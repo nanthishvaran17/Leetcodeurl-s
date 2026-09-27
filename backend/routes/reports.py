@@ -34,12 +34,35 @@ def get_available_sundays(db: Session = Depends(get_db)):
     Must only return sessions that are finalized.
     """
     from backend.models import WeeklySession
-    sessions = db.query(WeeklySession).filter(
-        (WeeklySession.finalized == True) | (WeeklySession.status == "FINALIZED")
-    ).order_by(WeeklySession.session_date.desc()).all()
+    from datetime import datetime, date
+    
+    # We must filter in python because session_date is formatted as DD.MM.YYYY or YYYY-MM-DD
+    raw_sessions = db.query(WeeklySession).filter(
+        (WeeklySession.status == "FINALIZED") | (WeeklySession.finalized == True)
+    ).all()
+    
+    today = date.today()
+    valid_sessions = []
+    for s in raw_sessions:
+        if not s.session_date:
+            continue
+        try:
+            # Try to parse DD.MM.YYYY
+            if "." in s.session_date:
+                d_obj = datetime.strptime(s.session_date, "%d.%m.%Y").date()
+            else:
+                d_obj = datetime.strptime(s.session_date, "%Y-%m-%d").date()
+            
+            if d_obj <= today:
+                valid_sessions.append(s)
+        except Exception:
+            # Fallback to string comparison if parsing fails, but mostly it should work
+            pass
+            
+    valid_sessions.sort(key=lambda x: x.id, reverse=True)
     
     results = []
-    for s in sessions:
+    for s in valid_sessions:
         results.append({
             "session_id": str(s.id),
             "snapshot_id": s.final_snapshot_id or str(s.id),
@@ -843,34 +866,39 @@ def download_session_report_by_format(
         )
 
         if fmt in ("excel", "xlsx"):
-            excel_bytes = export_excel_from_dataset(dataset)
+            from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
+            excel_bytes = export_dynamic_excel(dataset)
             return Response(
                 content=excel_bytes,
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 headers={"Content-Disposition": f'attachment; filename="{r_filename}.xlsx"'}
             )
         elif fmt == "pdf":
-            pdf_bytes = export_pdf_from_dataset(dataset)
+            from backend.exporters.dynamic_pdf_exporter import export_dynamic_pdf
+            pdf_bytes = export_dynamic_pdf(dataset)
             return Response(
                 content=pdf_bytes,
                 media_type="application/pdf",
                 headers={"Content-Disposition": f'attachment; filename="{r_filename}.pdf"'}
             )
         elif fmt in ("word", "docx"):
-            word_bytes = export_word_from_dataset(dataset)
+            from backend.exporters.dynamic_word_exporter import export_dynamic_word
+            word_bytes = export_dynamic_word(dataset)
             return Response(
                 content=word_bytes,
                 media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 headers={"Content-Disposition": f'attachment; filename="{r_filename}.docx"'}
             )
         elif fmt == "csv":
-            csv_bytes = export_csv_from_dataset(dataset)
+            from backend.exporters.dynamic_csv_exporter import export_dynamic_csv
+            csv_bytes = export_dynamic_csv(dataset)
             return Response(
                 content=csv_bytes,
                 media_type="text/csv",
                 headers={"Content-Disposition": f'attachment; filename="{r_filename}.csv"'}
             )
         elif fmt == "zip":
+            # Keeping export_zip_bundle_from_dataset as it handles bundles for all reports.
             zip_bytes = export_zip_bundle_from_dataset(dataset)
             return Response(
                 content=zip_bytes,
@@ -878,7 +906,8 @@ def download_session_report_by_format(
                 headers={"Content-Disposition": f'attachment; filename="{r_filename}.zip"'}
             )
         else:
-            excel_bytes = export_excel_from_dataset(dataset)
+            from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
+            excel_bytes = export_dynamic_excel(dataset)
             return Response(
                 content=excel_bytes,
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -984,42 +1013,193 @@ def get_report_history(
 from backend.models import WeeklySession
 import re
 
-def get_contest_filename_base(contest_name: str, session_date: Optional[str] = None, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL") -> str:
+def _get_latest_completed_session(db: Session) -> Optional[WeeklySession]:
     """
-    NEC-branded compact filename:
-    NEC_WC516_CSE-IOT_IV-Yr_23Aug2026
-    NEC_WC516_CSE-CS_III-Yr_23Aug2026
-    NEC_WC516_All-Depts_All-Yrs_23Aug2026
+    Returns the latest completed/finalized weekly contest session whose date is on or before today.
+    Never returns future provisioned/upcoming sessions.
+    """
+    import datetime
+    today = datetime.date.today()
+
+    # 1. First check finalized sessions with date <= today
+    raw_finalized = db.query(WeeklySession).filter(
+        (WeeklySession.status == "FINALIZED") | (WeeklySession.finalized == True)
+    ).order_by(WeeklySession.id.desc()).all()
+    for s in raw_finalized:
+        if not s.session_date:
+            continue
+        try:
+            if "." in s.session_date:
+                d_obj = datetime.datetime.strptime(s.session_date, "%d.%m.%Y").date()
+            else:
+                d_obj = datetime.datetime.strptime(s.session_date, "%Y-%m-%d").date()
+            if d_obj <= today:
+                return s
+        except Exception:
+            pass
+
+    # 2. Check non-upcoming sessions with date <= today
+    raw_active = db.query(WeeklySession).filter(
+        WeeklySession.status != "UPCOMING"
+    ).order_by(WeeklySession.id.desc()).all()
+    for s in raw_active:
+        if not s.session_date:
+            continue
+        try:
+            if "." in s.session_date:
+                d_obj = datetime.datetime.strptime(s.session_date, "%d.%m.%Y").date()
+            else:
+                d_obj = datetime.datetime.strptime(s.session_date, "%Y-%m-%d").date()
+            if d_obj <= today:
+                return s
+        except Exception:
+            pass
+
+    # 3. Fallback: all sessions with date <= today ordered by id desc
+    all_sess = db.query(WeeklySession).order_by(WeeklySession.id.desc()).all()
+    for s in all_sess:
+        if not s.session_date:
+            continue
+        try:
+            if "." in s.session_date:
+                d_obj = datetime.datetime.strptime(s.session_date, "%d.%m.%Y").date()
+            else:
+                d_obj = datetime.datetime.strptime(s.session_date, "%Y-%m-%d").date()
+            if d_obj <= today:
+                return s
+        except Exception:
+            pass
+
+    return all_sess[0] if all_sess else None
+
+
+def get_contest_filename_base(
+    contest_name: str, 
+    session_date: Optional[str] = None, 
+    dept: str = "ALL", 
+    year: str = "ALL", 
+    attendance: str = "ALL",
+    db: Optional[Session] = None,
+    report_type: Optional[str] = None
+) -> str:
+    """
+    NEC-branded compact, clean, highly-descriptive filename base:
+    Format: NEC_<ReportTypeSlug>_<DeptSlug>_<YearSlug>_<DateSlug>
+    Examples:
+      NEC_Faculty_Perf_CSE-CS_IV-Yr_20Sep2026
+      NEC_Hist_Intel_All-Depts_All-Yrs_20Sep2026
+      NEC_WoW_Intel_AIDS_II-Yr_20Sep2026
+      NEC_Trend_5W_IT_III-Yr_20Sep2026
+      NEC_Student_Perf_ECE_IV-Yr_20Sep2026
+      NEC_WC520_All-Depts_All-Yrs_20Sep2026
     """
     import re
 
-    # --- Contest number ---
-    m = re.search(r'\d+', contest_name or "")
-    contest_seg = f"WC{m.group(0)}" if m else "WC"
+    # --- 1. Report Type / Name Slug ---
+    rtype_str = (report_type or "").upper().strip()
+    cname_str = (contest_name or "").upper().strip()
 
-    # --- Date: compact 23Aug2026 ---
+    type_slug = None
+
+    if "FACULTY" in rtype_str or "FACULTY" in cname_str:
+        type_slug = "Faculty_Perf"
+    elif "HISTORICAL" in rtype_str or "HISTORICAL" in cname_str or "HIST" in rtype_str:
+        type_slug = "Hist_Intel"
+    elif "WEEK_ON_WEEK" in rtype_str or "WEEK-ON-WEEK" in cname_str or "WOW" in rtype_str or "WOW" in cname_str:
+        type_slug = "WoW_Intel"
+    elif "FIVE_WEEK" in rtype_str or "FIVE-WEEK" in cname_str or "TREND" in rtype_str or "TREND" in cname_str:
+        type_slug = "Trend_5W"
+    elif "PRINCIPAL" in rtype_str or "PRINCIPAL" in cname_str:
+        type_slug = "Principal_Exec"
+    elif "HOD" in rtype_str or "HOD" in cname_str:
+        type_slug = "HOD_Intel"
+    elif "COLLEGE" in rtype_str or "COLLEGE" in cname_str:
+        type_slug = "College_Exec"
+    elif "MASTER" in rtype_str or "MASTER" in cname_str:
+        type_slug = "Master_Tracker"
+    elif "STUDENT_PERFORMANCE" in rtype_str or "STUDENT PERFORMANCE" in cname_str:
+        type_slug = "Student_Perf"
+
+    # If still not determined, look for contest numbers (e.g. Weekly Contest 520, WC520)
+    if not type_slug:
+        m = re.search(r'\d+', contest_name or "")
+        contest_num = m.group(0) if m else None
+
+        if not contest_num and db is not None:
+            ws = None
+            if session_date:
+                ws = db.query(WeeklySession).filter(WeeklySession.session_date == session_date).first()
+            if not ws:
+                ws = _get_latest_completed_session(db)
+            if ws:
+                m_ws = re.search(r'\d+', ws.contest_name or "")
+                if m_ws:
+                    contest_num = m_ws.group(0)
+                if not session_date:
+                    session_date = ws.session_date
+
+        if contest_num:
+            type_slug = f"WC{contest_num}"
+        else:
+            type_slug = "Contest_Report"
+
+    # If session_date is not provided, resolve from db using contest_name or latest completed session
+    if not session_date and db is not None:
+        m_c = re.search(r'\d+', contest_name or "")
+        if m_c:
+            c_val = int(m_c.group(0))
+            ws_by_id = db.query(WeeklySession).filter(WeeklySession.id == c_val).first()
+            if not ws_by_id:
+                ws_by_id = db.query(WeeklySession).filter(WeeklySession.contest_name.ilike(f"%{c_val}%")).first()
+            if ws_by_id and ws_by_id.session_date:
+                session_date = ws_by_id.session_date
+        
+        if not session_date:
+            ws_last = _get_latest_completed_session(db)
+            if ws_last and ws_last.session_date:
+                session_date = ws_last.session_date
+
+    # --- 2. Date Segment: DDMonYYYY (e.g. 20Sep2026) ---
     MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    date_seg = None
+
     if session_date:
-        s_date_str = session_date
+        s_date_str = str(session_date).strip()
         parts = re.split(r'[.\-/]', s_date_str)
         try:
             if len(parts) == 3:
-                # could be DD.MM.YYYY or YYYY-MM-DD
                 if len(parts[0]) == 4:           # YYYY-MM-DD
                     dd, mm, yyyy = int(parts[2]), int(parts[1]), parts[0]
                 else:                            # DD.MM.YYYY
                     dd, mm, yyyy = int(parts[0]), int(parts[1]), parts[2]
-                date_seg = f"{dd:02d}{MONTHS[mm-1]}{yyyy}"
-            else:
+                if 1 <= mm <= 12:
+                    date_seg = f"{dd:02d}{MONTHS[mm-1]}{yyyy}"
+            if not date_seg:
                 date_seg = s_date_str.replace(".", "")
         except Exception:
             date_seg = s_date_str.replace(".", "")
-    else:
+
+    if not date_seg and db is not None:
+        ws_last = _get_latest_completed_session(db)
+        if ws_last and ws_last.session_date:
+            parts = re.split(r'[.\-/]', str(ws_last.session_date).strip())
+            try:
+                if len(parts) == 3:
+                    if len(parts[0]) == 4:
+                        dd, mm, yyyy = int(parts[2]), int(parts[1]), parts[0]
+                    else:
+                        dd, mm, yyyy = int(parts[0]), int(parts[1]), parts[2]
+                    if 1 <= mm <= 12:
+                        date_seg = f"{dd:02d}{MONTHS[mm-1]}{yyyy}"
+            except Exception:
+                pass
+
+    if not date_seg:
         import datetime
         now = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=5, minutes=30)
         date_seg = f"{now.day:02d}{MONTHS[now.month-1]}{now.year}"
 
-    # --- Department short slug ---
+    # --- 3. Department Slug ---
     DEPT_SLUG = {
         "CSE":      "CSE",
         "IT":       "IT",
@@ -1034,19 +1214,20 @@ def get_contest_filename_base(contest_name: str, session_date: Optional[str] = N
         "BME":      "BME",
     }
     d = (dept or "ALL").upper().strip()
-    dept_seg = "All-Depts" if d in ("ALL", "", "ALL DEPARTMENTS") else DEPT_SLUG.get(d, d)
+    dept_seg = "All-Depts" if d in ("ALL", "", "ALL DEPARTMENTS", "NONE") else DEPT_SLUG.get(d, d.replace(" ", "-"))
 
-    # --- Year short slug ---
+    # --- 4. Year Slug ---
     y = (year or "ALL").upper().strip()
     YEAR_SLUG = {
-        "II": "II-Yr", "2": "II-Yr",
-        "III": "III-Yr", "3": "III-Yr",
-        "IV": "IV-Yr", "4": "IV-Yr",
-        "ALL": "All-Yrs", "": "All-Yrs",
+        "II": "II-Yr", "2": "II-Yr", "2ND": "II-Yr", "II YEAR": "II-Yr",
+        "III": "III-Yr", "3": "III-Yr", "3RD": "III-Yr", "III YEAR": "III-Yr",
+        "IV": "IV-Yr", "4": "IV-Yr", "4TH": "IV-Yr", "IV YEAR": "IV-Yr",
+        "I": "I-Yr", "1": "I-Yr", "1ST": "I-Yr", "I YEAR": "I-Yr",
+        "ALL": "All-Yrs", "": "All-Yrs", "ALL YEARS": "All-Yrs", "NONE": "All-Yrs",
     }
-    year_seg = YEAR_SLUG.get(y, f"{y}-Yr")
+    year_seg = YEAR_SLUG.get(y, f"{y}-Yr" if y and not y.endswith("-YR") else "All-Yrs")
 
-    return f"NEC_{contest_seg}_{dept_seg}_{year_seg}_{date_seg}"
+    return f"NEC_{type_slug}_{dept_seg}_{year_seg}_{date_seg}"
 
 def _get_dataset_for_id(
     report_id: str, 
@@ -1075,23 +1256,89 @@ def _get_dataset_for_id(
     r_filename = None
 
     # First check ReportHistory
-    # First check ReportHistory
     report = db.query(ReportHistory).filter(ReportHistory.report_id == report_id).first()
     if report:
         dataset = dict(getattr(report, "dataset", {}) or {})
-        contest_name = dataset.get("contestName") or dataset.get("title") or "Weekly Contest"
-        session_date = dataset.get("sessionDate") or dataset.get("session_date")
-        r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=effective_att)
+        contest_name = (
+            dataset.get("contestName") or 
+            (dataset.get("current_session") or {}).get("contest_name") or 
+            dataset.get("title") or 
+            "Weekly Contest"
+        )
+        session_date = (
+            dataset.get("sessionDate") or 
+            dataset.get("session_date") or 
+            (dataset.get("current_session") or {}).get("session_date") or 
+            dataset.get("report_date")
+        )
+        report_type = dataset.get("report_type") or dataset.get("reportType") or getattr(report, "report_type", None)
+        r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=effective_att, db=db, report_type=report_type)
         
-        rows = dataset.get("allStudents") or dataset.get("rows") or []
+        rows = (
+            dataset.get("allStudents") or 
+            dataset.get("rows") or 
+            dataset.get("all_students_current") or 
+            dataset.get("all_students") or 
+            dataset.get("all_rows") or 
+            dataset.get("students") or 
+            []
+        )
         if has_active_filters:
             from backend.services.contest_performance_service import matches_dept, matches_year
+            
+            def _att_match(row_status: str, filter_att: str) -> bool:
+                if not filter_att or filter_att.upper().strip() in ("ALL", ""):
+                    return True
+                rs = (row_status or "").upper().strip()
+                fa = (filter_att or "").upper().strip()
+                if fa == "DATA_ERROR":
+                    return rs in ("USERNAME_NOT_FOUND", "INVALID_USERNAME", "PENDING_USERNAME", "UNLINKED", "ERROR", "DATA_ERROR")
+                if fa in ("PUBLIC", "ATTENDED", "PUBLIC_ATTENDED", "VERIFIED"):
+                    return rs in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VERIFIED")
+                if fa in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+                    return rs in ("VIRTUAL", "VIRTUAL_ATTENDED")
+                if fa in ("NOT_ATTENDED", "NOT ATTENDED", "ABSENT", "PUBLIC_NOT_ATTENDED", "NO_EVIDENCE"):
+                    return rs in ("NOT_ATTENDED", "NO_EVIDENCE", "ABSENT", "PUBLIC_NOT_ATTENDED")
+                if fa == "SOLVED_0":
+                    return rs == "SOLVED_0"
+                if fa.startswith("SOLVED_"):
+                    # This is for problem solve distribution filters, handled below separately
+                    return True
+                return rs == fa
+
+            def _search_match(row: dict, query: str) -> bool:
+                if not query or not query.strip():
+                    return True
+                q = query.lower().strip()
+                return (
+                    q in str(row.get("name", "")).lower() or
+                    q in str(row.get("reg_no", "")).lower() or
+                    q in str(row.get("username", "")).lower() or
+                    q in str(row.get("email", "")).lower() or
+                    q in str(row.get("department", "")).lower()
+                )
+
             filtered_rows = []
             for r in rows:
                 if dept != "ALL" and not matches_dept(r.get("dept") or r.get("department") or "", "", dept, r.get("department_id") or r.get("dept_id")):
                     continue
                 if year != "ALL" and not matches_year(r.get("year") or r.get("year_level") or "", year, r.get("reg_no") or r.get("register_no") or ""):
                     continue
+                if effective_att != "ALL":
+                    # Handle exact solve count filters (e.g. SOLVED_4, SOLVED_3)
+                    if effective_att.startswith("SOLVED_"):
+                        target_solve = effective_att.replace("SOLVED_", "")
+                        if target_solve.isdigit():
+                            r_solve = r.get("total_solved")
+                            rs = (r.get("status") or "").upper().strip()
+                            is_part = rs in ("PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "PUBLIC", "VIRTUAL", "PUBLIC_LIVE", "VIRTUAL_PRACTICE", "ATTENDED", "VERIFIED")
+                            if not is_part or str(r_solve) != target_solve:
+                                continue
+                    elif not _att_match(r.get("status", ""), effective_att):
+                        continue
+                if search and search.strip():
+                    if not _search_match(r, search):
+                        continue
                 filtered_rows.append(r)
             rows = filtered_rows
 
@@ -1133,9 +1380,46 @@ def _get_dataset_for_id(
 
         dataset["rows"] = rows
         dataset["allStudents"] = rows
+        if has_active_filters:
+            dataset["deptFilter"] = dept
+            dataset["department"] = dept
+            dataset["yearFilter"] = year
+            dataset["year"] = year
         return dataset, r_filename
     else:
         dataset = None
+
+        # Fallback 1: If report_id is a dynamic RPT-, REP-, or REPORT- code, build dataset via build_universal_report
+        if report_id.startswith("RPT-") or report_id.startswith("REP-") or report_id.startswith("REPORT-") or "REP" in report_id.upper():
+            rtype = "STUDENT_PERFORMANCE"
+            rid_u = report_id.upper()
+            if "HIST" in rid_u:
+                rtype = "HISTORICAL_CONTEST_INTELLIGENCE"
+            elif "WOW" in rid_u:
+                rtype = "WEEK_ON_WEEK_INTELLIGENCE"
+            elif "TREND" in rid_u:
+                rtype = "FIVE_WEEK_PERFORMANCE_TREND"
+            elif "FRIDAY" in rid_u:
+                rtype = "FRIDAY_OFFICIAL_CONTEST"
+            elif "SUNDAY" in rid_u:
+                rtype = "SUNDAY_LIVE_CONTEST"
+            elif "COORD" in rid_u or "PERFORMANCE" in rid_u or "WEEKLY" in rid_u or "REP-2026" in rid_u or rid_u.startswith("REP-"):
+                rtype = "WEEKLY_PERFORMANCE"
+
+            from backend.services.report_engine import build_universal_report
+            from backend.services.report_models import ReportConfig
+            cfg = ReportConfig(
+                report_type=rtype,
+                department=dept,
+                year=year,
+                filters={"department": dept, "year": year, "status": effective_att, "search": search, "batch": batch}
+            )
+            dataset = build_universal_report(db, cfg, current_user=current_user)
+            contest_name = dataset.get("contestName") or dataset.get("title") or rtype.replace("_", " ").title()
+            session_date = dataset.get("sessionDate") or dataset.get("session_date")
+            report_type = dataset.get("report_type") or rtype
+            r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=effective_att, db=db, report_type=report_type)
+            return dataset, r_filename
 
         # Resolve session_id from report_id
         session_id = None
@@ -1152,15 +1436,16 @@ def _get_dataset_for_id(
                 pass
         
         if session_id is None:
-            # Fallback: extract contest number from report_id
+            # Fallback: extract contest number from report_id (ensure it's a realistic session/contest number < 10000)
             m = re.search(r'\d+', report_id)
             if m:
                 val = int(m.group(0))
-                ws_match = db.query(WeeklySession).filter(WeeklySession.id == val).first()
-                if not ws_match:
-                    ws_match = db.query(WeeklySession).filter(WeeklySession.contest_name.ilike(f"%{val}%")).first()
-                if ws_match:
-                    session_id = int(getattr(ws_match, "id"))
+                if val < 10000:
+                    ws_match = db.query(WeeklySession).filter(WeeklySession.id == val).first()
+                    if not ws_match:
+                        ws_match = db.query(WeeklySession).filter(WeeklySession.contest_name.ilike(f"%{val}%")).first()
+                    if ws_match:
+                        session_id = int(getattr(ws_match, "id"))
 
         if session_id is not None:
             ws = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
@@ -1172,7 +1457,7 @@ def _get_dataset_for_id(
 
             contest_name = str(getattr(ws, "contest_name", None) or f"Weekly Contest {session_id}")
             session_date = str(getattr(ws, "session_date", None) or "")
-            r_filename = get_contest_filename_base(contest_name, dept=dept, year=year, attendance=effective_att)
+            r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=effective_att, db=db)
 
             from backend.services.canonical_contest_engine import build_canonical_contest_dataset
             canonical_data = build_canonical_contest_dataset(
@@ -1481,9 +1766,14 @@ def download_universal_excel(
             batch=batch,
             current_user=current_user
         )
-        excel_bytes = export_excel_from_dataset(dataset)
-        
-        # Validate Excel workbook
+        try:
+            from backend.exporters.excel_exporter import export_excel_from_dataset
+            excel_bytes = export_excel_from_dataset(dataset)
+        except Exception as ex_exp:
+            logger.warning(f"[UNIVERSAL EXCEL FALLBACK] Standard exporter failed: {ex_exp}, falling back to dynamic")
+            from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
+            excel_bytes = export_dynamic_excel(dataset)
+
         if not excel_bytes or len(excel_bytes) < 100:
             raise ValueError("Generated Excel file is empty or corrupted.")
 
@@ -1492,7 +1782,8 @@ def download_universal_excel(
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={
                 "Content-Disposition": f'attachment; filename="{r_filename}.xlsx"',
-                "Access-Control-Expose-Headers": "Content-Disposition"
+                "Access-Control-Expose-Headers": "Content-Disposition",
+                "Cache-Control": "no-cache, no-store, must-revalidate"
             }
         )
     except HTTPException:
@@ -1532,7 +1823,8 @@ def download_universal_pdf(
             batch=batch,
             current_user=current_user
         )
-        pdf_bytes = export_pdf_from_dataset(dataset)
+        from backend.exporters.dynamic_pdf_exporter import export_dynamic_pdf
+        pdf_bytes = export_dynamic_pdf(dataset)
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
@@ -1572,7 +1864,8 @@ def download_universal_word(
         batch=batch,
         current_user=current_user
     )
-    word_bytes = export_word_from_dataset(dataset)
+    from backend.exporters.dynamic_word_exporter import export_dynamic_word
+    word_bytes = export_dynamic_word(dataset)
     return Response(
         content=word_bytes,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -1609,7 +1902,9 @@ def download_universal_csv_by_id(
         batch=batch,
         current_user=current_user
     )
-    csv_bytes = export_csv_from_dataset(dataset)
+    
+    from backend.exporters.dynamic_csv_exporter import export_dynamic_csv
+    csv_bytes = export_dynamic_csv(dataset)
     return Response(
         content=csv_bytes,
         media_type="text/csv",

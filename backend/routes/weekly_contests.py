@@ -370,7 +370,7 @@ async def get_contest_metadata_endpoint(
         # DYNAMIC FALLBACK: If LeetCode Cloudflare blocks the GraphQL API, we extract the questions dynamically 
         # from our own telemetry (LiveEvent) where students have already submitted them!
         if not meta.get("problemSlugs") or len(meta["problemSlugs"]) < 4:
-            from backend.models import LiveEvent
+            from backend.models import WeeklyContestLiveEvent as LiveEvent
             from sqlalchemy import select
             
             stmt = select(LiveEvent.question_id, LiveEvent.title_slug).where(
@@ -1827,8 +1827,10 @@ def _run_sync_in_background(session_id: int):
             sync_single_historical_session(db, session_id)
             _CONTEST_RAM_CACHE.clear()
             from backend.cache import cache
+            from backend.services.canonical_contest_engine import invalidate_canonical_cache
+            invalidate_canonical_cache(session_id)
             cache.clear()
-            logger.info(f"Completed background sync and cleared caches for Session {session_id}")
+            logger.info(f"Completed background sync and cleared canonical caches for Session {session_id}")
     except Exception as e:
         from backend.logger import logger
         logger.error(f"Background single session sync failed for {session_id}: {e}")
@@ -1888,6 +1890,7 @@ async def sync_all_weekly_contests(
     student_count = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
 
     # Optimize: Pre-fetch result counts per session
+    from sqlalchemy import func
     counts_query = db.query(
         WeeklyPublicResult.session_id, func.count(WeeklyPublicResult.id)
     ).group_by(WeeklyPublicResult.session_id).all()
@@ -2638,7 +2641,7 @@ def get_post_930_solvers(
 
         if not qualifying_problems and post_contest_solves > 0:
             student_submissions = post_contest_solves + 1
-            post_snap = sn_after
+            post_snap = None
             if post_snap and post_snap[0].captured_at:
                 c_at = post_snap[0].captured_at
                 base_time_ist = pytz.utc.localize(c_at).astimezone(ist_tz) if c_at.tzinfo is None else c_at.astimezone(ist_tz)
@@ -3256,10 +3259,10 @@ async def ingest_live_contest_solve(
         q2=req.q2,
         q3=req.q3,
         q4=req.q4,
-        q1_observed_seconds=req.q1_observed_seconds,
-        q2_observed_seconds=req.q2_observed_seconds,
-        q3_observed_seconds=req.q3_observed_seconds,
-        q4_observed_seconds=req.q4_observed_seconds,
+        q1_observed_active_seconds=req.q1_observed_seconds,
+        q2_observed_active_seconds=req.q2_observed_seconds,
+        q3_observed_active_seconds=req.q3_observed_seconds,
+        q4_observed_active_seconds=req.q4_observed_seconds,
         official_rank=req.official_rank,
         official_score=req.official_score,
         finish_time=req.finish_time,

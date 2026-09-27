@@ -264,6 +264,7 @@ def get_report_definition(report_code: str) -> Dict[str, Any]:
         "HISTORICAL_INTELLIGENCE": "HISTORICAL_CONTEST_INTELLIGENCE",
         "HISTORICAL_CONTEST": "HISTORICAL_CONTEST_INTELLIGENCE",
         "HISTORICAL_CONTEST_INTEL": "HISTORICAL_CONTEST_INTELLIGENCE",
+        "WEEKLY_PERFORMANCE": "WEEKLY_STUDENT_PERFORMANCE",
     }
     
     target_code = ALIASES.get(code_upper, code_upper)

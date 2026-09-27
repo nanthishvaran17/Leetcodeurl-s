@@ -1284,24 +1284,45 @@ def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_i
         bottom=Side(style='thin', color='C0C0C0')
     )
 
-    sessions = db.query(WeeklySession).order_by(WeeklySession.session_date.asc()).all()
-    default_dates = ["02.08.2026", "09.08.2026", "16.08.2026 (UPCOMING)"]
+    import re
+    def _parse_sess_date(s_date_str: str):
+        if not s_date_str:
+            return datetime.date.min
+        try:
+            if "." in s_date_str:
+                p = s_date_str.split(".")
+                return datetime.date(int(p[2]), int(p[1]), int(p[0]))
+            elif "-" in s_date_str:
+                p = s_date_str.split("-")
+                return datetime.date(int(p[0]), int(p[1]), int(p[2]))
+        except Exception:
+            pass
+        return datetime.date.min
+
+    all_db_sessions = db.query(WeeklySession).all()
+    valid_sessions = []
+    for s in all_db_sessions:
+        if not s or not s.session_date:
+            continue
+        c_name = str(s.contest_name or "")
+        if re.search(r'\b(test|mock)\b', c_name, re.IGNORECASE) or s.session_date == "2026-08-30":
+            continue
+        valid_sessions.append(s)
+
+    valid_sessions.sort(key=lambda s: _parse_sess_date(s.session_date))
 
     date_list = []
-    if sessions:
-        # Keep only the last 2 completed sessions
-        recent_sessions = sessions[-2:]
-        for s in recent_sessions:
-            try:
-                dt_obj = datetime.datetime.strptime(s.session_date, "%Y-%m-%d")  # type: ignore
-                date_list.append((s, dt_obj.strftime("%d.%m.%Y")))
-            except:
-                date_list.append((s, s.session_date))
-        # Add next upcoming Sunday date
-        date_list.append((None, "16.08.2026 (UPCOMING)"))
-    else:
-        for d in default_dates:
-            date_list.append((None, d))
+    for s in valid_sessions:
+        d_obj = _parse_sess_date(s.session_date)
+        fmt_date = d_obj.strftime("%d.%m.%Y") if d_obj != datetime.date.min else str(s.session_date)
+        c_num = str(s.contest_name or f"Contest {s.id}")
+        date_list.append((s, f"{c_num} ({fmt_date})"))
+
+    from backend.services.contest_discovery import get_upcoming_sunday_date, calculate_contest_number
+    next_sun = get_upcoming_sunday_date()
+    next_num = calculate_contest_number(next_sun)
+    next_fmt = next_sun.strftime("%d.%m.%Y")
+    date_list.append((None, f"Weekly Contest {next_num} ({next_fmt} UPCOMING)"))
 
     total_cols = 5 + len(date_list) * 4
     last_col_let = get_column_letter(total_cols)
@@ -1398,6 +1419,27 @@ def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_i
 
     students = stud_query.order_by(Student.reg_no.asc()).all()
 
+    student_ids = [st.id for st in students]
+    valid_sess_ids = [sess_obj.id for sess_obj, _ in date_list if sess_obj]
+
+    snap_map = {}
+    if student_ids and valid_sess_ids:
+        snaps = db.query(WeeklySessionSnapshot).filter(
+            WeeklySessionSnapshot.student_id.in_(student_ids),
+            WeeklySessionSnapshot.session_id.in_(valid_sess_ids)
+        ).all()
+        for sn in snaps:
+            snap_map[(sn.student_id, sn.session_id)] = sn
+
+    pub_map = {}
+    if student_ids and valid_sess_ids:
+        pubs = db.query(WeeklyPublicResult).filter(
+            WeeklyPublicResult.student_id.in_(student_ids),
+            WeeklyPublicResult.session_id.in_(valid_sess_ids)
+        ).all()
+        for pb in pubs:
+            pub_map[(pb.student_id, pb.session_id)] = pb
+
     current_row = 10
     for idx, st in enumerate(students, 1):
         ws.cell(row=current_row, column=1, value=idx).alignment = center_align
@@ -1411,21 +1453,16 @@ def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_i
             rank_val, solved_val, rating_val, global_rank_val = idx, "—", "—", "—"
             
             if sess_obj:
-                snap = db.query(WeeklySessionSnapshot).filter(
-                    WeeklySessionSnapshot.session_id == sess_obj.id,
-                    WeeklySessionSnapshot.student_id == st.id
-                ).first()
-                if snap:
-                    # problems_added = how many contest problems solved this week (0-4)
+                snap = snap_map.get((st.id, sess_obj.id))
+                pub = pub_map.get((st.id, sess_obj.id))
+                if pub:
+                    solved_val = pub.total_contest_solved if pub.total_contest_solved is not None else 0
+                    rating_val = pub.contest_rating if pub.contest_rating else "—"
+                    global_rank_val = pub.contest_rank if pub.contest_rank else "—"
+                elif snap:
                     solved_val = snap.problems_added if snap.problems_added is not None else 0
                     rating_val = snap.end_rating if snap.end_rating else (st.stats.contest_rating if st.stats else "—")
                     global_rank_val = st.stats.contest_global_ranking if st.stats and st.stats.contest_global_ranking else "—"
-                # Rank: use WeeklyStudentProgress (matched by week/student, no session_id)
-                latest_prog = db.query(WeeklyStudentProgress).filter(
-                    WeeklyStudentProgress.student_id == st.id
-                ).order_by(WeeklyStudentProgress.id.desc()).first()
-                if latest_prog and latest_prog.college_rank:
-                    rank_val = latest_prog.college_rank
             else:
                 # Upcoming / no session — use current live stats
                 if st.stats:

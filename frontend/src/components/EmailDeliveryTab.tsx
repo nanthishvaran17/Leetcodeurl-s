@@ -1423,22 +1423,22 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             <div className="flex items-center gap-2 font-mono">
               <div className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 text-center min-w-[54px]">
                 <span className="text-base font-black text-amber-400 block leading-none">{String(countdown.days).padStart(2, '0')}</span>
-                <span className="text-[9px] text-slate-400 font-sans uppercase font-bold">Days</span>
+                <span className="text-[9px] text-slate-400 font-sans uppercase font-bold mt-1">Days</span>
               </div>
-              <span className="text-slate-500 font-black">:</span>
+              <span className="text-slate-500 font-black -translate-y-2 animate-pulse">:</span>
               <div className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 text-center min-w-[54px]">
                 <span className="text-base font-black text-amber-400 block leading-none">{String(countdown.hours).padStart(2, '0')}</span>
-                <span className="text-[9px] text-slate-400 font-sans uppercase font-bold">Hours</span>
+                <span className="text-[9px] text-slate-400 font-sans uppercase font-bold mt-1">Hours</span>
               </div>
-              <span className="text-slate-500 font-black">:</span>
+              <span className="text-slate-500 font-black -translate-y-2 animate-pulse">:</span>
               <div className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 text-center min-w-[54px]">
                 <span className="text-base font-black text-amber-400 block leading-none">{String(countdown.minutes).padStart(2, '0')}</span>
-                <span className="text-[9px] text-slate-400 font-sans uppercase font-bold">Mins</span>
+                <span className="text-[9px] text-slate-400 font-sans uppercase font-bold mt-1">Mins</span>
               </div>
-              <span className="text-slate-500 font-black">:</span>
+              <span className="text-slate-500 font-black -translate-y-2 animate-pulse">:</span>
               <div className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 text-center min-w-[54px]">
                 <span className="text-base font-black text-teal-300 block leading-none">{String(countdown.seconds).padStart(2, '0')}</span>
-                <span className="text-[9px] text-slate-400 font-sans uppercase font-bold">Secs</span>
+                <span className="text-[9px] text-slate-400 font-sans uppercase font-bold mt-1">Secs</span>
               </div>
             </div>
           </div>

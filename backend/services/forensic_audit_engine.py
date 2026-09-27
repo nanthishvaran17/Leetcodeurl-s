@@ -3,7 +3,7 @@ import datetime
 import re
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
-from backend.models import Student, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult, CertificateRecord
+from backend.models import Student, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult, CertificateRecord, PreviousWeekParticipationRecord
 from backend.logger import logger
 
 def derive_clean_contest_name(session_obj) -> str:
@@ -138,6 +138,12 @@ def build_normalized_forensic_report(
         WeeklyVirtualResult.session_id == session_obj.id
     ).first() if not contest_result or contest_result.participation_status != "PUBLIC_ATTENDED" else None
 
+    prev_record = db.query(PreviousWeekParticipationRecord).filter(
+        PreviousWeekParticipationRecord.student_id == student.id,
+        PreviousWeekParticipationRecord.session_id == session_obj.id,
+        PreviousWeekParticipationRecord.is_active_version == True
+    ).first()
+
     # Validate that contest records match student and contest session
     if contest_result:
         if contest_result.student_id != student.id or contest_result.session_id != session_obj.id:
@@ -151,17 +157,23 @@ def build_normalized_forensic_report(
         participation_status = "PUBLIC_ATTENDED"
     elif virtual_result and virtual_result.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL"):
         participation_status = "VIRTUAL_ATTENDED"
+    elif prev_record and prev_record.participation_type in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+        participation_status = "PUBLIC_ATTENDED"
+    elif prev_record and prev_record.participation_type in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+        participation_status = "VIRTUAL_ATTENDED"
     elif contest_result and (contest_result.total_contest_solved or 0) > 0:
         participation_status = "PUBLIC_ATTENDED"
     elif virtual_result and (virtual_result.total_contest_solved or 0) > 0:
         participation_status = "VIRTUAL_ATTENDED"
+    elif prev_record and (prev_record.problems_solved or 0) > 0:
+        participation_status = "PUBLIC_ATTENDED"
 
-    q1_val = 1 if (contest_result and contest_result.q1) else (1 if (virtual_result and virtual_result.q1) else 0)
-    q2_val = 1 if (contest_result and contest_result.q2) else (1 if (virtual_result and virtual_result.q2) else 0)
-    q3_val = 1 if (contest_result and contest_result.q3) else (1 if (virtual_result and virtual_result.q3) else 0)
-    q4_val = 1 if (contest_result and contest_result.q4) else (1 if (virtual_result and virtual_result.q4) else 0)
+    q1_val = 1 if ((contest_result and contest_result.q1) or (virtual_result and virtual_result.q1) or (prev_record and prev_record.q1)) else 0
+    q2_val = 1 if ((contest_result and contest_result.q2) or (virtual_result and virtual_result.q2) or (prev_record and prev_record.q2)) else 0
+    q3_val = 1 if ((contest_result and contest_result.q3) or (virtual_result and virtual_result.q3) or (prev_record and prev_record.q3)) else 0
+    q4_val = 1 if ((contest_result and contest_result.q4) or (virtual_result and virtual_result.q4) or (prev_record and prev_record.q4)) else 0
 
-    total_solved = contest_result.total_contest_solved if contest_result else (virtual_result.total_contest_solved if virtual_result else 0)
+    total_solved = (contest_result.total_contest_solved if contest_result and contest_result.total_contest_solved is not None else 0) or (virtual_result.total_contest_solved if virtual_result and virtual_result.total_contest_solved is not None else 0) or (prev_record.problems_solved if prev_record and prev_record.problems_solved is not None else 0)
     if not total_solved and (q1_val or q2_val or q3_val or q4_val):
         total_solved = q1_val + q2_val + q3_val + q4_val
 
@@ -173,8 +185,10 @@ def build_normalized_forensic_report(
     score_val = q1_pts + q2_pts + q3_pts + q4_pts
     if contest_result and contest_result.contest_score and contest_result.contest_score > 0:
         score_val = contest_result.contest_score
+    elif prev_record and prev_record.official_score and prev_record.official_score > 0:
+        score_val = prev_record.official_score
 
-    rank_str = f"#{contest_result.contest_rank}" if (contest_result and contest_result.contest_rank) else (f"#{virtual_result.contest_rank}" if (virtual_result and virtual_result.contest_rank) else "—")
+    rank_str = f"#{contest_result.contest_rank}" if (contest_result and contest_result.contest_rank) else (f"#{prev_record.official_rank}" if (prev_record and prev_record.official_rank) else (f"#{virtual_result.contest_rank}" if (virtual_result and virtual_result.contest_rank) else "—"))
     rating_str = f"{contest_result.contest_rating:.2f}" if (contest_result and contest_result.contest_rating) else (f"{virtual_result.contest_rating:.2f}" if (virtual_result and virtual_result.contest_rating) else "—")
 
     clean_reg = "".join(c for c in (student.reg_no or "") if c.isalnum()).upper()
@@ -282,6 +296,16 @@ def build_normalized_forensic_report(
         "traceId": final_trace_id,
         "verification_id": final_trace_id,
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "participation_status": participation_status,
+        "total_solved": total_solved,
+        "problems_solved": total_solved,
+        "q1": q1_val,
+        "q2": q2_val,
+        "q3": q3_val,
+        "q4": q4_val,
+        "score": score_val,
+        "rank": rank_str,
+        "rating": rating_str,
         "student": {
             "id": student.id,
             "reg_no": student.reg_no,

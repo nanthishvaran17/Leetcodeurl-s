@@ -1,30 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Scale, 
-  FileSignature, 
-  AlertCircle, 
-  RefreshCw, 
-  Mail, 
-  ShieldCheck, 
-  Code, 
-  Printer, 
-  Copy, 
-  Check, 
-  Sparkles, 
-  Cpu, 
-  CheckCircle2, 
-  Search, 
-  HelpCircle,
-  Zap,
-  BookOpen,
-  ChevronDown,
-  ChevronUp,
-  Maximize2,
-  Minimize2,
-  Filter
+  Shield, Lock, Eye, Database, UserCheck, Search, Printer, Copy, Check, Sparkles, Mail, Code, Cpu, CheckCircle2, Key,
+  ShieldAlert, ChevronDown, ChevronRight, Globe, Layers, Filter, HelpCircle, Activity, Layout, Terminal, Scale, 
+  FileText, ArrowRight, Zap, RefreshCw, XCircle, AlertCircle, FileSignature, BookOpen, ShieldCheck
 } from 'lucide-react';
 
-interface TermsSection {
+interface ContentSection {
   id: string;
   title: string;
   icon: React.ElementType;
@@ -35,68 +17,27 @@ interface TermsSection {
   content: React.ReactNode;
 }
 
+const developerInfo = {
+  name: "Nanthish S",
+  email: "nanthishvaran17@gmail.com",
+  role: "Lead Platform Engineer",
+  institution: "Nandha Engineering College (Autonomous)"
+};
+
 export const TermsOfServicePage: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    acceptance: true,
-    purpose: true,
-    integrity: true,
-    modifications: true,
-    ip: true,
-    contact: true,
-  });
-  const [activeSection, setActiveSection] = useState<string>('acceptance');
+  const [activeSection, setActiveSection] = useState<string>('collection');
+  const [isCopied, setIsCopied] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
-  const toggleSection = (id: string) => {
-    setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const expandAll = () => {
-    const allExpanded: Record<string, boolean> = {};
-    sections.forEach(s => { allExpanded[s.id] = true; });
-    setExpandedSections(allExpanded);
-  };
-
-  const collapseAll = () => {
-    const allCollapsed: Record<string, boolean> = {};
-    sections.forEach(s => { allCollapsed[s.id] = false; });
-    setExpandedSections(allCollapsed);
-  };
-
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleSectionClick = (id: string) => {
-    setActiveSection(id);
-    setExpandedSections(prev => ({ ...prev, [id]: true }));
-    
-    setTimeout(() => {
-      const el = document.getElementById(id);
-      if (el) {
-        const yOffset = -90;
-        const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-        window.scrollTo({ top: y, behavior: 'smooth' });
-      }
-    }, 50);
-  };
-
-  const developerInfo = {
-    name: 'Nanthish S',
-    role: 'Lead Platform Engineer & System Architect',
-    platform: 'Nandha LeetCode Intelligence Platform',
-    institution: 'Nandha Engineering College (Autonomous), Erode',
-    email: 'nanthishvaran17@gmail.com',
-  };
-
-  const sections: TermsSection[] = [
+  const sections: ContentSection[] = [
     {
       id: 'acceptance',
       title: '1. Acceptance & User Agreement',
@@ -257,235 +198,198 @@ export const TermsOfServicePage: React.FC = () => {
     }
   ];
 
-  const filteredSections = useMemo(() => {
-    if (!searchQuery.trim()) return sections;
-    const q = searchQuery.toLowerCase();
-    return sections.filter(
-      s => s.title.toLowerCase().includes(q) || s.badge.toLowerCase().includes(q) || s.summary.toLowerCase().includes(q)
-    );
-  }, [searchQuery]);
+  useEffect(() => {
+    if (sections.length > 0 && !sections.find(s => s.id === activeSection)) {
+      setActiveSection(sections[0].id);
+    }
+  }, [sections, activeSection]);
+
+  const handlePrint = () => window.print();
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  const activeData = sections.find(s => s.id === activeSection) || sections[0];
+  const ActiveIcon = activeData?.icon || Shield;
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-navy-950 font-sans selection:bg-brand-500/30 text-slate-900 dark:text-white pb-24 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#030816] text-slate-900 dark:text-slate-100 font-sans relative overflow-hidden transition-colors duration-500">
       
-      {/* Background Lighting */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none overflow-hidden">
-        <div className="absolute -top-32 right-10 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse-slow"></div>
-        <div className="absolute top-96 left-10 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+      {/* Animated Background Glows */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-600/10 dark:bg-brand-500/10 blur-[120px] animate-pulse-slow" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/10 dark:bg-indigo-500/10 blur-[120px] animate-pulse-slow" style={{ animationDelay: '2s' }} />
+        <div 
+          className="absolute w-[600px] h-[600px] rounded-full bg-purple-500/5 dark:bg-purple-500/10 blur-[100px] transition-transform duration-700 ease-out"
+          style={{ transform: `translate(${mousePosition.x - 300}px, ${mousePosition.y - 300}px)` }}
+        />
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.015] dark:opacity-[0.03] mix-blend-overlay" />
       </div>
 
-      <div className="relative z-10 w-full max-w-full px-4 sm:px-6 lg:px-12 pt-6 lg:pt-10">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
         
-        {/* Top Control Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8 p-4 bg-white dark:bg-navy-900 rounded-3xl border-2 border-slate-200 dark:border-navy-800 shadow-xl">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-gradient-to-tr from-slate-900 to-indigo-900 text-white rounded-2xl shadow-md">
-              <Scale className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-sm font-black text-slate-900 dark:text-white">Terms of Service Framework</h2>
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Version 2.4.0 • Operational Sept 2026</p>
-            </div>
+        {/* Header Title & Actions */}
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="text-center max-w-3xl mx-auto mb-16 lg:mb-24"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 dark:bg-navy-900/60 border border-slate-200/50 dark:border-navy-700/50 backdrop-blur-md shadow-sm mb-6">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-500"></span>
+            </span>
+            <span className="text-xs font-black tracking-widest uppercase text-brand-600 dark:text-brand-400">
+              Official Directive
+            </span>
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleCopyLink}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-extrabold bg-slate-100 dark:bg-navy-800 text-slate-900 dark:text-white hover:bg-brand-500 hover:text-white dark:hover:bg-brand-500 border border-slate-300 dark:border-navy-700 transition-all shadow-sm"
-            >
-              {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? 'Copied!' : 'Share'}</span>
-            </button>
-            <button
-              onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-extrabold bg-slate-100 dark:bg-navy-800 text-slate-900 dark:text-white hover:bg-brand-500 hover:text-white dark:hover:bg-brand-500 border border-slate-300 dark:border-navy-700 transition-all shadow-sm"
-            >
-              <Printer className="w-4 h-4" />
-              <span>Print</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Hero Header */}
-        <div className="text-center space-y-4 mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-slate-900 via-indigo-900 to-purple-900 text-white shadow-lg text-xs font-black uppercase tracking-widest">
-            <Scale className="w-4 h-4 text-brand-400" />
-            <span>Institutional Governance Framework</span>
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-display font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-            Terms of <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 dark:from-brand-400 dark:via-indigo-400 dark:to-purple-400">Service</span>
-          </h1>
-          <p className="text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-200 max-w-3xl mx-auto leading-relaxed">
-            Please read these operational terms carefully. Engineered & Enforced by Lead Developer <strong className="text-brand-600 dark:text-brand-400 font-black">Nanthish S</strong>.
-          </p>
-        </div>
-
-        {/* Search & Global Controls */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-          <div className="relative w-full sm:max-w-md">
-            <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input 
-              type="text"
-              placeholder="Search terms (e.g. conduct, bots, HOD, developer)..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-navy-900 border-2 border-slate-300 dark:border-navy-700 rounded-2xl text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-md transition-all"
-            />
-            {searchQuery && (
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-extrabold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-navy-800 px-2 py-1 rounded-md">
-                {filteredSections.length} matches
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 text-xs font-black text-slate-700 dark:text-slate-300">
-            <button 
-              onClick={expandAll}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-800 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all shadow-sm"
-            >
-              <Maximize2 className="w-4 h-4 text-brand-500" />
-              <span>Expand All</span>
-            </button>
-            <button 
-              onClick={collapseAll}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-800 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all shadow-sm"
-            >
-              <Minimize2 className="w-4 h-4 text-brand-500" />
-              <span>Collapse All</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Index Sidebar */}
-          <div className="hidden lg:block lg:col-span-3 sticky top-6">
-            <div className="p-4 rounded-3xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-800 shadow-xl space-y-2">
-              <div className="px-3 py-2 text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 mb-2">
-                <span className="flex items-center gap-2">
-                  <Filter className="w-4 h-4 text-brand-500" />
-                  Terms Index
+          <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight leading-tight drop-shadow-sm">
+            Terms of Service <br className="hidden md:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-500 animate-gradient-x">
+              Operational Framework
+            </span>
+          </h1>
+          
+          <p className="text-lg text-slate-600 dark:text-slate-400 font-medium leading-relaxed mb-8">
+            Engineered with a Zero-Trust architecture by Lead Developer <strong className="text-slate-900 dark:text-white">Nanthish S</strong> for Nandha Engineering College. 100% data authenticity guarantee.
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <button 
+              onClick={handlePrint}
+              className="group flex items-center gap-2 px-6 py-3 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 hover:border-brand-500/50 dark:hover:border-brand-500/50 rounded-2xl text-sm font-black transition-all shadow-sm hover:shadow-brand-500/10"
+            >
+              <Printer className="w-4 h-4 text-slate-500 group-hover:text-brand-500 transition-colors" />
+              <span>Print Document</span>
+            </button>
+            <button 
+              onClick={handleCopyLink}
+              className="group flex items-center gap-2 px-6 py-3 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 rounded-2xl text-sm font-black transition-all shadow-sm hover:shadow-indigo-500/10"
+            >
+              {isCopied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-slate-500 group-hover:text-indigo-500 transition-colors" />}
+              <span>{isCopied ? 'Link Copied!' : 'Share Link'}</span>
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Layout Grid */}
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+          
+          {/* Left Navigation Sidebar */}
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="lg:col-span-4 space-y-4 sticky top-24"
+          >
+            <div className="p-1.5 bg-white/40 dark:bg-navy-900/40 backdrop-blur-xl border border-white/60 dark:border-navy-700/50 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)]">
+              <div className="px-4 py-3 border-b border-slate-200/50 dark:border-navy-700/50 flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                  <Layers className="w-4 h-4" /> Index
                 </span>
-                <Sparkles className="w-4 h-4 text-brand-500" />
+                <Sparkles className="w-4 h-4 text-brand-500/50" />
               </div>
-
-              {sections.map(s => {
-                const Icon = s.icon;
-                const isActive = activeSection === s.id;
-                return (
-                  <button
-                    key={s.id}
-                    onClick={() => handleSectionClick(s.id)}
-                    className={`w-full text-left p-3 rounded-2xl text-xs font-black transition-all flex items-center justify-between gap-2 border-2 ${
-                      isActive 
-                        ? 'bg-gradient-to-r from-slate-900 via-indigo-900 to-navy-900 text-white border-slate-800 shadow-lg scale-[1.02]' 
-                        : 'bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-navy-800 hover:border-brand-500 hover:bg-white dark:hover:bg-navy-900'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-brand-400' : 'text-slate-700 dark:text-slate-300'}`} />
-                      <span className="font-extrabold leading-snug text-slate-900 dark:text-white text-xs">{s.title.replace(/^\d+\.\s*/, '')}</span>
-                    </div>
-                    <span className={`px-2 py-0.5 rounded-lg text-[10px] shrink-0 font-extrabold shadow-sm ${
-                      isActive 
-                        ? 'bg-white text-slate-900 font-black shadow-md' 
-                        : 'bg-slate-200 dark:bg-navy-800 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-navy-700'
-                    }`}>
-                      {s.badge}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Cards List */}
-          <div className="lg:col-span-9 space-y-6">
-            {filteredSections.length === 0 ? (
-              <div className="p-12 text-center bg-white dark:bg-navy-900 rounded-3xl border-2 border-slate-200 dark:border-navy-800 space-y-3">
-                <HelpCircle className="w-12 h-12 text-slate-400 mx-auto" />
-                <h3 className="font-black text-slate-900 dark:text-white text-lg">No matching terms found</h3>
-                <p className="text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300">Try searching for keywords like "conduct" or "bots".</p>
-              </div>
-            ) : (
-              filteredSections.map((section) => {
-                const Icon = section.icon;
-                const isExpanded = !!expandedSections[section.id];
-                const isActive = activeSection === section.id;
-
-                return (
-                  <div 
-                    key={section.id} 
-                    id={section.id}
-                    className={`rounded-3xl bg-white dark:bg-navy-900 border-2 transition-all shadow-xl ${section.cardGlow} ${
-                      isActive 
-                        ? 'ring-4 ring-slate-900/20 dark:ring-white/20 border-slate-900 dark:border-white shadow-2xl scale-[1.01]' 
-                        : 'border-slate-200 dark:border-navy-800 hover:border-slate-300 dark:hover:border-navy-700'
-                    }`}
-                  >
-                    {/* Header Button */}
+              <div className="p-2 flex flex-col gap-1.5">
+                {sections.map((s, idx) => {
+                  const Icon = s.icon;
+                  const isActive = activeSection === s.id;
+                  return (
                     <button
-                      onClick={() => toggleSection(section.id)}
-                      className="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 focus:outline-none"
+                      key={s.id}
+                      onClick={() => setActiveSection(s.id)}
+                      className={`relative w-full text-left px-4 py-3.5 rounded-2xl transition-all duration-300 flex items-center justify-between group overflow-hidden ${
+                        isActive 
+                          ? 'bg-gradient-to-r from-brand-500 to-indigo-600 text-white shadow-md shadow-brand-500/20 scale-[1.02]' 
+                          : 'hover:bg-white dark:hover:bg-navy-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
                     >
-                      <div className="flex items-center gap-4 truncate">
-                        <div className={`p-3.5 rounded-2xl shrink-0 shadow-md bg-gradient-to-tr ${section.badgeGradient}`}>
-                          <Icon className="w-6 h-6" />
+                      {isActive && (
+                        <motion.div 
+                          layoutId="navGlow"
+                          className="absolute inset-0 bg-gradient-to-r from-brand-400 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        />
+                      )}
+                      <div className="relative z-10 flex items-center gap-3 min-w-0">
+                        <div className={`p-1.5 rounded-lg shrink-0 transition-colors ${isActive ? 'bg-white/20' : 'bg-slate-100 dark:bg-navy-950 group-hover:bg-brand-50 dark:group-hover:bg-brand-500/10'}`}>
+                          <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400 group-hover:text-brand-500'}`} />
                         </div>
-                        <div className="truncate">
-                          <div className="flex items-center gap-2.5">
-                            <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate">
-                              {section.title}
-                            </h2>
-                            <span className={`hidden sm:inline-flex px-2.5 py-0.5 rounded-lg text-xs font-black shadow-sm bg-gradient-to-r ${section.badgeGradient}`}>
-                              {section.badge}
-                            </span>
-                          </div>
-                          <p className="text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-400 truncate mt-1">
-                            {section.summary}
-                          </p>
-                        </div>
+                        <span className="font-extrabold text-sm tracking-tight truncate">{s.title.replace(/^\d+\.\s*/, '')}</span>
                       </div>
-
-                      <div className="p-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 shrink-0">
-                        {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                      </div>
+                      <ChevronRight className={`relative z-10 shrink-0 w-4 h-4 transition-transform duration-300 ${isActive ? 'text-white translate-x-1 opacity-100' : 'opacity-0 -translate-x-2 group-hover:opacity-50 group-hover:translate-x-0'}`} />
                     </button>
-
-                    {/* Accordion Body */}
-                    {isExpanded && (
-                      <div className="px-5 pb-6 sm:px-6 sm:pb-7">
-                        {section.content}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            )}
-
-            {/* Support Desk Card */}
-            <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-slate-950 via-navy-950 to-indigo-950 text-white shadow-2xl border-2 border-indigo-500/50 flex flex-col sm:flex-row items-center justify-between gap-6">
-              <div className="space-y-2 text-center sm:text-left">
-                <h3 className="text-xl font-black">Questions about platform terms?</h3>
-                <p className="text-xs sm:text-sm font-semibold text-slate-200 max-w-md">
-                  For inquiries regarding terms enforcement or account verification, contact Lead Developer <strong className="text-white">Nanthish S</strong>.
-                </p>
+                  );
+                })}
               </div>
-
-              <a 
-                href={`mailto:${developerInfo.email}`}
-                className="inline-flex items-center gap-2.5 px-6 py-3.5 bg-white text-slate-900 hover:bg-slate-100 font-black text-xs sm:text-sm rounded-2xl shadow-xl transition-all shrink-0"
-              >
-                <Mail className="w-5 h-5 text-slate-900" />
-                <span>Email Nanthish S</span>
-              </a>
             </div>
 
-          </div>
+            {/* Tech Stack Security Card */}
+            <div className="p-6 rounded-3xl bg-gradient-to-br from-slate-900 to-navy-950 border border-navy-800 shadow-xl overflow-hidden relative group hidden lg:block">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-2xl group-hover:bg-brand-500/20 transition-all duration-500" />
+              <ShieldAlert className="w-8 h-8 text-brand-400 mb-4" />
+              <h4 className="text-white font-black text-lg mb-2">Zero-Trust Framework</h4>
+              <p className="text-slate-400 text-sm font-medium leading-relaxed">
+                Platform telemetry is protected by Neon PostgreSQL encrypted at rest. We never store passwords or sync mock data.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Right Main Content Area */}
+          <motion.div 
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="lg:col-span-8"
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSection}
+                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.98 }}
+                transition={{ duration: 0.4, type: "spring", bounce: 0.2 }}
+                className="relative"
+              >
+                {/* Glowing Aura around active content */}
+                <div className={`absolute -inset-0.5 rounded-[2.5rem] blur-xl opacity-20 bg-gradient-to-br ${activeData.badgeGradient.replace('text-white', '').replace(/shadow-.*/, '')} transition-all duration-700`} />
+                
+                <div className="relative bg-white/70 dark:bg-navy-900/70 backdrop-blur-2xl border border-white/50 dark:border-navy-700/50 p-6 sm:p-10 rounded-[2.5rem] shadow-xl">
+                  
+                  {/* Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-8 border-b border-slate-200/50 dark:border-navy-700/50">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-4 rounded-2xl bg-gradient-to-br ${activeData.badgeGradient} shadow-lg shrink-0`}>
+                        <ActiveIcon className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
+                          {activeData.title}
+                        </h2>
+                        <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
+                          {activeData.summary}
+                        </p>
+                      </div>
+                    </div>
+                    <div className={`hidden sm:flex px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-gradient-to-r ${activeData.badgeGradient} shrink-0`}>
+                      {activeData.badge}
+                    </div>
+                  </div>
+
+                  {/* Formatted Content */}
+                  <div className="prose prose-slate dark:prose-invert prose-headings:font-black prose-p:font-medium prose-p:leading-relaxed prose-strong:font-black prose-strong:text-brand-600 dark:prose-strong:text-brand-400 max-w-none">
+                    {activeData.content}
+                  </div>
+
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
 
         </div>
-
       </div>
     </div>
   );

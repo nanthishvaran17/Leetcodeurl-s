@@ -7,6 +7,7 @@ producing a preview dataset + download-ready structure.
 """
 import datetime
 import uuid
+import re
 from typing import Any, Dict, List, Optional
 from backend.logger import logger
 from backend.models import Student, WeeklySession, WeeklyPublicResult, Department
@@ -22,7 +23,7 @@ def _contest_num(sess: WeeklySession) -> Optional[int]:
 
 def _is_attended(status: str) -> bool:
     s = (status or "").upper()
-    return s in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE")
+    return s in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE", "ATTENDED_ZERO", "ATTENDED_SOLVED")
 
 
 def build_wow_intel_report(db, config, current_user=None) -> Dict[str, Any]:
@@ -31,20 +32,71 @@ def build_wow_intel_report(db, config, current_user=None) -> Dict[str, Any]:
         dept_filter = (config.department or "ALL").upper()
         year_filter = (config.year or "ALL").upper()
 
+        filters = config.filters or {}
+        report_date_str = filters.get("session_id") or filters.get("report_date") or getattr(config, "report_date", None)
+        limit_date = datetime.date.today()
+        if report_date_str and str(report_date_str).lower() not in ("latest", "all", "none", ""):
+            try:
+                if "." in str(report_date_str):
+                    limit_date = datetime.datetime.strptime(str(report_date_str), "%d.%m.%Y").date()
+                else:
+                    limit_date = datetime.datetime.strptime(str(report_date_str), "%Y-%m-%d").date()
+            except Exception:
+                pass
+
         # 1. Load all sessions ordered by contest number
-        sessions = db.query(WeeklySession).order_by(WeeklySession.id.asc()).all()
+        raw_sessions = db.query(WeeklySession).filter(WeeklySession.status != "SCHEDULED").all()
+        
+        valid_sessions = []
+        for s in raw_sessions:
+            if not s.session_date:
+                continue
+            name = (s.contest_name or "").strip()
+            if re.search(r"\b(test|mock)\b", name, re.IGNORECASE) or name.upper().startswith("TEST_"):
+                continue
+            if s.session_date == "2026-08-30":
+                continue
+            try:
+                if "." in s.session_date:
+                    d_obj = datetime.datetime.strptime(s.session_date, "%d.%m.%Y").date()
+                else:
+                    d_obj = datetime.datetime.strptime(s.session_date, "%Y-%m-%d").date()
+                if d_obj <= limit_date:
+                    valid_sessions.append(s)
+            except Exception:
+                pass
+                
+        valid_sessions.sort(key=lambda x: x.id)
+        
         contest_sessions = []
-        for sess in sessions:
+        for sess in valid_sessions:
             num = _contest_num(sess)
-            if num and num >= 500:
+            if num is not None:
                 contest_sessions.append((num, sess))
+            else:
+                contest_sessions.append((sess.id, sess))
         contest_sessions.sort(key=lambda x: x[0])
 
         if len(contest_sessions) < 2:
             return _empty_wow_report("Insufficient sessions (need at least 2 contests with data).")
 
-        prev_num, prev_sess = contest_sessions[-2]
-        curr_num, curr_sess = contest_sessions[-1]
+        target_session_id = (config.filters or {}).get("session_id")
+        if target_session_id:
+            try:
+                t_id = int(target_session_id)
+                match_idx = next((i for i, (num, sess) in enumerate(contest_sessions) if sess.id == t_id or num == t_id), None)
+                if match_idx is not None and match_idx >= 1:
+                    prev_num, prev_sess = contest_sessions[match_idx - 1]
+                    curr_num, curr_sess = contest_sessions[match_idx]
+                else:
+                    prev_num, prev_sess = contest_sessions[-2]
+                    curr_num, curr_sess = contest_sessions[-1]
+            except Exception:
+                prev_num, prev_sess = contest_sessions[-2]
+                curr_num, curr_sess = contest_sessions[-1]
+        else:
+            prev_num, prev_sess = contest_sessions[-2]
+            curr_num, curr_sess = contest_sessions[-1]
 
         # 2. Load roster (all active students)
         all_stus = db.query(Student).options(joinedload(Student.department)).all()
@@ -55,15 +107,22 @@ def build_wow_intel_report(db, config, current_user=None) -> Dict[str, Any]:
             and not s.reg_no.startswith("CONCUR_")
             and not s.reg_no.startswith("732224TEST")
         ]
-        # Apply filters
+        from backend.services.contest_performance_service import matches_dept, matches_year
         if dept_filter != "ALL":
-            dept_map = {d.id: d.code for d in db.query(Department).all()}
-            roster = [s for s in roster if dept_map.get(s.department_id, "") == dept_filter]
+            roster = [
+                s for s in roster
+                if matches_dept(
+                    s.department.code if s.department else "",
+                    s.department.name if s.department else "",
+                    dept_filter,
+                    s.department_id
+                )
+            ]
         if year_filter != "ALL":
-            year_int_map = {"I": 1, "II": 2, "III": 3, "IV": 4}
-            y_int = year_int_map.get(year_filter, 0)
-            if y_int:
-                roster = [s for s in roster if s.year == y_int]
+            roster = [
+                s for s in roster
+                if matches_year(s.year_level, year_filter, s.reg_no)
+            ]
 
         roster.sort(key=lambda s: s.reg_no)
 
@@ -97,12 +156,13 @@ def build_wow_intel_report(db, config, current_user=None) -> Dict[str, Any]:
                 "rank": pr.contest_rank if is_att else None,
             }
 
+        from backend.services.contest_performance_service import matches_dept, matches_year, normalize_year_val
         # 4. Build per-student rows with prev vs curr comparison
         rows = []
         for idx, s in enumerate(roster, 1):
             dept_obj = s.department
             dept_code = dept_obj.code if dept_obj else "N/A"
-            year_disp = {1: "I", 2: "II", 3: "III", 4: "IV"}.get(s.year, str(s.year or ""))
+            year_disp = normalize_year_val(s.year_level, s.reg_no) or "N/A"
 
             prev_d = _get_data(s, prev_sess)
             curr_d = _get_data(s, curr_sess)
@@ -110,9 +170,9 @@ def build_wow_intel_report(db, config, current_user=None) -> Dict[str, Any]:
             prev_status = "ATTENDED" if prev_d["att"] else "NOT ATTENDED"
             curr_status = "ATTENDED" if curr_d["att"] else "NOT ATTENDED"
 
-            # Trend arrow
+            # Trend arrow & label
             diff = curr_d["solved"] - prev_d["solved"]
-            trend = "↑" if diff > 0 else ("↓" if diff < 0 else "→")
+            trend = "Improving ↑" if diff > 0 else ("Declining ↓" if diff < 0 else "Stable →")
 
             rows.append({
                 "s_no": idx,
@@ -168,6 +228,9 @@ def build_wow_intel_report(db, config, current_user=None) -> Dict[str, Any]:
             "currContest": f"Contest {curr_num}",
             "prevDate": prev_date,
             "currDate": curr_date,
+            "sessionDate": curr_date,
+            "session_date": curr_date,
+            "contestName": f"Weekly Contest {curr_num}",
             "filters": {"department": dept_filter, "year": year_filter},
             "wowSummary": {
                 "totalStudents": total,

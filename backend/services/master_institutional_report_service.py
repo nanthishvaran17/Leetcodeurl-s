@@ -625,19 +625,27 @@ def generate_master_10_sheet_workbook(
         else:
             status_str = "VERIFIED" if s.username else "UNLINKED"
 
-        c_rating = (getattr(p_res, "contest_rating", None) if p_res else None) or \
-                   (getattr(v_res, "contest_rating", None) if v_res else None) or \
-                   (st_stats.contest_rating if st_stats and getattr(st_stats, "contest_rating", None) else None)
-        g_rank = (getattr(p_res, "contest_rank", None) if p_res else None) or \
-                 (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
-                 getattr(s, "global_rank", None)
+        if report_type == "FRIDAY_OFFICIAL_CONTEST":
+            c_rating = (st_stats.contest_rating if st_stats and getattr(st_stats, "contest_rating", None) else None) or \
+                       (getattr(p_res, "contest_rating", None) if p_res else None) or \
+                       (getattr(v_res, "contest_rating", None) if v_res else None)
+            g_rank = (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
+                     (getattr(p_res, "contest_rank", None) if p_res else None) or \
+                     getattr(s, "global_rank", None)
+        else:
+            c_rating = (getattr(p_res, "contest_rating", None) if p_res else None) or \
+                       (getattr(v_res, "contest_rating", None) if v_res else None) or \
+                       (st_stats.contest_rating if st_stats and getattr(st_stats, "contest_rating", None) else None)
+            g_rank = (getattr(p_res, "contest_rank", None) if p_res else None) or \
+                     (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
+                     getattr(s, "global_rank", None)
         easy_s = st_stats.easy_solved if (st_stats and st_stats.easy_solved is not None) else 0
         med_s = st_stats.medium_solved if (st_stats and st_stats.medium_solved is not None) else 0
         hard_s = st_stats.hard_solved if (st_stats and st_stats.hard_solved is not None) else 0
         tot_lifetime = st_stats.total_solved if (st_stats and st_stats.total_solved is not None) else (easy_s + med_s + hard_s)
 
         # STRICT HISTORICAL INTEGRITY: NEVER MIX LIVE DATA IN HISTORICAL REPORTS
-        if is_historical:
+        if is_historical and report_type != "FRIDAY_OFFICIAL_CONTEST":
             snap = snapshot_map.get(s.id)
             if snap:
                 tot_lifetime = snap.end_solved_count or 0

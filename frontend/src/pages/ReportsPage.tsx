@@ -180,7 +180,7 @@ export const ReportsPage: React.FC = () => {
 
     // Parse query params from endpoint to filters first
     const urlParts = endpoint.split('?');
-    const filters: any = { department: selectedDept, year: selectedYear, output_scope: selectedOutputScope };
+    const filters: any = { department: selectedDept, year: selectedYear, output_scope: selectedOutputScope, session_id: selectedSessionId };
     if (urlParts.length > 1) {
       const params = new URLSearchParams(urlParts[1]);
       params.forEach((val, key) => { filters[key] = val; });
@@ -194,6 +194,7 @@ export const ReportsPage: React.FC = () => {
     else if (endpoint.includes('export-student-performance-detail')) { report_type = 'STUDENT_PERFORMANCE'; format = 'excel'; }
     else if (endpoint.includes('export-weekly-contest-matrix')) { report_type = 'CONTEST_ATTENDANCE_PARTICIPATION'; format = 'excel'; } 
     else if (endpoint.includes('export-master-tracker')) { report_type = 'STUDENT_MASTER'; format = 'excel'; }
+    else if (endpoint.includes('report_type=WEEKLY_PERFORMANCE')) { report_type = 'WEEKLY_PERFORMANCE'; format = 'excel'; }
     else if (endpoint.includes('/reports/download')) { report_type = 'MASTER_10_SHEET'; format = 'excel'; }
     else if (endpoint.includes('/reports/hod')) { report_type = 'HOD_DEPARTMENT_INTELLIGENCE'; format = 'excel'; }
     else if (endpoint.includes('/reports/staff')) { report_type = 'FACULTY_CONSOLIDATED'; format = 'excel'; }
@@ -317,7 +318,7 @@ export const ReportsPage: React.FC = () => {
         department: department,
         year: year,
         output_scope: output_scope,
-        filters: overrideFilters || {}
+        filters: { session_id: selectedSessionId, ...(overrideFilters || {}) }
       });
 
       setActiveUniversalPreviewData(res.data);
@@ -427,6 +428,21 @@ export const ReportsPage: React.FC = () => {
       onClick: () => {
         const q = getActiveFilterQueryParams();
         downloadReportFile(`/reports/staff${q}`, 'Faculty_Consolidated_Performance_Report.xlsx');
+      }
+    },
+    {
+      id: 'coordinator-weekly-performance',
+      title: 'Coordinator Weekly Performance',
+      badge: 'WEEKLY SUMMARY REPORT',
+      badgeColor: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
+      description: 'Generates the Weekly Performance Report for the Academic Coordinator, detailing problem solving counts, contest attendance, and Leetcode ratings.',
+      filename: 'LeetCode_Weekly_Report.xlsx',
+      icon: FileSpreadsheet,
+      iconBg: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
+      btnGradient: 'from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 shadow-cyan-600/30',
+      onClick: () => {
+        const q = getActiveFilterQueryParams();
+        downloadReportFile(`/reports/export-excel?report_type=WEEKLY_PERFORMANCE${q}`, 'LeetCode_Weekly_Report.xlsx');
       }
     },
     {
@@ -618,6 +634,7 @@ export const ReportsPage: React.FC = () => {
                           { value: 'FACULTY_CONSOLIDATED', label: 'Faculty Consolidated Performance', pill: 'FACULTY', pillColor: 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 border-amber-300 dark:border-amber-700' },
                           { value: 'FACULTY_COORDINATOR_CONSOLIDATED', label: 'Faculty Coordinator Consolidated', pill: 'COORDINATOR', pillColor: 'bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200 border-orange-300 dark:border-orange-700' },
                           { value: 'HOD_DEPARTMENT_INTELLIGENCE', label: 'HOD Department Intelligence', pill: 'HOD', pillColor: 'bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200 border-rose-300 dark:border-rose-700' },
+                          { value: 'WEEKLY_PERFORMANCE', label: 'Coordinator Weekly Performance', pill: 'WEEKLY', pillColor: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-200 border-cyan-300 dark:border-cyan-700' },
                         ]
                       },
                       {
@@ -786,13 +803,25 @@ export const ReportsPage: React.FC = () => {
                     {(() => {
                       const sel = availableSundays.find(s => s.session_id === selectedSessionId) || availableSundays[0];
                       if (!sel) return <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">Latest Date</span>;
+                      
+                      const formatDate = (d: string) => {
+                        if (d && d.includes('-')) {
+                          const p = d.split('-');
+                          if (p.length === 3) return `${p[2]}.${p[1]}.${p[0]}`;
+                        }
+                        if (d && d.includes('/')) {
+                          return d.replace(/\//g, '.');
+                        }
+                        return d;
+                      };
+
                       return (
                         <>
                           <span className={`text-[10px] font-black px-2 py-0.5 rounded-md shrink-0 border ${sel.is_latest ? 'text-brand-700 bg-brand-100 border-brand-300' : 'text-slate-700 bg-slate-100 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700'}`}>
                             {sel.is_latest ? 'LATEST' : 'PAST'}
                           </span>
                           <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
-                            {sel.date}
+                            {formatDate(sel.date)}
                           </span>
                         </>
                       );
@@ -800,9 +829,19 @@ export const ReportsPage: React.FC = () => {
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptSessionOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {rptSessionOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto p-1.5 space-y-1">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl max-h-[400px] overflow-y-auto p-1.5 space-y-1 custom-scrollbar">
                       {availableSundays.map(opt => {
                         const isSelected = selectedSessionId === opt.session_id;
+                        const formatDate = (d: string) => {
+                          if (d && d.includes('-')) {
+                            const p = d.split('-');
+                            if (p.length === 3) return `${p[2]}.${p[1]}.${p[0]}`;
+                          }
+                          if (d && d.includes('/')) {
+                            return d.replace(/\//g, '.');
+                          }
+                          return d;
+                        };
                         return (
                           <button key={opt.session_id} type="button"
                             onMouseDown={(e) => e.preventDefault()}
@@ -812,9 +851,9 @@ export const ReportsPage: React.FC = () => {
                             <span className={`w-14 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : (opt.is_latest ? 'bg-brand-100 text-brand-700 border-brand-300' : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700')}`}>
                               {opt.is_latest ? 'LATEST' : 'PAST'}
                             </span>
-                            <div className={`flex flex-col flex-1 min-w-0 ${isSelected ? 'text-white' : 'text-slate-700 dark:text-slate-200'}`}>
-                              <span className={`text-xs truncate ${isSelected ? 'font-black' : 'font-semibold'}`}>{opt.date}</span>
-                              <span className={`text-[10px] truncate ${isSelected ? 'text-white/80' : 'text-slate-500'}`}>{opt.label.split(' - ')[1]}</span>
+                            <div className={`flex flex-col flex-1 min-w-0 ${isSelected ? 'text-white' : 'text-slate-800 dark:text-slate-100'}`}>
+                              <span className={`text-xs truncate ${isSelected ? 'font-black' : 'font-bold'}`}>{formatDate(opt.date)}</span>
+                              <span className={`text-[11px] truncate ${isSelected ? 'text-white/90 font-bold' : 'text-slate-600 dark:text-slate-400 font-semibold'}`}>{opt.label.split(' - ')[1]}</span>
                             </div>
                             {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
                           </button>

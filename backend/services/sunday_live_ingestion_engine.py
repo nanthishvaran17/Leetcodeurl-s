@@ -208,10 +208,10 @@ class SundayLiveIngestionEngine:
                     q2=q2_flag,
                     q3=q3_flag,
                     q4=q4_flag,
-                    q1_observed_active_seconds=q1_observed_active_seconds,
-                    q2_observed_active_seconds=q2_observed_active_seconds,
-                    q3_observed_active_seconds=q3_observed_active_seconds,
-                    q4_observed_active_seconds=q4_observed_active_seconds,
+                    q1_observed_seconds=q1_observed_active_seconds,
+                    q2_observed_seconds=q2_observed_active_seconds,
+                    q3_observed_seconds=q3_observed_active_seconds,
+                    q4_observed_seconds=q4_observed_active_seconds,
                     problems_solved=new_solved_count,
                     official_rank=official_rank,
                     official_score=official_score or (new_solved_count * 4),
@@ -340,7 +340,11 @@ class SundayLiveIngestionEngine:
         db: Session,
         session_id: int,
         student_id: int,
-        target_solved: int
+        target_solved: int,
+        q1_observed_active_seconds: Optional[int] = None,
+        q2_observed_active_seconds: Optional[int] = None,
+        q3_observed_active_seconds: Optional[int] = None,
+        q4_observed_active_seconds: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Simulates progress transitions:

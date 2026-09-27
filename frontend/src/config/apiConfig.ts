@@ -22,17 +22,6 @@ export const isCapacitorNative = (): boolean => {
   if (window.location.protocol === 'capacitor:' || window.location.protocol === 'ionic:') return true;
   if (window.location.origin.includes('capacitor://') || window.location.origin.includes('ionic://')) return true;
   if (typeof navigator !== 'undefined' && /Capacitor/i.test(navigator.userAgent)) return true;
-  
-  // Capacitor Android with androidScheme: 'https' or 'http' runs on origin 'https://localhost' or 'http://localhost'
-  // (without a Vite dev server port like :3000 or :5173 or local backend :8000)
-  if (
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
-    window.location.port !== '3000' &&
-    window.location.port !== '5173' &&
-    window.location.port !== '8000'
-  ) {
-    return true;
-  }
   return false;
 };
 

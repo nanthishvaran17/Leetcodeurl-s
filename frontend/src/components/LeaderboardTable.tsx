@@ -926,11 +926,11 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                   <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-slate-800 text-center">
                     <span className="text-[10px] font-bold text-slate-500 block">Contest Rating</span>
                     <p className="text-sm sm:text-base font-black text-amber-500 mt-0.5">
-                      {viewingStudent.public_contest_result?.contest_rating
-                        ? viewingStudent.public_contest_result.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1 })
-                        : viewingStudent.stats?.contest_rating
-                          ? viewingStudent.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1 })
-                          : '—'}
+                      {(() => {
+                        const r = viewingStudent.public_contest_result?.contest_rating || viewingStudent.stats?.contest_rating;
+                        if (!r || r === 1500 || r === 1500.0) return '—';
+                        return r.toLocaleString('en-US', { minimumFractionDigits: 1 });
+                      })()}
                     </p>
                   </div>
                   <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-slate-800 text-center">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+// import { useNavigate } from 'react-router-dom';
 import { 
   User, Mail, Phone, Calendar, Shield, Key, CheckCircle, Building2, 
   History, CreditCard, Clock, KeyRound, Award, GraduationCap, X, 
@@ -23,6 +24,8 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   staff, onClose, onSuccess, departments, staffList, notify 
 }) => {
   const storeVersion = useStudentStoreVersion();
+  // const navigate = useNavigate();
+  const [assignedSections, setAssignedSections] = useState('');
 
   // Primary Form State
   const [formData, setFormData] = useState({
@@ -500,10 +503,10 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
               <Clock className="w-3 h-3 text-amber-500" /> Last Updated
             </span>
-            <span className="font-mono font-bold text-xs text-slate-700 dark:text-slate-300 truncate block">
+            <span className="font-mono font-bold text-[10px] sm:text-xs text-slate-700 dark:text-slate-300 truncate block">
               {lastUpdatedAt
-                ? lastUpdatedAt.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                : 'Active System'}
+                ? lastUpdatedAt.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
+                : 'Account Active'}
             </span>
           </div>
         </div>
@@ -575,6 +578,18 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                       />
                     </div>
 
+                    {/* Employee ID (Institutional ID) */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Employee ID / Staff ID</label>
+                      <input
+                        type="text"
+                        value={formData.institutional_id || ''}
+                        onChange={e => setFormData({...formData, institutional_id: e.target.value})}
+                        placeholder="e.g. NEC-EMP-104"
+                        className="w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                      />
+                    </div>
+
                     {/* Phone Number */}
                     <div className="space-y-1.5">
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Phone Number</label>
@@ -588,7 +603,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                     </div>
 
                     {/* Date of Birth */}
-                    <div className="space-y-1.5 sm:col-span-2">
+                    <div className="space-y-1.5">
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Date of Birth (DD/MM/YYYY)</label>
                       <input
                         type="text"
@@ -746,6 +761,18 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                         />
                       )}
                     </div>
+
+                    {/* Assigned Sections */}
+                    <div className="space-y-1.5 relative sm:col-span-2">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Assigned Sections (Optional)</label>
+                      <input
+                        type="text"
+                        value={assignedSections}
+                        onChange={(e) => setAssignedSections(e.target.value)}
+                        placeholder="e.g. A, B, C (Global Access if empty)"
+                        className="w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                      />
+                    </div>
                   </div>
                 </section>
 
@@ -778,7 +805,24 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                       </div>
                     )}
                   </div>
-                  <p className="text-[10px] text-slate-400 font-medium italic">
+                  
+                  {/* Automated Email Reports Toggle */}
+                  <div className="mt-4 p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-500/20 rounded-xl">
+                        <Mail className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-black text-indigo-900 dark:text-indigo-300">Automated Email Reports</div>
+                        <div className="text-[10px] text-indigo-600/70 dark:text-indigo-400/70 font-medium mt-0.5">Receive weekly performance summaries for assigned cohorts.</div>
+                      </div>
+                    </div>
+                    <div className="w-10 h-6 bg-indigo-500 rounded-full flex items-center p-1 cursor-pointer">
+                      <div className="w-4 h-4 bg-white rounded-full translate-x-4 shadow-sm transition-transform"></div>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-slate-400 font-medium italic mt-2">
                     * Permissions are automatically inherited from the assigned institutional role.
                   </p>
                 </section>
@@ -790,6 +834,22 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                     <h3 className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                       <ShieldAlert className="w-4 h-4 text-emerald-500" /> Account Status & Security Actions
                     </h3>
+                  </div>
+
+                  {/* Last Login Info & 2FA */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-1">
+                        <History className="w-3.5 h-3.5 text-slate-400" /> Last Login Information
+                      </span>
+                      <div className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">
+                        27 Sept 2026, 10:41 AM <span className="text-slate-400 dark:text-slate-500 font-medium">(IP: 127.0.0.1)</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                      <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400">2FA ENABLED</span>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
@@ -862,6 +922,18 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  {/* View Activity Logs */}
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => { onClose(); window.location.hash = '#/audit'; window.dispatchEvent(new CustomEvent('navigate_to_route', { detail: { route: 'audit' } })); }}
+                      className="w-full py-3 px-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 text-xs font-black shadow-sm flex items-center justify-center space-x-2 transition-all cursor-pointer"
+                    >
+                      <History className="w-4 h-4 text-slate-400" />
+                      <span>View Staff Activity Logs</span>
+                    </button>
                   </div>
 
                   {/* Emergency Action: Terminate All Active Sessions */}

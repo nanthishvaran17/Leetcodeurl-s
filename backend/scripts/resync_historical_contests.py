@@ -140,7 +140,7 @@ def _extract_contest_number(title: str) -> Optional[int]:
 def _classify_entry(entry: Dict[str, Any]) -> str:
     """Maps a contest history entry to a participation status string."""
     if entry.get("attended") and (entry.get("problemsSolved", 0) >= 0):
-        return "OFFICIAL_ATTENDED"
+        return "PUBLIC_ATTENDED"
     return "ABSENT"
 
 
@@ -268,7 +268,7 @@ async def backfill_historical(
                     rating = entry.get("rating")
                     rank = entry.get("ranking")
                     q1, q2, q3, q4 = _q_matrix(solved)
-                    score = solved * 25
+                    score = q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6
                 else:
                     status = "ABSENT"
                     solved = 0
@@ -311,7 +311,7 @@ async def backfill_historical(
                 rec.fetch_status = "SUCCESS" if entry else "SUCCESS"
                 rec.last_fetched_at = datetime.datetime.now(datetime.timezone.utc)
 
-                if status == "OFFICIAL_ATTENDED":
+                if status == "PUBLIC_ATTENDED":
                     counters[cn]["official"] += 1
                 else:
                     counters[cn]["absent"] += 1

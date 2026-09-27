@@ -404,7 +404,7 @@ export const AuditLogPage: React.FC = () => {
             if (e.target === e.currentTarget) setSelectedLog(null);
           }}
         >
-          <div className="modal-container-responsive max-w-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl p-6 space-y-4 animate-modal-content">
+          <div className="modal-container-responsive max-w-xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl p-6 space-y-4 animate-modal-content">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
               <div className="flex items-center space-x-2.5">
@@ -460,12 +460,12 @@ export const AuditLogPage: React.FC = () => {
               {/* Admin Identity Card */}
               <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-900/80 border border-slate-150 dark:border-navy-700/60">
                 <div>
-                  <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px]">Administrator</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px]">Administrator</span>
                   <div className="font-black text-slate-900 dark:text-white text-sm mt-1">{selectedLog.admin_name}</div>
                   <div className="text-slate-500 dark:text-slate-400 text-[11px] font-semibold font-mono mt-0.5">{selectedLog.admin_email}</div>
                 </div>
                 <div>
-                  <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px]">IP Address</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px]">IP Address</span>
                   <div className="font-black text-slate-900 dark:text-white text-sm mt-1 font-mono">{selectedLog.ip_address || '127.0.0.1'}</div>
                   <div className="text-slate-500 dark:text-slate-400 text-[11px] font-semibold mt-0.5">{formatAuditDate(selectedLog.created_at)}</div>
                 </div>
@@ -473,7 +473,7 @@ export const AuditLogPage: React.FC = () => {
 
               {/* Event Description */}
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-900/80 border border-slate-150 dark:border-navy-700/60 space-y-1.5">
-                <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px]">Event Summary</span>
+                <span className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px]">Event Summary</span>
                 <div className="font-bold text-slate-800 dark:text-slate-200 text-xs leading-relaxed">
                   {selectedLog.details || selectedLog.description || selectedLog.action}
                 </div>
@@ -483,13 +483,13 @@ export const AuditLogPage: React.FC = () => {
               {(selectedLog.target_type || selectedLog.target_id) && (
                 <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-900/80 border border-slate-150 dark:border-navy-700/60">
                   <div>
-                    <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px]">Target Resource</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px]">Target Resource</span>
                     <div className="font-mono font-black text-indigo-600 dark:text-indigo-400 text-xs mt-1">
                       {selectedLog.target_type || 'System Resource'} {selectedLog.target_id ? `(#${selectedLog.target_id})` : ''}
                     </div>
                   </div>
                   <div>
-                    <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px]">Classification</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px]">Classification</span>
                     <div className="font-mono font-black text-slate-800 dark:text-slate-200 text-xs mt-1">{selectedLog.action_type || 'GENERAL'}</div>
                   </div>
                 </div>
@@ -498,7 +498,7 @@ export const AuditLogPage: React.FC = () => {
               {/* User Agent / Device Signature */}
               {selectedLog.user_agent && (
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-900/80 border border-slate-150 dark:border-navy-700/60 space-y-1.5">
-                  <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px] flex items-center gap-1">
+                  <span className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px] flex items-center gap-1">
                     <Laptop className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
                     <span>Device Signature</span>
                   </span>
@@ -511,14 +511,14 @@ export const AuditLogPage: React.FC = () => {
               {/* Detailed Key-Value Event Payload Grid */}
               {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-900/80 border border-slate-150 dark:border-navy-700/60 space-y-2">
-                  <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px] flex items-center gap-1">
+                  <span className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px] flex items-center gap-1">
                     <Terminal className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
                     <span>Event Attributes ({Object.keys(selectedLog.metadata).length})</span>
                   </span>
                   <div className="grid grid-cols-2 gap-2 text-[11px]">
                     {Object.entries(selectedLog.metadata).map(([key, val]) => (
                       <div key={key} className="p-2.5 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 flex flex-col justify-center">
-                        <span className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500 font-mono tracking-wider">{key}</span>
+                        <span className="text-[9px] font-bold uppercase text-slate-700 dark:text-slate-300 font-mono tracking-wider">{key}</span>
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate mt-0.5">
                           {typeof val === 'object' ? JSON.stringify(val) : String(val)}
                         </span>

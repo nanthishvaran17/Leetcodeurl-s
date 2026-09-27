@@ -333,11 +333,11 @@ def _build_and_store_report_sync(
 
     storage_path = _get_storage_path(institution_id, report_type, filter_hash, ext)
 
-    # Generate filename
+    from backend.routes.reports import get_contest_filename_base
     clean_week = filters.get("week_id") or filters.get("session_id") or "latest"
     dept_label = filters.get("department") or filters.get("dept") or "ALL"
     year_label = filters.get("year") or filters.get("year_level") or "ALL"
-    filename = f"NEC_{report_type}_{clean_week}_{dept_label}_{year_label}.{ext}".replace(" ", "_")
+    filename = f"{get_contest_filename_base(str(clean_week), dept=dept_label, year=year_label, db=db, report_type=report_type)}.{ext}"
 
     logger.info(f"[REPORT_GEN_START] Building {report_type} ({format}) hash={filter_hash[:8]}")
 
@@ -475,13 +475,18 @@ def generate_report_bytes(
         from backend.services.weekly_report_service import generate_weekly_performance_data
         from backend.exporters.weekly_excel_generator import build_weekly_performance_excel
 
+        dept_val = dept if dept != "ALL" else (flt.get("department") or flt.get("dept") or "ALL")
+        year_val = year if year != "ALL" else (flt.get("year") or flt.get("year_level") or "ALL")
         date_str = flt.get("report_date") or datetime.date.today().strftime("%d-%m-%Y")
         data = generate_weekly_performance_data(
             db,
             last_week_contest=flt.get("last_week_contest"),
             current_week_contest=flt.get("current_week_contest"),
             report_date=date_str,
-            save_snapshot=False
+            save_snapshot=False,
+            dept_filter=dept_val,
+            year_filter=year_val,
+            batch_filter=batch
         )
         temp_dir = tempfile.gettempdir()
         temp_path = os.path.join(temp_dir, f"temp_report_{uuid.uuid4().hex}.xlsx")
@@ -522,8 +527,7 @@ def generate_report_bytes(
         "FIVE_WEEK_PERFORMANCE_TREND", "PROBLEM_DIFFICULTY_INTELLIGENCE",
         "FACULTY_CONSOLIDATED", "FACULTY_COORDINATOR_CONSOLIDATED",
         "HOD_DEPARTMENT_INTELLIGENCE", "PRINCIPAL_EXECUTIVE",
-        "MANAGEMENT_EXECUTIVE_SUMMARY", "COLLEGE_EXECUTIVE", "DEPARTMENT_PERFORMANCE",
-        "WEEK_ON_WEEK_INTELLIGENCE", "WEEK_ON_WEEK", "HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"
+        "MANAGEMENT_EXECUTIVE_SUMMARY", "COLLEGE_EXECUTIVE", "DEPARTMENT_PERFORMANCE"
     ):
         from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
         c_id = flt.get("session_id") or flt.get("contest_id")

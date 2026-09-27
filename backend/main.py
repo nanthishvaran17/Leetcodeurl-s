@@ -321,7 +321,7 @@ async def _deferred_startup_tasks():
             try:
                 admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
                 admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
-                admin_pass = getattr(settings, "ADMIN_PASSWORD", "Nanthish@2701").strip()
+                admin_pass = getattr(settings, "ADMIN_PASSWORD", "").strip()
 
                 admin_user = db_init.query(User).filter(
                     (User.username.ilike(admin_username)) | (User.email.ilike(admin_email))
@@ -365,6 +365,8 @@ async def _deferred_startup_tasks():
             with SessionLocal() as db_init_async:
                 from backend.services.weekly_session_manager import resume_active_weekly_session
                 await resume_active_weekly_session(db_init_async)
+                from backend.scripts.sync_upcoming_sessions import sync_upcoming_weekly_sessions
+                await asyncio.to_thread(sync_upcoming_weekly_sessions, 52)
         except Exception as _sess_err:
             logger.warning(f"[STARTUP] Weekly session resume note: {_sess_err}")
 
@@ -662,14 +664,8 @@ app.add_middleware(
     expose_headers=["Content-Disposition", "Content-Length", "Content-Type", "X-Report-Cache-Hit", "X-Report-Lookup-Ms", "X-Cache-Lookup"],
 )
 
-@app.middleware("http")
-async def add_security_headers(request: Request, call_next):
-    response = await call_next(request)
-    if request.method != "OPTIONS":
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "SAMEORIGIN"
-    return response
+
+
 
 # =====================================================================
 # ULTRA-FAST SUB-MILLISECOND IN-MEMORY API RESPONSE CACHE
@@ -738,9 +734,21 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
     method = request.method
     path = request.url.path
 
-    # Invalidate cache on mutations
+    # Selective cache invalidation on mutations (only invalidate related cache entries)
     if method in ("POST", "PUT", "DELETE", "PATCH"):
-        purge_api_memory_cache()
+        # Extract the route prefix to selectively invalidate only related cache entries
+        # e.g., POST /api/students/... only invalidates /api/students cache, not /api/analytics
+        path_parts = path.strip("/").split("/")
+        # Build prefix: /api/<resource> (e.g., /api/students, /api/sessions, /api/settings)
+        if len(path_parts) >= 2:
+            invalidation_prefix = f"/{path_parts[0]}/{path_parts[1]}"
+        else:
+            invalidation_prefix = path
+        
+        keys_to_remove = [k for k in _API_MEMORY_CACHE if k.startswith(invalidation_prefix)]
+        for k in keys_to_remove:
+            del _API_MEMORY_CACHE[k]
+        
         response = await call_next(request)
         _add_cors_headers_to_response(request, response.headers)
         return response
@@ -1114,168 +1122,17 @@ async def websocket_contest_endpoint(websocket: WebSocket, contest_id: str, toke
 
 
 @app.post("/api/contests/{contest_id}/start-live-monitor")
-async def start_live_contest_monitor_api(contest_id: str):
-    """Triggers backend live monitoring engine for all registered students."""
-    from backend.services.live_contest_monitor_engine import live_contest_monitor_engine
-    return await live_contest_monitor_engine.start_monitoring(contest_id)
-
-@app.get("/api/contests/{contest_id}/live-snapshot")
-def get_live_contest_snapshot_api(contest_id: str, db: Session = Depends(get_db)):
-    """REST fallback endpoint returning live snapshot."""
-    from backend.services.live_contest_monitor_engine import live_contest_monitor_engine
-    return live_contest_monitor_engine.get_live_snapshot(db, contest_id)
-
-from fastapi import HTTPException
-from fastapi.responses import FileResponse
-
-@app.get("/api/download/apk")
-@app.get("/download/apk")
-def download_android_apk_endpoint():
-    """Serves the official Nandha LeetCode Intelligence Android APK package."""
-    apk_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Nandha_LeetCode_Intelligence_v2_latest.apk"))
-    if not os.path.exists(apk_path):
-        raise HTTPException(status_code=404, detail="Android APK package is currently updating on the server. Please try again in a few moments.")
-    return FileResponse(
-        path=apk_path,
-        media_type="application/vnd.android.package-archive",
-        filename="Nandha_LeetCode_Intelligence_v2_latest.apk"
-    )
-
-
-# Production Static Build Mount (Serves Frontend SPA bundle on single port)
-FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
-# leetcode_tracker — short prefix
-app.include_router(leetcode_tracker.router, prefix="/api")
-app.include_router(leetcode_tracker.router)
-# faculty_assignments — short prefix, keep both + faculty aliases
-app.include_router(faculty_assignments.router, prefix="/api")
-app.include_router(faculty_assignments.router)
-app.include_router(faculty_assignments.router, prefix="/api/faculty", tags=["Faculty"])
-app.include_router(faculty_assignments.router, prefix="/faculty", tags=["Faculty"])
-# institutional_dashboards — short prefix
-app.include_router(institutional_dashboards.router, prefix="/api")
-app.include_router(institutional_dashboards.router)
-# email_campaigns — short prefix
-app.include_router(email_campaigns.router, prefix="/api")
-app.include_router(email_campaigns.router)
-# bot_notifications — short prefix
-app.include_router(bot_notifications.router, prefix="/api")
-app.include_router(bot_notifications.router)
-# anti_cheat — short prefix
-app.include_router(anti_cheat.router, prefix="/api")
-app.include_router(anti_cheat.router)
-# placement_eligibility — short prefix
-app.include_router(placement_eligibility.router, prefix="/api")
-app.include_router(placement_eligibility.router)
-# gamification — short prefix
-app.include_router(gamification.router, prefix="/api")
-app.include_router(gamification.router)
-# accreditation — short prefix
-app.include_router(accreditation.router, prefix="/api")
-# deep_tech_intelligence: prefix="/api/intelligence/deep-tech" (self-prefixed)
-app.include_router(deep_tech_intelligence.router)
-# scheduler — no prefix
-app.include_router(scheduler.router)
-
-
-from backend.routes import stats_snapshot, staff_verification
-app.include_router(stats_snapshot.router, prefix="/api")
-app.include_router(stats_snapshot.router)
-app.include_router(url_import.router, prefix="/api")
-app.include_router(contest_integrity.router, prefix="/api")
-app.include_router(staff_verification.router)
-# Mount Static File Directories
-is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
-if is_vercel:
-
-    REPORTS_DIR = "/tmp/reports"
-else:
-    REPORTS_DIR = os.path.join(os.path.dirname(__file__), "reports")
-
-try:
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    os.makedirs(REPORTS_DIR, exist_ok=True)
-    os.makedirs(os.path.join(BASE_DIR, "static"), exist_ok=True)
-    
-    app.mount("/static/reports", StaticFiles(directory=REPORTS_DIR), name="reports")
-    app.mount("/static/assets", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="assets")
-except Exception as e:
-    logger.warning(f"Could not mount static reports directory: {e}")
-
-
-@app.websocket("/ws/contest/{contest_id}")
-async def websocket_contest_endpoint(websocket: WebSocket, contest_id: str, token: Optional[str] = None):
-    """
-    Persistent WebSocket Endpoint for True Live Contest Monitoring.
-    Supports:
-    - Optional JWT token authentication (query param: ?token=<jwt>)
-    - Session subscription: send {"action": "SUBSCRIBE", "session_id": N}
-    - Session unsubscribe: send {"action": "UNSUBSCRIBE", "session_id": N}
-    - Initial snapshot push on connect
-    - GET_SNAPSHOT, GET_MISSED_EVENTS version recovery
-    """
-    connected = await manager.connect(websocket, token=token)
-    if not connected:
-        return
-    try:
-        from backend.services.live_contest_monitor_engine import live_contest_monitor_engine
-        from backend.database import execute_with_db_retry
-
-        # Push initial snapshot immediately on connect
-        snapshot = await asyncio.to_thread(execute_with_db_retry, lambda db: live_contest_monitor_engine.get_live_snapshot(db, contest_id))
-        await websocket.send_text(json.dumps(snapshot))
-
-        while True:
-            try:
-                raw_msg = await websocket.receive_text()
-            except (WebSocketDisconnect, RuntimeError, Exception):
-                break
-
-            if raw_msg == "ping":
-                try:
-                    await websocket.send_text("pong")
-                except Exception:
-                    break
-                continue
-
-            try:
-                msg = json.loads(raw_msg)
-                msg_type = msg.get("type")
-                action = msg.get("action")
-
-                # Session subscription protocol
-                if action == "SUBSCRIBE" and msg.get("session_id"):
-                    manager.subscribe_session(websocket, int(msg["session_id"]))
-                    await websocket.send_text(json.dumps({"type": "SUBSCRIBED", "session_id": msg["session_id"]}))
-                    continue
-                elif action == "UNSUBSCRIBE" and msg.get("session_id"):
-                    manager.unsubscribe_session(websocket, int(msg["session_id"]))
-                    await websocket.send_text(json.dumps({"type": "UNSUBSCRIBED", "session_id": msg["session_id"]}))
-                    continue
-
-                if msg_type == "GET_SNAPSHOT":
-                    snap = await asyncio.to_thread(execute_with_db_retry, lambda db: live_contest_monitor_engine.get_live_snapshot(db, contest_id))
-                    await websocket.send_text(json.dumps(snap))
-                elif msg_type == "GET_MISSED_EVENTS":
-                    last_ver = msg.get("last_received_version", 0)
-                    missed = await asyncio.to_thread(execute_with_db_retry, lambda db: live_contest_monitor_engine.get_missed_events(db, contest_id, last_ver))
-                    await websocket.send_text(json.dumps({
-                        "event": "MISSED_EVENTS_RESPONSE",
-                        "type": "MISSED_EVENTS_RESPONSE",
-                        "contest_id": contest_id,
-                        "events": missed
-                    }))
-            except Exception as parse_err:
-                logger.warning(f"[WS_CONTEST] Non-fatal message parse note: {parse_err}")
-    except Exception:
-        pass
-    finally:
-        manager.disconnect(websocket)
-
-
-@app.post("/api/contests/{contest_id}/start-live-monitor")
-async def start_live_contest_monitor_api(contest_id: str):
-    """Triggers backend live monitoring engine for all registered students."""
+async def start_live_contest_monitor_api(
+    contest_id: str,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Triggers backend live monitoring engine for all registered students. Requires Admin/HOD auth."""
+    from backend.routes.auth import get_current_user
+    current_user = get_current_user(request, db)
+    user_role = (getattr(current_user, "override_role", None) or getattr(current_user, "role", "") or "").strip().lower()
+    if user_role not in ("admin", "hod", "department hod", "department_hod", "staff"):
+        raise HTTPException(status_code=403, detail="Only Admin, HOD, or Staff can trigger live contest monitoring.")
     from backend.services.live_contest_monitor_engine import live_contest_monitor_engine
     return await live_contest_monitor_engine.start_monitoring(contest_id)
 
@@ -1308,5 +1165,3 @@ if os.path.exists(FRONTEND_DIST):
     app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
 
 logger.info("LeetCode Performance Tracker API is fully ready & live sync engine active.")
-
-import datetime

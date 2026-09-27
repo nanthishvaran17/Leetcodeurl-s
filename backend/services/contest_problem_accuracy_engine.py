@@ -86,6 +86,12 @@ class ContestProblemSet:
 # Stored with exact canonical slugs to prevent fuzzy match errors.
 # The engine dynamically resolves any weekly contest N.
 OFFICIAL_CONTEST_PROBLEM_REGISTRY: Dict[int, List[Dict[str, Any]]] = {
+    521: [
+        {"index": 1, "problem_id": "Q1", "title_slug": "rearrange-array-by-removing-distinct-values", "title": "Rearrange Array by Removing Distinct Values", "difficulty": "Easy", "points": 3},
+        {"index": 2, "problem_id": "Q2", "title_slug": "maximum-equal-adjacent-pairs-after-at-most-one-replacement", "title": "Maximum Equal Adjacent Pairs After at Most One Replacement", "difficulty": "Medium", "points": 5},
+        {"index": 3, "problem_id": "Q3", "title_slug": "longest-subarray-with-restricted-pair-sums", "title": "Longest Subarray With Restricted Pair Sums", "difficulty": "Medium", "points": 5},
+        {"index": 4, "problem_id": "Q4", "title_slug": "maximize-meeting-earnings-with-idle-gaps", "title": "Maximize Meeting Earnings with Idle Gaps", "difficulty": "Hard", "points": 6},
+    ],
     520: [
         {"index": 1, "problem_id": "Q1", "title_slug": "number-of-intersecting-interval-pairs-i", "title": "Number of Intersecting Interval Pairs I", "difficulty": "Easy", "points": 3},
         {"index": 2, "problem_id": "Q2", "title_slug": "number-of-intersecting-interval-pairs-ii", "title": "Number of Intersecting Interval Pairs II", "difficulty": "Medium", "points": 4},

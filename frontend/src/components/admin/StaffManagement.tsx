@@ -694,7 +694,7 @@ export const StaffManagement: React.FC = () => {
                 {/* DESKTOP TABLE VIEW (>= 768px) */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left text-sm whitespace-nowrap">
-                    <thead className="bg-slate-50 dark:bg-navy-950/50 text-slate-600 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-100 dark:border-navy-700">
+                    <thead className="bg-slate-50 dark:bg-navy-950/80 text-slate-800 dark:text-slate-200 font-black uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-navy-600 shadow-sm">
                       <tr>
                         <th className="px-6 py-4">Institutional ID</th>
                         <th className="px-6 py-4">Username / Email</th>

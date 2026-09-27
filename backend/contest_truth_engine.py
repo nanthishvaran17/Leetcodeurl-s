@@ -153,7 +153,7 @@ class ContestTruthEngine:
             # Check exact date AND exact time window (08:00:00 AM - 09:30:00 AM IST)
             is_correct_date = (sub_time_ist.strftime("%Y-%m-%d") == target_date_str)
             is_correct_time = (
-                sub_time_ist.hour == 8 or (sub_time_ist.hour == 9 and sub_time_ist.minute <= 30)
+                sub_time_ist.hour == 8 or (sub_time_ist.hour == 9 and (sub_time_ist.minute < 30 or (sub_time_ist.minute == 30 and sub_time_ist.second == 0)))
             )
             is_in_contest_window = is_correct_date and is_correct_time
 

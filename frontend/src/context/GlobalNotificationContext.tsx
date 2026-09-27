@@ -153,7 +153,10 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   };
 
   const fetchFromBackendAPI = useCallback(async () => {
-    if (!token) return;
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
     try {
       const res = await fetch(`${API_BASE_URL}/notifications`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -171,10 +174,13 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
 
         setAllNotifications(items);
         setUnreadCount(data.unreadCount || items.filter((n: Notification) => !n.isRead).length);
-        setIsLoading(false);
+      } else {
+        console.warn("[GlobalNotificationContext] Non-ok status from backend:", res.status);
       }
     } catch (err) {
       console.warn("[GlobalNotificationContext] REST API sync notice:", err);
+    } finally {
+      setIsLoading(false);
     }
   }, [token, user?.email]);
 

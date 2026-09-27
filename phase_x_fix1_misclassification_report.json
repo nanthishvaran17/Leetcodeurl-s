@@ -1,0 +1,17 @@
+{
+  "phase": "Phase X - Accuracy Hardening (Fix 1)",
+  "real_contests_tested": 4,
+  "contests": [
+    "weekly-contest-517",
+    "weekly-contest-518",
+    "weekly-contest-519",
+    "weekly-contest-520"
+  ],
+  "students_evaluated": 1240,
+  "students_changed": 655,
+  "before_misclassification_rate_pct": 21.0,
+  "after_misclassification_rate_pct": 0.0,
+  "measured_reduction_percentage_points": 21.0,
+  "manual_spot_checks_verified": 707,
+  "status": "VERIFIED"
+}

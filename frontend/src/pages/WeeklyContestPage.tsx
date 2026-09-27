@@ -563,6 +563,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         if (event.studentId != null && byId.has(event.studentId)) idx = byId.get(event.studentId)!;
         else if (event.regNo && byRegNo.has(event.regNo)) idx = byRegNo.get(event.regNo)!;
         else if (event.studentName && byName.has(event.studentName)) idx = byName.get(event.studentName)!;
+        else if (event.username && byUsername.has(event.username)) idx = byUsername.get(event.username)!;
         else if (event.contestId && byUsername.has(event.contestId)) idx = byUsername.get(event.contestId)!;
         
         if (idx === -1) continue;
@@ -601,7 +602,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     lastSyncAt: wsLastSyncAt,
     subscribeSession: wsSubscribeSession,
     unsubscribeSession: wsUnsubscribeSession
-  } = useContestWebSocket(activeContestIdStr);
+  } = useContestWebSocket({
+    contestId: activeContestIdStr,
+    sessionId: selectedSessionId,
+    onBatchUpdate: handleWebSocketBatch
+  });
 
   // Send SUBSCRIBE when user switches contest sessions, UNSUBSCRIBE on cleanup
   useEffect(() => {
@@ -649,7 +654,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           q2: evt.activity?.q2 ?? oldRow.q2,
           q3: evt.activity?.q3 ?? oldRow.q3,
           q4: evt.activity?.q4 ?? oldRow.q4,
+          q1_score: evt.activity?.q1 ?? oldRow.q1_score,
+          q2_score: evt.activity?.q2 ?? oldRow.q2_score,
+          q3_score: evt.activity?.q3 ?? oldRow.q3_score,
+          q4_score: evt.activity?.q4 ?? oldRow.q4_score,
           total_solved: evt.activity?.count ?? oldRow.total_solved,
+          total_contest_solved: evt.activity?.count ?? oldRow.total_contest_solved ?? oldRow.total_solved,
           score_display: evt.activity?.score_display ?? oldRow.score_display,
           last_updated: evt.timestamp,
           is_recently_updated: true,
@@ -771,7 +781,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       if (cachedList && cachedList.length > 0) {
         setSessionsList(cachedList);
         if (cachedCurr) setCurrentSession(cachedCurr);
-        const targetId = cachedCurr?.sessionId || cachedList[0].sessionId;
+        const liveSessionCached = cachedList.find((s: any) => (s.status || '').toUpperCase() === 'LIVE');
+        const latestSyncedCached = cachedList.find((s: any) => !(s.status || '').toUpperCase().includes('SCHEDULE'));
+        const targetId = cachedCurr?.sessionId || liveSessionCached?.sessionId || latestSyncedCached?.sessionId || null;
         if (targetId) {
           setSelectedSessionId(prev => prev || targetId);
         }
@@ -786,7 +798,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       const list = allSessionsRes || [];
       setSessionsList(list);
 
-      const targetId = currRes?.sessionId || (list.length > 0 ? list[0].sessionId : null);
+      // Auto-select: prefer LIVE first, then most recent FINALIZED — skip SCHEDULED future sessions
+      const liveSession = list.find((s: any) => (s.status || '').toUpperCase() === 'LIVE');
+      const latestSynced = list.find((s: any) => !(s.status || '').toUpperCase().includes('SCHEDULE'));
+      const targetId = currRes?.sessionId || liveSession?.sessionId || latestSynced?.sessionId || null;
       if (targetId) {
         setSelectedSessionId(prev => prev || targetId);
       }
@@ -1356,23 +1371,37 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           calcVirtual++;
         } else if (st === 'PUBLIC' || st === 'PUBLIC_ATTENDED' || st === 'ATTENDED') {
           calcAttended++;
-        } else if (st === 'DATA_ERROR' || st === 'ERROR') {
+        } else if (
+          !r.username ||
+          [
+            // Identity errors
+            'USERNAME_NOT_FOUND', 'INVALID_USERNAME',
+            // Fetch/network errors (canonical backend values)
+            'FETCH_FAILED', 'FETCH_ERROR', 'DATA_ERROR',
+            // Data integrity errors
+            'DATA_MISMATCH', 'CONFLICT',
+            // Access/infra errors
+            'AUTH_REQUIRED', 'BLOCKED', 'SOURCE_UNAVAILABLE',
+            // Legacy / non-canonical
+            'ERROR', 'INVALID',
+          ].includes(st)
+        ) {
           calcDataError++;
+        } else if (st === 'NOT_ATTENDED') {
+          calcNotAttended++;
         } else {
+          // NOT_VERIFIED / PENDING / unknown → treat as not-attended for display
           calcNotAttended++;
         }
       }
     }
 
-    const totalRowsVal = sessionMetrics?.totalStudents ?? sessionMetrics?.totalCount ?? totalRows ?? (fastSummary?.totalStudents ?? 0);
-
-    const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? (isScopeActive ? calcAttended : (fastSummary?.participantCount ?? calcAttended));
-
+    const fallbackTotal = matrixRows && matrixRows.length > 0 ? matrixRows.length : 0;
+    const totalRowsVal = sessionMetrics?.totalStudents ?? sessionMetrics?.totalCount ?? totalRows ?? fastSummary?.totalStudents ?? fallbackTotal;
+    const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? fastSummary?.participantCount ?? calcAttended;
     const virtualRows = sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? calcVirtual;
-
     const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? Math.max(0, totalRowsVal - attendedRows - virtualRows);
-
-    const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.failedVerification ?? (errorLogs ? errorLogs.length : calcDataError);
+    const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.errors ?? sessionMetrics?.failedVerification ?? calcDataError;
 
     const isVirtualAvailable = sessionMetrics?.virtualDataStatus === 'AVAILABLE' || virtualRows > 0;
 
@@ -1539,7 +1568,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     });
   }, []);
 
-  const displaySessions = sessionsList;
+  // Only show sessions that have actual data synced — exclude all SCHEDULED (future) sessions
+  const displaySessions = sessionsList.filter(s => {
+    const status = (s.status || '').toUpperCase();
+    // Exclude any session that is purely SCHEDULED with no data yet
+    return !status.includes('SCHEDULE');
+  });
   const activeSessionObj = displaySessions.find(s => Number(s.sessionId) === Number(selectedSessionId)) || currentSession;
   const statusColor = activeSessionObj?.status === 'LIVE' ? 'bg-emerald-500 text-white animate-pulse' :
     activeSessionObj?.status === 'FINALIZED' ? 'bg-indigo-600 text-white' : 'bg-amber-500 text-white';
@@ -1580,7 +1614,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const isFinalizing = activeSessionObj?.status === 'FINALIZING';
 
   return (
-    <div className="space-y-6 sm:space-y-8 pt-1 sm:pt-0 animate-fade-in pb-12">
+    <div className="space-y-10 sm:space-y-12 pt-1 sm:pt-0 animate-fade-in pb-12">
 
       {/* 1. SLEEK INSTITUTIONAL HERO HEADER */}
       <div className={`relative overflow-hidden rounded-3xl text-white p-5 sm:p-7 md:p-8 shadow-2xl border transition-all duration-500 ${isLive
@@ -1687,10 +1721,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
 
           {/* Right Controls: Unified Session Selector & Admin Monitor Toggle */}
-          <div className="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white/10 dark:bg-navy-950/80 p-2.5 rounded-2xl border border-white/15 backdrop-blur-md shadow-lg">
+          <div className="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-white/10 dark:bg-navy-950/80 p-2.5 rounded-2xl border border-white/15 backdrop-blur-md shadow-lg">
 
             {/* Session Dropdown Selector with Delete Option */}
-            <div className="flex items-center space-x-2 flex-1 min-w-[180px]">
+            <div className="flex items-center gap-3 flex-1 min-w-[180px]">
               <GlobalFilter
                 options={displaySessions.map((s) => {
                   const statusUp = (s.status || '').toUpperCase();
@@ -1731,7 +1765,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   type="button"
                   onClick={(e) => handleDeleteSession(activeSessionObj.sessionId, activeSessionObj.contestName, e)}
-                  className="p-2.5 bg-rose-500/20 hover:bg-rose-500/30 rounded-xl border border-rose-500/30 text-rose-400 hover:text-rose-300 transition-colors shadow-sm cursor-pointer shrink-0"
+                  className="ml-2 p-2.5 bg-rose-500/20 hover:bg-rose-500/30 rounded-xl border border-rose-500/30 text-rose-400 hover:text-rose-300 transition-colors shadow-sm cursor-pointer shrink-0"
                   title="Delete this Weekly Contest Session"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -1808,7 +1842,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       {/* 1B. SCHEDULED MODE COUNTDOWN BANNER (BEFORE SUNDAY 08:00 AM IST) */}
       {isScheduled && (
-        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-950/90 via-slate-900 to-navy-950 border border-amber-500/30 text-white shadow-lg space-y-4 animate-fade-in">
+        <div className="mt-6 sm:mt-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-950/90 via-slate-900 to-navy-950 border border-amber-500/30 text-white shadow-lg space-y-4 animate-fade-in">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-black">
               <Clock className="w-3.5 h-3.5 text-amber-400" />
@@ -1834,7 +1868,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       {/* 1C. LIVE MODE TELEMETRY, QUESTION PROGRESS & LIVE ACTIVITY FEED */}
       {isLive && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="mt-6 sm:mt-8 space-y-4 animate-fade-in">
           {/* Live Timer Bar */}
           <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 border border-emerald-500/40 text-white flex flex-wrap items-center justify-between gap-4 shadow-xl">
             <div className="flex items-center space-x-3">
@@ -2082,11 +2116,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
 
               {/* Action Buttons Toolbar */}
-              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center flex-wrap gap-2.5">
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center flex-wrap gap-3">
                 <button
                   onClick={() => handleAdminAction('start_live')}
                   disabled={isPerformingAdminAction}
-                  className="flex items-center space-x-2 px-4.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-lg shadow-emerald-900/40 border border-emerald-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-lg shadow-emerald-900/40 border border-emerald-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>Start Live Sync</span>
@@ -2095,7 +2129,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   onClick={() => handleAdminAction(liveTelemetry?.isPaused ? 'resume' : 'pause')}
                   disabled={isPerformingAdminAction}
-                  className="flex items-center space-x-2 px-4.5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-black shadow-lg shadow-amber-900/40 border border-amber-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-black shadow-lg shadow-amber-900/40 border border-amber-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   <Pause className="w-3.5 h-3.5 fill-current" />
                   <span>{liveTelemetry?.isPaused ? 'Resume Sync' : 'Pause Sync'}</span>
@@ -2104,7 +2138,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   onClick={() => handleAdminAction('sweep_verification')}
                   disabled={isPerformingAdminAction}
-                  className="flex items-center space-x-2 px-4.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black shadow-lg shadow-indigo-900/40 border border-indigo-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black shadow-lg shadow-indigo-900/40 border border-indigo-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Run 3-Day Verification Sweep</span>
@@ -2113,7 +2147,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   onClick={() => handleAdminAction('reset_worker')}
                   disabled={isPerformingAdminAction}
-                  className="flex items-center space-x-2 px-4.5 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black shadow-md border border-slate-500/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black shadow-md border border-slate-500/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Reset Worker State</span>
@@ -2122,7 +2156,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   onClick={() => handleAdminAction('force_final_sync')}
                   disabled={isPerformingAdminAction}
-                  className="flex items-center space-x-2 px-4.5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black shadow-lg shadow-purple-900/40 border border-purple-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black shadow-lg shadow-purple-900/40 border border-purple-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   <FastForward className="w-3.5 h-3.5" />
                   <span>Force Final Sync & Lock Snapshot</span>
@@ -2415,7 +2449,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {activeTab === 'matrix' && (
         <>
           {/* 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR */}
-          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 no-print mb-6">
+          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 no-print mb-10">
         {/* Row 1: Search Input + Full Consolidated Action Toolbar */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           {/* Real-time Search Input */}
@@ -3037,7 +3071,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       </div>
 
       {/* 3. EXECUTIVE QUICK VIEW (SCANNABLE IN < 3 SECONDS) */}
-      <div className="space-y-6">
+      <div className="space-y-10">
         
         {/* Department-wise Summary Section */}
         {(() => {
@@ -3773,9 +3807,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               )}
 
               <div className="table-responsive-container w-full min-w-0 max-w-full max-h-[520px] overflow-y-auto overflow-x-auto">
-                <table className="w-full min-w-[900px] text-left text-xs">
-                  <thead className="bg-slate-950 dark:bg-navy-950 text-white text-xs font-black uppercase tracking-wider sticky top-0 z-10 shadow-sm hidden md:table-header-group">
-                    <tr className="border-b border-slate-700 dark:border-slate-600">
+                <table className="w-full min-w-[900px] text-left text-xs border-separate border-spacing-0">
+                  <thead className="text-white text-xs font-black uppercase tracking-wider sticky top-0 z-10 shadow-sm hidden md:table-header-group">
+                    <tr className="[&>th]:bg-slate-950 [&>th]:dark:bg-navy-950 [&>th:first-child]:rounded-l-2xl [&>th:last-child]:rounded-r-2xl border-b border-slate-700 dark:border-slate-600">
                       {/* Checkbox Column */}
                       <th className="px-3 py-3.5 text-center w-10">
                         <input 
@@ -4134,12 +4168,31 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
 
               {(() => {
-                const errorRows = matrixRows.filter(r => 
-                  !r.username || 
-                  selectedAttendanceFilter === 'DATA_ERROR' ||
-                  ['USERNAME_NOT_FOUND', 'DATA_ERROR', 'FETCH_ERROR', 'ERROR', 'INVALID', 'DATA_MISMATCH', 'AUTH_REQUIRED', 'BLOCKED'].includes(r.status) || 
-                  r.participation_status === 'DATA_ERROR'
-                );
+                const errorRows = matrixRows.filter(r => {
+                  const st = (r.status || r.participation_status || '').toString().toUpperCase();
+                  const u = (r.username || '').toString().trim();
+                  const isMissingUsername = !u || u === 'USERNAME_NOT_FOUND' || u === 'UNLINKED' || u === 'NO_HANDLE' || u === 'NONE' || u === 'NULL';
+                  return (
+                    isMissingUsername ||
+                    [
+                      'USERNAME_NOT_FOUND', 'INVALID_USERNAME',
+                      'FETCH_FAILED', 'FETCH_ERROR', 'DATA_ERROR',
+                      'DATA_MISMATCH', 'CONFLICT',
+                      'AUTH_REQUIRED', 'BLOCKED', 'SOURCE_UNAVAILABLE',
+                      'SOURCE_ERROR', 'ERROR', 'INVALID', 'FAILED'
+                    ].includes(st) ||
+                    r.participation_status === 'DATA_ERROR'
+                  );
+                });
+
+                if (loading) {
+                  return (
+                    <div className="p-8 text-center text-slate-500 font-bold bg-slate-50 dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse flex items-center justify-center space-x-2">
+                      <RefreshCw className="w-4 h-4 animate-spin text-amber-500" />
+                      <span>Loading data quality error records for scope ({selectedDeptFilter} • {selectedYearFilter} Year)...</span>
+                    </div>
+                  );
+                }
 
                 return (
                   <>
@@ -4147,7 +4200,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     <div className="md:hidden space-y-3">
                       {errorRows.length === 0 ? (
                         <div className="p-6 text-center text-slate-500 font-bold bg-slate-50 dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-                          No data quality errors found for current filter scope.
+                          No data quality errors found for active filter scope ({selectedDeptFilter} • {selectedYearFilter} Year).
                         </div>
                       ) : (
                         errorRows.map((errStudent, idx) => (
@@ -4210,7 +4263,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                           {errorRows.length === 0 ? (
                             <tr>
                               <td colSpan={7} className="p-8 text-center text-slate-500 font-bold">
-                                No data quality errors found for current filter scope.
+                                No data quality errors found for active filter scope ({selectedDeptFilter} • {selectedYearFilter} Year).
                               </td>
                             </tr>
                           ) : (

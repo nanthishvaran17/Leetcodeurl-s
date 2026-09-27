@@ -350,7 +350,7 @@ def _acquire_global_lock(db: Session = None, job_id: str = "", timeout_minutes: 
             except Exception:
                 pass
             try:
-                lock_db.invalidate()
+                pass  # pool_pre_ping handles reconnection
             except Exception:
                 pass
             if attempt < 2 and ('SSL' in str(e) or 'OperationalError' in str(e) or 'connection' in str(e).lower()):
@@ -390,7 +390,7 @@ def _release_global_lock(db: Session = None, job_id: str = None):  # type: ignor
         except Exception:
             pass
         try:
-            lock_db.invalidate()
+            pass  # pool_pre_ping handles reconnection
         except Exception:
             pass
         logger.warning(f"[SYNC_LOCK] Lock release note: {e}")
@@ -1299,7 +1299,7 @@ def get_system_freshness(db: Session) -> Dict[str, Any]:
             exc_str = str(exc).lower()
             if attempt == 0 and any(k in exc_str or k in type(exc).__name__.lower() for k in ("operationalerror", "connection", "closed", "timeout")):
                 try:
-                    current_db.invalidate()
+                    current_db.close()  # close broken session cleanly
                 except Exception:
                     pass
                 try:

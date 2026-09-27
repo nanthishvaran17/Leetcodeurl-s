@@ -108,7 +108,7 @@ def get_paginated_matrix_rows(
         # PUBLIC / PUBLIC_ATTENDED — users attended the public official contest
         if att in ['PUBLIC', 'PUBLIC_ATTENDED', 'ATTENDED']:
             query = query.filter(
-                func.upper(WeeklyPublicResult.participation_status).in_(['PUBLIC', 'PUBLIC_ATTENDED', 'ATTENDED', 'OFFICIAL'])
+                func.upper(WeeklyPublicResult.participation_status).in_(['PUBLIC', 'PUBLIC_ATTENDED', 'ATTENDED', 'OFFICIAL', 'ACTUAL', 'ATTENDED_ZERO', 'ATTENDED_SOLVED', 'PUBLIC_LIVE', 'PUBLIC_LIVE_VERIFIED', 'PUBLIC_ATTENDED_ZERO', 'PUBLIC_ATTENDED_SOLVED'])
             )
         # VIRTUAL / VIRTUAL_ATTENDED — users attended via virtual participation
         elif att in ['VIRTUAL', 'VIRTUAL_ATTENDED']:

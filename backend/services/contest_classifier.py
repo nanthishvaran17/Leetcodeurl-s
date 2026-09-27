@@ -60,8 +60,8 @@ class ContestStatus(str, Enum):
     def __eq__(self, other: object) -> bool:
         if super().__eq__(other):
             return True
-        val = str(self)
-        oth = str(other.value) if isinstance(other, Enum) else str(other)
+        val = self.value if isinstance(self, Enum) else str(self)
+        oth = other.value if isinstance(other, Enum) else str(other)
         live_aliases = {"LIVE", "PUBLIC_LIVE", "PUBLIC_ATTENDED", "PUBLIC_LIVE_VERIFIED"}
         virtual_aliases = {"VIRTUAL", "VIRTUAL_PRACTICE", "VIRTUAL_ATTENDED", "VIRTUAL_PRACTICE_VERIFIED"}
         if val in live_aliases and oth in live_aliases:
@@ -84,6 +84,14 @@ class ReasonCode(str, Enum):
     RATE_LIMITED            = "RATE_LIMITED"
     VALID_LIVE_SUBMISSION   = "VALID_LIVE_SUBMISSION"
     EXPLICIT_VIRTUAL        = "EXPLICIT_VIRTUAL"
+
+    def __eq__(self, other: object) -> bool:
+        if super().__eq__(other):
+            return True
+        val = self.value if isinstance(self, Enum) else str(self)
+        oth = other.value if isinstance(other, Enum) else str(other)
+        virtual_reasons = {"VIRTUAL", "EXPLICIT_VIRTUAL"}
+        return val in virtual_reasons and oth in virtual_reasons
 
 
 class FetchStatus(str, Enum):
@@ -170,7 +178,7 @@ def normalize_contest_id(contest_name_or_id: str) -> str:
     if not contest_name_or_id:
         raise ValueError("contest_name_or_id must not be empty")
 
-    s = str(contest_name_or_id).strip()
+    s = contest_name_or_id.strip()
     if re.fullmatch(r'(weekly|biweekly)-contest-\d+', s, re.IGNORECASE):
         return s.lower()
 
@@ -244,6 +252,7 @@ def evaluate_contest_evidence(
     fetch_error: Optional[str] = None,
     rank: Optional[int] = None,
     rating_after: Optional[float] = None,
+    official_problems_solved: Optional[int] = None,
 ) -> ContestStatusRow:
     """
     Phase X — Accuracy Hardening Evidence-First Classification Logic.
@@ -288,7 +297,7 @@ def evaluate_contest_evidence(
             verified_leetcode_username=raw_username,
             contest_id=canonical_id,
             contest_name=contest_name,
-            status=ContestStatus.NOT_VERIFIED,
+            status=ContestStatus.FETCH_FAILED,
             reason_code=ReasonCode.FETCH_ERROR,
             reason_text=f"Contest participation could not be verified due to submission API error: {fetch_error or 'evidence_unavailable'}",
             fetch_status=FetchStatus.FAILED,
@@ -382,7 +391,7 @@ def evaluate_contest_evidence(
             solved_problems_map[slug]["has_post_window"] = True
 
     # Unique solved metrics
-    total_unique_solved = len(solved_problems_map)
+    total_unique_solved = len(solved_problems_map) if solved_problems_map else (official_problems_solved or 0)
     live_solves = sum(1 for data in solved_problems_map.values() if data["has_in_window"])
     post_contest_solves = sum(1 for data in solved_problems_map.values() if not data["has_in_window"] and data["has_post_window"])
 
@@ -397,16 +406,22 @@ def evaluate_contest_evidence(
         reason_code = ReasonCode.VALID_LIVE_SUBMISSION
         classification_signal = "in_window_submission"
         reason_text = "Verified live submission(s) inside official 90-min contest window."
-    elif post_contest_solves > 0:
-        status = ContestStatus.VIRTUAL
+    elif post_contest_solves > 0 or (total_unique_solved > 0 and ranking_history_attended is False):
+        status = ContestStatus.VIRTUAL_ATTENDED
         reason_code = ReasonCode.EXPLICIT_VIRTUAL
         classification_signal = "post_window_only"
         reason_text = "All accepted submission(s) occurred post-contest window (Virtual/Practice)."
     elif ranking_history_attended is True:
-        status = ContestStatus.ATTENDED_ZERO
-        reason_code = ReasonCode.PUBLIC
-        classification_signal = "no_submissions"
-        reason_text = "Attended official contest window with 0 accepted submissions."
+        if total_unique_solved > 0 or (rank and rank > 0):
+            status = ContestStatus.PUBLIC_ATTENDED
+            reason_code = ReasonCode.PUBLIC
+            classification_signal = "official_ranking_history"
+            reason_text = "Attended official contest according to ranking history."
+        else:
+            status = ContestStatus.ATTENDED_ZERO
+            reason_code = ReasonCode.PUBLIC
+            classification_signal = "no_submissions"
+            reason_text = "Attended official contest window with 0 accepted submissions."
     else:
         status = ContestStatus.NOT_ATTENDED
         reason_code = ReasonCode.NO_PARTICIPATION
@@ -533,6 +548,20 @@ class ContestClassifier:
             )
 
         try:
+            val = self.api.validate_profile(raw_username)
+            if not val:
+                return ContestStatusRow(
+                    student_id=student_id,
+                    student_name=student_name,
+                    verified_leetcode_username=raw_username,
+                    contest_id=canonical_id,
+                    contest_name=contest_name,
+                    status=ContestStatus.INVALID_USERNAME,
+                    reason_code=ReasonCode.INVALID_PROFILE,
+                    reason_text="LeetCode username does not exist or profile is invalid.",
+                    fetch_status=FetchStatus.OK,
+                    classification_signal="invalid_username",
+                )
             contest_data = self.api.fetch_contest_result(raw_username, canonical_id)
         except Exception as e:
             return ContestStatusRow(
@@ -541,7 +570,7 @@ class ContestClassifier:
                 verified_leetcode_username=raw_username,
                 contest_id=canonical_id,
                 contest_name=contest_name,
-                status=ContestStatus.NOT_VERIFIED,
+                status=ContestStatus.FETCH_FAILED,
                 reason_code=ReasonCode.FETCH_ERROR,
                 reason_text=f"API error fetching contest result: {e}",
                 fetch_status=FetchStatus.FAILED,
@@ -563,6 +592,26 @@ class ContestClassifier:
                 classification_signal="no_participation",
             )
 
+        ret_contest_id = contest_data.get("contest_id")
+        ret_username = contest_data.get("username")
+        
+        if ret_contest_id and normalize_contest_id(ret_contest_id) != canonical_id:
+            return ContestStatusRow(
+                student_id=student_id, student_name=student_name, verified_leetcode_username=raw_username,
+                contest_id=canonical_id, contest_name=contest_name,
+                status=ContestStatus.UNKNOWN, reason_code=ReasonCode.IDENTITY_MISMATCH,
+                reason_text="Contest ID mismatch in returned data.",
+                fetch_status=FetchStatus.OK, classification_signal="identity_mismatch"
+            )
+        if ret_username and ret_username.lower() != raw_username.lower():
+            return ContestStatusRow(
+                student_id=student_id, student_name=student_name, verified_leetcode_username=raw_username,
+                contest_id=canonical_id, contest_name=contest_name,
+                status=ContestStatus.UNKNOWN, reason_code=ReasonCode.IDENTITY_MISMATCH,
+                reason_text="Username mismatch in returned data.",
+                fetch_status=FetchStatus.OK, classification_signal="identity_mismatch"
+            )
+
         attended = bool(contest_data.get("attended", False))
         recent_ac = contest_data.get("recent_ac") or contest_data.get("submissions") or []
 
@@ -579,6 +628,7 @@ class ContestClassifier:
             raw_submissions=recent_ac,
             rank=contest_data.get("rank"),
             rating_after=contest_data.get("rating_after"),
+            official_problems_solved=contest_data.get("problems_solved") or contest_data.get("problemsSolved"),
         )
 
 
@@ -830,7 +880,8 @@ async def get_contest_status(
         )
 
     # Fetch Contest Data
-    fetch_st, entry = await _fetch_contest_entry(canonical_username, canonical_id, client)
+    target_username = canonical_username or raw_username
+    fetch_st, entry = await _fetch_contest_entry(target_username, canonical_id, client)
     if fetch_st in ("timeout", "rate_limited", "error"):
         return ContestStatusRow(
             student_id=student_id,
@@ -865,6 +916,7 @@ async def get_contest_status(
         raw_submissions=recent_ac,
         rank=entry.get("ranking") if entry else None,
         rating_after=entry.get("rating_after") if entry else None,
+        official_problems_solved=entry.get("problems_solved") if entry else None,
     )
 
 

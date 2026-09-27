@@ -1,4 +1,5 @@
 import os
+import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from backend.config import settings
@@ -73,11 +74,11 @@ if "postgresql" in db_url or "postgres" in db_url:
     }
 
     engine_kwargs.update({
-        "pool_size": int(os.environ.get("DB_POOL_SIZE", 30)),
-        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 50)),
+        "pool_size": int(os.environ.get("DB_POOL_SIZE", 10)),
+        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 15)),
         "pool_timeout": 60,          # wait up to 60s to checkout a connection under load
         "pool_pre_ping": True,       # verify liveness before returning from pool
-        "pool_recycle": int(os.environ.get("DB_POOL_RECYCLE", 30)), # recycle after 30s to stay ahead of serverless/Render 30-60s idle drops
+        "pool_recycle": int(os.environ.get("DB_POOL_RECYCLE", 300)), # recycle after 5min; pool_pre_ping handles stale detection
         "connect_args": pg_connect_args
     })
 else:
@@ -191,7 +192,12 @@ def get_db():
         exc_str = str(exc).lower()
         if "operationalerror" in type(exc).__name__.lower() or any(k in exc_str for k in ("connection", "closed", "timeout")):
             try:
-                db.invalidate()
+                bind = db.get_bind()
+                raw_conn = getattr(bind, "raw_connection", None)
+                if callable(raw_conn):
+                    c = raw_conn()
+                    if hasattr(c, "invalidate"):
+                        c.invalidate()
             except Exception:
                 pass
         raise
@@ -199,10 +205,7 @@ def get_db():
         try:
             db.close()  # type: ignore
         except Exception:
-            try:
-                db.invalidate()
-            except Exception:
-                pass
+            pass
 
 
 
@@ -229,10 +232,7 @@ def get_db_session():
         try:
             db.close()
         except Exception:
-            try:
-                db.invalidate()
-            except Exception:
-                pass
+            pass
 
 
 def execute_with_db_retry(func, max_retries=3, retry_delay=0.3):
@@ -291,15 +291,15 @@ def run_migrations():
             # Create PostgreSQL performance indexes and missing columns if applicable
             if "postgresql" in db_url or "postgres" in db_url:
                 try:
-                    conn.execute(__import__('sqlalchemy').text("SET statement_timeout = 0;"))
-                    conn.execute(__import__('sqlalchemy').text("SET lock_timeout = '2s';"))
+                    conn.execute(sqlalchemy.text("SET statement_timeout = 0;"))
+                    conn.execute(sqlalchemy.text("SET lock_timeout = '2s';"))
                 except Exception:
                     pass
 
                 # Pre-check if primary_leetcode_id column already exists in students table
                 has_col = False
                 try:
-                    res = conn.execute(__import__('sqlalchemy').text("""
+                    res = conn.execute(sqlalchemy.text("""
                         SELECT column_name FROM information_schema.columns 
                         WHERE table_name='students' AND column_name='primary_leetcode_id';
                     """))
@@ -423,12 +423,12 @@ def run_migrations():
                 ]
                 for stmt in migration_statements:
                     try:
-                        conn.execute(__import__('sqlalchemy').text(stmt))
+                        conn.execute(sqlalchemy.text(stmt))
                     except Exception:
                         pass
 
                 try:
-                    conn.execute(__import__('sqlalchemy').text("""
+                    conn.execute(sqlalchemy.text("""
                         UPDATE students
                         SET primary_leetcode_id = username
                         WHERE primary_leetcode_id IS NULL AND username IS NOT NULL;
@@ -448,7 +448,7 @@ def run_migrations():
                 ]
                 for idx_stmt in idx_statements:
                     try:
-                        conn.execute(__import__('sqlalchemy').text(idx_stmt))
+                        conn.execute(sqlalchemy.text(idx_stmt))
                     except Exception:
                         pass
     except Exception as e:
@@ -459,7 +459,7 @@ def run_migrations():
         with engine.connect() as conn:
             # Check leetcode_profile_stats columns
             result = conn.execute(
-                __import__('sqlalchemy').text("PRAGMA table_info(leetcode_profile_stats)")
+                sqlalchemy.text("PRAGMA table_info(leetcode_profile_stats)")
             )
             existing_cols = {row[1] for row in result}
 
@@ -470,13 +470,13 @@ def run_migrations():
             ]
             for col_name, sql in migrations:
                 if col_name not in existing_cols:
-                    conn.execute(__import__('sqlalchemy').text(sql))
+                    conn.execute(sqlalchemy.text(sql))
                     conn.commit()
                     print(f"[DB Migration] Added column: {col_name}")
 
             # Check hod_snapshots columns
             result_hod = conn.execute(
-                __import__('sqlalchemy').text("PRAGMA table_info(hod_snapshots)")
+                sqlalchemy.text("PRAGMA table_info(hod_snapshots)")
             )
             hod_cols = {row[1] for row in result_hod}
             if hod_cols:
@@ -488,13 +488,13 @@ def run_migrations():
                 ]
                 for col_name, sql in hod_migrations:
                     if col_name not in hod_cols:
-                        conn.execute(__import__('sqlalchemy').text(sql))
+                        conn.execute(sqlalchemy.text(sql))
                         conn.commit()
                         print(f"[DB Migration] Added hod_snapshots column: {col_name}")
 
             # Check weekly_sessions columns
             result_sess = conn.execute(
-                __import__('sqlalchemy').text("PRAGMA table_info(weekly_sessions)")
+                sqlalchemy.text("PRAGMA table_info(weekly_sessions)")
             )
             sess_cols = {row[1] for row in result_sess}
             if sess_cols:
@@ -531,13 +531,13 @@ def run_migrations():
                 ]
                 for col_name, sql in sess_migrations:
                     if col_name not in sess_cols:
-                        conn.execute(__import__('sqlalchemy').text(sql))
+                        conn.execute(sqlalchemy.text(sql))
                         conn.commit()
                         print(f"[DB Migration] Added weekly_sessions column: {col_name}")
 
             # Check weekly_public_results columns
             result_pub = conn.execute(
-                __import__('sqlalchemy').text("PRAGMA table_info(weekly_public_results)")
+                sqlalchemy.text("PRAGMA table_info(weekly_public_results)")
             )
             pub_cols = {row[1] for row in result_pub}
             if pub_cols:
@@ -547,13 +547,13 @@ def run_migrations():
                 ]
                 for col_name, sql in pub_migrations:
                     if col_name not in pub_cols:
-                        conn.execute(__import__('sqlalchemy').text(sql))
+                        conn.execute(sqlalchemy.text(sql))
                         conn.commit()
                         print(f"[DB Migration] Added weekly_public_results column: {col_name}")
 
             # Check student_contest_participations columns
             result_part = conn.execute(
-                __import__('sqlalchemy').text("PRAGMA table_info(student_contest_participations)")
+                sqlalchemy.text("PRAGMA table_info(student_contest_participations)")
             )
             part_cols = {row[1] for row in result_part}
             if part_cols:
@@ -567,12 +567,12 @@ def run_migrations():
                 ]
                 for col_name, sql in part_migrations:
                     if col_name not in part_cols:
-                        conn.execute(__import__('sqlalchemy').text(sql))
+                        conn.execute(sqlalchemy.text(sql))
                         conn.commit()
 
             # Check admin_audit_logs columns
             result_audit = conn.execute(
-                __import__('sqlalchemy').text("PRAGMA table_info(admin_audit_logs)")
+                sqlalchemy.text("PRAGMA table_info(admin_audit_logs)")
             )
             audit_cols = {row[1] for row in result_audit}
             if audit_cols:
@@ -618,13 +618,13 @@ def run_migrations():
                 for col_name, sql in audit_migrations:
                     if col_name not in audit_cols:
                         try:
-                            conn.execute(__import__('sqlalchemy').text(sql))
+                            conn.execute(sqlalchemy.text(sql))
                             conn.commit()
                             print(f"[DB Migration] Added admin_audit_logs column: {col_name}")
                         except Exception:
                             pass
             result_scp = conn.execute(
-                __import__('sqlalchemy').text("PRAGMA table_info(student_contest_participations)")
+                sqlalchemy.text("PRAGMA table_info(student_contest_participations)")
             )
             scp_cols = {row[1] for row in result_scp}
             if scp_cols:
@@ -638,13 +638,13 @@ def run_migrations():
                 ]
                 for col_name, sql in scp_migrations:
                     if col_name not in scp_cols:
-                        conn.execute(__import__('sqlalchemy').text(sql))
+                        conn.execute(sqlalchemy.text(sql))
                         conn.commit()
                         print(f"[DB Migration] Added student_contest_participations column: {col_name}")
 
             # Check certificate_records columns
             result_cert = conn.execute(
-                __import__('sqlalchemy').text("PRAGMA table_info(certificate_records)")
+                sqlalchemy.text("PRAGMA table_info(certificate_records)")
             )
             cert_cols = {row[1] for row in result_cert}
             if cert_cols:
@@ -665,7 +665,7 @@ def run_migrations():
                 for col_name, sql in cert_migrations:
                     if col_name not in cert_cols:
                         try:
-                            conn.execute(__import__('sqlalchemy').text(sql))
+                            conn.execute(sqlalchemy.text(sql))
                             conn.commit()
                             print(f"[DB Migration] Added certificate_records column: {col_name}")
                         except Exception:
@@ -673,7 +673,7 @@ def run_migrations():
 
             # Check sync_jobs columns
             result_jobs = conn.execute(
-                __import__('sqlalchemy').text("PRAGMA table_info(sync_jobs)")
+                sqlalchemy.text("PRAGMA table_info(sync_jobs)")
             )
             job_cols = {row[1] for row in result_jobs}
             if job_cols:
@@ -685,67 +685,67 @@ def run_migrations():
                 ]
                 for col_name, sql in job_migrations:
                     if col_name not in job_cols:
-                        conn.execute(__import__('sqlalchemy').text(sql))
+                        conn.execute(sqlalchemy.text(sql))
                         conn.commit()
                         print(f"[DB Migration] Added sync_jobs column: {col_name}")
 
                 # Clean up any stale zombie RUNNING jobs on startup
                 conn.execute(
-                    __import__('sqlalchemy').text("UPDATE sync_jobs SET status = 'INTERRUPTED', completed_at = started_at WHERE status = 'RUNNING'")
+                    sqlalchemy.text("UPDATE sync_jobs SET status = 'INTERRUPTED', completed_at = started_at WHERE status = 'RUNNING'")
                 )
                 conn.commit()
 
             # Check users table columns for WhatsApp integration
             result_users = conn.execute(
-                __import__('sqlalchemy').text("PRAGMA table_info(users)")
+                sqlalchemy.text("PRAGMA table_info(users)")
             )
             users_cols = {row[1] for row in result_users}
             if users_cols:
                 if "phone_number" not in users_cols:
-                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE users ADD COLUMN phone_number VARCHAR(30)"))
+                    conn.execute(sqlalchemy.text("ALTER TABLE users ADD COLUMN phone_number VARCHAR(30)"))
                     conn.commit()
                     print("[DB Migration] Added users column: phone_number")
                 if "whatsapp_verified" not in users_cols:
-                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE users ADD COLUMN whatsapp_verified BOOLEAN DEFAULT 0"))
+                    conn.execute(sqlalchemy.text("ALTER TABLE users ADD COLUMN whatsapp_verified BOOLEAN DEFAULT 0"))
                     conn.commit()
                     print("[DB Migration] Added users column: whatsapp_verified")
 
             # Check students table columns for WhatsApp integration
             result_students = conn.execute(
-                __import__('sqlalchemy').text("PRAGMA table_info(students)")
+                sqlalchemy.text("PRAGMA table_info(students)")
             )
             st_cols = {row[1] for row in result_students}
             if st_cols:
                 if "phone_number" not in st_cols:
-                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN phone_number VARCHAR(30)"))
+                    conn.execute(sqlalchemy.text("ALTER TABLE students ADD COLUMN phone_number VARCHAR(30)"))
                     conn.commit()
                     print("[DB Migration] Added students column: phone_number")
                 if "whatsapp_verified" not in st_cols:
-                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN whatsapp_verified BOOLEAN DEFAULT 0"))
+                    conn.execute(sqlalchemy.text("ALTER TABLE students ADD COLUMN whatsapp_verified BOOLEAN DEFAULT 0"))
                     conn.commit()
                     print("[DB Migration] Added students column: whatsapp_verified")
                 if "allocation" not in st_cols:
-                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN allocation VARCHAR(50)"))
+                    conn.execute(sqlalchemy.text("ALTER TABLE students ADD COLUMN allocation VARCHAR(50)"))
                     conn.commit()
                     print("[DB Migration] Added students column: allocation")
                 if "batch" not in st_cols:
-                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN batch VARCHAR(50)"))
+                    conn.execute(sqlalchemy.text("ALTER TABLE students ADD COLUMN batch VARCHAR(50)"))
                     conn.commit()
                     print("[DB Migration] Added students column: batch")
                 if "institutional_email" not in st_cols:
-                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN institutional_email VARCHAR(150)"))
+                    conn.execute(sqlalchemy.text("ALTER TABLE students ADD COLUMN institutional_email VARCHAR(150)"))
                     conn.commit()
                     print("[DB Migration] Added students column: institutional_email")
                 if "email_status" not in st_cols:
-                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN email_status VARCHAR(50) DEFAULT 'pending'"))
+                    conn.execute(sqlalchemy.text("ALTER TABLE students ADD COLUMN email_status VARCHAR(50) DEFAULT 'pending'"))
                     conn.commit()
                     print("[DB Migration] Added students column: email_status")
                 if "accommodation" not in st_cols:
-                    conn.execute(__import__('slate_text' if False else 'sqlalchemy').text("ALTER TABLE students ADD COLUMN accommodation VARCHAR(50)"))
+                    conn.execute(sqlalchemy.text("ALTER TABLE students ADD COLUMN accommodation VARCHAR(50)"))
                     conn.commit()
                     print("[DB Migration] Added students column: accommodation")
                 if "twelfth_cutoff" not in st_cols:
-                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN twelfth_cutoff FLOAT"))
+                    conn.execute(sqlalchemy.text("ALTER TABLE students ADD COLUMN twelfth_cutoff FLOAT"))
                     conn.commit()
                     print("[DB Migration] Added students column: twelfth_cutoff")
 
@@ -773,7 +773,7 @@ def run_migrations():
                         ]
                         for col_name, sql in msg_migrations:
                             if col_name not in msg_cols:
-                                conn.execute(__import__('sqlalchemy').text(sql))
+                                conn.execute(sqlalchemy.text(sql))
                                 conn.commit()
                                 print(f"[DB Migration] Added messages column: {col_name}")
             except Exception as _e_msg:
@@ -781,11 +781,11 @@ def run_migrations():
 
             # Ensure system default Admin account exists
             admin_check = conn.execute(
-                __import__('sqlalchemy').text("SELECT id, role FROM users WHERE email = 'admin@college.edu' OR role = 'Admin'")
+                sqlalchemy.text("SELECT id, role FROM users WHERE email = 'admin@college.edu' OR role = 'Admin'")
             ).fetchone()
             if not admin_check:
                 conn.execute(
-                    __import__('sqlalchemy').text(
+                    sqlalchemy.text(
                         "INSERT INTO users (username, email, hashed_password, role, is_active) "
                         "VALUES ('admin', 'admin@college.edu', 'N/A_SYSTEM_ADMIN', 'Admin', 1)"
                     )
@@ -795,7 +795,7 @@ def run_migrations():
 
             # Check official_weekly_snapshots columns
             result_snaps = conn.execute(
-                __import__('sqlalchemy').text("PRAGMA table_info(official_weekly_snapshots)")
+                sqlalchemy.text("PRAGMA table_info(official_weekly_snapshots)")
             )
             snap_cols = {row[1] for row in result_snaps}
             if snap_cols:
@@ -805,14 +805,14 @@ def run_migrations():
                 ]
                 for col_name, sql in snap_migrations:
                     if col_name not in snap_cols:
-                        conn.execute(__import__('sqlalchemy').text(sql))
+                        conn.execute(sqlalchemy.text(sql))
                         conn.commit()
                         print(f"[DB Migration] Added official_weekly_snapshots column: {col_name}")
 
             # Check email_otp_records columns
             try:
                 result_otp = conn.execute(
-                    __import__('sqlalchemy').text("PRAGMA table_info(email_otp_records)")
+                    sqlalchemy.text("PRAGMA table_info(email_otp_records)")
                 )
                 otp_cols = {row[1] for row in result_otp}
                 if otp_cols:
@@ -822,7 +822,7 @@ def run_migrations():
                     ]
                     for col_name, sql in otp_migrations:
                         if col_name not in otp_cols:
-                            conn.execute(__import__('sqlalchemy').text(sql))
+                            conn.execute(sqlalchemy.text(sql))
                             conn.commit()
                             print(f"[DB Migration] Added email_otp_records column: {col_name}")
             except Exception as _e_otp:
@@ -831,7 +831,7 @@ def run_migrations():
             # Check email_dispatch_logs columns
             try:
                 result_edl = conn.execute(
-                    __import__('sqlalchemy').text("PRAGMA table_info(email_dispatch_logs)")
+                    sqlalchemy.text("PRAGMA table_info(email_dispatch_logs)")
                 )
                 edl_cols = {row[1] for row in result_edl}
                 if edl_cols:
@@ -855,7 +855,7 @@ def run_migrations():
                     ]
                     for col_name, sql in edl_migrations:
                         if col_name not in edl_cols:
-                            conn.execute(__import__('sqlalchemy').text(sql))
+                            conn.execute(sqlalchemy.text(sql))
                             conn.commit()
                             print(f"[DB Migration] Added email_dispatch_logs column: {col_name}")
             except Exception as _e_edl:
@@ -864,7 +864,7 @@ def run_migrations():
             # faculty_action_queue: add new columns if missing 
             try:
                 result_faq = conn.execute(
-                    __import__('sqlalchemy').text("PRAGMA table_info(faculty_action_queue)")
+                    sqlalchemy.text("PRAGMA table_info(faculty_action_queue)")
                 )
                 faq_cols = {row[1] for row in result_faq}
                 if faq_cols:
@@ -886,7 +886,7 @@ def run_migrations():
                     ]
                     for col_name, sql in faq_migrations:
                         if col_name not in faq_cols:
-                            conn.execute(__import__('sqlalchemy').text(sql))
+                            conn.execute(sqlalchemy.text(sql))
                             conn.commit()
                             print(f"[DB Migration] Added faculty_action_queue column: {col_name}")
             except Exception as _e_faq:
@@ -894,7 +894,7 @@ def run_migrations():
 
             # faculty_action_audit_logs: create if missing 
             try:
-                conn.execute(__import__('sqlalchemy').text("""
+                conn.execute(sqlalchemy.text("""
                     CREATE TABLE IF NOT EXISTS faculty_action_audit_logs (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         action_id INTEGER NOT NULL REFERENCES faculty_action_queue(id),
@@ -923,7 +923,7 @@ def run_migrations():
                     SELECT RAISE(ABORT, 'SNAPSHOT_IMMUTABLE: Finalized snapshot cannot be modified in-place. Use snapshot_supersedes() instead.');
                 END;
                 """
-                conn.execute(__import__('sqlalchemy').text(trigger_sql))
+                conn.execute(sqlalchemy.text(trigger_sql))
                 conn.commit()
                 print("[DB Migration] Registered SQLite snapshot immutability trigger.")
             except Exception as _trg_err:
@@ -931,7 +931,7 @@ def run_migrations():
 
             # faculty_student_assignments: create if missing 
             try:
-                conn.execute(__import__('sqlalchemy').text("""
+                conn.execute(sqlalchemy.text("""
                     CREATE TABLE IF NOT EXISTS faculty_student_assignments (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         faculty_id INTEGER NOT NULL REFERENCES users(id),
@@ -1167,7 +1167,7 @@ def run_migrations():
             ]
             for idx_name, idx_sql in indexes:
                 try:
-                    conn.execute(__import__('sqlalchemy').text(idx_sql))
+                    conn.execute(sqlalchemy.text(idx_sql))
                 except Exception:
                     pass
             conn.commit()
@@ -1207,7 +1207,7 @@ def run_migrations():
                 ]
                 for pgi in pg_indexes:
                     try:
-                        pg_conn.execute(__import__('sqlalchemy').text(pgi))
+                        pg_conn.execute(sqlalchemy.text(pgi))
                     except Exception:
                         pass
                 pg_conn.commit()

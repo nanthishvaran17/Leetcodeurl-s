@@ -152,7 +152,7 @@ export const FastStudentRow = memo(({
               <span className="text-[11px] sm:text-xs font-black font-mono text-amber-700 dark:text-amber-300">
                 {(() => {
                   const rawRating = student.stats?.contest_rating ?? (student as any).contest_rating;
-                  if (rawRating == null || rawRating <= 0) return '—';
+                  if (rawRating == null || rawRating <= 0 || Number(rawRating) === 1500 || Number(rawRating) === 1500.0) return '—';
                   return Math.round(Number(rawRating)).toLocaleString();
                 })()}
               </span>
@@ -286,7 +286,7 @@ export const FastStudentRow = memo(({
       <div className="hidden md:flex flex-none w-24 px-3 items-center justify-center text-center text-amber-600 dark:text-amber-400 font-extrabold">
         {(() => {
           const rawRating = student.stats?.contest_rating ?? (student as any).contest_rating;
-          if (rawRating == null || rawRating <= 0) return '—';
+          if (rawRating == null || rawRating <= 0 || Number(rawRating) === 1500 || Number(rawRating) === 1500.0) return '—';
           return Math.round(Number(rawRating)).toLocaleString();
         })()}
       </div>

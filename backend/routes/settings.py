@@ -239,7 +239,6 @@ def get_system_health(db: Session = Depends(get_db)):
         except Exception as e:
             try:
                 db.rollback()
-                db.invalidate()
             except Exception:
                 pass
             if attempt == 0:

@@ -462,7 +462,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
             <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-navy-700 flex flex-col">
               {isLoading ? (
                 <div className="p-4 space-y-3">
-                  {[1, 2, 3].map((i) => (
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
                     <div key={i} className="flex items-start space-x-3 animate-pulse p-2 rounded-xl">
                       <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-navy-800 shrink-0" />
                       <div className="flex-1 space-y-1.5">

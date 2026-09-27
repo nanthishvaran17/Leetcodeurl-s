@@ -20,6 +20,29 @@ ALERT_COOLDOWN: Dict[str, datetime.datetime] = {}
 WINDOW_MINUTES = 10
 THRESHOLD_ATTEMPTS = 5
 COOLDOWN_MINUTES = 15
+_MAX_TRACKING_ENTRIES = 10000  # Cap to prevent unbounded memory growth under sustained attack
+
+def _cleanup_stale_tracking():
+    """Prune expired entries from security tracking dicts to prevent memory leaks."""
+    now = datetime.datetime.utcnow()
+    window_cutoff = now - datetime.timedelta(minutes=WINDOW_MINUTES)
+    cooldown_cutoff = now - datetime.timedelta(minutes=COOLDOWN_MINUTES)
+    
+    # Clean expired blocked attempts
+    stale_keys = [k for k, v in BLOCKED_ATTEMPTS.items() if not v or v[-1] < window_cutoff]
+    for k in stale_keys:
+        del BLOCKED_ATTEMPTS[k]
+    
+    # Clean expired cooldowns
+    stale_cooldowns = [k for k, v in ALERT_COOLDOWN.items() if v < cooldown_cutoff]
+    for k in stale_cooldowns:
+        del ALERT_COOLDOWN[k]
+    
+    # Hard cap: if still too many entries, remove oldest half
+    if len(BLOCKED_ATTEMPTS) > _MAX_TRACKING_ENTRIES:
+        sorted_keys = sorted(BLOCKED_ATTEMPTS.keys(), key=lambda k: BLOCKED_ATTEMPTS[k][-1] if BLOCKED_ATTEMPTS[k] else datetime.datetime.min)
+        for k in sorted_keys[:len(sorted_keys) // 2]:
+            del BLOCKED_ATTEMPTS[k]
 
 def get_hashed_ip(request: Request) -> str:
     """Generates an anonymized/hashed IP address for audit and tracking."""
@@ -66,6 +89,9 @@ def evaluate_security_alert_threshold(
     """
     now = datetime.datetime.now(datetime.timezone.utc)
     cutoff = now - datetime.timedelta(minutes=WINDOW_MINUTES)
+    
+    # Periodic cleanup of stale tracking entries to prevent unbounded memory growth
+    _cleanup_stale_tracking()
     
     if source_id not in BLOCKED_ATTEMPTS:
         BLOCKED_ATTEMPTS[source_id] = []
@@ -393,7 +419,7 @@ def log_security_access_event(
         exc_str = str(ex).lower()
         if "operationalerror" in type(ex).__name__.lower() or any(k in exc_str for k in ("connection", "closed", "timeout")):
             try:
-                db.invalidate()
+                pass  # Session doesn't support invalidate(); pool_pre_ping handles reconnection
             except Exception:
                 pass
             logger.warning(f"Notice: Security audit log deferred due to DB reconnection: {ex}")

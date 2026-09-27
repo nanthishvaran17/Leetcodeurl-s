@@ -378,8 +378,23 @@ class ConnectionManager:
             await self._broadcast_to_local_connections(payload)
 
     async def _broadcast_to_local_connections(self, payload: str):
+        """Broadcasts to all authenticated connections. Anonymous connections only receive public event types."""
         disconnected = []
+        # Determine if this is a public-safe event type
+        is_public_event = False
+        try:
+            msg = json.loads(payload)
+            event_type = msg.get("type", "")
+            # Only sync_progress and BATCH_UPDATES with sync_progress are considered public-safe
+            is_public_event = event_type in ("sync_progress", "pong", "HEALTH_STATUS")
+        except Exception:
+            pass
+        
         for connection in list(self.active_connections):
+            # Skip unauthenticated connections for non-public events
+            ctx = self._ws_user.get(connection, {})
+            if not is_public_event and not ctx.get("authenticated", False):
+                continue
             try:
                 await connection.send_text(payload)
             except Exception as e:

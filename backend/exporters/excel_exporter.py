@@ -58,8 +58,8 @@ ALIGN_LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
 ALIGN_RIGHT = Alignment(horizontal="right", vertical="center")
 ALIGN_RIGHT_WRAP = Alignment(horizontal="right", vertical="center", wrap_text=True)
 
-# Grid Borders
-_THIN_SIDE = Side(style='thin', color='CBD5E1')
+# Grid Borders (Crisp, sharp dark borders around every cell like All Borders in Excel)
+_THIN_SIDE = Side(style='thin', color='334155')
 _THIN_BORDER = Border(left=_THIN_SIDE, right=_THIN_SIDE, top=_THIN_SIDE, bottom=_THIN_SIDE)
 
 OFFICIAL_DEPTS = [
@@ -67,10 +67,8 @@ OFFICIAL_DEPTS = [
     "ECE", "EEE", "MECH", "CIVIL", "AGRI", "BME"
 ]
 
-def _apply_thin_border(cell, force: bool = False):
-    # Skip setting border on plain body cells unless explicitly requested for headers/summaries
-    if force or cell.value is not None:
-        cell.border = _THIN_BORDER
+def _apply_thin_border(cell, force: bool = True):
+    cell.border = _THIN_BORDER
 
 def _to_int(val, default=0) -> int:
     try:
@@ -105,26 +103,29 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
     for c in range(1, cols + 1):
         cell = ws.cell(row=1, column=c)
         cell.fill = NAVY_PRIMARY
+        _apply_thin_border(cell)
     ws["A1"] = "NANDHA ENGINEERING COLLEGE, ERODE – 638 052"
     ws["A1"].font = FONT_MAIN_TITLE
     ws["A1"].alignment = ALIGN_CENTER
-    ws.row_dimensions[1].height = 32
+    ws.row_dimensions[1].height = 42
 
     # Row 2: Subtitle (A2:last_col 2)
     ws.merge_cells(f"A2:{last_col}2")
     for c in range(1, cols + 1):
         cell = ws.cell(row=2, column=c)
         cell.fill = NAVY_SECONDARY
+        _apply_thin_border(cell)
     ws["A2"] = "(AUTONOMOUS) • ESTD 2001 | Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai"
     ws["A2"].font = FONT_SUBTITLE
     ws["A2"].alignment = ALIGN_CENTER
-    ws.row_dimensions[2].height = 20
+    ws.row_dimensions[2].height = 24
 
     # Row 3: Department Context (A3:last_col 3)
     ws.merge_cells(f"A3:{last_col}3")
     for c in range(1, cols + 1):
         cell = ws.cell(row=3, column=c)
         cell.fill = SUB_FILL
+        _apply_thin_border(cell)
     ws["A3"] = dept_text.upper()
     ws["A3"].font = Font(name=FONT_TNR, size=11, bold=True, color="1B365D")
     ws["A3"].alignment = ALIGN_CENTER
@@ -132,27 +133,35 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
 
     # Row 4: Report Title
     ws.merge_cells(f"A4:{last_col}4")
+    for c in range(1, cols + 1):
+        cell = ws.cell(row=4, column=c)
+        _apply_thin_border(cell)
     ws["A4"] = report_title.upper()
     ws["A4"].font = Font(name=FONT_TNR, size=13, bold=True, color="2E5B88")
     ws["A4"].alignment = ALIGN_CENTER
     ws.row_dimensions[4].height = 24
 
-    # College Emblem Image (Placed in A1:A3 cleanly without overlapping text)
+    # College Emblem Image (Placed cleanly in B1 to avoid hugging edge)
     logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nandha_emblem.png")
     if os.path.exists(logo_path):
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
             img = OpenPyxlImage(logo_path)
-            orig_w = getattr(img, "width", None)
-            orig_h = getattr(img, "height", None)
-            target_h = 64
-            if orig_w and orig_h and float(orig_h) > 0:
-                target_w = int(target_h * (float(orig_w) / float(orig_h)))
-            else:
-                target_w = 78
-            img.height = target_h
-            img.width = target_w
-            ws.add_image(img, "A1")
+            img.height = 60
+            img.width = 85
+            ws.add_image(img, "B1")
+        except Exception:
+            pass
+
+    # 25 Years Anniversary Logo (Placed cleanly on top-right last_col 1)
+    logo_25_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nec_25_years_logo.png")
+    if os.path.exists(logo_25_path):
+        try:
+            from openpyxl.drawing.image import Image as OpenPyxlImage
+            img_25 = OpenPyxlImage(logo_25_path)
+            img_25.height = 60
+            img_25.width = 60
+            ws.add_image(img_25, f"{last_col}1")
         except Exception:
             pass
 
@@ -239,11 +248,266 @@ def normalize_row_data(r: dict) -> dict:
         "trend": trend
     }
 
+def export_weekly_performance_excel(dataset: dict) -> bytes:
+    """
+    COORDINATOR WEEKLY PERFORMANCE EXCEL EXPORTER
+    Generates a multi-sheet institutional workbook detailing College Summary,
+    Department Performance Summary, Batch-wise Summary, and Full Student Roster.
+    """
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active)
+
+    # SHEET 1: EXECUTIVE SUMMARY
+    ws_exec = wb.create_sheet(title="Executive Summary")
+    ws_exec.sheet_view.showGridLines = True
+    ws_exec.page_setup.orientation = ws_exec.ORIENTATION_LANDSCAPE
+
+    _write_college_header(
+        ws_exec,
+        "COORDINATOR WEEKLY PERFORMANCE REPORT",
+        "INSTITUTIONAL PERFORMANCE & CONTEST SUMMARY",
+        13,
+        {
+            "Report ID": str(dataset.get("report_id") or dataset.get("reportId") or "REP-2026"),
+            "Report Date": str(dataset.get("report_date") or dataset.get("reportDate") or ""),
+            "Total Roster": f"{dataset.get('total_students', 0)} Students",
+            "Verified Solvers": f"{dataset.get('verified_students', 0)} Solvers"
+        }
+    )
+
+    # 1. College Performance Summary
+    row_idx = 7
+    ws_exec.merge_cells(f"A{row_idx}:M{row_idx}")
+    cell_sec1 = ws_exec.cell(row=row_idx, column=1, value="1. COLLEGE PERFORMANCE SUMMARY")
+    cell_sec1.font = FONT_SECTION_BANNER
+    cell_sec1.fill = NAVY_PRIMARY
+    cell_sec1.alignment = ALIGN_LEFT
+    for col in range(1, 14):
+        _apply_thin_border(ws_exec.cell(row=row_idx, column=col))
+    row_idx += 1
+
+    coll_metrics = dataset.get("college_summary") or {}
+    categories = coll_metrics.get("categories") or {}
+
+    kpi_headers = ["Total Students", "Verified Profiles", "Unavailable Profiles", "Above 500", "250–500", "Less than 250", "Less than 100", "Not Started", "Avg Solved", "Total Solved", "Rating > 1500", "Ranking < 20K"]
+    for c_i, h in enumerate(kpi_headers, 1):
+        c = ws_exec.cell(row=row_idx, column=c_i, value=h)
+        c.font = FONT_TBL_HDR
+        c.fill = NAVY_SECONDARY
+        c.alignment = ALIGN_CENTER
+        _apply_thin_border(c)
+    row_idx += 1
+
+    kpi_vals = [
+        dataset.get("total_students", coll_metrics.get("total_students", 0)),
+        dataset.get("verified_students", coll_metrics.get("verified_students", 0)),
+        dataset.get("unavailable_students", 0),
+        categories.get("Above 500", 0),
+        categories.get("250 - 500") or categories.get("250–500", 0),
+        categories.get("Less than 250", 0),
+        categories.get("Less than 100", 0),
+        categories.get("Not Yet Started") or categories.get("Not Started", 0),
+        coll_metrics.get("average_solved", 0),
+        coll_metrics.get("total_solved", 0),
+        coll_metrics.get("rating_1500", 0),
+        coll_metrics.get("ranking_20000", 0)
+    ]
+    for c_i, v in enumerate(kpi_vals, 1):
+        c = ws_exec.cell(row=row_idx, column=c_i, value=v)
+        c.font = FONT_NUMERIC_BOLD
+        c.alignment = ALIGN_CENTER
+        _apply_thin_border(c)
+    row_idx += 3
+
+    # 2. Department Performance Summary
+    ws_exec.merge_cells(f"A{row_idx}:M{row_idx}")
+    cell_sec2 = ws_exec.cell(row=row_idx, column=1, value="2. DEPARTMENT PERFORMANCE SUMMARY")
+    cell_sec2.font = FONT_SECTION_BANNER
+    cell_sec2.fill = NAVY_PRIMARY
+    cell_sec2.alignment = ALIGN_LEFT
+    for col in range(1, 14):
+        _apply_thin_border(ws_exec.cell(row=row_idx, column=col))
+    row_idx += 1
+
+    dept_headers = ["S.No", "Department", "Coordinator", "Total", "Verified", "Avg Solved", "Total Solved", "Above 500", "250–500", "4/4 Solved", "3/4 Solved", "2/4 Solved", "1/4 Solved"]
+    for c_i, h in enumerate(dept_headers, 1):
+        c = ws_exec.cell(row=row_idx, column=c_i, value=h)
+        c.font = FONT_TBL_HDR
+        c.fill = NAVY_SECONDARY
+        c.alignment = ALIGN_CENTER
+        _apply_thin_border(c)
+    row_idx += 1
+
+    dept_summaries = dataset.get("department_summaries") or dataset.get("dept_summaries") or []
+    for d_i, d in enumerate(dept_summaries, 1):
+        d_cats = d.get("categories") or {}
+        d_cw = d.get("current_week") or {}
+        d_vals = [
+            d_i,
+            d.get("department") or d.get("dept") or "",
+            d.get("coordinator") or "—",
+            d.get("total_students", 0),
+            (d.get("metrics") or {}).get("verified_students", d.get("total_students", 0)),
+            (d.get("metrics") or {}).get("average_solved", 0),
+            (d.get("metrics") or {}).get("total_solved", 0),
+            d_cats.get("Above 500", 0),
+            d_cats.get("250 - 500") or d_cats.get("250–500", 0),
+            d_cw.get("q4", 0),
+            d_cw.get("q3", 0),
+            d_cw.get("q2", 0),
+            d_cw.get("q1", 0),
+        ]
+        for c_i, v in enumerate(d_vals, 1):
+            c = ws_exec.cell(row=row_idx, column=c_i, value=v)
+            c.font = FONT_BODY if c_i in (2, 3) else FONT_NUMERIC
+            c.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
+            _apply_thin_border(c)
+        row_idx += 1
+    row_idx += 2
+
+    # 3. Batch-wise Performance Summary
+    ws_exec.merge_cells(f"A{row_idx}:M{row_idx}")
+    cell_sec3 = ws_exec.cell(row=row_idx, column=1, value="3. BATCH-WISE PERFORMANCE SUMMARY")
+    cell_sec3.font = FONT_SECTION_BANNER
+    cell_sec3.fill = NAVY_PRIMARY
+    cell_sec3.alignment = ALIGN_LEFT
+    for col in range(1, 14):
+        _apply_thin_border(ws_exec.cell(row=row_idx, column=col))
+    row_idx += 1
+
+    batch_headers = ["Batch", "Year", "Total", "Above 500", "250–500", "< 250", "< 100", "Not Started", "Rating > 1500", "Ranking < 20K", "4/4 Solved", "3/4 Solved", "2/4 Solved"]
+    for c_i, h in enumerate(batch_headers, 1):
+        c = ws_exec.cell(row=row_idx, column=c_i, value=h)
+        c.font = FONT_TBL_HDR
+        c.fill = NAVY_SECONDARY
+        c.alignment = ALIGN_CENTER
+        _apply_thin_border(c)
+    row_idx += 1
+
+    batch_summaries = dataset.get("batch_summaries") or []
+    for b in batch_summaries:
+        b_cats = b.get("categories") or {}
+        b_cw = b.get("current_week") or {}
+        b_vals = [
+            b.get("batch", ""),
+            b.get("year", ""),
+            b.get("total_students") or b.get("num_students", 0),
+            b_cats.get("Above 500", 0),
+            b_cats.get("250 - 500") or b_cats.get("250–500", 0),
+            b_cats.get("Less than 250", 0),
+            b_cats.get("Less than 100", 0),
+            b_cats.get("Not Yet Started") or b_cats.get("Not Started", 0),
+            b.get("rating_1500", 0),
+            b.get("ranking_20000", 0),
+            b_cw.get("q4", 0),
+            b_cw.get("q3", 0),
+            b_cw.get("q2", 0),
+        ]
+        for c_i, v in enumerate(b_vals, 1):
+            c = ws_exec.cell(row=row_idx, column=c_i, value=v)
+            c.font = FONT_NUMERIC
+            c.alignment = ALIGN_CENTER
+            _apply_thin_border(c)
+        row_idx += 1
+
+    # SHEET 2: FULL STUDENT ROSTER
+    ws_roster = wb.create_sheet(title="Full Student Roster")
+    ws_roster.sheet_view.showGridLines = True
+    ws_roster.page_setup.orientation = ws_roster.ORIENTATION_LANDSCAPE
+
+    roster_rows = dataset.get("all_students_current") or dataset.get("allStudents") or dataset.get("rows") or []
+    _write_college_header(
+        ws_roster,
+        "COORDINATOR WEEKLY PERFORMANCE REPORT — FULL STUDENT ROSTER",
+        f"TOTAL ROSTER: {len(roster_rows)} STUDENTS",
+        12
+    )
+
+    r_hdr_row = 7
+    r_headers = ["S.No", "Register No", "Student Name", "Dept", "Yr", "Easy", "Med", "Hard", "Total", "Category", "Curr Week", "Last Week"]
+    for c_i, h in enumerate(r_headers, 1):
+        c = ws_roster.cell(row=r_hdr_row, column=c_i, value=h)
+        c.font = FONT_TBL_HDR
+        c.fill = NAVY_PRIMARY
+        c.alignment = ALIGN_CENTER
+        _apply_thin_border(c)
+    ws_roster.row_dimensions[r_hdr_row].height = 28
+
+    def _fmt_res(r_val):
+        if not r_val or r_val in ("NOT_PARTICIPATED", "NOT_ATTENDED", "NONE", "—"):
+            return "—"
+        s = str(r_val)
+        if "SOLVED" in s:
+            return s.replace("_SOLVED", "/4")
+        return s
+
+    for idx, s in enumerate(roster_rows, 1):
+        row_num = r_hdr_row + idx
+        pub_res = _fmt_res(s.get("public_result") or s.get("current_week_result"))
+        last_res = _fmt_res(s.get("last_public_result") or s.get("last_week_result"))
+
+        vals = [
+            s.get("s_no") or idx,
+            str(s.get("reg_no") or s.get("register_no") or ""),
+            str(s.get("name") or s.get("student_name") or ""),
+            str(s.get("dept") or s.get("department") or ""),
+            str(s.get("year") or s.get("academic_year") or ""),
+            s.get("easy") if s.get("easy") is not None else "—",
+            s.get("medium") if s.get("medium") is not None else "—",
+            s.get("hard") if s.get("hard") is not None else "—",
+            s.get("total_solved") if s.get("total_solved") is not None else "—",
+            str(s.get("category") or "—"),
+            pub_res,
+            last_res
+        ]
+        for c_i, v in enumerate(vals, 1):
+            c = ws_roster.cell(row=row_num, column=c_i, value=v)
+            c.font = FONT_BODY
+            c.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
+            _apply_thin_border(c)
+        ws_roster.row_dimensions[row_num].height = 22
+
+    # Column Auto-Widths & Min-Widths
+    for sheet in wb.worksheets:
+        for col in sheet.columns:
+            col_letter = get_column_letter(col[0].column)
+            col_idx = col[0].column
+            hdr_val = ""
+            for r_chk in range(12, 0, -1):
+                cell_v = str(sheet.cell(row=r_chk, column=col_idx).value or "").strip().upper()
+                if cell_v and not cell_v.startswith("NANDHA") and not cell_v.startswith("(AUTONOMOUS)") and not cell_v.startswith("COORDINATOR") and not cell_v.startswith("TOTAL"):
+                    hdr_val = cell_v
+                    break
+
+            max_len = len(hdr_val)
+            for cell in col:
+                if cell.row >= 7:
+                    val_s = str(cell.value or "")
+                    if len(val_s) > max_len and len(val_s) < 80:
+                        max_len = len(val_s)
+
+            if "REGISTER" in hdr_val: w = max(18.0, max_len + 3)
+            elif "NAME" in hdr_val: w = max(28.0, max_len + 3)
+            elif "DEPARTMENT" in hdr_val or hdr_val == "DEPT": w = max(16.0, max_len + 3)
+            elif "COORDINATOR" in hdr_val: w = max(22.0, max_len + 3)
+            elif "CATEGORY" in hdr_val: w = max(18.0, max_len + 3)
+            else: w = max(12.0, min(max_len + 3, 30.0))
+            sheet.column_dimensions[col_letter].width = w
+
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()
+
+
 def export_excel_from_dataset(dataset: dict) -> bytes:
     """
     MASTER INSTITUTIONAL EXCEL WORKBOOK EXPORTER
     Constructs a 16-sheet Principal-ready intelligence report using strictly Times New Roman.
     """
+    rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
+    if rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR") or dataset.get("college_summary"):
+        return export_weekly_performance_excel(dataset)
+
     wb = openpyxl.Workbook()
     wb.remove(wb.active)  # Remove default sheet
 
@@ -300,7 +564,12 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     tot_students = len(rows)
     attended_rows = [r for r in rows if r["is_att"]]
     tot_attended = len(attended_rows)
-    tot_not_attended = tot_students - tot_attended
+    
+    tot_data_errors = sum(1 for r in rows if str(r.get("status") or "").upper() in ("USERNAME_NOT_FOUND", "INVALID_USERNAME", "PENDING_USERNAME", "UNLINKED", "ERROR", "DATA_ERROR", "FETCH_FAILED", "FETCH_ERROR"))
+    tot_not_attended = tot_students - tot_attended - tot_data_errors
+    if tot_not_attended < 0:
+        tot_not_attended = 0
+        
     att_pct = (tot_attended / tot_students * 100) if tot_students > 0 else 0.0
 
     q1_solves = sum(r["q1"] for r in rows)
@@ -335,9 +604,10 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     r_kpi = 7
     kpis = [
         ("TOTAL SCOPE ROSTER", f"{tot_students:,}", "A", "B", "1B365D"),
-        ("OFFICIAL CONTEST ATTENDANCE", f"{tot_attended:,} ({att_pct:.1f}%)", "C", "E", "059669"),
-        ("NOT ATTENDED / NO EVIDENCE", f"{tot_not_attended:,}", "F", "G", "DC2626"),
-        ("TOTAL CONTEST SOLVES", f"{total_solves:,}", "H", "J", "2E5B88"),
+        ("OFFICIAL ATTENDANCE", f"{tot_attended:,} ({att_pct:.1f}%)", "C", "D", "059669"),
+        ("NOT ATTENDED", f"{tot_not_attended:,}", "E", "F", "DC2626"),
+        ("DATA ERRORS", f"{tot_data_errors:,}", "G", "H", "B45309"),
+        ("TOTAL SOLVES", f"{total_solves:,}", "I", "J", "2E5B88"),
     ]
     for title, val, start_c, end_c, col_hex in kpis:
         ws1.merge_cells(f"{start_c}{r_kpi}:{end_c}{r_kpi}")
@@ -417,7 +687,6 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         ws2.row_dimensions[row_num].height = 22
 
     ws2.auto_filter.ref = f"A{r2_hdr}:L{r2_hdr + tot_students}"
-    ws2.freeze_panes = "A8"
 
     # 
     # SHEET 4: CONTEST ATTENDANCE
@@ -454,7 +723,6 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         ws3.row_dimensions[row_num].height = 22
 
     ws3.auto_filter.ref = f"A{r3_hdr}:J{r3_hdr + tot_students}"
-    ws3.freeze_panes = "A8"
 
     # 
     # SHEET 5: CONTEST PERFORMANCE MATRIX (BINARY Q1-Q4)
@@ -485,7 +753,6 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         ws4.row_dimensions[row_num].height = 22
 
     ws4.auto_filter.ref = f"A{r4_hdr}:L{r4_hdr + tot_students}"
-    ws4.freeze_panes = "A8"
 
     # 
     # SHEET 6: TOP PERFORMERS (RANK ORDER 4/4 -> 3/4 -> 2/4 -> 1/4)
@@ -517,7 +784,6 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             ws_t.row_dimensions[row_num].height = 22
 
         ws_t.auto_filter.ref = f"A{rt_hdr}:L{rt_hdr + len(tier_rows)}"
-        ws_t.freeze_panes = "A8"
 
     all_top_solvers = sorted(attended_rows, key=lambda x: (-x["solved"], -x["score"], x["dept"], x["name"]))
     render_tier_sheet("Top Performers", f"{contest_name.upper()} — TOP PERFORMERS LEADERBOARD (4/4 -> 3/4 -> 2/4 -> 1/4)", all_top_solvers)
@@ -594,7 +860,6 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             cell.fill = SUB_FILL
             _apply_thin_border(cell)
         ws10.row_dimensions[cur_r].height = 24
-        ws10.freeze_panes = "A8"
 
         # 
         # SHEET 12: DEPARTMENT TOP PERFORMERS
@@ -637,8 +902,6 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
                     _apply_thin_border(cell)
                 r11_cur += 1
             r11_cur += 1
-
-        ws11.freeze_panes = "A8"
 
     # 
     # SHEETS: CSE(CS) & CSE(IOT) — YEAR-WISE ENUMERATED ROSTERS
@@ -733,7 +996,6 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         _apply_thin_border(summary_cell)
 
         ws_yr.auto_filter.ref = f"A{yr_hdr_row}:L{yr_hdr_row + len(sorted_yr)}"
-        ws_yr.freeze_panes = "A8"
 
     for t_dept in TARGET_DEPTS_YEAR_ENUM:
         dept_all_rows = dept_map.get(t_dept, [])
@@ -796,11 +1058,11 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
                 elif "YEAR" in hdr_val:
                     w = max(12.0, max_len + 3)
                 elif "USERNAME" in hdr_val or "LEETCODE" in hdr_val or "HANDLE" in hdr_val:
-                    w = max(24.0, max_len + 3)
+                    w = max(18.0, max_len + 3)
                 elif "STATUS" in hdr_val or "ATTENDANCE" in hdr_val:
-                    w = max(22.0, max_len + 3)
+                    w = max(16.0, max_len + 3)
                 elif "EVIDENCE" in hdr_val:
-                    w = max(42.0, max_len + 3)
+                    w = max(30.0, max_len + 3)
                 elif hdr_val in ("Q1", "Q2", "Q3", "Q4"):
                     w = 9.0
                 elif hdr_val in ("SOLVED", "SCORE", "LIVE", "VIRTUAL"):

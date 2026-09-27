@@ -53,6 +53,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
           icon: CheckCircle2,
           iconColor: 'text-emerald-500',
           progressBg: 'bg-emerald-500',
+          categoryColor: 'text-emerald-600 dark:text-emerald-400',
           defaultCategory: 'SUCCESS',
         };
       case 'error':
@@ -62,6 +63,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
           icon: XCircle,
           iconColor: 'text-rose-500',
           progressBg: 'bg-rose-500',
+          categoryColor: 'text-rose-600 dark:text-rose-400',
           defaultCategory: 'SYSTEM ERROR',
         };
       case 'warning':
@@ -71,6 +73,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
           icon: AlertTriangle,
           iconColor: 'text-amber-500',
           progressBg: 'bg-amber-500',
+          categoryColor: 'text-amber-600 dark:text-amber-400',
           defaultCategory: 'ATTENTION REQUIRED',
         };
       case 'ai':
@@ -80,6 +83,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
           icon: Sparkles,
           iconColor: 'text-amber-400 animate-pulse',
           progressBg: 'bg-gradient-to-r from-brand-400 to-amber-400',
+          categoryColor: 'text-brand-300',
           defaultCategory: 'NEC UNIFIED AI',
         };
       case 'loading':
@@ -89,6 +93,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
           icon: Loader2,
           iconColor: 'text-brand-500 animate-spin',
           progressBg: 'bg-brand-500',
+          categoryColor: 'text-brand-600 dark:text-brand-400',
           defaultCategory: 'PROCESSING',
         };
       case 'info':
@@ -99,6 +104,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
           icon: Info,
           iconColor: 'text-indigo-500',
           progressBg: 'bg-indigo-500',
+          categoryColor: 'text-indigo-600 dark:text-indigo-400',
           defaultCategory: 'INFORMATION',
         };
     }
@@ -121,10 +127,10 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
 
         <div className="flex-1 min-w-0 pr-2 space-y-1">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-400">
+            <span className={`text-[10px] font-black uppercase tracking-wider ${style.categoryColor}`}>
               {toast.category || style.defaultCategory}
             </span>
-            <span className="text-[10px] text-slate-400 font-bold shrink-0">{toast.timestamp}</span>
+            <span className="text-[10px] text-slate-600 dark:text-slate-300 font-bold shrink-0">{toast.timestamp}</span>
           </div>
 
           <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-snug tracking-tight">
@@ -132,7 +138,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
           </h4>
 
           {toast.description && (
-            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed truncate">
               {toast.description}
             </p>
           )}
@@ -205,7 +211,7 @@ export const NotificationCenter: React.FC = () => {
     <>
       {/* Toast Notification Stack Container */}
       <div
-        className="fixed top-[calc(env(safe-area-inset-top,0px)+4rem)] sm:top-20 right-3 sm:right-6 z-[99999999] flex flex-col space-y-3 w-[calc(100vw-24px)] sm:w-96 pointer-events-none"
+        className="fixed top-[calc(env(safe-area-inset-top,0px)+4rem)] sm:top-20 right-3 sm:right-6 z-[99999999] flex flex-col space-y-3 w-[calc(100vw-24px)] sm:w-[420px] pointer-events-none"
         aria-live="polite"
         aria-atomic="true"
       >

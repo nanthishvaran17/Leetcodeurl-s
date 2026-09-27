@@ -160,6 +160,26 @@ URL_CORRECTIONS = {
     "732224CC021": ("KIRUTHIKAA P T", "KIRUTHIKAA_05"),
     "732224CC017": ("JANANI S", "Jananii_26"),
     "732224CC002": ("AMRUTHA M", "Amruthauma"),
+    
+    # Newly Added
+    "732224CC003": ("ANUSHKUMAR R", "Anushkumar006"),
+    "732224CC004": ("BHARATH G", "BHARATH1927"),
+    "732224CC005": ("DHANUSHYA GK", "dhanu2006"),
+    "732224CC008": ("DHARUNRAJ KP", "K_P_DHARUNRAJ"),
+    "732224CC009": ("GIRIPATHI K", "Giripathi_k"),
+    "732224CC015": ("HARISH N", "Har-ish23"),
+    "732224CC038": ("RADHISRI", "Radhisri28"),
+    "732224CC039": ("RAJESH R", "raj1328"),
+    "732224CC041": ("RITHIKA J", "Rithu04162006"),
+    "732224CC046": ("SHANMUGA PRIYA J", "Priya_1410"),
+    "732224CC052": ("SUPRIYA K", "K_supriya_01"),
+    "732224CC053": ("SURESH S", "suresh11092006"),
+    "732224CC059": ("YURJEEN J", "4Nfn0FHIyV"),
+    "732224CC060": ("YUVANESH S", "kBU8ALVGdd"),
+    "732224CCL01": ("MOHAMMED AFFAN JA", "affan781"),
+    "732224CCL02": ("SARAN R", "Saranraj_2580"),
+    "732224CCL03": ("SHREE SANJAY U K", "shreesanjay"),
+    "732224CCL04": ("SRIDHAR S", "sridhar320076"),
 }
 
 

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 from backend.models import (
     WeeklySession, WeeklyPublicResult, WeeklyVirtualResult, 
     WeeklyContestErrorLog, OfficialWeeklySnapshot, Student,
-    WeeklyContestLiveEvent
+    WeeklyContestLiveEvent, PreviousWeekParticipationRecord, StudentContestSnapshot
 )
 from backend.services.contest_discovery import discover_contest_metadata, get_current_ist_datetime, get_most_recent_sunday_date, IST_TZ
 from backend.services.contest_merger import retry_failed_student_fetches
@@ -498,6 +498,30 @@ async def sweep_bounded_verification_windows(db: Session):
                 db.commit()
                 logger.info(f"[BOUNDED_WINDOW] Session {s.id} verification window expired. Marked {len(unresolved)} as NOT_VERIFIED_FINAL.")
 
+def _safe_purge_or_merge_session(db: Session, old_sess_id: int, target_sess_id: Optional[int] = None):
+    """Safely cascades or reassigns all child table foreign keys before deleting duplicate session."""
+    try:
+        if target_sess_id:
+            db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == old_sess_id).update({WeeklyPublicResult.session_id: target_sess_id}, synchronize_session=False)
+            db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == old_sess_id).update({WeeklyVirtualResult.session_id: target_sess_id}, synchronize_session=False)
+            db.query(WeeklyContestErrorLog).filter(WeeklyContestErrorLog.session_id == old_sess_id).update({WeeklyContestErrorLog.session_id: target_sess_id}, synchronize_session=False)
+            db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == old_sess_id).update({OfficialWeeklySnapshot.session_id: target_sess_id}, synchronize_session=False)
+            db.query(StudentContestSnapshot).filter(StudentContestSnapshot.session_id == old_sess_id).update({StudentContestSnapshot.session_id: target_sess_id}, synchronize_session=False)
+        else:
+            db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == old_sess_id).delete(synchronize_session=False)
+            db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == old_sess_id).delete(synchronize_session=False)
+            db.query(WeeklyContestErrorLog).filter(WeeklyContestErrorLog.session_id == old_sess_id).delete(synchronize_session=False)
+            db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == old_sess_id).delete(synchronize_session=False)
+            db.query(StudentContestSnapshot).filter(StudentContestSnapshot.session_id == old_sess_id).delete(synchronize_session=False)
+        
+        old_sess = db.query(WeeklySession).filter(WeeklySession.id == old_sess_id).first()
+        if old_sess:
+            db.delete(old_sess)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.warning(f"Safe session purge/merge note for session {old_sess_id}: {e}")
+
 def seed_institutional_historical_sessions(db: Session):
     """
     ROOT-LEVEL SESSION ARCHIVE RECONCILIATION ENGINE
@@ -562,30 +586,6 @@ def seed_institutional_historical_sessions(db: Session):
             res_count = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == sess.id).count()
             sessions_by_num[c_num].append((res_count, sess))
             continue
-
-def _safe_purge_or_merge_session(db: Session, old_sess_id: int, target_sess_id: Optional[int] = None):
-    """Safely cascades or reassigns all child table foreign keys before deleting duplicate session."""
-    try:
-        if target_sess_id:
-            db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == old_sess_id).update({WeeklyPublicResult.session_id: target_sess_id}, synchronize_session=False)
-            db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == old_sess_id).update({WeeklyVirtualResult.session_id: target_sess_id}, synchronize_session=False)
-            db.query(WeeklyContestErrorLog).filter(WeeklyContestErrorLog.session_id == old_sess_id).update({WeeklyContestErrorLog.session_id: target_sess_id}, synchronize_session=False)
-            db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == old_sess_id).update({OfficialWeeklySnapshot.session_id: target_sess_id}, synchronize_session=False)
-            db.query(StudentContestSnapshot).filter(StudentContestSnapshot.session_id == old_sess_id).update({StudentContestSnapshot.session_id: target_sess_id}, synchronize_session=False)
-        else:
-            db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == old_sess_id).delete(synchronize_session=False)
-            db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == old_sess_id).delete(synchronize_session=False)
-            db.query(WeeklyContestErrorLog).filter(WeeklyContestErrorLog.session_id == old_sess_id).delete(synchronize_session=False)
-            db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == old_sess_id).delete(synchronize_session=False)
-            db.query(StudentContestSnapshot).filter(StudentContestSnapshot.session_id == old_sess_id).delete(synchronize_session=False)
-        
-        old_sess = db.query(WeeklySession).filter(WeeklySession.id == old_sess_id).first()
-        if old_sess:
-            db.delete(old_sess)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        logger.warning(f"Safe session purge/merge note for session {old_sess_id}: {e}")
 
         # If not a valid Sunday contest session, purge it safely!
         logger.info(f"Purging non-canonical session ID {sess.id} ('{sess.contest_name}', date {sess.session_date})")
@@ -1045,7 +1045,7 @@ def sync_single_historical_session(db: Session, session_id: int):
                                 # Strategy 2: Live AC Submissions during contest session window
                                 session_subs = []
                                 for sub in subs:
-                                    ts = int(sub.get("timestamp", 0))
+                                    ts = int(sub.get("submission_timestamp") or sub.get("timestamp") or 0)
                                     if (c_start_ts - 300) <= ts <= (c_end_ts + 300):
                                         session_subs.append(sub)
 
@@ -1123,6 +1123,49 @@ def sync_single_historical_session(db: Session, session_id: int):
     now_dt = datetime.datetime.now(datetime.timezone.utc)
     now_iso = now_dt.isoformat()
 
+    # Preserve existing verified solvers before clearing table
+    existing_solvers = db.query(WeeklyPublicResult).filter(
+        WeeklyPublicResult.session_id == session.id,
+        (WeeklyPublicResult.total_contest_solved > 0) | (WeeklyPublicResult.participation_status.in_(["PUBLIC", "PUBLIC_ATTENDED"]))
+    ).all()
+    solver_map = {p.student_id: p for p in existing_solvers}
+
+    part_records = db.query(PreviousWeekParticipationRecord).filter(
+        PreviousWeekParticipationRecord.session_id == session.id,
+        (PreviousWeekParticipationRecord.problems_solved > 0) | (PreviousWeekParticipationRecord.participation_type.in_(["PUBLIC", "PUBLIC_ATTENDED"]))
+    ).all()
+
+    for pr in part_records:
+        if pr.student_id not in solver_map:
+            st = db.query(Student).filter(Student.id == pr.student_id).first()
+            if st:
+                solver_map[pr.student_id] = WeeklyPublicResult(
+                    session_id=session.id,
+                    student_id=st.id,
+                    reg_no=st.reg_no,
+                    name=st.name,
+                    dept=st.department.name if st.department else "CSE",
+                    year=st.year_level,
+                    participation_status="PUBLIC_ATTENDED",
+                    data_fetch_status="SUCCESS",
+                    confidence="VERIFIED",
+                    q1=pr.q1, q2=pr.q2, q3=pr.q3, q4=pr.q4,
+                    total_contest_solved=pr.problems_solved,
+                    contest_score=pr.official_score,
+                    contest_rank=pr.official_rank,
+                    q1_observed_seconds=pr.q1_observed_seconds,
+                    q2_observed_seconds=pr.q2_observed_seconds,
+                    q3_observed_seconds=pr.q3_observed_seconds,
+                    q4_observed_seconds=pr.q4_observed_seconds,
+                    q1_time_source=pr.q1_time_source,
+                    q2_time_source=pr.q2_time_source,
+                    q3_time_source=pr.q3_time_source,
+                    q4_time_source=pr.q4_time_source,
+                    fetch_status="SUCCESS",
+                    error_reason=None,
+                    last_fetched_at=now_dt
+                )
+
     # Clear existing session results and write verified records
     db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).delete(synchronize_session=False)
     db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session.id).delete(synchronize_session=False)
@@ -1138,7 +1181,12 @@ def sync_single_historical_session(db: Session, session_id: int):
     }
 
     for idx, r in enumerate(results, start=1):
-        cls_type = r["classification"]
+        existing_p = solver_map.get(r["student_id"])
+        if existing_p and ((existing_p.total_contest_solved or 0) > 0 or existing_p.participation_status in ["PUBLIC", "PUBLIC_ATTENDED"]):
+            cls_type = existing_p.participation_status if existing_p.participation_status in counts else "PUBLIC_ATTENDED"
+        else:
+            cls_type = r["classification"]
+
         counts[cls_type] = counts.get(cls_type, 0) + 1
 
         r["attended"]
@@ -1163,26 +1211,56 @@ def sync_single_historical_session(db: Session, session_id: int):
             "classified_at": now_iso
         }
 
-        pub_res = WeeklyPublicResult(
-            session_id=session.id,
-            student_id=r["student_id"],
-            reg_no=r["reg_no"],
-            name=r["name"],
-            dept=r["dept"],
-            year=r["year"],
-            participation_status=r["participation_status"],
-            data_fetch_status=r["data_fetch_status"],
-            confidence=r["confidence"],
-            q1=q1, q2=q2, q3=q3, q4=q4,
-            total_contest_solved=solved,
-            contest_score=score,
-            contest_rank=r.get("contest_rank"),
-            contest_rating=r.get("contest_rating"),
-            fetch_status=r["data_fetch_status"],
-            error_reason=r["reason"] if r["participation_status"] == "UNKNOWN" else None,
-            verification_evidence=json.dumps(evidence_payload),
-            last_fetched_at=now_dt
-        )
+        if existing_p and ((existing_p.total_contest_solved or 0) > 0 or existing_p.participation_status in ["PUBLIC", "PUBLIC_ATTENDED"]):
+            pub_res = WeeklyPublicResult(
+                session_id=session.id,
+                student_id=existing_p.student_id,
+                reg_no=existing_p.reg_no,
+                name=existing_p.name,
+                dept=existing_p.dept,
+                year=existing_p.year,
+                participation_status=existing_p.participation_status or "PUBLIC_ATTENDED",
+                data_fetch_status=existing_p.data_fetch_status or "SUCCESS",
+                confidence=existing_p.confidence or "VERIFIED",
+                q1=existing_p.q1, q2=existing_p.q2, q3=existing_p.q3, q4=existing_p.q4,
+                total_contest_solved=existing_p.total_contest_solved,
+                contest_score=existing_p.contest_score,
+                contest_rank=existing_p.contest_rank,
+                contest_rating=existing_p.contest_rating,
+                q1_observed_seconds=existing_p.q1_observed_seconds,
+                q2_observed_seconds=existing_p.q2_observed_seconds,
+                q3_observed_seconds=existing_p.q3_observed_seconds,
+                q4_observed_seconds=existing_p.q4_observed_seconds,
+                q1_time_source=existing_p.q1_time_source,
+                q2_time_source=existing_p.q2_time_source,
+                q3_time_source=existing_p.q3_time_source,
+                q4_time_source=existing_p.q4_time_source,
+                fetch_status="SUCCESS",
+                error_reason=None,
+                verification_evidence=existing_p.verification_evidence or json.dumps(evidence_payload),
+                last_fetched_at=now_dt
+            )
+        else:
+            pub_res = WeeklyPublicResult(
+                session_id=session.id,
+                student_id=r["student_id"],
+                reg_no=r["reg_no"],
+                name=r["name"],
+                dept=r["dept"],
+                year=r["year"],
+                participation_status=r["participation_status"],
+                data_fetch_status=r["data_fetch_status"],
+                confidence=r["confidence"],
+                q1=q1, q2=q2, q3=q3, q4=q4,
+                total_contest_solved=solved,
+                contest_score=score,
+                contest_rank=r.get("contest_rank"),
+                contest_rating=r.get("contest_rating"),
+                fetch_status=r["data_fetch_status"],
+                error_reason=r["reason"] if r["participation_status"] == "UNKNOWN" else None,
+                verification_evidence=json.dumps(evidence_payload),
+                last_fetched_at=now_dt
+            )
         db.add(pub_res)
 
         if cls_type == "VIRTUAL_ATTENDED" or r["participation_status"] == "VIRTUAL":

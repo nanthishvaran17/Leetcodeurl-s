@@ -73,7 +73,7 @@ def extract_contest_number(session: Any) -> Optional[int]:
         m = re.search(r'(?:weekly[- ]contest[- ]?|contest[- ]?)(\d+)', text, re.IGNORECASE)
         if m:
             return int(m.group(1))
-        m_num = re.search(r'\b(4\d{2}|5\d{2}|6\d{2})\b', text)
+        m_num = re.search(r'\b(\d{3,4})\b', text)
         if m_num:
             return int(m_num.group(1))
 

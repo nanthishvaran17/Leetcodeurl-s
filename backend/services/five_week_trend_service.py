@@ -39,7 +39,7 @@ def build_five_week_trend_report(
     usable_sessions = []
     for s in all_sessions:
         c_name = str(s.contest_name or "")
-        if re.search(r'\b(test|mock)\b', c_name, re.IGNORECASE):
+        if re.search(r'\b(test|mock)\b', c_name, re.IGNORECASE) or s.session_date == "2026-08-30":
             continue
         cnt = db.query(WeeklyPublicResult).filter(
             WeeklyPublicResult.session_id == s.id,
@@ -54,6 +54,10 @@ def build_five_week_trend_report(
     five_sessions = sorted(usable_sessions, key=lambda s: s.id)
     session_ids = [s.id for s in five_sessions]
     session_names = [s.contest_name or f"Contest {s.id}" for s in five_sessions]
+
+    # Pad session_names to exactly 5 headers
+    while len(session_names) < 5:
+        session_names.insert(0, "Historical N/A")
 
     # Pre-fetch all public results for these 5 sessions
     public_results = db.query(WeeklyPublicResult).filter(
@@ -106,12 +110,14 @@ def build_five_week_trend_report(
             pr = res_map.get((s_id, sess_id))
             if pr:
                 part_st = str(pr.participation_status or "").upper()
-                is_att = part_st in ("PUBLIC", "PUBLIC_ATTENDED", "OFFICIAL", "ATTENDED", "PUBLIC_LIVE")
+                is_att = part_st in ("PUBLIC", "PUBLIC_ATTENDED", "OFFICIAL", "ATTENDED", "PUBLIC_LIVE", "ATTENDED_ZERO", "ATTENDED_SOLVED") or (getattr(pr, "total_contest_solved", 0) or 0) > 0
                 q1 = 1 if (pr.q1 and pr.q1 >= 1) else 0
                 q2 = 1 if (pr.q2 and pr.q2 >= 1) else 0
                 q3 = 1 if (pr.q3 and pr.q3 >= 1) else 0
                 q4 = 1 if (pr.q4 and pr.q4 >= 1) else 0
-                sol = q1 + q2 + q3 + q4 if is_att else 0
+                actual_q_sum = q1 + q2 + q3 + q4
+                tot_rec = int(getattr(pr, "total_contest_solved", 0) or 0)
+                sol = max(actual_q_sum, tot_rec) if is_att else 0
                 c_solves.append(sol)
                 c_att_flags.append(1 if is_att else 0)
             else:

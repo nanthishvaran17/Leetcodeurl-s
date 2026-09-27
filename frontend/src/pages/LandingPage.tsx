@@ -431,8 +431,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       if (isFacultyRole) {
         try {
           const res = await api.get('/faculty-assignments/my-students?_t=' + Date.now());
-          if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-            const facultyStudents = res.data.map((st: any) => ({
+          if (res.data && Array.isArray(res.data.students) && res.data.students.length > 0) {
+            const facultyStudents = res.data.students.map((st: any) => ({
               ...st,
               department: typeof st.department === 'string' ? st.department : (st.department?.code || st.department?.name || 'CSE(CS)'),
               stats: st.stats || {

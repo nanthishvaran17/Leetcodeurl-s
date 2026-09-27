@@ -210,7 +210,7 @@ export const StudentAuditModal: React.FC<StudentAuditModalProps> = ({
               </div>
 
               {/* Audit Activity Trail */}
-              <div className="space-y-3">
+              <div className="space-y-3 mt-6">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center space-x-1.5">
                     <Clock className="w-3.5 h-3.5" />
@@ -245,8 +245,8 @@ export const StudentAuditModal: React.FC<StudentAuditModalProps> = ({
                             {log.details || 'Event logged successfully.'}
                           </p>
                         </div>
-                        <div className="text-[10px] font-mono text-slate-400 shrink-0">
-                          {log.timestamp ? new Date(log.timestamp).toLocaleString() : ''}
+                        <div className="text-xs font-bold text-slate-600 dark:text-slate-400 shrink-0 ml-3 mt-1 sm:mt-0 text-right">
+                          {log.timestamp ? new Date(log.timestamp).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase() : ''}
                         </div>
                       </div>
                     ))}

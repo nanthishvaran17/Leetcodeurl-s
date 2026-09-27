@@ -12,7 +12,7 @@ from collections import defaultdict
 from sqlalchemy.orm import Session, joinedload
 
 from backend.models import (
-    Student, Department, WeeklyPublicResult, WeeklyVirtualResult,
+    Student, Department, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult,
     WeeklyStudentSnapshot, WeeklyReportAudit, LeetCodeProfileStats
 )
 from backend.config.report_config import (
@@ -25,6 +25,7 @@ from backend.services.reporting_period_service import reporting_period_service
 from backend.services.contest_discovery_service import contest_discovery_service
 from backend.services.weekly_session_resolver import (
     resolve_weekly_sessions,
+    extract_contest_number,
 )
 from backend.services.contest_bucket_classifier import (
     classify_public_contest_outcome,
@@ -199,7 +200,11 @@ def generate_weekly_performance_data(
     current_week_contest: Optional[int] = None,
     report_date: Optional[str] = None,
     save_snapshot: bool = False,
-    current_user: Optional[Any] = None
+    current_user: Optional[Any] = None,
+    dept_filter: Optional[str] = "ALL",
+    year_filter: Optional[str] = "ALL",
+    batch_filter: Optional[str] = "ALL",
+    session_id: Optional[Any] = None
 ) -> Dict[str, Any]:
     """
     CANONICAL WEEKLY PERFORMANCE DATASET GENERATOR
@@ -221,11 +226,38 @@ def generate_weekly_performance_data(
     curr_contest_ids = [c["contest_id"] for c in discovered_curr_contests]
 
     # Step 2: Session Resolution
-    session_res = resolve_weekly_sessions(
-        db,
-        last_week=last_week_contest or (int(last_contest_ids[0]) if last_contest_ids and str(last_contest_ids[0]).isdigit() else None),
-        current_week=current_week_contest or (int(curr_contest_ids[0]) if curr_contest_ids and str(curr_contest_ids[0]).isdigit() else None)
-    )
+    if session_id and str(session_id).lower() not in ("latest", "all", "none", ""):
+        target_ws = None
+        if str(session_id).isdigit():
+            target_ws = db.query(WeeklySession).filter(WeeklySession.id == int(session_id)).first()
+        else:
+            target_ws = db.query(WeeklySession).filter(
+                (WeeklySession.session_date == str(session_id)) |
+                (WeeklySession.contest_name.ilike(f"%{session_id}%")) |
+                (WeeklySession.contest_id.ilike(f"%{session_id}%"))
+            ).first()
+
+        if target_ws:
+            prev_ws = db.query(WeeklySession).filter(WeeklySession.id < target_ws.id).order_by(WeeklySession.id.desc()).first()
+            session_res = {
+                "current_week_session": target_ws,
+                "last_week_session": prev_ws,
+                "current_week_contest": extract_contest_number(target_ws) or target_ws.id,
+                "last_week_contest": extract_contest_number(prev_ws) if prev_ws else "N/A",
+                "resolution_mode": "override_session_id"
+            }
+        else:
+            session_res = resolve_weekly_sessions(
+                db,
+                last_week=last_week_contest or (int(last_contest_ids[0]) if last_contest_ids and str(last_contest_ids[0]).isdigit() else None),
+                current_week=current_week_contest or (int(curr_contest_ids[0]) if curr_contest_ids and str(curr_contest_ids[0]).isdigit() else None)
+            )
+    else:
+        session_res = resolve_weekly_sessions(
+            db,
+            last_week=last_week_contest or (int(last_contest_ids[0]) if last_contest_ids and str(last_contest_ids[0]).isdigit() else None),
+            current_week=current_week_contest or (int(curr_contest_ids[0]) if curr_contest_ids and str(curr_contest_ids[0]).isdigit() else None)
+        )
 
     curr_ws = session_res.get("current_week_session")
     last_ws = session_res.get("last_week_session")
@@ -258,12 +290,34 @@ def generate_weekly_performance_data(
 
     # Step 3: Load Full Master Roster
     from backend.services.authorization_service import apply_role_based_student_filter
+    from backend.services.contest_performance_service import matches_dept, matches_year
+
     student_query = db.query(Student).options(joinedload(Student.department)).filter((Student.is_active == True) | (Student.is_active.is_(None)))
     
     if current_user:
         student_query = apply_role_based_student_filter(student_query, current_user, db)
         
     students = student_query.order_by(Student.department_id, Student.year_level, Student.reg_no).all()
+
+    # Apply department and year/batch filters if provided
+    if dept_filter and str(dept_filter).upper() != "ALL":
+        students = [
+            s for s in students
+            if matches_dept(
+                s.department.code if s.department else "",
+                s.department.name if s.department else "",
+                dept_filter,
+                s.department_id
+            )
+        ]
+
+    effective_year = year_filter if (year_filter and str(year_filter).upper() != "ALL") else batch_filter
+    if effective_year and str(effective_year).upper() != "ALL":
+        students = [
+            s for s in students
+            if matches_year(s.year_level, effective_year, s.reg_no)
+        ]
+
     total_students_count = len(students)
 
     student_ids = [s.id for s in students]
@@ -380,8 +434,8 @@ def generate_weekly_performance_data(
             "total_solved": tot,
             "category": category_name,
             "profile_ranking": getattr(st, "public_profile_ranking", None),
-            "contest_rating": getattr(st, "contest_rating", None),
-            "contest_ranking": getattr(st, "contest_global_ranking", None),
+            "contest_rating": (getattr(curr_pub_obj, "contest_rating", None) if curr_pub_obj and getattr(curr_pub_obj, "contest_rating", None) else getattr(st, "contest_rating", None)),
+            "contest_ranking": (getattr(curr_pub_obj, "contest_rank", None) if curr_pub_obj and getattr(curr_pub_obj, "contest_rank", None) else getattr(st, "contest_global_ranking", None)),
             "contest_name": f"Weekly Contest {curr_contest_num}",
             "public_result": curr_pub_outcome,
             "last_public_result": last_pub_outcome,
@@ -492,6 +546,9 @@ def generate_weekly_performance_data(
             b_label = b_cfg["label"]
             b_cohort = [s for s in d_students if s.get("year") == b_cfg["year"] or s.get("batch", "").replace(" ", "") == b_label.replace(" ", "")]
             batch_matrices[b_key] = _aggregate_cohort_metrics(b_cohort)
+
+        if len(d_students) == 0:
+            continue
 
         coordinator_name = get_coordinator_for_department(d.code)
         dept_summaries.append({

@@ -556,7 +556,11 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                 <Award className="w-4 h-4 text-white" />
               </div>
               <h3 className="text-3xl sm:text-4xl font-black text-white">
-                {(detail?.lc_contest_standing?.contest_rating || detail?.stats?.contest_rating) ? (detail.lc_contest_standing?.contest_rating || detail.stats?.contest_rating).toLocaleString('en-US', { minimumFractionDigits: 1 }) : 'Unrated'}
+                {(() => {
+                  const r = detail?.lc_contest_standing?.contest_rating || detail?.stats?.contest_rating;
+                  if (!r || r === 1500 || r === 1500.0) return 'Unrated';
+                  return r.toLocaleString('en-US', { minimumFractionDigits: 1 });
+                })()}
               </h3>
             </div>
 

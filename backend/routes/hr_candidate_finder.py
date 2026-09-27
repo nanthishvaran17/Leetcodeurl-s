@@ -1349,17 +1349,17 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     chart2.width = 13; chart2.height = 7.5
     ws1.add_chart(chart2, "I8")
 
-    ws1.merge_cells("A24:H24")
+    ws1.merge_cells("A24:I24")
     ws1["A24"] = "ACADEMIC & IDENTIFIER INFO"; ws1["A24"].font = FONT_HEADER; ws1["A24"].fill = GRP_ID_FILL; ws1["A24"].alignment = ALIGN_CENTER
-    ws1.merge_cells("I24:Q24")
-    ws1["I24"] = "LEETCODE SOLVING & ACTIVITY"; ws1["I24"].font = FONT_HEADER; ws1["I24"].fill = GRP_SOLVE_FILL; ws1["I24"].alignment = ALIGN_CENTER
-    ws1.merge_cells("R24:U24")
-    ws1["R24"] = "CONTEST METRICS"; ws1["R24"].font = FONT_HEADER; ws1["R24"].fill = GRP_CONTEST_FILL; ws1["R24"].alignment = ALIGN_CENTER
+    ws1.merge_cells("J24:R24")
+    ws1["J24"] = "LEETCODE SOLVING & ACTIVITY"; ws1["J24"].font = FONT_HEADER; ws1["J24"].fill = GRP_SOLVE_FILL; ws1["J24"].alignment = ALIGN_CENTER
+    ws1.merge_cells("S24:V24")
+    ws1["S24"] = "CONTEST METRICS"; ws1["S24"].font = FONT_HEADER; ws1["S24"].fill = GRP_CONTEST_FILL; ws1["S24"].alignment = ALIGN_CENTER
 
     ws1.row_dimensions[24].height = 20
 
     headers1 = [
-        "Rank", "Student Name", "Register No", "Roll No", "Department", "Degree", "Batch", "Section",
+        "Rank", "Student Name", "Register No", "Roll No", "Department", "Degree", "Batch", "Section", "12th Cutoff",
         "Primary Language", "Total Solved", "Easy", "Medium", "Hard", "Acceptance %", "Submissions", "Current Streak", "Active Days",
         "Contest Rating", "Global Rank", "Contests Attended", "Top %"
     ]
@@ -1388,6 +1388,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
             clean_cell_value(c.get("degree", "B.E.")),
             clean_cell_value(c.get("batch", "2023–2027")),
             clean_cell_value(c.get("section", "A")),
+            clean_cell_value(c.get("twelfth_cutoff", "—")),
             clean_cell_value(c.get("primary_language", "Java")),
             tot,
             int(c.get("easy_solved", 0) or 0),
@@ -1413,8 +1414,8 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
 
         ws1.row_dimensions[r_idx].height = 20
 
-    ws1.auto_filter.ref = f"A25:U{25 + tot_cnt}"
-    ws1.freeze_panes = "A26"
+    ws1.auto_filter.ref = f"A25:V{25 + tot_cnt}"
+    # Removed freeze_panes here so the user can scroll naturally without the massive header blocking the view
 
     min_widths_sheet1 = {
         "A": 7.5, # Rank / #
@@ -1425,19 +1426,20 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         "F": 12,  # Degree
         "G": 14,  # Batch
         "H": 12,  # Section
-        "I": 14,  # Primary Language
-        "J": 14,  # Total Solved
-        "K": 10,  # Easy
-        "L": 10,  # Medium
-        "M": 10,  # Hard
-        "N": 16,  # Acceptance %
-        "O": 14,  # Submissions
-        "P": 12,  # Current Streak
-        "Q": 14,  # Active Days
-        "R": 16,  # Contest Rating
-        "S": 16,  # Global Rank
-        "T": 16,  # Contests Attended
-        "U": 12   # Top %
+        "I": 12,  # 12th Cutoff
+        "J": 14,  # Primary Language
+        "K": 14,  # Total Solved
+        "L": 10,  # Easy
+        "M": 10,  # Medium
+        "N": 10,  # Hard
+        "O": 16,  # Acceptance %
+        "P": 14,  # Submissions
+        "Q": 12,  # Current Streak
+        "R": 14,  # Active Days
+        "S": 16,  # Contest Rating
+        "T": 16,  # Global Rank
+        "U": 16,  # Contests Attended
+        "V": 12   # Top %
     }
 
     for col in ws1.columns:
@@ -1458,18 +1460,18 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     ws2.page_setup.fitToWidth = 1
     ws2.page_setup.fitToHeight = 0
 
-    ws2.merge_cells("A1:M1")
+    ws2.merge_cells("A1:N1")
     ws2["A1"] = "MANAGEMENT REPORT — STUDENT OVERVIEW"
     ws2["A1"].font = FONT_TITLE; ws2["A1"].fill = NAVY_FILL; ws2["A1"].alignment = ALIGN_CENTER
     ws2.row_dimensions[1].height = 28
 
-    ws2.merge_cells("A2:M2")
+    ws2.merge_cells("A2:N2")
     ws2["A2"] = f"Generated: {date_str}   |   Total Students: {tot_cnt}   |   Filters: {filters_desc}"
     ws2["A2"].font = FONT_META; ws2["A2"].fill = GRAY_META_FILL; ws2["A2"].alignment = ALIGN_CENTER
     ws2.row_dimensions[2].height = 18
 
     headers2 = [
-        "Rank", "Student Name", "Register No", "Department", "Batch", "Section", "Language",
+        "Rank", "Student Name", "Register No", "Department", "Batch", "Section", "12th Cutoff", "Language",
         "Total Solved", "Easy", "Medium", "Hard", "Acceptance %", "Contest Rating"
     ]
 
@@ -1488,6 +1490,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
             clean_cell_value(c.get("dept_code")),
             clean_cell_value(c.get("batch")),
             clean_cell_value(c.get("section")),
+            clean_cell_value(c.get("twelfth_cutoff", "—")),
             clean_cell_value(c.get("primary_language")),
             int(c.get("total_solved", 0) or 0),
             int(c.get("easy_solved", 0) or 0),
@@ -1503,7 +1506,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
             cell.border = _THIN_BORDER
             if r_idx % 2 == 1: cell.fill = ALT_ROW_FILL
 
-    ws2.auto_filter.ref = f"A4:M{4 + tot_cnt}"
+    ws2.auto_filter.ref = f"A4:N{4 + tot_cnt}"
     ws2.freeze_panes = "A5"
     for col in ws2.columns:
         col_letter = get_column_letter(col[0].column)

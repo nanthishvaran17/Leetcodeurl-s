@@ -114,7 +114,7 @@ def apscheduler_listener(event):
             exc_str = str(e).lower()
             if 'ssl' in exc_str or 'operationalerror' in exc_str or 'connection' in exc_str:
                 try:
-                    db.invalidate()
+                    pass  # Session doesn't support invalidate(); pool_pre_ping handles reconnection
                 except Exception:
                     pass
             if attempt < 2 and any(kw in exc_str for kw in ('ssl', 'operationalerror', 'connection', 'closed')):

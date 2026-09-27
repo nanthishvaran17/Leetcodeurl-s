@@ -180,7 +180,7 @@ def validate_csrf_origin(request: Request):
     """Verifies request Origin/Referer for state-changing operations and blocks unauthorized origins."""
     raw_origin = request.headers.get("Origin") or request.headers.get("Referer")
     if not raw_origin:
-        return
+        raise HTTPException(status_code=403, detail="CSRF Validation Failed: Missing Origin or Referer header")
 
     # Properly parse scheme and host/port from Origin or Referer header (strips paths like /login)
     try:
@@ -248,8 +248,6 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
         raw_token = auth_header.split(" ")[1].strip()
-    elif request.query_params.get("token"):
-        raw_token = request.query_params.get("token", "").strip()
     else:
         # Fallback to HttpOnly cookie for all requests to prevent XSS/localStorage exposure
         cookie_name = getattr(settings, "SESSION_COOKIE_NAME", "admin_session_token")
@@ -352,7 +350,7 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                     cache.set(cache_key, {"type": "User", "id": user.id, "username": user.username, "email": user.email, "role": user.role, "department_id": getattr(user, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{user.id}"])
                     return user
                 # If authorized admin email
-                if fb_email in EXACT_TWO_ADMIN_EMAILS:
+                if fb_email in AUTHORIZED_ADMIN_EMAILS:
                     user_by_name = db.query(User).filter(User.username.ilike(fb_email.split('@')[0]), User.is_active == True).first()
                     if user_by_name:
                         cache.set(cache_key, {"type": "User", "id": user_by_name.id, "username": user_by_name.username, "email": user_by_name.email, "role": user_by_name.role, "department_id": getattr(user_by_name, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{user_by_name.id}"])
@@ -422,7 +420,7 @@ def get_authoritative_admin_email() -> str:
     return (os.environ.get("ADMIN_EMAIL") or getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com")).strip().lower()
 
 
-EXACT_TWO_ADMIN_EMAILS = {
+AUTHORIZED_ADMIN_EMAILS = {
     "nanthishvaran17@gmail.com",
     "nanthishvaran117@gmail.com",
     "nanthishvaran0106@gmail.com",
@@ -533,7 +531,7 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
     # =========================================================================
     # STEP 1: VERIFY ADMINISTRATOR / AUTHORIZED USER IDENTITY
     # =========================================================================
-    is_direct_match = (raw_input == auth_admin_email) or (raw_input in EXACT_TWO_ADMIN_EMAILS)
+    is_direct_match = (raw_input == auth_admin_email) or (raw_input in AUTHORIZED_ADMIN_EMAILS)
     
     user = db.query(User).filter(
         (User.email.ilike(raw_input)) | (User.username.ilike(raw_input))
@@ -674,7 +672,7 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
     user = db.query(User).filter(User.email.ilike(clean_email)).first()
     
     auth_admin = get_authoritative_admin_email()
-    if not user and (clean_email in EXACT_TWO_ADMIN_EMAILS or clean_email == auth_admin):
+    if not user and (clean_email in AUTHORIZED_ADMIN_EMAILS or clean_email == auth_admin):
         user = db.query(User).filter(User.role.ilike("admin"), User.is_active == True).first()
         if user:
             setattr(user, "email", str(clean_email))
@@ -1123,16 +1121,16 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
     if not user or not is_pass_valid:
         allow_default_pwd = getattr(settings, "ALLOW_DEFAULT_ADMIN_PASSWORD", False)
         
+        configured_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
+        configured_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
+        configured_password = getattr(settings, "ADMIN_PASSWORD", "").strip()
+
         if allow_default_pwd:
-            configured_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
-            configured_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
-            configured_password = getattr(settings, "ADMIN_PASSWORD", secrets.token_urlsafe(16)).strip()
-            
             is_admin_user_match = (
                 clean_username.lower() == configured_username.lower() or
                 clean_username.lower() == configured_email.lower()
             )
-            is_pass_match = (clean_password == configured_password)
+            is_pass_match = bool(configured_password and clean_password == configured_password)
         else:
             is_admin_user_match = False
             is_pass_match = False

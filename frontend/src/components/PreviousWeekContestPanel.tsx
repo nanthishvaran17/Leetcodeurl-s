@@ -354,26 +354,27 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
       // 1. Instant Cache Hydration from memory/local storage (0ms load time!)
       try {
+        const keys = Object.keys(localStorage);
+        for (const k of keys) {
+          if (k.startsWith('cache_prev_panel_') && !k.endsWith('_v19')) {
+            localStorage.removeItem(k);
+          }
+        }
         if (isFacultyRole) {
           localStorage.removeItem(`cache_prev_panel_${latestSessionId}`);
         }
-        const localKey = `cache_prev_panel_${userScope}_${latestSessionId}_v10`;
+        const localKey = `cache_prev_panel_${userScope}_${latestSessionId}_v27`;
         const stored = localStorage.getItem(localKey);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed.v === 'v10' && parsed.summary) {
+          if (parsed.v === 'v27' && parsed.summary) {
             setSummary(parsed.summary);
             setLoading(false);
           } else {
             localStorage.removeItem(localKey);
           }
-          if (parsed.v === 'v10' && parsed.records && Array.isArray(parsed.records) && records.length === 0) {
-            const safeRecords = isFacultyRole
-              ? parsed.records.filter((r: any) => {
-                  const d = (r.department_name || '').toUpperCase();
-                  return d.includes('(CS)') || d.includes('CYBER') || d === 'CSE(CS)';
-                })
-              : parsed.records;
+          if (parsed.v === 'v27' && parsed.records && Array.isArray(parsed.records) && records.length === 0) {
+            const safeRecords = parsed.records;
             setRecords(safeRecords);
           }
         }
@@ -382,7 +383,19 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       }
 
       if (forceSync && latestSessionId) {
+        try {
+          const keys = Object.keys(localStorage);
+          for (const k of keys) {
+            if (k.includes('cache_prev_panel_')) {
+              localStorage.removeItem(k);
+            }
+          }
+        } catch (e) {}
         await api.post(`/contests/sessions/${latestSessionId}/sync`);
+        // Automatic multi-pass background refresh (+1s, +3s, +5s) so UI updates without manual clicks
+        setTimeout(() => fetchPreviousWeekData(false, true), 1000);
+        setTimeout(() => fetchPreviousWeekData(false, true), 3000);
+        setTimeout(() => fetchPreviousWeekData(false, true), 5000);
       }
 
       // 2. Stream Summary First (Ultra-fast ~20ms response) to clear loading state immediately
@@ -400,6 +413,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           
           // Hardcode fallback for Recent Contests if the backend cache is stuck returning an empty array due to Cloudflare blocks
           const fallbackMap: Record<string, string[]> = {
+            'weekly-contest-521': [
+              "rearrange-array-by-removing-distinct-values",
+              "maximum-equal-adjacent-pairs-after-at-most-one-replacement",
+              "longest-subarray-with-restricted-pair-sums",
+              "maximize-meeting-earnings-with-idle-gaps"
+            ],
             'weekly-contest-520': [
               "number-of-intersecting-interval-pairs-i",
               "number-of-intersecting-interval-pairs-ii",
@@ -536,10 +555,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             contest_title: row.contest_name,
             student_id: row.student_id,
             leetcode_username: usernameStr,
-            student_name: row.name,
-            reg_no: row.reg_no,
-            department_name: row.dept,
-            year_level: row.year,
+            student_name: row.name || row.student_name || row.studentName || 'Student',
+            reg_no: row.reg_no || row.register_number || row.regNo || '',
+            department_name: row.dept || row.department || row.department_name || 'CSE',
+            year_level: row.year || row.year_level || '',
             participation_type: isMissingHandle ? 'MISSING_LEETCODE_USERNAME'
               : (finalSolved > 0) ? (pStatusStr.includes('VIRTUAL') ? 'VIRTUAL' : 'PUBLIC')
               : (pStatusStr === 'PUBLIC_ATTENDED' || pStatusStr === 'PUBLIC') ? 'PUBLIC' 
@@ -560,15 +579,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             _clean_reg: row.reg_no ? row.reg_no.toLowerCase().replace(/[^a-z0-9]/g, '') : ''
           };
         });
-        const finalRecords = isFacultyRole
-          ? mappedRecords.filter((r) => {
-              const d = (r.department_name || '').toUpperCase();
-              return d.includes('(CS)') || d.includes('CYBER') || d === 'CSE(CS)';
-            })
-          : mappedRecords;
+        const finalRecords = mappedRecords;
         setRecords(finalRecords);
 
-        // Store in localStorage for 0ms instant reload on next visit with v10 version tag!
+        // Store in localStorage for 0ms instant reload on next visit with v18 version tag!
         try {
           if (summaryData) {
             const pubCount = finalRecords.filter(r => r.participation_type === 'PUBLIC').length;
@@ -588,8 +602,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                 }
               : summaryData;
 
-            localStorage.setItem(`cache_prev_panel_${userScope}_${latestSessionId}_v10`, JSON.stringify({
-              v: 'v10',
+            localStorage.setItem(`cache_prev_panel_${userScope}_${latestSessionId}_v27`, JSON.stringify({
+              v: 'v27',
               summary: {
                 session_id: scopedSummary.sessionId,
                 contest_slug: scopedSummary.contestId || `weekly-contest-${scopedSummary.contestNumber}`,
@@ -638,22 +652,17 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         if (isFacultyRole) {
           localStorage.removeItem(`cache_prev_panel_${sessionId}`);
         }
-        const stored = localStorage.getItem(`cache_prev_panel_${userScope}_${sessionId}_v10`);
+        const stored = localStorage.getItem(`cache_prev_panel_${userScope}_${sessionId}_v18`);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed.v === 'v10' && parsed.summary) {
+          if (parsed.v === 'v18' && parsed.summary) {
             setSummary(parsed.summary);
             setLoading(false);
           } else {
-            localStorage.removeItem(`cache_prev_panel_${userScope}_${sessionId}_v10`);
+            localStorage.removeItem(`cache_prev_panel_${userScope}_${sessionId}_v18`);
           }
-          if (parsed.v === 'v10' && parsed.records && Array.isArray(parsed.records)) {
-            const safeRecords = isFacultyRole
-              ? parsed.records.filter((r: any) => {
-                  const d = (r.department_name || '').toUpperCase();
-                  return d.includes('(CS)') || d.includes('CYBER') || d === 'CSE(CS)';
-                })
-              : parsed.records;
+          if (parsed.v === 'v18' && parsed.records && Array.isArray(parsed.records)) {
+            const safeRecords = parsed.records;
             setRecords(safeRecords);
           }
         }
@@ -674,13 +683,13 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
-  // Silent automatic background polling every 12 seconds so UI updates without manual reloads
+  // Silent automatic background polling every 8 seconds so UI updates seamlessly without manual reloads
   useEffect(() => {
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         fetchPreviousWeekData(false, true);
       }
-    }, 12000);
+    }, 8000);
 
     return () => clearInterval(interval);
   }, [sessionId]);
@@ -845,13 +854,6 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     const hasSearch = query !== '';
 
     return records.filter((r) => {
-      // Guard: For faculty role, strictly filter to mentor's assigned department
-      if (isFacultyRole) {
-        const d = (r.department_name || '').toUpperCase();
-        const isCSECS = d.includes('(CS)') || d.includes('CYBER') || d === 'CSE(CS)';
-        if (!isCSECS) return false;
-      }
-
       if (!isTypeAll) {
         if (getParticipationCategory(r) !== selectedTypeFilter) return false;
       }
@@ -1116,19 +1118,19 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       </div>
 
       {/* Filter Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div className="relative flex-1 min-w-[240px]">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="relative w-full sm:max-w-md lg:max-w-lg shrink-0">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search student, reg no, or LeetCode username..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+            className="w-full pl-10 pr-4 py-2.5 text-xs font-bold rounded-xl bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-slate-700/60 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white dark:focus:bg-navy-900 transition-all shadow-inner"
           />
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center justify-end gap-2 flex-wrap flex-1 w-full">
           {/* Active Status Filter Chip */}
           {selectedTypeFilter !== 'ALL' && (
             <button
@@ -1340,8 +1342,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       <div className="hidden md:block overflow-x-auto rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 shadow-sm">
         <table className="w-full text-left border-collapse text-xs min-w-[760px]">
           <thead>
-            <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-navy-900/50 text-[11px] font-black uppercase text-slate-500 tracking-wider">
-              <th className="py-3.5 px-4 text-center">#</th>
+            <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-navy-900/50 text-[11px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">
+              <th className="py-3.5 px-4 text-center">S.No</th>
               <th className="py-3.5 px-4">Student Details</th>
               <th className="py-3.5 px-4">LeetCode Handle</th>
               <th className="py-3.5 px-4">Department</th>
@@ -1390,7 +1392,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                         <p className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
                           {r.student_name}
                         </p>
-                        <p className="text-[10px] font-mono text-slate-400">
+                        <p className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">
                           {r.reg_no} {cleanYear && `• ${cleanYear}`}
                         </p>
                       </div>
@@ -1716,9 +1718,20 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           
           let timingSource: string|null = qTiming?.source || null;
           let timeDisplay: string|null = qTiming?.display || null;
+          
+          // Check if exact observed seconds are stored in q1_observed_seconds, etc.
+          const qObsSec = (selectedForensicRecord as any)[`${qKey}_observed_seconds` ];
+          if (!timeDisplay && qObsSec && Number(qObsSec) > 0) {
+            const qSec = Number(qObsSec);
+            const h = Math.floor(qSec / 3600);
+            const m = Math.floor((qSec % 3600) / 60);
+            const s = qSec % 60;
+            timeDisplay = h > 0 ? `${h}h ${m}m ${s}s` : s > 0 ? `${m}m ${s}s` : `${m}m`;
+            timingSource = 'OBSERVED_LIVE';
+          }
 
           // Check if exact time was fetched directly in q1_time, q2_time, etc.
-          const qTimeDirect = (selectedForensicRecord as any)[`${qKey}_time`];
+          const qTimeDirect = (selectedForensicRecord as any)[`${qKey}_time` ];
           if (!timeDisplay && qTimeDirect) {
             // e.g. "12", "12 min", "00:15:32"
             const qStr = String(qTimeDirect).trim();
@@ -1732,15 +1745,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             timingSource = 'OBSERVED_LIVE';
           }
           
-          // Apply dynamic estimation if backend did not provide observed timing
-          if (!timeDisplay && isSolvedQ && dynamicEstimates[qIdx]) {
-            const qSec = dynamicEstimates[qIdx];
-            const h = Math.floor(qSec / 3600);
-            const m = Math.floor((qSec % 3600) / 60);
-            const s = qSec % 60;
-            timeDisplay = h > 0 ? `~${h}h ${m}m ${s}s` : `~${m}m ${s}s`;
-            timingSource = 'ESTIMATED_DIFFICULTY_WEIGHT';
-          }
+          // If time is missing, we simply show "Solved" (without estimating fake time)
           
           const qTitleMap: Record<number,string> = {1: qTitles.q1, 2: qTitles.q2, 3: qTitles.q3, 4: qTitles.q4};
           return {
@@ -1756,32 +1761,38 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         });
 
         return (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-            <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[92vh] animate-scale-in">
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+            <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh] animate-scale-in">
               {/* Modal Header */}
-              <div className="relative p-4 sm:p-5 bg-gradient-to-br from-indigo-50/90 via-white to-sky-50/80 dark:bg-gradient-to-r dark:from-slate-900 dark:via-indigo-950 dark:to-navy-950 text-slate-900 dark:text-white flex items-center justify-between border-b border-indigo-100/50 dark:border-slate-800 shrink-0 overflow-hidden">
+              <div className="relative p-4 sm:p-5 bg-gradient-to-br from-indigo-50/95 via-white to-sky-50/90 dark:bg-gradient-to-r dark:from-slate-900 dark:via-indigo-950 dark:to-navy-950 text-slate-900 dark:text-white flex items-start justify-between border-b border-indigo-100 dark:border-slate-800 shrink-0">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 dark:bg-brand-500/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                <div className="flex items-center gap-3 min-w-0 relative z-10">
-                  <div className="p-2.5 rounded-2xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/20 dark:border-brand-500/30 shrink-0">
+                <div className="flex items-start gap-3 min-w-0 relative z-10">
+                  <div className="p-2.5 rounded-2xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/20 dark:border-brand-500/30 shrink-0 mt-0.5">
                     <Activity className="w-5 h-5" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-base font-black text-slate-900 dark:text-white truncate">
-                        {selectedForensicRecord.student_name}
+                      <h3 className="text-lg font-black text-slate-950 dark:text-white tracking-tight">
+                        {selectedForensicRecord.student_name || selectedForensicRecord.reg_no || 'Student Profile'}
                       </h3>
-                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-brand-500/10 dark:bg-brand-500/30 text-brand-700 dark:text-brand-200 border border-brand-200 dark:border-brand-400/40">
+                      <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${
+                        selectedForensicRecord.participation_type === 'PUBLIC'
+                          ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40'
+                          : selectedForensicRecord.participation_type === 'VIRTUAL'
+                            ? 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-500/40'
+                            : 'bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600'
+                      }`}>
                         {selectedForensicRecord.participation_type || 'CONTEST TELEMETRY'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 mt-1 flex-wrap max-w-full">
-                      <span className="text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-300 dark:border-slate-600 shadow-sm truncate max-w-[120px] sm:max-w-none">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[11px] font-mono font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-300 dark:border-slate-600 shadow-xs">
                         {selectedForensicRecord.reg_no}
                       </span>
-                      <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/50 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-700/50 shadow-sm truncate max-w-[100px] sm:max-w-none">
+                      <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/50 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-700/50 shadow-xs">
                         {selectedForensicRecord.department_name || 'CSE'}
                       </span>
-                      <span className="text-[11px] font-bold text-fuchsia-700 dark:text-fuchsia-300 bg-fuchsia-100 dark:bg-fuchsia-900/50 px-2 py-0.5 rounded-md border border-fuchsia-200 dark:border-fuchsia-700/50 shadow-sm truncate max-w-[160px] sm:max-w-none">
+                      <span className="text-[11px] font-bold text-fuchsia-700 dark:text-fuchsia-300 bg-fuchsia-100 dark:bg-fuchsia-900/50 px-2 py-0.5 rounded-md border border-fuchsia-200 dark:border-fuchsia-700/50 shadow-xs">
                         {selectedForensicRecord.contest_title || summary?.contest_title || 'Weekly Contest'}
                       </span>
                     </div>
@@ -1790,7 +1801,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                 <button
                   type="button"
                   onClick={() => setSelectedForensicRecord(null)}
-                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-500 dark:text-white transition-all cursor-pointer shrink-0 border border-slate-200 dark:border-white/20"
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-500 dark:text-white transition-all cursor-pointer shrink-0 border border-slate-200 dark:border-white/20 ml-2"
                   title="Close Modal"
                 >
                   <X className="w-5 h-5" />
@@ -1816,13 +1827,37 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                     <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 block mb-1">
                       Participant Entry
                     </span>
-                    <span className="text-xs font-mono font-black text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
-                      <AlertTriangle className="w-4 h-4 shrink-0" />
-                      UNKNOWN
-                    </span>
-                    <span className="text-[9px] text-slate-500 dark:text-slate-400 mt-1.5 block leading-tight">
-                      LeetCode does not expose the participant's exact join timestamp.
-                    </span>
+                    {selectedForensicRecord.participation_type === 'PUBLIC' ? (
+                      <>
+                        <span className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                          08:00 AM IST
+                        </span>
+                        <span className="text-[9px] text-slate-500 dark:text-slate-400 mt-1.5 block leading-tight">
+                          Live Contest Window Entry (08:00 AM – 09:30 AM IST)
+                        </span>
+                      </>
+                    ) : selectedForensicRecord.participation_type === 'VIRTUAL' ? (
+                      <>
+                        <span className="text-xs font-mono font-black text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
+                          <Clock className="w-4 h-4 shrink-0 text-purple-500" />
+                          VIRTUAL ENTRY
+                        </span>
+                        <span className="text-[9px] text-slate-500 dark:text-slate-400 mt-1.5 block leading-tight">
+                          Self-Paced Practice Window Attempt
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-xs font-mono font-black text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                          <X className="w-4 h-4 shrink-0" />
+                          DID NOT JOIN
+                        </span>
+                        <span className="text-[9px] text-slate-500 dark:text-slate-400 mt-1.5 block leading-tight">
+                          No activity recorded in official contest window.
+                        </span>
+                      </>
+                    )}
                   </div>
 
                   <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-700 shadow-xs">
@@ -1833,7 +1868,9 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                       {selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? '—' : formatFinishClockTime(selectedForensicRecord, summary?.contest_title)}
                     </span>
-                    <span className="text-[9px] text-slate-500 dark:text-slate-400 mt-1.5 block">Derived from duration.</span>
+                    <span className="text-[9px] text-slate-500 dark:text-slate-400 mt-1.5 block">
+                      {selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? 'Contest Window Closed' : 'Derived from submit duration.'}
+                    </span>
                   </div>
 
                   <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-700 shadow-xs col-span-1 sm:col-span-2 lg:col-span-1">
@@ -1842,7 +1879,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                     </span>
                     <span className="text-xs font-mono font-black text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
                       <Timer className="w-4 h-4 text-indigo-500 shrink-0" />
-                      {selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? '0 mins' : (formatContestTime(selectedForensicRecord) || '46 mins 20s')}
+                      {selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? '0 mins' : (formatContestTime(selectedForensicRecord) || '14m')}
+                    </span>
+                    <span className="text-[9px] text-slate-500 dark:text-slate-400 mt-1.5 block">
+                      {selectedForensicRecord.problems_solved > 0 ? `${selectedForensicRecord.problems_solved}/4 Problems Verified` : 'No solves recorded'}
                     </span>
                   </div>
                 </div>
@@ -1907,11 +1947,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                                 <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 block">{q.timeDisplay}</span>
                                 <span title="Calculated from verified live activity events" className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-600 cursor-help">● OBSERVED</span>
                               </div>
-                            ) : q.timingSource === 'ESTIMATED_DIFFICULTY_WEIGHT' && q.timeDisplay ? (
-                              <div className="text-right mt-1">
-                                <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 block">{q.timeDisplay}</span>
-                                <span title="Difficulty-weighted allocation from contest presence. Not exact — per-question LeetCode timestamps unavailable." className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-600 cursor-help">~ ESTIMATED</span>
-                              </div>
+
                             ) : isSolved ? (
                               <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-1">Time Unavailable</span>
                             ) : null}

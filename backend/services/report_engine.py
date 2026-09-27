@@ -5,6 +5,7 @@ import hashlib
 import threading
 import copy
 import logging
+import re
 from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
 from backend.models import Student, ReportHistory
@@ -23,6 +24,47 @@ _UNIVERSAL_CACHE_LOCK = threading.Lock()
 def clear_universal_dataset_cache():
     with _UNIVERSAL_CACHE_LOCK:
         _UNIVERSAL_DATASET_CACHE.clear()
+
+def to_roman_year(val: Any) -> str:
+    if not val:
+        return ""
+    v = str(val).strip().upper()
+    if v in ("1", "1ST", "I", "I YEAR", "1 YEAR"):
+        return "I"
+    elif v in ("2", "2ND", "II", "II YEAR", "2 YEAR"):
+        return "II"
+    elif v in ("3", "3RD", "III", "III YEAR", "3 YEAR"):
+        return "III"
+    elif v in ("4", "4TH", "IV", "IV YEAR", "4 YEAR", "FINAL"):
+        return "IV"
+    if "III" in v:
+        return "III"
+    elif "II" in v:
+        return "II"
+    elif "IV" in v:
+        return "IV"
+    elif "I" in v:
+        return "I"
+    return v
+
+
+def clean_report_title(t_str: str) -> str:
+    if not t_str:
+        return ""
+    t = str(t_str).strip()
+    # 1. Strip leading standalone numbers e.g. "2 2 ", "2 ", "3 ", "2-", "2 2"
+    t = re.sub(r'^\s*(\d+[\s-]*)+', '', t).strip()
+    # 2. Strip orphaned standalone numbers before hyphens e.g. " (AUTONOMOUS) 2 - " -> " (AUTONOMOUS) "
+    t = re.sub(r'\s+\d+\s*-\s*', ' ', t).strip()
+    # 3. Convert (3 Year), (3Yr), (3) to (III Year)
+    def repl_yr(m):
+        r_y = to_roman_year(m.group(1))
+        return f"({r_y} Year)"
+    t = re.sub(r'\(\s*(\d+|I+|IV|V|FINAL|1ST|2ND|3RD|4TH)\s*(?:Year|Yr)?\s*\)', repl_yr, t, flags=re.IGNORECASE)
+    # 4. Convert standalone "3 Year" / "3rd Year" to "III Year"
+    t = re.sub(r'\b(\d+|1ST|2ND|3RD|4TH)\s*(?:Year|Yr)\b', lambda m: f"{to_roman_year(m.group(1))} Year", t, flags=re.IGNORECASE)
+    return t.strip()
+
 
 def build_universal_report(db: Session, config: ReportConfig, current_user: Optional[Any] = None) -> Dict[str, Any]:
     """
@@ -73,32 +115,125 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
 
     rtype_upper = (config.report_type or "").upper()
 
+    REPORT_TYPE_TITLES = {
+        "WEEKLY_CONTEST_INTELLIGENCE": "Weekly Contest Intelligence Report",
+        "SUNDAY_LIVE_CONTEST": "Sunday Live Contest Report",
+        "CONTEST_ATTENDANCE_PARTICIPATION": "Contest Attendance & Participation Report",
+        "CONTEST_PERFORMANCE_RANKING": "Contest Performance & Ranking Report",
+        "WEEKLY_STUDENT_PERFORMANCE": "Weekly Student Performance Report",
+        "WEEKLY_PERFORMANCE": "Coordinator Weekly Performance Report",
+        "FIVE_WEEK_PERFORMANCE_TREND": "Five-Week Performance Trend Report",
+        "PROBLEM_DIFFICULTY_INTELLIGENCE": "Problem Difficulty Intelligence Report",
+        "FACULTY_CONSOLIDATED": "Faculty Consolidated Performance Report",
+        "FACULTY_COORDINATOR_CONSOLIDATED": "Faculty Coordinator Consolidated Report",
+        "HOD_DEPARTMENT_INTELLIGENCE": "HOD Department Intelligence Report",
+        "PRINCIPAL_EXECUTIVE": "Principal Executive Intelligence Report",
+        "MANAGEMENT_EXECUTIVE_SUMMARY": "Management Executive Summary Report",
+    }
+
+    rpt_key = rtype_upper or "REPORT"
+    base_title = REPORT_TYPE_TITLES.get(rpt_key, rpt_key.replace('_', ' ').title())
+    title = base_title
+    if config.department and config.department != "ALL":
+        title = f"{config.department} - {title}"
+    if config.year and config.year != "ALL":
+        roman_yr = to_roman_year(config.year)
+        title = f"{title} ({roman_yr} Year)"
+    title = clean_report_title(title)
+
+    report_id = f"RPT-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+
+    def _save_and_return(res_data):
+        unique_rid = f"RPT-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
+        final_rid = res_data.get("reportId") or res_data.get("report_id") or unique_rid
+        res_data["reportId"] = final_rid
+        res_data["report_id"] = final_rid
+        res_data["department"] = config.department or "ALL"
+        res_data["deptFilter"] = config.department or "ALL"
+        res_data["year"] = config.year or "ALL"
+        res_data["yearFilter"] = config.year or "ALL"
+        try:
+            existing = db.query(ReportHistory).filter(ReportHistory.report_id == final_rid).first()
+            if existing:
+                existing.dataset = res_data
+                existing.status = "GENERATED"
+                existing.title = res_data.get("title") or res_data.get("reportTitle") or title
+                existing.filters = config.model_dump()
+            else:
+                history_entry = ReportHistory(
+                    report_id=final_rid,
+                    report_type=config.report_type,
+                    title=res_data.get("title") or res_data.get("reportTitle") or title,
+                    filters=config.model_dump(),
+                    dataset=res_data,
+                    status="GENERATED"
+                )
+                db.add(history_entry)
+            db.commit()
+        except Exception as ex:
+            db.rollback()
+            logger.warning(f"[REPORT_HISTORY_NOTE] {ex}")
+        with _UNIVERSAL_CACHE_LOCK:
+            _UNIVERSAL_DATASET_CACHE[cache_key] = copy.deepcopy(res_data)
+        return res_data
+
     if rtype_upper in WOW_INTEL_TYPES:
         from backend.services.wow_intel_service import build_wow_intel_report
         res = build_wow_intel_report(db, config, current_user=current_user)
-        with _UNIVERSAL_CACHE_LOCK:
-            _UNIVERSAL_DATASET_CACHE[cache_key] = copy.deepcopy(res)
-        return res
+        return _save_and_return(res)
 
     if rtype_upper in HIST_INTEL_TYPES:
         from backend.services.hist_intel_service import build_hist_intel_report
         res = build_hist_intel_report(db, config, current_user=current_user)
-        with _UNIVERSAL_CACHE_LOCK:
-            _UNIVERSAL_DATASET_CACHE[cache_key] = copy.deepcopy(res)
-        return res
+        return _save_and_return(res)
 
     if config.report_type and rtype_upper in CONTEST_REPORT_TYPES:
         res = build_contest_performance_report(db, config, current_user=current_user)
-        with _UNIVERSAL_CACHE_LOCK:
-            _UNIVERSAL_DATASET_CACHE[cache_key] = copy.deepcopy(res)
-        return res
+        return _save_and_return(res)
 
     if config.report_type and config.report_type.upper() in ("FIVE_WEEK_PERFORMANCE_TREND", "BATCH_PERFORMANCE"):
         from backend.services.five_week_trend_service import build_five_week_trend_report
         res = build_five_week_trend_report(db, config, current_user=current_user)
-        with _UNIVERSAL_CACHE_LOCK:
-            _UNIVERSAL_DATASET_CACHE[cache_key] = copy.deepcopy(res)
-        return res
+        return _save_and_return(res)
+
+    WEEKLY_PERFORMANCE_TYPES = (
+        "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_PERFORMANCE",
+    )
+    if rtype_upper in WEEKLY_PERFORMANCE_TYPES:
+        from backend.services.weekly_report_service import generate_weekly_performance_data
+        cfg_flt = config.filters or {}
+        raw = generate_weekly_performance_data(
+            db,
+            current_user=current_user,
+            dept_filter=config.department,
+            year_filter=config.year,
+            batch_filter=cfg_flt.get("batch") or cfg_flt.get("batch_filter"),
+            session_id=cfg_flt.get("session_id")
+        )
+        # Sanitize non-serializable objects (WeeklySession ORM instances in session_resolution)
+        sr = raw.get("session_resolution", {})
+        sanitized_sr = {}
+        for k, v in sr.items():
+            if hasattr(v, "__dict__") and hasattr(v, "__tablename__"):
+                # ORM object → extract safe attrs
+                sanitized_sr[k] = str(v) if v else None
+            else:
+                sanitized_sr[k] = v
+        raw["session_resolution"] = sanitized_sr
+        # Strip non-serializable public_obj / virtual_obj from student rows
+        for stu in raw.get("all_students_current", []):
+            stu.pop("public_obj", None)
+            stu.pop("virtual_obj", None)
+        for stu in raw.get("rosters", {}).get("all_current", []):
+            stu.pop("public_obj", None)
+            stu.pop("virtual_obj", None)
+        # Wrap with standard report envelope keys the frontend expects
+        raw["reportType"] = config.report_type
+        raw["reportId"] = raw.get("report_id", report_id)
+        raw["title"] = title
+        raw["dataStatus"] = "READY" if raw.get("total_students", 0) > 0 else "PARTIAL"
+        raw["generatedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        return _save_and_return(raw)
 
     cfg_filters = config.filters or {}
     students = fetch_normalized_students(
@@ -239,36 +374,32 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         contests = fetch_normalized_contests(db, dept_filter=config.department, year_filter=config.year)
         participations_dict = [c.model_dump() for c in contests]
 
-    # Title formatting
-    REPORT_TYPE_TITLES = {
-        "WEEKLY_CONTEST_INTELLIGENCE": "Weekly Contest Intelligence Report",
-        "SUNDAY_LIVE_CONTEST": "Sunday Live Contest Report",
-        "CONTEST_ATTENDANCE_PARTICIPATION": "Contest Attendance & Participation Report",
-        "CONTEST_PERFORMANCE_RANKING": "Contest Performance & Ranking Report",
-        "WEEKLY_STUDENT_PERFORMANCE": "Weekly Student Performance Report",
-        "FIVE_WEEK_PERFORMANCE_TREND": "Five-Week Performance Trend Report",
-        "PROBLEM_DIFFICULTY_INTELLIGENCE": "Problem Difficulty Intelligence Report",
-        "FACULTY_CONSOLIDATED": "Faculty Consolidated Performance Report",
-        "FACULTY_COORDINATOR_CONSOLIDATED": "Faculty Coordinator Consolidated Report",
-        "HOD_DEPARTMENT_INTELLIGENCE": "HOD Department Intelligence Report",
-        "PRINCIPAL_EXECUTIVE": "Principal Executive Intelligence Report",
-        "MANAGEMENT_EXECUTIVE_SUMMARY": "Management Executive Summary Report",
-    }
-    rpt_key = (config.report_type or "REPORT").upper()
-    base_title = REPORT_TYPE_TITLES.get(rpt_key, rpt_key.replace('_', ' ').title())
-    title = base_title
-    if config.department != "ALL":
-        title = f"{config.department} {title}"
-    if config.year != "ALL":
-        title = f"{title} ({config.year} Year)"
-
-    report_id = f"RPT-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
 
     from backend.services.weekly_session_resolver import resolve_weekly_sessions
     resolved_info = resolve_weekly_sessions(db)
     curr_sess = resolved_info.get("current_week_session")
     resolved_cname = curr_sess.contest_name if curr_sess else None
     resolved_cdate = curr_sess.session_date if curr_sess else None
+
+    metrics_dict = {
+        "totalStudents": total_students,
+        "verifiedStudents": verified_students,
+        "unverifiedStudents": unverified_students,
+        "activeSolvers": active_solvers,
+        "totalSolved": total_solved,
+        "averageSolved": average_solved,
+        "easySolved": easy_solved,
+        "mediumSolved": medium_solved,
+        "hardSolved": hard_solved,
+        "highestSolved": highest_solved,
+        "averageRating": average_rating,
+        "highestRating": highest_rating
+    }
+
+    if config.report_type in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST"):
+        metrics_dict["totalParticipations"] = len(participations_dict)
+        metrics_dict["contestName"] = resolved_cname
+        metrics_dict["sessionDate"] = resolved_cdate
 
     dataset = {
         "reportId": report_id,
@@ -281,23 +412,7 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         "dataStatus": "READY" if total_students > 0 else "PARTIAL",
         "message": None,
         "config": config.model_dump(),
-        "metrics": {
-            "totalStudents": total_students,
-            "verifiedStudents": verified_students,
-            "unverifiedStudents": unverified_students,
-            "activeSolvers": active_solvers,
-            "totalSolved": total_solved,
-            "averageSolved": average_solved,
-            "easySolved": easy_solved,
-            "mediumSolved": medium_solved,
-            "hardSolved": hard_solved,
-            "highestSolved": highest_solved,
-            "averageRating": average_rating,
-            "highestRating": highest_rating,
-            "totalParticipations": len(participations_dict),
-            "contestName": resolved_cname,
-            "sessionDate": resolved_cdate
-        },
+        "metrics": metrics_dict,
         "distribution": distribution,
         "departmentSummary": dept_summary_list,
         "facultySummary": faculty_summary_list,

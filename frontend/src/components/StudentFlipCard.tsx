@@ -253,7 +253,16 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
               <ShieldCheck className="w-5 h-5 text-brand-500 shrink-0" />
               <span className="font-extrabold text-sm text-slate-900 dark:text-white truncate tracking-tight" title={student.name}>{student.name}</span>
             </div>
-            <ExternalLink className="w-4 h-4 text-slate-400 shrink-0" />
+            <a 
+              href={student.username ? `https://leetcode.com/u/${student.username}/` : '#'} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-slate-400 hover:text-brand-500 transition-colors shrink-0"
+              title={student.username ? `View ${student.username} on LeetCode` : 'No LeetCode ID'}
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
           </div>
 
           {/* Clean Line Divider */}

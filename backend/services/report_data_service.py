@@ -159,15 +159,38 @@ def fetch_normalized_students(
     canon_range = (performance_range or "ALL").lower().strip()
 
     snapshot_map = {}
+    session_pub_map = {}
+    session_virt_map = {}
     is_historical = False
     if session_id:
-        from backend.models import WeeklySession, WeeklySessionSnapshot
-        target_session = db.query(WeeklySession).filter(WeeklySession.id == int(session_id)).first() if str(session_id).isdigit() else None
-        if target_session and (getattr(target_session, "finalized", False) or getattr(target_session, "status", None) == "FINALIZED"):
+        import re
+        from backend.models import WeeklySession, WeeklySessionSnapshot, WeeklyPublicResult, WeeklyVirtualResult
+        target_session = None
+        s_str = str(session_id).strip()
+        if s_str.isdigit():
+            target_session = db.query(WeeklySession).filter(WeeklySession.id == int(s_str)).first()
+        if not target_session:
+            target_session = db.query(WeeklySession).filter(WeeklySession.session_date == s_str).first()
+        if not target_session:
+            m = re.search(r'\d+', s_str)
+            if m:
+                c_num = int(m.group(0))
+                if c_num < 10000:
+                    target_session = db.query(WeeklySession).filter(
+                        (WeeklySession.id == c_num) | (WeeklySession.contest_name.ilike(f"%{c_num}%"))
+                    ).first()
+
+        if target_session:
             is_historical = True
             snaps = db.query(WeeklySessionSnapshot).filter(WeeklySessionSnapshot.session_id == target_session.id).all()
             for snp in snaps:
                 snapshot_map[snp.student_id] = snp
+            pubs = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == target_session.id).all()
+            for p in pubs:
+                session_pub_map[p.student_id] = p
+            virts = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == target_session.id).all()
+            for v in virts:
+                session_virt_map[v.student_id] = v
 
     filtered_students = []
     for s in raw_students:
@@ -210,27 +233,32 @@ def fetch_normalized_students(
                 canon_search not in email_str):
                 continue
 
-        is_verified = bool(st and (st.sync_status in ("success", "OK", "verified", "stale") or st.status == "verified" or st.total_solved is not None))
+        p_res = session_pub_map.get(s.id) or session_virt_map.get(s.id)
+        is_verified = bool(
+            (st and (st.sync_status in ("success", "OK", "verified", "stale") or st.status == "verified" or st.total_solved is not None))
+            or p_res is not None
+            or bool(s.username and str(s.username).strip())
+        )
         
         # Calculate solved
+        easy = st.easy_solved if st and st.easy_solved is not None else (0 if is_verified else None)
+        medium = st.medium_solved if st and st.medium_solved is not None else (0 if is_verified else None)
+        hard = st.hard_solved if st and st.hard_solved is not None else (0 if is_verified else None)
+        current_total = st.total_solved if st and st.total_solved is not None else (0 if is_verified else None)
+        if current_total is None and easy is not None and medium is not None and hard is not None:
+            current_total = easy + medium + hard
+
         if is_historical:
             snap = snapshot_map.get(s.id)
-            if snap:
-                total_solved = snap.end_solved_count or 0
-                easy = medium = hard = 0
+            if snap and snap.end_solved_count is not None:
+                total_solved = snap.end_solved_count
+            elif p_res and getattr(p_res, "total_contest_solved", None) is not None:
+                # If historical contest result exists, use its solved count if current_total is not available
+                total_solved = current_total if (current_total is not None and current_total > 0) else p_res.total_contest_solved
             else:
-                total_solved = 0
-                easy = medium = hard = 0
-        elif st:
-            easy = st.easy_solved if st.easy_solved is not None else (0 if is_verified else None)
-            medium = st.medium_solved if st.medium_solved is not None else (0 if is_verified else None)
-            hard = st.hard_solved if st.hard_solved is not None else (0 if is_verified else None)
-            if easy is not None and medium is not None and hard is not None:
-                total_solved = easy + medium + hard
-            else:
-                total_solved = st.total_solved if st.total_solved is not None else (0 if is_verified else None)
+                total_solved = current_total if current_total is not None else 0
         else:
-            easy, medium, hard, total_solved = None, None, None, None
+            total_solved = current_total if current_total is not None else 0
 
         # 6. Status Filter
         if canon_status != "ALL":
@@ -334,9 +362,7 @@ def fetch_normalized_contests(db: Session, dept_filter: Optional[str] = "ALL", y
             dept=s.department.code if (s and s.department) else "",
             year=s.year_level if s else "",
             problems_solved=getattr(p, "problems_solved", 0),
-            total_problems=getattr(p, "total_problems", 4),
-            rank=str(p.contest_rank) if p.contest_rank else "-",
-            verified_at=p.verified_at.isoformat() if hasattr(p.verified_at, 'isoformat') else (str(p.verified_at) if p.verified_at else None)
+            rank=f"#{p.contest_rank:,}" if (p.contest_rank and str(p.contest_rank).isdigit() and int(p.contest_rank) > 0) else "-",
         ))
 
     # Fallback to profile stats recent contest info if no ContestParticipation table entries exist
@@ -361,7 +387,7 @@ def fetch_normalized_contests(db: Session, dept_filter: Optional[str] = "ALL", y
                     year=getattr(s, "year_level", ""),
                     problems_solved=int(st.recent_contest_score) if (st.recent_contest_score and str(st.recent_contest_score).isdigit()) else 1,
                     total_problems=4,
-                    rank=str(st.contest_global_ranking) if st.contest_global_ranking else "-",
+                    rank=f"#{st.contest_global_ranking:,}" if (st.contest_global_ranking and str(st.contest_global_ranking).isdigit() and int(st.contest_global_ranking) > 0) else "-",
                     verified_at=iso_str
                 ))
 

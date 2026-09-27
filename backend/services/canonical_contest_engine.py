@@ -40,9 +40,9 @@ def normalize_participation_status(raw_status: Optional[str], fetch_status: Opti
     st = raw_status.strip().upper() if raw_status else ""
 
     # 3. Confirmed attendance states (backed by evidence)
-    if st in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "ACTUAL"):
+    if st in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "ACTUAL", "ATTENDED_ZERO", "ATTENDED_SOLVED", "PUBLIC_LIVE", "PUBLIC_LIVE_VERIFIED", "PUBLIC_ATTENDED_ZERO", "PUBLIC_ATTENDED_SOLVED"):
         return "PUBLIC"
-    if st in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+    if st in ("VIRTUAL", "VIRTUAL_ATTENDED", "VIRTUAL_PRACTICE", "VIRTUAL_PRACTICE_VERIFIED"):
         return "VIRTUAL"
 
     # 4. Confirmed absence (only when evidence explicitly proves no participation)
@@ -554,7 +554,9 @@ def _build_canonical_contest_dataset_internal(
             dept_stats_map[dept_norm]["public"] += 1
         elif canon_status in ("VIRTUAL", "VIRTUAL_ATTENDED"):
             dept_stats_map[dept_norm]["virtual"] += 1
-        elif canon_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "PENDING", "NOT_VERIFIED", "UNVERIFIED", "USERNAME_NOT_FOUND"):
+        elif canon_status in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "FETCH_FAILED", "DATA_MISMATCH", "CONFLICT", "SOURCE_ERROR"):
+            dept_stats_map[dept_norm]["errors"] += 1
+        elif canon_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "PENDING", "NOT_VERIFIED", "UNVERIFIED"):
             dept_stats_map[dept_norm]["not_attended"] += 1
         else:
             dept_stats_map[dept_norm]["errors"] += 1
@@ -575,7 +577,9 @@ def _build_canonical_contest_dataset_internal(
                 year_stats_map[yr_norm]["public"] += 1
             elif canon_status in ("VIRTUAL", "VIRTUAL_ATTENDED"):
                 year_stats_map[yr_norm]["virtual"] += 1
-            elif canon_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "PENDING", "NOT_VERIFIED", "UNVERIFIED", "USERNAME_NOT_FOUND"):
+            elif canon_status in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "FETCH_FAILED", "DATA_MISMATCH", "CONFLICT", "SOURCE_ERROR"):
+                year_stats_map[yr_norm]["errors"] += 1
+            elif canon_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "PENDING", "NOT_VERIFIED", "UNVERIFIED"):
                 year_stats_map[yr_norm]["not_attended"] += 1
             else:
                 year_stats_map[yr_norm]["errors"] += 1
@@ -779,7 +783,8 @@ def _build_canonical_contest_dataset_internal(
             "virtual2Solved": scope_virtual2,
             "virtual1Solved": scope_virtual1,
             "topPerformers": top_performers,
-            "reconciliationPassed": reconciliation_passed
+            "reconciliationPassed": reconciliation_passed,
+            "last_synced": session_obj.last_synced.strftime("%d %b %Y, %I:%M %p IST") if getattr(session_obj, "last_synced", None) else None
         }
     else:
         public_cnt = status_counts.get("PUBLIC", 0)
@@ -866,7 +871,8 @@ def _build_canonical_contest_dataset_internal(
             "virtual2Solved": virtual2_all,
             "virtual1Solved": virtual1_all,
             "topPerformers": top_performers_global,
-            "reconciliationPassed": reconciliation_passed
+            "reconciliationPassed": reconciliation_passed,
+            "last_synced": session_obj.last_synced.strftime("%d %b %Y, %I:%M %p IST") if getattr(session_obj, "last_synced", None) else None
         }
 
     # Department and Year percentages

@@ -176,10 +176,10 @@ def extract_leetcode_username(url_or_username: Optional[str]) -> Tuple[Optional[
       - john_doe -> ("john_doe", "https://leetcode.com/u/john_doe/", "OK")
     Returns (username, profile_url, status)
     """
-    if not url_or_username or not str(url_or_username).strip():
+    if not url_or_username or not url_or_username.strip():
         return None, None, "MISSING LINK"
     
-    cleaned = str(url_or_username).strip()
+    cleaned = url_or_username.strip()
 
     # Strip query strings and URL fragments
     cleaned = cleaned.split('?')[0].split('#')[0].strip()
@@ -587,54 +587,57 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
                 await circuit_breaker.record_failure()
             
             if isinstance(contest_history, list):
+                # Extract recent contest info once (outside loop)
+                attended_contests = [c for c in contest_history if isinstance(c, dict) and (c.get("attended") or c.get("problemsSolved", 0) > 0)]
+                if attended_contests:
+                    latest = attended_contests[-1]
+                    recent_contest_name = latest.get("contest", {}).get("title")
+                    solved = latest.get("problemsSolved", 0)
+                    total = latest.get("totalProblems", 4)
+                    recent_contest_score = f"{solved} / {total}"
+                    recent_contest_type = "OFFICIAL" if latest.get("attended") else "VIRTUAL"
+                    if latest.get("ranking") and latest.get("attended"):
+                        contest_global_ranking = latest.get("ranking")
+                    # FIX: Do NOT overwrite contest_rating from a history entry.
+                    # userContestRanking.rating (set above ~line 581) = current live rating (e.g. 1780).
+                    # History entry "rating" = post-contest rating for that specific past contest (e.g. 1700.2) — STALE.
+
                 for item in contest_history:
                     if not isinstance(item, dict):
                         continue
-                        c_title = item.get("contest", {}).get("title") or "Weekly Contest"
-                        c_start = item.get("contest", {}).get("startTime")
-                        c_solved = item.get("problemsSolved", 0)
-                        c_total = item.get("totalProblems", 4)
-                        c_rank = item.get("ranking")
-                        c_rating = item.get("rating")
-                        is_attended = item.get("attended", False)
-    
-                        # Determine participation type strictly:
-                        # OFFICIAL: attended == True with official rank/rating entry
-                        # VIRTUAL: attended == False but problemsSolved > 0 or virtual contest score
-                        if is_attended:
-                            part_type = "OFFICIAL"
-                        elif c_solved > 0:
-                            part_type = "VIRTUAL"
-                        else:
-                            part_type = "UNKNOWN"
-    
-                        if part_type != "UNKNOWN":
-                            contest_participations.append({
-                                "contest_name": c_title,
-                                "contest_date": datetime.datetime.fromtimestamp(c_start).strftime("%Y-%m-%d") if c_start else None,
-                                "participation_type": part_type,
-                                "registered": True,
-                                "started": True,
-                                "submitted": True if c_solved > 0 else False,
-                                "problems_solved": c_solved,
-                                "total_problems": c_total,
-                                "contest_rank": c_rank if part_type == "OFFICIAL" else None,
-                                "contest_rating_after": c_rating if part_type == "OFFICIAL" else None,
-                                "source": "leetcode_graphql"
-                            })
 
-                    attended_contests = [c for c in contest_history if isinstance(c, dict) and (c.get("attended") or c.get("problemsSolved", 0) > 0)]
-                    if attended_contests:
-                        latest = attended_contests[-1]
-                        recent_contest_name = latest.get("contest", {}).get("title")
-                        solved = latest.get("problemsSolved", 0)
-                        total = latest.get("totalProblems", 4)
-                        recent_contest_score = f"{solved} / {total}"
-                        recent_contest_type = "OFFICIAL" if latest.get("attended") else "VIRTUAL"
-                        if latest.get("ranking") and latest.get("attended"):
-                            contest_global_ranking = latest.get("ranking")
-                        if latest.get("rating") and latest.get("attended"):
-                                contest_rating = round(float(latest.get("rating")), 1)
+                    c_title = item.get("contest", {}).get("title") or "Weekly Contest"
+                    c_start = item.get("contest", {}).get("startTime")
+                    c_solved = item.get("problemsSolved", 0)
+                    c_total = item.get("totalProblems", 4)
+                    c_rank = item.get("ranking")
+                    c_entry_rating = item.get("rating")
+                    is_attended = item.get("attended", False)
+
+                    # Determine participation type strictly:
+                    # OFFICIAL: attended == True with official rank/rating entry
+                    # VIRTUAL: attended == False but problemsSolved > 0
+                    if is_attended:
+                        part_type = "OFFICIAL"
+                    elif c_solved > 0:
+                        part_type = "VIRTUAL"
+                    else:
+                        part_type = "UNKNOWN"
+
+                    if part_type != "UNKNOWN":
+                        contest_participations.append({
+                            "contest_name": c_title,
+                            "contest_date": datetime.datetime.fromtimestamp(c_start).strftime("%Y-%m-%d") if c_start else None,
+                            "participation_type": part_type,
+                            "registered": True,
+                            "started": True,
+                            "submitted": True if c_solved > 0 else False,
+                            "problems_solved": c_solved,
+                            "total_problems": c_total,
+                            "contest_rank": c_rank if part_type == "OFFICIAL" else None,
+                            "contest_rating_after": c_entry_rating if part_type == "OFFICIAL" else None,
+                            "source": "leetcode_graphql"
+                        })
         except Exception as e:
             logger.info(f"Contest stats skipped for '{username}': {e}")
 
@@ -747,7 +750,7 @@ query recentAcSubmissions($username: String!, $limit: Int!) {
 # 
 
 def _make_headers(username: str) -> dict:
-    safe_username = re.sub(r'[^a-zA-Z0-9_-]', '', str(username or '')) or 'leetcode'
+    safe_username = re.sub(r'[^a-zA-Z0-9_-]', '', username or '') or 'leetcode'
     return {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Content-Type": "application/json",
@@ -1177,6 +1180,7 @@ async def fetch_recent_submissions(
             "status_display":       s.get("statusDisplay"),
             "runtime_display":      s.get("runtime"),
             "memory_display":       s.get("memory"),
+            "timestamp":            dt_val,
             "submission_timestamp": dt_val,
         })
 
@@ -1219,7 +1223,7 @@ async def fetch_contest_metadata(
     Fetches dynamic contest metadata (start/end times, dynamic problem count, problem slugs).
     Caches results in-memory to prevent redundant requests across student loops.
     """
-    slug_clean = str(contest_slug).strip().lower()
+    slug_clean = contest_slug.strip().lower()
     if slug_clean in _contest_metadata_cache:
         return _contest_metadata_cache[slug_clean]
 
@@ -1264,7 +1268,14 @@ async def fetch_contest_metadata(
     fallback_num = re.search(r'\d+', slug_clean)
     num_str = fallback_num.group(0) if fallback_num else ""
     fallback_slugs = []
-    if slug_clean == "weekly-contest-520":
+    if slug_clean == "weekly-contest-521":
+        fallback_slugs = [
+            "rearrange-array-by-removing-distinct-values",
+            "maximum-equal-adjacent-pairs-after-at-most-one-replacement",
+            "longest-subarray-with-restricted-pair-sums",
+            "maximize-meeting-earnings-with-idle-gaps"
+        ]
+    elif slug_clean == "weekly-contest-520":
         fallback_slugs = [
             "number-of-intersecting-interval-pairs-i",
             "number-of-intersecting-interval-pairs-ii",
@@ -1303,7 +1314,7 @@ async def fetch_verified_student_contest_record(
     """
     now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
     mode_clean = participation_mode.upper().strip()
-    slug_clean = str(contest_slug).strip().lower()
+    slug_clean = contest_slug.strip().lower()
 
     base_record: Dict[str, Any] = {
         "username": username,

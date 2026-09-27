@@ -370,7 +370,7 @@ def generate_live_weekly_intelligence_data(
         if is_upcoming_contest:
             curr_attended = False
         else:
-            curr_attended = bool(curr_res and (curr_res.participation_status in ("PUBLIC_ATTENDED", "PUBLIC", "ATTENDED") or (curr_res.total_contest_solved or 0) > 0))
+            curr_attended = bool(curr_res and (curr_res.participation_status in ("PUBLIC_ATTENDED", "PUBLIC", "ATTENDED", "ATTENDED_ZERO", "ATTENDED_SOLVED", "PUBLIC_LIVE") or (curr_res.total_contest_solved or 0) > 0))
 
         if curr_res and not is_upcoming_contest:
             if (curr_res.q1 or 0) > 0: q_stats["q1"]["solved"] += 1

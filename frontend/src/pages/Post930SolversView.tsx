@@ -196,7 +196,7 @@ export const Post930SolversView: React.FC = () => {
           <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400">
             {summary.students_detected}
           </p>
-          <p className="text-[10px] text-slate-400">Verified post-window solvers</p>
+          <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Verified post-window solvers</p>
         </div>
 
         <div className="glass-card p-5 rounded-3xl border border-indigo-500/30 space-y-1.5 shadow-lg">
@@ -206,7 +206,7 @@ export const Post930SolversView: React.FC = () => {
           <p className="text-3xl font-black text-indigo-500">
             +{summary.total_post_solves}
           </p>
-          <p className="text-[10px] text-slate-400">Deduplicated problem solves</p>
+          <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Deduplicated problem solves</p>
         </div>
 
         <div className="glass-card p-5 rounded-3xl border border-purple-500/30 space-y-1.5 shadow-lg">
@@ -216,27 +216,27 @@ export const Post930SolversView: React.FC = () => {
           <p className="text-3xl font-black text-purple-500">
             {summary.total_post_submissions || summary.total_post_solves}
           </p>
-          <p className="text-[10px] text-slate-400">Total submission attempts</p>
+          <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Total submission attempts</p>
         </div>
 
         <div className="glass-card p-5 rounded-3xl border space-y-1.5 shadow-lg">
-          <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+          <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
             Earliest Activity
           </span>
           <p className="text-xl font-black text-slate-900 dark:text-white">
             {summary.earliest_activity}
           </p>
-          <p className="text-[10px] text-slate-400">First qualifying solve</p>
+          <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">First qualifying solve</p>
         </div>
 
         <div className="glass-card p-5 rounded-3xl border space-y-1.5 shadow-lg">
-          <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+          <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
             Latest Activity
           </span>
           <p className="text-xl font-black text-slate-900 dark:text-white">
             {summary.latest_activity}
           </p>
-          <p className="text-[10px] text-slate-400">Most recent solve</p>
+          <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Most recent solve</p>
         </div>
       </div>
 

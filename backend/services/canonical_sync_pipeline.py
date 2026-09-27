@@ -669,36 +669,121 @@ async def run_full_pipeline(
 
             async def _process_student_chunk(chunk: List[Any]):
                 async with batch_sem:
+                    # ── Profile-stats staleness gate ────────────────────────────────────────
+                    # For targeted / manual / filtered syncs (student_ids specified), ALWAYS fetch
+                    # fresh live data from LeetCode GraphQL.
+                    # For background full syncs, cache profile stats for 1 hour to optimize throughput.
+                    is_explicit_targeted = bool(student_ids) or sync_mode in ("RECOVERY_SYNC", "TARGETED_SYNC", "MANUAL_SYNC", "EXPLICIT_SYNC")
+                    PROFILE_FRESH_HOURS = 1
+                    cached_profile_a: Dict[str, Any] = {}  # username → synthetic pre_a
+                    fresh_student_ids: Set[int] = set()
+
+                    if not is_explicit_targeted:
+                        try:
+                            _db_stale = SessionLocal()
+                            try:
+                                student_ids_in_chunk = [s.id for s in chunk]
+                                stale_cutoff = start_time - datetime.timedelta(hours=PROFILE_FRESH_HOURS)
+                                fresh_stats = _db_stale.query(LeetCodeProfileStats).filter(
+                                    LeetCodeProfileStats.student_id.in_(student_ids_in_chunk),
+                                    LeetCodeProfileStats.last_updated >= stale_cutoff,
+                                    LeetCodeProfileStats.total_solved.isnot(None),
+                                    LeetCodeProfileStats.sync_status == "success"
+                                ).all()
+                                fresh_student_ids = {fs.student_id for fs in fresh_stats}
+                                for fs in fresh_stats:
+                                    uname_raw = next(
+                                        (s.username or s.leetcode_url for s in chunk if s.id == fs.student_id),
+                                        None
+                                    )
+                                    if not uname_raw:
+                                        continue
+                                    uname, _, u_ok = extract_leetcode_username(str(uname_raw))
+                                    if u_ok != "OK" or not uname:
+                                        continue
+                                    cached_profile_a[uname] = {
+                                        "status": "ok",
+                                        "source": "db_cache",
+                                        "data": {
+                                            "username": uname,
+                                            "total_solved": fs.total_solved,
+                                            "easy_solved": fs.easy_solved,
+                                            "medium_solved": fs.medium_solved,
+                                            "hard_solved": fs.hard_solved,
+                                            "profile_global_ranking": fs.public_profile_ranking,
+                                            "contest_rating": fs.contest_rating,
+                                            "contest_global_ranking": fs.contest_global_ranking,
+                                        }
+                                    }
+                            finally:
+                                _db_stale.close()
+                        except Exception as _stale_err:
+                            logger.warning(f"[CANONICAL_PIPELINE] Staleness check failed (will refetch all): {_stale_err}")
+                            fresh_student_ids = set()
+
+                    # Build the usernames that actually need a live Phase-A fetch
                     valid_usernames = []
                     for s in chunk:
                         uname, _, u_status = extract_leetcode_username(s.username or s.leetcode_url)
                         if u_status == "OK" and uname:
-                            valid_usernames.append(uname)
-                    
+                            if s.id not in fresh_student_ids:
+                                valid_usernames.append(uname)
+
+                    # Always fetch ALL valid usernames for Phase B (contest data must be fresh)
+                    all_valid_usernames = []
+                    for s in chunk:
+                        uname, _, u_status = extract_leetcode_username(s.username or s.leetcode_url)
+                        if u_status == "OK" and uname:
+                            all_valid_usernames.append(uname)
+
+                    if valid_usernames or all_valid_usernames:
+                        fresh_count = len(all_valid_usernames) - len(valid_usernames)
+                        if fresh_count > 0:
+                            logger.info(
+                                f"[CANONICAL_PIPELINE] Profile cache HIT: {fresh_count} student(s) skip Phase-A "
+                                f"(fetched within {PROFILE_FRESH_HOURS}h). Stale/new: {len(valid_usernames)}."
+                            )
+
                     batched_a: Dict[str, Any] = {}
                     batched_b: Dict[str, Any] = {}
-                    
-                    if valid_usernames:
-                        if sync_mode == "LIVE_MONITOR":
-                            b_res = await fetch_contest_data_batched(valid_usernames, client)
+
+                    if sync_mode == "LIVE_MONITOR":
+                        if all_valid_usernames:
+                            b_res = await fetch_contest_data_batched(all_valid_usernames, client)
                             if isinstance(b_res, dict): batched_b = b_res
+                    else:
+                        async def _empty_a():
+                            return {}
+                        async def _empty_b():
+                            return {}
+
+                        fetch_tasks = []
+                        if valid_usernames:
+                            fetch_tasks.append(fetch_profile_and_stats_batched(valid_usernames, client))
                         else:
-                            res_a, res_b = await asyncio.gather(
-                                fetch_profile_and_stats_batched(valid_usernames, client),
-                                fetch_contest_data_batched(valid_usernames, client),
-                                return_exceptions=True
-                            )
-                            if isinstance(res_a, dict): batched_a = res_a
-                            if isinstance(res_b, dict): batched_b = res_b
+                            fetch_tasks.append(_empty_a())
+
+                        if all_valid_usernames:
+                            fetch_tasks.append(fetch_contest_data_batched(all_valid_usernames, client))
+                        else:
+                            fetch_tasks.append(_empty_b())
+
+                        res_a, res_b = await asyncio.gather(*fetch_tasks, return_exceptions=True)
+                        if isinstance(res_a, dict): batched_a = res_a
+                        if isinstance(res_b, dict): batched_b = res_b
+
+                    # Merge cached (DB) Phase-A results with live-fetched ones
+                    # Live fetch wins if both exist for same username
+                    merged_a = {**cached_profile_a, **batched_a}
 
                     try:
                         async def _sync_one(s):
                             if progress_callback and hasattr(progress_callback, "set_current"):
                                 progress_callback.set_current(s.name, s.username)
                             uname, _, _ = extract_leetcode_username(str(s.username or s.leetcode_url or ""))
-                            pre_a = batched_a.get(uname) if uname else None
+                            pre_a = merged_a.get(uname) if uname else None
                             pre_b = batched_b.get(uname) if uname else None
-                            
+
                             return await _sync_single_student_canonical(
                                 student=s,
                                 client=client,

@@ -65,10 +65,7 @@ class AuthoritativeSnapshotEngine:
                 try:
                     db.close()
                 except Exception:
-                    try:
-                        db.invalidate()
-                    except Exception:
-                        pass
+                    pass
 
         if res:
             return res
