@@ -21,7 +21,7 @@ router = APIRouter(prefix="/api/students", tags=["Students"])
 
 from sqlalchemy import func
 
-from sqlalchemy.orm import joinedload, defer
+from sqlalchemy.orm import joinedload, defer, selectinload
 
 from backend.cache import cache
 from sqlalchemy import desc, asc, nullslast
@@ -375,6 +375,13 @@ async def get_students(
             query = query.order_by(nullslast(desc(LeetCodeProfileStats.max_streak)), Student.name.asc())
         else:
             query = query.order_by(Student.name.asc())
+
+        # Apply eager loading to eliminate N+1 query overhead for stats, department, section
+        query = query.options(
+            selectinload(Student.department),
+            selectinload(Student.section),
+            selectinload(Student.stats)
+        )
 
         # Pagination if page and limit provided
         if isinstance(page, int) and isinstance(limit, int) and page >= 1 and limit >= 1:

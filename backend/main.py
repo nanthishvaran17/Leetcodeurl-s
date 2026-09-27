@@ -472,19 +472,17 @@ async def _deferred_startup_tasks():
                             if now_ist.hour < 9 or (now_ist.hour == 9 and now_ist.minute < 30):
                                 logger.info("[STARTUP RECOVERY] Running Phase 1 (Pre-Flight) + Phase 2 (Baseline)...")
                                 sunday_autopilot.phase_1_preflight_0755(_recovery_db)
-                            elif now_ist.hour == 9 and now_ist.minute >= 30:
-                                logger.info("[STARTUP RECOVERY] Running Phase 4 (Finalization)...")
-                                asyncio.create_task(
-                                    sunday_autopilot.phase_4_finalization_0930(_recovery_db)
-                                )
                             else:
-                                logger.info("[STARTUP RECOVERY] Contest window passed. Attempting finalization.")  # type: ignore
-                                asyncio.create_task(
-                                    sunday_autopilot.phase_4_finalization_0930(_recovery_db)
-                                )
-  # type: ignore
+                                logger.info("[STARTUP RECOVERY] Contest window passed. Triggering async background finalization...")
+
+                                async def _run_bg_finalization():
+                                    with _SL() as _task_db:
+                                        await sunday_autopilot.phase_4_finalization_0930(_task_db)
+
+                                asyncio.create_task(_run_bg_finalization())
+
                             recovery_record.status = "COMPLETED"
-                            recovery_record.completed_at = _dt.datetime.now(_dt.timezone.utc)  # type: ignore
+                            recovery_record.completed_at = _dt.datetime.now(_dt.timezone.utc)
                             _recovery_db.commit()
                             logger.info("[STARTUP] Missed job recovery completed.")
                         else:
