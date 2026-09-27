@@ -506,56 +506,9 @@ async def _deferred_startup_tasks():
             logger.warning(f"[STARTUP] Scheduler initialization note: {e}")
 
     # STEP 5: LEADERBOARD CACHE PRE-WARM
-    # Runs in background 5s after startup so the first frontend page load
-    # finds a hot cache instead of waiting 30–60s for a cold Neon DB query.
-    async def _prewarm_leaderboard_cache():
-        await asyncio.sleep(5)
-        try:
-            from backend.cache import cache
-            from backend.routes.students import get_leaderboard_fast
-            import datetime
-
-            def _build_cache():
-                from backend.database import SessionLocal
-                from backend.models import (
-                    Student, LeetCodeProfileStats, WeeklyStudentProgress,
-                    WeeklyPublicResult, WeeklyVirtualResult, WeeklySession,
-                    LeetCodeContestRatingHistory, LeetCodeAccount
-                )
-                from sqlalchemy.orm import joinedload
-                from sqlalchemy import desc, nullslast
-                import re, orjson
-
-                with SessionLocal() as db:
-                    students = (
-                        db.query(Student)
-                        .outerjoin(Student.stats)
-                        .options(
-                            joinedload(Student.department),
-                            joinedload(Student.stats),
-                            joinedload(Student.lc_activity),
-                        )
-                        .filter((Student.is_active == True) | (Student.is_active.is_(None)))
-                        .order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc())
-                        .all()
-                    )
-                    if not students:
-                        return b'[]'
-                    logger.info(f"[PREWARM] Loaded {len(students)} students for cache pre-warm.")
-                    return orjson.dumps([{"id": s.id, "name": s.name} for s in students[:1]])  # minimal ping
-
-            cache_key = "leaderboard_fast:public:None:None:None"
-            existing = cache.get(cache_key)
-            if not existing:
-                logger.info("[PREWARM] Warming leaderboard cache in background...")
-                await asyncio.to_thread(_build_cache)
-                logger.info("[PREWARM] Leaderboard cache warmed successfully via internal build.")
-            else:
-                logger.info("[PREWARM] Leaderboard cache already warm, skipping.")
-        except Exception as _pw_err:
-            logger.warning(f"[PREWARM] Leaderboard pre-warm note: {_pw_err}")
-
-    asyncio.create_task(_prewarm_leaderboard_cache())
+    # NOTE: Disabled at startup to prevent OOM memory spikes on 512MB Render RAM.
+    # Leaderboard cache is warmed on-demand when requested by the frontend.
+    logger.info("[STARTUP] Step 5: Leaderboard pre-warm deferred to first request (OOM prevention).")
 
 
 @asynccontextmanager
