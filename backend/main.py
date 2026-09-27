@@ -539,8 +539,8 @@ app = FastAPI(
 # =====================================================================
 
 @app.api_route("/health", methods=["GET", "HEAD"])
-@app.api_route("/api/health", methods=["GET", "HEAD"])
-@app.api_route("/api", methods=["GET", "HEAD"])
+@app.api_route("/api/health", methods=["GET", "HEAD"], include_in_schema=False)
+@app.api_route("/api", methods=["GET", "HEAD"], include_in_schema=False)
 def health_check():
     """
     Ultra-lightweight Liveness Probe for Render & UptimeRobot (< 1ms).
@@ -554,7 +554,7 @@ def health_check():
     }
 
 @app.api_route("/ready", methods=["GET", "HEAD"])
-@app.api_route("/api/ready", methods=["GET", "HEAD"])
+@app.api_route("/api/ready", methods=["GET", "HEAD"], include_in_schema=False)
 def readiness_check(response: Response):
     """
     Production Readiness Probe verifying critical runtime dependencies.
@@ -836,9 +836,9 @@ async def add_security_headers_and_performance_middleware(request, call_next):
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://apis.google.com https://*.firebaseapp.com; "
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com data:; "
-        "img-src 'self' data: https: blob:; "
+        "img-src 'self' data: https: blob: https://cdn.jsdelivr.net https://fastapi.tiangolo.com; "
         "connect-src 'self' https: wss: ws:; "
         "frame-ancestors 'self';"
     )
