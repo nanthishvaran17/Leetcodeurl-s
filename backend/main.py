@@ -402,7 +402,7 @@ async def _deferred_startup_tasks():
                 from backend.services.weekly_session_manager import resume_active_weekly_session
                 await resume_active_weekly_session(db_init_async)
                 from backend.scripts.sync_upcoming_sessions import sync_upcoming_weekly_sessions
-                await asyncio.to_thread(sync_upcoming_weekly_sessions, 52)
+                await asyncio.to_thread(sync_upcoming_weekly_sessions, 4)
         except Exception as _sess_err:
             logger.warning(f"[STARTUP] Weekly session resume note: {_sess_err}")
 
@@ -486,8 +486,8 @@ async def _deferred_startup_tasks():
 
                                 asyncio.create_task(_run_bg_finalization())
 
-                            recovery_record.status = "COMPLETED"
-                            recovery_record.completed_at = _dt.datetime.now(_dt.timezone.utc)
+                            recovery_record.status = "COMPLETED"  # type: ignore[assignment]
+                            recovery_record.completed_at = _dt.datetime.now(_dt.timezone.utc)  # type: ignore[assignment]
                             _recovery_db.commit()
                             logger.info("[STARTUP] Missed job recovery completed.")
                         else:
@@ -543,9 +543,9 @@ app = FastAPI(
 # 2. LIGHTWEIGHT PRODUCTION HEALTH & READINESS PROBES
 # =====================================================================
 
-@app.api_route("/health", methods=["GET", "HEAD"])
-@app.api_route("/api/health", methods=["GET", "HEAD"], include_in_schema=False)
-@app.api_route("/api", methods=["GET", "HEAD"], include_in_schema=False)
+@app.api_route("/health", methods=["GET"], operation_id="health_check")
+@app.api_route("/api/health", methods=["GET"], include_in_schema=False)
+@app.api_route("/api", methods=["GET"], include_in_schema=False)
 def health_check():
     """
     Ultra-lightweight Liveness Probe for Render & UptimeRobot (< 1ms).
@@ -558,8 +558,8 @@ def health_check():
         "version": "2.2.0"
     }
 
-@app.api_route("/ready", methods=["GET", "HEAD"])
-@app.api_route("/api/ready", methods=["GET", "HEAD"], include_in_schema=False)
+@app.api_route("/ready", methods=["GET"], operation_id="readiness_check")
+@app.api_route("/api/ready", methods=["GET"], include_in_schema=False)
 def readiness_check(response: Response):
     """
     Production Readiness Probe verifying critical runtime dependencies.
@@ -873,7 +873,7 @@ app.include_router(students.router)
 app.include_router(hr_candidate_finder.router)
 # sync: typically short prefix — keep both mounts
 app.include_router(sync.router, prefix="/api")
-app.include_router(sync.router)
+app.include_router(sync.router, include_in_schema=False)
 # departments: prefix="/api/departments" (self-prefixed)
 app.include_router(departments.router)
 # sessions: prefix="/api/sessions" (self-prefixed)
@@ -896,7 +896,7 @@ app.include_router(audit.router)
 app.include_router(public.router)
 # history: prefix="/api" and root
 app.include_router(history.router, prefix="/api")
-app.include_router(history.router)
+app.include_router(history.router, include_in_schema=False)
 # risk: prefix="/api/risk" (self-prefixed)
 app.include_router(risk.router)
 # goals: prefix="/api/goals" (self-prefixed)
@@ -905,59 +905,59 @@ app.include_router(goals.router)
 app.include_router(system_health.router)
 # weekly_contests: prefix="/contests" — keep both
 app.include_router(weekly_contests.router, prefix="/api")
-app.include_router(weekly_contests.router)
+app.include_router(weekly_contests.router, include_in_schema=False)
 # email_reports: prefix="/api/email" (self-prefixed) — mount ONCE to fix /api/api/email
 app.include_router(email_reports.router)
 # scheduled_reports: prefix="/api/system/schedule" (self-prefixed)
 app.include_router(scheduled_reports.router)
 # certificates — short prefix, keep both
 app.include_router(certificates.router, prefix="/api")
-app.include_router(certificates.router)
+app.include_router(certificates.router, include_in_schema=False)
 # leetcode — short prefix
 app.include_router(leetcode.router, prefix="/api")
-app.include_router(leetcode.router)
+app.include_router(leetcode.router, include_in_schema=False)
 # ai_assistant — short prefix
 app.include_router(ai_assistant.router, prefix="/api")
-app.include_router(ai_assistant.router)
+app.include_router(ai_assistant.router, include_in_schema=False)
 # ai_control_center — short prefix
 app.include_router(ai_control_center.router, prefix="/api")
-app.include_router(ai_control_center.router)
+app.include_router(ai_control_center.router, include_in_schema=False)
 # intelligence: prefix="/api/intelligence" (self-prefixed)
 app.include_router(intelligence.router)
 # nlci: prefix="/api/nlci" (self-prefixed)
 app.include_router(nlci.router)
 # data_issues — dual prefix (/api/data-issues and /data-issues)
 app.include_router(data_issues.router, prefix="/api")
-app.include_router(data_issues.router)
+app.include_router(data_issues.router, include_in_schema=False)
 # command_center — short prefix
 app.include_router(command_center.router, prefix="/api")
-app.include_router(command_center.router)
+app.include_router(command_center.router, include_in_schema=False)
 # leetcode_tracker — short prefix
 app.include_router(leetcode_tracker.router, prefix="/api")
-app.include_router(leetcode_tracker.router)
+app.include_router(leetcode_tracker.router, include_in_schema=False)
 # faculty_assignments — short prefix, keep both + faculty aliases
 app.include_router(faculty_assignments.router, prefix="/api")
-app.include_router(faculty_assignments.router)
-app.include_router(faculty_assignments.router, prefix="/api/faculty", tags=["Faculty"])
-app.include_router(faculty_assignments.router, prefix="/faculty", tags=["Faculty"])
+app.include_router(faculty_assignments.router, include_in_schema=False)
+app.include_router(faculty_assignments.router, prefix="/api/faculty", include_in_schema=False)
+app.include_router(faculty_assignments.router, prefix="/faculty", include_in_schema=False)
 # institutional_dashboards — short prefix
 app.include_router(institutional_dashboards.router, prefix="/api")
-app.include_router(institutional_dashboards.router)
+app.include_router(institutional_dashboards.router, include_in_schema=False)
 # email_campaigns — short prefix
 app.include_router(email_campaigns.router, prefix="/api")
-app.include_router(email_campaigns.router)
+app.include_router(email_campaigns.router, include_in_schema=False)
 # bot_notifications — short prefix
 app.include_router(bot_notifications.router, prefix="/api")
-app.include_router(bot_notifications.router)
+app.include_router(bot_notifications.router, include_in_schema=False)
 # anti_cheat — short prefix
 app.include_router(anti_cheat.router, prefix="/api")
-app.include_router(anti_cheat.router)
+app.include_router(anti_cheat.router, include_in_schema=False)
 # placement_eligibility — short prefix
 app.include_router(placement_eligibility.router, prefix="/api")
-app.include_router(placement_eligibility.router)
+app.include_router(placement_eligibility.router, include_in_schema=False)
 # gamification — short prefix
 app.include_router(gamification.router, prefix="/api")
-app.include_router(gamification.router)
+app.include_router(gamification.router, include_in_schema=False)
 # accreditation — short prefix
 app.include_router(accreditation.router, prefix="/api")
 # deep_tech_intelligence: prefix="/api/intelligence/deep-tech" (self-prefixed)
