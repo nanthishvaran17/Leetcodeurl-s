@@ -540,7 +540,6 @@ app = FastAPI(
 
 @app.api_route("/health", methods=["GET", "HEAD"])
 @app.api_route("/api/health", methods=["GET", "HEAD"])
-@app.api_route("/", methods=["GET", "HEAD"])
 @app.api_route("/api", methods=["GET", "HEAD"])
 def health_check():
     """
