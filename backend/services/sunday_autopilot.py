@@ -322,6 +322,10 @@ class UniversalWeeklyContestAutopilot:
                 "database_healthy": True
             }
         except Exception as e:
+            try:
+                db.rollback()
+            except Exception:
+                pass
             logger.error(f"[LOCK_GATE_ERROR] {e}", exc_info=True)
             return {"allow_lock": False, "gate_status": "LOCK_BLOCKED", "error": str(e)}
         finally:
@@ -630,6 +634,10 @@ class UniversalWeeklyContestAutopilot:
                 "audit": reconciliation
             }
         except Exception as e:
+            try:
+                db.rollback()
+            except Exception:
+                pass
             logger.error(f"[AUTOPILOT_FINALIZE_ERROR] {e}", exc_info=True)
             return {"phase": "FINALIZATION", "success": False, "error": str(e)}
         finally:

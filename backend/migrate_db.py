@@ -147,10 +147,22 @@ def run_db_migrations():
             ("weekly_public_results", "verification_evidence", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS verification_evidence TEXT"),
             ("weekly_public_results", "retry_count", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS retry_count INTEGER DEFAULT 0"),
             ("weekly_public_results", "last_fetched_at", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS last_fetched_at TIMESTAMP"),
+            ("weekly_public_results", "classification_signal", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS classification_signal VARCHAR(100)"),
+            ("weekly_public_results", "solve_timeline", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS solve_timeline JSONB"),
             # weekly_virtual_results 
             ("weekly_virtual_results", "state", "ALTER TABLE weekly_virtual_results ADD COLUMN IF NOT EXISTS state VARCHAR(30) DEFAULT 'VALIDATED'"),
             ("weekly_virtual_results", "evidence_json", "ALTER TABLE weekly_virtual_results ADD COLUMN IF NOT EXISTS evidence_json TEXT"),
             ("weekly_virtual_results", "record_hash", "ALTER TABLE weekly_virtual_results ADD COLUMN IF NOT EXISTS record_hash VARCHAR(128)"),
+            ("weekly_virtual_results", "classification_signal", "ALTER TABLE weekly_virtual_results ADD COLUMN IF NOT EXISTS classification_signal VARCHAR(100)"),
+            ("weekly_virtual_results", "solve_timeline", "ALTER TABLE weekly_virtual_results ADD COLUMN IF NOT EXISTS solve_timeline JSONB"),
+            # student_contest_participations
+            ("student_contest_participations", "classification_signal", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS classification_signal VARCHAR(100)"),
+            ("student_contest_participations", "solve_timeline", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS solve_timeline JSONB"),
+            ("student_contest_participations", "live_solves_count", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS live_solves_count INTEGER DEFAULT 0"),
+            # contest_participations
+            ("contest_participations", "classification_signal", "ALTER TABLE contest_participations ADD COLUMN IF NOT EXISTS classification_signal VARCHAR(100)"),
+            ("contest_participations", "solve_timeline", "ALTER TABLE contest_participations ADD COLUMN IF NOT EXISTS solve_timeline JSONB"),
+            ("contest_participations", "live_solves_count", "ALTER TABLE contest_participations ADD COLUMN IF NOT EXISTS live_solves_count INTEGER DEFAULT 0"),
             # weekly_student_progress 
             ("weekly_student_progress", "academic_year", "ALTER TABLE weekly_student_progress ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20)"),
             ("weekly_student_progress", "year_rank", "ALTER TABLE weekly_student_progress ADD COLUMN IF NOT EXISTS year_rank INTEGER"),

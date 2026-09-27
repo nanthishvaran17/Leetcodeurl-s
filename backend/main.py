@@ -189,7 +189,9 @@ async def _deferred_startup_tasks():
                                 ADD COLUMN IF NOT EXISTS q4_time_source VARCHAR(50),
                                 ADD COLUMN IF NOT EXISTS timing_calculation_version VARCHAR(20),
                                 ADD COLUMN IF NOT EXISTS timing_calculated_at TIMESTAMP WITH TIME ZONE,
-                                ADD COLUMN IF NOT EXISTS timing_confidence VARCHAR(20);
+                                ADD COLUMN IF NOT EXISTS timing_confidence VARCHAR(20),
+                                ADD COLUMN IF NOT EXISTS classification_signal VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS solve_timeline JSONB;
                             """,
                             """
                             ALTER TABLE weekly_virtual_results
@@ -197,7 +199,39 @@ async def _deferred_startup_tasks():
                                 ADD COLUMN IF NOT EXISTS participant_entry_time_source VARCHAR(50),
                                 ADD COLUMN IF NOT EXISTS participant_entry_time_confidence VARCHAR(20),
                                 ADD COLUMN IF NOT EXISTS participant_entry_time_method VARCHAR(50),
-                                ADD COLUMN IF NOT EXISTS participant_entry_time_observed_at TIMESTAMP WITH TIME ZONE;
+                                ADD COLUMN IF NOT EXISTS participant_entry_time_observed_at TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS classification_signal VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS solve_timeline JSONB;
+                            """,
+                            """
+                            ALTER TABLE student_contest_participations
+                                ADD COLUMN IF NOT EXISTS official_attendance_state VARCHAR(30),
+                                ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE,
+                                ADD COLUMN IF NOT EXISTS frozen_at TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS post_contest_solves_count INTEGER DEFAULT 0,
+                                ADD COLUMN IF NOT EXISTS live_solves_count INTEGER DEFAULT 0,
+                                ADD COLUMN IF NOT EXISTS solved_problems TEXT,
+                                ADD COLUMN IF NOT EXISTS classification_signal VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS solve_timeline JSONB,
+                                ADD COLUMN IF NOT EXISTS confidence VARCHAR(50) DEFAULT 'HIGH',
+                                ADD COLUMN IF NOT EXISTS verification_level VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS verification_evidence TEXT;
+                            """,
+                            """
+                            ALTER TABLE contest_participations
+                                ADD COLUMN IF NOT EXISTS classification_signal VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS solve_timeline JSONB,
+                                ADD COLUMN IF NOT EXISTS live_solves_count INTEGER DEFAULT 0,
+                                ADD COLUMN IF NOT EXISTS post_contest_solves_count INTEGER DEFAULT 0;
+                            """,
+                            """
+                            ALTER TABLE contest_reconciliation_events
+                                ADD COLUMN IF NOT EXISTS contest_id VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS classification_signal VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS reason TEXT,
+                                ADD COLUMN IF NOT EXISTS old_solved_count INTEGER,
+                                ADD COLUMN IF NOT EXISTS new_solved_count INTEGER,
+                                ADD COLUMN IF NOT EXISTS reconciliation_stage VARCHAR(50);
                             """
                     ]
                     for stmt in pg_statements:
