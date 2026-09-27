@@ -543,6 +543,7 @@ app = FastAPI(
 # 2. LIGHTWEIGHT PRODUCTION HEALTH & READINESS PROBES
 # =====================================================================
 
+@app.api_route("/", methods=["GET"], include_in_schema=False)
 @app.api_route("/health", methods=["GET"], operation_id="health_check")
 @app.api_route("/api/health", methods=["GET"], include_in_schema=False)
 @app.api_route("/api", methods=["GET"], include_in_schema=False)
