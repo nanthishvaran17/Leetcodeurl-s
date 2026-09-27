@@ -59,7 +59,7 @@ def test_rate_limiter_handles_simulated_429_backoff():
                 max_backoff_sec=0.05
             )
 
-        assert call_counts["attempts"] == 3
+        assert call_counts["attempts"] == 4  # 1 initial attempt + 3 retries = 4 total attempts
         assert "Rate limit exhausted" in str(exc_info.value)
         assert exc_info.value.status_code == 429
 
