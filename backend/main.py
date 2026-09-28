@@ -1133,8 +1133,8 @@ def get_live_contest_snapshot_api(contest_id: str, db: Session = Depends(get_db)
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
 
-@app.get("/api/download/apk")
-@app.get("/download/apk")
+@app.api_route("/api/download/apk", methods=["GET", "HEAD"])
+@app.api_route("/download/apk", methods=["GET", "HEAD"])
 def download_android_apk_endpoint():
     """Serves the official Nandha LeetCode Intelligence Android APK package without blocking event loop."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
