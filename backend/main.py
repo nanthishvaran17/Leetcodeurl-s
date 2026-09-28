@@ -501,7 +501,7 @@ async def _deferred_startup_tasks():
             try:
                 logger.info("[STARTUP] Step 4: Contest Discovery...")
                 from backend.services.contest_discovery import discover_contest_metadata
-                meta = discover_contest_metadata()
+                meta = await asyncio.to_thread(discover_contest_metadata)
                 logger.info(
                     f"[STARTUP] Contest Discovery: {meta.get('contest_name')} "
                     f"({meta.get('status')}) on {meta.get('raw_date')}"
