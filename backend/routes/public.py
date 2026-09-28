@@ -52,36 +52,32 @@ def verify_certificate(cert_code: str, db: Session = Depends(get_db)):
 def get_public_stats(db: Session = Depends(get_db)):
     """
     Lightweight endpoint to fetch total and verified student counts for public displays
-    without downloading the entire roster.
-    Canonical LeetCode field: Student.username (Column String(100), index=True, nullable=True).
+    using single-pass SQL aggregations.
     """
-    from sqlalchemy import func
+    from sqlalchemy import func, case
     from backend.models import Department
-    import traceback
-
     try:
-        total = db.query(Student).count()
-        active = db.query(Student).filter(Student.is_active == True).count()
-        inactive = db.query(Student).filter(Student.is_active == False).count()
+        stats = db.query(
+            func.count(Student.id).label("total"),
+            func.count(case((Student.is_active == True, 1))).label("active"),
+            func.count(case(((Student.username != None) & (Student.username != ''), 1))).label("with_handle")
+        ).first()
 
-        # Count students with a non-null, non-empty LeetCode username
-        with_handle = db.query(Student).filter(
-            Student.username.isnot(None),
-            Student.username != ''
-        ).count()
-        without_handle = total - with_handle
+        dept_count = db.query(func.count(Department.id)).scalar() or 0
 
-        dept_count = db.query(func.count(func.distinct(Department.id))).scalar()
+        total = getattr(stats, "total", 0) or 0
+        active = getattr(stats, "active", 0) or 0
+        with_handle = getattr(stats, "with_handle", 0) or 0
 
         return {
             "total": total,
             "active": active,
-            "inactive": inactive,
-            "verified": with_handle,           # backward-compat alias
+            "inactive": max(0, total - active),
+            "verified": with_handle,
             "with_leetcode_handle": with_handle,
-            "without_leetcode_handle": without_handle,
+            "without_leetcode_handle": max(0, total - with_handle),
             "department_count": dept_count,
         }
     except Exception as e:
-        return {"error": str(e), "traceback": traceback.format_exc()}
+        return {"total": 0, "active": 0, "inactive": 0, "verified": 0, "department_count": 0, "error": str(e)}
 
