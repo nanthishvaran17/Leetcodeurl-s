@@ -1136,19 +1136,23 @@ from fastapi.responses import FileResponse
 @app.api_route("/api/download/apk", methods=["GET", "HEAD"])
 @app.api_route("/download/apk", methods=["GET", "HEAD"])
 def download_android_apk_endpoint():
-    """Serves the official Nandha LeetCode Intelligence Android APK package without blocking event loop."""
+    """Redirects to Vercel CDN for high-speed zero-load Android APK package downloads."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    possible_paths = [
-        os.path.abspath(os.path.join(base_dir, "static", "nandha-leetcode-tracker-latest.apk")),
+    for apk_path in [
         os.path.abspath(os.path.join(base_dir, "..", "frontend", "public", "nandha-leetcode-tracker-latest.apk")),
-        os.path.abspath(os.path.join(base_dir, "static", "Nandha_LeetCode_Intelligence_v2_latest.apk")),
         os.path.abspath(os.path.join(base_dir, "..", "Nandha_LeetCode_Intelligence_v2_latest.apk")),
-    ]
-    for apk_path in possible_paths:
-        if os.path.exists(apk_path):
-            rel_name = os.path.basename(apk_path)
-            return RedirectResponse(url=f"/static/assets/{rel_name}", status_code=307)
-    raise HTTPException(status_code=404, detail="Android APK package is currently updating on the server. Please try again in a few moments.")
+    ]:
+        if os.path.exists(apk_path) and os.environ.get("ENVIRONMENT") != "production":
+            return FileResponse(
+                path=apk_path,
+                media_type="application/vnd.android.package-archive",
+                filename="Nandha_LeetCode_Intelligence_v2_latest.apk"
+            )
+            
+    return RedirectResponse(
+        url="https://leetcodeurl-s-roan.vercel.app/nandha-leetcode-tracker-latest.apk",
+        status_code=307
+    )
 
 
 @lru_cache(maxsize=8)
