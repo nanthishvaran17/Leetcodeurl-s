@@ -29,7 +29,7 @@ def normalize_slug(val: Optional[str]) -> str:
     """
     if not val:
         return ""
-    s = str(val).strip().lower()
+    s = val.strip().lower()
     s = re.sub(r'[^a-z0-9\s\-_]', '', s)
     s = re.sub(r'[\s_]+', '-', s)
     s = re.sub(r'-+', '-', s)
@@ -43,7 +43,7 @@ def is_accepted_submission(status: Optional[str]) -> bool:
     """
     if not status:
         return False
-    st = str(status).strip().upper()
+    st = status.strip().upper()
     return st in ("ACCEPTED", "AC", "10")
 
 

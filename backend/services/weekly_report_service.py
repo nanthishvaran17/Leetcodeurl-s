@@ -300,22 +300,22 @@ def generate_weekly_performance_data(
     students = student_query.order_by(Student.department_id, Student.year_level, Student.reg_no).all()
 
     # Apply department and year/batch filters if provided
-    if dept_filter and str(dept_filter).upper() != "ALL":
+    if dept_filter and dept_filter.upper() != "ALL":
         students = [
             s for s in students
             if matches_dept(
-                s.department.code if s.department else "",
-                s.department.name if s.department else "",
+                str(s.department.code if s.department else ""),
+                str(s.department.name if s.department else ""),
                 dept_filter,
-                s.department_id
+                int(str(s.department_id)) if s.department_id else None
             )
         ]
 
-    effective_year = year_filter if (year_filter and str(year_filter).upper() != "ALL") else batch_filter
-    if effective_year and str(effective_year).upper() != "ALL":
+    effective_year = year_filter if (year_filter and year_filter.upper() != "ALL") else batch_filter
+    if effective_year and effective_year.upper() != "ALL":
         students = [
             s for s in students
-            if matches_year(s.year_level, effective_year, s.reg_no)
+            if matches_year(str(s.year_level) if s.year_level else None, effective_year, str(s.reg_no) if s.reg_no else None)
         ]
 
     total_students_count = len(students)
@@ -332,21 +332,21 @@ def generate_weekly_performance_data(
 
     if curr_session_id is not None:
         for r in db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == curr_session_id).all():
-            curr_pub_results[r.student_id] = r
+            curr_pub_results[int(str(r.student_id))] = r
         for r in db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == curr_session_id).all():
-            curr_vir_results[r.student_id] = r
+            curr_vir_results[int(str(r.student_id))] = r
 
     if last_session_id is not None:
         for r in db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == last_session_id).all():
-            last_pub_results[r.student_id] = r
+            last_pub_results[int(str(r.student_id))] = r
         for r in db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == last_session_id).all():
-            last_vir_results[r.student_id] = r
+            last_vir_results[int(str(r.student_id))] = r
 
     # Step 5: Load Historical Last Week Snapshots if Available
     last_snapshots_by_pid: Dict[str, WeeklyStudentSnapshot] = {}
     db_snaps = db.query(WeeklyStudentSnapshot).filter(WeeklyStudentSnapshot.reporting_period_id == prev_period_id).all()
     for snap in db_snaps:
-        last_snapshots_by_pid[snap.people_id] = snap
+        last_snapshots_by_pid[str(snap.people_id)] = snap
 
     # Step 6: Process Students & Deduplicate by People ID
     processed_pids = set()
@@ -383,25 +383,25 @@ def generate_weekly_performance_data(
 
         # PRIMARY ACCOUNT STRICT ISOLATION FOR BUCKETS
         category_name = _get_profile_category_name(tot, is_verified)
-        batch_label = derive_student_batch(s.year_level)
+        batch_label = derive_student_batch(str(s.year_level) if s.year_level else None)
         dept_code = s.department.code if s.department else "CSE"
 
         # Current Week Contest Outcomes
-        curr_pub_obj = curr_pub_results.get(s.id)
-        curr_vir_obj = curr_vir_results.get(s.id)
+        curr_pub_obj = curr_pub_results.get(int(str(s.id)))
+        curr_vir_obj = curr_vir_results.get(int(str(s.id)))
         curr_pub_outcome = classify_public_contest_outcome(curr_pub_obj)
         curr_vir_outcome = classify_virtual_contest_outcome(curr_vir_obj)
 
         # Last Week Contest Outcomes & Historical Snapshot Solved Total
-        last_pub_obj = last_pub_results.get(s.id)
-        last_vir_obj = last_vir_results.get(s.id)
+        last_pub_obj = last_pub_results.get(int(str(s.id)))
+        last_vir_obj = last_vir_results.get(int(str(s.id)))
         last_pub_outcome = classify_public_contest_outcome(last_pub_obj)
         last_vir_outcome = classify_virtual_contest_outcome(last_vir_obj)
 
-        hist_snap = last_snapshots_by_pid.get(pid)
+        hist_snap = last_snapshots_by_pid.get(str(pid))
         if last_pub_outcome in ("NOT_ATTENDED", "DATA_ERROR", "PENDING", None) and hist_snap and hist_snap.contest_data:
             try:
-                cdata = json.loads(hist_snap.contest_data)
+                cdata = json.loads(str(hist_snap.contest_data))
                 if isinstance(cdata, dict) and cdata.get("public"):
                     last_pub_outcome = cdata.get("public")
                 if isinstance(cdata, dict) and cdata.get("virtual"):
@@ -423,8 +423,8 @@ def generate_weekly_performance_data(
             "department": dept_code,
             "dept": dept_code,
             "department_id": s.department_id,
-            "year": normalize_year_roman(s.year_level),
-            "year_level": normalize_year_roman(s.year_level),
+            "year": normalize_year_roman(str(s.year_level) if s.year_level else None),
+            "year_level": normalize_year_roman(str(s.year_level) if s.year_level else None),
             "batch": batch_label,
             "leetcode_url": s.leetcode_url,
             "username": s.username or (st.canonical_username if hasattr(st, "canonical_username") else None),
@@ -474,8 +474,8 @@ def generate_weekly_performance_data(
             "department": dept_code,
             "dept": dept_code,
             "department_id": s.department_id,
-            "year": normalize_year_roman(s.year_level),
-            "year_level": normalize_year_roman(s.year_level),
+            "year": normalize_year_roman(str(s.year_level) if s.year_level else None),
+            "year_level": normalize_year_roman(str(s.year_level) if s.year_level else None),
             "batch": batch_label,
             "leetcode_url": s.leetcode_url,
             "username": s.username,
@@ -535,7 +535,7 @@ def generate_weekly_performance_data(
     # Department Summaries
     from backend.constants import is_production_department
     dept_summaries = []
-    departments_db = [d for d in db.query(Department).order_by(Department.id).all() if is_production_department(d.code, d.name)]
+    departments_db = [d for d in db.query(Department).order_by(Department.id).all() if is_production_department(str(d.code), str(d.name))]
     for d in departments_db:
         d_students = dept_map.get(d.code, [])
         d_metrics = _aggregate_cohort_metrics(d_students)
@@ -550,7 +550,7 @@ def generate_weekly_performance_data(
         if len(d_students) == 0:
             continue
 
-        coordinator_name = get_coordinator_for_department(d.code)
+        coordinator_name = get_coordinator_for_department(str(d.code))
         dept_summaries.append({
             "department_id": d.id,
             "department": d.code,

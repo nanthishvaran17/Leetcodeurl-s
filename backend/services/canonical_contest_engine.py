@@ -548,7 +548,7 @@ def _build_canonical_contest_dataset_internal(
         status_counts[canon_status] = status_counts.get(canon_status, 0) + 1
 
         # Department aggregator
-        dept_norm = str(dept_code) if dept_code else "OTHER"
+        dept_norm = dept_code if dept_code else "OTHER"
         if dept_norm not in dept_stats_map:
             dept_stats_map[dept_norm] = {"name": dept_norm, "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0}
 
@@ -600,6 +600,8 @@ def _build_canonical_contest_dataset_internal(
             elif solved_val == 1: q1_all += 1
 
         stat = stats_map.get(s_id)
+        last_sync_dt = getattr(p_res, "last_fetched_at", None) if p_res else None
+        utc_sync_dt = ensure_utc(last_sync_dt) if isinstance(last_sync_dt, datetime.datetime) else None
         row_item = {
             "s_no": idx,
             "student_id": s_id,
@@ -636,7 +638,7 @@ def _build_canonical_contest_dataset_internal(
             "data_source": "LeetCode GraphQL (userContestRankingHistory)",
             "verification_status": "VERIFIED" if is_participant or canon_status == "NOT_ATTENDED" else "UNVERIFIED",
             "error_reason": error_reason,
-            "last_synced_at": ensure_utc(p_res.last_fetched_at).isoformat() if (p_res and p_res.last_fetched_at) else None
+            "last_synced_at": utc_sync_dt.isoformat() if utc_sync_dt else None
         }
         canonical_rows.append(row_item)
 

@@ -5,6 +5,7 @@ import re
 from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, Query, Request, BackgroundTasks
 from sqlalchemy.orm import Session, joinedload
+from openpyxl.utils import get_column_letter
 from backend.database import get_db
 
 logger = logging.getLogger(__name__)
@@ -173,7 +174,7 @@ def _extract_contest_number(session: WeeklySession) -> int:
         nums = re.findall(r'\d+', str(session.contest_name))
         if nums:
             return int(nums[-1])
-    return session.week_number or session.id
+    return int(session.week_number or session.id or 0)
 
 def _resolve_session(session_id_or_slug: Any, db: Session) -> Optional[WeeklySession]:
     """Resolves WeeklySession from numeric id, session_code, contest_id, or contest slug/number."""
@@ -250,7 +251,7 @@ def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user:
         "PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED"
     )]
     participant_count = len(attended)
-    attendance_rate = round((participant_count / max(total_students, 1)) * 100, 2)
+    attendance_rate = round((float(participant_count) / max(int(total_students), 1)) * 100, 2)
     
     scores = [r.contest_score for r in attended if r.contest_score is not None]
     ranks = [r.contest_rank for r in attended if r.contest_rank is not None and r.contest_rank > 0]
@@ -294,7 +295,7 @@ def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user:
     missing_username_count = len([r for r in results if r.participation_status in ("UNKNOWN", "USERNAME_NOT_FOUND", "DATA_ERROR", "SOURCE_ERROR")])
     public_count = len([r for r in results if r.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")])
 
-    dept_stats = {
+    dept_stats: Dict[str, Dict[str, Any]] = {
         "CSE(CS)": {"name": "Computer Science and Engineering (Cyber Security)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "errors": 0},
         "CSE(IOT)": {"name": "Computer Science and Engineering (Internet of Things)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "errors": 0},
     }
@@ -392,10 +393,10 @@ async def get_contest_metadata_endpoint(
     
     contest_id = session.contest_id
     if not contest_id and session.contest_name:
-        contest_id = session.contest_name.strip().lower().replace(" ", "-")
+        contest_id = str(session.contest_name).strip().lower().replace(" ", "-")
     
     try:
-        meta = await fetch_contest_metadata(contest_id or f"weekly-contest-{session.id}")
+        meta = await fetch_contest_metadata(str(contest_id or f"weekly-contest-{session.id}"))
         
         # DYNAMIC FALLBACK: If LeetCode Cloudflare blocks the GraphQL API, we extract the questions dynamically 
         # from our own telemetry (LiveEvent) where students have already submitted them!
@@ -438,7 +439,7 @@ def get_contest_questions_endpoint(
     session = _resolve_session(session_id, db)
     if not session:
         raise HTTPException(status_code=404, detail="Contest session not found")
-    return get_contest_question_analytics(session_id=session.id, db=db, current_user=current_user)
+    return get_contest_question_analytics(session_id=int(session.id), db=db, current_user=current_user)
 
 
 @router.get("/sessions/{session_id}/analytics")
@@ -457,8 +458,8 @@ def get_contest_deep_analytics_endpoint(
     session = _resolve_session(session_id, db)
     if not session:
         raise HTTPException(status_code=404, detail="Contest session not found")
-    dept_stats = get_contest_dept_analytics(session_id=session.id, db=db, current_user=current_user)
-    comparison = get_week_comparison(session_id=session.id, dept=dept, year=year, attendance=attendance, db=db, current_user=current_user)
+    dept_stats = get_contest_dept_analytics(session_id=int(session.id), db=db, current_user=current_user)
+    comparison = get_week_comparison(session_id=int(session.id), dept=dept, year=year, attendance=attendance, db=db, current_user=current_user)
     return {
         "sessionId": session.id,
         "contestNumber": _extract_contest_number(session),
@@ -549,7 +550,7 @@ def get_session_live_telemetry(
         total_solved = len(solvers)
         q_stats[f"q{q_idx}"] = {
             "totalSolved": total_solved,
-            "solvePercent": round((total_solved / max(total_students, 1)) * 100, 1) if total_students else 0,
+            "solvePercent": round((float(total_solved) / max(int(total_students), 1)) * 100, 1) if total_students else 0.0,
             "firstSolver": solvers[0].name if solvers else None,
             "firstSolverDept": solvers[0].dept if solvers else None,
             "firstSolverYear": solvers[0].year if solvers else None,
@@ -560,7 +561,7 @@ def get_session_live_telemetry(
         role = (getattr(current_user, "override_role", None) or current_user.role or "").lower()
         if "staff" in role or "faculty" in role:
             from backend.services.faculty_assignment_service import faculty_assignment_service
-            assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
+            assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))
             if assigned_ids:
                 # Filter leaderboard & top performers for faculty mentorship scope
                 telemetry["topLeaderboard"] = [
@@ -606,7 +607,7 @@ async def execute_admin_live_control(
             sunday_live_engine.record_live_event("ADMIN_ACTION", "Admin Operations", "ADMIN", "ALL", "ALL", "Worker execution resumed by administrator.")
             return {"success": True, "message": "Live worker resumed successfully."}
         elif action == "start_live":
-            session.status = "LIVE"
+            setattr(session, "status", "LIVE")
             db.commit()
             sunday_live_engine.is_paused = False
             sunday_live_engine.worker_state = "RUNNING"
@@ -615,7 +616,7 @@ async def execute_admin_live_control(
             asyncio.create_task(sunday_live_engine.run_live_sync_cycle(session_id, SessionLocal))
             return {"success": True, "message": f"Live synchronization activated for {session.contest_name}."}
         elif action == "force_final_sync":
-            session.status = "FINALIZING"
+            setattr(session, "status", "FINALIZING")
             db.commit()
             sunday_live_engine.record_live_event("FINAL_LOCK", "Snapshot Engine", "SYSTEM", "ALL", "ALL", "Triggered Final Snapshot 09:30 AM IST & Immutability Lock.")
             await trigger_final_snapshot_0930(db, session_id)
@@ -626,7 +627,7 @@ async def execute_admin_live_control(
             return {"success": True, "message": f"Successfully retried {res.get('retried_count', 21)} unresolved student records."}
         elif action == "sweep_verification":
             from backend.services.weekly_session_manager import sweep_bounded_verification_windows
-            sweep_bounded_verification_windows(db)
+            await sweep_bounded_verification_windows(db)
             return {"success": True, "message": "Bounded 3-day verification sweep executed successfully."}
         elif action == "reset_worker":
             sunday_live_engine.is_running = False
@@ -653,10 +654,10 @@ async def execute_admin_live_control(
                 evt_type, detail, score, rank = sample_events[idx % len(sample_events)]
                 sunday_live_engine.record_live_event(
                     evt_type,
-                    student.name,
-                    student.reg_no,
-                    student.department.code if student.department else "CSE",
-                    student.year_level or "III",
+                    str(student.name),
+                    str(student.reg_no),
+                    str(student.department.code if student.department else "CSE"),
+                    str(student.year_level or "III"),
                     detail,
                     score=score,
                     rank=rank,
@@ -776,7 +777,7 @@ def get_calendar_recent_session(db: Session = Depends(get_db)):
 
     completed_in_window = []
     for s in all_sessions:
-        s_date = parse_session_date(s.session_date)
+        s_date = parse_session_date(str(s.session_date))
         if s_date and s_date <= current_date and s.status in ("FINALIZED", "COMPLETED"):
             if s_date >= seven_days_ago:
                 completed_in_window.append((s_date, s))
@@ -863,15 +864,22 @@ def list_weekly_sessions(db: Session = Depends(get_db)):
 
         dirty = False
         for s in sessions:
-            s_date = parse_session_date(s.session_date)
+            s_date = parse_session_date(str(s.session_date))
             if s_date and s_date > today_ist and s.status != "SCHEDULED":
-                s.status = "SCHEDULED"
+                setattr(s, "status", "SCHEDULED")
                 dirty = True
         if dirty:
             db.commit()
 
+        def _get_sort_num(s: WeeklySession) -> int:
+            if s.contest_name:
+                m = re.search(r'\d+', str(s.contest_name))
+                if m:
+                    return int(m.group(0))
+            return int(getattr(s, "id", 0) or 0)
+
         sessions.sort(
-            key=lambda s: int(re.search(r'\d+', s.contest_name).group(0)) if (s.contest_name and re.search(r'\d+', s.contest_name)) else s.id,
+            key=_get_sort_num,
             reverse=True
         )
 
@@ -897,7 +905,7 @@ def list_weekly_sessions(db: Session = Depends(get_db)):
 def normalize_department_filter(target_dept: Optional[str]) -> Optional[str]:
     if not target_dept:
         return None
-    t = str(target_dept).strip().upper()
+    t = target_dept.strip().upper()
     if t in ["ALL", "ALL DEPTS", "ALL DEPTS (COMBINED)", "COMBINED", "ALL DEPARTMENTS", ""]:
         return None
     if "ALL" in t:
@@ -907,7 +915,7 @@ def normalize_department_filter(target_dept: Optional[str]) -> Optional[str]:
 def normalize_year_filter(target_year: Optional[str]) -> Optional[str]:
     if not target_year:
         return None
-    t = str(target_year).strip().upper()
+    t = target_year.strip().upper()
     if t in ["ALL", "ALL YEARS", "ALL YEARS (COMBINED)", "COMBINED", ""]:
         return None
     if "ALL" in t:
@@ -917,7 +925,7 @@ def normalize_year_filter(target_year: Optional[str]) -> Optional[str]:
 def normalize_attendance_filter(target_att: Optional[str]) -> Optional[str]:
     if not target_att:
         return None
-    t = str(target_att).strip().upper()
+    t = target_att.strip().upper()
     if t in ["ALL", "ALL ATTENDANCE", "COMBINED", ""]:
         return None
     if "ALL" in t:
@@ -928,7 +936,7 @@ def matches_dept(r_dept: str, target_dept: str) -> bool:
     norm_target = normalize_department_filter(target_dept)
     if norm_target is None:
         return True
-    r_d = str(r_dept or "").upper().strip()
+    r_d = (r_dept or "").upper().strip()
     t_d = norm_target.replace("", "").strip()
     
     if "CS" in t_d and "IOT" not in t_d:
@@ -942,7 +950,7 @@ def matches_year(r_year: str, target_year: str) -> bool:
     norm_target = normalize_year_filter(target_year)
     if norm_target is None:
         return True
-    r_y = str(r_year or "").upper().replace("YEAR", "").replace("", "").strip()
+    r_y = (r_year or "").upper().replace("YEAR", "").replace("", "").strip()
     t_y = norm_target.replace("YEAR", "").replace("", "").strip()
     
     if t_y in ["III", "3", "3RD"]:
@@ -993,7 +1001,7 @@ def get_normalized_contest_data(
     department: Optional[str] = None,
     academic_year: Optional[str] = None,
     attendance_status: Optional[str] = None,
-    db: Session = None,
+    db: Optional[Session] = None,
     current_user: Optional[User] = None
 ) -> Dict[str, Any]:
     """
@@ -1316,9 +1324,13 @@ def get_week_comparison(
     all_weekly = db.query(WeeklySession).filter(
         WeeklySession.contest_name.ilike("%Weekly Contest%")
     ).all()
-    all_weekly.sort(
-        key=lambda s: int(re.search(r'\d+', s.contest_name).group(0)) if re.search(r'\d+', s.contest_name or "") else s.id
-    )
+    def _get_weekly_num(s: WeeklySession) -> int:
+        if s.contest_name:
+            m = re.search(r'\d+', str(s.contest_name))
+            if m:
+                return int(m.group(0))
+        return int(getattr(s, "id", 0) or 0)
+    all_weekly.sort(key=_get_weekly_num)
 
     curr_idx = -1
     for idx, s in enumerate(all_weekly):
@@ -1336,8 +1348,8 @@ def get_week_comparison(
 
     # Read from single canonical normalized dataset engine (fast in-memory filter)
     from backend.services.canonical_contest_engine import build_canonical_contest_dataset
-    curr_data = build_canonical_contest_dataset(current_session.id, dept=final_dept, year=final_year, attendance=final_attendance, db=db, current_user=current_user)
-    prev_data = build_canonical_contest_dataset(prev_session.id, dept=final_dept, year=final_year, attendance=final_attendance, db=db, current_user=current_user) if prev_session else None
+    curr_data = build_canonical_contest_dataset(int(current_session.id), dept=final_dept, year=final_year, attendance=final_attendance, db=db, current_user=current_user)
+    prev_data = build_canonical_contest_dataset(int(prev_session.id), dept=final_dept, year=final_year, attendance=final_attendance, db=db, current_user=current_user) if prev_session else None
 
     curr_metrics = curr_data["metrics"]
     prev_metrics = prev_data["metrics"] if prev_data else {
@@ -1434,7 +1446,7 @@ def get_contest_diagnostics(
         data_errors = sum(1 for r in results if r.participation_status == "DATA_ERROR")
 
         import re
-        match = re.search(r'\d+', s.contest_name or "")
+        match = re.search(r'\d+', str(s.contest_name or ""))
         c_num = int(match.group(0)) if match else None
 
         diagnostics.append({
@@ -1471,7 +1483,7 @@ def get_session_diagnostics_detail(
     if not s:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    m = re.search(r'\d+', s.contest_name or "")
+    m = re.search(r'\d+', str(s.contest_name or ""))
     c_num = int(m.group(0)) if m else None
 
     students = db.query(Student).all()
@@ -1594,7 +1606,7 @@ def get_contest_leaderboard(
         from collections import defaultdict
         dept_groups: Dict[str, list] = defaultdict(list)
         for r in results:
-            dept_groups[r.dept].append(r)
+            dept_groups[str(r.dept or "Unknown")].append(r)
 
         # If a specific dept filter is requested, return only that dept
         target_dept = dept.strip().upper() if dept else None
@@ -1609,7 +1621,7 @@ def get_contest_leaderboard(
         from collections import defaultdict
         year_groups: Dict[str, list] = defaultdict(list)
         for r in results:
-            year_groups[r.year or "Unknown"].append(r)
+            year_groups[str(r.year or "Unknown")].append(r)
 
         target_year = year.strip().upper() if year else None
         output_y: Dict[str, Any] = {}
@@ -1660,7 +1672,7 @@ def get_contest_dept_analytics(
     from collections import defaultdict
     dept_map: Dict[str, list] = defaultdict(list)
     for r in all_results:
-        dept_map[r.dept or "Unknown"].append(r)
+        dept_map[str(r.dept or "Unknown")].append(r)
 
     analytics = []
     for dept_code, rows in sorted(dept_map.items()):
@@ -1928,7 +1940,7 @@ async def sync_all_weekly_contests(
 
     import re
     for s in sessions:
-        m = re.search(r'\d+', s.contest_name or "")
+        m = re.search(r'\d+', str(s.contest_name or ""))
         c_num = int(m.group(0)) if m else None
 
         res_count = session_counts.get(s.id, 0)
@@ -2224,8 +2236,8 @@ def start_or_resume_virtual_attempt(
 
     if existing:
         # RESUME — never modify started_at / expires_at
-        existing.last_activity_at = dt.datetime.now(datetime.timezone.utc)
-        existing.resume_count = (existing.resume_count or 0) + 1
+        setattr(existing, "last_activity_at", datetime.datetime.now(datetime.timezone.utc))
+        setattr(existing, "resume_count", int(getattr(existing, "resume_count", 0) or 0) + 1)
         try:
             db.commit()
             db.refresh(existing)
@@ -2467,7 +2479,7 @@ def get_post_930_solvers(
     assigned_student_ids = None
     from backend.services.authorization_service import _STAFF_ROLES
     if user and user_role_clean in _STAFF_ROLES:
-        assigned_ids_list = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
+        assigned_ids_list = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(user.id))
         assigned_student_ids = set(assigned_ids_list)
         if student_id and student_id not in assigned_student_ids:
             raise HTTPException(
@@ -2490,7 +2502,8 @@ def get_post_930_solvers(
     lock_datetime = datetime.datetime.combine(target_date, datetime.time(9, 30, 0))
     if session and hasattr(session, 'finalized_at') and session.finalized_at:
         lock_dt = session.finalized_at
-        lock_datetime = lock_dt if lock_dt.tzinfo else pytz.utc.localize(lock_dt).astimezone(ist_tz)
+        lock_dt_val: datetime.datetime = lock_dt if isinstance(lock_dt, datetime.datetime) else datetime.datetime.now(datetime.timezone.utc)
+        lock_datetime = lock_dt_val if lock_dt_val.tzinfo else pytz.utc.localize(lock_dt_val).astimezone(ist_tz)
     else:
         lock_datetime = ist_tz.localize(lock_datetime)
 
@@ -2828,7 +2841,10 @@ def export_post_930_solvers_excel(
 
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Post-930 Solvers Report"
+    if ws is None:
+        ws = wb.create_sheet(title="Post-930 Solvers Report")
+    else:
+        ws.title = "Post-930 Solvers Report"
 
     # Style definitions
     header_fill = PatternFill(start_color="1E1E2D", end_color="1E1E2D", fill_type="solid")
@@ -2900,8 +2916,10 @@ def export_post_930_solvers_excel(
 
     # Column Widths
     for col in ws.columns:
+        if not col or col[0].column is None:
+            continue
         max_len = max(len(str(cell.value or '')) for cell in col)
-        col_letter = openpyxl.utils.get_column_letter(col[0].column)
+        col_letter = get_column_letter(int(col[0].column))
         ws.column_dimensions[col_letter].width = max(max_len + 4, 14)
 
     output = io.BytesIO()
@@ -3312,14 +3330,14 @@ async def simulate_live_solve_step(
     Triggers true DB commit + WebSocket broadcast without full page reload.
     """
     from backend.services.sunday_live_ingestion_engine import SundayLiveIngestionEngine
-    session_id = req.session_id
-    if not session_id:
+    session_id_val = req.session_id
+    if not session_id_val:
         session = SundayLiveIngestionEngine.get_or_create_live_session(db)
-        session_id = session.id
+        session_id_val = int(session.id)
 
     res = await SundayLiveIngestionEngine.simulate_question_solve_progression(
         db=db,
-        session_id=session_id,
+        session_id=int(session_id_val),
         student_id=req.student_id,
         target_solved=req.target_solved
     )
@@ -3344,7 +3362,7 @@ def get_live_contest_summary(
     if not session:
         raise HTTPException(status_code=404, detail="Live contest session not found.")
 
-    metrics = SundayLiveIngestionEngine.recalculate_live_summary_metrics(db, session.id)
+    metrics = SundayLiveIngestionEngine.recalculate_live_summary_metrics(db, int(session.id))
     return {
         "session_id": session.id,
         "contest_id": session.contest_id,

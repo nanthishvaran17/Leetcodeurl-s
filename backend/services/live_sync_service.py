@@ -258,7 +258,7 @@ def invalidate_active_students_cache():
         _ACTIVE_STUDENTS_CACHE = None
         _ACTIVE_STUDENTS_CACHE_TIME = 0.0
 
-def get_active_students(db: Session = None, force_refresh: bool = False) -> List[Student]:
+def get_active_students(db: Optional[Session] = None, force_refresh: bool = False) -> List[Student]:
     """Returns active student roster from database dynamically with joinedload stats."""
     from sqlalchemy.orm import joinedload
     s_db = SessionLocal()
@@ -292,7 +292,7 @@ def dispatch_background_task(coro):
 from backend.config import Settings
 settings = Settings()
 
-def _acquire_global_lock(db: Session = None, job_id: str = "", timeout_minutes: int = 120) -> bool:
+def _acquire_global_lock(db: Optional[Session] = None, job_id: str = "", timeout_minutes: int = 120) -> bool:
     """Atomic acquisition of the global sync lock using a single short-lived transaction."""
     now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     for attempt in range(3):
@@ -313,7 +313,8 @@ def _acquire_global_lock(db: Session = None, job_id: str = "", timeout_minutes: 
             if lock_row and lock_row.is_locked and lock_row.locked_at:
                 from backend.time_utils import ensure_utc
                 now_utc = datetime.datetime.now(datetime.timezone.utc)
-                locked_utc = ensure_utc(lock_row.locked_at)
+                lock_dt_val = getattr(lock_row, "locked_at", None)
+                locked_utc = ensure_utc(lock_dt_val) if isinstance(lock_dt_val, datetime.datetime) else None
                 locked_age = (now_utc - locked_utc).total_seconds() if locked_utc else 9999
                 # If sync_tracker is not running and lock is either older than 15s or has negative age, it's a ghost lock
                 if not sync_tracker.is_running and (locked_age > 15 or locked_age < -5):
@@ -440,6 +441,7 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
     
     # Mark any stale running jobs as INTERRUPTED & create new SyncJob record cleanly
     s_job_db = db
+    total_count: int = 0
     try:
         s_job_db.query(SyncJob).filter(SyncJob.status == "RUNNING").update({
             "status": "INTERRUPTED",
@@ -1337,4 +1339,20 @@ def get_system_freshness(db: Session) -> Dict[str, Any]:
                 "running_job_id": None,
                 "freshness_badge": " Reconnecting DB"
             }
+
+    if _LAST_FRESHNESS_CACHE:
+        return _LAST_FRESHNESS_CACHE
+    return {
+        "total_students": 0,
+        "verified_count": 0,
+        "partial_count": 0,
+        "stale_count": 0,
+        "needs_attention_count": 0,
+        "data_freshness_status": "STALE",
+        "freshness_hours_threshold": settings.SYNC_FRESHNESS_HOURS,
+        "last_successful_sync": None,
+        "is_sync_running": False,
+        "running_job_id": None,
+        "freshness_badge": " Reconnecting DB"
+    }
 

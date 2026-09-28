@@ -446,12 +446,27 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
             </div>
           </>
         ) : (
-          <div className="p-12 text-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
-            <Sparkles className="w-8 h-8 text-emerald-500 mx-auto" />
-            <h4 className="text-base font-black text-emerald-700 dark:text-emerald-300">No Matching Issues Found</h4>
-            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-               Zero data quality anomalies match your active filter parameters.
-            </p>
+          <div className="p-10 sm:p-14 text-center rounded-3xl bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/80 dark:border-navy-700/80 shadow-lg backdrop-blur-md space-y-3 my-4">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 dark:bg-emerald-950/60 text-emerald-500 border border-emerald-500/20 flex items-center justify-center mx-auto shadow-md shadow-emerald-500/10">
+              <Sparkles className="w-7 h-7 text-emerald-500 animate-pulse" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">No Matching Issues Found</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold max-w-sm mx-auto">
+                Zero data quality anomalies match your active filter parameters or search query.
+              </p>
+            </div>
+            {(searchQuery || filterCategory !== 'ALL') && (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setSearchQuery(''); setFilterCategory('ALL'); setPage(1); }}
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-200/80 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
+                >
+                  Reset All Filters
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

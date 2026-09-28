@@ -41,8 +41,8 @@ elif db_url.startswith("sqlite:///./"):
         pass
     db_url = f"sqlite:///{db_path}"
 
-# In development mode, verify PostgreSQL host DNS resolution and TCP port reachability. If offline or hostname unreachable, fallback to local SQLite DB.
-if ("postgresql" in db_url or "postgres" in db_url) and not env_is_prod:
+# Verify PostgreSQL host DNS resolution and TCP port reachability in all environments. If offline or hostname unreachable, fallback to local SQLite DB.
+if ("postgresql" in db_url or "postgres" in db_url):
     import urllib.parse
     import socket
     hostname = "unknown"

@@ -668,59 +668,59 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                   className={`relative rounded-3xl border overflow-hidden transition-all shadow-md hover:shadow-xl w-full max-w-full min-w-0 box-border ${!st.is_active
                     ? 'bg-slate-100/80 dark:bg-navy-950/60 border-slate-200 opacity-70'
                     : isFull
-                      ? 'bg-gradient-to-br from-rose-50 to-white dark:from-rose-950/20 dark:to-navy-900 border-rose-300 dark:border-rose-800/50'
-                      : 'bg-gradient-to-br from-white to-slate-50 dark:from-navy-800 dark:to-navy-900 border-slate-200 dark:border-navy-700 hover:border-sky-400/50'
+                      ? 'bg-gradient-to-br from-rose-50/80 via-white to-orange-50/30 dark:from-rose-950/30 dark:via-navy-900 dark:to-navy-950 border-rose-300/80 dark:border-rose-800/60'
+                      : 'bg-gradient-to-br from-white via-slate-50/50 to-sky-50/30 dark:from-navy-900 dark:via-navy-950 dark:to-navy-900 border-slate-200/90 dark:border-navy-700/80 hover:border-sky-400/60'
                     }`}
                 >
                   {/* Top accent bar */}
                   <div className={`h-1.5 w-full ${!st.is_active ? 'bg-slate-400' : isFull
-                    ? 'bg-gradient-to-r from-rose-500 to-orange-500'
-                    : 'bg-gradient-to-r from-sky-500 to-indigo-500'
+                    ? 'bg-gradient-to-r from-rose-500 via-pink-500 to-orange-500'
+                    : 'bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-600'
                     }`} />
 
-                  <div className="p-4 sm:p-5 flex flex-col w-full max-w-full min-w-0 box-border">
-                    {/* Avatar + Name + Actions (Responsive Header) */}
-                    <div className="flex flex-wrap items-start justify-between gap-4 w-full min-w-0">
+                  <div className="p-4 sm:p-5 flex flex-col w-full max-w-full min-w-0 box-border space-y-3.5">
+                    {/* Header: Avatar + Name/Email + Status Badge + Actions */}
+                    <div className="flex items-center justify-between gap-3 w-full min-w-0">
                       
-                      {/* Left: Avatar & Identity */}
+                      {/* Avatar & Identity */}
                       <div className="flex items-center space-x-3 flex-1 min-w-0">
-                        <div className={`relative w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black text-white shadow-lg shrink-0 ${!st.is_active ? 'bg-slate-400'
+                        <div className={`relative w-11 h-11 rounded-2xl flex items-center justify-center text-lg font-black text-white shadow-md shrink-0 ${!st.is_active ? 'bg-slate-400'
                           : isFull ? 'bg-gradient-to-br from-rose-500 to-orange-500'
                             : 'bg-gradient-to-br from-sky-500 to-indigo-600'
                           }`}>
                           {st.username?.charAt(0)?.toUpperCase() || '?'}
                           {st.is_active && (
-                            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-navy-800 bg-emerald-500" />
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-navy-900 bg-emerald-500" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-black text-sm text-slate-900 dark:text-white leading-tight break-words" style={{ overflowWrap: 'anywhere' }}>{st.username}</h4>
-                          <p className="text-[11px] text-slate-400 dark:text-slate-500 break-words mt-0.5" style={{ overflowWrap: 'anywhere' }}>{st.email}</p>
+                          <h4 className="font-black text-sm text-slate-900 dark:text-white leading-tight truncate">{st.username}</h4>
+                          <p className="text-[11px] text-slate-400 dark:text-slate-400 truncate mt-0.5 font-mono">{st.email}</p>
                         </div>
                       </div>
 
-                      {/* Right: Badges & Actions */}
-                      <div className="flex flex-wrap items-center justify-end gap-2 sm:flex-col sm:items-end sm:gap-1.5 shrink-0">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide whitespace-nowrap ${!st.is_active ? 'bg-slate-200 text-slate-500'
-                          : isFull ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400'
-                            : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                      {/* Status & Actions */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide whitespace-nowrap shadow-2xs ${!st.is_active ? 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                          : isFull ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-900'
+                            : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900'
                           }`}>
-                          {!st.is_active ? '⊘ DISABLED' : isFull ? 'FULL' : ' AVAILABLE'}
+                          {!st.is_active ? 'DISABLED' : isFull ? 'FULL' : 'AVAILABLE'}
                         </span>
-                        
-                        <div className="flex flex-wrap items-center justify-end gap-1.5">
+
+                        <div className="flex items-center gap-1">
                           <button onClick={() => handleOpenStaffRoster(st)}
-                            className="min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 sm:p-1.5 flex items-center justify-center rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-600 hover:bg-sky-200 transition-all cursor-pointer shrink-0" title="View Roster">
-                            <Eye className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                            className="p-2 rounded-xl bg-sky-50 hover:bg-sky-500 hover:text-white dark:bg-sky-950/60 dark:hover:bg-sky-500 dark:hover:text-white text-sky-600 dark:text-sky-400 transition-all cursor-pointer shrink-0 shadow-2xs" title="View Roster">
+                            <Eye className="w-4 h-4" />
                           </button>
                           <button onClick={() => triggerToggleStatusModal(st)}
-                            className={`min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 sm:p-1.5 flex items-center justify-center rounded-xl transition-all cursor-pointer shrink-0 ${st.is_active ? 'bg-amber-100 text-amber-600 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
-                              }`} title={st.is_active ? 'Disable' : 'Enable'}>
-                            <Power className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                            className={`p-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-2xs ${st.is_active ? 'bg-amber-50 hover:bg-amber-500 hover:text-white dark:bg-amber-950/60 dark:hover:bg-amber-500 text-amber-600 dark:text-amber-400' : 'bg-emerald-50 hover:bg-emerald-500 hover:text-white dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400'
+                              }`} title={st.is_active ? 'Disable Staff' : 'Enable Staff'}>
+                            <Power className="w-4 h-4" />
                           </button>
                           <button onClick={() => triggerDeleteStaffModal(st)}
-                            className="min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 sm:p-1.5 flex items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-200 transition-all cursor-pointer shrink-0" title="Delete">
-                            <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                            className="p-2 rounded-xl bg-rose-50 hover:bg-rose-500 hover:text-white dark:bg-rose-950/60 dark:hover:bg-rose-500 dark:hover:text-white text-rose-600 dark:text-rose-400 transition-all cursor-pointer shrink-0 shadow-2xs" title="Delete Staff">
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
@@ -728,22 +728,22 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
                     {/* Dept Tag */}
                     {st.department && (
-                      <div className="mt-3 w-full min-w-0">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-100 dark:border-indigo-800/40 break-words" style={{ overflowWrap: 'anywhere' }}>
+                      <div className="w-full min-w-0">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-indigo-50/80 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-black border border-indigo-200/60 dark:border-indigo-800/40 uppercase tracking-wider">
                           {st.department}
                         </span>
                       </div>
                     )}
 
-                    {/* Progress Bar */}
-                    <div className="mt-4 space-y-1.5 w-full max-w-full min-w-0">
-                      <div className="flex flex-wrap justify-between gap-2 text-xs font-bold w-full">
-                        <span className="text-slate-500 dark:text-slate-400">Student Allocation</span>
-                        <span className={`shrink-0 ${isFull ? 'text-rose-500' : count >= 20 ? 'text-amber-500' : 'text-emerald-600'}`}>
+                    {/* Progress Bar & Footer */}
+                    <div className="space-y-2 w-full max-w-full min-w-0 pt-1">
+                      <div className="flex items-center justify-between gap-2 text-xs font-bold w-full">
+                        <span className="text-slate-600 dark:text-slate-400 font-extrabold">Student Allocation</span>
+                        <span className={`shrink-0 font-mono font-black ${isFull ? 'text-rose-500' : count >= 20 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
                           {count} / {maxCap}
                         </span>
                       </div>
-                      <div className="w-full h-2.5 rounded-full bg-slate-200 dark:bg-navy-700 overflow-hidden shrink-0">
+                      <div className="w-full h-2 rounded-full bg-slate-200/80 dark:bg-navy-800 overflow-hidden shrink-0 shadow-inner">
                         <div
                           className={`h-full rounded-full transition-all duration-700 ${isFull ? 'bg-gradient-to-r from-rose-500 to-orange-500'
                             : count >= 20 ? 'bg-gradient-to-r from-amber-400 to-orange-400'
@@ -753,12 +753,13 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                         />
                       </div>
                       
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-[11px] mt-4 sm:mt-1 gap-3 w-full">
+                      <div className="flex items-center justify-between text-xs pt-1 gap-2 w-full">
                         <button onClick={() => handleOpenStaffRoster(st)}
-                          className="w-full sm:w-auto h-[44px] sm:h-auto px-4 flex items-center justify-center rounded-xl sm:rounded-lg bg-sky-50 sm:bg-transparent text-sky-600 dark:text-sky-400 font-bold hover:underline cursor-pointer transition-all active:scale-95">
-                          Inspect Progress →
+                          className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-500 hover:text-white dark:bg-sky-950/60 dark:hover:bg-sky-500 dark:hover:text-white text-sky-600 dark:text-sky-400 font-bold transition-all active:scale-95 cursor-pointer shadow-2xs inline-flex items-center gap-1 text-[11px]">
+                          <span>Inspect Progress</span>
+                          <span>→</span>
                         </button>
-                        <span className={`font-semibold text-center sm:text-right w-full sm:w-auto ${isFull ? 'text-rose-500' : availableSlots <= 5 ? 'text-amber-500' : 'text-slate-400'
+                        <span className={`font-mono text-[11px] font-bold ${isFull ? 'text-rose-500' : availableSlots <= 5 ? 'text-amber-500' : 'text-slate-400 dark:text-slate-500'
                           }`}>
                           {isFull ? 'Cap Reached' : `${availableSlots} slots free`}
                         </span>
@@ -923,28 +924,65 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                       const isSelected = selectedStudents.includes(st.id);
                       return (
                         <tr key={st.id} onClick={() => toggleSelectStudent(st.id)}
-                          className={`cursor-pointer transition-colors block md:table-row bg-white md:bg-transparent border border-slate-200 md:border-0 rounded-2xl md:rounded-none mb-3 md:mb-0 p-3 md:p-0 dark:bg-navy-950 dark:border-navy-700 shadow-sm md:shadow-none ${isSelected ? 'bg-sky-50 dark:bg-sky-950/40 ring-1 ring-sky-500 md:ring-0' : 'hover:bg-slate-50 dark:hover:bg-navy-800/50'}`}
+                          className={`cursor-pointer transition-all block md:table-row bg-white md:bg-transparent border border-slate-200/90 md:border-0 rounded-2xl md:rounded-none mb-2.5 md:mb-0 p-3 md:p-0 dark:bg-navy-950 dark:border-navy-800 shadow-xs md:shadow-none ${isSelected ? 'bg-sky-50/90 dark:bg-sky-950/50 ring-2 ring-sky-500 md:ring-0 border-sky-400' : 'hover:bg-slate-50 dark:hover:bg-navy-800/50'}`}
                         >
-                          <td className="p-1.5 md:p-3 text-center flex items-center justify-between md:table-cell border-b border-slate-100 dark:border-navy-800 md:border-0 pb-3 md:pb-3 mb-2 md:mb-0" onClick={(e) => e.stopPropagation()}>
-                            <span className="md:hidden font-bold text-slate-500">Select Student</span>
-                            <input type="checkbox" checked={isSelected} onChange={() => toggleSelectStudent(st.id)} className="rounded border-slate-300 text-sky-600 cursor-pointer w-5 h-5 md:w-auto md:h-auto" />
+                          {/* MOBILE COMPACT CARD VIEW */}
+                          <td className="md:hidden p-0 border-0 w-full block" colSpan={7}>
+                            <div className="flex flex-col space-y-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={() => toggleSelectStudent(st.id)}
+                                    className="rounded border-slate-300 text-sky-600 cursor-pointer w-4 h-4 shrink-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                  <span className="font-black text-sm text-slate-900 dark:text-white truncate">
+                                    {st.name}
+                                  </span>
+                                </div>
+                                <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">
+                                  {st.reg_no}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 flex-wrap pt-0.5 text-[11px]">
+                                <span className="px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 font-bold border border-sky-200 dark:border-sky-800">
+                                  {st.department || 'INSTITUTIONAL'}
+                                </span>
+                                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-200 dark:border-navy-700">
+                                  Yr {st.year_level || '—'}
+                                </span>
+                                {st.username && (
+                                  <span className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono font-bold border border-indigo-200 dark:border-indigo-800 truncate max-w-[120px]">
+                                    @{st.username}
+                                  </span>
+                                )}
+                                <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-mono font-black border border-emerald-200 dark:border-emerald-800 ml-auto">
+                                  {st.total_solved || 0} Solved
+                                </span>
+                              </div>
+                            </div>
                           </td>
-                          <td className="p-1.5 md:p-3 font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Reg No:</span>{st.reg_no}</td>
-                          <td className="p-1.5 md:p-3 font-extrabold text-slate-900 dark:text-white flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Name:</span>{st.name}</td>
-                          <td className="p-1.5 md:p-3 font-bold text-sky-700 dark:text-sky-400 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Dept:</span>{st.department || 'INSTITUTIONAL'}</td>
-                          <td className="p-1.5 md:p-3 font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell">
-                            <span className="md:hidden font-normal text-slate-500">Year:</span>
+
+                          {/* DESKTOP TABLE VIEW */}
+                          <td className="hidden md:table-cell p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                            <input type="checkbox" checked={isSelected} onChange={() => toggleSelectStudent(st.id)} className="rounded border-slate-300 text-sky-600 cursor-pointer w-4 h-4" />
+                          </td>
+                          <td className="hidden md:table-cell p-3 font-bold text-slate-800 dark:text-slate-200">{st.reg_no}</td>
+                          <td className="hidden md:table-cell p-3 font-extrabold text-slate-900 dark:text-white">{st.name}</td>
+                          <td className="hidden md:table-cell p-3 font-bold text-sky-700 dark:text-sky-400">{st.department || 'INSTITUTIONAL'}</td>
+                          <td className="hidden md:table-cell p-3 font-bold text-slate-800 dark:text-slate-200">
                             <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-navy-700 font-mono font-bold text-xs">
                               {st.year_level || '—'}
                             </span>
                           </td>
-                          <td className="p-1.5 md:p-3 font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell">
-                            <span className="md:hidden font-normal text-slate-500">LeetCode:</span>
-                            <span className="truncate max-w-[150px] md:max-w-none text-right font-mono font-extrabold text-indigo-600 dark:text-indigo-300">
+                          <td className="hidden md:table-cell p-3 font-bold text-slate-800 dark:text-slate-200">
+                            <span className="truncate max-w-[150px] font-mono font-extrabold text-indigo-600 dark:text-indigo-300">
                               {st.username || '—'}
                             </span>
                           </td>
-                          <td className="p-1.5 md:p-3 text-right font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell border-t md:border-0 border-slate-100 dark:border-navy-800 pt-3 md:pt-3 mt-2 md:mt-0"><span className="md:hidden font-normal text-slate-500">Problems Solved:</span>{st.total_solved || 0}</td>
+                          <td className="hidden md:table-cell p-3 text-right font-bold text-slate-800 dark:text-slate-200">{st.total_solved || 0}</td>
                         </tr>
                       );
                     })
@@ -1046,41 +1084,87 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                         const isSel = selectedAssignedStudents.includes(s.id);
                         return (
                           <tr key={s.id} onClick={() => toggleAssignedStudent(s.id)}
-                            className={`cursor-pointer transition-colors block md:table-row bg-white md:bg-transparent border border-slate-200 md:border-0 rounded-2xl md:rounded-none mb-3 md:mb-0 p-3 md:p-0 dark:bg-navy-950 dark:border-navy-700 shadow-sm md:shadow-none ${isSel ? 'bg-rose-50 dark:bg-rose-950/30 ring-1 ring-rose-500 md:ring-0' : 'hover:bg-slate-50 dark:hover:bg-navy-800/50'}`}
+                            className={`cursor-pointer transition-all block md:table-row bg-white md:bg-transparent border border-slate-200/90 md:border-0 rounded-2xl md:rounded-none mb-2.5 md:mb-0 p-3 md:p-0 dark:bg-navy-950 dark:border-navy-800 shadow-xs md:shadow-none ${isSel ? 'bg-rose-50/90 dark:bg-rose-950/50 ring-2 ring-rose-500 md:ring-0 border-rose-400' : 'hover:bg-slate-50 dark:hover:bg-navy-800/50'}`}
                           >
-                            <td className="p-1.5 md:p-3 text-center flex items-center justify-between md:table-cell border-b border-slate-100 dark:border-navy-800 md:border-0 pb-3 md:pb-3 mb-2 md:mb-0" onClick={(e) => e.stopPropagation()}>
-                              <span className="md:hidden font-bold text-slate-500">Select Student</span>
-                              <input type="checkbox" checked={isSel} onChange={() => toggleAssignedStudent(s.id)} className="rounded border-rose-300 text-rose-600 cursor-pointer w-5 h-5 md:w-auto md:h-auto" />
+                            {/* MOBILE COMPACT CARD VIEW */}
+                            <td className="md:hidden p-0 border-0 w-full block" colSpan={7}>
+                              <div className="flex flex-col space-y-2">
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <input
+                                      type="checkbox"
+                                      checked={isSel}
+                                      onChange={() => toggleAssignedStudent(s.id)}
+                                      className="rounded border-rose-300 text-rose-600 cursor-pointer w-4 h-4 shrink-0"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <span className="font-black text-sm text-slate-900 dark:text-white truncate">
+                                      {s.name}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400">
+                                      {s.reg_no}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setStudentToUnassign({ student: s, staffId: Number(unassignStaffId), source: 'tab' });
+                                      }}
+                                      className="p-1 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-colors"
+                                      title="Unassign"
+                                    >
+                                      <UserMinus className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1.5 flex-wrap pt-0.5 text-[11px]">
+                                  <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-200 dark:border-navy-700">
+                                    Yr {s.year_level || '—'}
+                                  </span>
+                                  {s.username && (
+                                    <span className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono font-bold border border-indigo-200 dark:border-indigo-800 truncate max-w-[120px]">
+                                      @{s.username}
+                                    </span>
+                                  )}
+                                  <span className={`px-2 py-0.5 rounded-md font-mono font-black border ml-auto ${s.total_solved >= 100 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200' :
+                                    s.total_solved >= 30 ? 'bg-sky-100 text-sky-800 border-sky-200' :
+                                      'bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300 border-slate-200'
+                                    }`}>{s.total_solved || 0} Solved</span>
+                                </div>
+                              </div>
                             </td>
-                            <td className="p-1.5 md:p-3 font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Reg No:</span>{s.reg_no}</td>
-                            <td className="p-1.5 md:p-3 font-extrabold text-slate-900 dark:text-white flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Name:</span>{s.name}</td>
-                            <td className="p-1.5 md:p-3 font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell">
-                              <span className="md:hidden font-normal text-slate-500">Year:</span>
+
+                            {/* DESKTOP TABLE VIEW */}
+                            <td className="hidden md:table-cell p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                              <input type="checkbox" checked={isSel} onChange={() => toggleAssignedStudent(s.id)} className="rounded border-rose-300 text-rose-600 cursor-pointer w-4 h-4" />
+                            </td>
+                            <td className="hidden md:table-cell p-3 font-bold text-slate-800 dark:text-slate-200">{s.reg_no}</td>
+                            <td className="hidden md:table-cell p-3 font-extrabold text-slate-900 dark:text-white">{s.name}</td>
+                            <td className="hidden md:table-cell p-3 font-bold text-slate-800 dark:text-slate-200">
                               <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-navy-700 font-mono font-bold text-xs">
                                 {s.year_level || '—'}
                               </span>
                             </td>
-                            <td className="p-1.5 md:p-3 font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell">
-                              <span className="md:hidden font-normal text-slate-500">LeetCode:</span>
-                              <span className="truncate max-w-[150px] md:max-w-none text-right font-mono font-extrabold text-indigo-600 dark:text-indigo-300">
+                            <td className="hidden md:table-cell p-3 font-bold text-slate-800 dark:text-slate-200">
+                              <span className="truncate max-w-[150px] font-mono font-extrabold text-indigo-600 dark:text-indigo-300">
                                 {s.username || '—'}
                               </span>
                             </td>
-                            <td className="p-1.5 md:p-3 text-right flex justify-between md:table-cell items-center mt-2 md:mt-0">
-                              <span className="md:hidden font-normal text-slate-500">Problems Solved:</span>
+                            <td className="hidden md:table-cell p-3 text-right">
                               <span className={`px-2 py-1 rounded-lg font-black text-[11px] ${s.total_solved >= 100 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
                                 s.total_solved >= 30 ? 'bg-sky-100 text-sky-800' :
                                   'bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300'
                                 }`}>{s.total_solved || 0}</span>
                             </td>
-                            <td className="p-2 md:p-3 text-center flex justify-end md:table-cell border-t md:border-0 border-slate-100 dark:border-navy-800 pt-3 md:pt-3 mt-3 md:mt-0" onClick={(e) => e.stopPropagation()}>
+                            <td className="hidden md:table-cell p-3 text-center" onClick={(e) => e.stopPropagation()}>
                               <button
                                 onClick={() => setStudentToUnassign({ student: s, staffId: Number(unassignStaffId), source: 'tab' })}
-                                className="w-full md:w-auto h-11 md:h-auto px-4 md:px-0 flex items-center justify-center md:p-1.5 rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-200 transition-colors cursor-pointer"
+                                className="p-1.5 rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-200 transition-colors cursor-pointer inline-flex items-center justify-center"
                                 title="Unassign this student"
                               >
-                                <UserMinus className="w-4 h-4 md:w-3.5 md:h-3.5 mr-2 md:mr-0" />
-                                <span className="md:hidden font-bold text-sm">Unassign</span>
+                                <UserMinus className="w-3.5 h-3.5" />
                               </button>
                             </td>
                           </tr>

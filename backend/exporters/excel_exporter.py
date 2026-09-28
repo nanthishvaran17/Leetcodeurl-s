@@ -107,7 +107,7 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
     ws["A1"] = "NANDHA ENGINEERING COLLEGE, ERODE – 638 052"
     ws["A1"].font = FONT_MAIN_TITLE
     ws["A1"].alignment = ALIGN_CENTER
-    ws.row_dimensions[1].height = 28
+    ws.row_dimensions[1].height = 64
 
     # Row 2: Subtitle (A2:last_col 2)
     ws.merge_cells(f"A2:{last_col}2")
@@ -147,8 +147,8 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
             img = OpenPyxlImage(logo_path)
-            img.height = 42
-            img.width = 60
+            img.height = 58
+            img.width = 90
             ws.add_image(img, "B1")
         except Exception:
             pass
@@ -159,8 +159,8 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
             img_25 = OpenPyxlImage(logo_25_path)
-            img_25.height = 42
-            img_25.width = 42
+            img_25.height = 58
+            img_25.width = 58
             ws.add_image(img_25, f"{last_col}1")
         except Exception:
             pass

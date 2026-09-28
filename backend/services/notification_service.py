@@ -117,7 +117,7 @@ class NotificationService:
         if not event_type:
             return "announcements"
         
-        evt = str(event_type).upper().strip()
+        evt = event_type.upper().strip()
         if evt in EVENT_CATEGORY_MAP:
             return EVENT_CATEGORY_MAP[evt]
         
@@ -757,7 +757,7 @@ class NotificationService:
             for uid in recipient_user_ids:
                 if not uid:
                     continue
-                clean_uid = str(uid).strip()
+                clean_uid = uid.strip()
                 if not clean_uid:
                     continue
                 recs = NotificationService.resolve_recipients(db, "INDIVIDUAL", clean_uid)

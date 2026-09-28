@@ -191,7 +191,7 @@ def build_normalized_forensic_report(
     rank_str = f"#{contest_result.contest_rank}" if (contest_result and contest_result.contest_rank) else (f"#{prev_record.official_rank}" if (prev_record and prev_record.official_rank) else (f"#{virtual_result.contest_rank}" if (virtual_result and virtual_result.contest_rank) else "—"))
     rating_str = f"{contest_result.contest_rating:.2f}" if (contest_result and contest_result.contest_rating) else (f"{virtual_result.contest_rating:.2f}" if (virtual_result and virtual_result.contest_rating) else "—")
 
-    clean_reg = "".join(c for c in (student.reg_no or "") if c.isalnum()).upper()
+    clean_reg = "".join(c for c in str(student.reg_no or "") if c.isalnum()).upper()
     final_trace_id = trace_id or target_trace
     if not final_trace_id:
         if session_obj and session_obj.id:
@@ -225,7 +225,7 @@ def build_normalized_forensic_report(
 
     # Sync / Provision CertificateRecord in Database for public resolver consistency
     try:
-        existing_cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == final_trace_id).first()
+        existing_cert: Any = db.query(CertificateRecord).filter(CertificateRecord.verification_id == final_trace_id).first()
         ver_url = f"https://leetcode-student-data.web.app/verify/{final_trace_id}"
 
         if existing_cert:

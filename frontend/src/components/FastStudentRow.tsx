@@ -91,7 +91,7 @@ export const FastStudentRow = memo(({
         }
         onView(student, e);
       }}
-      className="flex flex-col md:flex-row p-3 md:py-2.5 md:px-0 gap-3 md:gap-0 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-all duration-150 group font-medium text-xs border border-slate-200/80 md:border-t-0 md:border-x-0 md:border-b dark:border-navy-800/60 cursor-pointer w-full min-w-full md:min-w-[1100px] items-start md:items-center bg-white md:bg-transparent dark:bg-navy-950 md:dark:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none mb-3 md:mb-0 min-h-[52px]"
+      className="flex flex-col md:flex-row p-3.5 md:py-3.5 md:px-0 gap-3 md:gap-0 hover:bg-slate-50/80 dark:hover:bg-navy-900/50 transition-all duration-150 group font-medium text-xs border border-slate-200/80 md:border-t-0 md:border-x-0 md:border-b dark:border-navy-800/60 cursor-pointer w-full min-w-full md:min-w-[1100px] items-start md:items-center bg-white md:bg-transparent dark:bg-navy-950 md:dark:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none mb-3 md:mb-0 min-h-[68px]"
     >
       {/* MOBILE LAYOUT (PREMIUM CARD DESIGN) */}
       <div className="flex md:hidden flex-col w-full p-4 space-y-3 bg-white dark:bg-navy-900/90 rounded-2xl border border-slate-200/90 dark:border-navy-700/80 shadow-md hover:shadow-xl transition-all duration-200 relative overflow-hidden backdrop-blur-md">

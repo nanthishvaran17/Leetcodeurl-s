@@ -26,33 +26,33 @@ def get_or_create_current_weekly_session(db: Session) -> WeeklySession:
         logger.warning(f"Contest discovery fallback note: {e}")
         return db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
 
-    latest_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+    latest_session: Any = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
     
     if latest_session and latest_session.session_code == session_code:
         # 100/10 Self-Healing: Repair missing contest metadata that was created prematurely
         if not latest_session.contest_name or not latest_session.contest_id:
-            latest_session.contest_name = meta.get("contest_name")
-            latest_session.contest_id = meta.get("contest_id")
+            setattr(latest_session, "contest_name", str(meta.get("contest_name") or ""))
+            setattr(latest_session, "contest_id", str(meta.get("contest_id") or ""))
             db.commit()
 
         dynamic_status = meta.get("status", "SCHEDULED")
         if dynamic_status == "FINALIZED" and latest_session.status in ("LIVE", "ACTIVE", "SCHEDULED"):
-            latest_session.status = "FINALIZED"
+            setattr(latest_session, "status", "FINALIZED")
             db.commit()
         elif dynamic_status == "SCHEDULED" and latest_session.status in ("LIVE", "ACTIVE"):
-            latest_session.status = "SCHEDULED"
+            setattr(latest_session, "status", "SCHEDULED")
             db.commit()
         elif dynamic_status == "LIVE":
             if latest_session.status != "LIVE":
-                latest_session.status = "LIVE"
-                latest_session.baseline_snapshot_id = f"start_{latest_session.id}"
+                setattr(latest_session, "status", "LIVE")
+                setattr(latest_session, "baseline_snapshot_id", f"start_{latest_session.id}")
                 db.commit()
 
             # Ensure baseline student tracking records exist for this session
             existing_count = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == latest_session.id).count()
             if existing_count == 0:
                 students = db.query(Student).options(joinedload(Student.department)).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
-                latest_session.total_students = len(students)
+                setattr(latest_session, "total_students", len(students))
                 now_dt = datetime.datetime.now(datetime.timezone.utc)
                 new_results = [
                     WeeklyPublicResult(
@@ -117,17 +117,17 @@ async def trigger_start_snapshot_0800(db: Session, session_id: int):
     Sets state = PENDING & participation_status = PENDING for all students (nobody marked NOT ATTENDED prematurely).
     Idempotent: Resumes existing records without duplicating.
     """
-    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    session: Any = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session:
         logger.error(f"WeeklySession ID {session_id} not found.")
         return
 
-    session.status = "LIVE"
-    session.baseline_snapshot_id = f"start_{session_id}"
+    setattr(session, "status", "LIVE")
+    setattr(session, "baseline_snapshot_id", f"start_{session_id}")
     db.commit()
 
     students = db.query(Student).options(joinedload(Student.department)).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
-    session.total_students = len(students)
+    setattr(session, "total_students", len(students))
     db.commit()
 
     now_dt = datetime.datetime.now(datetime.timezone.utc)
@@ -169,12 +169,12 @@ async def run_live_polling_cycle(db: Session, session_id: int):
     Polls live contest participation with rate limiting and exponential backoff retry.
     Resumes seamlessly after any server restart without re-polling already VALIDATED records.
     """
-    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    session: Any = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session or session.status not in ("LIVE", "SCHEDULED", "RUNNING"):
         return
 
     if session.status != "LIVE":
-        session.status = "LIVE"
+        setattr(session, "status", "LIVE")
         db.commit()
 
     await retry_failed_student_fetches(db, session_id)
@@ -202,7 +202,7 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
     5. Creates immutable OfficialWeeklySnapshot locked snapshot.
     6. Sets status = FINALIZED.
     """
-    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    session: Any = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session:
         raise ValueError(f"Session ID {session_id} not found.")
 
@@ -210,7 +210,7 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
         logger.info(f"Session ID {session_id} is already FINALIZED.")
         return db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == session_id).first()
 
-    session.status = "FINALIZING"
+    setattr(session, "status", "FINALIZING")
     db.commit()
 
     # Step 1: Final Retry Sweep
@@ -227,7 +227,8 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
 
     now_dt = datetime.datetime.now(datetime.timezone.utc)
 
-    for r in public_results:
+    for r_raw in public_results:
+        r: Any = r_raw
         prev_st = r.state
         r.previous_state = prev_st
         r.state_changed_at = now_dt
@@ -284,12 +285,12 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
 
         # Calculate Individual Student Cryptographic Seal
         r.record_hash = compute_student_record_hash(
-            reg_no=r.reg_no,
-            session_id=session.id,
-            solved=r.total_contest_solved or 0,
-            score=r.contest_score or 0,
-            rank=r.contest_rank,
-            rating=r.contest_rating
+            reg_no=str(r.reg_no or ""),
+            session_id=int(session.id),
+            solved=int(r.total_contest_solved or 0),
+            score=int(r.contest_score or 0),
+            rank=int(r.contest_rank) if r.contest_rank is not None else None,
+            rating=float(r.contest_rating) if r.contest_rating is not None else None
         )
 
     virtual_results = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session_id).all()
@@ -315,13 +316,13 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
     if not reconciliation_summary["reconciliation_passed"]:
         logger.error(f"[RECONCILIATION_GATE_FAILED] Active={session.total_students} vs Processed={total_processed} ReconciledSum={reconciled_sum}")
 
-    session.official_participants = official_attended
-    session.virtual_participants = virtual_count
-    session.not_participated = not_attended
-    session.failed_verification = data_errors
-    session.reconciliation_summary = reconciliation_summary
-    session.completed_at = now_dt
-    session.finalized_at = now_dt
+    setattr(session, "official_participants", official_attended)
+    setattr(session, "virtual_participants", virtual_count)
+    setattr(session, "not_participated", not_attended)
+    setattr(session, "failed_verification", data_errors)
+    setattr(session, "reconciliation_summary", reconciliation_summary)
+    setattr(session, "completed_at", now_dt)
+    setattr(session, "finalized_at", now_dt)
 
     # Step 4: Build Canonical Dataset & Compute Whole Session SHA-256
     matrix_rows = []
@@ -346,8 +347,8 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
         })
 
     session_data_hash = compute_session_data_hash(matrix_rows)
-    session.session_data_hash = session_data_hash
-    session.dataset_hash = session_data_hash
+    setattr(session, "session_data_hash", session_data_hash)
+    setattr(session, "dataset_hash", session_data_hash)
 
     snapshot_data = {
         "sessionId": session.id,
@@ -355,7 +356,7 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
         "contestId": session.contest_id,
         "contestName": session.contest_name,
         "sessionDate": session.session_date,
-        "finalizedAt": session.finalized_at.isoformat(),
+        "finalizedAt": session.finalized_at.isoformat() if session.finalized_at else now_dt.isoformat(),
         "sessionDataHash": session_data_hash,
         "metrics": {
             "totalStudents": session.total_students,
@@ -363,7 +364,7 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
             "notAttended": not_attended,
             "virtualAttended": virtual_count,
             "dataErrors": data_errors,
-            "participationRate": round((official_attended / max(session.total_students, 1)) * 100, 1)
+            "participationRate": round((float(official_attended) / max(int(session.total_students or 1), 1)) * 100, 1)
         },
         "reconciliation": reconciliation_summary,
         "rows": matrix_rows
@@ -375,7 +376,7 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
     ).first()
 
     if existing_snap:
-        snapshot = snapshot_supersedes(existing_snap.id, snapshot_data, db)
+        snapshot = snapshot_supersedes(int(str(existing_snap.id)), snapshot_data, db)
     else:
         snapshot = OfficialWeeklySnapshot(
             session_id=session.id,
@@ -395,7 +396,7 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
         )
         db.add(snapshot)
 
-    session.status = "FINALIZED"
+    setattr(session, "status", "FINALIZED")
     db.commit()
     logger.info(f"09:30 AM Official Weekly Snapshot locked for Session ID {session_id} (Session Hash: {session_data_hash[:16]})")
     return snapshot
@@ -492,9 +493,10 @@ async def sweep_bounded_verification_windows(db: Session):
             ).all()
 
             if unresolved:
-                for r in unresolved:
-                    r.participation_status = "NOT_VERIFIED_FINAL"
-                    r.confidence = "LOW"
+                for r_unres in unresolved:
+                    r_item: Any = r_unres
+                    setattr(r_item, "participation_status", "NOT_VERIFIED_FINAL")
+                    setattr(r_item, "confidence", "LOW")
                 db.commit()
                 logger.info(f"[BOUNDED_WINDOW] Session {s.id} verification window expired. Marked {len(unresolved)} as NOT_VERIFIED_FINAL.")
 
@@ -1180,28 +1182,30 @@ def sync_single_historical_session(db: Session, session_id: int):
         "UNKNOWN": 0
     }
 
+    session_any: Any = session
     for idx, r in enumerate(results, start=1):
+        if not r or not isinstance(r, dict):
+            continue
         existing_p = solver_map.get(r["student_id"])
         if existing_p and ((existing_p.total_contest_solved or 0) > 0 or existing_p.participation_status in ["PUBLIC", "PUBLIC_ATTENDED"]):
             cls_type = existing_p.participation_status if existing_p.participation_status in counts else "PUBLIC_ATTENDED"
         else:
-            cls_type = r["classification"]
+            cls_type = r.get("classification") or "UNKNOWN"
 
         counts[cls_type] = counts.get(cls_type, 0) + 1
 
-        r["attended"]
-        solved = r["problems_solved"]
-        q1, q2, q3, q4 = r["q1"], r["q2"], r["q3"], r["q4"]
-        score = r["contest_score"]
+        solved = r.get("problems_solved", 0)
+        q1, q2, q3, q4 = r.get("q1", 0), r.get("q2", 0), r.get("q3", 0), r.get("q4", 0)
+        score = r.get("contest_score", 0)
 
         evidence_payload = {
-            "student_id": r["student_id"],
-            "username": r["username"],
+            "student_id": r.get("student_id"),
+            "username": r.get("username"),
             "contest_id": canonical_contest_id,
             "contest_name": target_contest_title,
             "classification": cls_type,
-            "status": r["participation_status"],
-            "reason_code": r["reason"],
+            "status": r.get("participation_status"),
+            "reason_code": r.get("reason"),
             "source": "LEETCODE_GRAPHQL_AUTHORITATIVE",
             "source_timestamp": now_iso,
             "fetch_timestamp": now_iso,
@@ -1243,32 +1247,32 @@ def sync_single_historical_session(db: Session, session_id: int):
         else:
             pub_res = WeeklyPublicResult(
                 session_id=session.id,
-                student_id=r["student_id"],
-                reg_no=r["reg_no"],
-                name=r["name"],
-                dept=r["dept"],
-                year=r["year"],
-                participation_status=r["participation_status"],
-                data_fetch_status=r["data_fetch_status"],
-                confidence=r["confidence"],
+                student_id=r.get("student_id"),
+                reg_no=r.get("reg_no"),
+                name=r.get("name"),
+                dept=r.get("dept"),
+                year=r.get("year"),
+                participation_status=r.get("participation_status"),
+                data_fetch_status=r.get("data_fetch_status"),
+                confidence=r.get("confidence"),
                 q1=q1, q2=q2, q3=q3, q4=q4,
                 total_contest_solved=solved,
                 contest_score=score,
                 contest_rank=r.get("contest_rank"),
                 contest_rating=r.get("contest_rating"),
-                fetch_status=r["data_fetch_status"],
-                error_reason=r["reason"] if r["participation_status"] == "UNKNOWN" else None,
+                fetch_status=r.get("data_fetch_status"),
+                error_reason=r.get("reason") if r.get("participation_status") == "UNKNOWN" else None,
                 verification_evidence=json.dumps(evidence_payload),
                 last_fetched_at=now_dt
             )
         db.add(pub_res)
 
-        if cls_type == "VIRTUAL_ATTENDED" or r["participation_status"] == "VIRTUAL":
+        if cls_type == "VIRTUAL_ATTENDED" or r.get("participation_status") == "VIRTUAL":
             vir_res = WeeklyVirtualResult(
                 session_id=session.id,
-                student_id=r["student_id"],
-                reg_no=r["reg_no"],
-                name=r["name"],
+                student_id=r.get("student_id"),
+                reg_no=r.get("reg_no"),
+                name=r.get("name"),
                 participation_status="VIRTUAL_ATTENDED",
                 q1=q1, q2=q2, q3=q3, q4=q4,
                 total_contest_solved=solved,
@@ -1279,22 +1283,22 @@ def sync_single_historical_session(db: Session, session_id: int):
 
         # Also store / update in LeetCodeContestRatingHistory if official contest result
         if cls_type == "PUBLIC_ATTENDED":
-            existing_hist = db.query(LeetCodeContestRatingHistory).filter(
-                LeetCodeContestRatingHistory.student_id == r["student_id"],
+            existing_hist: Any = db.query(LeetCodeContestRatingHistory).filter(
+                LeetCodeContestRatingHistory.student_id == r.get("student_id"),
                 LeetCodeContestRatingHistory.contest_name == target_contest_title
             ).first()
             if not existing_hist:
                 existing_hist = LeetCodeContestRatingHistory(
-                    student_id=r["student_id"],
+                    student_id=r.get("student_id"),
                     contest_name=target_contest_title,
                     contest_type="weekly",
                     attended=True
                 )
                 db.add(existing_hist)
-            existing_hist.problems_solved = solved
-            existing_hist.total_problems = 4
-            existing_hist.contest_rank = r.get("contest_rank")
-            existing_hist.rating_after = r.get("contest_rating")
+            setattr(existing_hist, "problems_solved", solved)
+            setattr(existing_hist, "total_problems", 4)
+            setattr(existing_hist, "contest_rank", r.get("contest_rank"))
+            setattr(existing_hist, "rating_after", r.get("contest_rating"))
 
     # 300/300 Mathematical Reconciliation
     total_classified = sum(counts.values())
@@ -1305,37 +1309,39 @@ def sync_single_historical_session(db: Session, session_id: int):
     not_attended_cnt = counts["NOT_ATTENDED"]
     data_errors_cnt = counts["FETCH_FAILED"] + counts["PENDING_USERNAME"] + counts["INVALID_USERNAME"] + counts["UNKNOWN"]
 
-    session.total_students = roster_count
-    session.official_participants = official_cnt
-    session.virtual_participants = virtual_cnt
-    session.not_participated = not_attended_cnt
-    session.failed_verification = data_errors_cnt
-    session.sync_status = "Verified" if reconciliation_passed else "Reconciliation Error"
-    session.last_synced = now_dt
-    session.status = "FINALIZED"
-    session.completed_at = now_dt
-    session.finalized_at = now_dt
+    setattr(session_any, "total_students", roster_count)
+    setattr(session_any, "official_participants", official_cnt)
+    setattr(session_any, "virtual_participants", virtual_cnt)
+    setattr(session_any, "not_participated", not_attended_cnt)
+    setattr(session_any, "failed_verification", data_errors_cnt)
+    setattr(session_any, "sync_status", "Verified" if reconciliation_passed else "Reconciliation Error")
+    setattr(session_any, "last_synced", now_dt)
+    setattr(session_any, "status", "FINALIZED")
+    setattr(session_any, "completed_at", now_dt)
+    setattr(session_any, "finalized_at", now_dt)
 
     # Lock immutable OfficialWeeklySnapshot
     matrix_rows = []
-    for idx, r in enumerate(results, start=1):
+    for idx, r_item in enumerate(results, start=1):
+        if not r_item or not isinstance(r_item, dict):
+            continue
         matrix_rows.append({
             "s_no": idx,
-            "reg_no": r["reg_no"],
-            "name": r["name"],
-            "dept": r["dept"],
-            "year": r["year"],
-            "username": r.get("username", ""),
-            "classification": r["classification"],
-            "participation_status": r["participation_status"],
-            "data_fetch_status": r["data_fetch_status"],
-            "confidence": r["confidence"],
-            "q1": r["q1"], "q2": r["q2"], "q3": r["q3"], "q4": r["q4"],
-            "total_solved": r["problems_solved"],
-            "score": r["contest_score"],
-            "contest_rank": r.get("contest_rank"),
-            "contest_rating": r.get("contest_rating"),
-            "reason": r["reason"]
+            "reg_no": r_item.get("reg_no"),
+            "name": r_item.get("name"),
+            "dept": r_item.get("dept"),
+            "year": r_item.get("year"),
+            "username": r_item.get("username", ""),
+            "classification": r_item.get("classification"),
+            "participation_status": r_item.get("participation_status"),
+            "data_fetch_status": r_item.get("data_fetch_status"),
+            "confidence": r_item.get("confidence"),
+            "q1": r_item.get("q1"), "q2": r_item.get("q2"), "q3": r_item.get("q3"), "q4": r_item.get("q4"),
+            "total_solved": r_item.get("problems_solved"),
+            "score": r_item.get("contest_score"),
+            "contest_rank": r_item.get("contest_rank"),
+            "contest_rating": r_item.get("contest_rating"),
+            "reason": r_item.get("reason")
         })
 
     snapshot_data = {
@@ -1625,7 +1631,7 @@ class SundayLiveContestEngine:
                             results = await asyncio.gather(*tasks, return_exceptions=True)
                             
                             for r_idx, result in enumerate(results):
-                                if isinstance(result, Exception) or result.get("status") != "ok":
+                                if isinstance(result, BaseException) or not isinstance(result, dict) or result.get("status") != "ok":
                                     self.failed_count += 1
                                     continue
                                     

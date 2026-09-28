@@ -21,7 +21,10 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     """
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Student Performance Report"
+    if ws is None:
+        ws = wb.create_sheet(title="Student Performance Report")
+    else:
+        ws.title = "Student Performance Report"
 
     rows = dataset.get("rows") or dataset.get("allStudents") or dataset.get("all_rows") or dataset.get("all_students_current") or []
     if not rows:
@@ -212,7 +215,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     ws["A1"] = "NANDHA ENGINEERING COLLEGE, ERODE – 638 052"
     ws["A1"].font = FONT_TITLE
     ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[1].height = 28
+    ws.row_dimensions[1].height = 64
 
     # Row 2: Subtitle
     ws.merge_cells(f"A2:{last_col}2")
@@ -265,8 +268,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
             img_left = OpenPyxlImage(logo_path)
-            img_left.height = 42
-            img_left.width = 60
+            img_left.height = 58
+            img_left.width = 90
             ws.add_image(img_left, "B1")
         except Exception:
             pass
@@ -277,8 +280,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
             img_right = OpenPyxlImage(logo_25_path)
-            img_right.height = 42
-            img_right.width = 42
+            img_right.height = 58
+            img_right.width = 58
             ws.add_image(img_right, f"{last_col}1")
         except Exception:
             pass
@@ -308,12 +311,13 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     LEFT_ALIGN_TITLES = {
         "student name", "name", "full name", "student", 
         "leetcode username", "username", "leetcode handle", "handle", "email",
-        "data source", "error reason", "error description", "recommended action",
-        "fetch status", "verification status"
+        "error reason", "error description", "recommended action",
+        "fetch status", "verification status", "profile url", "leetcode url", "url",
+        "profile_url", "leetcode_url", "profile link", "profile"
     }
 
     CENTER_TITLES = {
-        "s.no", "register no", "department", "year level", "attendance status", 
+        "s.no", "register no", "department", "year level", "attendance status", "data source", 
         "prev status", "curr status", "status",
         "q1", "q2", "q3", "q4", "solved", "score", "contest rating", 
         "global rank", "total time", "weekly contest", "session date", "batch cohort",
@@ -441,7 +445,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                         pass
                 elif title == "Contest Rating":
                     try:
-                        num = int(round(float(str(val).replace(",", ""))))
+                        num = round(float(str(val).replace(",", "")))
                         val = f"{num:,}" if num > 0 and num != 1500 else "—"
                     except (ValueError, TypeError):
                         pass
@@ -460,12 +464,15 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 pass  # Keep as numeric
             elif isinstance(val, str) and val.isdigit() and title_lower not in ("register no", "s.no"):
                 val = int(val)
-            elif isinstance(val, str) and "T" in val and len(val) >= 16:
-                # Format ISO 8601 timestamps nicely without altering the underlying time
+            elif isinstance(val, str) and ("T" in val or "-" in val) and len(val) >= 16:
+                # Format ISO 8601 timestamps nicely into local IST time display
                 try:
-                    dt = datetime.datetime.fromisoformat(val.replace("Z", ""))
-                    val = dt.strftime("%d %b %Y, %I:%M %p")
-                except ValueError:
+                    from backend.time_utils import parse_iso_to_utc, ensure_ist
+                    dt_utc = parse_iso_to_utc(val)
+                    if dt_utc:
+                        dt_ist = ensure_ist(dt_utc)
+                        val = dt_ist.strftime("%d %b %Y, %I:%M %p IST")
+                except Exception:
                     pass
                 
             cell = ws.cell(row=r_idx, column=col_idx, value=val)
@@ -475,7 +482,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             if is_alt:
                 cell.fill = ALT_ROW_FILL
 
-            if title_lower in LEFT_ALIGN_TITLES:
+            if (title_lower in LEFT_ALIGN_TITLES or "url" in title_lower or "link" in title_lower) and title_lower != "data source":
                 cell.alignment = Alignment(horizontal="left", vertical="center")
             else:
                 cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -506,36 +513,37 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         ws.row_dimensions[r_idx].height = 22
 
     # Auto-adjust column widths cleanly with generous padding for filter buttons
+    header_row_idx = 6
     for col_idx, col in enumerate(ws.columns, 1):
         col_letter = get_column_letter(col_idx)
         max_len = 0
         for cell in col:
-            if cell.row in (1, 2, 3, 4, 5, 6):
+            if cell.row < header_row_idx:
                 continue
             v_str = str(cell.value or "")
-            if cell.row == 7:  # Header row
+            if cell.row == header_row_idx:  # Header row
                 max_len = max(max_len, len(v_str))
                 continue
                 
             if len(v_str) > max_len:
                 max_len = len(v_str)
         
-        header_name = str(ws.cell(row=7, column=col_idx).value or "").lower().strip()
+        header_name = str(ws.cell(row=header_row_idx, column=col_idx).value or "").lower().strip()
         if "status" in header_name:
             final_width = max(max_len + 6, 18)
         elif header_name == "student name":
             final_width = min(max(max_len + 6, 22), 35)
         elif header_name in ("leetcode username", "email"):
             final_width = min(max(max_len + 4, 16), 25)
-        elif header_name in ("data source", "error reason", "error description", "recommended action"):
-            final_width = min(max(max_len + 6, 20), 55)
+        elif header_name in ("data source", "error reason", "error description", "recommended action", "profile url", "leetcode url"):
+            final_width = min(max(max_len + 8, 28), 65)
         else:
-            final_width = min(max(max_len + 5, 12), 35)
+            final_width = min(max(max_len + 6, 14), 38)
 
         ws.column_dimensions[col_letter].width = final_width
 
-    # Add AutoFilter so users can filter by Department, Year, etc.
-    ws.auto_filter.ref = f"A7:{last_col}{len(rows) + 7}"
+    # Add AutoFilter so users can filter by Department, Year, Status, etc. on Row 6
+    ws.auto_filter.ref = f"A{header_row_idx}:{last_col}{len(rows) + header_row_idx}"
 
     output = io.BytesIO()
     wb.save(output)

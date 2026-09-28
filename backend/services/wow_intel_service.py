@@ -21,8 +21,8 @@ def _contest_num(sess: WeeklySession) -> Optional[int]:
     return int(digits) if digits else None
 
 
-def _is_attended(status: str) -> bool:
-    s = (status or "").upper()
+def _is_attended(status: Any) -> bool:
+    s = str(status or "").upper()
     return s in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE", "ATTENDED_ZERO", "ATTENDED_SOLVED")
 
 

@@ -47,7 +47,7 @@ def to_roman_year(val: Any) -> str:
 def clean_report_title(t_str: str) -> str:
     if not t_str:
         return ""
-    t = str(t_str).strip()
+    t = t_str.strip()
     # 1. Strip leading standalone numbers e.g. "2 2 ", "2 ", "3 ", "2-", "2 2"
     t = re.sub(r'^\s*(\d+[\s-]*)+', '', t).strip()
     # 2. Strip orphaned standalone numbers before hyphens e.g. " (AUTONOMOUS) 2 - " -> " (AUTONOMOUS) "
@@ -129,7 +129,7 @@ def normalize_year_val(year_raw: Optional[str], reg_no: Optional[str] = "") -> s
 
     if not year_raw:
         return ""
-    y = str(year_raw).upper().strip()
+    y = year_raw.upper().strip()
     if "ALL" in y:
         return "ALL"
     if "IV" in y or "4" in y or "2023" in y:
@@ -300,7 +300,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 q4_val = 1 if int(p_q4) >= 1 else 0
                 actual_sum = q1_val + q2_val + q3_val + q4_val
                 tot_rec = int(getattr(p_res, "total_contest_solved", 0) or 0)
-                solved_val = int(max(actual_sum, tot_rec))
+                solved_val = max(actual_sum, tot_rec)
                 if solved_val > 0 and actual_sum < solved_val:
                     if solved_val >= 4:
                         q1_val = q2_val = q3_val = q4_val = 1
@@ -325,7 +325,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 q4_val = 1 if int(p_q4) >= 1 else 0
                 actual_sum = q1_val + q2_val + q3_val + q4_val
                 tot_rec = int(getattr(p_res, "total_contest_solved", 0) or 0)
-                solved_val = int(max(actual_sum, tot_rec))
+                solved_val = max(actual_sum, tot_rec)
                 if solved_val > 0 and actual_sum < solved_val:
                     if solved_val >= 4:
                         q1_val = q2_val = q3_val = q4_val = 1
@@ -360,7 +360,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             q4_val = 1 if int(v_q4) >= 1 else 0
             actual_sum = q1_val + q2_val + q3_val + q4_val
             tot_rec = int(getattr(v_res, "total_contest_solved", 0) or 0)
-            solved_val = int(max(actual_sum, tot_rec))
+            solved_val = max(actual_sum, tot_rec)
             if solved_val > 0 and actual_sum < solved_val:
                 if solved_val >= 4:
                     q1_val = q2_val = q3_val = q4_val = 1
@@ -387,7 +387,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 q4_val = 1 if int(pt_q4) >= 1 else 0
                 actual_sum = q1_val + q2_val + q3_val + q4_val
                 tot_rec = int(getattr(part_res, "problems_solved", 0) or 0)
-                solved_val = int(max(actual_sum, tot_rec))
+                solved_val = max(actual_sum, tot_rec)
                 if solved_val > 0 and actual_sum < solved_val:
                     if solved_val >= 4:
                         q1_val = q2_val = q3_val = q4_val = 1
@@ -415,7 +415,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 q4_val = 1 if int(pt_q4) >= 1 else 0
                 actual_sum = q1_val + q2_val + q3_val + q4_val
                 tot_rec = int(getattr(part_res, "problems_solved", 0) or 0)
-                solved_val = int(max(actual_sum, tot_rec))
+                solved_val = max(actual_sum, tot_rec)
                 if solved_val > 0 and actual_sum < solved_val:
                     if solved_val >= 4:
                         q1_val = q2_val = q3_val = q4_val = 1
@@ -495,7 +495,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 parsed_cum_times.append(None)
 
         # Generate realistic individual durations for missing question times
-        q_durations = [None, None, None, None]
+        q_durations: List[Optional[float]] = [None, None, None, None]
         c_s = solved_val or 0
 
         # Base individual durations per question
@@ -540,7 +540,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         def format_q_cell(q_val: Optional[int], q_t: Any, attended: bool) -> str:
             if not attended or q_val is None:
                 return "—"
-            if int(q_val or 0) >= 1:
+            if (q_val or 0) >= 1:
                 if q_t is not None and float(q_t or 0) > 0:
                     t_val = float(q_t)
                     t_str = str(int(t_val)) if t_val.is_integer() else str(t_val)

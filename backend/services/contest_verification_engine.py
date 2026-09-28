@@ -76,7 +76,7 @@ class ContestProblemMapping:
     def find_problem(self, slug_or_id: str) -> Optional[ProblemDefinition]:
         if not slug_or_id:
             return None
-        target = str(slug_or_id).strip().lower()
+        target = slug_or_id.strip().lower()
         for p in self.problems:
             if p.title_slug.lower() == target or p.problem_id.lower() == target:
                 return p
@@ -308,7 +308,7 @@ class ContestVerificationEngine:
         """Normalizes any participation string into canonical ACTUAL, VIRTUAL_ATTENDED, NOT_VERIFIED."""
         if not raw_type:
             return "NOT_VERIFIED"
-        st = str(raw_type).strip().upper()
+        st = raw_type.strip().upper()
         if st in ("ACTUAL", "PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL"):
             return "ACTUAL"
         if st in ("VIRTUAL", "VIRTUAL_ATTENDED"):

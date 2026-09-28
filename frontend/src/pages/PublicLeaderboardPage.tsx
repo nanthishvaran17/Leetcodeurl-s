@@ -167,68 +167,70 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
 
       {/* TOP 3 PODIUM */}
       {top3.length >= 3 && (
-        <div className="glass-card p-4 sm:p-6 rounded-3xl border border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent shadow-xl">
-          <h2 className="text-center font-black text-sm sm:text-base text-slate-900 dark:text-white flex items-center justify-center space-x-2 mb-4 sm:mb-6">
-            <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-500 shrink-0" />
-            <span className="truncate">INSTITUTION TOP 3 RANKERS</span>
-            <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-500 shrink-0" />
+        <div className="glass-card p-5 sm:p-8 rounded-3xl border border-amber-500/20 bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent shadow-xl space-y-6">
+          <h2 className="text-center font-black text-sm sm:text-base text-slate-900 dark:text-white flex items-center justify-center space-x-2">
+            <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 fill-amber-500 shrink-0" />
+            <span className="truncate tracking-wider uppercase font-black">INSTITUTION TOP 3 RANKERS</span>
+            <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 fill-amber-500 shrink-0" />
           </h2>
 
-          <div className="grid grid-cols-3 items-end justify-items-center max-w-xl mx-auto gap-2 sm:gap-6">
+          <div className="grid grid-cols-3 items-end justify-items-center max-w-2xl mx-auto gap-3 sm:gap-6">
             {MEDAL_CONFIGS.map(cfg => {
               const s = top3[cfg.rank - 1];
               if (!s) return null;
               return (
                 <div
                   key={s.id}
-                  className={`${cfg.order} w-full flex flex-col items-center space-y-2 sm:space-y-3 cursor-pointer group`}
+                  className={`${cfg.order} w-full flex flex-col items-center space-y-3 cursor-pointer group bg-white/70 dark:bg-navy-900/70 backdrop-blur-md p-3.5 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-navy-700/80 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-200`}
                   onClick={() => onSelectStudent?.(s)}
                 >
                   {/* Medal Crown */}
-                  <div className={`text-xl sm:text-2xl ${cfg.rank === 1 ? 'animate-bounce' : ''}`}>{cfg.emoji}</div>
+                  <div className={`text-2xl sm:text-3xl ${cfg.rank === 1 ? 'animate-bounce' : ''}`}>{cfg.emoji}</div>
 
                   {/* Avatar */}
-                  <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${cfg.color} flex items-center justify-center text-white font-black text-base sm:text-xl shadow-xl border-2 ${cfg.borderColor} group-hover:scale-105 transition-transform`}>
+                  <div className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br ${cfg.color} flex items-center justify-center text-white font-black text-lg sm:text-2xl shadow-xl border-2 ${cfg.borderColor} group-hover:scale-105 transition-transform`}>
                     {s.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                   </div>
 
                   {/* Info */}
-                  <div className="text-center space-y-0.5 w-full px-1">
+                  <div className="text-center space-y-1 w-full px-1">
                     <div className={`text-[10px] sm:text-xs font-black inline-block tracking-wider uppercase ${cfg.textColor}`}>{cfg.label}</div>
-                    <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate max-w-[85px] sm:max-w-[130px] mx-auto mt-1" title={s.name}>{s.name}</div>
-                    <div className="text-[9px] sm:text-[10px] text-slate-700 dark:text-slate-300 font-mono font-bold truncate">{s.reg_no}</div>
-                    <div className="pt-0.5">
+                    <div className="text-xs sm:text-base font-black text-slate-900 dark:text-white truncate max-w-[95px] sm:max-w-[150px] mx-auto pt-0.5" title={s.name}>{s.name}</div>
+                    <div className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 font-mono font-bold truncate">{s.reg_no}</div>
+                    <div className="pt-1">
                       {(() => {
                         const derivedYear = deriveYearLevelFromRegNo(s.reg_no, s.year_level);
                         const deptCode = s.department?.code || s.department?.name || 'DEPT';
                         return (
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-black border ${getDeptBadgeStyle(deptCode)}`}>
-                            {deptCode} • {derivedYear} Year
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] sm:text-xs font-black border ${getDeptBadgeStyle(deptCode)}`}>
+                            {deptCode} • {derivedYear} Yr
                           </span>
                         );
                       })()}
                     </div>
-                    <div className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-black text-[10px] sm:text-xs border border-emerald-500/20 mt-1 inline-block whitespace-nowrap shadow-2xs">
-                      {s.stats?.total_solved || 0} Solved
+                    <div className="pt-1">
+                      <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-black text-[11px] sm:text-xs border border-emerald-500/20 inline-block whitespace-nowrap shadow-2xs">
+                        {s.stats?.total_solved || 0} Solved
+                      </span>
                     </div>
                     {s.username && (
-                      <div className="pt-0.5">
+                      <div className="pt-1">
                         <a
                           href={`https://leetcode.com/u/${s.username}/`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center space-x-1 text-[9px] sm:text-[10px] text-brand-500 hover:text-brand-600 font-mono truncate max-w-full"
+                          className="inline-flex items-center space-x-1 text-[10px] sm:text-xs text-brand-500 hover:text-brand-600 font-mono truncate max-w-full font-bold"
                           onClick={e => e.stopPropagation()}
                         >
                           <span className="truncate">@{s.username}</span>
-                          <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                          <ExternalLink className="w-3 h-3 shrink-0" />
                         </a>
                       </div>
                     )}
                   </div>
 
                   {/* Podium Stand */}
-                  <div className={`w-full max-w-[70px] sm:max-w-[90px] rounded-t-xl ${cfg.rank === 1 ? 'h-9 sm:h-12 bg-gradient-to-b from-amber-400 to-amber-500' : cfg.rank === 2 ? 'h-6 sm:h-8 bg-gradient-to-b from-slate-400 to-slate-500' : 'h-4 sm:h-6 bg-gradient-to-b from-orange-500 to-amber-600'} flex items-center justify-center text-white font-black text-xs sm:text-sm shadow-md`}>
+                  <div className={`w-full max-w-[80px] sm:max-w-[110px] rounded-2xl ${cfg.rank === 1 ? 'h-10 sm:h-14 bg-gradient-to-b from-amber-400 to-amber-500' : cfg.rank === 2 ? 'h-7 sm:h-10 bg-gradient-to-b from-slate-400 to-slate-500' : 'h-5 sm:h-8 bg-gradient-to-b from-orange-500 to-amber-600'} flex items-center justify-center text-white font-black text-xs sm:text-sm shadow-md mt-2`}>
                     #{cfg.rank}
                   </div>
                 </div>

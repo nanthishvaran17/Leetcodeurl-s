@@ -99,8 +99,9 @@ class AuthoritativeSnapshotEngine:
             ).order_by(OfficialWeeklySnapshot.id.desc()).first()
 
             if snap and snap.dataset:
-                data = snap.dataset if isinstance(snap.dataset, dict) else json.loads(snap.dataset)
-                ver = 100 + snap.id
+                raw_data = snap.dataset
+                data = raw_data if isinstance(raw_data, dict) else json.loads(str(raw_data))
+                ver = 100 + int(str(snap.id))
                 data["data_version"] = ver
                 data["snapshot_id"] = f"SNAPSHOT-{snap.contest_id}-{ver}"
                 data["status"] = "SUCCESS"
@@ -109,7 +110,7 @@ class AuthoritativeSnapshotEngine:
 
             # If no snapshot in table, build canonical dataset for latest session
             latest_sess = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
-            sess_id = latest_sess.id if latest_sess else 21
+            sess_id: int = int(str(latest_sess.id)) if latest_sess and latest_sess.id else 21
             dataset = build_canonical_contest_dataset(session_id=sess_id, db=db)
             dataset["data_version"] = cls._in_memory_latest_version
             dataset["snapshot_id"] = f"SNAPSHOT-{sess_id}-{cls._in_memory_latest_version}"
@@ -184,7 +185,7 @@ class AuthoritativeSnapshotEngine:
             db.commit()
             db.refresh(new_snap)
 
-            cls._in_memory_latest_version = 100 + new_snap.id
+            cls._in_memory_latest_version = 100 + int(str(new_snap.id))
             cls._in_memory_snapshot_cache = dataset
 
             logger.info(
