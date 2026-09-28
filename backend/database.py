@@ -122,19 +122,21 @@ try:
             except Exception:
                 print(f"[DB_FALLBACK] PostgreSQL query ping failed ({_pg_conn_err}). Fallback to SQLite: {db_url}")
 except Exception as _engine_exc:
-    if not env_is_prod:
-        local_sqlite = os.path.join(os.path.dirname(os.path.dirname(__file__)), "leetcode_tracker.db")  # type: ignore
-        if not os.path.exists(local_sqlite):
-            local_sqlite = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "leetcode_tracker.db")
-        db_url = f"sqlite:///{local_sqlite}"
-        engine = create_engine(
-            db_url,
-            echo=False,
-            poolclass=NullPool,
-            connect_args={"check_same_thread": False, "timeout": 60}
-        )
-    else:
-        raise _engine_exc
+    local_sqlite = os.path.join(os.path.dirname(os.path.dirname(__file__)), "leetcode_tracker.db")
+    if not os.path.exists(local_sqlite):
+        local_sqlite = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "leetcode_tracker.db")
+    db_url = f"sqlite:///{local_sqlite}"
+    engine = create_engine(
+        db_url,
+        echo=False,
+        poolclass=NullPool,
+        connect_args={"check_same_thread": False, "timeout": 60}
+    )
+    try:
+        from backend.logger import logger as _log
+        _log.warning(f"[DB_FALLBACK] Engine creation failed ({_engine_exc}). Fallback to local SQLite: {db_url}")
+    except Exception:
+        print(f"[DB_FALLBACK] Engine creation failed ({_engine_exc}). Fallback to local SQLite: {db_url}")
 
 from sqlalchemy import event
 
