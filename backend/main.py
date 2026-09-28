@@ -498,17 +498,8 @@ async def _deferred_startup_tasks():
             except Exception as _recovery_err:
                 logger.warning(f"[STARTUP] Missed job recovery note: {_recovery_err}")
 
-            # STEP 4: CONTEST DISCOVERY 
-            try:
-                logger.info("[STARTUP] Step 4: Contest Discovery...")
-                from backend.services.contest_discovery import discover_contest_metadata
-                meta = await asyncio.to_thread(discover_contest_metadata)
-                logger.info(
-                    f"[STARTUP] Contest Discovery: {meta.get('contest_name')} "
-                    f"({meta.get('status')}) on {meta.get('raw_date')}"
-                )
-            except Exception as _disc_err:
-                logger.warning(f"[STARTUP] Contest discovery note: {_disc_err}")
+            # STEP 4: CONTEST DISCOVERY (Deferred to worker/on-demand request for zero-latency web startup)
+            logger.info("[STARTUP] Step 4: Contest discovery deferred to worker/on-demand request.")
 
         except Exception as e:
             logger.warning(f"[STARTUP] Scheduler initialization note: {e}")
