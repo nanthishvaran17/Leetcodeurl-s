@@ -1397,10 +1397,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
 
     const fallbackTotal = matrixRows && matrixRows.length > 0 ? matrixRows.length : 0;
-    const totalRowsVal = sessionMetrics?.totalStudents ?? sessionMetrics?.totalCount ?? totalRows ?? fastSummary?.totalStudents ?? fallbackTotal;
+    const totalRowsVal = sessionMetrics?.totalStudents ?? sessionMetrics?.totalCount ?? fastSummary?.totalStudents ?? (totalRows > 0 ? totalRows : undefined) ?? fallbackTotal;
     const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? fastSummary?.participantCount ?? calcAttended;
-    const virtualRows = sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? calcVirtual;
-    const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? Math.max(0, totalRowsVal - attendedRows - virtualRows);
+    const virtualRows = sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? fastSummary?.virtualParticipants ?? calcVirtual;
+    const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? fastSummary?.notParticipated ?? Math.max(0, totalRowsVal - attendedRows - virtualRows);
     const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.errors ?? sessionMetrics?.failedVerification ?? calcDataError;
 
     const isVirtualAvailable = sessionMetrics?.virtualDataStatus === 'AVAILABLE' || virtualRows > 0;
