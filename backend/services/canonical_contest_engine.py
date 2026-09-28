@@ -217,6 +217,8 @@ def _filter_canonical_dataset_in_memory(
         else:
             rows = [r for r in rows if str(r.get("year","")).upper() == y_upper]
         
+    scope_rows = list(rows)
+
     if attendance and attendance.upper() != "ALL":
         att_upper = attendance.upper().strip()
         if att_upper in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL"):
@@ -238,25 +240,25 @@ def _filter_canonical_dataset_in_memory(
         r_copy["s_no"] = idx
         indexed_rows.append(r_copy)
 
-    tot = len(indexed_rows)
-    pub = sum(1 for r in indexed_rows if r.get("status") in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"))
-    virt = sum(1 for r in indexed_rows if r.get("status") in ("VIRTUAL", "VIRTUAL_ATTENDED"))
-    not_att = sum(1 for r in indexed_rows if r.get("status") == "NOT_ATTENDED")
-    not_verified = sum(1 for r in indexed_rows if r.get("status") in ("NOT_VERIFIED", "PENDING", "UNVERIFIED"))
-    errors = sum(1 for r in indexed_rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "FETCH_FAILED", "DATA_MISMATCH", "CONFLICT"))
-    pending = sum(1 for r in indexed_rows if r.get("status") == "PENDING")
+    tot = len(scope_rows)
+    pub = sum(1 for r in scope_rows if r.get("status") in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"))
+    virt = sum(1 for r in scope_rows if r.get("status") in ("VIRTUAL", "VIRTUAL_ATTENDED"))
+    not_att = sum(1 for r in scope_rows if r.get("status") == "NOT_ATTENDED")
+    not_verified = sum(1 for r in scope_rows if r.get("status") in ("NOT_VERIFIED", "PENDING", "UNVERIFIED"))
+    errors = sum(1 for r in scope_rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "FETCH_FAILED", "DATA_MISMATCH", "CONFLICT"))
+    pending = sum(1 for r in scope_rows if r.get("status") == "PENDING")
 
     def _get_solved(r):
         if r.get("total_solved") is not None:
             return int(r.get("total_solved") or 0)
         return (1 if r.get("q1") == 1 else 0) + (1 if r.get("q2") == 1 else 0) + (1 if r.get("q3") == 1 else 0) + (1 if r.get("q4") == 1 else 0)
 
-    q4 = sum(1 for r in indexed_rows if _get_solved(r) >= 4 and r.get("status") in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED"))
-    q3 = sum(1 for r in indexed_rows if _get_solved(r) == 3 and r.get("status") in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED"))
-    q2 = sum(1 for r in indexed_rows if _get_solved(r) == 2 and r.get("status") in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED"))
-    q1 = sum(1 for r in indexed_rows if _get_solved(r) == 1 and r.get("status") in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED"))
+    q4 = sum(1 for r in scope_rows if _get_solved(r) >= 4 and r.get("status") in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED"))
+    q3 = sum(1 for r in scope_rows if _get_solved(r) == 3 and r.get("status") in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED"))
+    q2 = sum(1 for r in scope_rows if _get_solved(r) == 2 and r.get("status") in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED"))
+    q1 = sum(1 for r in scope_rows if _get_solved(r) == 1 and r.get("status") in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED"))
 
-    pct = ((pub + virt) / max(1, tot)) * 100.0
+    pct = round(((pub + virt) / max(1, tot)) * 100.0, 1)
 
     base_metrics = base_dataset.get("metrics", {})
     metrics = {
