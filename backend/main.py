@@ -4,6 +4,7 @@ import json
 import asyncio
 import secrets
 import string
+from functools import lru_cache
 from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, Request, Response, Depends, WebSocket, WebSocketDisconnect
@@ -1159,6 +1160,7 @@ def root_landing_page(request: Request, format: Optional[str] = None):
     
     base_dir = os.path.dirname(os.path.abspath(__file__))
     
+    @lru_cache(maxsize=8)
     def _load_base64_logo(filename: str) -> str:
         paths = [
             os.path.join(base_dir, "..", "frontend", "public", filename),
