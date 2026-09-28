@@ -321,6 +321,172 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
     prev.r.rating === next.r.rating &&
     prev.r.confidence === next.r.confidence;
 });
+
+const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onSelect, onCheckbox, onQuickSync }: RowProps) => {
+  const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC';
+  const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
+  const isAttended = isPublicAttended || isVirtualAttended;
+  const isNotAttended = r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED';
+  const isNotVerified = r.participation_status === 'NOT_VERIFIED' || r.status === 'NOT_VERIFIED' || r.participation_status === 'PENDING';
+  const isNotVerifiedFinal = r.participation_status === 'NOT_VERIFIED_FINAL' || r.status === 'NOT_VERIFIED_FINAL';
+  const isError = r.participation_status === 'DATA_ERROR' || r.participation_status === 'SOURCE_ERROR' || r.participation_status === 'CONFLICT' || r.status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR';
+
+  const statusBadge = isPublicAttended
+    ? { cls: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30', dot: 'bg-emerald-500', label: 'PUBLIC' }
+    : isVirtualAttended
+      ? { cls: 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30', dot: 'bg-purple-500', label: 'VIRTUAL' }
+      : isNotAttended
+        ? { cls: 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30', dot: 'bg-rose-500', label: 'NOT ATTENDED' }
+        : isNotVerifiedFinal
+          ? { cls: 'bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/30', dot: 'bg-slate-400', label: 'UNVERIFIED' }
+          : isNotVerified
+            ? { cls: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30', dot: 'bg-indigo-500', label: 'PENDING' }
+            : isError
+              ? { cls: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30', dot: 'bg-amber-500', label: 'DATA ERROR' }
+              : { cls: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20', dot: 'bg-slate-400', label: 'PENDING' };
+
+  const renderMobileQ = (label: string, val: any) => {
+    const isSolved = (val === 1 || val === '1');
+    const isUnsolved = isAttended && !isSolved && (val === 0 || val === '0');
+    return (
+      <div className={`flex flex-col items-center justify-center py-1 px-1.5 rounded-lg border text-[11px] font-mono font-black ${
+        isSolved 
+          ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300' 
+          : isUnsolved 
+            ? 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400' 
+            : 'bg-slate-100 dark:bg-navy-900 border-slate-200 dark:border-navy-800 text-slate-400 dark:text-slate-500'
+      }`}>
+        <span className="text-[8px] font-sans font-bold text-slate-400 dark:text-slate-500 uppercase">{label}</span>
+        <span>{isSolved ? '1' : isUnsolved ? '0' : '—'}</span>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).tagName.toLowerCase() === 'input') return;
+        onSelect(r);
+      }}
+      className={`p-3.5 rounded-2xl border transition-all duration-150 cursor-pointer w-full bg-white dark:bg-navy-900 shadow-sm hover:shadow-md space-y-2.5 ${
+        isSelected ? 'bg-brand-50/70 dark:bg-brand-950/40 border-brand-300 dark:border-brand-700 ring-1 ring-brand-500/30' : 'border-slate-200/90 dark:border-navy-800'
+      }`}
+    >
+      {/* Top Header: Checkbox + S.No + RegNo + Status Badge */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <input
+            type="checkbox"
+            className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-navy-950 focus:ring-brand-500 checked:bg-brand-500 shrink-0"
+            checked={isSelected}
+            onChange={(e) => onCheckbox(r.reg_no, e.target.checked)}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <span className="text-[11px] font-mono font-bold text-slate-400 shrink-0">#{actualIdx + 1}</span>
+          <span className="font-mono font-bold text-xs text-slate-800 dark:text-slate-200 truncate">{r.reg_no}</span>
+        </div>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-extrabold rounded-full border ${statusBadge.cls}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${statusBadge.dot}`} />
+            {statusBadge.label}
+          </span>
+        </div>
+      </div>
+
+      {/* Middle Row: Student Name + Dept & Year Badges */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col min-w-0 flex-1">
+          <span className="font-black text-sm text-slate-900 dark:text-white truncate">
+            {r.name}
+          </span>
+          {r.username && (
+            <span className="text-[11px] font-mono font-semibold text-brand-600 dark:text-brand-400 truncate">
+              @{r.username}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-black uppercase bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700">
+            {r.dept}
+          </span>
+          <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-navy-700">
+            Yr {r.year}
+          </span>
+        </div>
+      </div>
+
+      {/* Bottom Row: Q1-Q4 Grid + Total Solved + Action Buttons */}
+      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-navy-800/80 gap-2">
+        {/* Q1-Q4 mini score boxes */}
+        <div className="grid grid-cols-4 gap-1 flex-1 max-w-[160px]">
+          {renderMobileQ('Q1', r.q1)}
+          {renderMobileQ('Q2', r.q2)}
+          {renderMobileQ('Q3', r.q3)}
+          {renderMobileQ('Q4', r.q4)}
+        </div>
+
+        {/* Total Solved Badge */}
+        <div className="flex items-center shrink-0">
+          {isVirtualAttended ? (
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-300 font-mono font-extrabold text-xs border border-purple-500/20">
+              {r.total_solved ?? 0}/4 <span className="text-[9px] opacity-70">(V)</span>
+            </span>
+          ) : isPublicAttended ? (
+            <span className="inline-flex items-center px-2 py-1 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 font-mono font-black text-xs border border-brand-500/20 shadow-2xs">
+              {r.total_solved ?? '0'}/4
+            </span>
+          ) : (
+            <span className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-400 dark:text-slate-500 font-bold text-[11px]">
+              Not Attended
+            </span>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(r); }}
+            className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-400 transition-all cursor-pointer"
+            title={`Edit ${r.name}`}
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+          </button>
+          {onQuickSync && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickSync(r.reg_no); }}
+              className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-600 dark:text-emerald-400 transition-all cursor-pointer"
+              title={`Sync ${r.name}`}
+            >
+              <Zap className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(r); }}
+            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-400 transition-all cursor-pointer"
+            title={`Deactivate ${r.name}`}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}, (prev, next) => {
+  return prev.isSelected === next.isSelected &&
+    prev.actualIdx === next.actualIdx &&
+    prev.r.participation_status === next.r.participation_status &&
+    prev.r.q1 === next.r.q1 &&
+    prev.r.q2 === next.r.q2 &&
+    prev.r.q3 === next.r.q3 &&
+    prev.r.q4 === next.r.q4 &&
+    prev.r.total_solved === next.r.total_solved &&
+    prev.r.rank === next.r.rank &&
+    prev.r.rating === next.r.rating &&
+    prev.r.confidence === next.r.confidence;
+});
+
 interface WeeklyContestPageProps {
   onSelectStudent?: (student: any) => void;
 }
@@ -3816,9 +3982,45 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </div>
               )}
 
-              <div className="table-responsive-container w-full min-w-0 max-w-full max-h-[520px] overflow-y-auto overflow-x-auto">
+              {/* MOBILE VIEW: High-density full-width responsive cards (Zero Horizontal Scroll) */}
+              <div className="block md:hidden divide-y divide-slate-100 dark:divide-slate-800 p-3 space-y-3 max-h-[580px] overflow-y-auto">
+                {paginatedMatrixRows.length === 0 ? (
+                  <div className="p-8 text-center text-slate-500 font-bold">
+                    No students found
+                  </div>
+                ) : (
+                  paginatedMatrixRows.map((r, idx) => {
+                    const actualIdx = (currentPage - 1) * pageSize + idx;
+                    return (
+                      <MobileContestMatrixCard
+                        key={r.reg_no || r.student_id || actualIdx}
+                        r={r}
+                        actualIdx={actualIdx}
+                        isSelected={selectedRowIds.has(r.reg_no)}
+                        onEdit={handleOpenEditStudent}
+                        onDelete={setDeletingStudent}
+                        onSelect={setViewingProfileStudent}
+                        onCheckbox={handleRowCheckbox}
+                        onQuickSync={(user?.role?.toLowerCase().includes('admin') || user?.role?.toLowerCase() === 'system admin') ? (regNo) => {
+                          setQuickSyncIdentifier(regNo);
+                          setShowAdminMonitor(true);
+                          setAdminSubTab('live_monitor');
+                          requestAnimationFrame(() => {
+                            requestAnimationFrame(() => {
+                              adminMonitorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            });
+                          });
+                        } : undefined}
+                      />
+                    );
+                  })
+                )}
+              </div>
+
+              {/* DESKTOP VIEW: Full 12-Column Table */}
+              <div className="hidden md:block table-responsive-container w-full min-w-0 max-w-full max-h-[520px] overflow-y-auto overflow-x-auto">
                 <table className="w-full min-w-[900px] text-left text-xs border-separate border-spacing-0">
-                  <thead className="text-white text-xs font-black uppercase tracking-wider sticky top-0 z-10 shadow-sm hidden md:table-header-group">
+                  <thead className="text-white text-xs font-black uppercase tracking-wider sticky top-0 z-10 shadow-sm">
                     <tr className="[&>th]:bg-slate-950 [&>th]:dark:bg-navy-950 [&>th:first-child]:rounded-l-2xl [&>th:last-child]:rounded-r-2xl border-b border-slate-700 dark:border-slate-600">
                       {/* Checkbox Column */}
                       <th className="px-3 py-3.5 text-center w-10">
