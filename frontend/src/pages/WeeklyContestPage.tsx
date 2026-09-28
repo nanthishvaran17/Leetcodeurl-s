@@ -354,10 +354,17 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
           ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300' 
           : isUnsolved 
             ? 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400' 
-            : 'bg-slate-100 dark:bg-navy-900 border-slate-200 dark:border-navy-800 text-slate-400 dark:text-slate-500'
+            : isError
+              ? 'bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-400'
+              : 'bg-slate-100 dark:bg-navy-900 border-slate-300 dark:border-navy-700 text-slate-700 dark:text-slate-300'
       }`}>
-        <span className="text-[8px] font-sans font-bold text-slate-400 dark:text-slate-500 uppercase">{label}</span>
-        <span>{isSolved ? '1' : isUnsolved ? '0' : '—'}</span>
+        <span className={`text-[8px] font-sans font-bold uppercase ${
+          isSolved ? 'text-emerald-600 dark:text-emerald-400' :
+          isUnsolved ? 'text-rose-600 dark:text-rose-400' :
+          isError ? 'text-amber-700 dark:text-amber-400 font-extrabold' :
+          'text-slate-600 dark:text-slate-400 font-bold'
+        }`}>{label}</span>
+        <span className="font-black text-xs">{isSolved ? '1' : isUnsolved ? '0' : '—'}</span>
       </div>
     );
   };
@@ -430,15 +437,19 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
         {/* Total Solved Badge */}
         <div className="flex items-center shrink-0">
           {isVirtualAttended ? (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-300 font-mono font-black text-xs border border-purple-500/20">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-700 dark:text-purple-300 font-mono font-black text-xs border border-purple-500/30 shadow-2xs">
               {r.total_solved ?? 0}/4 <span className="text-[9px] opacity-70">(V)</span>
             </span>
           ) : isPublicAttended ? (
-            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 font-mono font-black text-xs border border-brand-500/20 shadow-2xs">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-brand-500/15 text-brand-600 dark:text-brand-400 font-mono font-black text-xs border border-brand-500/30 shadow-2xs">
               {r.total_solved ?? '0'}/4
             </span>
+          ) : isError ? (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 font-mono font-black text-xs border border-amber-500/30 shadow-2xs">
+              —/4
+            </span>
           ) : (
-            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-900 text-slate-400 dark:text-slate-500 font-mono font-bold text-xs border border-slate-200 dark:border-navy-800">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 font-mono font-black text-xs border border-slate-300 dark:border-navy-700 shadow-2xs">
               0/4
             </span>
           )}
@@ -5127,18 +5138,41 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </div>
               </div>
 
-              {/* Status Pill */}
-              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
-                <span className="text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                  {viewingProfileStudent.participation_status?.replace(/_/g, ' ') || viewingProfileStudent.status}
-                </span>
-                <div className="text-right">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">LeetCode Username</p>
-                  <p className="text-sm font-black mt-2 text-amber-700 dark:text-amber-300 font-mono truncate" title={viewingProfileStudent.username}>
-                    {viewingProfileStudent.username || 'Not Linked'}
-                  </p>
-                </div>
-              </div>
+              {/* Status & LeetCode Info Banner */}
+              {(() => {
+                const isPub = viewingProfileStudent.participation_status === 'PUBLIC_ATTENDED' || viewingProfileStudent.participation_status === 'ATTENDED' || viewingProfileStudent.status === 'PUBLIC' || viewingProfileStudent.participation_status === 'PUBLIC';
+                const isVirt = viewingProfileStudent.participation_status === 'VIRTUAL_ATTENDED' || viewingProfileStudent.participation_status === 'VIRTUAL' || viewingProfileStudent.status === 'VIRTUAL';
+                const isErr = viewingProfileStudent.participation_status === 'DATA_ERROR' || viewingProfileStudent.status === 'USERNAME_NOT_FOUND' || viewingProfileStudent.status === 'FETCH_ERROR';
+
+                const bannerCls = isPub 
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                  : isVirt 
+                    ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-300 dark:border-purple-800 text-purple-800 dark:text-purple-300'
+                    : isErr 
+                      ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-300'
+                      : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-300';
+
+                return (
+                  <div className={`p-4 rounded-2xl border flex items-center justify-between shadow-2xs ${bannerCls}`}>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        Attendance Status
+                      </span>
+                      <span className="text-sm font-black uppercase tracking-wide mt-0.5">
+                        {viewingProfileStudent.participation_status?.replace(/_/g, ' ') || viewingProfileStudent.status || 'NOT ATTENDED'}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                        LeetCode Username
+                      </p>
+                      <p className="text-sm font-black mt-1 font-mono text-slate-900 dark:text-white truncate max-w-[200px]" title={viewingProfileStudent.username}>
+                        {viewingProfileStudent.username ? `@${viewingProfileStudent.username.replace(/^@/, '')}` : 'Not Linked'}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Quick Actions */}
               <div className="flex items-center justify-end space-x-3 pt-2">
