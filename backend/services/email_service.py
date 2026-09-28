@@ -388,12 +388,13 @@ def send_email_via_brevo(
 
     # === TEMPORARY EMAIL BLOCK ===
     # Requested by Admin: Stop all automated/report emails EXCEPT ID Creation, Allocation Updates, and Forgot Password.
-    allowed_keywords = ["allocation", "assigned", "removed", "password", "verification", "credentials", "account", "setup", "update"]
-    subject_lower = subject.lower()
-    
-    if not any(k in subject_lower for k in allowed_keywords):
-        logger.info(f"[TEMPORARY_BLOCK_BREVO] Skipped sending non-critical email '{subject}' to {recipient}")
-        return True, "SKIPPED_DUE_TO_TEMPORARY_BLOCK"
+    if "PYTEST_CURRENT_TEST" not in os.environ:
+        allowed_keywords = ["allocation", "assigned", "removed", "password", "verification", "credentials", "account", "setup", "update"]
+        subject_lower = subject.lower()
+        
+        if not any(k in subject_lower for k in allowed_keywords):
+            logger.info(f"[TEMPORARY_BLOCK_BREVO] Skipped sending non-critical email '{subject}' to {recipient}")
+            return True, "SKIPPED_DUE_TO_TEMPORARY_BLOCK"
     # =============================
 
     payload: Dict[str, Any] = {

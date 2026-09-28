@@ -563,11 +563,24 @@ class UniversalWeeklyContestAutopilot:
 
             # Final Lock Readiness Gate Guard & Authoritative Reconciliation
             gate = self.evaluate_final_lock_readiness_gate(session.id, db)
+            if not gate.get("allow_lock", False):
+                session.status = "LOCK_BLOCKED"
+                session.pipeline_state = AutopilotState.LOCK_BLOCKED
+                session.last_error_code = "LOCK_GATE_FAILED"
+                session.last_error_message_safe = str(gate.get("reason") or "Lock gate verification failed")
+                db.commit()
+                return {
+                    "phase": "FINALIZATION",
+                    "success": False,
+                    "status": "LOCK_BLOCKED",
+                    "reason": session.last_error_message_safe,
+                    "gate": gate
+                }
+
             reconciliation = UniversalContestReconciliationEngine.reconcile_contest(
                 session.id, db, sync_mode="POST_CONTEST_SYNC"
             )
-
-            is_successful = gate.get("allow_lock", False) or reconciliation.get("success", False)
+            is_successful = reconciliation.get("success", True) if (isinstance(reconciliation, dict) and "success" in reconciliation) else (bool(reconciliation) if isinstance(reconciliation, dict) else True)
 
             if not is_successful:
                 session.status = "MANUAL_REVIEW_REQUIRED"
@@ -582,7 +595,7 @@ class UniversalWeeklyContestAutopilot:
                 # Log administrative alert
                 err_log = WeeklyContestErrorLog(
                     session_id=session.id,
-                    student_id=0,
+                    student_id=None,
                     reg_no="SYSTEM",
                     student_name="SYSTEM_RECONCILIATION",
                     field_name="finalization_status",

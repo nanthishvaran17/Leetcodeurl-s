@@ -100,8 +100,8 @@ def resolve_certificate_record(
 
         return cert
 
-    # 2. Forensic Trace IDs MUST exist in database; return None if not found (NO REGEX GUESSING)
-    if is_forensic_request or raw_id.lower().startswith("trace_"):
+    # 2. Forensic Trace IDs without reg/name parameter MUST exist in database
+    if (is_forensic_request or raw_id.lower().startswith("trace_")) and not reg and not name:
         logger.warning(f"[CERT_RESOLVE_FAILED] No forensic record found for trace_id={raw_id}")
         return None
 

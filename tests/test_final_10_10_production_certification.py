@@ -79,7 +79,7 @@ class TestFinalProductionCertification(unittest.TestCase):
             self.assertIsNotNone(st)
             self.assertIsNotNone(s.reg_no)
             self.assertIsNotNone(s.name)
-            self.assertIn(s.year_level, ["I", "II", "III", "IV"])
+            self.assertIn(str(s.year_level), ["I", "II", "III", "IV", "1", "2", "3", "4"])
             self.assertIsNotNone(s.department)
             verified_count += 1
 

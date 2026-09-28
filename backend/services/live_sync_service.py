@@ -407,6 +407,17 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
     """
     job_id = f"SYNC-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d-%H%M%S')}"
 
+    if sync_tracker.is_running and sync_tracker.current_job_id:
+        logger.info(f"[SYNC] Sync job {sync_tracker.current_job_id} is already RUNNING (tracker). Reusing active job.")
+        return {
+            "success": True,
+            "status": "SYNC_ALREADY_RUNNING",
+            "already_running": True,
+            "job_id": sync_tracker.current_job_id,
+            "message": "A synchronization job is already in progress.",
+            "started_at": sync_tracker.started_at
+        }
+
     # 1. DB-Level Single Job Lock Check
     if not _acquire_global_lock(db, job_id):
         s_lock_db = SessionLocal()
@@ -428,7 +439,7 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
     logger.info(f"[SYNC] Creating session: {job_id}")
     
     # Mark any stale running jobs as INTERRUPTED & create new SyncJob record cleanly
-    s_job_db = SessionLocal()
+    s_job_db = db
     try:
         s_job_db.query(SyncJob).filter(SyncJob.status == "RUNNING").update({
             "status": "INTERRUPTED",
@@ -450,8 +461,9 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
         )
         s_job_db.add(new_job)
         s_job_db.commit()
-    finally:
-        s_job_db.close()
+    except Exception as exc:
+        logger.error(f"[SYNC_JOB_INIT_ERROR] {exc}")
+        s_job_db.rollback()
 
     logger.info(f"[QUEUE] Job queued: {job_id}")
     sync_tracker.start(job_id, total_count, triggered_by=triggered_by)

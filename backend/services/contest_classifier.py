@@ -253,6 +253,7 @@ def evaluate_contest_evidence(
     rank: Optional[int] = None,
     rating_after: Optional[float] = None,
     official_problems_solved: Optional[int] = None,
+    is_virtual: bool = False,
 ) -> ContestStatusRow:
     """
     Phase X — Accuracy Hardening Evidence-First Classification Logic.
@@ -406,7 +407,7 @@ def evaluate_contest_evidence(
         reason_code = ReasonCode.VALID_LIVE_SUBMISSION
         classification_signal = "in_window_submission"
         reason_text = "Verified live submission(s) inside official 90-min contest window."
-    elif post_contest_solves > 0 or (total_unique_solved > 0 and ranking_history_attended is False):
+    elif post_contest_solves > 0 or (total_unique_solved > 0 and ranking_history_attended is False) or is_virtual:
         status = ContestStatus.VIRTUAL_ATTENDED
         reason_code = ReasonCode.EXPLICIT_VIRTUAL
         classification_signal = "post_window_only"
@@ -503,6 +504,27 @@ class ContestClassifier:
 
     def __init__(self, leetcode_api_client=None):
         self.api = leetcode_api_client
+
+    def classify_batch(
+        self,
+        students: List[Dict[str, Any]],
+        contest_id: str,
+        contest_name: str,
+        official_problems: Optional[List[Dict[str, Any]]] = None,
+    ) -> List[ContestStatusRow]:
+        """Synchronous batch classification method for compatibility."""
+        results = []
+        for s in students:
+            row = self.classify_student_contest(
+                student_id=s.get("student_id") or s.get("id", 0),
+                student_name=s.get("student_name") or s.get("name", ""),
+                leetcode_username=s.get("leetcode_username") or s.get("username"),
+                contest_id=contest_id,
+                contest_name=contest_name,
+                official_problems=official_problems,
+            )
+            results.append(row)
+        return results
 
     def classify_student_contest(
         self,
@@ -613,6 +635,7 @@ class ContestClassifier:
             )
 
         attended = bool(contest_data.get("attended", False))
+        is_virt = bool(contest_data.get("is_virtual", False) or contest_data.get("virtual", False) or (contest_data.get("contest_slug") and not contest_data.get("attended", False) and contest_data.get("problems_solved") == 0))
         recent_ac = contest_data.get("recent_ac") or contest_data.get("submissions") or []
 
         return evaluate_contest_evidence(
@@ -629,6 +652,7 @@ class ContestClassifier:
             rank=contest_data.get("rank"),
             rating_after=contest_data.get("rating_after"),
             official_problems_solved=contest_data.get("problems_solved") or contest_data.get("problemsSolved"),
+            is_virtual=is_virt,
         )
 
 

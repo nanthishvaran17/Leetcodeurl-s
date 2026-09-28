@@ -505,18 +505,15 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         def_q4_dur = 11 + ((u_seed * 11) % 16)                           # 11-26 min
         default_durs = [def_q1_dur, def_q2_dur, def_q3_dur, def_q4_dur]
 
-        # Calculate incremental durations if cumulative timestamps are provided
-        prev_cum = 0.0
+        # Set individual question durations directly from parsed times
         for i in range(4):
             q_val_check = [q1_val, q2_val, q3_val, q4_val][i]
             if is_att and (q_val_check == 1 or c_s > i):
                 cum_t = parsed_cum_times[i]
-                if cum_t is not None and cum_t > prev_cum:
-                    q_durations[i] = round(cum_t - prev_cum, 1)
-                    prev_cum = cum_t
+                if cum_t is not None and cum_t > 0:
+                    q_durations[i] = round(cum_t, 1)
                 else:
                     q_durations[i] = float(default_durs[i])
-                    prev_cum += default_durs[i]
 
         q1_time, q2_time, q3_time, q4_time = q_durations
 
@@ -549,7 +546,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                     t_str = str(int(t_val)) if t_val.is_integer() else str(t_val)
                     return f"1 ({t_str} min)"
                 return "1"
-            return "0"
+            return "0 (—)"
 
         q1_disp = format_q_cell(q1_val, q1_time, is_att)
         q2_disp = format_q_cell(q2_val, q2_time, is_att)

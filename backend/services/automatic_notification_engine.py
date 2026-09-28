@@ -27,6 +27,7 @@ from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_, and_
 
+from backend.time_utils import ensure_utc
 from backend.models import (
     User, Student, Department, FacultyStudentAssignment,
     LeetCodeProfileStats, WeeklySession, WeeklyPublicResult,
@@ -127,8 +128,9 @@ class AutomaticNotificationEngine:
                 new_milestones = 0
                 for s in assigned_students:
                     if s.stats and s.stats.total_solved:
+                        lu_utc = ensure_utc(s.stats.last_updated)
                         for m in MILESTONE_THRESHOLDS:
-                            if s.stats.total_solved >= m and s.stats.last_updated and s.stats.last_updated >= cutoff_24h:
+                            if s.stats.total_solved >= m and lu_utc and lu_utc >= cutoff_24h:
                                 new_milestones += 1
                                 break
 
