@@ -4152,23 +4152,65 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
           )}
 
-          {/* Tab 3: Itemized Data Quality Error Board (21 Actionable Errors) */}
+          {/* Tab 3: Itemized Data Quality Error Board */}
           {subTab === 'error_board' && (
             <div className="border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-950 p-6 space-y-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-slate-100 dark:border-slate-800/80">
                 <div>
                   <h3 className="text-sm font-black uppercase text-amber-600 dark:text-amber-400 flex items-center space-x-2">
                     <AlertTriangle className="w-4 h-4" />
-                    <span>Itemized Data Quality Errors ({stats.errorRows} Students)</span>
+                    <span>Itemized Data Quality Errors ({totalRows || stats.errorRows} Students)</span>
                   </h3>
                   <p className="text-xs text-slate-500 font-bold mt-0.5">
                     Root Cause: Missing or invalid LeetCode username handles. API failure is NEVER falsely marked as Not Attended.
                   </p>
                 </div>
 
-                <span className="px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-xs font-black border border-amber-300">
-                  Action Required: Click "Add Username" to link LeetCode profile
-                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Page Size Selector */}
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                    <span className="px-2 text-slate-400 uppercase text-[9px] font-black">Rows:</span>
+                    {[15, 25, 50, 100].map(sz => (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() => { setPageSize(sz); setCurrentPage(1); }}
+                        className={`px-2 py-0.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${pageSize === sz ? 'bg-indigo-600 text-white shadow-sm' : 'hover:bg-slate-200 dark:hover:bg-navy-800'}`}
+                      >
+                        {sz}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Top Pagination Controls */}
+                  {totalRows > 0 && (
+                    <div className="flex items-center gap-1.5 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                      <button
+                        type="button"
+                        disabled={currentPage <= 1}
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      >
+                        ‹ Prev
+                      </button>
+                      <span className="text-[10px] font-mono font-black text-amber-600 dark:text-amber-400 px-1.5">
+                        {currentPage}/{totalPages}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={currentPage >= totalPages}
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      >
+                        Next ›
+                      </button>
+                    </div>
+                  )}
+
+                  <span className="px-3 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-xs font-black border border-amber-300">
+                    Click "Add Username" to link profile
+                  </span>
+                </div>
               </div>
 
               {(() => {
@@ -4313,6 +4355,37 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         </tbody>
                       </table>
                     </div>
+
+                    {/* Bottom Pagination Controls */}
+                    {totalRows > 0 && (
+                      <div className="flex items-center justify-between flex-wrap gap-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+                        <span className="text-slate-500 font-bold">
+                          Showing <b className="text-slate-800 dark:text-slate-200">{(currentPage - 1) * pageSize + 1}</b> to <b className="text-slate-800 dark:text-slate-200">{Math.min(totalRows, currentPage * pageSize)}</b> of <b className="text-amber-600 dark:text-amber-400">{totalRows}</b> data error records
+                        </span>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            disabled={currentPage <= 1}
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                          >
+                            ‹ Previous
+                          </button>
+                          <span className="px-2.5 py-1 text-xs font-mono font-bold text-amber-600 dark:text-amber-400">
+                            Page {currentPage} of {totalPages}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={currentPage >= totalPages}
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                          >
+                            Next ›
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </>
                 );
               })()}

@@ -7,6 +7,7 @@ from backend.models import (
     Student, User
 )
 from backend.logger import logger
+from backend.time_utils import ensure_utc
 
 VALID_PARTICIPATION_STATUSES = {
     "PUBLIC", "VIRTUAL", "NOT_ATTENDED", "NOT_VERIFIED",
@@ -283,12 +284,12 @@ def _filter_canonical_dataset_in_memory(
         "NOT_ATTENDED": not_att,
         "NOT_VERIFIED": not_verified,
         "PENDING": pending,
-        "SOURCE_UNAVAILABLE": sum(1 for r in indexed_rows if r.get("status") == "SOURCE_UNAVAILABLE"),
-        "AUTH_REQUIRED": sum(1 for r in indexed_rows if r.get("status") == "AUTH_REQUIRED"),
-        "USERNAME_NOT_FOUND": sum(1 for r in indexed_rows if r.get("status") == "USERNAME_NOT_FOUND"),
-        "FETCH_FAILED": sum(1 for r in indexed_rows if r.get("status") in ("FETCH_ERROR", "FETCH_FAILED")),
-        "CONFLICT": sum(1 for r in indexed_rows if r.get("status") == "CONFLICT"),
-        "DATA_MISMATCH": sum(1 for r in indexed_rows if r.get("status") == "DATA_MISMATCH")
+        "SOURCE_UNAVAILABLE": sum(1 for r in scope_rows if r.get("status") == "SOURCE_UNAVAILABLE"),
+        "AUTH_REQUIRED": sum(1 for r in scope_rows if r.get("status") == "AUTH_REQUIRED"),
+        "USERNAME_NOT_FOUND": sum(1 for r in scope_rows if r.get("status") == "USERNAME_NOT_FOUND"),
+        "FETCH_FAILED": sum(1 for r in scope_rows if r.get("status") in ("FETCH_ERROR", "FETCH_FAILED")),
+        "CONFLICT": sum(1 for r in scope_rows if r.get("status") == "CONFLICT"),
+        "DATA_MISMATCH": sum(1 for r in scope_rows if r.get("status") == "DATA_MISMATCH")
     }
 
     return {
@@ -635,7 +636,7 @@ def _build_canonical_contest_dataset_internal(
             "data_source": "LeetCode GraphQL (userContestRankingHistory)",
             "verification_status": "VERIFIED" if is_participant or canon_status == "NOT_ATTENDED" else "UNVERIFIED",
             "error_reason": error_reason,
-            "last_synced_at": p_res.last_fetched_at.isoformat() if (p_res and p_res.last_fetched_at) else None
+            "last_synced_at": ensure_utc(p_res.last_fetched_at).isoformat() if (p_res and p_res.last_fetched_at) else None
         }
         canonical_rows.append(row_item)
 

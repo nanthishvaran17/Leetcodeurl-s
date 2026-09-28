@@ -212,7 +212,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     ws["A1"] = "NANDHA ENGINEERING COLLEGE, ERODE – 638 052"
     ws["A1"].font = FONT_TITLE
     ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[1].height = 42
+    ws.row_dimensions[1].height = 28
 
     # Row 2: Subtitle
     ws.merge_cells(f"A2:{last_col}2")
@@ -223,7 +223,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     ws["A2"] = "(AUTONOMOUS) • ESTD 2001 | Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai"
     ws["A2"].font = FONT_SUBTITLE
     ws["A2"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[2].height = 24
+    ws.row_dimensions[2].height = 18
 
     # Row 3: Department & Year Scope Context
     ws.merge_cells(f"A3:{last_col}3")
@@ -234,7 +234,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     ws["A3"] = f"DEPARTMENT OF {dept} • COHORT: {year}".upper()
     ws["A3"].font = FONT_DEPT
     ws["A3"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[3].height = 22
+    ws.row_dimensions[3].height = 18
 
     # Row 4: Sheet / Report Title
     ws.merge_cells(f"A4:{last_col}4")
@@ -244,7 +244,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     ws["A4"] = report_title.upper()
     ws["A4"].font = FONT_RPT
     ws["A4"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[4].height = 24
+    ws.row_dimensions[4].height = 20
 
     # Row 5: Metadata Block (Session Date, Timestamp, Scope Roster)
     now_str = datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
@@ -257,7 +257,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     ws["A5"] = meta_str
     ws["A5"].font = FONT_META
     ws["A5"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[5].height = 24
+    ws.row_dimensions[5].height = 20
 
     # Add College Emblem Logo (Placed cleanly on top-left B1 to avoid hugging edge)
     logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nandha_emblem.png")
@@ -265,8 +265,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
             img_left = OpenPyxlImage(logo_path)
-            img_left.height = 60
-            img_left.width = 85
+            img_left.height = 42
+            img_left.width = 60
             ws.add_image(img_left, "B1")
         except Exception:
             pass
@@ -277,18 +277,15 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
             img_right = OpenPyxlImage(logo_25_path)
-            img_right.height = 60
-            img_right.width = 60
+            img_right.height = 42
+            img_right.width = 42
             ws.add_image(img_right, f"{last_col}1")
         except Exception:
             pass
 
-    # Row 6: Empty spacing row
-    ws.row_dimensions[6].height = 10
-
-    # Row 7: Table Headers
-    r_hdr = 7
-    ws.row_dimensions[r_hdr].height = 28
+    # Row 6: Table Headers (No empty spacing row)
+    r_hdr = 6
+    ws.row_dimensions[r_hdr].height = 24
     for col_idx, h_text in enumerate(clean_headers, 1):
         cell = ws.cell(row=r_hdr, column=col_idx, value=h_text)
         cell.font = FONT_HDR
@@ -326,8 +323,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         "solved delta", "trend", "delta"
     }
 
-    # Data Rows (Row 8 onwards)
-    start_row = 8
+    # Data Rows (Row 7 onwards)
+    start_row = 7
     for r_idx, r in enumerate(rows, start_row):
         row_num = r_idx - start_row + 1
         is_alt = (row_num % 2 == 0)

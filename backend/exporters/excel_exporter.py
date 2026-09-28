@@ -107,7 +107,7 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
     ws["A1"] = "NANDHA ENGINEERING COLLEGE, ERODE – 638 052"
     ws["A1"].font = FONT_MAIN_TITLE
     ws["A1"].alignment = ALIGN_CENTER
-    ws.row_dimensions[1].height = 42
+    ws.row_dimensions[1].height = 28
 
     # Row 2: Subtitle (A2:last_col 2)
     ws.merge_cells(f"A2:{last_col}2")
@@ -118,7 +118,7 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
     ws["A2"] = "(AUTONOMOUS) • ESTD 2001 | Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai"
     ws["A2"].font = FONT_SUBTITLE
     ws["A2"].alignment = ALIGN_CENTER
-    ws.row_dimensions[2].height = 24
+    ws.row_dimensions[2].height = 18
 
     # Row 3: Department Context (A3:last_col 3)
     ws.merge_cells(f"A3:{last_col}3")
@@ -129,7 +129,7 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
     ws["A3"] = dept_text.upper()
     ws["A3"].font = Font(name=FONT_TNR, size=11, bold=True, color="1B365D")
     ws["A3"].alignment = ALIGN_CENTER
-    ws.row_dimensions[3].height = 22
+    ws.row_dimensions[3].height = 18
 
     # Row 4: Report Title
     ws.merge_cells(f"A4:{last_col}4")
@@ -139,7 +139,7 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
     ws["A4"] = report_title.upper()
     ws["A4"].font = Font(name=FONT_TNR, size=13, bold=True, color="2E5B88")
     ws["A4"].alignment = ALIGN_CENTER
-    ws.row_dimensions[4].height = 24
+    ws.row_dimensions[4].height = 20
 
     # College Emblem Image (Placed cleanly in B1 to avoid hugging edge)
     logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nandha_emblem.png")
@@ -147,8 +147,8 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
             img = OpenPyxlImage(logo_path)
-            img.height = 60
-            img.width = 85
+            img.height = 42
+            img.width = 60
             ws.add_image(img, "B1")
         except Exception:
             pass
@@ -159,8 +159,8 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
             img_25 = OpenPyxlImage(logo_25_path)
-            img_25.height = 60
-            img_25.width = 60
+            img_25.height = 42
+            img_25.width = 42
             ws.add_image(img_25, f"{last_col}1")
         except Exception:
             pass
@@ -179,7 +179,7 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
         ws["A5"] = meta_str
         ws["A5"].font = FONT_META
         ws["A5"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-        ws.row_dimensions[5].height = 26
+        ws.row_dimensions[5].height = 20
 
 def normalize_row_data(r: dict) -> dict:
     """Ensures deterministic binary Q1-Q4 (0 or 1) and exact solved calculation."""
