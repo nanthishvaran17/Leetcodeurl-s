@@ -60,7 +60,7 @@ def get_public_stats(db: Session = Depends(get_db)):
         stats = db.query(
             func.count(Student.id).label("total"),
             func.count(case((Student.is_active == True, 1))).label("active"),
-            func.count(case(((Student.username != None) & (Student.username != ''), 1))).label("with_handle")
+            func.count(case((Student.username.isnot(None) & (Student.username != ''), 1))).label("with_handle")
         ).first()
 
         dept_count = db.query(func.count(Department.id)).scalar() or 0
