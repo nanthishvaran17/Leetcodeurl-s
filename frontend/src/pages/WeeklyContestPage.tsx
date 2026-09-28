@@ -887,6 +887,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         summaryApiTime = performance.now() - t0;
         if (reqId === latestReqIdRef.current && selectedSessionIdRef.current === requestedSessionId) {
           setFastSummary(sData);
+          if (sData?.departmentStats) {
+            setDepartmentStats(sData.departmentStats);
+          }
           if (sData?.status) {
             setCurrentSession((prev: any) => prev ? { ...prev, status: sData.status } : { sessionId: requestedSessionId, status: sData.status });
           }
@@ -3091,9 +3094,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 let total = 0;
                 let attended = 0;
 
-                // 1. Check API departmentStats dictionary
-                if (departmentStats && typeof departmentStats === 'object') {
-                  for (const [key, val] of Object.entries(departmentStats)) {
+                // 1. Check API departmentStats dictionary (or fastSummary)
+                const activeDeptStats = departmentStats || fastSummary?.departmentStats;
+                if (activeDeptStats && typeof activeDeptStats === 'object') {
+                  for (const [key, val] of Object.entries(activeDeptStats)) {
                     if (normalizeDepartment(key) === deptNorm || key === dept.code || key === dept.name) {
                       const dVal: any = val;
                       total = Number(dVal?.total || dVal?.totalStudents || 0);

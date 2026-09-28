@@ -294,6 +294,32 @@ def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user:
     missing_username_count = len([r for r in results if r.participation_status in ("UNKNOWN", "USERNAME_NOT_FOUND", "DATA_ERROR", "SOURCE_ERROR")])
     public_count = len([r for r in results if r.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")])
 
+    dept_stats = {
+        "CSE(CS)": {"name": "Computer Science and Engineering (Cyber Security)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "errors": 0},
+        "CSE(IOT)": {"name": "Computer Science and Engineering (Internet of Things)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "errors": 0},
+    }
+    for r in results:
+        reg = (getattr(r, "reg_no", "") or "").upper()
+        d = (getattr(r, "dept", "") or "").upper()
+        if "CC" in reg or "CS" in d or "CYBER" in d:
+            d_key = "CSE(CS)"
+        elif "CI" in reg or "IOT" in d:
+            d_key = "CSE(IOT)"
+        else:
+            d_key = "CSE(CS)"
+        
+        st = (getattr(r, "participation_status", "") or "").upper()
+        if d_key in dept_stats:
+            dept_stats[d_key]["total"] += 1
+            if st in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+                dept_stats[d_key]["public"] += 1
+            elif st in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+                dept_stats[d_key]["virtual"] += 1
+            elif st in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT"):
+                dept_stats[d_key]["not_attended"] += 1
+            else:
+                dept_stats[d_key]["errors"] += 1
+
     summary_data = {
         "sessionId": sess_id,
         "contestNumber": contest_num,
@@ -315,6 +341,7 @@ def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user:
         "ratingDecliners": decliners,
         "ratingStable": stable,
         "solvedDistribution": solved_dist,
+        "departmentStats": dept_stats,
         "verificationStatus": "FINALIZED" if session.status == "FINALIZED" else ("FULLY_VERIFIED" if participant_count > 0 else "PENDING_VERIFICATION"),
         "lastUpdated": datetime.datetime.now().isoformat()
     }
