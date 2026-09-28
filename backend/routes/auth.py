@@ -24,7 +24,7 @@ from backend.schemas import UserLogin, SendOtpRequest, VerifyOtpRequest, VerifyD
 from backend.services.otp_service import create_otp_transaction, verify_otp_transaction
 from backend.logger import logger
 
-router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token", auto_error=False)
 

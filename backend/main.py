@@ -862,8 +862,9 @@ async def add_security_headers_and_performance_middleware(request, call_next):
 # RULE: Routers whose own prefix already starts with /api are mounted ONCE (no extra prefix).
 #       Routers with short/no prefix get BOTH a /api-prefixed and root mount for compat.
 
-# auth: prefix="/api/auth" (self-prefixed) — mount once
-app.include_router(auth.router)
+# auth: prefix="/auth" — mount for both /api/auth and /auth compatibility
+app.include_router(auth.router, prefix="/api")
+app.include_router(auth.router, include_in_schema=False)
 # notifications: prefix="/api/notifications" (self-prefixed) — mount once
 app.include_router(notifications.router)
 # messaging: prefix="/api/messaging"

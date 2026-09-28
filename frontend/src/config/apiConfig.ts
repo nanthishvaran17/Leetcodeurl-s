@@ -37,11 +37,17 @@ export const getApiBaseUrl = (): string => {
     return `${base}/api`;
   }
 
-  // Web Browser dev environment (e.g. running on localhost:3000 or localhost:5173)
+  // Web Browser dev environment (localhost, 127.0.0.1, or local LAN IP like 192.168.x.x / 10.x.x.x)
   if (
     typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
-    (window.location.port === '3000' || window.location.port === '5173')
+    (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.startsWith('192.168.') ||
+      window.location.hostname.startsWith('10.') ||
+      window.location.hostname.endsWith('.local')
+    ) &&
+    (window.location.port === '3000' || window.location.port === '5173' || window.location.port === '8000')
   ) {
     return '/api';
   }
@@ -63,6 +69,9 @@ export const getApiUrl = (path: string): string => {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   if (currentBase.endsWith('/api') && cleanPath.startsWith('/api/')) {
     return `${currentBase.replace(/\/api$/, '')}${cleanPath}`;
+  }
+  if (!currentBase.endsWith('/api') && !cleanPath.startsWith('/api/')) {
+    return `${currentBase}/api${cleanPath}`;
   }
   return `${currentBase}${cleanPath}`;
 };
