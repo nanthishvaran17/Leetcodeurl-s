@@ -1404,7 +1404,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? fastSummary?.participantCount ?? calcAttended;
     const virtualRows = sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? fastSummary?.virtualParticipants ?? calcVirtual;
     const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? fastSummary?.notParticipated ?? Math.max(0, totalRowsVal - attendedRows - virtualRows);
-    const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.errors ?? sessionMetrics?.failedVerification ?? calcDataError;
+    const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.errors ?? sessionMetrics?.failedVerification ?? fastSummary?.dataErrors ?? fastSummary?.missingUsername ?? fastSummary?.errors ?? calcDataError;
 
     const isVirtualAvailable = sessionMetrics?.virtualDataStatus === 'AVAILABLE' || virtualRows > 0;
 

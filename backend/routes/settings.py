@@ -1137,7 +1137,7 @@ def get_data_lineage_and_parity(db: Session = Depends(get_db)):
     db.query(LeetCodeProfileStats).count()
     
     latest_sess = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
-    sess_id = latest_sess.id if latest_sess else 1
+    sess_id: int = int(getattr(latest_sess, "id", 1) or 1) if latest_sess else 1
     
     try:
         norm_data = get_normalized_contest_data(session_id=sess_id, db=db)
@@ -1240,7 +1240,8 @@ def get_forensic_audit_pdf_file(
         raise HTTPException(status_code=404, detail=f"No student record found matching '{clean_search}'.")
 
     try:
-        pdf_bytes = generate_forensic_audit_pdf(db, student_id=int(student.id), session_id=session_id)
+        student_id_val = int(str(student.id))
+        pdf_bytes = generate_forensic_audit_pdf(db, student_id=student_id_val, session_id=session_id)
         filename = f"NEC_Forensic_Contest_Audit_{student.reg_no}_Session_{session_id}.pdf"
         return Response(
             content=pdf_bytes,

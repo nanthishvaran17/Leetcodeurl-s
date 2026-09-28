@@ -48,10 +48,11 @@ def get_available_sundays(db: Session = Depends(get_db)):
             continue
         try:
             # Try to parse DD.MM.YYYY
-            if "." in s.session_date:
-                d_obj = datetime.strptime(s.session_date, "%d.%m.%Y").date()
+            s_date_val = str(s.session_date)
+            if "." in s_date_val:
+                d_obj = datetime.strptime(s_date_val, "%d.%m.%Y").date()
             else:
-                d_obj = datetime.strptime(s.session_date, "%Y-%m-%d").date()
+                d_obj = datetime.strptime(s_date_val, "%Y-%m-%d").date()
             
             if d_obj <= today:
                 valid_sessions.append(s)
@@ -1029,10 +1030,11 @@ def _get_latest_completed_session(db: Session) -> Optional[WeeklySession]:
         if not s.session_date:
             continue
         try:
-            if "." in s.session_date:
-                d_obj = datetime.datetime.strptime(s.session_date, "%d.%m.%Y").date()
+            s_date_val = str(s.session_date)
+            if "." in s_date_val:
+                d_obj = datetime.datetime.strptime(s_date_val, "%d.%m.%Y").date()
             else:
-                d_obj = datetime.datetime.strptime(s.session_date, "%Y-%m-%d").date()
+                d_obj = datetime.datetime.strptime(s_date_val, "%Y-%m-%d").date()
             if d_obj <= today:
                 return s
         except Exception:
@@ -1046,10 +1048,11 @@ def _get_latest_completed_session(db: Session) -> Optional[WeeklySession]:
         if not s.session_date:
             continue
         try:
-            if "." in s.session_date:
-                d_obj = datetime.datetime.strptime(s.session_date, "%d.%m.%Y").date()
+            s_date_val = str(s.session_date)
+            if "." in s_date_val:
+                d_obj = datetime.datetime.strptime(s_date_val, "%d.%m.%Y").date()
             else:
-                d_obj = datetime.datetime.strptime(s.session_date, "%Y-%m-%d").date()
+                d_obj = datetime.datetime.strptime(s_date_val, "%Y-%m-%d").date()
             if d_obj <= today:
                 return s
         except Exception:
@@ -1061,10 +1064,11 @@ def _get_latest_completed_session(db: Session) -> Optional[WeeklySession]:
         if not s.session_date:
             continue
         try:
-            if "." in s.session_date:
-                d_obj = datetime.datetime.strptime(s.session_date, "%d.%m.%Y").date()
+            s_date_val = str(s.session_date)
+            if "." in s_date_val:
+                d_obj = datetime.datetime.strptime(s_date_val, "%d.%m.%Y").date()
             else:
-                d_obj = datetime.datetime.strptime(s.session_date, "%Y-%m-%d").date()
+                d_obj = datetime.datetime.strptime(s_date_val, "%Y-%m-%d").date()
             if d_obj <= today:
                 return s
         except Exception:
@@ -1132,11 +1136,12 @@ def get_contest_filename_base(
             if not ws:
                 ws = _get_latest_completed_session(db)
             if ws:
-                m_ws = re.search(r'\d+', ws.contest_name or "")
+                c_name = str(ws.contest_name or "")
+                m_ws = re.search(r'\d+', c_name)
                 if m_ws:
                     contest_num = m_ws.group(0)
-                if not session_date:
-                    session_date = ws.session_date
+                if not session_date and ws.session_date:
+                    session_date = str(ws.session_date)
 
         if contest_num:
             type_slug = f"WC{contest_num}"
@@ -1152,19 +1157,19 @@ def get_contest_filename_base(
             if not ws_by_id:
                 ws_by_id = db.query(WeeklySession).filter(WeeklySession.contest_name.ilike(f"%{c_val}%")).first()
             if ws_by_id and ws_by_id.session_date:
-                session_date = ws_by_id.session_date
+                session_date = str(ws_by_id.session_date)
         
         if not session_date:
             ws_last = _get_latest_completed_session(db)
             if ws_last and ws_last.session_date:
-                session_date = ws_last.session_date
+                session_date = str(ws_last.session_date)
 
     # --- 2. Date Segment: DDMonYYYY (e.g. 20Sep2026) ---
     MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
     date_seg = None
 
     if session_date:
-        s_date_str = str(session_date).strip()
+        s_date_str = session_date.strip()
         parts = re.split(r'[.\-/]', s_date_str)
         try:
             if len(parts) == 3:

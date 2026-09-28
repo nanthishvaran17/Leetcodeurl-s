@@ -94,7 +94,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     if not hashed_password or hashed_password == "N/A_OTP_USER":
         return False
     try:
-        clean_stored = str(hashed_password).strip()
+        clean_stored = hashed_password.strip()
         # Standard bcrypt check
         if clean_stored.startswith("$2b$") or clean_stored.startswith("$2a$") or clean_stored.startswith("$2y$"):
             pwd_bytes = plain_password.encode('utf-8')[:72]
@@ -604,7 +604,7 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
             detail="Verification code could not be sent. Please try again."
         )
 
-    update_otp_delivery_status(db, str(otp_rec.request_id), "PROVIDER_ACCEPTED", str(msg_id) if msg_id else None)
+    update_otp_delivery_status(db, str(otp_rec.request_id), "PROVIDER_ACCEPTED", msg_id if msg_id else None)
     logger.info(f"[OTP_PROVIDER_RESPONSE] requestId={otp_rec.request_id} accepted=true providerMessageId={msg_id} elapsed={elapsed_ms:.0f}ms")
 
     # =========================================================================
@@ -675,7 +675,7 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
     if not user and (clean_email in AUTHORIZED_ADMIN_EMAILS or clean_email == auth_admin):
         user = db.query(User).filter(User.role.ilike("admin"), User.is_active == True).first()
         if user:
-            setattr(user, "email", str(clean_email))
+            setattr(user, "email", clean_email)
             db.commit()
         else:
             user = User(
@@ -1310,7 +1310,7 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
             if admin_session.created_at:
                 diff = _utcnow() - admin_session.created_at
                 session_duration = str(diff).split(".")[0]
-            admin_session.revoked_at = _utcnow()
+            setattr(admin_session, "revoked_at", _utcnow())
         db.commit()
 
     # Clear HttpOnly Cookie with matching attributes
@@ -1374,8 +1374,7 @@ def forgot_password_verify_dob(req: VerifyDobRequest, db: Session = Depends(get_
         raise HTTPException(status_code=400, detail="Account not found.")
         
     entity = user if user else student
-    
-    if not entity.is_active:
+    if not entity or not getattr(entity, "is_active", True):
         raise HTTPException(status_code=400, detail="Account is inactive.")
         
     # Verify DOB if we added the column and it is populated
@@ -1487,9 +1486,9 @@ def forgot_password_verify(req: ForgotPasswordVerifyRequest, db: Session = Depen
         raise HTTPException(status_code=400, detail="OTP has expired. Please request a new one.")
 
     if not verify_password(raw_otp, str(otp_rec.otp_hash)):
-        otp_rec.attempts += 1
-        if otp_rec.attempts >= otp_rec.max_attempts:
-            otp_rec.is_locked = True
+        setattr(otp_rec, "attempts", int(getattr(otp_rec, "attempts", 0) or 0) + 1)
+        if int(getattr(otp_rec, "attempts", 0) or 0) >= int(getattr(otp_rec, "max_attempts", 5) or 5):
+            setattr(otp_rec, "is_locked", True)
         db.commit()
         
         from backend.services.audit_service import log_admin_action
@@ -1500,7 +1499,7 @@ def forgot_password_verify(req: ForgotPasswordVerifyRequest, db: Session = Depen
         )
         raise HTTPException(status_code=400, detail="Invalid OTP.")
 
-    otp_rec.is_used = True
+    setattr(otp_rec, "is_used", True)
     db.commit()
     
     from backend.services.audit_service import log_admin_action
@@ -1535,7 +1534,10 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: Bac
             raise HTTPException(status_code=401, detail="Invalid token purpose.")
         if payload.get("email") != email_clean:
             raise HTTPException(status_code=401, detail="Token email mismatch.")
-        user_id = int(payload.get("sub"))
+        sub_val = payload.get("sub")
+        if sub_val is None:
+            raise HTTPException(status_code=401, detail="Invalid token subject.")
+        user_id = int(str(sub_val))
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid or expired reset token. Please start over.")
 
@@ -1550,8 +1552,8 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: Bac
         if verify_password(pwd, str(user.hashed_password or "")):
             raise HTTPException(status_code=400, detail="New password cannot be the same as the old password.")
 
-        user.hashed_password = get_password_hash(pwd)
-        user.require_password_change = False
+        setattr(user, "hashed_password", get_password_hash(pwd))
+        setattr(user, "require_password_change", False)
         
         # Invalidate all existing sessions
         db.query(AdminSession).filter(AdminSession.user_id == user.id).update(
@@ -1568,7 +1570,7 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: Bac
         
         if user.email:
             from backend.services.email_notifications import notify_password_changed
-            background_tasks.add_task(notify_password_changed, staff_email=user.email, staff_name=user.username)
+            background_tasks.add_task(notify_password_changed, staff_email=str(user.email), staff_name=str(user.username))
             
         return {"success": True, "message": "Password reset successfully."}
         
@@ -1593,7 +1595,7 @@ def admin_reset_staff_password(req: AdminResetStaffPasswordRequest, background_t
         raise HTTPException(status_code=404, detail="Staff account not found.")
 
     temp_pass = req.temp_password or f"NEC@Temp{random.randint(1000, 9999)}"
-    staff_user.hashed_password = get_password_hash(temp_pass)
+    setattr(staff_user, "hashed_password", get_password_hash(temp_pass))
     db.commit()
 
     from backend.services.audit_service import log_admin_action
@@ -1607,8 +1609,8 @@ def admin_reset_staff_password(req: AdminResetStaffPasswordRequest, background_t
         from backend.services.email_notifications import notify_password_changed
         background_tasks.add_task(
             notify_password_changed,
-            staff_email=staff_user.email,
-            staff_name=staff_user.full_name or staff_user.username,
+            staff_email=str(staff_user.email),
+            staff_name=str(staff_user.full_name or staff_user.username),
             new_password=temp_pass
         )
         try:
@@ -1616,7 +1618,7 @@ def admin_reset_staff_password(req: AdminResetStaffPasswordRequest, background_t
             NotificationService.create_direct_notification(
                 title="Security Alert: Temporary Password Issued",
                 message=f"Your staff account password was reset by an administrator. Please use 'Forgot Password' or settings to update your password securely.",
-                recipient_user_ids=[staff_user.email],
+                recipient_user_ids=[str(staff_user.email)],
                 notification_type="security",
                 priority="high",
                 action_route="/settings",
@@ -1665,7 +1667,7 @@ def admin_terminate_staff_sessions(
     ).update({"revoked_at": now}, synchronize_session=False)
 
     # Force re-authentication flag
-    staff_user.require_password_change = True
+    setattr(staff_user, "require_password_change", True)
     
     # Flush auth resolution cache
     try:
@@ -1692,7 +1694,7 @@ def admin_terminate_staff_sessions(
         NotificationService.create_direct_notification(
             title="Emergency Security Notice: Sessions Terminated",
             message="An administrator has remotely terminated all active login sessions on your account due to a security action.",
-            recipient_user_ids=[staff_user.email],
+            recipient_user_ids=[str(staff_user.email)],
             notification_type="security",
             priority="urgent",
             action_route="/login",

@@ -3,7 +3,7 @@ import io
 import datetime
 import hashlib
 import json
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -91,7 +91,7 @@ def _fmt_null(val, default="—"):
         return default
     return val
 
-def _write_college_header(ws, report_title: str, dept_text: str, cols: int, metadata_block: Dict[str, str] = None):
+def _write_college_header(ws, report_title: str, dept_text: str, cols: int, metadata_block: Optional[Dict[str, str]] = None):
     last_col = get_column_letter(max(1, cols))
     ws.sheet_view.showGridLines = True
     ws.page_setup.orientation = ws.ORIENTATION_LANDSCAPE
@@ -255,7 +255,8 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
     Department Performance Summary, Batch-wise Summary, and Full Student Roster.
     """
     wb = openpyxl.Workbook()
-    wb.remove(wb.active)
+    if wb.active is not None:
+        wb.remove(wb.active)
 
     # SHEET 1: EXECUTIVE SUMMARY
     ws_exec = wb.create_sheet(title="Executive Summary")
@@ -470,8 +471,10 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
     # Column Auto-Widths & Min-Widths
     for sheet in wb.worksheets:
         for col in sheet.columns:
-            col_letter = get_column_letter(col[0].column)
-            col_idx = col[0].column
+            if not col or col[0].column is None:
+                continue
+            col_idx = int(col[0].column)
+            col_letter = get_column_letter(col_idx)
             hdr_val = ""
             for r_chk in range(12, 0, -1):
                 cell_v = str(sheet.cell(row=r_chk, column=col_idx).value or "").strip().upper()
@@ -481,7 +484,7 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
 
             max_len = len(hdr_val)
             for cell in col:
-                if cell.row >= 7:
+                if cell.row is not None and cell.row >= 7:
                     val_s = str(cell.value or "")
                     if len(val_s) > max_len and len(val_s) < 80:
                         max_len = len(val_s)
@@ -509,7 +512,8 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         return export_weekly_performance_excel(dataset)
 
     wb = openpyxl.Workbook()
-    wb.remove(wb.active)  # Remove default sheet
+    if wb.active is not None:
+        wb.remove(wb.active)  # Remove default sheet
 
     raw_rows = dataset.get("rows") or dataset.get("all_rows") or []
     rows = [normalize_row_data(r) for r in raw_rows]
@@ -1021,8 +1025,10 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     for ws_item in wb.worksheets:
         s_title = ws_item.title
         for col in ws_item.columns:
-            col_letter = get_column_letter(col[0].column)
-            col_idx = col[0].column
+            if not col or col[0].column is None:
+                continue
+            col_idx = int(col[0].column)
+            col_letter = get_column_letter(col_idx)
             
             # Lookup column header title from row 7 or row 11
             hdr_val = ""
@@ -1034,7 +1040,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
 
             max_len = len(hdr_val)
             for cell in col:
-                if cell.row >= 7:
+                if cell.row is not None and cell.row >= 7:
                     val_s = str(cell.value or "")
                     if len(val_s) > max_len and len(val_s) < 80:
                         max_len = len(val_s)
