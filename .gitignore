@@ -122,6 +122,8 @@ test_*.py
 1234.pdf
 all_codes.txt
 *.apk
+!frontend/public/nandha-leetcode-tracker-latest.apk
+!backend/static/nandha-leetcode-tracker-latest.apk
 *.xlsx
 *.tsv
 *.pdf
