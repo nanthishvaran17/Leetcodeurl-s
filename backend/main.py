@@ -1162,23 +1162,35 @@ def root_landing_page(request: Request, format: Optional[str] = None):
     
     @lru_cache(maxsize=8)
     def _load_base64_logo(filename: str) -> str:
-        paths = [
-            os.path.join(base_dir, "..", "frontend", "public", filename),
-            os.path.join(base_dir, "static", filename),
-            os.path.join(base_dir, "..", filename)
+        base_name = os.path.splitext(filename)[0]
+        candidates = [
+            filename,
+            f"{base_name}.png",
+            f"{base_name}.webp",
+            "nec_25_logo.png",
+            "nec_25_years_logo.png",
+            "nec_25_logo.webp",
+            "nec_25_years_logo.webp"
         ]
-        for p in paths:
-            if os.path.exists(p):
-                try:
-                    with open(p, "rb") as f:
-                        mime = "image/webp" if filename.endswith(".webp") else "image/png"
-                        return f"data:{mime};base64," + base64.b64encode(f.read()).decode("utf-8")
-                except Exception:
-                    pass
-        return f"/static/assets/{filename}"
+        dirs = [
+            os.path.join(base_dir, "static"),
+            os.path.join(base_dir, "..", "frontend", "public"),
+            os.path.join(base_dir, ".."),
+            base_dir
+        ]
+        for name in candidates:
+            for d in dirs:
+                p = os.path.join(d, name)
+                if os.path.exists(p):
+                    try:
+                        with open(p, "rb") as f:
+                            mime = "image/webp" if name.endswith(".webp") else "image/png"
+                            return f"data:{mime};base64," + base64.b64encode(f.read()).decode("utf-8")
+                    except Exception:
+                        pass
+        return "/static/assets/nec_25_logo.png"
 
     nec_25_logo_uri = _load_base64_logo("nec_25_logo.webp")
-    nandha_emblem_uri = _load_base64_logo("nandha_emblem.webp")
 
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1750,8 +1762,7 @@ def root_landing_page(request: Request, format: Optional[str] = None):
         <header>
             <div class="brand-box">
                 <div class="logo-wrapper">
-                    <img src="{nec_25_logo_uri}" alt="Nandha 25 Years Jubilee Logo" class="header-logo logo-25" />
-                    <img src="{nandha_emblem_uri}" alt="Nandha Emblem" class="header-logo logo-emblem" />
+                    <img src="{nec_25_logo_uri}" alt="Nandha 25 Years Silver Jubilee Logo" class="header-logo logo-25" />
                 </div>
                 <div class="brand-text">
                     <h2>NANDHA ENGINEERING COLLEGE</h2>
