@@ -116,12 +116,14 @@ class Settings(BaseSettings):
         is_prod = env_lower == "production"
 
         if is_prod:
-            # 1. Database URL Rule (PostgreSQL mandatory)
+            # 1. Database URL Rule (PostgreSQL mandatory unless explicitly bypassed for single-instance preview)
             db_url = (self.DATABASE_URL or "").strip().lower()
-            if not db_url or "sqlite" in db_url:
-                raise RuntimeError("FATAL: Production deployment requires a valid PostgreSQL DATABASE_URL (Supabase/Render). SQLite is not permitted in production.")
-            if not (db_url.startswith("postgresql://") or db_url.startswith("postgres://")):
-                raise RuntimeError("FATAL: Production DATABASE_URL must be a valid PostgreSQL connection string.")
+            allow_sqlite_prod = os.environ.get("ALLOW_SQLITE_PROD", "false").lower() in ("true", "1")
+            if not allow_sqlite_prod:
+                if not db_url or "sqlite" in db_url:
+                    raise RuntimeError("FATAL: Production deployment requires a valid PostgreSQL DATABASE_URL (Supabase/Render/Neon). SQLite is not permitted in production unless ALLOW_SQLITE_PROD=true is set.")
+                if not (db_url.startswith("postgresql://") or db_url.startswith("postgres://")):
+                    raise RuntimeError("FATAL: Production DATABASE_URL must be a valid PostgreSQL connection string (postgresql://...).")
 
             # 2. Secret Validation & Auto-Hardening
             if not self.SECRET_KEY or len(self.SECRET_KEY) < 32 or self.SECRET_KEY in WEAK_SECRETS:

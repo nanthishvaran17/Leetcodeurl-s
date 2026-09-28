@@ -21,9 +21,10 @@ raw_db_url = os.environ.get("DATABASE_URL")
 db_url = raw_db_url.strip() if raw_db_url and raw_db_url.strip() else (settings.DATABASE_URL or "sqlite:///./data/leetcode_tracker.db")
 
 env_is_prod = (getattr(settings, "ENVIRONMENT", "") or os.environ.get("ENVIRONMENT", "")).strip().lower() == "production"
+allow_sqlite_prod = os.environ.get("ALLOW_SQLITE_PROD", "false").lower() in ("true", "1")
 
-if env_is_prod and ("sqlite" in db_url.lower() or not (db_url.startswith("postgresql://") or db_url.startswith("postgres://"))):
-    raise RuntimeError("FATAL: Production environment requires PostgreSQL database. SQLite is forbidden in production.")
+if env_is_prod and not allow_sqlite_prod and ("sqlite" in db_url.lower() or not (db_url.startswith("postgresql://") or db_url.startswith("postgres://"))):
+    raise RuntimeError("FATAL: Production environment requires PostgreSQL database. SQLite is forbidden in production unless ALLOW_SQLITE_PROD=true is set.")
 
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
