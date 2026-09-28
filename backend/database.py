@@ -28,7 +28,9 @@ if env_is_prod and not allow_sqlite_prod and ("sqlite" in db_url.lower() or not 
     _log.warning("[DB_FALLBACK] Production mode without PostgreSQL DATABASE_URL detected. Using SQLite for runtime resilience.")
 
 if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
+    db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+"):
+    db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 elif is_vercel:
     db_url = "sqlite:////tmp/leetcode_tracker.db"
 elif db_url.startswith("sqlite:///./"):
