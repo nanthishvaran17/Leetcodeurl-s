@@ -1,4 +1,5 @@
 import os
+import base64
 import json
 import asyncio
 import secrets
@@ -1156,7 +1157,28 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             "version": "2.2.0"
         })
     
-    html_content = """<!DOCTYPE html>
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    def _load_base64_logo(filename: str) -> str:
+        paths = [
+            os.path.join(base_dir, "..", "frontend", "public", filename),
+            os.path.join(base_dir, "static", filename),
+            os.path.join(base_dir, "..", filename)
+        ]
+        for p in paths:
+            if os.path.exists(p):
+                try:
+                    with open(p, "rb") as f:
+                        mime = "image/webp" if filename.endswith(".webp") else "image/png"
+                        return f"data:{mime};base64," + base64.b64encode(f.read()).decode("utf-8")
+                except Exception:
+                    pass
+        return f"/static/assets/{filename}"
+
+    nec_25_logo_uri = _load_base64_logo("nec_25_logo.webp")
+    nandha_emblem_uri = _load_base64_logo("nandha_emblem.webp")
+
+    html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1168,11 +1190,8 @@ def root_landing_page(request: Request, format: Optional[str] = None):
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
     <style>
-        :root {
+        :root {{
             --bg-dark: #060913;
             --bg-card: rgba(15, 23, 42, 0.75);
             --bg-card-hover: rgba(30, 41, 59, 0.85);
@@ -1188,25 +1207,25 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
-        }
+        }}
 
-        * {
+        * {{
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
+        }}
 
-        body {
+        body {{
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
             position: relative;
-        }
+        }}
 
         /* Ambient Glow & Canvas */
-        #bg-canvas {
+        #bg-canvas {{
             position: fixed;
             top: 0;
             left: 0;
@@ -1214,9 +1233,9 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             height: 100%;
             z-index: 0;
             pointer-events: none;
-        }
+        }}
 
-        .ambient-blob {
+        .ambient-blob {{
             position: fixed;
             border-radius: 50%;
             filter: blur(140px);
@@ -1224,88 +1243,93 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             z-index: 0;
             pointer-events: none;
             animation: pulse-blob 8s ease-in-out infinite alternate;
-        }
+        }}
 
-        .blob-1 {
+        .blob-1 {{
             width: 500px;
             height: 500px;
             top: -100px;
             left: -100px;
             background: radial-gradient(circle, #38bdf8, #6366f1);
-        }
+        }}
 
-        .blob-2 {
+        .blob-2 {{
             width: 600px;
             height: 600px;
             bottom: -150px;
             right: -150px;
             background: radial-gradient(circle, #a855f7, #10b981);
             animation-delay: -4s;
-        }
+        }}
 
-        @keyframes pulse-blob {
-            0% { transform: scale(1) translate(0, 0); }
-            100% { transform: scale(1.15) translate(30px, 30px); }
-        }
+        @keyframes pulse-blob {{
+            0% {{ transform: scale(1) translate(0, 0); }}
+            100% {{ transform: scale(1.15) translate(30px, 30px); }}
+        }}
 
-        .wrapper {
+        .wrapper {{
             position: relative;
             z-index: 1;
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem 1.5rem 4rem;
-        }
+        }}
 
         /* Header Bar */
-        header {
+        header {{
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 1.25rem 2rem;
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(15, 23, 42, 0.65);
             backdrop-filter: blur(16px);
             border: 1px solid var(--border-subtle);
             border-radius: 24px;
             margin-bottom: 3rem;
             box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
-        }
+        }}
 
-        .brand-box {
+        .brand-box {{
             display: flex;
             align-items: center;
-            gap: 14px;
-        }
+            gap: 16px;
+        }}
 
-        .brand-icon {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(135deg, #0284c7 0%, #6366f1 100%);
-            border-radius: 12px;
+        .logo-wrapper {{
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            color: #fff;
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
-        }
+            gap: 12px;
+        }}
 
-        .brand-text h2 {
+        .header-logo {{
+            height: 48px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 12px rgba(56, 189, 248, 0.35));
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }}
+
+        .header-logo:hover {{
+            transform: scale(1.06);
+        }}
+
+        .brand-text h2 {{
             font-family: 'Outfit', sans-serif;
-            font-size: 1.15rem;
+            font-size: 1.18rem;
             font-weight: 800;
             letter-spacing: -0.01em;
             background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-        }
+        }}
 
-        .brand-text p {
+        .brand-text p {{
             font-size: 0.75rem;
             color: var(--text-secondary);
             font-weight: 500;
-        }
+        }}
 
-        .status-badge {
+        .status-badge {{
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -1318,30 +1342,30 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             font-weight: 700;
             letter-spacing: 0.02em;
             box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
-        }
+        }}
 
-        .pulse-dot {
+        .pulse-dot {{
             width: 9px;
             height: 9px;
             background: var(--emerald-glow);
             border-radius: 50%;
             box-shadow: 0 0 10px var(--emerald-glow);
             animation: pulse-ring 1.8s infinite;
-        }
+        }}
 
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
+        @keyframes pulse-ring {{
+            0% {{ transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }}
+            70% {{ transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }}
+            100% {{ transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }}
+        }}
 
         /* Hero Section */
-        .hero {
+        .hero {{
             text-align: center;
             margin-bottom: 3.5rem;
-        }
+        }}
 
-        .hero-tag {
+        .hero-tag {{
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -1355,9 +1379,9 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             text-transform: uppercase;
             letter-spacing: 0.08em;
             margin-bottom: 1.5rem;
-        }
+        }}
 
-        .hero h1 {
+        .hero h1 {{
             font-family: 'Outfit', sans-serif;
             font-size: 3.2rem;
             font-weight: 900;
@@ -1367,26 +1391,26 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             background: linear-gradient(135deg, #ffffff 20%, #94a3b8 60%, #38bdf8 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-        }
+        }}
 
-        .hero p {
+        .hero p {{
             max-width: 720px;
             margin: 0 auto 2rem;
             font-size: 1.1rem;
             color: var(--text-secondary);
             line-height: 1.65;
-        }
+        }}
 
         /* Hero Action Buttons */
-        .cta-group {
+        .cta-group {{
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 16px;
             flex-wrap: wrap;
-        }
+        }}
 
-        .btn {
+        .btn {{
             display: inline-flex;
             align-items: center;
             gap: 10px;
@@ -1398,52 +1422,52 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             border: none;
-        }
+        }}
 
-        .btn-primary {
+        .btn-primary {{
             background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
             color: #fff;
             box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.5), 0 0 20px rgba(56, 189, 248, 0.3);
-        }
+        }}
 
-        .btn-primary:hover {
+        .btn-primary:hover {{
             transform: translateY(-3px) scale(1.02);
             box-shadow: 0 15px 35px -5px rgba(37, 99, 235, 0.7), 0 0 30px rgba(56, 189, 248, 0.5);
-        }
+        }}
 
-        .btn-secondary {
+        .btn-secondary {{
             background: rgba(255, 255, 255, 0.05);
             color: var(--text-primary);
             border: 1px solid var(--border-glow);
             backdrop-filter: blur(10px);
-        }
+        }}
 
-        .btn-secondary:hover {
+        .btn-secondary:hover {{
             background: rgba(255, 255, 255, 0.1);
             transform: translateY(-3px);
             border-color: rgba(56, 189, 248, 0.5);
-        }
+        }}
 
-        .btn-accent {
+        .btn-accent {{
             background: rgba(16, 185, 129, 0.12);
             color: var(--emerald-glow);
             border: 1px solid rgba(16, 185, 129, 0.3);
-        }
+        }}
 
-        .btn-accent:hover {
+        .btn-accent:hover {{
             background: rgba(16, 185, 129, 0.22);
             transform: translateY(-3px);
-        }
+        }}
 
         /* Live Metrics Cards */
-        .metrics-grid {
+        .metrics-grid {{
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 1.25rem;
             margin-bottom: 3.5rem;
-        }
+        }}
 
-        .metric-card {
+        .metric-card {{
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
             border-radius: 20px;
@@ -1452,9 +1476,9 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-        }
+        }}
 
-        .metric-card::before {
+        .metric-card::before {{
             content: '';
             position: absolute;
             top: 0;
@@ -1464,152 +1488,159 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             background: linear-gradient(90deg, var(--cyan-glow), var(--indigo-glow));
             opacity: 0;
             transition: opacity 0.3s ease;
-        }
+        }}
 
-        .metric-card:hover {
+        .metric-card:hover {{
             transform: translateY(-5px);
             border-color: rgba(56, 189, 248, 0.3);
             background: var(--bg-card-hover);
             box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.5);
-        }
+        }}
 
-        .metric-card:hover::before {
+        .metric-card:hover::before {{
             opacity: 1;
-        }
+        }}
 
-        .metric-icon {
+        .metric-icon {{
             font-size: 1.5rem;
             margin-bottom: 0.85rem;
-            display: inline-block;
-        }
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+        }}
 
-        .metric-label {
+        .metric-label {{
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 0.06em;
             color: var(--text-muted);
             font-weight: 700;
             margin-bottom: 0.35rem;
-        }
+        }}
 
-        .metric-value {
+        .metric-value {{
             font-family: 'Outfit', sans-serif;
             font-size: 1.5rem;
             font-weight: 800;
             color: var(--text-primary);
-        }
+        }}
 
-        .metric-subtext {
+        .metric-subtext {{
             font-size: 0.78rem;
             color: var(--emerald-glow);
             margin-top: 0.35rem;
             font-weight: 600;
-        }
+        }}
 
         /* System Capabilities Section */
-        .section-title {
+        .section-title {{
             text-align: center;
             margin-bottom: 2.5rem;
-        }
+        }}
 
-        .section-title h2 {
+        .section-title h2 {{
             font-family: 'Outfit', sans-serif;
             font-size: 2rem;
             font-weight: 800;
             letter-spacing: -0.02em;
             margin-bottom: 0.5rem;
-        }
+        }}
 
-        .section-title p {
+        .section-title p {{
             color: var(--text-secondary);
             font-size: 0.95rem;
-        }
+        }}
 
-        .features-grid {
+        .features-grid {{
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
             gap: 1.5rem;
             margin-bottom: 4rem;
-        }
+        }}
 
-        .feature-box {
+        .feature-box {{
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
             border-radius: 20px;
             padding: 1.85rem;
             backdrop-filter: blur(16px);
             transition: all 0.3s ease;
-        }
+        }}
 
-        .feature-box:hover {
+        .feature-box:hover {{
             transform: translateY(-5px);
             border-color: rgba(99, 102, 241, 0.4);
             box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
-        }
+        }}
 
-        .feature-icon-wrapper {
-            width: 50px;
-            height: 50px;
+        .feature-icon-wrapper {{
+            width: 52px;
+            height: 52px;
             border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.4rem;
             margin-bottom: 1.25rem;
-        }
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.3);
+        }}
 
-        .ic-1 { background: rgba(56, 189, 248, 0.12); color: var(--cyan-glow); }
-        .ic-2 { background: rgba(99, 102, 241, 0.12); color: var(--indigo-glow); }
-        .ic-3 { background: rgba(16, 185, 129, 0.12); color: var(--emerald-glow); }
-        .ic-4 { background: rgba(168, 85, 247, 0.12); color: var(--purple-glow); }
+        .ic-1 {{ background: rgba(56, 189, 248, 0.14); color: var(--cyan-glow); border: 1px solid rgba(56, 189, 248, 0.3); }}
+        .ic-2 {{ background: rgba(99, 102, 241, 0.14); color: var(--indigo-glow); border: 1px solid rgba(99, 102, 241, 0.3); }}
+        .ic-3 {{ background: rgba(16, 185, 129, 0.14); color: var(--emerald-glow); border: 1px solid rgba(16, 185, 129, 0.3); }}
+        .ic-4 {{ background: rgba(168, 85, 247, 0.14); color: var(--purple-glow); border: 1px solid rgba(168, 85, 247, 0.3); }}
 
-        .feature-box h3 {
+        .feature-box h3 {{
             font-family: 'Outfit', sans-serif;
             font-size: 1.25rem;
             font-weight: 700;
             margin-bottom: 0.6rem;
-        }
+        }}
 
-        .feature-box p {
+        .feature-box p {{
             font-size: 0.88rem;
             color: var(--text-secondary);
             line-height: 1.6;
-        }
+        }}
 
         /* Interactive Endpoint Explorer Sandbox */
-        .sandbox-card {
+        .sandbox-card {{
             background: #090d16;
             border: 1px solid var(--border-glow);
             border-radius: 24px;
             padding: 2rem;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
             margin-bottom: 4rem;
-        }
+        }}
 
-        .sandbox-header {
+        .sandbox-header {{
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 1.5rem;
             flex-wrap: wrap;
             gap: 12px;
-        }
+        }}
 
-        .sandbox-title {
+        .sandbox-title {{
             display: flex;
             align-items: center;
             gap: 10px;
             font-family: 'Outfit', sans-serif;
             font-size: 1.3rem;
             font-weight: 700;
-        }
+        }}
 
-        .sandbox-tabs {
+        .sandbox-tabs {{
             display: flex;
             gap: 8px;
-        }
+        }}
 
-        .tab-btn {
+        .tab-btn {{
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border-subtle);
             color: var(--text-secondary);
@@ -1619,15 +1650,15 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-        }
+        }}
 
-        .tab-btn.active, .tab-btn:hover {
+        .tab-btn.active, .tab-btn:hover {{
             background: rgba(56, 189, 248, 0.15);
             color: var(--cyan-glow);
             border-color: rgba(56, 189, 248, 0.4);
-        }
+        }}
 
-        .terminal-box {
+        .terminal-box {{
             background: #030712;
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
@@ -1638,57 +1669,57 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             overflow-x: auto;
             min-height: 140px;
             position: relative;
-        }
+        }}
 
-        .terminal-line {
+        .terminal-line {{
             display: flex;
             align-items: center;
             gap: 10px;
             color: #94a3b8;
             margin-bottom: 0.75rem;
-        }
+        }}
 
-        .terminal-line .method {
+        .terminal-line .method {{
             background: #10b981;
             color: #000;
             padding: 2px 8px;
             border-radius: 4px;
             font-weight: 700;
             font-size: 0.75rem;
-        }
+        }}
 
-        .terminal-line .url {
+        .terminal-line .url {{
             color: #f3f4f6;
             font-weight: 600;
-        }
+        }}
 
-        pre code {
+        pre code {{
             color: #a7f3d0;
             line-height: 1.5;
-        }
+        }}
 
         /* Footer */
-        footer {
+        footer {{
             text-align: center;
             padding-top: 2rem;
             border-top: 1px solid var(--border-subtle);
             color: var(--text-muted);
             font-size: 0.85rem;
-        }
+        }}
 
-        footer p {
+        footer p {{
             margin-bottom: 0.5rem;
-        }
+        }}
 
-        .dept-badges {
+        .dept-badges {{
             display: flex;
             justify-content: center;
             gap: 12px;
             margin-top: 1rem;
             flex-wrap: wrap;
-        }
+        }}
 
-        .dept-chip {
+        .dept-chip {{
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--border-subtle);
             padding: 4px 12px;
@@ -1696,13 +1727,13 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             font-size: 0.75rem;
             color: var(--text-secondary);
             font-weight: 600;
-        }
+        }}
 
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2.2rem; }
-            header { flex-direction: column; gap: 15px; text-align: center; }
-            .brand-box { flex-direction: column; }
-        }
+        @media (max-width: 768px) {{
+            .hero h1 {{ font-size: 2.2rem; }}
+            header {{ flex-direction: column; gap: 15px; text-align: center; }}
+            .brand-box {{ flex-direction: column; }}
+        }}
     </style>
 </head>
 <body>
@@ -1716,8 +1747,9 @@ def root_landing_page(request: Request, format: Optional[str] = None):
         <!-- Top Navigation Bar -->
         <header>
             <div class="brand-box">
-                <div class="brand-icon">
-                    <i class="fa-solid fa-code"></i>
+                <div class="logo-wrapper">
+                    <img src="{nec_25_logo_uri}" alt="Nandha 25 Years Jubilee Logo" class="header-logo logo-25" />
+                    <img src="{nandha_emblem_uri}" alt="Nandha Emblem" class="header-logo logo-emblem" />
                 </div>
                 <div class="brand-text">
                     <h2>NANDHA ENGINEERING COLLEGE</h2>
@@ -1734,7 +1766,8 @@ def root_landing_page(request: Request, format: Optional[str] = None):
         <!-- Hero Section -->
         <section class="hero">
             <div class="hero-tag">
-                <i class="fa-solid fa-bolt"></i> High-Performance Production API Engine
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                High-Performance Production API Engine
             </div>
 
             <h1>LeetCode Intelligence & Analytics Engine</h1>
@@ -1745,13 +1778,16 @@ def root_landing_page(request: Request, format: Optional[str] = None):
 
             <div class="cta-group">
                 <a href="https://leetcodeurl-s-roan.vercel.app" target="_blank" class="btn btn-primary">
-                    <i class="fa-solid fa-globe"></i> Launch Web Dashboard
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    Launch Web Dashboard
                 </a>
                 <a href="/docs" class="btn btn-secondary">
-                    <i class="fa-solid fa-book-bookmark"></i> Explore API Docs (Swagger)
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    Explore API Docs (Swagger)
                 </a>
                 <a href="/api/download/apk" class="btn btn-accent">
-                    <i class="fa-solid fa-mobile-screen"></i> Download Mobile App (APK)
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                    Download Mobile App (APK)
                 </a>
             </div>
         </section>
@@ -1760,7 +1796,7 @@ def root_landing_page(request: Request, format: Optional[str] = None):
         <section class="metrics-grid">
             <div class="metric-card">
                 <div class="metric-icon" style="color: var(--emerald-glow);">
-                    <i class="fa-solid fa-circle-check"></i>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
                 </div>
                 <div class="metric-label">System Health</div>
                 <div class="metric-value" id="health-val">Operational</div>
@@ -1769,7 +1805,7 @@ def root_landing_page(request: Request, format: Optional[str] = None):
 
             <div class="metric-card">
                 <div class="metric-icon" style="color: var(--cyan-glow);">
-                    <i class="fa-solid fa-gauge-high"></i>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"></path><path d="m4.93 4.93 2.83 2.83"></path><path d="M2 12h4"></path><path d="m4.93 19.07 2.83-2.83"></path><path d="M12 22v-4"></path><path d="m19.07 19.07-2.83-2.83"></path><path d="M22 12h-4"></path><path d="m19.07 4.93-2.83 2.83"></path><circle cx="12" cy="12" r="3"></circle></svg>
                 </div>
                 <div class="metric-label">API Latency</div>
                 <div class="metric-value" id="latency-val">-- ms</div>
@@ -1778,7 +1814,7 @@ def root_landing_page(request: Request, format: Optional[str] = None):
 
             <div class="metric-card">
                 <div class="metric-icon" style="color: var(--indigo-glow);">
-                    <i class="fa-solid fa-trophy"></i>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>
                 </div>
                 <div class="metric-label">Contest Engine</div>
                 <div class="metric-value">WC 516 - 521</div>
@@ -1787,7 +1823,7 @@ def root_landing_page(request: Request, format: Optional[str] = None):
 
             <div class="metric-card">
                 <div class="metric-icon" style="color: var(--purple-glow);">
-                    <i class="fa-solid fa-shield-halved"></i>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 </div>
                 <div class="metric-label">Security & Auth</div>
                 <div class="metric-value">TLS 1.3 / CORS</div>
@@ -1805,7 +1841,7 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             <div class="features-grid">
                 <div class="feature-box">
                     <div class="feature-icon-wrapper ic-1">
-                        <i class="fa-solid fa-square-poll-vertical"></i>
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>
                     </div>
                     <h3>Contest Truth Engine</h3>
                     <p>Scrapes and reconciles Sunday LeetCode Weekly Contests (T+0 to T+12 hours), verifying actual contest solved counts vs weekly practice growth.</p>
@@ -1813,7 +1849,7 @@ def root_landing_page(request: Request, format: Optional[str] = None):
 
                 <div class="feature-box">
                     <div class="feature-icon-wrapper ic-2">
-                        <i class="fa-solid fa-diagram-project"></i>
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                     </div>
                     <h3>GraphQL Batch Ingestion</h3>
                     <p>High-speed asynchronous fetch engine equipped with exponential backoff and rate-limit guardrails to prevent LeetCode IP bans.</p>
@@ -1821,7 +1857,7 @@ def root_landing_page(request: Request, format: Optional[str] = None):
 
                 <div class="feature-box">
                     <div class="feature-icon-wrapper ic-3">
-                        <i class="fa-solid fa-file-excel"></i>
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                     </div>
                     <h3>Automated Excel & PDF Reports</h3>
                     <p>Generates HOD-ready Excel workbooks with Easy/Medium/Hard breakdown, submission logs, and student performance certificates.</p>
@@ -1829,7 +1865,7 @@ def root_landing_page(request: Request, format: Optional[str] = None):
 
                 <div class="feature-box">
                     <div class="feature-icon-wrapper ic-4">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
                     </div>
                     <h3>24/7 Background Worker</h3>
                     <p>Independent Render background worker thread running automated sync jobs and periodic database health maintenance without blocking web APIs.</p>
@@ -1841,7 +1877,7 @@ def root_landing_page(request: Request, format: Optional[str] = None):
         <section class="sandbox-card">
             <div class="sandbox-header">
                 <div class="sandbox-title">
-                    <i class="fa-solid fa-terminal" style="color: var(--cyan-glow);"></i>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--cyan-glow);"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
                     Interactive API Explorer
                 </div>
                 <div class="sandbox-tabs">
@@ -1864,7 +1900,7 @@ def root_landing_page(request: Request, format: Optional[str] = None):
         <!-- Footer -->
         <footer>
             <p><strong>Nandha Engineering College (Autonomous)</strong> • Erode, Tamil Nadu 638052</p>
-            <p style="font-size: 0.8rem;">LeetCode Intelligence Engine API • Version 2.2.0 | Powered by FastAPI, PostgreSQL & Render Cloud</p>
+            <p style="font-size: 0.82rem; color: var(--text-secondary);">LeetCode Intelligence Engine API • Version 2.2.0 | Powered by FastAPI, PostgreSQL & Render Cloud</p>
             
             <div class="dept-badges">
                 <span class="dept-chip">Computer Science & Engineering</span>
@@ -1878,37 +1914,37 @@ def root_landing_page(request: Request, format: Optional[str] = None):
     <!-- Interactive Scripts & Canvas Particle Animation -->
     <script>
         // Live Latency Measurement & API sandbox
-        async function fetchEndpoint(path, method = 'GET', btn = null) {
-            if (btn) {
+        async function fetchEndpoint(path, method = 'GET', btn = null) {{
+            if (btn) {{
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-            }
+            }}
             document.getElementById('term-url').innerText = path;
             document.getElementById('term-method').innerText = method;
             document.getElementById('terminal-code').innerText = '// Fetching data from server...';
             
             const start = performance.now();
-            try {
+            try {{
                 const res = await fetch(path);
                 const duration = Math.round(performance.now() - start);
                 const data = await res.json();
                 
-                document.getElementById('term-status').innerText = `HTTP ${res.status} OK (${duration}ms)`;
+                document.getElementById('term-status').innerText = `HTTP ${{res.status}} OK (${{duration}}ms)`;
                 document.getElementById('terminal-code').innerText = JSON.stringify(data, null, 2);
                 
-                if (path === '/health') {
-                    document.getElementById('latency-val').innerText = `${duration} ms`;
+                if (path === '/health') {{
+                    document.getElementById('latency-val').innerText = `${{duration}} ms`;
                     document.getElementById('latency-sub').innerText = duration < 50 ? '⚡ Ultra Fast Response' : 'Normal Latency';
-                }
-            } catch (err) {
+                }}
+            }} catch (err) {{
                 document.getElementById('terminal-code').innerText = '// Error fetching endpoint: ' + err.message;
-            }
-        }
+            }}
+        }}
 
         // Initial Load Call
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', () => {{
             fetchEndpoint('/health');
-        });
+        }});
 
         // Background Canvas Particle Grid Animation
         const canvas = document.getElementById('bg-canvas');
@@ -1917,31 +1953,31 @@ def root_landing_page(request: Request, format: Optional[str] = None):
         let width = canvas.width = window.innerWidth;
         let height = canvas.height = window.innerHeight;
 
-        window.addEventListener('resize', () => {
+        window.addEventListener('resize', () => {{
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
-        });
+        }});
 
         const particles = [];
         const numParticles = Math.min(Math.floor(width / 25), 45);
 
-        for (let i = 0; i < numParticles; i++) {
-            particles.push({
+        for (let i = 0; i < numParticles; i++) {{
+            particles.push({{
                 x: Math.random() * width,
                 y: Math.random() * height,
                 vx: (Math.random() - 0.5) * 0.4,
                 vy: (Math.random() - 0.5) * 0.4,
                 radius: Math.random() * 2 + 1
-            });
-        }
+            }});
+        }}
 
-        function drawParticles() {
+        function drawParticles() {{
             ctx.clearRect(0, 0, width, height);
             
             ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
             ctx.strokeStyle = 'rgba(56, 189, 248, 0.06)';
 
-            for (let i = 0; i < particles.length; i++) {
+            for (let i = 0; i < particles.length; i++) {{
                 let p = particles[i];
                 p.x += p.vx;
                 p.y += p.vy;
@@ -1953,20 +1989,20 @@ def root_landing_page(request: Request, format: Optional[str] = None):
                 ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
                 ctx.fill();
 
-                for (let j = i + 1; j < particles.length; j++) {
+                for (let j = i + 1; j < particles.length; j++) {{
                     let p2 = particles[j];
                     let dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-                    if (dist < 140) {
+                    if (dist < 140) {{
                         ctx.beginPath();
                         ctx.moveTo(p.x, p.y);
                         ctx.lineTo(p2.x, p2.y);
                         ctx.stroke();
-                    }
-                }
-            }
+                    }}
+                }}
+            }}
 
             requestAnimationFrame(drawParticles);
-        }
+        }}
 
         drawParticles();
     </script>
