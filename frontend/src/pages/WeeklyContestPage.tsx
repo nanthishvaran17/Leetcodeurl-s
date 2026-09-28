@@ -5106,8 +5106,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       {/* STUDENT PROFILE MODAL */}
       {viewingProfileStudent && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100000] flex items-start justify-center bg-black/75 backdrop-blur-sm p-4 pt-6 sm:pt-7 overflow-y-auto animate-fade-in" onClick={() => setViewingProfileStudent(null)}>
-          <div className="bg-white dark:bg-navy-950 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 dark:border-slate-800" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto animate-fade-in" onClick={() => setViewingProfileStudent(null)}>
+          <div className="bg-white dark:bg-navy-950 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 dark:border-slate-800 my-auto" onClick={e => e.stopPropagation()}>
             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start bg-slate-50 dark:bg-navy-950">
               <div className="flex items-center space-x-4">
                 <div className="w-14 h-14 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-400 font-black text-xl border-2 border-brand-200 dark:border-brand-700">
