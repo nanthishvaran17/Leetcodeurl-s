@@ -104,7 +104,7 @@ def calculate_contest_status(contest_date: datetime.date, current_dt: datetime.d
     else:
         return "FINALIZED"
 
-from functools import lru_cache
+import time
 import urllib.request
 import json
 from backend.logger import logger
@@ -120,33 +120,56 @@ query topTwoContests {
 }
 """
 
-def fetch_leetcode_live_contest_info(target_contest_num: int = None) -> Dict[str, Any]:
-    """
-    Attempts to fetch live contest metadata directly from LeetCode GraphQL API.
-    Returns metadata dict if successful, or empty dict on failure.
-    """
+_top_contests_cache = None
+_top_contests_cached_at = 0.0
+_CACHE_TTL_SUCCESS = 600.0  # 10 minutes cache on success
+_CACHE_TTL_FAILURE = 120.0  # 2 minutes cache on network failure
+
+def _get_leetcode_top_contests() -> list:
+    global _top_contests_cache, _top_contests_cached_at
+    now = time.time()
+    if _top_contests_cache is not None:
+        ttl = _CACHE_TTL_SUCCESS if _top_contests_cache else _CACHE_TTL_FAILURE
+        if now - _top_contests_cached_at < ttl:
+            return _top_contests_cache
+
     try:
         req = urllib.request.Request(
             "https://leetcode.com/graphql",
             data=json.dumps({"query": LEETCODE_TOP_CONTESTS_QUERY}).encode('utf-8'),
             headers={
                 "Content-Type": "application/json",
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                "Accept": "*/*"
             },
             method="POST"
         )
-        with urllib.request.urlopen(req, timeout=5) as resp:
+        with urllib.request.urlopen(req, timeout=4) as resp:
             data = json.loads(resp.read().decode('utf-8'))
             contests = data.get("data", {}).get("topTwoContests", [])
-            for c in contests:
-                title = c.get("title", "")
-                if target_contest_num:
-                    if f"Weekly Contest {target_contest_num}" in title:
-                        return c
-                elif "Weekly Contest" in title:
-                    return c
+            _top_contests_cache = contests
+            _top_contests_cached_at = now
+            return _top_contests_cache
     except Exception as e:
         logger.warning(f"[CONTEST_DISCOVERY] Live LeetCode GraphQL query failed: {e}. Falling back to date arithmetic.")
+        _top_contests_cache = []
+        _top_contests_cached_at = now
+        return []
+
+def fetch_leetcode_live_contest_info(target_contest_num: int = None) -> Dict[str, Any]:
+    """
+    Attempts to fetch live contest metadata directly from LeetCode GraphQL API.
+    Uses global top-contests TTL caching (10 mins) to prevent repetitive network requests.
+    Returns metadata dict if successful, or empty dict on failure.
+    """
+    contests = _get_leetcode_top_contests()
+    for c in contests:
+        title = c.get("title", "")
+        if target_contest_num:
+            if f"Weekly Contest {target_contest_num}" in title:
+                return c
+        elif "Weekly Contest" in title:
+            return c
     return {}
 
 def discover_contest_metadata(target_date: datetime.date = None, override_contest_num: int = None) -> Dict[str, Any]:
