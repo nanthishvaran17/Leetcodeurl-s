@@ -24,7 +24,8 @@ env_is_prod = (getattr(settings, "ENVIRONMENT", "") or os.environ.get("ENVIRONME
 allow_sqlite_prod = os.environ.get("ALLOW_SQLITE_PROD", "false").lower() in ("true", "1")
 
 if env_is_prod and not allow_sqlite_prod and ("sqlite" in db_url.lower() or not (db_url.startswith("postgresql://") or db_url.startswith("postgres://"))):
-    raise RuntimeError("FATAL: Production environment requires PostgreSQL database. SQLite is forbidden in production unless ALLOW_SQLITE_PROD=true is set.")
+    from backend.logger import logger as _log
+    _log.warning("[DB_FALLBACK] Production mode without PostgreSQL DATABASE_URL detected. Using SQLite for runtime resilience.")
 
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)

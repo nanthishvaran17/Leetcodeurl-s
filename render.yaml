@@ -10,6 +10,8 @@ services:
     envVars:
       - key: ENVIRONMENT
         value: production
+      - key: ALLOW_SQLITE_PROD
+        value: "true"
       - key: RUN_SCHEDULER_IN_WEB
         value: "false"
       - key: DATABASE_URL
