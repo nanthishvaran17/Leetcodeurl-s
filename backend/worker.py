@@ -32,13 +32,14 @@ async def heartbeat_loop():
 async def run_worker():
     logger.info("[WORKER] Starting true cloud background worker...")
     
-    # Optional: run migrations before starting worker
-    try:
-        run_db_migrations()
-        run_migrations()
-        logger.info("[WORKER] Database migrations completed.")
-    except Exception as e:
-        logger.warning(f"[WORKER] DB migrations note: {e}")
+    # Optional: run migrations in worker only if explicitly requested (prevents startup lock contention with API)
+    if os.environ.get("RUN_WORKER_MIGRATIONS", "false").lower() in ("true", "1"):
+        try:
+            run_db_migrations()
+            run_migrations()
+            logger.info("[WORKER] Database migrations completed.")
+        except Exception as e:
+            logger.warning(f"[WORKER] DB migrations note: {e}")
         
     # Start the robust scheduler
     start_scheduler()

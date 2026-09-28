@@ -28,8 +28,14 @@ services:
         value: Asia/Kolkata
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: LEETCODE_SYNC_CONCURRENCY
+      - key: DB_POOL_SIZE
+        value: "3"
+      - key: DB_MAX_OVERFLOW
         value: "5"
+      - key: LEETCODE_SYNC_CONCURRENCY
+        value: "3"
+      - key: PYTHONUNBUFFERED
+        value: "1"
       - key: FIREBASE_SERVICE_ACCOUNT_BASE64
         sync: false
 
@@ -58,8 +64,12 @@ services:
         value: Asia/Kolkata
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: LEETCODE_SYNC_CONCURRENCY
+      - key: DB_POOL_SIZE
+        value: "3"
+      - key: DB_MAX_OVERFLOW
         value: "5"
+      - key: LEETCODE_SYNC_CONCURRENCY
+        value: "3"
       - key: PYTHONUNBUFFERED
         value: "1"
       - key: FIREBASE_SERVICE_ACCOUNT_BASE64
