@@ -8,7 +8,11 @@ from functools import lru_cache
 from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, Request, Response, Depends, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse, ORJSONResponse, HTMLResponse, RedirectResponse  # type: ignore
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
+try:
+    from fastapi.responses import ORJSONResponse
+except Exception:
+    ORJSONResponse = JSONResponse  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
