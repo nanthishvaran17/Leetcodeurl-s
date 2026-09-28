@@ -2512,17 +2512,18 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <AnimatePresence>
                 {showExportMenu && (
                   <motion.div
-                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                    initial={{ opacity: 0, y: -8, scale: 0.97 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute z-50 left-0 sm:left-auto sm:right-0 mt-3 w-80 sm:w-[360px] rounded-2xl bg-white/95 dark:bg-navy-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-navy-700/80 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_60px_-12px_rgba(0,0,0,0.6)] p-3 space-y-1 focus:outline-none overflow-hidden select-none"
+                    exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                    transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute z-[9999] left-0 sm:left-auto sm:right-0 mt-2 w-84 sm:w-[380px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] p-3.5 space-y-2 focus:outline-none select-none"
+                    style={{ backgroundColor: '#ffffff' }}
                   >
                     {/* SECTION 1: ACTIONS */}
-                    <div className="pb-2 mb-2 border-b border-slate-100 dark:border-navy-800">
-                      <div className="px-3 pt-1 pb-2 flex items-center space-x-2">
-                         <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                         <span className="text-[10px] font-black tracking-widest uppercase text-slate-400 dark:text-slate-500">
+                    <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                      <div className="px-3 pt-1 pb-1.5 flex items-center space-x-2">
+                         <div className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
+                         <span className="text-[11px] font-black tracking-wider uppercase text-purple-700 dark:text-purple-400">
                            Primary Actions
                          </span>
                       </div>
@@ -2530,52 +2531,52 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         <button
                           type="button"
                           onClick={() => { setShowPreviewModal(true); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between p-3 rounded-xl text-left transition-all duration-200 group hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer border border-transparent hover:border-purple-100 dark:hover:border-purple-800/50"
+                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-purple-50 dark:hover:bg-purple-950/50 cursor-pointer border border-transparent hover:border-purple-200 dark:hover:border-purple-800"
                         >
-                          <div className="flex items-center space-x-3.5 min-w-0">
-                            <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300 shadow-sm">
-                              <Eye className="w-5 h-5 stroke-[2.5]" />
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
+                              <Eye className="w-4 h-4 stroke-[2.5]" />
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
+                              <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
                                 Live Preview
                               </span>
-                              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 group-hover:text-purple-500/80 dark:group-hover:text-purple-400/80 transition-colors">
-                                Review dataset before export
+                              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                Review dataset & questions before export
                               </span>
                             </div>
                           </div>
-                          <ArrowUpRight className="w-4 h-4 text-slate-300 dark:text-navy-600 opacity-0 group-hover:opacity-100 group-hover:text-purple-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300" />
+                          <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" />
                         </button>
 
                         <button
                           type="button"
                           onClick={() => { setShowEmailModal(true); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between p-3 rounded-xl text-left transition-all duration-200 group hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer border border-transparent hover:border-indigo-100 dark:hover:border-indigo-800/50"
+                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-indigo-50 dark:hover:bg-indigo-950/50 cursor-pointer border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800"
                         >
-                          <div className="flex items-center space-x-3.5 min-w-0">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm">
-                              <Mail className="w-5 h-5 stroke-[2.5]" />
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                              <Mail className="w-4 h-4 stroke-[2.5]" />
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
+                              <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
                                 Send Email Report
                               </span>
-                              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 group-hover:text-indigo-500/80 dark:group-hover:text-indigo-400/80 transition-colors">
-                                Distribute securely to faculty
+                              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                Distribute summary report securely to faculty
                               </span>
                             </div>
                           </div>
-                          <ArrowUpRight className="w-4 h-4 text-slate-300 dark:text-navy-600 opacity-0 group-hover:opacity-100 group-hover:text-indigo-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300" />
+                          <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" />
                         </button>
                       </div>
                     </div>
 
-                    {/* SECTION 2: EXPORT */}
-                    <div className="pb-2 mb-2 border-b border-slate-100 dark:border-navy-800">
-                      <div className="px-3 pt-1 pb-2 flex items-center space-x-2">
-                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                         <span className="text-[10px] font-black tracking-widest uppercase text-slate-400 dark:text-slate-500">
+                    {/* SECTION 2: EXPORT FORMATS */}
+                    <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                      <div className="px-3 pt-1 pb-1.5 flex items-center space-x-2">
+                         <div className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                         <span className="text-[11px] font-black tracking-wider uppercase text-emerald-700 dark:text-emerald-400">
                            Export Formats
                          </span>
                       </div>
@@ -2583,22 +2584,22 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         <button
                           type="button"
                           onClick={() => { downloadReportFile('excel'); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-200 group hover:bg-emerald-50 dark:hover:bg-emerald-900/20 cursor-pointer"
+                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-emerald-50 dark:hover:bg-emerald-950/50 cursor-pointer border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800"
                         >
-                          <div className="flex items-center space-x-3.5 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
                               <FileSpreadsheet className="w-4 h-4 stroke-[2.5]" />
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
+                              <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
                                 Excel Workbook
                               </span>
-                              <span className="text-[9.5px] font-semibold text-slate-400 dark:text-slate-500 transition-colors">
-                                Raw structured data
+                              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                Raw structured data & roster matrix
                               </span>
                             </div>
                           </div>
-                          <span className="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                          <span className="text-[10px] font-black tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 group-hover:bg-emerald-600 group-hover:text-white transition-colors border border-emerald-300 dark:border-emerald-700 shrink-0">
                             XLSX
                           </span>
                         </button>
@@ -2606,22 +2607,22 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         <button
                           type="button"
                           onClick={() => { downloadReportFile('pdf'); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-200 group hover:bg-rose-50 dark:hover:bg-rose-900/20 cursor-pointer"
+                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer border border-transparent hover:border-rose-200 dark:hover:border-rose-800"
                         >
-                          <div className="flex items-center space-x-3.5 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-rose-600 group-hover:text-white transition-all shadow-sm">
                               <FileText className="w-4 h-4 stroke-[2.5]" />
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-rose-700 dark:group-hover:text-rose-300 transition-colors">
+                              <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-rose-700 dark:group-hover:text-rose-300 transition-colors">
                                 PDF Document
                               </span>
-                              <span className="text-[9.5px] font-semibold text-slate-400 dark:text-slate-500 transition-colors">
-                                Formatted print layout
+                              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                Formatted print layout & analytics
                               </span>
                             </div>
                           </div>
-                          <span className="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                          <span className="text-[10px] font-black tracking-wider px-2.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200 group-hover:bg-rose-600 group-hover:text-white transition-colors border border-rose-300 dark:border-rose-700 shrink-0">
                             PDF
                           </span>
                         </button>
@@ -2629,22 +2630,22 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         <button
                           type="button"
                           onClick={() => { downloadReportFile('word'); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-200 group hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer"
+                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-blue-50 dark:hover:bg-blue-950/50 cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
                         >
-                          <div className="flex items-center space-x-3.5 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
                               <FileText className="w-4 h-4 stroke-[2.5]" />
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
+                              <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
                                 Word Document
                               </span>
-                              <span className="text-[9.5px] font-semibold text-slate-400 dark:text-slate-500 transition-colors">
-                                Editable text report
+                              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                Editable text report with tables
                               </span>
                             </div>
                           </div>
-                          <span className="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                          <span className="text-[10px] font-black tracking-wider px-2.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 group-hover:bg-blue-600 group-hover:text-white transition-colors border border-blue-300 dark:border-blue-700 shrink-0">
                             DOCX
                           </span>
                         </button>
@@ -2652,22 +2653,22 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         <button
                           type="button"
                           onClick={() => { downloadReportFile('zip'); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-200 group hover:bg-amber-50 dark:hover:bg-amber-900/20 cursor-pointer"
+                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-amber-50 dark:hover:bg-amber-950/50 cursor-pointer border border-transparent hover:border-amber-200 dark:hover:border-amber-800"
                         >
-                          <div className="flex items-center space-x-3.5 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-sm">
                               <FileArchive className="w-4 h-4 stroke-[2.5]" />
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
+                              <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
                                 ZIP Archive
                               </span>
-                              <span className="text-[9.5px] font-semibold text-slate-400 dark:text-slate-500 transition-colors">
-                                Bundle all formats
+                              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                All formats bundled in one archive
                               </span>
                             </div>
                           </div>
-                          <span className="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                          <span className="text-[10px] font-black tracking-wider px-2.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 group-hover:bg-amber-600 group-hover:text-white transition-colors border border-amber-300 dark:border-amber-700 shrink-0">
                             ZIP
                           </span>
                         </button>
@@ -2677,23 +2678,28 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     {/* SECTION 3: UTILITY */}
                     <div>
                       <div className="px-3 pt-1 pb-1 flex items-center space-x-2">
-                         <div className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500" />
-                         <span className="text-[10px] font-black tracking-widest uppercase text-slate-400 dark:text-slate-500">
+                         <div className="w-2 h-2 rounded-full bg-slate-500" />
+                         <span className="text-[11px] font-black tracking-wider uppercase text-slate-600 dark:text-slate-400">
                            Utility
                          </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => { window.print(); setShowExportMenu(false); }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-200 group hover:bg-slate-100 dark:hover:bg-navy-800 cursor-pointer"
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
                       >
-                        <div className="flex items-center space-x-3.5 min-w-0">
-                          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-slate-800 group-hover:text-white dark:group-hover:bg-slate-200 dark:group-hover:text-slate-900 transition-all duration-300">
+                        <div className="flex items-center space-x-3 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-slate-800 group-hover:text-white dark:group-hover:bg-slate-200 dark:group-hover:text-slate-900 transition-all shadow-sm">
                             <Printer className="w-4 h-4 stroke-[2.5]" />
                           </div>
-                          <span className="text-[13px] font-bold text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
-                            Print View
-                          </span>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black text-slate-900 dark:text-white transition-colors">
+                              Print View
+                            </span>
+                            <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                              Quick browser print layout
+                            </span>
+                          </div>
                         </div>
                       </button>
                     </div>
