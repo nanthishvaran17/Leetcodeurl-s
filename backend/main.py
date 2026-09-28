@@ -400,14 +400,12 @@ async def _deferred_startup_tasks():
     try:
         await asyncio.to_thread(_run_blocking_db_init)
 
-        # Weekly session resume is async, run directly
+        # Weekly session resume is async, run directly (session sync deferred to worker/on-demand for OOM prevention)
         try:
             from backend.database import SessionLocal
             with SessionLocal() as db_init_async:
                 from backend.services.weekly_session_manager import resume_active_weekly_session
                 await resume_active_weekly_session(db_init_async)
-                from backend.scripts.sync_upcoming_sessions import sync_upcoming_weekly_sessions
-                await asyncio.to_thread(sync_upcoming_weekly_sessions, 4)
         except Exception as _sess_err:
             logger.warning(f"[STARTUP] Weekly session resume note: {_sess_err}")
 
