@@ -15,7 +15,7 @@ def rewrite_page(filepath, page_title, subtitle, icon_name, is_terms=False):
         
     sections_array = sections_match.group(1)
     
-    new_content = f"""import React, {{ useState, useEffect }} from 'react';
+    new_content = fr"""import React, {{ useState, useEffect }} from 'react';
 import {{ motion, AnimatePresence }} from 'framer-motion';
 import {{ 
   Shield, Lock, Eye, Database, UserCheck, Search, Printer, Copy, Check, Sparkles, Mail, Code, Cpu, CheckCircle2, Key,

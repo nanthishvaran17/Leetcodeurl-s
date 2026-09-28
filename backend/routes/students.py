@@ -376,13 +376,6 @@ async def get_students(
         else:
             query = query.order_by(Student.name.asc())
 
-        # Apply eager loading to eliminate N+1 query overhead for stats, department, section
-        query = query.options(
-            selectinload(Student.department),
-            selectinload(Student.section),
-            selectinload(Student.stats)
-        )
-
         # Pagination if page and limit provided
         if isinstance(page, int) and isinstance(limit, int) and page >= 1 and limit >= 1:
             offset = (page - 1) * limit

@@ -398,7 +398,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     }
   }, [allNotifications, token]);
 
-  // Apply category filter in a pure memo — no subscription restart needed
+  // Apply category filter in a pure memo -- no subscription restart needed
   const notifications = React.useMemo(() =>
     selectedCategory === 'all'
       ? allNotifications
