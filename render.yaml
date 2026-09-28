@@ -15,9 +15,7 @@ services:
       - key: RUN_SCHEDULER_IN_WEB
         value: "false"
       - key: DATABASE_URL
-        fromDatabase:
-          name: leetcode-tracker-db
-          property: connectionString
+        value: "sqlite:///./data/leetcode_tracker.db"
       - key: CRON_SECRET
         generateValue: true
       - key: SECRET_KEY
@@ -52,9 +50,7 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: leetcode-tracker-db
-          property: connectionString
+        value: "sqlite:///./data/leetcode_tracker.db"
       - key: SECRET_KEY
         fromService:
           name: leetcode-tracker-api
