@@ -69,7 +69,7 @@ from sqlalchemy.pool import NullPool
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     pg_connect_args = {
-        "connect_timeout": 30,   # 30s connect timeout for Neon serverless wake-up & AWS multi-IP failover
+        "connect_timeout": 3,   # 3s connect timeout for fast fallback in cloud environments
         "keepalives": 1,
         "keepalives_idle": 10,   # Probe after 10s idle to keep cloud proxies active
         "keepalives_interval": 3, # Send probes every 3 seconds
