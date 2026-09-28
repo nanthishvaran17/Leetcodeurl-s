@@ -699,3 +699,12 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 100, pe
 
     finally:
         db.close()
+
+
+async def run_full_sync(db: Optional[Session] = None, limit: Optional[int] = None, max_workers: int = 15) -> Dict[str, Any]:
+    """
+    Executes a full pipeline LeetCode sync across all active students.
+    Exported entry point for GitHub Actions workflows (weekly_sync.yml), CLI scripts, and background workers.
+    """
+    return await run_batch_sync(limit=limit, max_workers=max_workers)
+
