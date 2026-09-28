@@ -301,10 +301,10 @@ def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user:
     for r in results:
         reg = (getattr(r, "reg_no", "") or "").upper()
         d = (getattr(r, "dept", "") or "").upper()
-        if "CC" in reg or "CS" in d or "CYBER" in d:
-            d_key = "CSE(CS)"
-        elif "CI" in reg or "IOT" in d:
+        if "CI" in reg or "CIR" in reg or "IOT" in d or "INTERNET" in d:
             d_key = "CSE(IOT)"
+        elif "CC" in reg or "CYBER" in d or "(CS)" in d or "CSE(CS)" in d:
+            d_key = "CSE(CS)"
         else:
             d_key = "CSE(CS)"
         
