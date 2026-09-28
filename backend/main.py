@@ -1147,6 +1147,38 @@ def download_android_apk_endpoint():
     )
 
 
+@lru_cache(maxsize=8)
+def _load_base64_logo(filename: str) -> str:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    base_name = os.path.splitext(filename)[0]
+    candidates = [
+        filename,
+        f"{base_name}.png",
+        f"{base_name}.webp",
+        "nec_25_logo.png",
+        "nec_25_years_logo.png",
+        "nec_25_logo.webp",
+        "nec_25_years_logo.webp"
+    ]
+    dirs = [
+        os.path.join(base_dir, "static"),
+        os.path.join(base_dir, "..", "frontend", "public"),
+        os.path.join(base_dir, ".."),
+        base_dir
+    ]
+    for name in candidates:
+        for d in dirs:
+            p = os.path.join(d, name)
+            if os.path.exists(p):
+                try:
+                    with open(p, "rb") as f:
+                        mime = "image/webp" if name.endswith(".webp") else "image/png"
+                        return f"data:{mime};base64," + base64.b64encode(f.read()).decode("utf-8")
+                except Exception:
+                    pass
+    return "/static/assets/nec_25_logo.png"
+
+
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 def root_landing_page(request: Request, format: Optional[str] = None):
     """Serves a high-tech interactive landing page for browser visitors on Render root."""
@@ -1158,38 +1190,6 @@ def root_landing_page(request: Request, format: Optional[str] = None):
             "version": "2.2.0"
         })
     
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    @lru_cache(maxsize=8)
-    def _load_base64_logo(filename: str) -> str:
-        base_name = os.path.splitext(filename)[0]
-        candidates = [
-            filename,
-            f"{base_name}.png",
-            f"{base_name}.webp",
-            "nec_25_logo.png",
-            "nec_25_years_logo.png",
-            "nec_25_logo.webp",
-            "nec_25_years_logo.webp"
-        ]
-        dirs = [
-            os.path.join(base_dir, "static"),
-            os.path.join(base_dir, "..", "frontend", "public"),
-            os.path.join(base_dir, ".."),
-            base_dir
-        ]
-        for name in candidates:
-            for d in dirs:
-                p = os.path.join(d, name)
-                if os.path.exists(p):
-                    try:
-                        with open(p, "rb") as f:
-                            mime = "image/webp" if name.endswith(".webp") else "image/png"
-                            return f"data:{mime};base64," + base64.b64encode(f.read()).decode("utf-8")
-                    except Exception:
-                        pass
-        return "/static/assets/nec_25_logo.png"
-
     nec_25_logo_uri = _load_base64_logo("nec_25_logo.webp")
 
     html_content = f"""<!DOCTYPE html>
