@@ -278,30 +278,30 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
           <span className="text-slate-300 dark:text-slate-600 font-bold text-xs">—</span>
         )}
       </td>
-      <td className="px-3 py-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-center space-x-1.5">
+      <td className="px-4 py-3 text-center whitespace-nowrap min-w-[130px]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-center gap-2.5">
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(r); }}
-            className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-400 transition-all hover:scale-105 cursor-pointer"
+            className="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-600 hover:text-white dark:bg-indigo-950/60 dark:hover:bg-indigo-600 text-indigo-600 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 flex items-center justify-center transition-all duration-150 hover:scale-110 active:scale-95 shadow-2xs cursor-pointer"
             title={`Edit ${r.name}`}
           >
-            <Edit3 className="w-3.5 h-3.5" />
+            <Edit3 className="w-3.5 h-3.5 stroke-[2.2]" />
           </button>
           {onQuickSync && (
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickSync(r.reg_no); }}
-              className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-600 dark:text-emerald-400 transition-all hover:scale-105 cursor-pointer"
+              className="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-600 hover:text-white dark:bg-emerald-950/60 dark:hover:bg-emerald-600 text-emerald-600 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 flex items-center justify-center transition-all duration-150 hover:scale-110 active:scale-95 shadow-2xs cursor-pointer"
               title={`Force Live Sync — ${r.name}`}
             >
-              <Zap className="w-3.5 h-3.5" />
+              <Zap className="w-3.5 h-3.5 stroke-[2.2]" />
             </button>
           )}
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(r); }}
-            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-400 transition-all hover:scale-105 cursor-pointer"
+            className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-600 hover:text-white dark:bg-rose-950/60 dark:hover:bg-rose-600 text-rose-600 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/80 flex items-center justify-center transition-all duration-150 hover:scale-110 active:scale-95 shadow-2xs cursor-pointer"
             title={`Deactivate ${r.name}`}
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3.5 h-3.5 stroke-[2.2]" />
           </button>
         </div>
       </td>
@@ -445,29 +445,29 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(r); }}
-            className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-400 transition-all cursor-pointer"
+            className="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-600 hover:text-white dark:bg-indigo-950/60 dark:hover:bg-indigo-600 text-indigo-600 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 flex items-center justify-center transition-all duration-150 active:scale-95 shadow-2xs cursor-pointer"
             title={`Edit ${r.name}`}
           >
-            <Edit3 className="w-3.5 h-3.5" />
+            <Edit3 className="w-3.5 h-3.5 stroke-[2.2]" />
           </button>
           {onQuickSync && (
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickSync(r.reg_no); }}
-              className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-600 dark:text-emerald-400 transition-all cursor-pointer"
+              className="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-600 hover:text-white dark:bg-emerald-950/60 dark:hover:bg-emerald-600 text-emerald-600 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 flex items-center justify-center transition-all duration-150 active:scale-95 shadow-2xs cursor-pointer"
               title={`Sync ${r.name}`}
             >
-              <Zap className="w-3.5 h-3.5" />
+              <Zap className="w-3.5 h-3.5 stroke-[2.2]" />
             </button>
           )}
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(r); }}
-            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-400 transition-all cursor-pointer"
+            className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-600 hover:text-white dark:bg-rose-950/60 dark:hover:bg-rose-600 text-rose-600 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/80 flex items-center justify-center transition-all duration-150 active:scale-95 shadow-2xs cursor-pointer"
             title={`Deactivate ${r.name}`}
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3.5 h-3.5 stroke-[2.2]" />
           </button>
         </div>
       </div>
@@ -4066,7 +4066,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         </div>
                       </th>
                       
-                      <th className="px-3 py-3.5 text-center text-white font-extrabold">Actions</th>
+                      <th className="px-4 py-3.5 text-center text-white font-extrabold min-w-[130px]">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
