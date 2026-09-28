@@ -24,7 +24,7 @@ _MAX_TRACKING_ENTRIES = 10000  # Cap to prevent unbounded memory growth under su
 
 def _cleanup_stale_tracking():
     """Prune expired entries from security tracking dicts to prevent memory leaks."""
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     window_cutoff = now - datetime.timedelta(minutes=WINDOW_MINUTES)
     cooldown_cutoff = now - datetime.timedelta(minutes=COOLDOWN_MINUTES)
     
@@ -39,8 +39,9 @@ def _cleanup_stale_tracking():
         del ALERT_COOLDOWN[k]
     
     # Hard cap: if still too many entries, remove oldest half
+    min_tz = datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
     if len(BLOCKED_ATTEMPTS) > _MAX_TRACKING_ENTRIES:
-        sorted_keys = sorted(BLOCKED_ATTEMPTS.keys(), key=lambda k: BLOCKED_ATTEMPTS[k][-1] if BLOCKED_ATTEMPTS[k] else datetime.datetime.min)
+        sorted_keys = sorted(BLOCKED_ATTEMPTS.keys(), key=lambda k: BLOCKED_ATTEMPTS[k][-1] if BLOCKED_ATTEMPTS[k] else min_tz)
         for k in sorted_keys[:len(sorted_keys) // 2]:
             del BLOCKED_ATTEMPTS[k]
 
