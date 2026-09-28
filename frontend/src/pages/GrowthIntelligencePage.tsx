@@ -315,11 +315,6 @@ export const GrowthIntelligencePage: React.FC = () => {
 
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="space-y-3.5 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>REAL-TIME GROWTH & DELTA ENGINE</span>
-            </div>
-
             <div className="flex items-center gap-3.5">
               <div className="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0 shadow-lg shadow-emerald-500/10">
                 <TrendingUp className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />

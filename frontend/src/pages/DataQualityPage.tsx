@@ -273,34 +273,34 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
               />
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold overflow-x-auto max-w-full">
+            <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-navy-950 p-1.5 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 text-[11px] font-bold overflow-x-auto max-w-full shadow-2xs">
               <button
-                onClick={() => setFilterCategory('ALL')}
-                className={`px-2.5 py-1 rounded-lg transition-all shrink-0 cursor-pointer ${filterCategory === 'ALL' ? 'bg-white dark:bg-navy-800 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                onClick={() => { setFilterCategory('ALL'); setPage(1); }}
+                className={`px-3 py-1.5 rounded-xl transition-all shrink-0 cursor-pointer ${filterCategory === 'ALL' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
               >
                 All ({issuesList.length})
               </button>
               <button
-                onClick={() => setFilterCategory('VALID')}
-                className={`px-2.5 py-1 rounded-lg transition-all shrink-0 cursor-pointer ${filterCategory === 'VALID' ? 'bg-emerald-500/20 text-emerald-400 font-black' : 'text-slate-500 hover:text-emerald-400'}`}
+                onClick={() => { setFilterCategory('VALID'); setPage(1); }}
+                className={`px-3 py-1.5 rounded-xl transition-all shrink-0 cursor-pointer ${filterCategory === 'VALID' ? 'bg-emerald-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'}`}
               >
                 Valid ({data?.valid_profiles || 0})
               </button>
               <button
-                onClick={() => setFilterCategory('MISSING')}
-                className={`px-2.5 py-1 rounded-lg transition-all shrink-0 cursor-pointer ${filterCategory === 'MISSING' ? 'bg-amber-500/20 text-amber-400 font-black' : 'text-slate-500 hover:text-amber-400'}`}
+                onClick={() => { setFilterCategory('MISSING'); setPage(1); }}
+                className={`px-3 py-1.5 rounded-xl transition-all shrink-0 cursor-pointer ${filterCategory === 'MISSING' ? 'bg-amber-500 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'}`}
               >
                 Missing ({data?.missing_links || 0})
               </button>
               <button
-                onClick={() => setFilterCategory('NOT_FOUND')}
-                className={`px-2.5 py-1 rounded-lg transition-all shrink-0 cursor-pointer ${filterCategory === 'NOT_FOUND' ? 'bg-rose-500/20 text-rose-400 font-black' : 'text-slate-500 hover:text-rose-400'}`}
+                onClick={() => { setFilterCategory('NOT_FOUND'); setPage(1); }}
+                className={`px-3 py-1.5 rounded-xl transition-all shrink-0 cursor-pointer ${filterCategory === 'NOT_FOUND' ? 'bg-rose-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400'}`}
               >
                 Not Found ({data?.profile_not_found || 0})
               </button>
               <button
-                onClick={() => setFilterCategory('NETWORK')}
-                className={`px-2.5 py-1 rounded-lg transition-all shrink-0 cursor-pointer ${filterCategory === 'NETWORK' ? 'bg-brand-500/20 text-brand-400 font-black' : 'text-slate-500 hover:text-brand-400'}`}
+                onClick={() => { setFilterCategory('NETWORK'); setPage(1); }}
+                className={`px-3 py-1.5 rounded-xl transition-all shrink-0 cursor-pointer ${filterCategory === 'NETWORK' ? 'bg-indigo-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400'}`}
               >
                 Network ({data?.network_errors || 0})
               </button>

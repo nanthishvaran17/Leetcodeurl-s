@@ -314,7 +314,7 @@ export const AuditLogPage: React.FC = () => {
                         )}
                       </td>
 
-                      <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-500 dark:text-slate-400 text-[10px] whitespace-nowrap">
+                      <td className="py-3.5 px-4 text-right font-mono font-extrabold text-slate-700 dark:text-slate-200 text-xs whitespace-nowrap">
                         {formatAuditDate(log.created_at)}
                       </td>
                     </tr>
@@ -372,16 +372,16 @@ export const AuditLogPage: React.FC = () => {
                     </div>
 
                     {/* Row 3: Description */}
-                    <div className="font-bold text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed mb-2.5 line-clamp-2">
+                    <div className="font-bold text-slate-700 dark:text-slate-200 text-xs leading-relaxed mb-2.5 line-clamp-2">
                       {log.description || '—'}
                     </div>
 
-                    {/* Row 4: Role + Timestamp */}
-                    <div className="flex justify-between items-center">
+                    {/* Row 4: Role + Timestamp Pill */}
+                    <div className="flex justify-between items-center gap-2">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-black border ${getRoleStyle(log.admin_role)}`}>
                         {log.admin_role}
                       </span>
-                      <span className="font-mono font-semibold text-slate-400 dark:text-slate-500 text-[10px]">
+                      <span className="font-mono font-black text-slate-700 dark:text-slate-200 text-[11px] bg-slate-100 dark:bg-navy-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-navy-700">
                         {formatAuditDate(log.created_at)}
                       </span>
                     </div>

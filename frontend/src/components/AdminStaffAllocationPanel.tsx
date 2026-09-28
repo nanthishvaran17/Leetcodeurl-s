@@ -517,7 +517,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
 
       {/* 1. STAFF WORKLOAD MATRIX PANEL */}
-      <div className="bg-white dark:bg-navy-950 p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl space-y-6">
+      <div className="bg-white dark:bg-navy-950 p-3.5 sm:p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h3 className="text-base font-black text-slate-800 dark:text-slate-100 flex items-center space-x-2">
@@ -678,68 +678,91 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                     : 'bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-600'
                     }`} />
 
-                  <div className="p-4 sm:p-5 flex flex-col w-full max-w-full min-w-0 box-border space-y-3.5">
-                    {/* Header: Avatar + Name/Email + Status Badge + Actions */}
-                    <div className="flex items-center justify-between gap-3 w-full min-w-0">
-                      
-                      {/* Avatar & Identity */}
-                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                  <div className="p-4 sm:p-5 flex flex-col w-full max-w-full min-w-0 box-border space-y-4">
+                    {/* Row 1: Avatar + Name & Email + Status Pill */}
+                    <div className="flex items-start justify-between gap-3 w-full min-w-0">
+                      <div className="flex items-center space-x-3 min-w-0 flex-1">
                         <div className={`relative w-11 h-11 rounded-2xl flex items-center justify-center text-lg font-black text-white shadow-md shrink-0 ${!st.is_active ? 'bg-slate-400'
                           : isFull ? 'bg-gradient-to-br from-rose-500 to-orange-500'
                             : 'bg-gradient-to-br from-sky-500 to-indigo-600'
                           }`}>
                           {st.username?.charAt(0)?.toUpperCase() || '?'}
                           {st.is_active && (
-                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-navy-900 bg-emerald-500" />
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-navy-900 bg-emerald-500" />
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-black text-sm text-slate-900 dark:text-white leading-tight truncate">{st.username}</h4>
-                          <p className="text-[11px] text-slate-400 dark:text-slate-400 truncate mt-0.5 font-mono">{st.email}</p>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-black text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate" title={st.username}>
+                            {st.username}
+                          </h4>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-mono mt-0.5" title={st.email}>
+                            {st.email || 'No email registered'}
+                          </p>
                         </div>
                       </div>
 
-                      {/* Status & Actions */}
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide whitespace-nowrap shadow-2xs ${!st.is_active ? 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                      {/* Status Pill */}
+                      <div className="shrink-0 pt-0.5">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide whitespace-nowrap shadow-2xs ${!st.is_active ? 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
                           : isFull ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-900'
                             : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900'
                           }`}>
                           {!st.is_active ? 'DISABLED' : isFull ? 'FULL' : 'AVAILABLE'}
                         </span>
-
-                        <div className="flex items-center gap-1">
-                          <button onClick={() => handleOpenStaffRoster(st)}
-                            className="p-2 rounded-xl bg-sky-50 hover:bg-sky-500 hover:text-white dark:bg-sky-950/60 dark:hover:bg-sky-500 dark:hover:text-white text-sky-600 dark:text-sky-400 transition-all cursor-pointer shrink-0 shadow-2xs" title="View Roster">
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => triggerToggleStatusModal(st)}
-                            className={`p-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-2xs ${st.is_active ? 'bg-amber-50 hover:bg-amber-500 hover:text-white dark:bg-amber-950/60 dark:hover:bg-amber-500 text-amber-600 dark:text-amber-400' : 'bg-emerald-50 hover:bg-emerald-500 hover:text-white dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400'
-                              }`} title={st.is_active ? 'Disable Staff' : 'Enable Staff'}>
-                            <Power className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => triggerDeleteStaffModal(st)}
-                            className="p-2 rounded-xl bg-rose-50 hover:bg-rose-500 hover:text-white dark:bg-rose-950/60 dark:hover:bg-rose-500 dark:hover:text-white text-rose-600 dark:text-rose-400 transition-all cursor-pointer shrink-0 shadow-2xs" title="Delete Staff">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
                       </div>
                     </div>
 
-                    {/* Dept Tag */}
-                    {st.department && (
-                      <div className="w-full min-w-0">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-indigo-50/80 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-black border border-indigo-200/60 dark:border-indigo-800/40 uppercase tracking-wider">
-                          {st.department}
-                        </span>
+                    {/* Row 2: Department Badge + Quick Action Toolbar */}
+                    <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-100 dark:border-navy-800/60">
+                      <div className="min-w-0 flex-1">
+                        {st.department ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-indigo-50/90 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-black border border-indigo-200/60 dark:border-indigo-800/40 uppercase tracking-wider truncate max-w-full">
+                            {st.department}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                            GENERAL
+                          </span>
+                        )}
                       </div>
-                    )}
 
-                    {/* Progress Bar & Footer */}
-                    <div className="space-y-2 w-full max-w-full min-w-0 pt-1">
+                      {/* Quick Action Toolbar */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenStaffRoster(st)}
+                          className="p-1.5 rounded-xl bg-sky-50 hover:bg-sky-500 hover:text-white dark:bg-sky-950/60 dark:hover:bg-sky-500 dark:hover:text-white text-sky-600 dark:text-sky-400 transition-all cursor-pointer shadow-2xs"
+                          title="View Roster"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => triggerToggleStatusModal(st)}
+                          className={`p-1.5 rounded-xl transition-all cursor-pointer shadow-2xs ${st.is_active
+                            ? 'bg-amber-50 hover:bg-amber-500 hover:text-white dark:bg-amber-950/60 dark:hover:bg-amber-500 text-amber-600 dark:text-amber-400'
+                            : 'bg-emerald-50 hover:bg-emerald-500 hover:text-white dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400'
+                            }`}
+                          title={st.is_active ? 'Disable Staff' : 'Enable Staff'}
+                        >
+                          <Power className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => triggerDeleteStaffModal(st)}
+                          className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-500 hover:text-white dark:bg-rose-950/60 dark:hover:bg-rose-500 dark:hover:text-white text-rose-600 dark:text-rose-400 transition-all cursor-pointer shadow-2xs"
+                          title="Delete Staff"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Row 3: Progress Bar & Footer */}
+                    <div className="space-y-2 w-full max-w-full min-w-0 pt-0.5">
                       <div className="flex items-center justify-between gap-2 text-xs font-bold w-full">
-                        <span className="text-slate-600 dark:text-slate-400 font-extrabold">Student Allocation</span>
-                        <span className={`shrink-0 font-mono font-black ${isFull ? 'text-rose-500' : count >= 20 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                        <span className="text-slate-600 dark:text-slate-400 font-extrabold text-[11px]">Student Allocation</span>
+                        <span className={`shrink-0 font-mono font-black text-xs ${isFull ? 'text-rose-500' : count >= 20 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
                           {count} / {maxCap}
                         </span>
                       </div>
@@ -752,15 +775,17 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                           style={{ width: `${percent}%` }}
                         />
                       </div>
-                      
+
                       <div className="flex items-center justify-between text-xs pt-1 gap-2 w-full">
-                        <button onClick={() => handleOpenStaffRoster(st)}
-                          className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-500 hover:text-white dark:bg-sky-950/60 dark:hover:bg-sky-500 dark:hover:text-white text-sky-600 dark:text-sky-400 font-bold transition-all active:scale-95 cursor-pointer shadow-2xs inline-flex items-center gap-1 text-[11px]">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenStaffRoster(st)}
+                          className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-500 hover:text-white dark:bg-sky-950/60 dark:hover:bg-sky-500 dark:hover:text-white text-sky-600 dark:text-sky-400 font-bold transition-all active:scale-95 cursor-pointer shadow-2xs inline-flex items-center gap-1.5 text-[11px]"
+                        >
                           <span>Inspect Progress</span>
                           <span>→</span>
                         </button>
-                        <span className={`font-mono text-[11px] font-bold ${isFull ? 'text-rose-500' : availableSlots <= 5 ? 'text-amber-500' : 'text-slate-400 dark:text-slate-500'
-                          }`}>
+                        <span className={`font-mono text-[11px] font-bold shrink-0 ${isFull ? 'text-rose-500' : availableSlots <= 5 ? 'text-amber-500' : 'text-slate-500 dark:text-slate-400'}`}>
                           {isFull ? 'Cap Reached' : `${availableSlots} slots free`}
                         </span>
                       </div>
@@ -809,7 +834,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
         {/* ASSIGN TAB */}
         {activeTab === 'assign' && (
-          <div className="p-6 space-y-6">
+          <div className="p-2.5 sm:p-6 space-y-4 sm:space-y-6">
             {/* Header row */}
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
@@ -894,8 +919,8 @@ export const AdminStaffAllocationPanel: React.FC = () => {
             </div>
 
             {/* Table */}
-            <div className="overflow-x-hidden md:overflow-x-auto rounded-2xl border-0 md:border border-slate-200 dark:border-navy-700 bg-slate-50 md:bg-transparent dark:bg-navy-900/20 md:dark:bg-transparent">
-              <table className="w-full text-left text-xs mobile-card-table">
+            <div className="overflow-hidden md:overflow-x-auto rounded-2xl border-0 md:border border-slate-200 dark:border-navy-700 bg-transparent md:bg-transparent w-full max-w-full box-border">
+              <table className="w-full table-fixed md:table-auto text-left text-xs mobile-card-table box-border">
                 <thead className="hidden md:table-header-group">
                   <tr className="bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-navy-300 font-bold border-b border-slate-200 dark:border-navy-700">
                     <th className="p-3 text-center">
@@ -924,13 +949,14 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                       const isSelected = selectedStudents.includes(st.id);
                       return (
                         <tr key={st.id} onClick={() => toggleSelectStudent(st.id)}
-                          className={`cursor-pointer transition-all block md:table-row bg-white md:bg-transparent border border-slate-200/90 md:border-0 rounded-2xl md:rounded-none mb-2.5 md:mb-0 p-3 md:p-0 dark:bg-navy-950 dark:border-navy-800 shadow-xs md:shadow-none ${isSelected ? 'bg-sky-50/90 dark:bg-sky-950/50 ring-2 ring-sky-500 md:ring-0 border-sky-400' : 'hover:bg-slate-50 dark:hover:bg-navy-800/50'}`}
+                          className={`cursor-pointer transition-all block md:table-row rounded-2xl md:rounded-none mb-2.5 md:mb-0 overflow-hidden box-border ${isSelected ? 'bg-sky-50/90 dark:bg-sky-950/60 border-2 border-sky-500 dark:border-sky-400 md:border-0 shadow-sm' : 'bg-white md:bg-transparent dark:bg-navy-950 border border-slate-200/90 md:border-0 dark:border-navy-800 shadow-2xs md:shadow-none hover:bg-slate-50 dark:hover:bg-navy-800/50'}`}
                         >
                           {/* MOBILE COMPACT CARD VIEW */}
-                          <td className="md:hidden p-0 border-0 w-full block" colSpan={7}>
-                            <div className="flex flex-col space-y-2">
-                              <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2.5 min-w-0">
+                          <td className="md:hidden p-2.5 sm:p-3 border-0 w-full block overflow-hidden box-border" colSpan={7}>
+                            <div className="flex flex-col space-y-2 w-full max-w-full overflow-hidden box-border">
+                              {/* Row 1: Checkbox + Name + Solved Badge */}
+                              <div className="flex items-center justify-between gap-2 w-full min-w-0">
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
                                   <input
                                     type="checkbox"
                                     checked={isSelected}
@@ -938,29 +964,31 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                                     className="rounded border-slate-300 text-sky-600 cursor-pointer w-4 h-4 shrink-0"
                                     onClick={(e) => e.stopPropagation()}
                                   />
-                                  <span className="font-black text-sm text-slate-900 dark:text-white truncate">
+                                  <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
                                     {st.name}
                                   </span>
                                 </div>
-                                <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">
-                                  {st.reg_no}
+                                <span className="shrink-0 px-2 py-0.5 rounded-md bg-emerald-500/10 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-mono font-black text-[10px] sm:text-[11px] border border-emerald-500/20 whitespace-nowrap">
+                                  {st.total_solved || 0} Solved
                                 </span>
                               </div>
-                              <div className="flex items-center gap-1.5 flex-wrap pt-0.5 text-[11px]">
-                                <span className="px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 font-bold border border-sky-200 dark:border-sky-800">
+
+                              {/* Row 2: Reg No + Dept + Yr + LeetCode Username */}
+                              <div className="flex items-center gap-1.5 flex-wrap w-full min-w-0 text-[10px] sm:text-[11px]">
+                                <span className="font-mono font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-navy-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-navy-700 shrink-0">
+                                  {st.reg_no}
+                                </span>
+                                <span className="px-1.5 py-0.5 rounded bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-bold border border-sky-200 dark:border-sky-800/60 shrink-0">
                                   {st.department || 'INSTITUTIONAL'}
                                 </span>
-                                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-200 dark:border-navy-700">
+                                <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-200 dark:border-navy-700 shrink-0">
                                   Yr {st.year_level || '—'}
                                 </span>
                                 {st.username && (
-                                  <span className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono font-bold border border-indigo-200 dark:border-indigo-800 truncate max-w-[120px]">
+                                  <span className="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono font-bold border border-indigo-200 dark:border-indigo-800/60 break-all shrink-0">
                                     @{st.username}
                                   </span>
                                 )}
-                                <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-mono font-black border border-emerald-200 dark:border-emerald-800 ml-auto">
-                                  {st.total_solved || 0} Solved
-                                </span>
                               </div>
                             </div>
                           </td>
@@ -995,7 +1023,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
         {/* UNASSIGN TAB */}
         {activeTab === 'unassign' && (
-          <div className="p-6 space-y-6">
+          <div className="p-2.5 sm:p-6 space-y-4 sm:space-y-6">
             {/* Staff picker */}
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex-1 min-w-[260px]">
@@ -1054,8 +1082,8 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                 <p className="text-sm font-bold text-slate-500">Loading assigned students...</p>
               </div>
             ) : (
-              <div className="overflow-x-hidden md:overflow-x-auto rounded-2xl border-0 md:border border-slate-200 dark:border-navy-700 bg-slate-50 md:bg-transparent dark:bg-navy-900/20 md:dark:bg-transparent">
-                <table className="w-full text-left text-xs mobile-card-table">
+              <div className="overflow-hidden md:overflow-x-auto rounded-2xl border-0 md:border border-slate-200 dark:border-navy-700 bg-transparent md:bg-transparent w-full max-w-full box-border">
+                <table className="w-full table-fixed md:table-auto text-left text-xs mobile-card-table box-border">
                   <thead className="hidden md:table-header-group">
                     <tr className="bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 font-bold border-b border-rose-100 dark:border-rose-900/50">
                       <th className="p-3 text-center">
@@ -1084,13 +1112,14 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                         const isSel = selectedAssignedStudents.includes(s.id);
                         return (
                           <tr key={s.id} onClick={() => toggleAssignedStudent(s.id)}
-                            className={`cursor-pointer transition-all block md:table-row bg-white md:bg-transparent border border-slate-200/90 md:border-0 rounded-2xl md:rounded-none mb-2.5 md:mb-0 p-3 md:p-0 dark:bg-navy-950 dark:border-navy-800 shadow-xs md:shadow-none ${isSel ? 'bg-rose-50/90 dark:bg-rose-950/50 ring-2 ring-rose-500 md:ring-0 border-rose-400' : 'hover:bg-slate-50 dark:hover:bg-navy-800/50'}`}
+                            className={`cursor-pointer transition-all block md:table-row rounded-2xl md:rounded-none mb-2.5 md:mb-0 overflow-hidden box-border ${isSel ? 'bg-rose-50/90 dark:bg-rose-950/60 border-2 border-rose-500 dark:border-rose-400 md:border-0 shadow-sm' : 'bg-white md:bg-transparent dark:bg-navy-950 border border-slate-200/90 md:border-0 dark:border-navy-800 shadow-2xs md:shadow-none hover:bg-slate-50 dark:hover:bg-navy-800/50'}`}
                           >
                             {/* MOBILE COMPACT CARD VIEW */}
-                            <td className="md:hidden p-0 border-0 w-full block" colSpan={7}>
-                              <div className="flex flex-col space-y-2">
-                                <div className="flex items-center justify-between gap-2">
-                                  <div className="flex items-center gap-2.5 min-w-0">
+                            <td className="md:hidden p-2.5 sm:p-3 border-0 w-full block overflow-hidden box-border" colSpan={7}>
+                              <div className="flex flex-col space-y-2 w-full max-w-full overflow-hidden box-border">
+                                {/* Row 1: Checkbox + Name + Solved Badge & Quick Unassign Button */}
+                                <div className="flex items-center justify-between gap-2 w-full min-w-0">
+                                  <div className="flex items-center gap-2 min-w-0 flex-1">
                                     <input
                                       type="checkbox"
                                       checked={isSel}
@@ -1098,40 +1127,42 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                                       className="rounded border-rose-300 text-rose-600 cursor-pointer w-4 h-4 shrink-0"
                                       onClick={(e) => e.stopPropagation()}
                                     />
-                                    <span className="font-black text-sm text-slate-900 dark:text-white truncate">
+                                    <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
                                       {s.name}
                                     </span>
                                   </div>
-                                  <div className="flex items-center gap-2 shrink-0">
-                                    <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400">
-                                      {s.reg_no}
-                                    </span>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <span className={`px-2 py-0.5 rounded-md font-mono font-black text-[10px] sm:text-[11px] border whitespace-nowrap ${s.total_solved >= 100 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200' :
+                                      s.total_solved >= 30 ? 'bg-sky-100 text-sky-800 border-sky-200' :
+                                        'bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300 border-slate-200'
+                                      }`}>{s.total_solved || 0} Solved</span>
                                     <button
                                       type="button"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setStudentToUnassign({ student: s, staffId: Number(unassignStaffId), source: 'tab' });
                                       }}
-                                      className="p-1 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-colors"
+                                      className="p-1 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-colors shrink-0"
                                       title="Unassign"
                                     >
                                       <UserMinus className="w-3.5 h-3.5" />
                                     </button>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-1.5 flex-wrap pt-0.5 text-[11px]">
-                                  <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-200 dark:border-navy-700">
+
+                                {/* Row 2: Reg No + Yr + LeetCode Username */}
+                                <div className="flex items-center gap-1.5 flex-wrap w-full min-w-0 text-[10px] sm:text-[11px]">
+                                  <span className="font-mono font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-navy-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-navy-700 shrink-0">
+                                    {s.reg_no}
+                                  </span>
+                                  <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-200 dark:border-navy-700 shrink-0">
                                     Yr {s.year_level || '—'}
                                   </span>
                                   {s.username && (
-                                    <span className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono font-bold border border-indigo-200 dark:border-indigo-800 truncate max-w-[120px]">
+                                    <span className="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono font-bold border border-indigo-200 dark:border-indigo-800/60 break-all shrink-0">
                                       @{s.username}
                                     </span>
                                   )}
-                                  <span className={`px-2 py-0.5 rounded-md font-mono font-black border ml-auto ${s.total_solved >= 100 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200' :
-                                    s.total_solved >= 30 ? 'bg-sky-100 text-sky-800 border-sky-200' :
-                                      'bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300 border-slate-200'
-                                    }`}>{s.total_solved || 0} Solved</span>
                                 </div>
                               </div>
                             </td>
@@ -1260,28 +1291,71 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                         </tr>
                       ) : (
                         viewRosterModal.data.students?.map((s: any) => (
-                          <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 block md:table-row bg-white md:bg-transparent border border-slate-200 md:border-0 rounded-2xl md:rounded-none mb-3 md:mb-0 p-4 md:p-0 dark:bg-navy-950 dark:border-navy-700 shadow-sm md:shadow-none">
-                            <td className="p-1.5 md:p-3 font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Register No:</span>{s.reg_no}</td>
-                            <td className="p-1.5 md:p-3 font-extrabold text-slate-900 dark:text-white flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Name:</span><span className="text-right max-w-[200px] truncate">{s.name}</span></td>
-                            <td className="p-1.5 md:p-3 text-slate-600 dark:text-navy-300 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Year:</span>{s.year_level}</td>
-                            <td className="p-1.5 md:p-3 text-sky-700 dark:text-sky-400 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">LeetCode:</span><span className="truncate max-w-[150px] md:max-w-none text-right">{s.username || '—'}</span></td>
-                            <td className="p-1.5 md:p-3 text-right font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell items-center">
-                              <span className="md:hidden font-normal text-slate-500">Problems Solved:</span>
-                              <span className={`px-2.5 py-1 rounded-lg font-black ${s.total_solved >= 100 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
+                          <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 block md:table-row bg-white md:bg-transparent border border-slate-200/90 md:border-0 rounded-2xl md:rounded-none mb-2.5 md:mb-0 dark:bg-navy-950 dark:border-navy-800 shadow-xs md:shadow-none overflow-hidden box-border">
+                            {/* MOBILE COMPACT CARD VIEW */}
+                            <td className="md:hidden p-3 border-0 w-full block overflow-hidden box-border" colSpan={6}>
+                              <div className="flex flex-col space-y-2 w-full max-w-full overflow-hidden box-border">
+                                {/* Row 1: Name + Solved Badge + Unassign Icon Button */}
+                                <div className="flex items-center justify-between gap-2 w-full min-w-0">
+                                  <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate flex-1 min-w-0">
+                                    {s.name}
+                                  </span>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <span className={`px-2 py-0.5 rounded-md font-mono font-black text-[10px] sm:text-[11px] border whitespace-nowrap ${s.total_solved >= 100 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200' :
+                                      s.total_solved >= 30 ? 'bg-sky-100 text-sky-800 border-sky-200' :
+                                        'bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300 border-slate-200'
+                                      }`}>
+                                      {s.total_solved || 0} Solved
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => setStudentToUnassign({ student: s, staffId: Number(viewRosterModal.staff?.id), source: 'modal' })}
+                                      className="p-1 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-colors shrink-0 cursor-pointer"
+                                      title="Unassign Student"
+                                    >
+                                      <UserMinus className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Row 2: Reg No + Year + LeetCode Handle */}
+                                <div className="flex items-center gap-1.5 flex-wrap w-full min-w-0 text-[10px] sm:text-[11px]">
+                                  <span className="font-mono font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-navy-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-navy-700 shrink-0">
+                                    {s.reg_no}
+                                  </span>
+                                  <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-200 dark:border-navy-700 shrink-0">
+                                    Yr {s.year_level || '—'}
+                                  </span>
+                                  {s.username && (
+                                    <span className="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono font-bold border border-indigo-200 dark:border-indigo-800/60 break-all shrink-0">
+                                      @{s.username}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* DESKTOP TABLE VIEW */}
+                            <td className="hidden md:table-cell p-3 font-bold text-slate-800 dark:text-slate-200">{s.reg_no}</td>
+                            <td className="hidden md:table-cell p-3 font-extrabold text-slate-900 dark:text-white">{s.name}</td>
+                            <td className="hidden md:table-cell p-3 text-slate-600 dark:text-navy-300 font-bold">{s.year_level}</td>
+                            <td className="hidden md:table-cell p-3 text-sky-700 dark:text-sky-400 font-mono font-bold">{s.username || '—'}</td>
+                            <td className="hidden md:table-cell p-3 text-right font-bold text-slate-800 dark:text-slate-200">
+                              <span className={`px-2.5 py-1 rounded-lg font-black font-mono ${s.total_solved >= 100 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
                                 s.total_solved >= 30 ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300' :
                                   'bg-slate-100 text-slate-700 dark:bg-navy-800 dark:text-slate-300'
                                 }`}>
                                 {s.total_solved || 0}
                               </span>
                             </td>
-                            <td className="p-2 md:p-3 text-center mt-3 md:mt-0 flex justify-end md:table-cell border-t md:border-0 border-slate-100 dark:border-navy-800 pt-3 md:pt-3">
+                            <td className="hidden md:table-cell p-3 text-center">
                               <button
+                                type="button"
                                 onClick={() => setStudentToUnassign({ student: s, staffId: Number(viewRosterModal.staff?.id), source: 'modal' })}
-                                className="w-full md:w-auto h-11 md:h-auto px-4 md:px-0 flex items-center justify-center md:p-1.5 rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-200 transition-colors"
+                                className="p-1.5 rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
                                 title="Unassign Student"
                               >
-                                <UserMinus className="w-4 h-4 md:w-3.5 md:h-3.5 mr-2 md:mr-0" />
-                                <span className="md:hidden font-bold text-sm">Unassign</span>
+                                <UserMinus className="w-3.5 h-3.5" />
                               </button>
                             </td>
                           </tr>

@@ -210,24 +210,29 @@ async def _deferred_startup_tasks():
                 for stmt in pg_statements:
                     try:
                         with engine.begin() as atomic_conn:
+                            atomic_conn.execute(text("SET lock_timeout = '2s';"))
                             atomic_conn.execute(text(stmt))
                     except Exception as _st_err:
                         logger.warning(f"[STARTUP] Atomic migration stmt note: {_st_err}")
 
-                with engine.begin() as conn:
-                    conn.execute(text("""
-                        UPDATE students
-                        SET primary_leetcode_id = username
-                        WHERE primary_leetcode_id IS NULL AND username IS NOT NULL
-                    """))
-                    conn.execute(text("""
-                        CREATE INDEX IF NOT EXISTS ix_students_primary_leetcode_id
-                        ON students (primary_leetcode_id)
-                    """))
-                    conn.execute(text("""
-                        CREATE INDEX IF NOT EXISTS ix_students_secondary_leetcode_id
-                        ON students (secondary_leetcode_id)
-                    """))
+                try:
+                    with engine.begin() as conn:
+                        conn.execute(text("SET lock_timeout = '2s';"))
+                        conn.execute(text("""
+                            UPDATE students
+                            SET primary_leetcode_id = username
+                            WHERE primary_leetcode_id IS NULL AND username IS NOT NULL
+                        """))
+                        conn.execute(text("""
+                            CREATE INDEX IF NOT EXISTS ix_students_primary_leetcode_id
+                            ON students (primary_leetcode_id)
+                        """))
+                        conn.execute(text("""
+                            CREATE INDEX IF NOT EXISTS ix_students_secondary_leetcode_id
+                            ON students (secondary_leetcode_id)
+                        """))
+                except Exception as _pg_stu_err:
+                    logger.warning(f"[STARTUP] PostgreSQL student update note: {_pg_stu_err}")
                     conn.execute(text("""
                         CREATE TABLE IF NOT EXISTS weekly_verification_records (
                             id SERIAL PRIMARY KEY,

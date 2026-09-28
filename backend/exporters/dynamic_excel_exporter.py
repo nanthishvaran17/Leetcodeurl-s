@@ -311,13 +311,13 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     LEFT_ALIGN_TITLES = {
         "student name", "name", "full name", "student", 
         "leetcode username", "username", "leetcode handle", "handle", "email",
-        "error reason", "error description", "recommended action",
+        "error description", "recommended action",
         "fetch status", "verification status", "profile url", "leetcode url", "url",
         "profile_url", "leetcode_url", "profile link", "profile"
     }
 
     CENTER_TITLES = {
-        "s.no", "register no", "department", "year level", "attendance status", "data source", 
+        "s.no", "register no", "department", "year level", "attendance status", "data source", "error reason", 
         "prev status", "curr status", "status",
         "q1", "q2", "q3", "q4", "solved", "score", "contest rating", 
         "global rank", "total time", "weekly contest", "session date", "batch cohort",
@@ -482,7 +482,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             if is_alt:
                 cell.fill = ALT_ROW_FILL
 
-            if (title_lower in LEFT_ALIGN_TITLES or "url" in title_lower or "link" in title_lower) and title_lower != "data source":
+            if (title_lower in LEFT_ALIGN_TITLES or "url" in title_lower or "link" in title_lower) and title_lower not in ("data source", "error reason", "error_reason"):
                 cell.alignment = Alignment(horizontal="left", vertical="center")
             else:
                 cell.alignment = Alignment(horizontal="center", vertical="center")

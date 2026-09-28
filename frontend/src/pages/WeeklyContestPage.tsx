@@ -2693,7 +2693,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.97 }}
                     transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute z-[9999] left-0 sm:left-auto sm:right-0 mt-2 w-84 sm:w-[380px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] p-3.5 space-y-2 focus:outline-none select-none"
+                    className="absolute z-[9999] right-0 mt-2 w-[calc(100vw-32px)] sm:w-[380px] max-w-[380px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] p-3.5 space-y-2 focus:outline-none select-none"
                     style={{ backgroundColor: '#ffffff' }}
                   >
                     {/* SECTION 1: ACTIONS */}

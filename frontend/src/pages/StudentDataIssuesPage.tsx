@@ -1150,7 +1150,7 @@ export const StudentDataIssuesPage: React.FC = () => {
         </div>
 
         {/* Desktop Table View (hidden md:block overflow-x-auto) */}
-        <div className="hidden md:block overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto p-3.5">
           {loading ? (
             <div className="p-16 text-center text-xs text-slate-500 font-bold space-y-3">
               <RefreshCw className="w-6 h-6 animate-spin text-amber-500 mx-auto" />
@@ -1165,8 +1165,8 @@ export const StudentDataIssuesPage: React.FC = () => {
           ) : (
             <table className="w-full text-left text-xs min-w-[760px]">
               <thead>
-                <tr className="bg-navy-950 text-white uppercase tracking-wider font-black text-[10px]">
-                  <th className="py-3.5 px-4 w-10 text-center">
+                <tr className="bg-slate-900 dark:bg-navy-900 text-white uppercase tracking-wider font-black text-[10px] shadow-sm">
+                  <th className="py-3.5 px-4 w-10 text-center rounded-l-2xl">
                     <input
                       type="checkbox"
                       checked={selectedStudentIds.length === students.length && students.length > 0}
@@ -1180,7 +1180,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                   <th className="py-3.5 px-3">Issue Category</th>
                   <th className="py-3.5 px-4">Exact Problem / Reason</th>
                   <th className="py-3.5 px-3">Last Sync</th>
-                  <th className="py-3.5 px-4 text-center">Actions</th>
+                  <th className="py-3.5 px-4 text-center rounded-r-2xl">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-medium text-slate-800 dark:text-slate-200">
