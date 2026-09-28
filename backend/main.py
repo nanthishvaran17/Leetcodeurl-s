@@ -290,19 +290,22 @@ async def _deferred_startup_tasks():
                     except Exception as _sq_err:
                         logger.warning(f"[STARTUP] SQLite safety column addition note: {_sq_err}")
 
-                    conn.execute(text("""
-                        UPDATE students
-                        SET primary_leetcode_id = username
-                        WHERE primary_leetcode_id IS NULL AND username IS NOT NULL
-                    """))
-                    conn.execute(text("""
-                        CREATE INDEX IF NOT EXISTS ix_students_primary_leetcode_id
-                        ON students (primary_leetcode_id)
-                    """))
-                    conn.execute(text("""
-                        CREATE INDEX IF NOT EXISTS ix_students_secondary_leetcode_id
-                        ON students (secondary_leetcode_id)
-                    """))
+                    try:
+                        conn.execute(text("""
+                            UPDATE students
+                            SET primary_leetcode_id = username
+                            WHERE primary_leetcode_id IS NULL AND username IS NOT NULL
+                        """))
+                        conn.execute(text("""
+                            CREATE INDEX IF NOT EXISTS ix_students_primary_leetcode_id
+                            ON students (primary_leetcode_id)
+                        """))
+                        conn.execute(text("""
+                            CREATE INDEX IF NOT EXISTS ix_students_secondary_leetcode_id
+                            ON students (secondary_leetcode_id)
+                        """))
+                    except Exception as _stu_upd_err:
+                        logger.warning(f"[STARTUP] SQLite student index/update note: {_stu_upd_err}")
                     is_pg_driver = "postgresql" in str(engine.url) or "postgres" in str(engine.url)
                     id_col_type = "SERIAL PRIMARY KEY" if is_pg_driver else "INTEGER PRIMARY KEY AUTOINCREMENT"
                     try:
