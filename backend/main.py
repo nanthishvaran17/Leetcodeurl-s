@@ -763,38 +763,6 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
             record_cache_miss()
 
     response = await call_next(request)
-
-    # Store in memory cache if matching fast endpoints
-    if method == "GET" and path in _CACHE_TTL_MAP and response.status_code == 200:
-        import time
-        try:
-            now = time.time()
-            auth_hdr = request.headers.get("authorization", "")
-            cache_key = f"{path}?{request.url.query}#auth:{hash(auth_hdr)}"
-            
-            body = [chunk async for chunk in response.body_iterator]
-            full_body = b"".join(body)
-            content_type = response.headers.get("content-type", "application/json")
-            
-            _cleanup_expired_cache_entries(now)
-            _API_MEMORY_CACHE[cache_key] = {
-                "body": full_body,
-                "status": response.status_code,
-                "content_type": content_type,
-                "headers": dict(response.headers),
-                "expires_at": now + _CACHE_TTL_MAP[path]
-            }
-            from fastapi.responses import Response as FastResponse
-            res_headers = dict(response.headers)
-            _add_cors_headers_to_response(request, res_headers)
-            return FastResponse(
-                content=full_body,
-                status_code=response.status_code,
-                headers=res_headers
-            )
-        except Exception:
-            pass
-
     _add_cors_headers_to_response(request, response.headers)
     return response
 
