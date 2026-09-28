@@ -430,16 +430,16 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
         {/* Total Solved Badge */}
         <div className="flex items-center shrink-0">
           {isVirtualAttended ? (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-300 font-mono font-extrabold text-xs border border-purple-500/20">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-300 font-mono font-black text-xs border border-purple-500/20">
               {r.total_solved ?? 0}/4 <span className="text-[9px] opacity-70">(V)</span>
             </span>
           ) : isPublicAttended ? (
-            <span className="inline-flex items-center px-2 py-1 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 font-mono font-black text-xs border border-brand-500/20 shadow-2xs">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 font-mono font-black text-xs border border-brand-500/20 shadow-2xs">
               {r.total_solved ?? '0'}/4
             </span>
           ) : (
-            <span className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-400 dark:text-slate-500 font-bold text-[11px]">
-              Not Attended
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-900 text-slate-400 dark:text-slate-500 font-mono font-bold text-xs border border-slate-200 dark:border-navy-800">
+              0/4
             </span>
           )}
         </div>
@@ -3910,15 +3910,6 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </div>
 
                 <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 bg-white dark:bg-navy-950 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
-                    <span className="font-semibold">Q cells:</span>
-                    <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400"><b className="w-4 h-4 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-center leading-4 text-[10px]">1</b> solved</span>
-                    <span className="text-slate-300 dark:text-slate-700">•</span>
-                    <span className="inline-flex items-center gap-1 font-bold text-rose-500 dark:text-rose-400"><b className="w-4 h-4 rounded bg-rose-500/20 text-rose-500 dark:text-rose-400 text-center leading-4 text-[10px]">0</b> unsolved</span>
-                    <span className="text-slate-300 dark:text-slate-700">•</span>
-                    <span className="text-slate-400 font-bold"><b>—</b> not attended</span>
-                  </div>
-
                   {/* Top Pagination Controls for Zero-Scroll Navigation */}
                   {totalRows > 0 && (
                     <div className="flex items-center gap-1.5 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
