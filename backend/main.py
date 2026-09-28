@@ -8,7 +8,7 @@ from functools import lru_cache
 from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, Request, Response, Depends, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse, ORJSONResponse, HTMLResponse  # type: ignore
+from fastapi.responses import JSONResponse, ORJSONResponse, HTMLResponse, RedirectResponse  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -1136,21 +1136,18 @@ from fastapi.responses import FileResponse
 @app.get("/api/download/apk")
 @app.get("/download/apk")
 def download_android_apk_endpoint():
-    """Serves the official Nandha LeetCode Intelligence Android APK package."""
+    """Serves the official Nandha LeetCode Intelligence Android APK package without blocking event loop."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
     possible_paths = [
-        os.path.abspath(os.path.join(base_dir, "..", "Nandha_LeetCode_Intelligence_v2_latest.apk")),
-        os.path.abspath(os.path.join(base_dir, "..", "nandha-leetcode-tracker-latest.apk")),
+        os.path.abspath(os.path.join(base_dir, "static", "nandha-leetcode-tracker-latest.apk")),
         os.path.abspath(os.path.join(base_dir, "..", "frontend", "public", "nandha-leetcode-tracker-latest.apk")),
         os.path.abspath(os.path.join(base_dir, "static", "Nandha_LeetCode_Intelligence_v2_latest.apk")),
+        os.path.abspath(os.path.join(base_dir, "..", "Nandha_LeetCode_Intelligence_v2_latest.apk")),
     ]
     for apk_path in possible_paths:
         if os.path.exists(apk_path):
-            return FileResponse(
-                path=apk_path,
-                media_type="application/vnd.android.package-archive",
-                filename="Nandha_LeetCode_Intelligence_v2_latest.apk"
-            )
+            rel_name = os.path.basename(apk_path)
+            return RedirectResponse(url=f"/static/assets/{rel_name}", status_code=307)
     raise HTTPException(status_code=404, detail="Android APK package is currently updating on the server. Please try again in a few moments.")
 
 
