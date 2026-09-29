@@ -132,8 +132,10 @@ api.interceptors.request.use(async (config) => {
   // CapacitorHttp native fetch drops the Origin header in some WebView versions.
   // We use window.location.origin to supply the real origin (not hardcoded).
   if (isCapacitorNative()) {
-    config.headers['Origin'] = window.location.origin;
-    config.headers['X-App-Origin'] = window.location.origin;
+    const originVal = (window.location.origin && window.location.origin !== 'null') ? window.location.origin : 'capacitor://localhost';
+    config.headers['Origin'] = originVal;
+    config.headers['X-App-Origin'] = originVal;
+    config.headers['X-Capacitor-Platform'] = 'android';
   }
 
   try {

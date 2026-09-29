@@ -78,9 +78,9 @@ if "postgresql" in db_url or "postgres" in db_url:
     }
 
     engine_kwargs.update({
-        "pool_size": int(os.environ.get("DB_POOL_SIZE", 3)),
-        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 5)),
-        "pool_timeout": 30,          # wait up to 30s to checkout a connection under load
+        "pool_size": int(os.environ.get("DB_POOL_SIZE", 20)),
+        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 30)),
+        "pool_timeout": int(os.environ.get("DB_POOL_TIMEOUT", 30)), # wait up to 30s to checkout a connection under load
         "pool_pre_ping": True,       # verify liveness before returning from pool
         "pool_recycle": int(os.environ.get("DB_POOL_RECYCLE", 300)), # recycle after 5min; pool_pre_ping handles stale detection
         "connect_args": pg_connect_args

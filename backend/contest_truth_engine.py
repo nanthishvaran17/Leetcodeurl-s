@@ -133,6 +133,8 @@ class ContestTruthEngine:
         else:
             clean_problems = []
 
+        q_matrix_virtual = {"Q1": False, "Q2": False, "Q3": False, "Q4": False}
+
         for sub in submissions:
             if not isinstance(sub, dict):
                 continue
@@ -174,13 +176,14 @@ class ContestTruthEngine:
                     if matched_q not in timestamps:
                         timestamps[matched_q] = formatted_time
                 else:
+                    q_matrix_virtual[matched_q] = True
                     virtual_solves += 1
-            elif not is_in_contest_window:
-                virtual_solves += 1
-
+                    if matched_q not in timestamps:
+                        timestamps[matched_q] = formatted_time
 
         # Calculate verified solved count strictly from Q1..Q4 matrix
         verified_solved_count = sum(1 for v in q_matrix.values() if v)
+        virtual_solved_count = sum(1 for v in q_matrix_virtual.values() if v)
         assert 0 <= verified_solved_count <= 4, f"Invalid verified_solved_count: {verified_solved_count}"
 
         # Hardened 3-Tier Classification Engine
@@ -190,10 +193,11 @@ class ContestTruthEngine:
             solved_count = verified_solved_count
             rating = official_entry.get("rating", 0.0)
             finish_time = official_entry.get("finishTimeInSeconds", 0)
-        elif virtual_solves > 0:
+        elif virtual_solves > 0 or virtual_solved_count > 0:
             status_badge = " YELLOW"
             status_text = "Virtual Practice Participant"
-            solved_count = 0  # Virtual solves DO NOT count towards actual contest solved_count
+            solved_count = max(virtual_solved_count, 1)
+            q_matrix = q_matrix_virtual
             rating = 0.0
             finish_time = 0
         elif verified_solved_count > 0:

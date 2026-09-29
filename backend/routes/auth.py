@@ -178,8 +178,30 @@ def uuid_hex_short() -> str:
 
 def validate_csrf_origin(request: Request):
     """Verifies request Origin/Referer for state-changing operations and blocks unauthorized origins."""
-    raw_origin = request.headers.get("Origin") or request.headers.get("Referer")
+    # Bearer Token authenticated API requests are inherently immune to browser cookie CSRF
+    auth_header = request.headers.get("Authorization") or ""
+    if auth_header.startswith("Bearer "):
+        return
+
+    # Check for Native Mobile App / Capacitor headers & User-Agent
+    ua = (request.headers.get("User-Agent") or "").lower()
+    if (
+        request.headers.get("X-Capacitor-Platform") or
+        request.headers.get("X-App-Origin") or
+        "capacitor" in ua or
+        "ionic" in ua
+    ):
+        return
+
+    raw_origin = (
+        request.headers.get("Origin") or
+        request.headers.get("Referer") or
+        request.headers.get("X-App-Origin") or
+        request.headers.get("X-Capacitor-Platform")
+    )
     if not raw_origin:
+        if "mozilla" not in ua or "capacitor" in ua or "wv" in ua:
+            return
         raise HTTPException(status_code=403, detail="CSRF Validation Failed: Missing Origin or Referer header")
 
     # Properly parse scheme and host/port from Origin or Referer header (strips paths like /login)
@@ -336,7 +358,7 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                     }, ttl_seconds=300)
                     return mock_user
         except Exception as e:
-            logger.warning(f"DEBUG AUTH FAIL: Exception {e}")
+            logger.debug(f"Local JWT decode attempt failed ({e}), falling back to Firebase/Session verification")
             pass
 
         # 2. Try Firebase ID Token / Google Auth Token

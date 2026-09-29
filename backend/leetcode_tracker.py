@@ -196,14 +196,16 @@ async def fetch_leetcode_contest_and_submissions(username: str) -> Dict[str, Any
 # DUAL CONTEST CLASSIFICATION ENGINE (RULES A, B, C) 
 def classify_student_contest_performance(
     gql_data: Dict[str, Any],
-    session_title: str = "Weekly Contest 515"
+    session_title: str = "Weekly Contest 515",
+    contest_date_str: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Evaluates student performance using zero-tolerance verification rules:
     - Rule A: GREEN BADGE (Official Participant 8:00 AM - 9:30 AM IST)
-    - Rule B: YELLOW BADGE (Virtual / Late Practice Participant 9:30 AM - 10:00 PM IST)
+    - Rule B: YELLOW BADGE (Virtual / Late Practice Participant 9:30 AM - 11:59 PM IST)
     - Rule C: RED BADGE (Absent / Inactive)
     """
+    import re
     contest_history = gql_data.get("contest_history") or []
     recent_submissions = gql_data.get("recent_submissions") or []
     
@@ -250,8 +252,32 @@ def classify_student_contest_performance(
 
     # 2. Evaluate Rule B (Virtual / Late Participant)
     now_ist = get_now_ist()
-    sunday_0930_ts = int(now_ist.replace(hour=9, minute=30, second=0).timestamp())
-    sunday_2200_ts = int(now_ist.replace(hour=22, minute=0, second=0).timestamp())
+    
+    if contest_date_str:
+        try:
+            parts = [int(p) for p in re.findall(r'\d+', str(contest_date_str))]
+            if len(parts) >= 3:
+                if parts[0] > 1000:
+                    y, m, d = parts[0], parts[1], parts[2]
+                else:
+                    d, m, y = parts[0], parts[1], parts[2]
+                target_date = datetime.date(y, m, d)
+            else:
+                days_since_sunday = (now_ist.weekday() + 1) % 7
+                target_date = (now_ist - datetime.timedelta(days=days_since_sunday)).date()
+        except Exception:
+            days_since_sunday = (now_ist.weekday() + 1) % 7
+            target_date = (now_ist - datetime.timedelta(days=days_since_sunday)).date()
+    else:
+        days_since_sunday = (now_ist.weekday() + 1) % 7
+        target_date = (now_ist - datetime.timedelta(days=days_since_sunday)).date()
+
+    ist_tz = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+    sunday_0930_dt = datetime.datetime(target_date.year, target_date.month, target_date.day, 9, 30, 0, tzinfo=ist_tz)
+    sunday_2359_dt = datetime.datetime(target_date.year, target_date.month, target_date.day, 23, 59, 59, tzinfo=ist_tz)
+    
+    sunday_0930_ts = int(sunday_0930_dt.timestamp())
+    sunday_2359_ts = int(sunday_2359_dt.timestamp())
 
     virtual_ac_count = 0
     solved_q1, solved_q2, solved_q3, solved_q4 = 0, 0, 0, 0
@@ -261,15 +287,15 @@ def classify_student_contest_performance(
         if not isinstance(sub, dict):
             continue
         ts = int(sub.get("timestamp", 0))
-        # Check if submission timestamp fell within Sunday virtual window (09:30 AM - 10:00 PM IST)
-        if sunday_0930_ts <= ts <= sunday_2200_ts:
+        # Check if submission timestamp fell within Sunday virtual window (09:30 AM - 11:59 PM IST)
+        if sunday_0930_ts <= ts <= sunday_2359_ts:
             virtual_ac_count += 1
             if virtual_ac_count == 1: solved_q1 = 1
             elif virtual_ac_count == 2: solved_q2 = 1
             elif virtual_ac_count == 3: solved_q3 = 1
             elif virtual_ac_count >= 4: solved_q4 = 1
             
-            sub_dt = datetime.datetime.fromtimestamp(ts, tz=datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
+            sub_dt = datetime.datetime.fromtimestamp(ts, tz=ist_tz)
             latest_virtual_time = sub_dt.strftime("%I:%M:%S %p IST")
 
     if virtual_ac_count > 0:
