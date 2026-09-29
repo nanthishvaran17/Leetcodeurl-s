@@ -197,19 +197,19 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
                     <div className={`text-[10px] sm:text-xs font-black inline-block tracking-wider uppercase ${cfg.textColor}`}>{cfg.label}</div>
                     <div className="text-xs sm:text-base font-black text-slate-900 dark:text-white truncate max-w-[95px] sm:max-w-[150px] mx-auto pt-0.5" title={s.name}>{s.name}</div>
                     <div className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 font-mono font-bold truncate">{s.reg_no}</div>
-                    <div className="pt-1">
+                    <div className="pt-1 flex justify-center w-full">
                       {(() => {
                         const derivedYear = deriveYearLevelFromRegNo(s.reg_no, s.year_level);
                         const deptCode = s.department?.code || s.department?.name || 'DEPT';
                         return (
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] sm:text-xs font-black border ${getDeptBadgeStyle(deptCode)}`}>
+                          <span className={`inline-flex justify-center items-center px-1.5 sm:px-2.5 py-0.5 rounded-lg text-[9px] sm:text-xs font-black border max-w-full truncate ${getDeptBadgeStyle(deptCode)}`}>
                             {deptCode} • {derivedYear} Yr
                           </span>
                         );
                       })()}
                     </div>
-                    <div className="pt-1">
-                      <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-black text-[11px] sm:text-xs border border-emerald-500/20 inline-block whitespace-nowrap shadow-2xs">
+                    <div className="pt-1 flex justify-center w-full">
+                      <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-black text-[9px] sm:text-xs border border-emerald-500/20 inline-block whitespace-nowrap shadow-2xs max-w-full truncate">
                         {s.stats?.total_solved || 0} Solved
                       </span>
                     </div>
