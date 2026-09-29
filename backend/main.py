@@ -61,8 +61,20 @@ async def _deferred_startup_tasks():
         It runs BEFORE Alembic so that even if Alembic has issues, the schema is correct.
         """
         try:
-            from backend.models import Base as ModelsBase
-            ModelsBase.metadata.create_all(bind=engine)
+            db_url_str = str(engine.url)
+            is_sqlite = "sqlite" in db_url_str
+            should_create_all = True
+            if is_sqlite:
+                try:
+                    with engine.connect() as _c_check:
+                        _tbl_count = _c_check.execute(text("SELECT count(*) FROM sqlite_master WHERE type='table'")).scalar()
+                    if _tbl_count and _tbl_count >= 5:
+                        should_create_all = False
+                except Exception:
+                    should_create_all = True
+            if should_create_all:
+                from backend.models import Base as ModelsBase
+                ModelsBase.metadata.create_all(bind=engine)
         except Exception as _c_err:
             logger.warning(f"[STARTUP] Base.metadata.create_all note: {_c_err}")
 
