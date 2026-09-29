@@ -992,10 +992,10 @@ def start_scheduler():
     )
 
     # ── FRIDAY WEEKLY INTELLIGENCE PIPELINE ─────────────────────────────────────
-    # Friday Window Polling: Every 30 mins from 18:00 to 23:30 IST on Fridays
+    # Friday Window Polling: Every 30 mins from 16:00 to 23:30 IST on Fridays (starts 4:00 PM IST)
     scheduler.add_job(
         friday_weekly_window_polling_job,
-        CronTrigger(day_of_week='fri', hour='18-23', minute='0,30', timezone=IST),
+        CronTrigger(day_of_week='fri', hour='16-23', minute='0,30', timezone=IST),
         id='friday_weekly_window_polling',
         replace_existing=True,
         max_instances=1,

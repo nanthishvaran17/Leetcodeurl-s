@@ -187,8 +187,30 @@ def sync_contest_results_from_db(
     if not participants:
         logger.info(
             f"[RESULT_GATE_SYNC] No OfficialPublicParticipant rows for session {session.id}. "
-            f"Results not yet synced from Sunday autopilot."
+            f"Attempting live official fetch via PublicContestEngine..."
         )
+        try:
+            from backend.services.public_contest_engine import PublicContestEngine
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # Running in existing event loop
+                    task = loop.create_task(PublicContestEngine.synchronize_public_contest(session.id, db))
+                else:
+                    loop.run_until_complete(PublicContestEngine.synchronize_public_contest(session.id, db))
+            except RuntimeError:
+                asyncio.run(PublicContestEngine.synchronize_public_contest(session.id, db))
+
+            participants = (
+                db.query(OfficialPublicParticipant)
+                .filter(OfficialPublicParticipant.session_id == session.id)
+                .all()
+            )
+        except Exception as sync_err:
+            logger.warning(f"[RESULT_GATE_SYNC] Live official fetch failed/skipped: {sync_err}")
+
+    if not participants:
         return {
             "ok": False,
             "synced": 0,
@@ -207,11 +229,17 @@ def sync_contest_results_from_db(
             username_to_student[s.username.lower()] = s
 
     synced = 0
+    updated = 0
     for p in participants:
-        uname = (p.username or "").lower()
+        uname = (p.leetcode_username or getattr(p, "username", "") or "").lower()
         student = username_to_student.get(uname)
         if not student:
             continue
+
+        p_rank = getattr(p, "official_rank", None) or getattr(p, "rank", None)
+        p_score = getattr(p, "official_score", None) or getattr(p, "score", None)
+        p_solved = getattr(p, "official_problems_solved", None) or getattr(p, "solved_count", 0) or 0
+        finish_time = getattr(p, "official_finish_time", None) or getattr(p, "finish_time_seconds", 0) or 0
 
         # Check if WeeklyPublicResult already exists
         existing = (
@@ -223,10 +251,23 @@ def sync_contest_results_from_db(
             .first()
         )
         if existing:
+            # Update existing record with official rank, score, solved count if available
+            modified = False
+            if p_rank and existing.contest_rank != p_rank:
+                existing.contest_rank = p_rank
+                modified = True
+            if p_score and existing.contest_score != p_score:
+                existing.contest_score = p_score
+                modified = True
+            if p_solved > 0 and (existing.total_contest_solved or 0) == 0:
+                existing.total_contest_solved = p_solved
+                modified = True
+            if modified:
+                updated += 1
             continue
 
         # Create from OfficialPublicParticipant
-        status = "OFFICIAL_ATTENDED" if (p.finish_time_seconds or 0) > 0 else "VIRTUAL_ATTENDED"
+        status = "OFFICIAL_ATTENDED" if finish_time > 0 or p_solved > 0 else "VIRTUAL_ATTENDED"
         rec = WeeklyPublicResult(
             session_id=session.id,
             student_id=student.id,
@@ -234,30 +275,30 @@ def sync_contest_results_from_db(
             name=student.name,
             dept=student.department.code if student.department else "CSE",
             year=student.year_level or "III Year",
-            username=p.username,
+            username=student.username,
             participation_status=status,
-            total_contest_solved=p.solved_count or 0,
+            total_contest_solved=p_solved,
             q1=bool(getattr(p, "q1_solved", False)),
             q2=bool(getattr(p, "q2_solved", False)),
             q3=bool(getattr(p, "q3_solved", False)),
             q4=bool(getattr(p, "q4_solved", False)),
-            contest_rank=p.rank,
-            contest_score=p.score,
+            contest_rank=p_rank,
+            contest_score=p_score,
         )
         db.add(rec)
         synced += 1
 
-    if synced > 0:
+    if synced > 0 or updated > 0:
         try:
             db.commit()
-            logger.info(f"[RESULT_GATE_SYNC] Synced {synced} new WeeklyPublicResult rows for session {session.id}")
+            logger.info(f"[RESULT_GATE_SYNC] Synced {synced} new and updated {updated} WeeklyPublicResult rows for session {session.id}")
         except Exception as e:
             db.rollback()
             logger.error(f"[RESULT_GATE_SYNC] Commit failed: {e}")
             return {"ok": False, "synced": 0, "reason": str(e)}
 
     return {
-        "ok": synced > 0 or len(participants) > 0,
+        "ok": synced > 0 or updated > 0 or len(participants) > 0,
         "synced": synced,
         "existing_participants": len(participants),
         "reason": f"Synced {synced} new rows from {len(participants)} OfficialPublicParticipant records",
