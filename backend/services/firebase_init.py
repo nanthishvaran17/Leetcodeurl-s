@@ -49,6 +49,13 @@ def get_firebase_app():
     cred = None
     project_id = default_proj_id
 
+    def _sanitize_cred_dict(d: dict) -> dict:
+        if isinstance(d, dict) and "private_key" in d:
+            pk = d["private_key"]
+            if isinstance(pk, str) and "\\n" in pk:
+                d["private_key"] = pk.replace("\\n", "\n")
+        return d
+
     # 1. Check JSON string from environment variables
     env_json = (
         os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON") or 
@@ -59,7 +66,7 @@ def get_firebase_app():
     if env_json and env_json.strip():
         try:
             clean_json = env_json.strip().strip("'\"")
-            cred_dict = json.loads(clean_json)
+            cred_dict = _sanitize_cred_dict(json.loads(clean_json))
             project_id = cred_dict.get("project_id") or default_proj_id
             cred = credentials.Certificate(cred_dict)
             logger.info(f"[FCM] Loaded credentials from environment JSON (projectId={project_id}).")
@@ -78,7 +85,7 @@ def get_firebase_app():
                     clean_b64 += '=' * (4 - missing_padding)
                 decoded_bytes = base64.b64decode(clean_b64)
                 decoded_str = decoded_bytes.decode('utf-8', errors='ignore')
-                cred_dict = json.loads(decoded_str)
+                cred_dict = _sanitize_cred_dict(json.loads(decoded_str))
                 project_id = cred_dict.get("project_id") or default_proj_id
                 cred = credentials.Certificate(cred_dict)
                 logger.info(f"[FCM] Loaded credentials from Base64 environment variable (projectId={project_id}).")
