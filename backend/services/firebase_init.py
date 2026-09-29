@@ -58,7 +58,8 @@ def get_firebase_app():
 
     if env_json and env_json.strip():
         try:
-            cred_dict = json.loads(env_json.strip())
+            clean_json = env_json.strip().strip("'\"")
+            cred_dict = json.loads(clean_json)
             project_id = cred_dict.get("project_id") or default_proj_id
             cred = credentials.Certificate(cred_dict)
             logger.info(f"[FCM] Loaded credentials from environment JSON (projectId={project_id}).")
@@ -70,7 +71,13 @@ def get_firebase_app():
         env_b64 = os.environ.get("FIREBASE_SERVICE_ACCOUNT_BASE64")
         if env_b64 and env_b64.strip():
             try:
-                decoded_str = base64.b64decode(env_b64.strip()).decode('utf-8')
+                # Sanitize base64 string (strip whitespace, newlines, quotes, and add missing padding)
+                clean_b64 = env_b64.strip().replace("\n", "").replace("\r", "").replace(" ", "").strip("'\"")
+                missing_padding = len(clean_b64) % 4
+                if missing_padding:
+                    clean_b64 += '=' * (4 - missing_padding)
+                decoded_bytes = base64.b64decode(clean_b64)
+                decoded_str = decoded_bytes.decode('utf-8', errors='ignore')
                 cred_dict = json.loads(decoded_str)
                 project_id = cred_dict.get("project_id") or default_proj_id
                 cred = credentials.Certificate(cred_dict)
