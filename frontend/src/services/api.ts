@@ -276,8 +276,8 @@ api.interceptors.response.use(
       });
     }
 
-    // --- 2. HANDLE NETWORK COLD STARTS / GATEWAY ERRORS (GET only — POSTs handle their own retry) ---
-    if (config._retryCount && config._retryCount >= 2) {
+    // --- 2. HANDLE NETWORK COLD STARTS / GATEWAY ERRORS (Auto-retry up to 3 times for cold-starts/502 Bad Gateway) ---
+    if (config._retryCount && config._retryCount >= 3) {
       return Promise.reject(error);
     }
 
@@ -285,13 +285,11 @@ api.interceptors.response.use(
     const isGatewayError = error.response && [502, 503, 504].includes(error.response.status);
     const isNetworkError = !error.response && Boolean(error.request);
     const isCanceled = axios.isCancel(error) || error.name === 'CanceledError' || error.code === 'ERR_CANCELED';
-    // Never auto-retry POST/PUT/DELETE — these are handled by the caller (e.g. LoginPage retry logic)
-    const isReadOnly = config.method === 'get' || config.method === 'GET';
 
-    if (!isCanceled && isReadOnly && (isTimeout || isGatewayError || isNetworkError)) {
+    if (!isCanceled && (isTimeout || isGatewayError || isNetworkError)) {
       config._retryCount = (config._retryCount || 0) + 1;
-      const delayMs = Math.min(200, config._retryCount * 150);
-      console.warn(`[API_COLD_START_RETRY] Retrying GET to ${config.url} (Attempt ${config._retryCount}/2) in ${delayMs}ms...`);
+      const delayMs = Math.min(2500, config._retryCount * 800);
+      console.warn(`[API_COLD_START_RETRY] Retrying request to ${config.url} (Attempt ${config._retryCount}/3) in ${delayMs}ms due to server cold start...`);
       await new Promise((resolve) => setTimeout(resolve, delayMs));
       return api(config);
     }
