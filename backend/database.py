@@ -77,15 +77,15 @@ if "postgresql" in db_url or "postgres" in db_url:
         "sslmode": "require",
     }
 
-    raw_pool_size = int(os.environ.get("DB_POOL_SIZE", 25))
-    raw_max_overflow = int(os.environ.get("DB_MAX_OVERFLOW", 35))
-    pool_size = raw_pool_size if os.environ.get("FORCE_LOW_POOL") == "true" else max(raw_pool_size, 20)
-    max_overflow = raw_max_overflow if os.environ.get("FORCE_LOW_POOL") == "true" else max(raw_max_overflow, 30)
+    raw_pool_size = int(os.environ.get("DB_POOL_SIZE", 10))
+    raw_max_overflow = int(os.environ.get("DB_MAX_OVERFLOW", 10))
+    pool_size = raw_pool_size if os.environ.get("FORCE_LOW_POOL") == "true" else max(raw_pool_size, 8)
+    max_overflow = raw_max_overflow if os.environ.get("FORCE_LOW_POOL") == "true" else max(raw_max_overflow, 10)
 
     engine_kwargs.update({
         "pool_size": pool_size,
         "max_overflow": max_overflow,
-        "pool_timeout": int(os.environ.get("DB_POOL_TIMEOUT", 45)), # wait up to 45s to checkout a connection under load
+        "pool_timeout": int(os.environ.get("DB_POOL_TIMEOUT", 30)), # wait up to 30s to checkout a connection under load
         "pool_pre_ping": True,       # verify liveness before returning from pool
         "pool_recycle": int(os.environ.get("DB_POOL_RECYCLE", 300)), # recycle after 5min; pool_pre_ping handles stale detection
         "connect_args": pg_connect_args
