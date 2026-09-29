@@ -76,8 +76,8 @@ def notify_staff_updated(staff_email: str, staff_name: str, changes: dict):
 
 
 def notify_password_changed(staff_email: str, staff_name: str, new_password: Optional[str] = None):
-    import datetime
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    from backend.time_utils import now_ist
+    timestamp = now_ist().strftime("%Y-%m-%d %H:%M:%S IST")
     title = "Temporary Password Issued" if new_password else "Password Changed Successfully"
 
     if new_password:
