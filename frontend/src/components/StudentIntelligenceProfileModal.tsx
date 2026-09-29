@@ -703,7 +703,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
               <div className="flex flex-col gap-3.5 pr-8 sm:pr-10">
                 {/* Avatar & Student Name */}
-                <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                <div className="flex items-center gap-3.5 min-w-0">
                   <button
                     onClick={onClose}
                     className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-slate-200 hover:text-white transition-all cursor-pointer shrink-0 shadow-md hover:scale-110"
@@ -712,7 +712,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                     <ArrowLeft className="w-5 h-5" />
                   </button>
 
-                  <div className="min-w-0 flex-1 flex flex-row items-start sm:items-center gap-3">
+                  <div className="min-w-0 flex-1 flex flex-row items-center gap-3">
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black text-xl sm:text-2xl shadow-xl border-2 border-white/20 shrink-0">
                       {st.name ? st.name.charAt(0).toUpperCase() : (initialStudent?.name?.charAt(0)?.toUpperCase() || 'S')}
                     </div>
@@ -727,7 +727,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-slate-300 font-semibold flex-wrap mt-1">
+                      <div className="mt-1.5 text-xs text-slate-300 font-semibold leading-relaxed">
                         {(() => {
                           const reg = st.reg_no || initialStudent?.reg_no;
                           const dept = st.department || st.dept_code || initialStudent?.department?.name || initialStudent?.department?.code || initialStudent?.dept;
@@ -745,19 +745,19 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                           return metaParts.map((part, idx) => (
                             <React.Fragment key={idx}>
-                              {idx > 0 && <span className="text-slate-400 font-bold">•</span>}
+                              {idx > 0 && <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-500/80 align-middle mx-1.5 shrink-0" />}
                               {part}
                             </React.Fragment>
                           ));
                         })()}
 
                         {st.accommodation && (
-                          <span className="px-2 py-0.5 rounded-full bg-purple-900/60 text-purple-200 text-[10px] font-bold border border-purple-700/40 ml-1">
+                          <span className="inline-block align-middle px-2 py-0.5 rounded-full bg-purple-900/60 text-purple-200 text-[10px] font-bold border border-purple-700/40 ml-2 mb-0.5 whitespace-nowrap">
                             {st.accommodation}
                           </span>
                         )}
                         {st.twelfth_cutoff != null && (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-900/60 text-emerald-200 text-[10px] font-bold border border-emerald-700/40">
+                          <span className="inline-block align-middle px-2 py-0.5 rounded-full bg-emerald-900/60 text-emerald-200 text-[10px] font-bold border border-emerald-700/40 ml-2 mb-0.5 whitespace-nowrap">
                             12th: {st.twelfth_cutoff}
                           </span>
                         )}
@@ -767,86 +767,82 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                 </div>
 
                 {/* Hero Actions Bar & Freshness / Telemetry Audit Status */}
-                <div className="flex items-center justify-between gap-3 text-xs flex-wrap pt-3 border-t border-slate-800/80">
-                  <div className="flex items-center gap-2 flex-wrap text-[11px]">
-                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold shadow-2xs">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      Data Quality: 100% Verified Ground Truth
-                    </span>
-                    <span className="px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 font-mono text-slate-300">
-                      Fetch Latency: <strong className="text-amber-300">{fetchLatency ? `${fetchLatency} ms` : '< 100 ms'}</strong>
-                    </span>
-                    <span className="px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 font-mono text-slate-300">
-                      Synced: <strong className="text-slate-100">{st.last_synced || lastFetchTime || 'Real-Time'}</strong>
-                    </span>
-                  </div>
+                <div className="flex flex-wrap items-center gap-2.5 pt-4 border-t border-slate-800/80 w-full">
+                  <span className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold shadow-2xs text-[10px] sm:text-[11px]">
+                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    Data Quality: 100% Verified
+                  </span>
+                  <span className="shrink-0 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/60 font-mono text-slate-300 text-[10px] sm:text-[11px]">
+                    Fetch Latency: <strong className="text-amber-300">{fetchLatency ? `${fetchLatency} ms` : '< 100 ms'}</strong>
+                  </span>
+                  <span className="shrink-0 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/60 font-mono text-slate-300 text-[10px] sm:text-[11px]">
+                    Synced: <strong className="text-slate-100">{st.last_synced || lastFetchTime || 'Real-Time'}</strong>
+                  </span>
 
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {st.leetcode_url && (
-                      <a
-                        href={st.leetcode_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer shadow-sm hover:scale-[1.04]"
-                        title="Primary LeetCode Account"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Primary: @{st.username || 'LeetCode'}</span>
-                      </a>
-                    )}
-
-                    {(() => {
-                      const list = [...(st.secondary_accounts || st.leetcode_accounts || initialStudent?.secondary_accounts || initialStudent?.leetcode_accounts || [])];
-                      const directSecId = st.secondary_leetcode_id || initialStudent?.secondary_leetcode_id;
-                      if (directSecId && !list.some(a => (a.username === directSecId || a.leetcode_username === directSecId))) {
-                        list.unshift({ username: directSecId, profile_url: `https://leetcode.com/u/${directSecId}/` });
-                      }
-                      return list.map((acc: any, idx: number) => {
-                        const secUser = acc.leetcode_username || acc.username;
-                        if (!secUser) return null;
-                        const secUrl = acc.profile_url || `https://leetcode.com/u/${secUser}/`;
-                        return (
-                          <a
-                            key={acc.id || idx}
-                            href={secUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-bold transition-all cursor-pointer shadow-sm hover:scale-[1.04]"
-                            title="Secondary LeetCode Account"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            <span>Secondary: @{secUser}</span>
-                          </a>
-                        );
-                      });
-                    })()}
-
-                    <button
-                      type="button"
-                      onClick={() => setShowEditOverlay(true)}
-                      className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-xs font-black shadow-md shadow-amber-500/30 transition-all cursor-pointer active:scale-95 sm:hover:scale-[1.04] touch-manipulation select-none"
-                      title="Edit Student Record"
+                  {st.leetcode_url && (
+                    <a
+                      href={st.leetcode_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer shadow-sm hover:scale-[1.04]"
+                      title="Primary LeetCode Account"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>Edit</span>
-                    </button>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Primary: @{st.username || 'LeetCode'}</span>
+                    </a>
+                  )}
 
-                    <button
-                      onClick={handleRefreshStudent}
-                      disabled={refreshing}
-                      className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-black shadow-md shadow-brand-600/30 transition-all cursor-pointer hover:scale-[1.04]"
-                    >
-                      <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-                      <span>{refreshing ? 'Syncing...' : 'Live Refresh'}</span>
-                    </button>
+                  {(() => {
+                    const list = [...(st.secondary_accounts || st.leetcode_accounts || initialStudent?.secondary_accounts || initialStudent?.leetcode_accounts || [])];
+                    const directSecId = st.secondary_leetcode_id || initialStudent?.secondary_leetcode_id;
+                    if (directSecId && !list.some(a => (a.username === directSecId || a.leetcode_username === directSecId))) {
+                      list.unshift({ username: directSecId, profile_url: `https://leetcode.com/u/${directSecId}/` });
+                    }
+                    return list.map((acc: any, idx: number) => {
+                      const secUser = acc.leetcode_username || acc.username;
+                      if (!secUser) return null;
+                      const secUrl = acc.profile_url || `https://leetcode.com/u/${secUser}/`;
+                      return (
+                        <a
+                          key={acc.id || idx}
+                          href={secUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-bold transition-all cursor-pointer shadow-sm hover:scale-[1.04]"
+                          title="Secondary LeetCode Account"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Secondary: @{secUser}</span>
+                        </a>
+                      );
+                    });
+                  })()}
 
-                    <button
-                      onClick={handlePrintDossier}
-                      className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-slate-200 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 border border-white/20 shadow-sm hover:scale-[1.04]"
-                    >
-                      <FileText className="w-3.5 h-3.5" /> Print
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditOverlay(true)}
+                    className="shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-xs font-black shadow-md shadow-amber-500/30 transition-all cursor-pointer active:scale-95 touch-manipulation select-none"
+                    title="Edit Student Record"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Edit</span>
+                  </button>
+
+                  <button
+                    onClick={handleRefreshStudent}
+                    disabled={refreshing}
+                    className="shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-black shadow-md shadow-brand-600/30 transition-all cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                    <span>{refreshing ? 'Syncing...' : 'Live Refresh'}</span>
+                  </button>
+
+                  <button
+                    onClick={handlePrintDossier}
+                    className="shrink-0 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-slate-200 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 border border-white/20 shadow-sm"
+                  >
+                    <FileText className="w-3.5 h-3.5" /> Print
+                  </button>
                 </div>
               </div>
             </div>
@@ -862,7 +858,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                       setActiveTab(tab.id as any);
                       document.getElementById('modal-scroll-container')?.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className={`px-2 py-2 sm:px-3.5 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] sm:text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center sm:justify-start gap-1.5 w-full ${
+                    className={`px-3 py-2 sm:px-3.5 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] sm:text-xs font-extrabold transition-all cursor-pointer flex items-center justify-start gap-2 w-full ${
                       isActive
                         ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30 border border-brand-500 scale-[1.02]'
                         : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 hover:text-slate-900 border border-slate-200'
@@ -890,7 +886,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                   {/* TAB 1: EXECUTIVE PERFORMANCE KPI DASHBOARD */}
                   {activeTab === 'overview' && (
                     <div id="overview" className="space-y-4 animate-fade-in scroll-mt-20">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                           <Activity className="w-4 h-4 text-brand-600" />
                           <span>1. Executive Performance KPI Dashboard</span>
@@ -900,12 +896,12 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
                         {/* KPI 1: Total Solved */}
-                        <div className="col-span-2 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1 hover:shadow-md transition-all">
+                        <div className="col-span-2 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1 hover:shadow-md transition-all flex flex-col items-center text-center">
                           <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Total Solved</span>
                           <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono">
                             {totalSolved}
                           </div>
-                          <div className="flex items-center gap-1 text-[11px] font-bold font-mono pt-1">
+                          <div className="flex justify-center items-center gap-1 text-[11px] font-bold font-mono pt-1">
                             <span className="text-emerald-600">{easySolved}E</span>
                             <span className="text-slate-400">•</span>
                             <span className="text-amber-600">{mediumSolved}M</span>
@@ -915,7 +911,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         </div>
 
                         {/* KPI 2: Acceptance Rate */}
-                        <div className="col-span-2 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1 hover:shadow-md transition-all">
+                        <div className="col-span-2 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1 hover:shadow-md transition-all flex flex-col items-center text-center">
                           <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Acceptance Rate</span>
                           <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono">
                             {coding.acceptance_rate || 'N/A'}
@@ -926,7 +922,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         </div>
 
                         {/* KPI 3: Contest Rating */}
-                        <div className="col-span-2 bg-purple-50/80 p-4 sm:p-5 rounded-3xl border border-purple-200/80 shadow-sm space-y-1 hover:shadow-md transition-all">
+                        <div className="col-span-2 bg-purple-50/80 p-4 sm:p-5 rounded-3xl border border-purple-200/80 shadow-sm space-y-1 hover:shadow-md transition-all flex flex-col items-center text-center">
                           <span className="text-[10px] font-extrabold text-purple-600 uppercase tracking-wider block">Contest Rating</span>
                           <div className="text-2xl sm:text-3xl font-black text-purple-900 font-mono">
                             {contestRatingVal || '1746.3'}
@@ -937,9 +933,9 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         </div>
 
                         {/* KPI 4: Global Rank */}
-                        <div className="col-span-2 bg-blue-50/80 p-4 sm:p-5 rounded-3xl border border-blue-200/80 shadow-sm space-y-1 hover:shadow-md transition-all">
+                        <div className="col-span-2 bg-blue-50/80 p-4 sm:p-5 rounded-3xl border border-blue-200/80 shadow-sm space-y-1 hover:shadow-md transition-all flex flex-col items-center text-center">
                           <span className="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider block">Global Rank</span>
-                          <div className="text-xl sm:text-2xl font-black text-blue-900 font-mono truncate">
+                          <div className="text-xl sm:text-2xl font-black text-blue-900 font-mono truncate w-full text-center">
                             {globalRankVal || '#94,251'}
                           </div>
                           <div className="text-[11px] text-blue-700 font-bold truncate pt-1">
@@ -950,24 +946,24 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                       {/* Secondary Student Activity Row */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
+                        <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center">
                           <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Active Coding Days</span>
                           <div className="text-xl font-black text-slate-900 font-mono mt-0.5">
                             {activity.active_days ?? coding.active_days ?? 0} Days
                           </div>
                         </div>
 
-                        <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
+                        <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center">
                           <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Activity Streak</span>
-                          <div className="text-xl font-black text-amber-600 font-mono mt-0.5 flex items-center gap-1">
+                          <div className="text-xl font-black text-amber-600 font-mono mt-0.5 flex justify-center items-center gap-1">
                             <Flame className="w-4 h-4 text-amber-500" />
                             <span>{activity.current_streak ?? 0} Days</span>
                           </div>
                         </div>
 
-                        <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
+                        <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center">
                           <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Primary Language</span>
-                          <div className="text-base font-black text-brand-600 font-mono mt-1 truncate">
+                          <div className="text-base font-black text-brand-600 font-mono mt-1 truncate w-full text-center">
                             {intelData?.primary_language || 'Auto-Detected'}
                           </div>
                         </div>
@@ -978,7 +974,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                   {/* TAB 2: DSA / PROBLEM-SOLVING DIFFICULTY INTELLIGENCE */}
                   {activeTab === 'dsa' && (
                     <div id="dsa" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 animate-fade-in scroll-mt-20">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                           <Brain className="w-4 h-4 text-indigo-600" />
                           <span>2. DSA / Problem-Solving Intelligence</span>
@@ -1104,7 +1100,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                   {/* TAB 3: CONTEST INTELLIGENCE */}
                   {activeTab === 'contests' && (
                     <div id="contests" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 animate-fade-in scroll-mt-20">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                           <Trophy className="w-4 h-4 text-purple-600" />
                           <span>3. Contest Intelligence &amp; Rating Progression</span>
@@ -1197,29 +1193,61 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                           Recent Contest History ({contestHistoryList.length} Sessions)
                         </span>
                         {contestHistoryList.length > 0 ? (
-                          <div className="overflow-x-auto rounded-2xl border border-slate-200/80">
-                            <table className="w-full text-left text-xs">
-                              <thead className="bg-slate-100 text-slate-600 font-black uppercase text-[10px]">
-                                <tr>
-                                  <th className="py-2.5 px-3">Contest Name</th>
-                                  <th className="py-2.5 px-3">Date</th>
-                                  <th className="py-2.5 px-3 text-center">Rank</th>
-                                  <th className="py-2.5 px-3 text-center">Score / Solved</th>
-                                  <th className="py-2.5 px-3 text-right">Rating After</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-100 font-semibold text-slate-800">
-                                {contestHistoryList.map((h: any, idx: number) => (
-                                  <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                    <td className="py-2.5 px-3 font-bold text-slate-900">{h.contest_name}</td>
-                                    <td className="py-2.5 px-3 font-mono text-slate-500">{h.date}</td>
-                                    <td className="py-2.5 px-3 text-center font-mono font-bold text-purple-600">{h.contest_rank}</td>
-                                    <td className="py-2.5 px-3 text-center font-bold text-emerald-600">{h.problems_solved} / {h.total_problems || 4}</td>
-                                    <td className="py-2.5 px-3 text-right font-mono font-black">{h.rating_after}</td>
+                          <div className="w-full">
+                            {/* Desktop Table View */}
+                            <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200/80">
+                              <table className="w-full text-left text-xs whitespace-nowrap">
+                                <thead className="bg-slate-100 text-slate-600 font-black uppercase text-[10px]">
+                                  <tr>
+                                    <th className="py-2.5 px-3">Contest Name</th>
+                                    <th className="py-2.5 px-3">Date</th>
+                                    <th className="py-2.5 px-3 text-center">Rank</th>
+                                    <th className="py-2.5 px-3 text-center">Score / Solved</th>
+                                    <th className="py-2.5 px-3 text-right">Rating After</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 font-semibold text-slate-800">
+                                  {contestHistoryList.map((h: any, idx: number) => (
+                                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                                      <td className="py-2.5 px-3 font-bold text-slate-900">{h.contest_name}</td>
+                                      <td className="py-2.5 px-3 font-mono text-slate-500">{h.date}</td>
+                                      <td className="py-2.5 px-3 text-center font-mono font-bold text-purple-600">{h.contest_rank}</td>
+                                      <td className="py-2.5 px-3 text-center font-bold text-emerald-600">{h.problems_solved} / {h.total_problems || 4}</td>
+                                      <td className="py-2.5 px-3 text-right font-mono font-black">{h.rating_after}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+
+                            {/* Mobile Card View */}
+                            <div className="md:hidden flex flex-col gap-3">
+                              {contestHistoryList.map((h: any, idx: number) => (
+                                <div key={idx} className="p-4 rounded-2xl border border-slate-200/80 bg-slate-50 space-y-3 shadow-sm">
+                                  <div className="flex justify-between items-start gap-2">
+                                    <span className="font-bold text-slate-900 text-sm leading-tight">{h.contest_name}</span>
+                                    <span className="px-2 py-1 rounded-lg bg-purple-100 text-purple-800 font-mono font-bold text-[10px] shrink-0">
+                                      Rank: {h.contest_rank}
+                                    </span>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                      <span className="text-[10px] font-extrabold text-slate-500 uppercase block">Date</span>
+                                      <span className="font-mono font-bold text-slate-800 mt-0.5 inline-block">{h.date}</span>
+                                    </div>
+                                    <div className="text-right">
+                                      <span className="text-[10px] font-extrabold text-slate-500 uppercase block">Score / Solved</span>
+                                      <span className="font-bold text-emerald-600 mt-0.5 inline-block">{h.problems_solved} / {h.total_problems || 4}</span>
+                                    </div>
+                                    <div className="col-span-2 pt-2 border-t border-slate-200/60 mt-1 flex justify-between items-center">
+                                      <span className="text-[10px] font-extrabold text-slate-500 uppercase">Rating After</span>
+                                      <span className="font-mono font-black text-slate-900 text-sm">{h.rating_after}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         ) : (
                           <div className="p-4 text-center text-xs text-slate-400 italic bg-slate-50 rounded-2xl border border-slate-200/80">
@@ -1233,7 +1261,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                   {/* TAB 4: CODING ACTIVITY HEATMAP */}
                   {activeTab === 'activity' && (
                     <div id="activity" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 animate-fade-in scroll-mt-20">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                           <Zap className="w-4 h-4 text-amber-500" />
                           <span>4. Coding Activity Calendar &amp; Consistency</span>
@@ -1341,55 +1369,103 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                       </div>
 
                       {submissions.length > 0 ? (
-                        <div className="overflow-x-auto rounded-2xl border border-slate-200/80">
-                          <table className="w-full text-left text-xs">
-                            <thead className="bg-slate-100 text-slate-600 font-black uppercase text-[10px]">
-                              <tr>
-                                <th className="py-3 px-3.5">Problem Title</th>
-                                <th className="py-3 px-3.5">Language</th>
-                                <th className="py-3 px-3.5 text-center">Status</th>
-                                <th className="py-3 px-3.5 text-center">Runtime / Memory</th>
-                                <th className="py-3 px-3.5 text-right">Timestamp</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
-                              {submissions
-                                .filter((s: any) =>
-                                  !probSearch ||
-                                  (s.title || '').toLowerCase().includes(probSearch.toLowerCase()) ||
-                                  (s.language || '').toLowerCase().includes(probSearch.toLowerCase())
-                                )
-                                .map((s: any, idx: number) => (
-                                  <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                    <td className="py-3 px-3.5 font-bold text-slate-900">
-                                      <a
-                                        href={`https://leetcode.com/problems/${s.title_slug || 'two-sum'}/`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="hover:text-brand-600 flex items-center gap-1.5"
-                                      >
-                                        <span>{s.title}</span>
-                                        <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-                                      </a>
-                                    </td>
-                                    <td className="py-3 px-3.5">
-                                      <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-bold text-[10px]">
-                                        {s.language}
+                        <div className="w-full">
+                          {/* Desktop Table View */}
+                          <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200/80">
+                            <table className="w-full text-left text-xs whitespace-nowrap">
+                              <thead className="bg-slate-100 text-slate-600 font-black uppercase text-[10px]">
+                                <tr>
+                                  <th className="py-3 px-3.5">Problem Title</th>
+                                  <th className="py-3 px-3.5">Language</th>
+                                  <th className="py-3 px-3.5 text-center">Status</th>
+                                  <th className="py-3 px-3.5 text-center">Runtime / Memory</th>
+                                  <th className="py-3 px-3.5 text-right">Timestamp</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+                                {submissions
+                                  .filter((s: any) =>
+                                    !probSearch ||
+                                    (s.title || '').toLowerCase().includes(probSearch.toLowerCase()) ||
+                                    (s.language || '').toLowerCase().includes(probSearch.toLowerCase())
+                                  )
+                                  .map((s: any, idx: number) => (
+                                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                                      <td className="py-3 px-3.5 font-bold text-slate-900 whitespace-normal min-w-[150px]">
+                                        <a
+                                          href={`https://leetcode.com/problems/${s.title_slug || 'two-sum'}/`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="hover:text-brand-600 flex items-start gap-1.5"
+                                        >
+                                          <span className="break-words leading-tight">{s.title}</span>
+                                          <ExternalLink className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
+                                        </a>
+                                      </td>
+                                      <td className="py-3 px-3.5">
+                                        <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-bold text-[10px]">
+                                          {s.language}
+                                        </span>
+                                      </td>
+                                      <td className="py-3 px-3.5 text-center">
+                                        <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-[10px]">
+                                          {s.status}
+                                        </span>
+                                      </td>
+                                      <td className="py-3 px-3.5 text-center font-mono text-slate-600">
+                                        {s.runtime && s.runtime !== 'N/A' ? s.runtime : '—'} {s.memory && s.memory !== 'N/A' ? `• ${s.memory}` : ''}
+                                      </td>
+                                      <td className="py-3 px-3.5 text-right font-mono text-slate-500">{s.timestamp}</td>
+                                    </tr>
+                                  ))}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {/* Mobile Card View (One by One) */}
+                          <div className="md:hidden flex flex-col gap-3">
+                            {submissions
+                              .filter((s: any) =>
+                                !probSearch ||
+                                (s.title || '').toLowerCase().includes(probSearch.toLowerCase()) ||
+                                (s.language || '').toLowerCase().includes(probSearch.toLowerCase())
+                              )
+                              .map((s: any, idx: number) => (
+                                <div key={idx} className="p-4 rounded-2xl border border-slate-200/80 bg-slate-50 space-y-3 shadow-sm">
+                                  <div className="flex justify-between items-start gap-2">
+                                    <a
+                                      href={`https://leetcode.com/problems/${s.title_slug || 'two-sum'}/`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="font-bold text-slate-900 text-sm hover:text-brand-600 flex items-start gap-1.5 leading-tight flex-1 break-words"
+                                    >
+                                      <span>{s.title}</span>
+                                      <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                                    </a>
+                                    <span className="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-[10px] shrink-0">
+                                      {s.status}
+                                    </span>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                      <span className="text-[10px] font-extrabold text-slate-500 uppercase block">Language</span>
+                                      <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded mt-0.5 inline-block">{s.language}</span>
+                                    </div>
+                                    <div className="text-right">
+                                      <span className="text-[10px] font-extrabold text-slate-500 uppercase block">Timestamp</span>
+                                      <span className="font-mono font-bold text-slate-800 mt-0.5 inline-block">{s.timestamp}</span>
+                                    </div>
+                                    <div className="col-span-2 pt-2 border-t border-slate-200/60 mt-1">
+                                      <span className="text-[10px] font-extrabold text-slate-500 uppercase block">Runtime / Memory</span>
+                                      <span className="font-mono font-bold text-slate-800 mt-0.5 inline-block">
+                                        {s.runtime && s.runtime !== 'N/A' ? s.runtime : '—'} {s.memory && s.memory !== 'N/A' ? `• ${s.memory}` : ''}
                                       </span>
-                                    </td>
-                                    <td className="py-3 px-3.5 text-center">
-                                      <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-[10px]">
-                                        {s.status}
-                                      </span>
-                                    </td>
-                                    <td className="py-3 px-3.5 text-center font-mono text-slate-600">
-                                      {s.runtime && s.runtime !== 'N/A' ? s.runtime : '—'} {s.memory && s.memory !== 'N/A' ? `• ${s.memory}` : ''}
-                                    </td>
-                                    <td className="py-3 px-3.5 text-right font-mono text-slate-500">{s.timestamp}</td>
-                                  </tr>
-                                ))}
-                            </tbody>
-                          </table>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
                         </div>
                       ) : (
                         <div className="p-8 text-center text-xs text-slate-400 italic bg-slate-50 rounded-2xl border border-slate-200/80">
@@ -1402,7 +1478,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                   {/* TAB 6: EARNED BADGES & ACHIEVEMENTS */}
                   {activeTab === 'badges' && (
                     <div id="badges" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 animate-fade-in scroll-mt-20">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <div>
                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                             <Award className="w-4 h-4 text-amber-500" />
@@ -1468,7 +1544,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                   {/* TAB 7: LANGUAGE INTELLIGENCE */}
                   {activeTab === 'languages' && (
                     <div id="languages" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 animate-fade-in scroll-mt-20">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <div>
                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                             <Sparkles className="w-4 h-4 text-amber-500" />
@@ -1530,7 +1606,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                   {/* TAB 8: TOPIC & SKILL INTELLIGENCE */}
                   {activeTab === 'topics' && (
                     <div id="topics" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 animate-fade-in scroll-mt-20">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <div>
                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                             <Target className="w-4 h-4 text-brand-600" />

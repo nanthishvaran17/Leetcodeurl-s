@@ -584,11 +584,11 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               <span className="text-sm font-bold text-slate-800 dark:text-slate-200">No students match the selected filters.</span>
             </div>
           ) : (
-            (paginatedStudents.length > 50 && (typeof window !== 'undefined' && window.innerWidth >= 768)) ? (
+            (paginatedStudents.length > 50) ? (
               <List
-                height={800}
+                height={typeof window !== 'undefined' && window.innerWidth < 768 ? 600 : 800}
                 itemCount={paginatedStudents.length}
-                itemSize={68}
+                itemSize={typeof window !== 'undefined' && window.innerWidth < 768 ? 160 : 68}
                 width="100%"
                 itemData={paginatedStudents}
                 style={{ overflowX: 'hidden' }}

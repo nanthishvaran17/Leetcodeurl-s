@@ -130,7 +130,6 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-3">
             <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-amber-300 text-xs font-black animate-pulse">
-              <Globe className="w-4 h-4" />
               <span>LIVE PUBLIC LEADERBOARD • NANDHA ENGINEERING COLLEGE</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-black tracking-tight">
@@ -209,8 +208,8 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
                       })()}
                     </div>
                     <div className="pt-1 flex justify-center w-full">
-                      <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-black text-[9px] sm:text-xs border border-emerald-500/20 inline-block whitespace-nowrap shadow-2xs max-w-full truncate">
-                        {s.stats?.total_solved || 0} Solved
+                      <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-black text-[9px] sm:text-xs border border-emerald-500/20 inline-block whitespace-nowrap shadow-2xs max-w-full">
+                        {s.stats?.total_solved || 0}
                       </span>
                     </div>
                     {s.username && (

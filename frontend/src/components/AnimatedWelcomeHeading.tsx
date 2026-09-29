@@ -8,8 +8,8 @@ interface AnimatedWelcomeHeadingProps {
 }
 
 export const AnimatedWelcomeHeading: React.FC<AnimatedWelcomeHeadingProps> = ({
-  className = "text-xl sm:text-3xl lg:text-4xl font-display font-extrabold tracking-tight text-white uppercase leading-tight break-words",
-  nameClassName = "text-brand-300 break-words",
+  className = "font-display font-extrabold tracking-tight text-white uppercase leading-tight whitespace-nowrap text-[clamp(0.9rem,4vw,2.25rem)]",
+  nameClassName = "text-brand-300",
   prefix = "WELCOME BACK"
 }) => {
   const { user } = useAuth();

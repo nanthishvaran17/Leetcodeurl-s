@@ -776,7 +776,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-navy-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 overflow-x-hidden w-full relative">
+    <div className="min-h-screen bg-white dark:bg-navy-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative">
       {/* Top Page Transition Progress Loader */}
       {isNavigating && (
         <div className="fixed top-0 left-0 right-0 z-[100050] h-[3px] bg-brand-500/10 dark:bg-brand-400/10 pointer-events-none">

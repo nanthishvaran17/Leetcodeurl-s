@@ -510,7 +510,6 @@ export const ReportsPage: React.FC = () => {
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>
             </div>
 

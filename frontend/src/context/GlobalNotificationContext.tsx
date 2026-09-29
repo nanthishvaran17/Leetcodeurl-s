@@ -145,6 +145,9 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
       if (res.ok) {
         setPreferences(newPrefs);
         return true;
+      } else {
+        const text = await res.text();
+        console.error("updatePreferences failed:", res.status, text);
       }
     } catch (err) {
       console.error("Error updating notification preferences:", err);

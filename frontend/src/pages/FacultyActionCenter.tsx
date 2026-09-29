@@ -346,39 +346,43 @@ const StudentViewModal: React.FC<{
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 overflow-y-auto animate-fade-in"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-slate-900 border border-slate-700 shadow-lg overflow-hidden my-auto text-white">
+      <div className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-xl overflow-hidden my-auto text-slate-900 dark:text-white">
         
         {/* Header */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between flex-wrap gap-3 bg-slate-950/60 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-500 to-indigo-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-brand-500/25">
-              {item.student_name.charAt(0)}
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50 dark:bg-navy-950/60 shrink-0">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-500 to-indigo-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-brand-500/25">
+              {item.student_name.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg sm:text-xl font-black text-white">{item.student_name}</h3>
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-brand-500/20 text-brand-400 border border-brand-500/30">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start sm:items-center flex-wrap gap-2">
+                <h3 className="text-[17px] sm:text-xl font-black text-slate-900 dark:text-white truncate tracking-tight">{item.student_name}</h3>
+                <span className="shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black bg-brand-50 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-500/30">
                   {item.year_level} Year
                 </span>
               </div>
-              <p className="text-xs text-slate-400 font-mono mt-0.5">
-                {item.reg_no} · {item.department_name} ({item.department_code}) · <span className="text-brand-400">@{item.leetcode_username}</span>
-              </p>
+              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
+                <span className="font-bold text-slate-700 dark:text-slate-300">{item.reg_no}</span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="truncate">{item.department_code}</span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="text-brand-600 dark:text-brand-400 font-bold truncate">@{item.leetcode_username}</span>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center self-end sm:self-auto gap-2 shrink-0">
             {onOpenUpdate && (
               <button
                 onClick={() => { onClose(); onOpenUpdate(); }}
-                className="px-3.5 py-1.5 rounded-xl bg-brand-500/20 border border-brand-500/40 text-brand-300 text-xs font-bold hover:bg-brand-500/30 transition flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/20 dark:hover:bg-brand-500/30 border border-brand-200 dark:border-brand-500/40 text-brand-600 dark:text-brand-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
                 <FileText size={12} /> Edit Action
               </button>
             )}
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-500 dark:text-slate-300 transition cursor-pointer"
               title="Close modal"
             >
               <X size={18} />
@@ -387,46 +391,46 @@ const StudentViewModal: React.FC<{
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 px-5 py-2.5 bg-slate-950/40 border-b border-slate-800/80 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 px-4 sm:px-5 py-2.5 bg-slate-50/80 dark:bg-navy-950/40 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
           <button
             onClick={() => setActiveViewTab('pass')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            className={`flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               activeViewTab === 'pass'
-                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800/60'
             }`}
           >
             <Award size={13} />
-            <span>Digital Performance Pass</span>
+            <span className="whitespace-nowrap">Digital Performance Pass</span>
           </button>
 
           <button
             onClick={() => setActiveViewTab('profile')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            className={`flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               activeViewTab === 'profile'
-                ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/25'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800/60'
             }`}
           >
             <Sparkles size={13} />
-            <span>AI Coding Profile</span>
+            <span className="whitespace-nowrap">AI Coding Profile</span>
           </button>
 
           <button
             onClick={() => setActiveViewTab('timeline')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            className={`flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               activeViewTab === 'timeline'
-                ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800/60'
             }`}
           >
             <Clock size={13} />
-            <span>Intervention Timeline ({(Array.isArray(events) ? events.length : 0)})</span>
+            <span className="whitespace-nowrap">Intervention Timeline ({(Array.isArray(events) ? events.length : 0)})</span>
           </button>
         </div>
 
         {/* Tab Content Body */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 custom-scrollbar bg-white dark:bg-transparent">
           {activeViewTab === 'pass' && (
             <div className="space-y-4">
               <IDCardGenerator
@@ -449,42 +453,42 @@ const StudentViewModal: React.FC<{
 
           {activeViewTab === 'timeline' && (
             <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
-                <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Current Action Signal</div>
-                <div className="text-sm font-black text-white">{item.signal_type}</div>
-                <div className="text-xs text-brand-400 mt-1 italic">{item.recommended_action}</div>
+              <div className="p-4 rounded-2xl bg-slate-100 dark:bg-navy-950/60 border border-slate-200 dark:border-navy-800">
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Current Action Signal</div>
+                <div className="text-sm font-black text-slate-900 dark:text-white">{item.signal_type}</div>
+                <div className="text-xs text-brand-600 dark:text-brand-400 mt-1 italic">{item.recommended_action}</div>
               </div>
 
               {timelineLoading ? (
-                <div className="py-12 text-center text-slate-400">
+                <div className="py-12 text-center text-slate-500 dark:text-slate-400">
                   <RefreshCw size={20} className="animate-spin mx-auto mb-2 opacity-50" />
                   <span className="text-xs">Loading intervention timeline...</span>
                 </div>
               ) : (!Array.isArray(events) || events.length === 0) ? (
-                <div className="py-12 text-center text-slate-400 text-xs">No intervention audit logs recorded yet.</div>
+                <div className="py-12 text-center text-slate-500 dark:text-slate-400 text-xs">No intervention audit logs recorded yet.</div>
               ) : (
                 <div className="relative pl-4 space-y-4">
-                  <div className="absolute left-7 top-3 bottom-3 w-px bg-slate-800" />
+                  <div className="absolute left-7 top-3 bottom-3 w-px bg-slate-200 dark:bg-navy-800" />
                   {(Array.isArray(events) ? events : []).map((ev, i) => {
-                    const colorCls = EVENT_COLOR[ev.event_type] || 'text-slate-400';
+                    const colorCls = EVENT_COLOR[ev.event_type] || 'text-slate-500 dark:text-slate-400';
                     return (
                       <div key={ev.id} className="flex gap-4 items-start relative z-10">
-                        <div className={`w-7 h-7 rounded-full border border-current flex items-center justify-center text-[11px] font-black bg-slate-900 ${colorCls} shrink-0`}>
+                        <div className={`w-7 h-7 rounded-full border border-current flex items-center justify-center text-[11px] font-black bg-white dark:bg-navy-900 ${colorCls} shrink-0 shadow-sm`}>
                           {i + 1}
                         </div>
-                        <div className="flex-1 p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-1">
+                        <div className="flex-1 p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950/70 border border-slate-200 dark:border-navy-800 space-y-1 shadow-sm">
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             <span className={`text-xs font-black ${colorCls}`}>{ev.event_type.replace(/_/g, ' ')}</span>
                             <span className="text-[10px] text-slate-500 font-mono">{ev.timestamp}</span>
                           </div>
-                          <div className="text-[11px] text-slate-400">by <b className="text-slate-200">{ev.user_name}</b></div>
+                          <div className="text-[11px] text-slate-600 dark:text-slate-400">by <b className="text-slate-800 dark:text-slate-200">{ev.user_name}</b></div>
                           {(ev.previous_value || ev.new_value) && (
-                            <div className="text-xs pt-1 border-t border-slate-800/80">
-                              {ev.previous_value && <span className="line-through text-slate-500 mr-1.5">{ev.previous_value}</span>}
-                              {ev.new_value && <span className="text-emerald-400 font-bold">{ev.new_value}</span>}
+                            <div className="text-xs pt-1 border-t border-slate-200 dark:border-navy-800/80">
+                              {ev.previous_value && <span className="line-through text-slate-400 dark:text-slate-500 mr-1.5">{ev.previous_value}</span>}
+                              {ev.new_value && <span className="text-emerald-600 dark:text-emerald-400 font-bold">{ev.new_value}</span>}
                             </div>
                           )}
-                          {ev.reason && <div className="text-[11px] text-slate-400 italic pt-1">{ev.reason}</div>}
+                          {ev.reason && <div className="text-[11px] text-slate-500 dark:text-slate-400 italic pt-1">{ev.reason}</div>}
                         </div>
                       </div>
                     );
@@ -572,11 +576,11 @@ const UpdateModal: React.FC<{
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
           
           <div className="relative z-10 flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3.5">
+            <div className="flex items-start gap-3.5 min-w-0 flex-1">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-500 via-indigo-600 to-purple-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-brand-500/30 border border-white/20 shrink-0">
                 {item.student_name.charAt(0)}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
                   {item.is_escalated && (
@@ -586,35 +590,35 @@ const UpdateModal: React.FC<{
                   )}
                 </div>
 
-                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">
+                <h3 className="text-lg sm:text-2xl font-black text-white tracking-tight leading-snug truncate" title={item.student_name}>
                   {item.student_name}
                 </h3>
 
-                <p className="text-xs text-slate-300 font-mono flex items-center gap-1.5 flex-wrap">
+                <p className="text-[11px] sm:text-xs text-slate-300 font-mono flex items-center gap-1.5 flex-wrap">
                   <span className="font-bold">{item.reg_no}</span>
-                  <span>·</span>
+                  <span className="text-slate-500">•</span>
                   <span>{item.department_code}</span>
-                  <span>·</span>
-                  <span className="px-2 py-0.5 rounded-md bg-white/10 text-white font-sans text-[11px] font-black">{item.year_level} Year</span>
-                  <span>·</span>
-                  <span className="text-brand-300 font-bold">@{item.leetcode_username}</span>
+                  <span className="text-slate-500">•</span>
+                  <span className="px-1.5 py-0.5 rounded-md bg-white/10 text-white font-sans text-[10px] font-black">{item.year_level} Year</span>
+                  <span className="text-slate-500">•</span>
+                  <span className="text-brand-300 font-bold truncate max-w-full" title={`@${item.leetcode_username}`}>@{item.leetcode_username}</span>
                 </p>
 
                 {/* Quick Metrics Bar */}
-                <div className="flex items-center gap-3 pt-1 text-[11px] text-slate-300 font-bold flex-wrap">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
+                <div className="flex items-center gap-2 pt-1.5 text-[10px] sm:text-[11px] text-slate-300 font-bold flex-wrap">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
                     <CheckCircle2 size={12} className="text-emerald-400" />
                     {item.total_solved} Solved
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
                     <Award size={12} className="text-amber-400" />
                     {item.current_rating} Rating
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
                     <Activity size={12} className="text-cyan-400" />
                     {item.contests_attended} Contests
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-400">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-400">
                     <Clock size={12} />
                     {item.last_active_days_ago}d ago
                   </span>
@@ -624,7 +628,7 @@ const UpdateModal: React.FC<{
 
             <button
               onClick={onClose}
-              className="p-2 rounded-2xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition cursor-pointer shrink-0 border border-white/10"
+              className="p-2 rounded-2xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition cursor-pointer shrink-0 border border-white/10 ml-auto"
               title="Close modal"
             >
               <X size={18} />
@@ -1003,7 +1007,6 @@ export const FacultyActionCenter: React.FC = () => {
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>STUDENT INTERVENTION & MENTORING</span>
             </div>
 

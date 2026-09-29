@@ -470,47 +470,47 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-4 lg:justify-end mt-4 lg:mt-0">
             {/* View Mode Toggle */}
-            <div className="flex items-center space-x-1 p-1 bg-white/10 dark:bg-black/30 rounded-xl border border-white/15 shadow-inner backdrop-blur-md">
+            <div className="flex items-center gap-1 p-1 bg-white/10 dark:bg-black/30 rounded-xl border border-white/15 shadow-inner backdrop-blur-md shrink-0">
               <button
                 onClick={() => setViewMode('table')}
-                className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                   viewMode === 'table'
                     ? 'bg-gradient-to-r from-white to-slate-100 text-navy-950 shadow-md scale-[1.02]'
                     : 'text-slate-300 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <List className="w-3.5 h-3.5" />
+                <List className="w-3.5 h-3.5 shrink-0" />
                 <span>Table</span>
               </button>
               <button
                 onClick={() => setViewMode('cards')}
-                className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                   viewMode === 'cards'
                     ? 'bg-gradient-to-r from-white to-slate-100 text-navy-950 shadow-md scale-[1.02]'
                     : 'text-slate-300 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <LayoutGrid className="w-3.5 h-3.5" />
+                <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
                 <span>Cards</span>
               </button>
             </div>
             
-            <div className="flex flex-wrap items-center gap-2.5 justify-end">
+            <div className="flex flex-wrap items-center gap-2.5">
               <button
                 onClick={onOpenImport}
-                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-black text-[11px] uppercase tracking-wider flex items-center space-x-2 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md"
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-black text-[11px] uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md shrink-0"
               >
-                <UploadCloud className="w-4 h-4 text-brand-300" />
+                <UploadCloud className="w-4 h-4 text-brand-300 shrink-0" />
                 <span>Bulk Import</span>
               </button>
 
               <button
                 onClick={handleOpenAddModal}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-400 hover:to-indigo-500 text-white font-black text-[11px] uppercase tracking-wider shadow-lg shadow-brand-500/25 flex items-center space-x-2 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-brand-300/40"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-400 hover:to-indigo-500 text-white font-black text-[11px] uppercase tracking-wider shadow-lg shadow-brand-500/25 flex items-center gap-2 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-brand-300/40 shrink-0"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 shrink-0" />
                 <span>Add Student</span>
               </button>
             </div>

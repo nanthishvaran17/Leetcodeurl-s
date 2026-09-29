@@ -312,7 +312,6 @@ export const ComparePage: React.FC = () => {
         <div className="relative z-10 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
-              <Swords className="w-4 h-4 text-amber-400" />
               <span>HEAD-TO-HEAD COMPARISON ARENA • STUDENT, DEPT, YEAR & BATCH ANALYTICS</span>
             </div>
 

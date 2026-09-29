@@ -480,9 +480,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8">
           {/* Left: Title & Description */}
           <div className="space-y-3.5 min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <LiveIndicator />
-            </div>
+
 
             <AnimatedWelcomeHeading
               className="text-2xl sm:text-3xl lg:text-4xl font-display font-extrabold tracking-tight text-white uppercase leading-tight break-words drop-shadow-sm"

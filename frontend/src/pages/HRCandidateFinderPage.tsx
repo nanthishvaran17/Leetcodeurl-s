@@ -2452,17 +2452,17 @@ export const HRCandidateFinderPage: React.FC = () => {
                     className="bg-white dark:bg-navy-950 rounded-2xl border border-slate-200/90 dark:border-navy-800 p-4 shadow-sm space-y-3 relative transition-all cursor-pointer hover:border-brand-500/50"
                   >
                     {/* Header: Avatar + Student Name + Username & Action Buttons */}
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-sm shadow-xs shrink-0">
                           {c.name.charAt(0)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h5 className="font-extrabold text-slate-900 dark:text-white text-sm leading-snug truncate">
+                          <h5 className="font-extrabold text-slate-900 dark:text-white text-sm leading-snug truncate" title={c.name}>
                             {c.name}
                           </h5>
                           {c.username && (
-                            <div className="text-xs text-slate-400 font-mono leading-none truncate mt-0.5">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 font-mono font-medium leading-none truncate mt-1" title={`@${c.username}`}>
                               @{c.username}
                             </div>
                           )}
@@ -2470,11 +2470,11 @@ export const HRCandidateFinderPage: React.FC = () => {
                       </div>
 
                       {/* Action Buttons: View + External Link */}
-                      <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
                           onClick={() => setSelectedCandidate(c)}
-                          className="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 transition-all cursor-pointer flex items-center gap-1.5"
+                          className="flex-1 sm:flex-none min-h-[40px] px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                         >
                           <Eye className="w-3.5 h-3.5 text-blue-100" />
                           <span>View Profile</span>
@@ -2483,7 +2483,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                           href={c.leetcode_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition-all cursor-pointer"
+                          className="shrink-0 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition-all cursor-pointer"
                           title="Open LeetCode Profile"
                         >
                           <ExternalLink className="w-4 h-4" />
@@ -2492,20 +2492,20 @@ export const HRCandidateFinderPage: React.FC = () => {
                     </div>
 
                     {/* Meta Bar: Register No, Batch, Dept */}
-                    <div className="grid grid-cols-2 gap-2 text-xs p-2.5 bg-slate-50 dark:bg-navy-900 rounded-xl border border-slate-100 dark:border-navy-800">
-                      <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Register No</span>
-                        <span className="font-mono font-bold text-slate-700 dark:text-slate-200 truncate block mt-0.5">
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-xs p-3 bg-slate-50 dark:bg-navy-900 rounded-xl border border-slate-100 dark:border-navy-800">
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Register No</span>
+                        <span className="font-mono font-bold text-slate-700 dark:text-slate-200 truncate block mt-0.5" title={c.reg_no}>
                           {c.reg_no || '—'}
                         </span>
                       </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Batch & Dept</span>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <span className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-800 dark:text-slate-200 font-extrabold text-[10px]">
+                      <div className="min-w-0 flex-shrink-0 text-right">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Batch & Dept</span>
+                        <div className="flex items-center justify-end gap-1.5 mt-0.5 flex-wrap">
+                          <span className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-800 dark:text-slate-200 font-extrabold text-[10px] truncate max-w-[80px] sm:max-w-none">
                             {c.dept_code}
                           </span>
-                          <span className="font-semibold text-slate-600 dark:text-slate-400 text-xs">{c.batch}</span>
+                          <span className="font-semibold text-slate-600 dark:text-slate-400 text-[11px] sm:text-xs whitespace-nowrap">{c.batch}</span>
                         </div>
                       </div>
                     </div>

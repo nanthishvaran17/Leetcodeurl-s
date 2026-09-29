@@ -502,11 +502,6 @@ export const CertificateManagementModal: React.FC<{
               <Award className="w-6 h-6 sm:w-8 sm:h-8 drop-shadow-md" />
             </div>
             <div className="space-y-1">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Nandha Engineering College (Autonomous)</span>
-              </div>
-              
               <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap gap-1">
                 <h2 className="text-base sm:text-xl md:text-2xl font-black text-white tracking-tight uppercase">
                   INSTITUTIONAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">CREDENTIAL ISSUANCE HUB</span>
@@ -525,8 +520,8 @@ export const CertificateManagementModal: React.FC<{
           </div>
 
           {/* Right Navigation & Actions */}
-          <div className="flex items-center justify-between md:justify-end space-x-2 sm:space-x-3 flex-wrap gap-2">
-            <div className="flex bg-slate-900/90 p-1 rounded-2xl border border-slate-800 text-xs sm:text-sm font-bold shadow-inner overflow-x-auto max-w-full no-scrollbar">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between md:justify-end gap-3 w-full lg:w-auto">
+            <div className="grid grid-cols-1 sm:flex bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 text-xs sm:text-sm font-bold shadow-inner gap-1">
               <button
                 type="button"
                 onClick={() => setActiveMainTab('studio')}
@@ -568,33 +563,32 @@ export const CertificateManagementModal: React.FC<{
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-2xl bg-rose-500/10 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 transition-all font-black text-xs sm:text-sm flex items-center space-x-1.5 cursor-pointer shadow-sm shrink-0"
+              className="px-4 py-2.5 sm:py-2 rounded-2xl bg-rose-500/10 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 transition-all font-black text-xs sm:text-sm flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm w-full sm:w-auto"
             >
-              <X className="w-4.5 h-4.5 sm:hidden" />
-              <span className="hidden sm:inline">Close Studio</span>
-              <span className="sm:hidden">Close</span>
+              <X className="w-4.5 h-4.5" />
+              <span>Close Studio</span>
             </button>
           </div>
         </div>
 
         {/* METRICS RIBBON (GROUND TRUTH NUMBERS) */}
-        <div className="px-6 py-2.5 bg-white dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700/80 flex items-center justify-between text-xs sm:text-sm font-black overflow-x-auto no-scrollbar shrink-0">
-          <div className="flex items-center space-x-6 whitespace-nowrap">
-            <div className="flex items-center space-x-2">
-              <span className="text-slate-900 dark:text-slate-200 text-xs font-black">TOTAL ISSUED:</span>
+        <div className="px-4 sm:px-6 py-3 sm:py-2.5 bg-white dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700/80 flex flex-col md:flex-row md:items-center justify-between text-xs sm:text-sm font-black shrink-0 gap-3">
+          <div className="grid grid-cols-2 lg:flex lg:items-center gap-3 sm:gap-6 w-full">
+            <div className="flex items-center space-x-2 bg-slate-50 dark:bg-navy-900 lg:bg-transparent p-2 lg:p-0 rounded-xl lg:rounded-none">
+              <span className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-black">TOTAL ISSUED:</span>
               <span className="text-slate-950 dark:text-white font-mono text-sm sm:text-base font-black">{metrics.total}</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-slate-900 dark:text-slate-200 text-xs font-black">VERIFIED ACTIVE:</span>
-              <span className="text-emerald-700 dark:text-emerald-400 font-mono text-sm sm:text-base font-black">{metrics.valid}</span>
+            <div className="flex items-center space-x-2 bg-slate-50 dark:bg-navy-900 lg:bg-transparent p-2 lg:p-0 rounded-xl lg:rounded-none">
+              <span className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-black">VERIFIED ACTIVE:</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-mono text-sm sm:text-base font-black">{metrics.valid}</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-slate-900 dark:text-slate-200 text-xs font-black">REVOKED:</span>
-              <span className="text-rose-700 dark:text-rose-400 font-mono text-sm sm:text-base font-black">{metrics.revoked}</span>
+            <div className="flex items-center space-x-2 bg-slate-50 dark:bg-navy-900 lg:bg-transparent p-2 lg:p-0 rounded-xl lg:rounded-none">
+              <span className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-black">REVOKED:</span>
+              <span className="text-rose-600 dark:text-rose-400 font-mono text-sm sm:text-base font-black">{metrics.revoked}</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-slate-900 dark:text-slate-200 text-xs font-black">AWAITING ISSUANCE:</span>
-              <span className="text-amber-700 dark:text-amber-400 font-mono text-sm sm:text-base font-black">{metrics.pending}</span>
+            <div className="flex items-center space-x-2 bg-slate-50 dark:bg-navy-900 lg:bg-transparent p-2 lg:p-0 rounded-xl lg:rounded-none">
+              <span className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-black">AWAITING ISSUANCE:</span>
+              <span className="text-amber-600 dark:text-amber-400 font-mono text-sm sm:text-base font-black">{metrics.pending}</span>
             </div>
           </div>
 
@@ -614,8 +608,8 @@ export const CertificateManagementModal: React.FC<{
             <div className="flex-1 flex flex-col min-h-0">
 
               {/* 5-Step Workflow Stepper Bar */}
-              <div className="px-6 py-2.5 bg-slate-100 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 flex items-center justify-between overflow-x-auto no-scrollbar shrink-0">
-                <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="px-4 sm:px-6 py-3 sm:py-2.5 bg-slate-100 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 flex flex-col sm:flex-row items-stretch sm:items-center justify-between overflow-y-auto sm:overflow-x-auto shrink-0 custom-scrollbar max-h-60 sm:max-h-none">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 sm:min-w-max pb-1 sm:pb-0 w-full">
                   {[
                     { step: 1, label: 'RECIPIENT', desc: 'Select Student' },
                     { step: 2, label: 'DESIGN & TYPE', desc: 'Recognition Text' },
@@ -629,7 +623,7 @@ export const CertificateManagementModal: React.FC<{
                       <button
                         key={s.step}
                         onClick={() => setCurrentStep(s.step)}
-                        className={`flex items-center space-x-2.5 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                        className={`flex items-center space-x-2.5 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black transition-all cursor-pointer w-full sm:w-auto text-left ${
                           isActive
                             ? 'bg-amber-500/20 text-amber-900 dark:text-amber-300 border-2 border-amber-500 dark:border-amber-400 shadow-sm'
                             : isCompleted
@@ -1384,7 +1378,7 @@ export const CertificateManagementModal: React.FC<{
                       className="w-full p-2.5 bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-navy-600 rounded-xl text-xs text-slate-950 dark:text-white font-bold file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-black file:bg-amber-400 file:text-slate-950 cursor-pointer"
                     />
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => { setUploadType('PRINCIPAL'); handleUploadSignature(); }}
                         disabled={isUploadingSig || !uploadFile || uploadType !== 'PRINCIPAL'}
@@ -1407,7 +1401,7 @@ export const CertificateManagementModal: React.FC<{
                             });
                             if (confirmed) {
                               try {
-                                await api.delete(`/signatures/${principalSig.id}`);
+                                await api.delete(`/signatures/type/${principalSig.signature_type}`);
                                 notify.success('Signature Deleted', 'Principal signature deleted successfully.', { category: 'SIGNATURE ENGINE' });
                                 await fetchSignatures();
                               } catch (e: any) {
@@ -1415,7 +1409,7 @@ export const CertificateManagementModal: React.FC<{
                               }
                             }
                           }}
-                          className="py-3 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-700 dark:text-rose-300 hover:text-white border border-rose-500/30 transition-all font-black text-xs flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs"
+                          className="py-3 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-700 dark:text-rose-300 hover:text-white border border-rose-500/30 transition-all font-black text-xs flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs relative z-10"
                         >
                           <Trash2 className="w-4 h-4" />
                           <span>Delete Signature</span>
@@ -1498,7 +1492,7 @@ export const CertificateManagementModal: React.FC<{
                           className="w-full p-2.5 bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-navy-600 rounded-xl text-xs text-slate-950 dark:text-white font-bold file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 cursor-pointer"
                         />
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                           <button
                             onClick={handleUploadSignature}
                             disabled={isUploadingSig || !uploadFile}
@@ -1521,7 +1515,7 @@ export const CertificateManagementModal: React.FC<{
                                 });
                                 if (confirmed) {
                                   try {
-                                    await api.delete(`/signatures/${activeHod.id}`);
+                                    await api.delete(`/signatures/type/${activeHod.signature_type}`);
                                     notify.success('Signature Deleted', `${deptLabel} signature deleted successfully.`, { category: 'SIGNATURE ENGINE' });
                                     await fetchSignatures();
                                   } catch (e: any) {

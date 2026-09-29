@@ -1100,7 +1100,7 @@ def execute_recommended_action(
 
     # Record durable AdminAuditLog
     audit = AdminAuditLog(
-        audit_id=f"AUDIT-ACTION-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')}",
+        audit_id=f"AUDIT-ACTION-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S%f')}-{__import__('secrets').token_hex(4).upper()}",
         admin_name=getattr(current_user, 'username', 'Admin'),
         admin_email=getattr(current_user, 'email', 'nanthishvaran17@gmail.com'),
         admin_role=getattr(current_user, 'role', 'admin'),

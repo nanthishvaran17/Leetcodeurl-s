@@ -6,7 +6,7 @@ import {
   Shield, Server, FileText, CheckCircle, FileSpreadsheet, Archive,
   Send, Fingerprint, Search, Filter, Download, Upload, Eye, 
   Check, HardDrive, Terminal, Sparkles, SlidersHorizontal, UserCheck,
-  Camera, Play, ShieldAlert, ChevronRight, Info, X, Copy, Code, Zap, FileCode, Bell
+  Camera, Play, ShieldAlert, ChevronRight, Info, X, Copy, Code, Zap, FileCode, Bell, RotateCcw, Trash2
 } from 'lucide-react';
 import api from '../services/api';
 import { SecurityActivitySection } from '../components/SecurityActivitySection';
@@ -645,7 +645,6 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
           {/* Left: Title Block */}
           <div className="space-y-2.5 max-w-2xl min-w-0 flex-1">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black uppercase max-w-full">
-              <Shield className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
               <span className="truncate">Institutional Configuration • System Control Center</span>
             </div>
 
@@ -1538,7 +1537,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                   Institutional SMTP gateway parameters, admin recipient routing, and real-time delivery diagnostics.
                 </p>
               </div>
-              <span className="text-[10px] font-mono font-black text-slate-400 uppercase bg-slate-100 dark:bg-navy-900 px-2.5 py-1 rounded-lg">
+              <span className="text-[10px] font-mono font-black text-slate-400 uppercase bg-slate-100 dark:bg-navy-900 px-2.5 py-1 rounded-lg whitespace-nowrap shrink-0">
                 SECTION V
               </span>
             </div>
@@ -1590,7 +1589,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                       placeholder="587"
                       className="w-24 h-10 px-3 text-center rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 font-mono text-slate-900 dark:text-white font-bold text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none shrink-0 shadow-xs"
                     />
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <GlobalFilter
                         options={smtpEncryptionOptions}
                         value={String(settings.SMTP_ENCRYPTION || 'TLS')}
@@ -1814,19 +1813,19 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
             {/* Live Metrics Summary */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
               <div className="p-3 rounded-2xl border bg-slate-50 dark:bg-navy-950/60 border-slate-200 dark:border-navy-700 flex flex-col justify-between space-y-1">
-                <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-black tracking-wider">Total Snapshots</span>
+                <span className="text-slate-700 dark:text-slate-300 text-[10px] uppercase font-black tracking-wider">Total Snapshots</span>
                 <span className="font-mono font-black text-base text-slate-900 dark:text-white">{backups.length} Files</span>
               </div>
               <div className="p-3 rounded-2xl border bg-slate-50 dark:bg-navy-950/60 border-slate-200 dark:border-navy-700 flex flex-col justify-between space-y-1">
-                <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-black tracking-wider">Total Storage Used</span>
+                <span className="text-slate-700 dark:text-slate-300 text-[10px] uppercase font-black tracking-wider">Total Storage Used</span>
                 <span className="font-mono font-black text-base text-emerald-700 dark:text-emerald-400">{formatBytes(totalBackupBytes)}</span>
               </div>
               <div className="p-3 rounded-2xl border bg-slate-50 dark:bg-navy-950/60 border-slate-200 dark:border-navy-700 flex flex-col justify-between space-y-1">
-                <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-black tracking-wider">Backup Schedule</span>
+                <span className="text-slate-700 dark:text-slate-300 text-[10px] uppercase font-black tracking-wider">Backup Schedule</span>
                 <span className="font-mono font-bold text-xs text-brand-600 dark:text-brand-400">Daily / Pre-Restore Safety</span>
               </div>
               <div className="p-3 rounded-2xl border bg-slate-50 dark:bg-navy-950/60 border-slate-200 dark:border-navy-700 flex flex-col justify-between space-y-1">
-                <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-black tracking-wider">SHA256 Status</span>
+                <span className="text-slate-700 dark:text-slate-300 text-[10px] uppercase font-black tracking-wider">SHA256 Status</span>
                 <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black text-xs">ENFORCED (64-CHAR)</span>
               </div>
             </div>
@@ -1849,93 +1848,86 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
             </div>
 
             {/* Backups Table */}
-            <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-700">
-              {filteredBackups.length === 0 ? (
-                <div className="p-8 text-center text-xs text-slate-500 font-bold">No matching backup snapshot files found.</div>
-              ) : (
-                <table className="w-full text-xs text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-100 dark:bg-navy-900 border-b-2 border-slate-200 dark:border-navy-700 text-slate-800 dark:text-slate-200 font-black uppercase text-[10.5px] tracking-wider">
-                      <th className="py-3 px-4">Snapshot File</th>
-                      <th className="py-3 px-4">Created (IST)</th>
-                      <th className="py-3 px-4">Size</th>
-                      <th className="py-3 px-4">SHA256 Checksum</th>
-                      <th className="py-3 px-4">Integrity</th>
-                      <th className="py-3 px-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-navy-800 font-mono text-[11px] bg-white dark:bg-navy-950">
-                    {filteredBackups.map((b) => (
-                      <tr key={b.filename} className="hover:bg-slate-50 dark:hover:bg-navy-900/60 transition-colors">
-                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
-                          <div className="flex items-center space-x-2">
-                            <Database className="w-4 h-4 text-brand-500 shrink-0" />
-                            <span className="font-mono font-extrabold text-slate-900 dark:text-white truncate max-w-xs sm:max-w-md">{b.filename}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-slate-700 dark:text-slate-300 font-semibold whitespace-nowrap">{b.created_at || '—'}</td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          <span className="font-mono font-black text-xs text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 px-2.5 py-1 rounded-lg inline-block">
-                            {formatBytes(b.size_bytes)}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4" title={b.checksum}>
-                          <span className="font-mono font-bold text-[10px] text-indigo-700 dark:text-indigo-300 bg-indigo-500/10 dark:bg-navy-900 border border-indigo-200 dark:border-navy-700 px-2.5 py-1 rounded-lg block truncate max-w-[150px]">
-                            {b.checksum ? (b.checksum.length > 20 ? `${b.checksum.substring(0, 16)}...` : b.checksum) : 'HEALTHY'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-black text-[10px] inline-flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            Healthy
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right whitespace-nowrap">
-                          <div className="inline-flex items-center space-x-1.5">
-                            <button
-                              type="button"
-                              onClick={() => handleDownloadBackup(b.filename)}
-                              className="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-[10.5px] shadow-xs inline-flex items-center space-x-1 cursor-pointer transition-all"
-                              title="Download SQLite database snapshot directly"
-                            >
-                              <Download className="w-3.5 h-3.5" />
-                              <span>Download</span>
-                            </button>
+            {filteredBackups.length === 0 ? (
+              <div className="p-8 text-center text-xs text-slate-500 font-bold rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-900/60">
+                No matching backup snapshot files found.
+              </div>
+            ) : (
+              <div className="w-full">
 
-                            <button
-                              type="button"
-                              onClick={() => handleVerifyBackup(b.filename)}
-                              disabled={actionLoading === `verify-${b.filename}`}
-                              className="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10.5px] shadow-xs cursor-pointer transition-all disabled:opacity-50"
-                            >
-                              Verify
-                            </button>
 
-                            <button
-                              type="button"
-                              onClick={() => handleRestoreBackup(b.filename)}
-                              disabled={actionLoading === `restore-${b.filename}`}
-                              className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10.5px] shadow-xs cursor-pointer transition-all disabled:opacity-50"
-                            >
-                              Restore
-                            </button>
+                {/* Universal Card View (One by One) */}
+                <div className="flex flex-col gap-3">
+                  {filteredBackups.map((b) => (
+                    <div key={b.filename} className="p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 bg-white dark:bg-navy-900/80 space-y-3 shadow-sm">
+                      {/* Filename Row */}
+                      <div className="flex items-start gap-2 min-w-0 w-full">
+                        <Database className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
+                        <span className="font-mono font-bold text-slate-900 dark:text-white text-xs break-all leading-tight flex-1" title={b.filename}>{b.filename}</span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-black text-[9px] shrink-0 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                          HEALTHY
+                        </span>
+                      </div>
 
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteBackup(b.filename)}
-                              disabled={actionLoading === `delete-${b.filename}`}
-                              className="px-2.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10.5px] shadow-xs cursor-pointer transition-all disabled:opacity-50"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
+                      {/* Meta Row */}
+                      <div className="flex items-center justify-between text-[11px] font-mono px-0.5">
+                        <span className="text-slate-500 dark:text-slate-400 font-semibold">{b.created_at || '—'}</span>
+                        <span className="font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
+                          {formatBytes(b.size_bytes)}
+                        </span>
+                      </div>
+
+                      {/* Checksum Row */}
+                      {b.checksum && (
+                        <div className="font-mono text-[10px] text-indigo-700 dark:text-indigo-300 bg-indigo-500/10 border border-indigo-200 dark:border-navy-700 px-2.5 py-1.5 rounded-lg break-all">
+                          SHA-256: {b.checksum}
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadBackup(b.filename)}
+                          className="px-2.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-[10.5px] shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all w-full"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Download</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleVerifyBackup(b.filename)}
+                          disabled={actionLoading === `verify-${b.filename}`}
+                          className="px-2.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10.5px] shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all disabled:opacity-50 w-full"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          <span>Verify</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRestoreBackup(b.filename)}
+                          disabled={actionLoading === `restore-${b.filename}`}
+                          className="px-2.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10.5px] shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all disabled:opacity-50 w-full"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Restore</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteBackup(b.filename)}
+                          disabled={actionLoading === `delete-${b.filename}`}
+                          className="px-2.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10.5px] shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all disabled:opacity-50 w-full"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

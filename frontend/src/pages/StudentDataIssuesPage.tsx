@@ -771,22 +771,22 @@ export const StudentDataIssuesPage: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap overflow-x-auto no-scrollbar pb-1">
+        <div className="grid grid-cols-2 md:flex md:flex-wrap lg:flex-nowrap gap-2 overflow-x-auto no-scrollbar pb-1">
           {savedViews.map((view) => (
             <button
               key={view.id}
               onClick={() => handleApplySavedView(view)}
-              className={`px-3 py-1.5 min-h-[44px] rounded-xl text-xs font-bold whitespace-nowrap transition-all border cursor-pointer flex items-center space-x-1.5 ${
+              className={`px-2 py-2 min-h-[44px] rounded-xl text-[11px] font-bold transition-all border cursor-pointer flex flex-col items-center justify-center text-center leading-tight ${
                 selectedDept === view.dept && selectedYear === view.year && selectedIssue === view.issue && searchQuery === view.search
                   ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 shadow-sm font-black'
                   : 'bg-slate-50 hover:bg-slate-100 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'
               }`}
             >
-              <span>{view.name}</span>
+              <span className="w-full truncate whitespace-normal break-words">{view.name}</span>
               {view.id.startsWith('custom_') && (
                 <span
                   onClick={(e) => handleDeleteSavedView(view.id, e)}
-                  className="text-slate-400 hover:text-rose-500 ml-1"
+                  className="text-slate-400 hover:text-rose-500 mt-1"
                   title="Delete preset"
                 >
                  

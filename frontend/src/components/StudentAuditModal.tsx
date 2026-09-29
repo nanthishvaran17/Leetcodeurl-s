@@ -174,29 +174,29 @@ export const StudentAuditModal: React.FC<StudentAuditModalProps> = ({
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-                  <div className="bg-slate-50 dark:bg-navy-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Validation</p>
-                    <p className="text-xs font-black text-slate-800 dark:text-white mt-0.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+                  <div className="bg-slate-50 dark:bg-navy-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Validation</p>
+                    <p className="text-xs font-black text-slate-800 dark:text-white mt-1 w-full break-words">
                       {pipeline.validation_status || 'Unverified'}
                     </p>
                   </div>
-                  <div className="bg-slate-50 dark:bg-navy-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Problems Solved</p>
-                    <p className="text-xs font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                  <div className="bg-slate-50 dark:bg-navy-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Problems Solved</p>
+                    <p className="text-xs font-black text-emerald-600 dark:text-emerald-400 mt-1 w-full break-words">
                       {pipeline.total_solved || 0} Solved
                     </p>
                   </div>
-                  <div className="bg-slate-50 dark:bg-navy-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Contest Rating</p>
-                    <p className="text-xs font-black text-indigo-600 dark:text-indigo-400 mt-0.5">
+                  <div className="bg-slate-50 dark:bg-navy-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Contest Rating</p>
+                    <p className="text-xs font-black text-indigo-600 dark:text-indigo-400 mt-1 w-full break-words">
                       {pipeline.contest_rating || 'Unrated'}
                     </p>
                   </div>
-                  <div className="bg-slate-50 dark:bg-navy-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Last Verified</p>
-                    <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 mt-0.5 truncate">
-                      {pipeline.last_verified_at ? new Date(pipeline.last_verified_at).toLocaleDateString() : 'Never'}
+                  <div className="bg-slate-50 dark:bg-navy-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Last Verified</p>
+                    <p className="text-[11px] font-black text-slate-600 dark:text-slate-300 mt-1 w-full break-words">
+                      {pipeline.last_verified_at ? new Date(pipeline.last_verified_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Never'}
                     </p>
                   </div>
                 </div>

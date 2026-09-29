@@ -93,63 +93,63 @@ export const FastStudentRow = memo(({
       }}
       className="flex flex-col md:flex-row p-3.5 md:py-3.5 md:px-0 gap-3 md:gap-0 hover:bg-slate-50/80 dark:hover:bg-navy-900/50 transition-all duration-150 group font-medium text-xs border border-slate-200/80 md:border-t-0 md:border-x-0 md:border-b dark:border-navy-800/60 cursor-pointer w-full min-w-full md:min-w-[1100px] items-start md:items-center bg-white md:bg-transparent dark:bg-navy-950 md:dark:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none mb-3 md:mb-0 min-h-[68px]"
     >
-      {/* MOBILE LAYOUT (PREMIUM CARD DESIGN) */}
-      <div className="flex md:hidden flex-col w-full p-4 space-y-3 bg-white dark:bg-navy-900/90 rounded-2xl border border-slate-200/90 dark:border-navy-700/80 shadow-md hover:shadow-xl transition-all duration-200 relative overflow-hidden backdrop-blur-md">
+      {/* MOBILE LAYOUT (SLEEK & PREMIUM CARD DESIGN) */}
+      <div className="flex md:hidden flex-col w-full bg-white dark:bg-navy-900/90 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-md transition-all duration-200 relative overflow-hidden backdrop-blur-md">
         
-        {/* Top Header Row: Checkbox + Rank Badge on Left, Department/Year Pill on Right */}
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2.5">
+        {/* Main Content Row */}
+        <div className="flex items-start gap-3 p-3.5">
+          <div className="flex flex-col items-center justify-center h-12">
             <input 
               type="checkbox" 
               checked={isSelected} 
               onChange={() => toggleStudent(student.id)} 
-              className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer" 
+              className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-[18px] h-[18px] cursor-pointer" 
               onClick={(e) => e.stopPropagation()} 
             />
-            {isSolver ? getRankBadge(effectiveCollegeRank) : <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-navy-700">Unranked</span>}
           </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100/90 dark:bg-navy-800/90 border border-slate-200/80 dark:border-navy-700/80 text-[11px] font-black tracking-tight text-slate-700 dark:text-slate-200 shadow-2xs">
-            <span>{student.department?.code || student.department?.name || '—'}</span>
-            <span className="text-slate-400 font-normal">•</span>
-            <span>{formatStudentYearBadge(student)}</span>
-          </div>
-        </div>
 
-        {/* Student Profile Info Row */}
-        <div className="flex items-center gap-3 w-full">
-          <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-500 via-indigo-600 to-purple-600 text-white font-black text-base flex items-center justify-center shadow-md shadow-brand-500/20 ring-2 ring-white dark:ring-navy-900">
+          <div className="shrink-0 w-12 h-12 rounded-[14px] bg-gradient-to-br from-brand-500 via-indigo-600 to-purple-600 text-white font-black text-lg flex items-center justify-center shadow-md shadow-brand-500/20 ring-2 ring-slate-50 dark:ring-navy-800">
             {student.name.charAt(0).toUpperCase()}
           </div>
-          <div className="flex flex-col min-w-0 flex-1">
-            <span className="font-black text-sm text-slate-900 dark:text-white truncate tracking-tight group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-              {student.name}
-            </span>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
+
+          <div className="flex flex-col min-w-0 flex-1 pt-0.5">
+            <div className="flex items-start justify-between gap-2">
+              <span className="font-black text-[15px] leading-tight text-slate-900 dark:text-white truncate tracking-tight group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                {student.name}
+              </span>
+              <div className="shrink-0 flex items-center gap-1">
+                {isSolver ? getRankBadge(effectiveCollegeRank) : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400">Unranked</span>}
+              </div>
+            </div>
+
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1">
+              <span className="font-mono text-[11px] font-bold text-slate-500 dark:text-slate-400">
                 {student.reg_no}
               </span>
-              {student.username && (
-                <span className="font-mono text-[11px] font-bold text-brand-600 dark:text-brand-400 truncate">
-                  @{student.username}
-                </span>
-              )}
+              <span className="text-slate-300 dark:text-slate-600">•</span>
+              <span className="text-[10px] font-black tracking-tight text-slate-600 dark:text-slate-300">
+                {student.department?.code || student.department?.name || '—'} {formatStudentYearBadge(student)}
+              </span>
             </div>
+
+            {student.username && (
+              <span className="font-mono text-[11px] font-bold text-brand-600 dark:text-brand-400 truncate mt-1">
+                @{student.username}
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Bottom Row: Stats Chips & Action Buttons */}
-        <div className="flex items-center justify-between w-full pt-3 border-t border-slate-100 dark:border-navy-800/80 gap-2 flex-wrap">
-          
-          {/* Solved & Rating Metric Chips */}
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-[200px]">
-            <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
-              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider">SOLVED</span>
-              <span className="text-[11px] sm:text-xs font-black font-mono text-emerald-700 dark:text-emerald-300">{totalSolved ?? '—'}</span>
+        {/* Bottom Bar: Stats on left, Actions on right */}
+        <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-3 w-full px-4 py-3 bg-slate-50/80 dark:bg-navy-950/80 border-t border-slate-100 dark:border-navy-800/80">
+          <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-sm">
+              <span className="text-[9px] font-black uppercase tracking-wider">SOLVED</span>
+              <span className="text-[11px] font-black font-mono">{totalSolved ?? '—'}</span>
             </div>
-
-            <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
-              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider">RATING</span>
-              <span className="text-[11px] sm:text-xs font-black font-mono text-amber-700 dark:text-amber-300">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 shadow-sm">
+              <span className="text-[9px] font-black uppercase tracking-wider">RATING</span>
+              <span className="text-[11px] font-black font-mono">
                 {(() => {
                   const rawRating = student.stats?.contest_rating ?? (student as any).contest_rating;
                   if (rawRating == null || rawRating <= 0 || Number(rawRating) === 1500 || Number(rawRating) === 1500.0) return '—';
@@ -159,30 +159,11 @@ export const FastStudentRow = memo(({
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-            <button 
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} 
-              className="w-9 h-9 rounded-xl text-brand-600 dark:text-brand-400 bg-brand-50 hover:bg-brand-500 hover:text-white dark:bg-brand-950/60 dark:hover:bg-brand-500 dark:hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-xs" 
-              title="View Student"
-            >
-              <Eye className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }} 
-              className="w-9 h-9 rounded-xl text-amber-600 dark:text-amber-400 bg-amber-50 hover:bg-amber-500 hover:text-white dark:bg-amber-950/60 dark:hover:bg-amber-500 dark:hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-xs" 
-              title="Edit Student"
-            >
-              <Edit3 className="w-4 h-4" />
-            </button>
+          <div className="flex items-center gap-2 shrink-0 ml-auto" onClick={(e) => e.stopPropagation()}>
+            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} className="w-[32px] h-[32px] rounded-[10px] text-slate-500 hover:text-brand-600 bg-white dark:bg-navy-900 hover:bg-brand-50 flex items-center justify-center cursor-pointer transition-all border border-slate-200 dark:border-navy-700 shadow-[0_1px_3px_rgba(0,0,0,0.05)] active:scale-95" title="View"><Eye className="w-[15px] h-[15px]" /></button>
+            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }} className="w-[32px] h-[32px] rounded-[10px] text-slate-500 hover:text-amber-600 bg-white dark:bg-navy-900 hover:bg-amber-50 flex items-center justify-center cursor-pointer transition-all border border-slate-200 dark:border-navy-700 shadow-[0_1px_3px_rgba(0,0,0,0.05)] active:scale-95" title="Edit"><Edit3 className="w-[15px] h-[15px]" /></button>
             {onDelete && (
-              <button 
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(student, e); }} 
-                className="w-9 h-9 rounded-xl text-rose-600 dark:text-rose-400 bg-rose-50 hover:bg-rose-500 hover:text-white dark:bg-rose-950/60 dark:hover:bg-rose-500 dark:hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-xs" 
-                title="Delete Student Record"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(student, e); }} className="w-[32px] h-[32px] rounded-[10px] text-slate-500 hover:text-rose-600 bg-white dark:bg-navy-900 hover:bg-rose-50 flex items-center justify-center cursor-pointer transition-all border border-slate-200 dark:border-navy-700 shadow-[0_1px_3px_rgba(0,0,0,0.05)] active:scale-95" title="Delete"><Trash2 className="w-[15px] h-[15px]" /></button>
             )}
           </div>
         </div>
