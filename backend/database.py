@@ -102,30 +102,6 @@ try:
         echo=False,
         **engine_kwargs
     )
-    # Active pre-ping test to verify database authentication and query execution
-    if "postgresql" in db_url or "postgres" in db_url:
-        try:
-            with engine.connect() as _test_conn:
-                _test_conn.execute(sqlalchemy.text("SELECT 1"))
-        except Exception as _pg_conn_err:
-            try:
-                engine.dispose()
-            except Exception:
-                pass
-            local_sqlite = os.path.join(os.path.dirname(os.path.dirname(__file__)), "leetcode_tracker.db")
-            if not os.path.exists(local_sqlite):
-                local_sqlite = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "leetcode_tracker.db")
-            db_url = f"sqlite:///{local_sqlite}"
-            engine_kwargs = {
-                "poolclass": NullPool,
-                "connect_args": {"check_same_thread": False, "timeout": 60}
-            }
-            engine = create_engine(db_url, echo=False, **engine_kwargs)
-            try:
-                from backend.logger import logger as _log
-                _log.warning(f"[DB_FALLBACK] PostgreSQL query ping failed ({_pg_conn_err}). Fallback to SQLite: {db_url}")
-            except Exception:
-                print(f"[DB_FALLBACK] PostgreSQL query ping failed ({_pg_conn_err}). Fallback to SQLite: {db_url}")
 except Exception as _engine_exc:
     local_sqlite = os.path.join(os.path.dirname(os.path.dirname(__file__)), "leetcode_tracker.db")
     if not os.path.exists(local_sqlite):
