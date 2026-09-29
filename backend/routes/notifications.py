@@ -160,14 +160,14 @@ def get_user_notifications_endpoint(
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_active_user)
 ):
-    """Returns paginated in-app notifications for the authenticated user."""
+    """Returns paginated in-app notifications for the authenticated user with event deduplication."""
     user_id_variants = get_user_id_variants(current_user)
 
     query = db.query(NotificationRecord).filter(
         NotificationRecord.recipient_user_id.in_(list(user_id_variants))
     )
 
-    if category and category.lower() != "all":
+    if category and isinstance(category, str) and category.lower() != "all":
         cat_lower = category.lower().strip()
         if cat_lower == "exams":
             query = query.filter(NotificationRecord.category.in_(["exams", "exam", "marks", "result"]))
@@ -186,14 +186,27 @@ def get_user_notifications_endpoint(
             ))
         else:
             query = query.filter(NotificationRecord.category == cat_lower)
-    if is_read is not None:
-        query = query.filter(NotificationRecord.is_read == is_read)
 
-    total_count = query.count()
-    records = query.order_by(NotificationRecord.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
+    records = query.order_by(NotificationRecord.created_at.desc()).all()
+
+    # Deduplicate records by event_id or (title, body) group so users never see duplicated cards
+    grouped_map = {}
+    for r in records:
+        group_key = r.event_id if r.event_id else f"{r.title}_{r.body}"
+        if group_key not in grouped_map:
+            grouped_map[group_key] = []
+        grouped_map[group_key].append(r)
 
     items = []
-    for r in records:
+    for group_key, grp_records in grouped_map.items():
+        # Representative record is the most recent
+        r = grp_records[0]
+        # Any duplicate read means the notification event is considered read for this user
+        any_read = any(rec.is_read for rec in grp_records)
+        
+        if is_read is not None and any_read != is_read:
+            continue
+
         items.append({
             "id": r.notification_id,
             "eventId": r.event_id,
@@ -203,7 +216,7 @@ def get_user_notifications_endpoint(
             "message": r.body,
             "body": r.body,
             "priority": r.priority,
-            "isRead": r.is_read,
+            "isRead": any_read,
             "readAt": r.read_at.isoformat() if r.read_at else None,
             "actionRoute": r.route,
             "entityType": r.entity_type,
@@ -214,14 +227,31 @@ def get_user_notifications_endpoint(
             "expiresAt": r.expires_at.isoformat() if r.expires_at else None
         })
 
-    unread_count = db.query(NotificationRecord).filter(
-        and_(NotificationRecord.recipient_user_id.in_(list(user_id_variants)), NotificationRecord.is_read == False)
-    ).count()
+    # Calculate exact unread count across unique notification events for this user
+    all_user_records = db.query(NotificationRecord).filter(
+        NotificationRecord.recipient_user_id.in_(list(user_id_variants))
+    ).all()
+    
+    unread_event_groups = set()
+    for rec in all_user_records:
+        g_key = rec.event_id if rec.event_id else f"{rec.title}_{rec.body}"
+        if not rec.is_read:
+            # Check if any record in this group was read
+            unread_event_groups.add(g_key)
+
+    # Remove groups where at least one record is marked read
+    for rec in all_user_records:
+        g_key = rec.event_id if rec.event_id else f"{rec.title}_{rec.body}"
+        if rec.is_read and g_key in unread_event_groups:
+            unread_event_groups.remove(g_key)
+
+    total_count = len(items)
+    paginated_items = items[(page - 1) * limit : page * limit]
 
     return {
-        "items": items,
+        "items": paginated_items,
         "total": total_count,
-        "unreadCount": unread_count,
+        "unreadCount": len(unread_event_groups),
         "page": page,
         "limit": limit
     }
@@ -232,14 +262,25 @@ def get_unread_notification_count_endpoint(
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_active_user)
 ):
-    """Returns exact unread notification count for bell badge."""
+    """Returns exact unread notification count across unique notification events."""
     user_id_variants = get_user_id_variants(current_user)
 
-    count = db.query(NotificationRecord).filter(
-        and_(NotificationRecord.recipient_user_id.in_(list(user_id_variants)), NotificationRecord.is_read == False)
-    ).count()
+    all_user_records = db.query(NotificationRecord).filter(
+        NotificationRecord.recipient_user_id.in_(list(user_id_variants))
+    ).all()
 
-    return {"unreadCount": count}
+    unread_groups = set()
+    for rec in all_user_records:
+        g_key = rec.event_id if rec.event_id else f"{rec.title}_{rec.body}"
+        if not rec.is_read:
+            unread_groups.add(g_key)
+
+    for rec in all_user_records:
+        g_key = rec.event_id if rec.event_id else f"{rec.title}_{rec.body}"
+        if rec.is_read and g_key in unread_groups:
+            unread_groups.remove(g_key)
+
+    return {"unreadCount": len(unread_groups)}
 
 
 @router.put("/{notification_id}/read")
@@ -248,14 +289,48 @@ def mark_notification_read_endpoint(
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_active_user)
 ):
-    """Marks single notification as read."""
-    record = db.query(NotificationRecord).filter_by(notification_id=notification_id).first()
-    if record:
-        cast(Any, record).is_read = True
-        cast(Any, record).read_at = datetime.datetime.now(datetime.timezone.utc)
+    """Marks notification as read (updates all duplicate records matching event_id or notification_id for current user)."""
+    user_id_variants = get_user_id_variants(current_user)
+
+    # Locate target record to extract notification_id, event_id, title & body
+    target = db.query(NotificationRecord).filter(
+        or_(
+            NotificationRecord.notification_id == notification_id,
+            NotificationRecord.event_id == notification_id
+        )
+    ).first()
+
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    updated_count = 0
+
+    if target:
+        event_id = target.event_id
+        title = target.title
+        body = target.body
+
+        # Query all records matching event_id, notification_id, or title+body for user_id_variants
+        records = db.query(NotificationRecord).filter(
+            and_(
+                NotificationRecord.recipient_user_id.in_(list(user_id_variants)),
+                or_(
+                    NotificationRecord.notification_id == notification_id,
+                    (NotificationRecord.event_id == event_id if event_id else False),
+                    and_(NotificationRecord.title == title, NotificationRecord.body == body)
+                )
+            )
+        ).all()
+
+        if not records:
+            records = [target]
+
+        for r in records:
+            cast(Any, r).is_read = True
+            cast(Any, r).read_at = now_utc
+            updated_count += 1
+
         db.commit()
 
-    return {"success": True, "notification_id": notification_id, "is_read": True}
+    return {"success": True, "notification_id": notification_id, "is_read": True, "marked_count": updated_count}
 
 
 @router.put("/{notification_id}/unread")
@@ -264,14 +339,45 @@ def mark_notification_unread_endpoint(
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_active_user)
 ):
-    """Marks single notification as unread."""
-    record = db.query(NotificationRecord).filter_by(notification_id=notification_id).first()
-    if record:
-        cast(Any, record).is_read = False
-        cast(Any, record).read_at = None
+    """Marks notification as unread for current user."""
+    user_id_variants = get_user_id_variants(current_user)
+
+    target = db.query(NotificationRecord).filter(
+        or_(
+            NotificationRecord.notification_id == notification_id,
+            NotificationRecord.event_id == notification_id
+        )
+    ).first()
+
+    updated_count = 0
+
+    if target:
+        event_id = target.event_id
+        title = target.title
+        body = target.body
+
+        records = db.query(NotificationRecord).filter(
+            and_(
+                NotificationRecord.recipient_user_id.in_(list(user_id_variants)),
+                or_(
+                    NotificationRecord.notification_id == notification_id,
+                    (NotificationRecord.event_id == event_id if event_id else False),
+                    and_(NotificationRecord.title == title, NotificationRecord.body == body)
+                )
+            )
+        ).all()
+
+        if not records:
+            records = [target]
+
+        for r in records:
+            cast(Any, r).is_read = False
+            cast(Any, r).read_at = None
+            updated_count += 1
+
         db.commit()
 
-    return {"success": True, "notification_id": notification_id, "is_read": False}
+    return {"success": True, "notification_id": notification_id, "is_read": False, "marked_count": updated_count}
 
 
 @router.post("/mark-all-read")
@@ -279,20 +385,15 @@ def mark_all_notifications_read_endpoint(
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_active_user)
 ):
-    """Marks all notifications as read for current user."""
-    user_id_variants = set()
-    if hasattr(current_user, "email") and current_user.email:
-        user_id_variants.add(current_user.email.lower().strip())
-    if hasattr(current_user, "reg_no") and current_user.reg_no:
-        user_id_variants.add(current_user.reg_no.strip())
-    if hasattr(current_user, "id"):
-        user_id_variants.add(str(current_user.id))
-        user_id_variants.add(f"STAFF_{current_user.id}")
-    user_id_variants.add("ALL")
-
+    """Marks all notifications as read for current user across all user ID variants."""
+    user_id_variants = get_user_id_variants(current_user)
     now_utc = datetime.datetime.now(datetime.timezone.utc)
+
     records = db.query(NotificationRecord).filter(
-        and_(NotificationRecord.recipient_user_id.in_(list(user_id_variants)), NotificationRecord.is_read == False)
+        and_(
+            NotificationRecord.recipient_user_id.in_(list(user_id_variants)),
+            NotificationRecord.is_read == False
+        )
     ).all()
 
     for r in records:
@@ -309,12 +410,45 @@ def delete_notification_endpoint(
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_active_user)
 ):
-    """Deletes a notification record."""
-    record = db.query(NotificationRecord).filter_by(notification_id=notification_id).first()
-    if record:
-        db.delete(record)
+    """Deletes notification record and all its duplicates for current user."""
+    user_id_variants = get_user_id_variants(current_user)
+
+    target = db.query(NotificationRecord).filter(
+        or_(
+            NotificationRecord.notification_id == notification_id,
+            NotificationRecord.event_id == notification_id
+        )
+    ).first()
+
+    deleted_count = 0
+
+    if target:
+        event_id = target.event_id
+        title = target.title
+        body = target.body
+
+        records = db.query(NotificationRecord).filter(
+            and_(
+                NotificationRecord.recipient_user_id.in_(list(user_id_variants)),
+                or_(
+                    NotificationRecord.notification_id == notification_id,
+                    (NotificationRecord.event_id == event_id if event_id else False),
+                    and_(NotificationRecord.title == title, NotificationRecord.body == body)
+                )
+            )
+        ).all()
+
+        if not records:
+            records = [target]
+
+        for r in records:
+            db.delete(r)
+            deleted_count += 1
+
         db.commit()
-    return {"success": True, "notification_id": notification_id}
+
+    return {"success": True, "notification_id": notification_id, "deleted_count": deleted_count}
+
 
 
 # 3. PREFERENCES 

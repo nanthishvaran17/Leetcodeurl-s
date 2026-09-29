@@ -348,12 +348,15 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   }, [isAuthenticated, fetchPreferences]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
-    setAllNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n));
-    setUnreadCount(prev => Math.max(0, prev - 1));
+    setAllNotifications(prev => prev.map(n => (n.id === notificationId || n.eventId === notificationId) ? { ...n, isRead: true } : n));
+    setUnreadCount(prev => {
+      const isTargetUnread = allNotifications.some(n => (n.id === notificationId || n.eventId === notificationId) && !n.isRead);
+      return isTargetUnread ? Math.max(0, prev - 1) : prev;
+    });
 
     if (token) {
       try {
-        await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
+        await fetch(getApiUrl(`/notifications/${notificationId}/read`), {
           method: 'PUT',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -361,7 +364,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
         console.warn("REST API mark read notice:", err);
       }
     }
-  }, [token]);
+  }, [allNotifications, token]);
 
   const markAllAsRead = useCallback(async () => {
     const unreadNotifs = allNotifications.filter(n => !n.isRead);
@@ -372,7 +375,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
 
     if (token) {
       try {
-        await fetch(`${API_BASE_URL}/notifications/mark-all-read`, {
+        await fetch(getApiUrl('/notifications/mark-all-read'), {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -383,15 +386,15 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   }, [allNotifications, token]);
 
   const deleteNotification = useCallback(async (notificationId: string) => {
-    setAllNotifications(prev => prev.filter(n => n.id !== notificationId));
+    setAllNotifications(prev => prev.filter(n => n.id !== notificationId && n.eventId !== notificationId));
     setUnreadCount(prev => {
-      const item = allNotifications.find(n => n.id === notificationId);
+      const item = allNotifications.find(n => n.id === notificationId || n.eventId === notificationId);
       return item && !item.isRead ? Math.max(0, prev - 1) : prev;
     });
 
     if (token) {
       try {
-        await fetch(`${API_BASE_URL}/notifications/${notificationId}`, {
+        await fetch(getApiUrl(`/notifications/${notificationId}`), {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });
