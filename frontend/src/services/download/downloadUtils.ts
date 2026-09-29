@@ -131,42 +131,17 @@ export async function openDownloadedDocument(
 
   if (isNativeMobile()) {
     try {
-      // 1. Try DocumentOpener custom plugin (Direct Android FileProvider ACTION_VIEW)
-      const { registerPlugin } = await import('@capacitor/core');
-      const DocumentOpener = registerPlugin<any>('DocumentOpener');
-
-      if (DocumentOpener) {
-        await DocumentOpener.openDocument({
-          path: fileUri,
-          filename: filename,
-          mimeType: effectiveMime,
-        });
-        return { success: true };
-      }
-    } catch (e: any) {
-      console.warn('[DownloadUtils] DocumentOpener plugin note:', e);
-      if (
-        e?.message?.includes('FILE_NOT_FOUND') ||
-        e?.code === 'FILE_NOT_FOUND' ||
-        e?.message?.includes('File is no longer available')
-      ) {
-        showFileUnavailableNotice(filename);
-        return { success: false, error: 'File is no longer available.' };
-      }
-    }
-
-    // 2. Fallback to @capacitor/share
-    try {
       const { Share } = await import('@capacitor/share');
       await Share.share({
         title: filename,
-        text: `Open ${filename}`,
+        text: `Shared document: ${filename}`,
         url: fileUri,
-        dialogTitle: `Open ${filename}`,
+        dialogTitle: `Share or Save ${filename}`,
       });
       return { success: true };
     } catch (err: any) {
-      console.warn('[DownloadUtils] Capacitor Share fallback note:', err);
+      console.warn('[DownloadUtils] Capacitor Share failed:', err);
+      return { success: false, error: 'Unable to open share dialog.' };
     }
   }
 
