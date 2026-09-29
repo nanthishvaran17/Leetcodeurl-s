@@ -477,7 +477,8 @@ def generate_report_bytes(
 
         dept_val = dept if dept != "ALL" else (flt.get("department") or flt.get("dept") or "ALL")
         year_val = year if year != "ALL" else (flt.get("year") or flt.get("year_level") or "ALL")
-        date_str = flt.get("report_date") or datetime.date.today().strftime("%d-%m-%Y")
+        from backend.time_utils import get_ist_date
+        date_str = flt.get("report_date") or get_ist_date().strftime("%d-%m-%Y")
         data = generate_weekly_performance_data(
             db,
             last_week_contest=flt.get("last_week_contest"),

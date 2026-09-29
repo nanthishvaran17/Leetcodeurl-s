@@ -41,7 +41,8 @@ def get_available_sundays(db: Session = Depends(get_db)):
         (WeeklySession.status == "FINALIZED") | (WeeklySession.finalized == True)
     ).all()
     
-    today = date.today()
+    from backend.time_utils import get_ist_date
+    today = get_ist_date()
     valid_sessions = []
     for s in raw_sessions:
         if not s.session_date:
@@ -1019,8 +1020,8 @@ def _get_latest_completed_session(db: Session) -> Optional[WeeklySession]:
     Returns the latest completed/finalized weekly contest session whose date is on or before today.
     Never returns future provisioned/upcoming sessions.
     """
-    import datetime
-    today = datetime.date.today()
+    from backend.time_utils import get_ist_date
+    today = get_ist_date()
 
     # 1. First check finalized sessions with date <= today
     raw_finalized = db.query(WeeklySession).filter(
@@ -2262,7 +2263,8 @@ def download_weekly_performance_19_sheet_excel(
     from backend.services.pregenerated_report_service import get_or_create_report
     from backend.models import ReportCache
 
-    date_str = report_date or datetime.date.today().strftime("%d-%m-%Y")
+    from backend.time_utils import get_ist_date
+    date_str = report_date or get_ist_date().strftime("%d-%m-%Y")
     filters = {
         "report_date": date_str,
         "last_week_contest": last_week_contest,

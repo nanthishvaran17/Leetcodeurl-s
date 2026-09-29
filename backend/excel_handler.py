@@ -405,7 +405,8 @@ def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
     ws["C3"].alignment = left_align
 
     ws.merge_cells("C4:K4")
-    ws["C4"] = f"Date: {datetime.date.today().strftime('%d-%m-%Y')}"
+    from backend.time_utils import get_ist_date
+    ws["C4"] = f"Date: {get_ist_date().strftime('%d-%m-%Y')}"
     ws["C4"].font = font_bold_11
     ws["C4"].alignment = left_align
 
@@ -653,7 +654,8 @@ def _create_dept_year_sheet(wb, dept, year_lvl: str, students_list, db: Session)
     ws["A1"].alignment = center
     ws["A1"].fill = navy_fill
 
-    dept_title = f"Department of {dept.name} | {year_display} | LeetCode Performance Report | {datetime.date.today().strftime('%d.%m.%Y')}"
+    from backend.time_utils import get_ist_date
+    dept_title = f"Department of {dept.name} | {year_display} | LeetCode Performance Report | {get_ist_date().strftime('%d.%m.%Y')}"
     ws.merge_cells("A2:K2")
     ws["A2"] = dept_title.upper()
     ws["A2"].font = Font(name=TNR, size=10, bold=True, color="FFFFFF")
@@ -772,7 +774,7 @@ def _create_analytics_summary_sheet(wb, db: Session):
     ws.row_dimensions[1].height = 30
 
     ws.merge_cells("A2:M2")
-    ws["A2"] = f"Report Date: {datetime.date.today().strftime('%d %B %Y')}   |   Academic Year: 2025–26"
+    ws["A2"] = f"Report Date: {get_ist_date().strftime('%d %B %Y')}   |   Academic Year: 2025–26"
     ws["A2"].font = Font(name=TNR, size=10, bold=True, color="FFFFFF")
     ws["A2"].fill = header_fill
     ws["A2"].alignment = center
@@ -1784,9 +1786,9 @@ def generate_single_week_matrix_excel(
             week_label = "Latest Week"
 
     try:
-        date_display = datetime.datetime.strptime(target_session.session_date, "%Y-%m-%d").strftime("%d.%m.%Y") if target_session else datetime.date.today().strftime("%d.%m.%Y")  # type: ignore
+        date_display = datetime.datetime.strptime(target_session.session_date, "%Y-%m-%d").strftime("%d.%m.%Y") if target_session else get_ist_date().strftime("%d.%m.%Y")  # type: ignore
     except Exception:
-        date_display = datetime.date.today().strftime("%d.%m.%Y")
+        date_display = get_ist_date().strftime("%d.%m.%Y")
 
     wb = openpyxl.Workbook()
     wb.remove(wb.active)  # type: ignore

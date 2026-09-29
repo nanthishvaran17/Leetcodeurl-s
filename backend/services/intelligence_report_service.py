@@ -84,14 +84,15 @@ def build_intelligence_dataset(
     exec_dash = live_data.get("executive_dashboard", {})
     reporting_win = meta.get("reporting_window", {})
 
+    from backend.time_utils import get_ist_date, now_ist
     dataset = {
         "metadata": {
-            "report_date": meta.get("report_date", datetime.date.today().strftime("%d-%m-%Y")),
+            "report_date": meta.get("report_date", get_ist_date().strftime("%d-%m-%Y")),
             "period_w0": reporting_win.get("current_week", {}).get("week_label", "W518"),
             "period_w1": reporting_win.get("previous_week", {}).get("week_label", "W517"),
             "period_w2": reporting_win.get("prev_prev_week", {}).get("week_label", "W516"),
             "window_str": reporting_win.get("window_str", "W516 -> W517 -> W518"),
-            "generated_at": meta.get("generated_at", datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")),
+            "generated_at": meta.get("generated_at", now_ist().strftime("%d %b %Y, %I:%M %p IST")),
             "snapshot_id": f"SNAP_{reporting_win.get('current_week', {}).get('week_label', 'W518')}_{meta.get('report_date', '').replace('-', '')}",
             "institution": meta.get("institution", "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"),
             "official_status": official_status,

@@ -690,7 +690,8 @@ def generate_master_10_sheet_workbook(
         wb.remove(active_sheet)  # Remove default blank sheet
 
     contest_title = f"Weekly Contest {contest_id or 518}"
-    session_date = datetime.date.today().strftime("%d-%m-%Y")
+    from backend.time_utils import get_ist_date
+    session_date = get_ist_date().strftime("%d-%m-%Y")
     roster_scope = f"{len(normalized_students)} Authorized Students"
 
     # KPI Calculation
