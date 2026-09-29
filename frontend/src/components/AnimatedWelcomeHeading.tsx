@@ -83,13 +83,27 @@ export const AnimatedWelcomeHeading: React.FC<AnimatedWelcomeHeadingProps> = ({
     ? canonicalName.slice(0, displayedCount - prefixAndCommaLength)
     : '';
 
+  // Clean up any break-words/break-all class that might accidentally be passed
+  const safeClassName = (className || '')
+    .replace(/\bbreak-words\b/g, '')
+    .replace(/\bbreak-all\b/g, '')
+    .trim();
+
+  const safeNameClassName = (nameClassName || '')
+    .replace(/\bbreak-words\b/g, '')
+    .replace(/\bbreak-all\b/g, '')
+    .trim();
+
   return (
-    <h1 className={className}>
+    <h1
+      className={`whitespace-nowrap truncate max-w-full block ${safeClassName}`}
+      title={fullText}
+    >
       <span>{revealedPrefix}</span>
       {hasCommaOnly && <span>,</span>}
       {hasCommaAndSpace && <span>, </span>}
       {canonicalName && (
-        <span className={nameClassName}>{revealedName}</span>
+        <span className={`inline-block ${safeNameClassName}`}>{revealedName}</span>
       )}
       {isTyping && (
         <span className="inline-block w-2 sm:w-2.5 h-6 sm:h-8 ml-1 bg-brand-400 animate-pulse rounded-xs align-middle shadow-[0_0_10px_rgba(129,140,248,0.9)]" />

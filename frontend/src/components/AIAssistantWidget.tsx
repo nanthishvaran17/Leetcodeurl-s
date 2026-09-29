@@ -38,6 +38,7 @@ import {
   Zap,
 } from 'lucide-react';
 import api from '../services/api';
+import { getApiUrl } from '../config/apiConfig';
 
 // --- Interfaces ---
 
@@ -694,7 +695,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
         context: { page: window.location.pathname, role: 'admin', activeContext, conversation_id: conversationIdRef.current }
       };
       const token = localStorage.getItem('token');
-      const streamUrl = `${import.meta.env.VITE_API_URL || ''}/api/ai/assistant/stream`;
+      const streamUrl = getApiUrl('/ai/assistant/stream');
 
       const response = await fetch(streamUrl, {
         method: 'POST',

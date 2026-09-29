@@ -102,14 +102,29 @@ class AutomaticNotificationEngine:
                 student_ids = [s.id for s in assigned_students]
 
                 # 3. Calculate dynamic performance metrics from actual LeetCode DB data
-                cutoff_24h = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=24)
-                active_count = db.query(LeetCodeProfileStats).filter(
+                # 3. Calculate dynamic performance metrics & Yesterday vs Today differences from actual LeetCode DB data
+                now_utc = datetime.datetime.now(datetime.timezone.utc)
+                cutoff_24h = now_utc - datetime.timedelta(hours=24)
+                cutoff_48h = now_utc - datetime.timedelta(hours=48)
+                cutoff_3d = now_utc - datetime.timedelta(days=3)
+                cutoff_4d = now_utc - datetime.timedelta(days=4)
+
+                # Today active (0-24h ago)
+                active_today = db.query(LeetCodeProfileStats).filter(
                     LeetCodeProfileStats.student_id.in_(student_ids),
                     LeetCodeProfileStats.last_updated >= cutoff_24h
                 ).count()
 
-                cutoff_3d = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=3)
-                attention_count = db.query(LeetCodeProfileStats).filter(
+                # Yesterday active (24-48h ago)
+                active_yesterday = db.query(LeetCodeProfileStats).filter(
+                    LeetCodeProfileStats.student_id.in_(student_ids),
+                    LeetCodeProfileStats.last_updated >= cutoff_48h,
+                    LeetCodeProfileStats.last_updated < cutoff_24h
+                ).count()
+                diff_active = active_today - active_yesterday
+
+                # Attention required (today vs yesterday)
+                attention_today = db.query(LeetCodeProfileStats).filter(
                     LeetCodeProfileStats.student_id.in_(student_ids),
                     or_(
                         LeetCodeProfileStats.last_updated < cutoff_3d,
@@ -118,12 +133,33 @@ class AutomaticNotificationEngine:
                     )
                 ).count()
 
+                attention_yesterday = db.query(LeetCodeProfileStats).filter(
+                    LeetCodeProfileStats.student_id.in_(student_ids),
+                    or_(
+                        LeetCodeProfileStats.last_updated < cutoff_4d,
+                        LeetCodeProfileStats.total_solved == 0,
+                        LeetCodeProfileStats.last_updated.is_(None)
+                    )
+                ).count()
+                diff_attention = attention_today - attention_yesterday
+
+                # Problems solved today (0-24h)
                 new_problems = db.query(
                     func.coalesce(func.sum(LeetCodeProfileStats.easy_solved + LeetCodeProfileStats.medium_solved + LeetCodeProfileStats.hard_solved), 0)
                 ).filter(
                     LeetCodeProfileStats.student_id.in_(student_ids),
                     LeetCodeProfileStats.last_updated >= cutoff_24h
                 ).scalar() or 0
+
+                # Problems solved yesterday (24-48h)
+                problems_yesterday = db.query(
+                    func.coalesce(func.sum(LeetCodeProfileStats.easy_solved + LeetCodeProfileStats.medium_solved + LeetCodeProfileStats.hard_solved), 0)
+                ).filter(
+                    LeetCodeProfileStats.student_id.in_(student_ids),
+                    LeetCodeProfileStats.last_updated >= cutoff_48h,
+                    LeetCodeProfileStats.last_updated < cutoff_24h
+                ).scalar() or 0
+                diff_problems = new_problems - problems_yesterday
 
                 new_milestones = 0
                 for s in assigned_students:
@@ -134,18 +170,21 @@ class AutomaticNotificationEngine:
                                 new_milestones += 1
                                 break
 
+                def fmt_diff(val: int) -> str:
+                    return f"+{val}" if val > 0 else str(val)
+
                 logger.info(f"[DAILY_FACULTY_INTELLIGENCE] intelligence_calculated faculty_id={faculty.id}")
 
-                # 4. Format short, professional faculty message
-                title = "Daily LeetCode Performance Summary"
+                # 4. Format detailed faculty message with Yesterday vs Today allocation status difference
+                title = "Daily Allocation Status & Performance Summary (10:00 AM)"
                 body = (
-                    f"Daily LeetCode Performance\n\n"
-                    f"Assigned students: {total_assigned}\n"
-                    f"Students showing activity: {active_count}\n"
-                    f"Students requiring attention: {attention_count}\n"
-                    f"New milestones: {new_milestones}\n"
-                    f"New problems solved: {new_problems}\n\n"
-                    f"View detailed student performance."
+                    f"📊 Daily Allocation Status & Progress Summary (10:00 AM IST)\n\n"
+                    f"👥 Total Allocated Mentees: {total_assigned}\n"
+                    f"🔥 Active Solvers: {active_today} today (vs {active_yesterday} yesterday | Diff: {fmt_diff(diff_active)})\n"
+                    f"💡 Problems Solved: {new_problems} today (vs {problems_yesterday} yesterday | Diff: {fmt_diff(diff_problems)})\n"
+                    f"⚠️ Requiring Attention: {attention_today} today (vs {attention_yesterday} yesterday | Diff: {fmt_diff(diff_attention)})\n"
+                    f"🏆 New Milestones: {new_milestones}\n\n"
+                    f"View detailed student performance & mentee allocation status."
                 )
 
                 idempotency_key = f"faculty_daily_intelligence:{faculty.id}:{today_str}"
@@ -160,6 +199,21 @@ class AutomaticNotificationEngine:
                     route="/faculty-actions",
                     event_id=idempotency_key
                 )
+
+                # Send Telegram / WhatsApp Bot Notification if available
+                try:
+                    from backend.services.bot_notification_service import BotNotificationService
+                    bot_msg = (
+                        f"📊 Daily Allocation Status (10:00 AM IST)\n"
+                        f"Faculty: {faculty.username}\n"
+                        f"Allocated Mentees: {total_assigned}\n"
+                        f"Active Today: {active_today} vs Yesterday: {active_yesterday} ({fmt_diff(diff_active)})\n"
+                        f"Solved Today: {new_problems} vs Yesterday: {problems_yesterday} ({fmt_diff(diff_problems)})\n"
+                        f"Attention Needed: {attention_today} vs Yesterday: {attention_yesterday} ({fmt_diff(diff_attention)})"
+                    )
+                    BotNotificationService.send_telegram_message(f"tg_fac_{faculty.id}", bot_msg)
+                except Exception as b_err:
+                    logger.debug(f"[AUTO_NOTIF] Bot notification dispatch note: {b_err}")
 
                 logger.info(f"[DAILY_FACULTY_INTELLIGENCE] notification_created faculty_id={faculty.id}")
 

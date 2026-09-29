@@ -806,17 +806,29 @@ CORE RULES:
             try:
                 if not client or time.time() < _GEMINI_COOLDOWN_UNTIL:
                     raise RuntimeError("Gemini in quota cooldown or uninitialized")
-                response = client.models.generate_content(
-                    model='gemini-2.5-flash',
-                    contents=contents,
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_instruction,
-                        tools=tools_list,
-                        temperature=0.2,
+                try:
+                    response = client.models.generate_content(
+                        model='gemini-2.0-flash',
+                        contents=contents,
+                        config=types.GenerateContentConfig(
+                            system_instruction=system_instruction,
+                            tools=tools_list,
+                            temperature=0.2,
+                        )
                     )
-                )
+                except Exception as m_err:
+                    logger.info(f"Trying gemini-1.5-flash fallback due to: {m_err}")
+                    response = client.models.generate_content(
+                        model='gemini-1.5-flash',
+                        contents=contents,
+                        config=types.GenerateContentConfig(
+                            system_instruction=system_instruction,
+                            tools=tools_list,
+                            temperature=0.2,
+                        )
+                    )
             except Exception as gemini_err:
-                _GEMINI_COOLDOWN_UNTIL = time.time() + 60.0
+                _GEMINI_COOLDOWN_UNTIL = time.time() + 30.0
                 logger.warning(f"Gemini API call failed (proceeding to high-speed engine fallback): {gemini_err}")
                 raise RuntimeError(f"Gemini API unavailable: {gemini_err}")
 
@@ -946,14 +958,24 @@ CORE RULES:
                     )
 
                 # Get final answer after tool execution
-                final_response = client.models.generate_content(
-                    model='gemini-2.5-flash',
-                    contents=contents,
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_instruction,
-                        temperature=0.2,
+                try:
+                    final_response = client.models.generate_content(
+                        model='gemini-2.0-flash',
+                        contents=contents,
+                        config=types.GenerateContentConfig(
+                            system_instruction=system_instruction,
+                            temperature=0.2,
+                        )
                     )
-                )
+                except Exception:
+                    final_response = client.models.generate_content(
+                        model='gemini-1.5-flash',
+                        contents=contents,
+                        config=types.GenerateContentConfig(
+                            system_instruction=system_instruction,
+                            temperature=0.2,
+                        )
+                    )
 
                 answer_text = final_response.text if final_response else "Verified capability execution completed."
             else:

@@ -222,7 +222,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   };
 
   // FORENSIC PDF EXPORT
-  const handleDownloadForensicCert = async () => {
+  const handleDownloadForensicCert = async (sessionIdParam?: number | string | null) => {
     const targetId = resolveTargetId();
     if (!targetId || downloadingForensic) {
       if (!targetId) notify.error('Forensic Error', 'No valid student identifier found.', { category: 'FORENSIC AUDIT' });
@@ -235,10 +235,15 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       const reportTargetId = cleanReg ? `CERT-${cleanReg}-FORENSIC` : `CERT-${targetId}-FORENSIC`;
       const filename = `Forensic_Audit_Report_${reportTargetId}.pdf`;
 
+      const filtersPayload: Record<string, any> = { student_id: targetId };
+      if (sessionIdParam) {
+        filtersPayload.session_id = sessionIdParam;
+      }
+
       const dlResult = await downloadManager.downloadJob({
         report_type: 'CERTIFICATE_FORENSIC_PDF',
         format: 'pdf',
-        filters: { student_id: targetId },
+        filters: filtersPayload,
         filename,
         onStateChange: (state) => setDownloadState(state)
       });

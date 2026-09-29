@@ -9,8 +9,9 @@ export interface StudentAuditModalProps {
   studentId: number | string | null;
   studentName?: string;
   regNo?: string;
+  sessionId?: number | string | null;
   onClose: () => void;
-  onDownloadForensic?: () => void;
+  onDownloadForensic?: (sessionId?: number | string | null) => void;
 }
 
 export const StudentAuditModal: React.FC<StudentAuditModalProps> = ({
@@ -18,6 +19,7 @@ export const StudentAuditModal: React.FC<StudentAuditModalProps> = ({
   studentId,
   studentName,
   regNo,
+  sessionId,
   onClose,
   onDownloadForensic
 }) => {
@@ -274,7 +276,7 @@ export const StudentAuditModal: React.FC<StudentAuditModalProps> = ({
             {onDownloadForensic && (
               <button
                 type="button"
-                onClick={onDownloadForensic}
+                onClick={() => onDownloadForensic(sessionId)}
                 className="px-4 py-2 min-h-[40px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 transition-all shadow-sm cursor-pointer"
               >
                 <FileText className="w-3.5 h-3.5" />

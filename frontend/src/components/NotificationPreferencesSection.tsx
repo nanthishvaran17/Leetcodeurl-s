@@ -287,13 +287,13 @@ export const NotificationPreferencesSection: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+            <div className="flex items-center justify-center gap-3 flex-wrap w-full sm:w-auto mt-2 sm:mt-0">
               {pushPermState !== 'granted' && (
                 <button
                   type="button"
                   onClick={handleEnablePush}
                   disabled={isEnablingPush}
-                  className="px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
                 >
                   {isEnablingPush ? <Loader2 size={14} className="animate-spin" /> : <Bell size={14} />}
                   <span>{isEnablingPush ? 'Requesting...' : 'Enable Push Notifications'}</span>
@@ -304,7 +304,7 @@ export const NotificationPreferencesSection: React.FC = () => {
                 type="button"
                 onClick={handleSendTestPush}
                 disabled={isSendingTestPush}
-                className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                className="px-4 py-2.5 rounded-xl bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
               >
                 {isSendingTestPush ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                 <span>Send Test Push</span>
@@ -313,15 +313,15 @@ export const NotificationPreferencesSection: React.FC = () => {
           </div>
 
           {pushErrorMessage && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2 font-medium">
+            <div className="p-3.5 mt-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center justify-center text-center gap-2.5 font-medium shadow-xs">
               <AlertCircle size={15} className="shrink-0" />
               <span>{pushErrorMessage}</span>
             </div>
           )}
 
           {testPushStatus && (
-            <div className="p-3 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs flex items-center gap-2 font-medium">
-              <Sparkles size={15} className="shrink-0 animate-pulse" />
+            <div className="p-3.5 mt-4 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs flex items-center justify-center text-center gap-2.5 font-medium shadow-xs">
+              <Sparkles size={15} className="shrink-0 animate-pulse text-brand-500" />
               <span>{testPushStatus}</span>
             </div>
           )}
@@ -337,7 +337,7 @@ export const NotificationPreferencesSection: React.FC = () => {
             </div>
             <div>
               <h4 className="text-xs font-black text-slate-900 dark:text-white">Mobile & Web Push Alerts</h4>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Receive instant foreground and background push popups on your devices.</p>
+              <p className="text-[11px] text-slate-700 dark:text-slate-200 font-medium">Receive instant foreground and background push popups on your devices.</p>
             </div>
           </div>
           <label className="relative inline-flex items-center cursor-pointer shrink-0">
@@ -358,7 +358,7 @@ export const NotificationPreferencesSection: React.FC = () => {
             </div>
             <div>
               <h4 className="text-xs font-black text-slate-900 dark:text-white">Email Digest & Alerts</h4>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Receive automated daily summaries, contest digests, and report emails.</p>
+              <p className="text-[11px] text-slate-700 dark:text-slate-200 font-medium">Receive automated daily summaries, contest digests, and report emails.</p>
             </div>
           </div>
           <label className="relative inline-flex items-center cursor-pointer shrink-0">
@@ -382,7 +382,7 @@ export const NotificationPreferencesSection: React.FC = () => {
               Category Subscriptions
             </h3>
           </div>
-          <span className="text-[11px] font-bold text-slate-400">
+          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200">
             Toggle notifications for specific modules
           </span>
         </div>
@@ -410,7 +410,7 @@ export const NotificationPreferencesSection: React.FC = () => {
                     <h5 className="text-xs font-black text-slate-900 dark:text-white truncate">
                       {item.label}
                     </h5>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                    <p className="text-[11px] text-slate-700 dark:text-slate-200 font-medium leading-tight">
                       {item.desc}
                     </p>
                   </div>

@@ -848,7 +848,12 @@ export const HRCandidateFinderPage: React.FC = () => {
 
     // Academic
     if (filters.department !== "all") {
-      result = result.filter(c => c.dept_code.toLowerCase().includes(filters.department.toLowerCase()) || c.department.toLowerCase().includes(filters.department.toLowerCase()));
+      const fd = filters.department.toLowerCase().replace(/[^a-z0-9]/g, "");
+      result = result.filter(c => {
+        const sc = (c.dept_code || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const sn = (c.department || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        return sc.includes(fd) || sn.includes(fd) || fd.includes(sc);
+      });
     }
     if (filters.degree !== "all") {
       result = result.filter(c => c.degree.toLowerCase() === filters.degree.toLowerCase());
@@ -857,7 +862,15 @@ export const HRCandidateFinderPage: React.FC = () => {
       result = result.filter(c => c.batch.toLowerCase().includes(filters.batch.toLowerCase()));
     }
     if (filters.year_level !== "all") {
-      result = result.filter(c => c.year_level.toLowerCase().includes(filters.year_level.toLowerCase()));
+      const fy = filters.year_level.toUpperCase().trim();
+      result = result.filter(c => {
+        const cy = (c.year_level || "").toUpperCase().trim();
+        if (fy.includes("IV") || fy.includes("4")) return cy.includes("IV") || cy.includes("4");
+        if (fy.includes("III") || fy.includes("3")) return cy.includes("III") || cy.includes("3");
+        if (fy.includes("II") || fy.includes("2")) return cy.includes("II") || cy.includes("2");
+        if (fy.includes("I") || fy.includes("1")) return cy.includes("I") || cy.includes("1");
+        return cy.includes(fy) || fy.includes(cy);
+      });
     }
     if (filters.section !== "all") {
       result = result.filter(c => c.section.toLowerCase() === filters.section.toLowerCase());
@@ -957,6 +970,14 @@ export const HRCandidateFinderPage: React.FC = () => {
     return displayCandidates.slice(startIndex, startIndex + itemsPerPage);
   }, [displayCandidates, currentPage, itemsPerPage]);
 
+  // Reset pagination to page 1 if displayCandidates shrinks beyond currentPage
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(displayCandidates.length / itemsPerPage));
+    if (currentPage > maxPage) {
+      setCurrentPage(1);
+    }
+  }, [displayCandidates.length, currentPage, itemsPerPage]);
+
   // Summary counts with safe case-insensitive matching
   const summaryCounts = useMemo(() => {
     const total = filteredCandidates.length;
@@ -988,12 +1009,15 @@ export const HRCandidateFinderPage: React.FC = () => {
 
     if (filters.name_search) list.push({ key: "name_search", label: `Name: "${filters.name_search}"` });
     if (filters.reg_no_search) list.push({ key: "reg_no_search", label: `Reg No: "${filters.reg_no_search}"` });
+    if (filters.roll_no_search) list.push({ key: "roll_no_search", label: `Roll No: "${filters.roll_no_search}"` });
     if (filters.username_search) list.push({ key: "username_search", label: `LeetCode: "${filters.username_search}"` });
 
     if (filters.primary_language !== "all") list.push({ key: "primary_language", label: `Language: ${filters.primary_language}` });
     if (filters.placement_readiness !== "all") list.push({ key: "placement_readiness", label: `Readiness: ${filters.placement_readiness}` });
     if (filters.risk_level !== "all") list.push({ key: "risk_level", label: `Risk: ${filters.risk_level}` });
     if (filters.profile_class !== "all") list.push({ key: "profile_class", label: `Profile: ${filters.profile_class}` });
+    if (filters.improvement_priority !== "all") list.push({ key: "improvement_priority", label: `Priority: ${filters.improvement_priority}` });
+    if (filters.trend !== "all") list.push({ key: "trend", label: `Trend: ${filters.trend}` });
 
     const numKeys: (keyof AdvancedFilters)[] = [
       "twelfth_cutoff", "total_solved", "easy_solved", "medium_solved", "hard_solved",
@@ -1002,7 +1026,7 @@ export const HRCandidateFinderPage: React.FC = () => {
 
     numKeys.forEach(k => {
       const nf = filters[k] as NumericFilter;
-      if (nf && nf.active && nf.val1 > 0) {
+      if (nf && (nf.active || nf.val1 > 0)) {
         const titleName = k.replace("_", " ").replace(/\b\w/g, c => c.toUpperCase());
         const opStr = nf.op === "BETWEEN" ? `${nf.val1} - ${nf.val2}` : `${nf.op} ${nf.val1}`;
         list.push({ key: k, label: `${titleName} ${opStr}` });
@@ -1013,14 +1037,40 @@ export const HRCandidateFinderPage: React.FC = () => {
   }, [filters]);
 
   const handleReset = () => {
-    setFilters(defaultFilters);
+    setFilters({
+      ...defaultFilters,
+      twelfth_cutoff: defaultNumeric(0),
+      total_solved: defaultNumeric(0),
+      easy_solved: defaultNumeric(0),
+      medium_solved: defaultNumeric(0),
+      hard_solved: defaultNumeric(0),
+      acceptance_rate: defaultNumeric(0),
+      total_submissions: defaultNumeric(0),
+      current_streak: defaultNumeric(0),
+      active_days: defaultNumeric(0),
+      contest_rating: defaultNumeric(0),
+      global_rank: defaultNumeric(0),
+      contests_attended: defaultNumeric(0),
+      contest_top_pct: defaultNumeric(0),
+      performance_score: defaultNumeric(0),
+      interview_readiness: defaultNumeric(0),
+    });
     setTableSearch("");
+    setCurrentPage(1);
   };
 
   const removeChip = (key: string) => {
     if (key in defaultFilters) {
       const defVal = (defaultFilters as any)[key];
-      setFilters(prev => ({ ...prev, [key]: defVal }));
+      if (typeof defVal === "object" && defVal !== null) {
+        setFilters(prev => ({
+          ...prev,
+          [key]: { op: ">=", val1: 0, val2: 0, active: false }
+        }));
+      } else {
+        setFilters(prev => ({ ...prev, [key]: defVal }));
+      }
+      setCurrentPage(1);
     }
   };
 

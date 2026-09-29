@@ -483,8 +483,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
 
             <AnimatedWelcomeHeading
-              className="text-2xl sm:text-3xl lg:text-4xl font-display font-extrabold tracking-tight text-white uppercase leading-tight break-words drop-shadow-sm"
-              nameClassName="text-brand-400 break-words"
+              className="text-lg sm:text-2xl lg:text-3xl font-display font-extrabold tracking-tight text-white uppercase leading-tight drop-shadow-sm max-w-full"
+              nameClassName="text-brand-400"
             />
 
             {!(['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())) && (

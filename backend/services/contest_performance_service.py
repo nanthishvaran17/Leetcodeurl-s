@@ -840,12 +840,29 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     }
     rpt_key = config.report_type or "FRIDAY_OFFICIAL_CONTEST"
     base_title = CONTEST_REPORT_TITLES.get(rpt_key, f"{contest_name} Official Contest Result")
-    title = base_title
+    
+    # Resolve numeric department ID or code to clear uppercase dept code (e.g. 8 -> CSE, 7 -> IT)
+    resolved_dept_display = dept_filter
     if dept_filter != "ALL":
-        title = f"{dept_filter} - {title}"
+        if str(dept_filter).isdigit():
+            id_code_map = {1: "CSE(CS)", 2: "CSE(IOT)", 7: "IT", 8: "CSE", 9: "AGRI", 10: "AIDS", 11: "EEE", 12: "ECE"}
+            d_obj = db.query(Department).filter(Department.id == int(dept_filter)).first()
+            if d_obj:
+                resolved_dept_display = d_obj.code or d_obj.name
+            else:
+                resolved_dept_display = id_code_map.get(int(dept_filter), dept_filter)
+        else:
+            resolved_dept_display = str(dept_filter).upper()
+
+    resolved_year_display = year_filter
     if year_filter != "ALL":
-        roman_yr = to_roman_year(year_filter)
-        title = f"{title} ({roman_yr} Year)"
+        resolved_year_display = to_roman_year(str(year_filter))
+
+    title = base_title
+    if resolved_dept_display and resolved_dept_display != "ALL":
+        title = f"{resolved_dept_display} - {title}"
+    if resolved_year_display and resolved_year_display != "ALL":
+        title = f"{title} ({resolved_year_display} Year)"
     title = clean_report_title(title)
 
     report_prefix = "RPT-SUNDAY" if rpt_key == "SUNDAY_LIVE_CONTEST" else "RPT-FRIDAY"
@@ -861,6 +878,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         "collegeName": "NANDHA ENGINEERING COLLEGE",
         "reportTitle": base_title,
         "title": f"NANDHA ENGINEERING COLLEGE (AUTONOMOUS)\n{title.upper()}",
+        "department": resolved_dept_display or "ALL",
+        "year": resolved_year_display or "ALL",
         "contestName": contest_name,
         "contest_name": contest_name,
         "contestDate": contest_date,

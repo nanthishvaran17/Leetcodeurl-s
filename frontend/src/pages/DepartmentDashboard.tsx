@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
-import { Layers, Users, Trophy, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, AlertCircle, Search, X, ArrowUpDown, Star, Flame } from 'lucide-react';
+import { Layers, Users, Trophy, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, AlertCircle, Search, X, ArrowUpDown, Star, Flame, SortAsc, SortDesc } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api from '../services/api';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
@@ -126,8 +126,8 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const sortOptions: DropdownOption[] = [
     { value: 'top_solved', label: 'Top Solvers (Highest First)', icon: Trophy },
     { value: 'low_solved', label: 'Lowest Solvers First', icon: ArrowUpDown },
-    { value: 'name_asc', label: 'Student Name (A → Z)' },
-    { value: 'name_desc', label: 'Student Name (Z → A)' },
+    { value: 'name_asc', label: 'Student Name (A → Z)', icon: SortAsc },
+    { value: 'name_desc', label: 'Student Name (Z → A)', icon: SortDesc },
     { value: 'streak', label: 'Highest Active Streak', icon: Flame },
     { value: 'rating', label: 'Highest Contest Rating', icon: Star }
   ];

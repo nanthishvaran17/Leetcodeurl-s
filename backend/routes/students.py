@@ -1400,10 +1400,12 @@ def get_student_audit_history(
     from backend.models import AuditLog
     from sqlalchemy import or_
 
-    search_terms = [t for t in [student.reg_no, student.name] if t]
     filter_conditions = []
-    for term in search_terms:
-        filter_conditions.append(AuditLog.details.ilike(f"%{term}%"))
+    if student.reg_no:
+        filter_conditions.append(AuditLog.details.ilike(f"%{student.reg_no}%"))
+    if student.name and len(student.name) >= 3:
+        filter_conditions.append(AuditLog.details.ilike(f"%({student.name})%"))
+        filter_conditions.append(AuditLog.details.ilike(f"%{student.name} ({student.reg_no})%"))
 
     logs = []
     if filter_conditions:

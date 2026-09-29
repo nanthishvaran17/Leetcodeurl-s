@@ -95,8 +95,8 @@ export const StudentDashboardView: React.FC = () => {
                 <span>AUTHENTICATED STUDENT DASHBOARD</span>
               </div>
               <AnimatedWelcomeHeading
-                className="text-2xl md:text-3xl font-black text-white leading-tight break-words uppercase"
-                nameClassName="text-brand-300 break-words"
+                className="text-lg sm:text-2xl md:text-3xl font-black text-white leading-tight uppercase max-w-full"
+                nameClassName="text-brand-300"
               />
               <p className="text-sm md:text-base text-slate-300 font-medium pb-1">Track your LeetCode progress, contests, and learning activity.</p>
               <p className="text-xs text-slate-300 font-mono font-bold">

@@ -21,12 +21,14 @@ import {
   Target,
   ExternalLink,
   ArrowRight,
+  FileText,
   X
 } from 'lucide-react';
 import api from '../services/api';
 import { useContestWebSocket } from '../hooks/useContestWebSocket';
 import { fetchWithCacheDedupe, getCachedContestData } from '../services/contestCache';
 import { useAuth } from '../context/AuthContext';
+import { downloadManager } from '../services/download/downloadManager';
 
 export interface PreviousWeekSummary {
   session_id: number;
@@ -1974,18 +1976,40 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-mono font-bold">No Handle Registered</span>
                   )}
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const rec = selectedForensicRecord;
-                      setSelectedForensicRecord(null);
-                      if (onStudentClick) onStudentClick(rec);
-                    }}
-                    className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/20 active:scale-95 cursor-pointer flex items-center gap-1.5"
-                  >
-                    <span>View Full Profile</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const rec = selectedForensicRecord;
+                        if (!rec || !rec.student_id) return;
+                        const cleanReg = (rec.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
+                        const reportTargetId = cleanReg ? `CERT-${cleanReg}-FORENSIC` : `CERT-${rec.student_id}-FORENSIC`;
+                        const filename = `Forensic_Audit_Report_${reportTargetId}.pdf`;
+                        await downloadManager.downloadJob({
+                          report_type: 'CERTIFICATE_FORENSIC_PDF',
+                          format: 'pdf',
+                          filters: { student_id: rec.student_id, session_id: rec.session_id || summary?.session_id },
+                          filename
+                        });
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-1.5"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Export Forensic PDF</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const rec = selectedForensicRecord;
+                        setSelectedForensicRecord(null);
+                        if (onStudentClick) onStudentClick(rec);
+                      }}
+                      className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/20 active:scale-95 cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span>View Full Profile</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

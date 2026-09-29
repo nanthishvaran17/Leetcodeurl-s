@@ -975,10 +975,30 @@ def search_candidates(
         if dept_str.isdigit():
             query = query.filter(Student.department_id == int(dept_str))
         else:
-            query = query.join(Student.department).filter(Department.code.ilike(f"%{dept_str}%"))
+            clean_dept = dept_str.replace("(", "").replace(")", "").replace("-", "").replace(" ", "")
+            from sqlalchemy import or_
+            query = query.join(Student.department).filter(
+                or_(
+                    Department.code.ilike(f"%{dept_str}%"),
+                    Department.name.ilike(f"%{dept_str}%"),
+                    Department.code.ilike(f"%{clean_dept}%"),
+                    Department.name.ilike(f"%{clean_dept}%")
+                )
+            )
 
     if year_str != "all":
-        query = query.filter(Student.year_level == year_str)
+        y_upper = year_str.upper().strip()
+        y_variants = [year_str]
+        if "IV" in y_upper or "4" in y_upper:
+            y_variants = ["IV", "IV Year", "4", "4th Year", "4th", "YR 4", "YEAR 4"]
+        elif "III" in y_upper or "3" in y_upper:
+            y_variants = ["III", "III Year", "3", "3rd Year", "3rd", "YR 3", "YEAR 3"]
+        elif "II" in y_upper or "2" in y_upper:
+            y_variants = ["II", "II Year", "2", "2nd Year", "2nd", "YR 2", "YEAR 2"]
+        elif "I" in y_upper or "1" in y_upper:
+            y_variants = ["I", "I Year", "1", "1st Year", "1st", "YR 1", "YEAR 1"]
+        
+        query = query.filter(Student.year_level.in_(y_variants))
   # type: ignore
     if batch_str != "all":
         query = query.filter(getattr(Student, "batch", "") == batch_str)  # type: ignore
@@ -1407,7 +1427,10 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         for col_idx, val in enumerate(row_vals, start=1):
             cell = ws1.cell(row=r_idx, column=col_idx, value=val)
             cell.font = FONT_DATA_BOLD if col_idx in (1, 2, 10) else FONT_DATA
-            cell.alignment = ALIGN_CENTER
+            if col_idx == 2:  # Student Name column: LEFT ALIGNED
+                cell.alignment = ALIGN_LEFT
+            else:
+                cell.alignment = ALIGN_CENTER
             cell.border = _THIN_BORDER
 
             if r_idx % 2 == 1: cell.fill = ALT_ROW_FILL
@@ -1502,7 +1525,10 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         for col_idx, val in enumerate(row_vals, start=1):
             cell = ws2.cell(row=r_idx, column=col_idx, value=val)
             cell.font = FONT_DATA_BOLD if col_idx in (1, 2, 8) else FONT_DATA
-            cell.alignment = ALIGN_CENTER
+            if col_idx == 2:  # Student Name column: LEFT ALIGNED
+                cell.alignment = ALIGN_LEFT
+            else:
+                cell.alignment = ALIGN_CENTER
             cell.border = _THIN_BORDER
             if r_idx % 2 == 1: cell.fill = ALT_ROW_FILL
 

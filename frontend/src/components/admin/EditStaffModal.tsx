@@ -508,13 +508,13 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
                   <User className="w-3 h-3 text-brand-500" /> Full Name
                 </span>
-                <span className="font-black text-xs text-slate-950 dark:text-white truncate block">{formData.full_name || staff.username}</span>
+                <span className="font-black text-xs text-slate-950 dark:text-white break-all [overflow-wrap:anywhere] block" title={formData.full_name || staff.username}>{formData.full_name || staff.username}</span>
               </div>
               <div className="bg-slate-50/90 dark:bg-navy-900/90 rounded-xl p-2.5 border border-slate-200/70 dark:border-navy-800">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
                   <Mail className="w-3 h-3 text-indigo-500" /> Official Email
                 </span>
-                <span className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate block">{formData.email}</span>
+                <span className="font-bold text-xs text-slate-800 dark:text-slate-200 break-all [overflow-wrap:anywhere] block" title={formData.email}>{formData.email}</span>
               </div>
               <div className="bg-slate-50/90 dark:bg-navy-900/90 rounded-xl p-2.5 border border-slate-200/70 dark:border-navy-800">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">

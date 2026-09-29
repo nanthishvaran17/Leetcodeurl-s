@@ -241,16 +241,14 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
   const cleanReportTitle = (rawTitle: any): string => {
     if (!rawTitle) return '';
     let t = String(rawTitle).trim();
-    // 1. Strip leading standalone numbers e.g. "2 2 ", "2 ", "3 ", "2-", "2 2"
-    t = t.replace(/^\s*(\d+[\s-]*)+/, '').trim();
-    // 2. Strip orphaned numbers before hyphens e.g. " (AUTONOMOUS) 2 - " -> " (AUTONOMOUS) "
-    t = t.replace(/\s+\d+\s*-\s*/, ' ').trim();
-    // 3. Replace (3 Year) or (2 Year) with (III Year) or (II Year)
+    // 1. Strip orphaned numbers standalone before hyphens without letters e.g. " 8 - " -> " " only if followed by another title
+    t = t.replace(/\s+\b\d+\b\s*-\s*/, ' ').trim();
+    // 2. Replace (3 Year) or (2 Year) with (III Year) or (II Year)
     t = t.replace(/\(\s*(\d+|I+|IV|V|FINAL|1ST|2ND|3RD|4TH)\s*(?:Year|Yr)?\s*\)/gi, (_m, g1) => {
       const rY = toRomanYear(g1);
       return `(${rY} Year)`;
     });
-    // 4. Replace standalone "3 Year" or "3rd Year" with "III Year"
+    // 3. Replace standalone "3 Year" or "3rd Year" with "III Year"
     t = t.replace(/\b(\d+|1ST|2ND|3RD|4TH)\s*(?:Year|Yr)\b/gi, (_m, g1) => {
       const rY = toRomanYear(g1);
       return `${rY} Year`;

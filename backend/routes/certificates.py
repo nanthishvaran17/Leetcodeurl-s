@@ -667,13 +667,6 @@ def download_forensic_contest_pdf(
         if m_id:
             student = db.query(Student).filter(Student.id == int(m_id.group(1))).first()
 
-    if not student and (raw_id.startswith("JOB:") or raw_id.startswith("trace_")):
-        latest_cert = db.query(CertificateRecord).order_by(CertificateRecord.id.desc()).first()
-        if latest_cert and latest_cert.student_id:
-            student = db.query(Student).filter(Student.id == latest_cert.student_id).first()
-        if not student:
-            student = db.query(Student).filter(Student.is_active == True).first()
-
     # STRICT: If student is not found, raise 404
     if not student:
         logger.warning(f"[forensic_download_failed] Student not found for identifier={raw_id}, student_id={student_id}")

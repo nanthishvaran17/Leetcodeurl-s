@@ -61,7 +61,7 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
             from backend.models import Student, CertificateRecord
 
             search = filters.get("search") or filters.get("student_id") or payload.get("identifier")
-            session_id = filters.get("session_id")
+            session_id = filters.get("session_id") or filters.get("contest_id")
             trace_id = filters.get("trace_id") or (str(search) if search and (str(search).startswith("trace_") or str(search).startswith("CERT-")) else None)
 
             student = None

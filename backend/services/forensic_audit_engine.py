@@ -119,8 +119,33 @@ def build_normalized_forensic_report(
         if session_id:
             raise ValueError(f"Data Integrity Conflict Detected: Contest session #{session_id} not found in verified registry. The report was not generated to prevent incorrect forensic certification.")
         else:
-            # Pick latest finalized session if no session_id specified
-            session_obj = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
+            # 1. Look for the student's latest participated contest session first
+            student_last_pub = db.query(WeeklyPublicResult).filter(
+                WeeklyPublicResult.student_id == student.id,
+                WeeklyPublicResult.participation_status.in_(["PUBLIC_ATTENDED", "PUBLIC", "ATTENDED"])
+            ).order_by(WeeklyPublicResult.session_id.desc()).first()
+
+            student_last_virt = db.query(WeeklyVirtualResult).filter(
+                WeeklyVirtualResult.student_id == student.id,
+                WeeklyVirtualResult.participation_status.in_(["VIRTUAL_ATTENDED", "VIRTUAL"])
+            ).order_by(WeeklyVirtualResult.session_id.desc()).first()
+
+            student_last_prev = db.query(PreviousWeekParticipationRecord).filter(
+                PreviousWeekParticipationRecord.student_id == student.id,
+                PreviousWeekParticipationRecord.is_active_version == True
+            ).order_by(PreviousWeekParticipationRecord.session_id.desc()).first()
+
+            candidate_session_ids = [
+                r.session_id for r in [student_last_pub, student_last_virt, student_last_prev] if r and r.session_id
+            ]
+
+            if candidate_session_ids:
+                best_session_id = max(candidate_session_ids)
+                session_obj = db.query(WeeklySession).filter(WeeklySession.id == best_session_id).first()
+
+            # 2. Fall back to latest finalized session if student has no recorded session participation
+            if not session_obj:
+                session_obj = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
             if not session_obj:
                 session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
 

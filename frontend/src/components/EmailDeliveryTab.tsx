@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Mail, Send, RefreshCw, CheckCircle2, XCircle, Clock, AlertTriangle,
-  Trash2, Plus, Users, ChevronDown, X, Eye, Loader2, RotateCcw,
+  Trash2, Plus, Users, ChevronDown, X, Eye, Loader2, RotateCcw, Download,
   FileSpreadsheet, FileText, Play, Pause, Settings, ShieldCheck, Sparkles,
   Filter, Search, Zap, Calendar, ArrowRight, ExternalLink, Check, CheckSquare, Square, Info
 } from 'lucide-react';
@@ -9,6 +9,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { StatusNotificationModal, NotificationState } from './StatusNotificationModal';
+import { downloadFromUrl } from '../utils/mobileDownload';
 
 interface EmailRecipient {
   id: number;
@@ -156,6 +157,24 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
   const [isSessionOpen, setIsSessionOpen] = useState(false);
   const [selectedRecipientEmails, setSelectedRecipientEmails] = useState<Set<string>>(new Set());
   const [customMessage, setCustomMessage] = useState<string>('');
+  const [downloadingFormat, setDownloadingFormat] = useState<string | null>(null);
+
+  const handleDownloadAttachment = async (format: 'excel' | 'pdf' | 'word', filename: string) => {
+    setDownloadingFormat(format);
+    try {
+      const sessId = selectedSessionId ? String(selectedSessionId) : 'latest';
+      const endpoint = `/reports/${sessId}/${format}`;
+      const res = await downloadFromUrl(endpoint, filename);
+      if (!res.ok) {
+        const fallbackEndpoint = format === 'excel' ? '/reports/download' : format === 'pdf' ? '/reports/download-pdf' : '/reports/download-word';
+        await downloadFromUrl(fallbackEndpoint, filename);
+      }
+    } catch (err) {
+      console.error(`Failed to download ${format} attachment:`, err);
+    } finally {
+      setDownloadingFormat(null);
+    }
+  };
 
   // Manual Send Workflow Modals & Overlays
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -779,11 +798,11 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
   }
 
   return (
-    <div className="space-y-8 pb-12 animate-fade-in">
+    <div className="space-y-8 sm:space-y-10 pt-3 sm:pt-4 pb-12 animate-fade-in">
       
       {/* 1. PROVIDER STATUS BAR (Admins Only) */}
       {!isStaff && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-sm mb-8 sm:mb-10">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 dark:text-emerald-400">
               <CheckCircle2 className="w-5 h-5" />
@@ -801,16 +820,16 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           <div className="flex items-center gap-6">
             <div className="hidden md:flex items-center gap-6 text-xs">
               <div className="flex flex-col">
-                <span className="text-slate-400 font-medium uppercase tracking-wider text-[10px]">Timeout</span>
-                <span className="font-bold text-slate-700 dark:text-slate-200">90s</span>
+                <span className="text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px]">Timeout</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100">90s</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-slate-400 font-medium uppercase tracking-wider text-[10px]">Retry Policy</span>
-                <span className="font-bold text-slate-700 dark:text-slate-200">3 Exponential</span>
+                <span className="text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px]">Retry Policy</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100">3 Exponential</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-slate-400 font-medium uppercase tracking-wider text-[10px]">Last Success</span>
-                <span className="font-bold text-slate-700 dark:text-slate-200">{metrics.lastSuccessTime ? formatTimestampIST(metrics.lastSuccessTime) : 'None'}</span>
+                <span className="text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px]">Last Success</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100">{metrics.lastSuccessTime ? formatTimestampIST(metrics.lastSuccessTime) : 'None'}</span>
               </div>
             </div>
             
@@ -818,8 +837,8 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
-                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Refreshed</div>
-                <div className="text-xs font-bold text-slate-700 dark:text-slate-300">{lastRefreshedAt || 'Just now'}</div>
+                <div className="text-[10px] text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider">Refreshed</div>
+                <div className="text-xs font-bold text-slate-900 dark:text-slate-200">{lastRefreshedAt || 'Just now'}</div>
               </div>
               <button
                 onClick={() => fetchAllData(false)}
@@ -836,7 +855,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
       {/* Staff Mentoring Safe Delivery Banner */}
       {isStaff && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 dark:bg-navy-950 border border-slate-700/50 dark:border-navy-700 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-xl relative overflow-hidden group">
+        <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 dark:bg-navy-950 border border-slate-700/50 dark:border-navy-700 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-xl relative overflow-hidden group mb-6 sm:mb-8">
           
           <div className="flex items-center space-x-4 relative z-10">
             <div className="p-3.5 rounded-2xl bg-slate-800/80 dark:bg-navy-800/80 text-emerald-400 border border-slate-700 dark:border-navy-700 shadow-inner">
@@ -859,7 +878,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       )}
 
       {/* 2. TOP KPI CARDS */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5 mb-8 sm:mb-10">
         {/* Delivered */}
         <button onClick={() => setActiveSection('history')} className="glass-card p-4 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-transparent text-left hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all cursor-pointer">
           <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 mb-1">
@@ -869,7 +888,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           <div className="text-2xl font-black text-slate-900 dark:text-white">
             {metrics.deliveredCount.toLocaleString()}
           </div>
-          <p className="text-[10px] text-slate-400 font-bold mt-1">Confirmed Dispatches</p>
+          <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold mt-1">Confirmed Dispatches</p>
         </button>
 
         {/* Pending / Queued */}
@@ -881,7 +900,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           <div className="text-2xl font-black text-slate-900 dark:text-white">
             {metrics.pendingCount.toLocaleString()}
           </div>
-          <p className="text-[10px] text-slate-400 font-bold mt-1">Queued Jobs</p>
+          <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold mt-1">Queued Jobs</p>
         </button>
 
         {/* Failed Deliveries */}
@@ -893,7 +912,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           <div className="text-2xl font-black text-slate-900 dark:text-white">
             {metrics.failedCount.toLocaleString()}
           </div>
-          <p className="text-[10px] text-slate-400 font-bold mt-1">Failed Attempts</p>
+          <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold mt-1">Failed Attempts</p>
         </button>
 
         {/* Active Recipients */}
@@ -905,7 +924,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           <div className="text-2xl font-black text-slate-900 dark:text-white">
             {metrics.activeRecipientsCount}
           </div>
-          <p className="text-[10px] text-slate-400 font-bold mt-1">Configured Emails</p>
+          <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold mt-1">Configured Emails</p>
         </button>
 
         {/* Success Rate */}
@@ -917,7 +936,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           <div className="text-2xl font-black text-slate-900 dark:text-white">
             {metrics.successRate}%
           </div>
-          <p className="text-[10px] text-slate-400 font-bold mt-1">Delivered / Attempts</p>
+          <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold mt-1">Delivered / Attempts</p>
         </button>
 
         {/* Automation Status */}
@@ -937,15 +956,15 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </span>
             )}
           </div>
-          <p className="text-[10px] text-slate-400 font-bold mt-1.5">Sunday 09:45 AM IST</p>
+          <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold mt-1.5">Sunday 09:45 AM IST</p>
         </button>
       </div>
 
       {/* 3. SECTION TAB NAVIGATION */}
-      <div className="flex items-center space-x-2 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex-wrap gap-1">
+      <div className="flex items-center gap-2 bg-slate-100 dark:bg-navy-950 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 flex-wrap mb-6 sm:mb-8">
         <button
           onClick={() => setActiveSection('manual')}
-          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeSection === 'manual'
               ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -957,7 +976,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
         <button
           onClick={() => setActiveSection('automated')}
-          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeSection === 'automated'
               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-black'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -969,7 +988,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
         <button
           onClick={() => setActiveSection('recipients')}
-          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeSection === 'recipients'
               ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -981,7 +1000,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
         <button
           onClick={() => setActiveSection('history')}
-          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeSection === 'history'
               ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -998,7 +1017,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             e.stopPropagation();
             setShowDiagnostics((prev) => !prev);
           }}
-          className={`relative z-10 flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ml-auto ${
+          className={`relative z-10 flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ml-auto ${
             showDiagnostics
               ? 'bg-slate-800 text-white shadow-md'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
@@ -1011,7 +1030,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
       {/* 4. DIAGNOSTICS & TEST TOOLS COLLAPSIBLE PANEL */}
       {showDiagnostics && (
-        <div className="glass-card p-6 rounded-3xl border border-indigo-500/30 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-transparent space-y-4">
+        <div className="glass-card p-6 rounded-3xl border border-indigo-500/30 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-transparent space-y-4 mb-6 sm:mb-8">
           <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-black text-sm">
               <Settings className="w-4 h-4" />
@@ -1028,7 +1047,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                 Send Quick Test Email
               </h4>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold">
                 Verify Brevo API connectivity and transactional email dispatch to a specific test address.
               </p>
 
@@ -1056,7 +1075,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                 Send Complete Test Report Package
               </h4>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold">
                 Generates full multi-sheet Excel + PDF + DOCX report and dispatches to test recipient in safe mode.
               </p>
 
@@ -1064,9 +1083,9 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 <button
                   onClick={() => handleRunDiagnosticsTest(true)}
                   disabled={isTestingProvider}
-                  className="w-full py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-50"
+                  className="w-full py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-50"
                 >
-                  {isTestingProvider ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-amber-300" />}
+                  {isTestingProvider && <Loader2 className="w-4 h-4 animate-spin" />}
                   <span>Send Full Test Report to {testRecipient}</span>
                 </button>
               </div>
@@ -1097,7 +1116,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 <Zap className="w-5 h-5 text-amber-500" />
                 Manual Instant Dispatch
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1">
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-bold mt-1">
                 Send an immediate executive performance report bundle to selected institutional recipients. This action executes <span className="text-brand-600 dark:text-brand-400 font-black">once in real-time</span> without altering the canonical Sunday automated schedule.
               </p>
             </div>
@@ -1115,7 +1134,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               
               {/* Report Selection */}
               <div className="space-y-2">
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Select Institutional Report
                 </label>
                 
@@ -1168,7 +1187,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
               {/* Target Session Selector */}
               <div className="space-y-2">
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Target Weekly Contest Session
                 </label>
 
@@ -1214,38 +1233,133 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </div>
 
               {/* Dynamic Attachments Bundle */}
-              <div className="p-4 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-2.5">
-                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">
-                  Generated Attachments (Dynamic Bundle)
-                </span>
+              <div className="p-4 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+                    Generated Attachments (Dynamic Bundle)
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Sync
+                  </span>
+                </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between p-2.5 bg-white dark:bg-navy-950 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold">
-                    <span className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-                      <FileSpreadsheet className="w-4 h-4" /> Performance_Report.xlsx
-                    </span>
-                    <span className="text-[10px] text-slate-400">Excel Multi-Sheet</span>
+                  {/* 1. Excel Multi-Sheet Report */}
+                  <div
+                    onClick={() => handleDownloadAttachment('excel', 'Performance_Report.xlsx')}
+                    className="flex items-center justify-between p-3 bg-white dark:bg-navy-950 rounded-xl border border-slate-200 dark:border-navy-700 hover:border-emerald-400 dark:hover:border-emerald-500/60 shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold shrink-0 border border-emerald-200/60 dark:border-emerald-800/60 group-hover:scale-105 transition-transform">
+                        {downloadingFormat === 'excel' ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                          Performance_Report.xlsx
+                        </div>
+                        <div className="text-[10px] font-bold text-slate-400 truncate">
+                          Excel Multi-Sheet • 19 Sheets Master Performance
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={downloadingFormat === 'excel'}
+                      className="px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-extrabold text-[11px] flex items-center gap-1.5 border border-emerald-200 dark:border-emerald-800 transition-colors shrink-0 cursor-pointer"
+                    >
+                      {downloadingFormat === 'excel' ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Building...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Download</span>
+                        </>
+                      )}
+                    </button>
                   </div>
 
-                  <div className="flex items-center justify-between p-2.5 bg-white dark:bg-navy-950 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold">
-                    <span className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
-                      <FileText className="w-4 h-4" /> Executive_Summary.pdf
-                    </span>
-                    <span className="text-[10px] text-slate-400">Printable PDF</span>
+                  {/* 2. Executive Summary Printable PDF */}
+                  <div
+                    onClick={() => handleDownloadAttachment('pdf', 'Executive_Summary.pdf')}
+                    className="flex items-center justify-between p-3 bg-white dark:bg-navy-950 rounded-xl border border-slate-200 dark:border-navy-700 hover:border-rose-400 dark:hover:border-rose-500/60 shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold shrink-0 border border-rose-200/60 dark:border-rose-800/60 group-hover:scale-105 transition-transform">
+                        {downloadingFormat === 'pdf' ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                          Executive_Summary.pdf
+                        </div>
+                        <div className="text-[10px] font-bold text-slate-400 truncate">
+                          Printable PDF • Executive Management Summary
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={downloadingFormat === 'pdf'}
+                      className="px-2.5 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-extrabold text-[11px] flex items-center gap-1.5 border border-rose-200 dark:border-rose-800 transition-colors shrink-0 cursor-pointer"
+                    >
+                      {downloadingFormat === 'pdf' ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Generating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-3.5 h-3.5 text-rose-600" />
+                          <span>Download</span>
+                        </>
+                      )}
+                    </button>
                   </div>
 
-                  <div className="flex items-center justify-between p-2.5 bg-white dark:bg-navy-950 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold">
-                    <span className="flex items-center gap-2 text-brand-600 dark:text-brand-400">
-                      <FileText className="w-4 h-4" /> Institutional_Summary.docx
-                    </span>
-                    <span className="text-[10px] text-slate-400">Word Document</span>
+                  {/* 3. Institutional Summary Word Document */}
+                  <div
+                    onClick={() => handleDownloadAttachment('word', 'Institutional_Summary.docx')}
+                    className="flex items-center justify-between p-3 bg-white dark:bg-navy-950 rounded-xl border border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500/60 shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-brand-50 dark:bg-brand-950/80 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold shrink-0 border border-brand-200/60 dark:border-brand-800/60 group-hover:scale-105 transition-transform">
+                        {downloadingFormat === 'word' ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                          Institutional_Summary.docx
+                        </div>
+                        <div className="text-[10px] font-bold text-slate-400 truncate">
+                          Word Document • Official Word Report (.docx)
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={downloadingFormat === 'word'}
+                      className="px-2.5 py-1.5 rounded-lg bg-brand-50 dark:bg-brand-950/40 hover:bg-brand-100 dark:hover:bg-brand-900/60 text-brand-700 dark:text-brand-300 font-extrabold text-[11px] flex items-center gap-1.5 border border-brand-200 dark:border-brand-800 transition-colors shrink-0 cursor-pointer"
+                    >
+                      {downloadingFormat === 'word' ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Building...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-3.5 h-3.5 text-brand-600" />
+                          <span>Download</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>
 
               {/* Custom Administrator Note */}
               <div className="space-y-2">
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   Custom Administrator Note (Optional)
                 </label>
                 <textarea
@@ -1253,7 +1367,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                   onChange={(e) => setCustomMessage(e.target.value)}
                   placeholder="Add an optional custom note or announcement to include in the email body..."
                   rows={3}
-                  className="w-full p-3 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all font-medium"
+                  className="w-full p-3 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all font-medium"
                 />
               </div>
             </div>
@@ -1270,7 +1384,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                       <Users className="w-4 h-4 text-brand-500" />
                       Select Target Recipients
                     </h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-0.5">
+                    <p className="text-[11px] text-slate-700 dark:text-slate-300 font-bold mt-0.5">
                       <span className="text-brand-600 dark:text-brand-400 font-extrabold">{selectedRecipientEmails.size}</span> of {recipients.length} recipients selected for instant dispatch
                     </p>
                   </div>
@@ -1301,14 +1415,14 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                     value={recipientSearchQuery}
                     onChange={(e) => setRecipientSearchQuery(e.target.value)}
                     placeholder="Filter recipients by name, email, role, or department..."
-                    className="w-full pl-10 pr-4 py-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-brand-500"
+                    className="w-full pl-10 pr-4 py-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 outline-none focus:border-brand-500 font-medium"
                   />
                 </div>
 
                 {/* Recipient Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[340px] overflow-y-auto pr-1 flex-1">
                   {filteredRecipientsForDispatch.length === 0 ? (
-                    <div className="col-span-2 p-8 text-center text-slate-400 text-xs italic">
+                    <div className="col-span-2 p-8 text-center text-slate-500 dark:text-slate-400 text-xs font-bold italic">
                       No matching recipients found.
                     </div>
                   ) : (
@@ -1332,7 +1446,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                               <p className="text-xs font-black text-slate-900 dark:text-white truncate">
                                 {r.name}
                               </p>
-                              <p className="text-[11px] text-slate-400 truncate">
+                              <p className="text-[11px] text-slate-600 dark:text-slate-300 font-bold truncate">
                                 {r.email}
                               </p>
                             </div>
@@ -1349,8 +1463,8 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
                 {/* Action Bar & Dispatch Trigger */}
                 <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-4">
-                  <div className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
-                    <Info className="w-4 h-4 text-brand-400" />
+                  <div className="text-xs text-slate-700 dark:text-slate-300 font-bold flex items-center gap-1.5">
+                    <Info className="w-4 h-4 text-brand-500 dark:text-brand-400" />
                     <span>Brevo Official API • HTTPS Port 443 (TLS 1.3 Verified)</span>
                   </div>
 
@@ -1453,15 +1567,15 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-400">Frequency:</span>
+                  <span className="text-slate-600 dark:text-slate-300 font-bold">Frequency:</span>
                   <span className="font-black text-slate-900 dark:text-white">Weekly</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-400">Trigger Day:</span>
+                  <span className="text-slate-600 dark:text-slate-300 font-bold">Trigger Day:</span>
                   <span className="font-black text-slate-900 dark:text-white capitalize">{scheduleDay || 'Sunday'}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-400">Trigger Time:</span>
+                  <span className="text-slate-600 dark:text-slate-300 font-bold">Trigger Time:</span>
                   <span className="font-black text-brand-600 dark:text-brand-400 font-mono">
                     {scheduleHour !== undefined && scheduleMinute !== undefined 
                       ? `${String(scheduleHour % 12 || 12).padStart(2, '0')}:${String(scheduleMinute).padStart(2, '0')} ${scheduleHour >= 12 ? 'PM' : 'AM'} IST` 
@@ -1469,7 +1583,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-slate-400">Timezone:</span>
+                  <span className="text-slate-600 dark:text-slate-300 font-bold">Timezone:</span>
                   <span className="font-black text-emerald-600 dark:text-emerald-400">IST — Asia/Kolkata</span>
                 </div>
               </div>
@@ -1485,13 +1599,13 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
                   {scheduleConfig?.schedule?.next_run || 'Sunday, 06 September 2026 — 09:45 AM IST'}
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1">
+                <p className="text-xs text-slate-700 dark:text-slate-300 font-bold mt-1">
                   Strict Asia/Kolkata Execution Window
                 </p>
               </div>
 
               <div className="pt-2 flex items-center justify-between text-xs border-t border-brand-500/20">
-                <span className="text-slate-400">Status:</span>
+                <span className="text-slate-600 dark:text-slate-300 font-bold">Status:</span>
                 <span className="font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   Scheduled & Active
@@ -1507,20 +1621,20 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-400">Last Execution:</span>
+                  <span className="text-slate-600 dark:text-slate-300 font-bold">Last Execution:</span>
                   <span className="font-bold text-slate-900 dark:text-white">
                     {scheduleConfig?.schedule?.last_run || '30 Aug 2026 — 04:17 AM IST'}
                   </span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-400">Status:</span>
+                  <span className="text-slate-600 dark:text-slate-300 font-bold">Status:</span>
                   <span className="font-black text-emerald-600 dark:text-emerald-400">
                     {scheduleConfig?.schedule?.last_status || 'SUCCESS'}
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-slate-400">Last Report:</span>
-                  <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300 truncate max-w-[150px]" title={scheduleConfig?.schedule?.last_report || 'NEC_WC517_All-Depts_All-Yrs_30Aug2026.xlsx'}>
+                  <span className="text-slate-600 dark:text-slate-300 font-bold">Last Report:</span>
+                  <span className="font-mono text-[11px] text-slate-900 dark:text-slate-200 font-bold truncate max-w-[150px]" title={scheduleConfig?.schedule?.last_report || 'NEC_WC517_All-Depts_All-Yrs_30Aug2026.xlsx'}>
                     {scheduleConfig?.schedule?.last_report || 'NEC_WC517_All-Depts_All-Yrs_30Aug2026.xlsx'}
                   </span>
                 </div>
@@ -1611,7 +1725,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                     <h3 className="text-sm font-black text-slate-900 dark:text-white">
                       {r.name}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    <p className="text-xs text-slate-700 dark:text-slate-300 font-bold">
                       {r.email}
                     </p>
                   </div>
@@ -1621,7 +1735,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-                  <span className="text-slate-400">Department: <strong>{r.department || 'ALL'}</strong></span>
+                  <span className="text-slate-600 dark:text-slate-300 font-bold">Department: <strong className="text-slate-900 dark:text-white font-extrabold">{r.department || 'ALL'}</strong></span>
                   <button
                     onClick={() => handleToggleRecipientActive(r.id, r.is_active)}
                     className={`px-2.5 py-1 rounded-full text-[10px] font-black cursor-pointer ${
@@ -1657,7 +1771,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                 Delivery Audit Logs &amp; Traceability
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-bold">
                 Real-time delivery audit logs, retry execution, message IDs, and provider response diagnostics.
               </p>
             </div>
@@ -1672,8 +1786,8 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           </div>
 
           {/* Filters Bar */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex-1 min-w-[200px] relative">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="flex-1 min-w-0 relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -1684,52 +1798,54 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-slate-400" />
-              <div className="relative z-20">
-                <button
-                  type="button"
-                  onClick={() => { setIsLogFilterStatusOpen(!isLogFilterStatusOpen); setIsLogFilterTypeOpen(false); }}
-                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isLogFilterStatusOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
-                >
-                  <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                    {{
-                      'ALL': 'All Statuses',
-                      'SENT': 'Delivered',
-                      'FAILED': 'Failed',
-                      'QUEUED': 'Queued',
-                      'RETRYING': 'Retrying'
-                    }[logFilterStatus] || logFilterStatus}
-                  </span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${isLogFilterStatusOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {isLogFilterStatusOpen && (
-                  <div className="absolute z-[200] top-full left-0 mt-2 w-48 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
-                    {[
-                      { value: 'ALL', label: 'All Statuses' },
-                      { value: 'SENT', label: 'Delivered' },
-                      { value: 'FAILED', label: 'Failed' },
-                      { value: 'QUEUED', label: 'Queued' },
-                      { value: 'RETRYING', label: 'Retrying' }
-                    ].map(opt => (
-                      <button key={opt.value} type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => { setLogFilterStatus(opt.value); setIsLogFilterStatusOpen(false); }}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-colors ${logFilterStatus === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold'}`}
-                      >
-                        <span className="text-xs truncate">{opt.label}</span>
-                        {logFilterStatus === opt.value && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
+            <div className="flex items-center gap-2 justify-between sm:justify-start">
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+                <div className="relative z-20">
+                  <button
+                    type="button"
+                    onClick={() => { setIsLogFilterStatusOpen(!isLogFilterStatusOpen); setIsLogFilterTypeOpen(false); }}
+                    className={`flex items-center gap-2.5 px-3.5 sm:px-4 py-2.5 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isLogFilterStatusOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                  >
+                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                      {{
+                        'ALL': 'All Statuses',
+                        'SENT': 'Delivered',
+                        'FAILED': 'Failed',
+                        'QUEUED': 'Queued',
+                        'RETRYING': 'Retrying'
+                      }[logFilterStatus] || logFilterStatus}
+                    </span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${isLogFilterStatusOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isLogFilterStatusOpen && (
+                    <div className="absolute z-[200] top-full left-0 mt-2 w-48 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                      {[
+                        { value: 'ALL', label: 'All Statuses' },
+                        { value: 'SENT', label: 'Delivered' },
+                        { value: 'FAILED', label: 'Failed' },
+                        { value: 'QUEUED', label: 'Queued' },
+                        { value: 'RETRYING', label: 'Retrying' }
+                      ].map(opt => (
+                        <button key={opt.value} type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => { setLogFilterStatus(opt.value); setIsLogFilterStatusOpen(false); }}
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-colors ${logFilterStatus === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold'}`}
+                        >
+                          <span className="text-xs truncate">{opt.label}</span>
+                          {logFilterStatus === opt.value && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="relative z-20">
                 <button
                   type="button"
                   onClick={() => { setIsLogFilterTypeOpen(!isLogFilterTypeOpen); setIsLogFilterStatusOpen(false); }}
-                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isLogFilterTypeOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                  className={`flex items-center gap-2.5 px-3.5 sm:px-4 py-2.5 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isLogFilterTypeOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
                 >
                   <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
                     {{
@@ -1742,7 +1858,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                   <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${isLogFilterTypeOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isLogFilterTypeOpen && (
-                  <div className="absolute z-[200] top-full left-0 mt-2 w-48 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                  <div className="absolute z-[200] top-full right-0 sm:left-0 mt-2 w-48 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
                     {[
                       { value: 'ALL', label: 'All Types' },
                       { value: 'MANUAL', label: 'Manual' },
@@ -1764,8 +1880,81 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             </div>
           </div>
 
-          {/* Delivery Logs Table */}
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800">
+          {/* Delivery Logs Container */}
+          
+          {/* Mobile View: Cards layout without horizontal scroll */}
+          <div className="block md:hidden space-y-3">
+            {filteredLogs.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 font-bold bg-slate-50 dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-800 text-xs">
+                No delivery logs match your filter criteria.
+              </div>
+            ) : (
+              filteredLogs.map(log => {
+                const statusCfg = STATUS_BADGES[log.status] || STATUS_BADGES.QUEUED;
+                const isFailed = log.status === 'FAILED';
+                return (
+                  <div key={log.id} className="p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black border ${statusCfg.bg} ${statusCfg.text} ${statusCfg.border}`}>
+                        {statusCfg.icon}
+                        <span>{statusCfg.label}</span>
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide border ${
+                        log.dispatch_type === 'MANUAL' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30' :
+                        log.dispatch_type === 'TEST' ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30' :
+                        'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
+                      }`}>
+                        {log.dispatch_type || 'AUTOMATED'}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="text-xs font-black text-slate-900 dark:text-white break-all">
+                        {log.recipient}
+                      </div>
+                      <div className="text-xs text-slate-600 dark:text-slate-300 font-semibold line-clamp-2 leading-relaxed">
+                        {log.subject}
+                      </div>
+                    </div>
+
+                    <div className="pt-2.5 border-t border-slate-100 dark:border-navy-800 flex items-center justify-between gap-2 text-xs flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                          {formatTimestampIST(log.sent_at || log.created_at)}
+                        </span>
+                        <span className="font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-navy-800 px-2 py-0.5 rounded border border-slate-200 dark:border-navy-700">
+                          Brevo v3
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setSelectedLogDetail(log)}
+                          className="px-3 py-1.5 bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-600 hover:text-white text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 rounded-xl text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> <span>View</span>
+                        </button>
+
+                        {isFailed && (
+                          <button
+                            onClick={() => handleRetryFailedLog(log.id)}
+                            disabled={retryingLogId === log.id}
+                            className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[11px] font-bold cursor-pointer inline-flex items-center gap-1 transition-all"
+                          >
+                            {retryingLogId === log.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
+                            Retry
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Desktop View: Full Table */}
+          <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 dark:border-navy-800">

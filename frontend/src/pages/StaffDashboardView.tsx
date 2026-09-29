@@ -302,8 +302,8 @@ export const StaffDashboardView: React.FC = () => {
               <span>MY MENTORING DASHBOARD</span>
             </div>
             <AnimatedWelcomeHeading
-              className="text-2xl md:text-3xl font-black text-white leading-tight break-words uppercase"
-              nameClassName="text-indigo-300 break-words"
+              className="text-lg sm:text-2xl md:text-3xl font-black text-white leading-tight uppercase max-w-full"
+              nameClassName="text-indigo-300"
             />
             <p className="text-sm md:text-base text-slate-300 font-medium">Your mentoring dashboard is ready.</p>
             <p className="text-xs text-slate-300 flex items-center gap-2">

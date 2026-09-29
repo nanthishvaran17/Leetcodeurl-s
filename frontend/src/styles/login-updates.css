@@ -240,8 +240,9 @@
     height: 48px !important;
     font-size: 0.94rem !important;
     border-radius: 12px !important;
-    background: #091E36 !important;
+    background: linear-gradient(135deg, #0284C7 0%, #004E7A 100%) !important;
     color: #FFFFFF !important;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
   }
 
   .help-card-row {
@@ -349,8 +350,9 @@
   height: 46px !important;
   font-size: 0.9rem !important;
   border-radius: 12px !important;
-  background: #091E36 !important;
+  background: linear-gradient(135deg, #0284C7 0%, #004E7A 100%) !important;
   color: #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
 }
 
 .login-page-container.is-capacitor .help-card-row {

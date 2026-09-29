@@ -502,66 +502,66 @@ export const CertificateManagementModal: React.FC<{
       >
 
         {/* TOP INSTITUTIONAL HEADER & SYSTEM STATUS */}
-        <div className="px-4 sm:px-6 py-3.5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-b border-brand-500/30 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0 shadow-lg">
-          <div className="flex items-center space-x-3 sm:space-x-4">
-            <div className="p-2.5 sm:p-3 rounded-2xl bg-brand-500/10 text-brand-400 border border-brand-500/30 shadow-lg shrink-0">
-              <Award className="w-6 h-6 sm:w-8 sm:h-8 drop-shadow-md" />
+        <div className="px-4 sm:px-6 py-3 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-b border-brand-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-3 shrink-0 shadow-lg">
+          <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
+            <div className="p-2 sm:p-2.5 rounded-2xl bg-brand-500/10 text-brand-400 border border-brand-500/30 shadow-lg shrink-0">
+              <Award className="w-6 h-6 sm:w-7 sm:h-7 drop-shadow-md" />
             </div>
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap gap-1">
-                <h2 className="text-base sm:text-xl md:text-2xl font-black text-white tracking-tight uppercase">
+            <div className="space-y-0.5 min-w-0">
+              <div className="flex items-center space-x-2 flex-wrap gap-1.5">
+                <h2 className="text-sm sm:text-base md:text-lg lg:text-xl font-black text-white tracking-tight uppercase truncate">
                   INSTITUTIONAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">CREDENTIAL ISSUANCE HUB</span>
                 </h2>
-                <span className="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1.5 shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1.5 shadow-sm shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
                   <span className="hidden sm:inline"> CREDENTIAL SYSTEM OPERATIONAL</span>
                   <span className="sm:hidden">OPERATIONAL</span>
                 </span>
               </div>
               
-              <p className="text-xs sm:text-sm text-slate-200 font-extrabold tracking-wide uppercase hidden sm:block">
+              <p className="text-[11px] sm:text-xs text-slate-300 font-extrabold tracking-wide uppercase hidden md:block">
                 Create • Sign • Issue • Verify • Audit
               </p>
             </div>
           </div>
 
           {/* Right Navigation & Actions */}
-          <div className="flex flex-row items-center justify-between md:justify-end gap-2 w-full lg:w-auto overflow-x-auto no-scrollbar">
-            <div className="flex flex-row items-center bg-slate-900/90 p-1 rounded-2xl border border-slate-800 text-xs font-bold shadow-inner gap-1 shrink-0 overflow-x-auto no-scrollbar">
+          <div className="flex flex-wrap items-center justify-start lg:justify-end gap-2 shrink-0">
+            <div className="flex flex-wrap items-center bg-slate-900/90 p-1 rounded-2xl border border-slate-800 text-xs font-bold shadow-inner gap-1 shrink-0">
               <button
                 type="button"
                 onClick={() => setActiveMainTab('studio')}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 whitespace-nowrap text-xs ${
+                className={`px-3 sm:px-4 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 whitespace-nowrap text-xs ${
                   activeMainTab === 'studio'
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md border border-amber-400/40'
                     : 'text-slate-300 hover:text-white font-bold hover:bg-slate-800/60'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                 <span>Issuance Studio</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveMainTab('signatures')}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 whitespace-nowrap text-xs ${
+                className={`px-3 sm:px-4 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 whitespace-nowrap text-xs ${
                   activeMainTab === 'signatures'
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md border border-amber-400/40'
                     : 'text-slate-300 hover:text-white font-bold hover:bg-slate-800/60'
                 }`}
               >
-                <Upload className="w-3.5 h-3.5 text-indigo-400" />
+                <Upload className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
                 <span>Signatures ({signatures.filter(s => s.is_active).length}/3)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveMainTab('registry')}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 whitespace-nowrap text-xs ${
+                className={`px-3 sm:px-4 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 whitespace-nowrap text-xs ${
                   activeMainTab === 'registry'
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md border border-amber-400/40'
                     : 'text-slate-300 hover:text-white font-bold hover:bg-slate-800/60'
                 }`}
               >
-                <FileCheck2 className="w-3.5 h-3.5 text-emerald-400" />
+                <FileCheck2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span>Issued Registry ({metrics.total})</span>
               </button>
             </div>

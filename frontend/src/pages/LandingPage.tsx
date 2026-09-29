@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CollegeLogo } from '../components/CollegeLogo';
-import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List, RefreshCw, CheckCircle2, Clock, AlertCircle, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, Search, X, Sparkles, Zap, ArrowUpDown } from 'lucide-react';
+import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List, RefreshCw, CheckCircle2, Clock, AlertCircle, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, Search, X, Sparkles, Zap, ArrowUpDown, SortAsc, SortDesc } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { StudentFlipCard } from '../components/StudentFlipCard';
@@ -554,8 +554,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const sortOptions: DropdownOption[] = [
     { value: 'top_solved', label: 'Top Solvers (Highest First)', icon: Trophy },
     { value: 'low_solved', label: 'Lowest Solvers First', icon: ArrowUpDown },
-    { value: 'name_asc', label: 'Student Name (A → Z)' },
-    { value: 'name_desc', label: 'Student Name (Z → A)' },
+    { value: 'name_asc', label: 'Student Name (A → Z)', icon: SortAsc },
+    { value: 'name_desc', label: 'Student Name (Z → A)', icon: SortDesc },
     { value: 'streak', label: 'Highest Active Streak', icon: Flame },
     { value: 'rating', label: 'Highest Contest Rating', icon: Star }
   ];

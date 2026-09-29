@@ -514,9 +514,9 @@ export const StaffManagement: React.FC = () => {
                         }`}
                       >
                         {/* Top Header: Avatar, Name, Status */}
-                        <div className="flex items-start justify-between gap-2.5">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="relative shrink-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                            <div className="relative shrink-0 mt-0.5">
                               <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-xs flex items-center justify-center shadow-sm uppercase tracking-wider">
                                 {initials}
                               </div>
@@ -527,7 +527,10 @@ export const StaffManagement: React.FC = () => {
 
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                                <h4 className="font-bold text-sm text-slate-900 dark:text-white leading-snug break-words flex-1">
+                                <h4 
+                                  className="font-bold text-xs xs:text-sm text-slate-900 dark:text-white leading-snug break-all sm:break-words [overflow-wrap:anywhere] [word-break:break-word] flex-1 min-w-0"
+                                  title={staff.full_name || staff.username}
+                                >
                                   {staff.full_name || staff.username}
                                 </h4>
                                 {staff.role === 'Super Admin' && (
@@ -539,14 +542,14 @@ export const StaffManagement: React.FC = () => {
                             </div>
                           </div>
 
-                          <div className="shrink-0 pt-0.5">
+                          <div className="shrink-0 pt-0.5 ml-1">
                             {staff.is_active ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 xs:px-2.5 xs:py-1 rounded-full text-[9px] xs:text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 Active
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 xs:px-2.5 xs:py-1 rounded-full text-[9px] xs:text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20">
                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                                 Suspended
                               </span>
@@ -557,7 +560,9 @@ export const StaffManagement: React.FC = () => {
                         {/* Dedicated Single-Line Full Email Banner */}
                         <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-navy-950/70 border border-slate-200/60 dark:border-navy-700 text-[10px] xs:text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 font-semibold min-w-0 w-full overflow-hidden shadow-2xs">
                           <Mail className="w-3.5 h-3.5 text-brand-500 shrink-0" />
-                          <span className="tracking-tight font-mono truncate">{staff.email || `@${staff.username}`}</span>
+                          <span className="tracking-tight font-mono break-all [overflow-wrap:anywhere] min-w-0" title={staff.email || `@${staff.username}`}>
+                            {staff.email || `@${staff.username}`}
+                          </span>
                         </div>
 
                         {/* Modern High-Contrast Vibrant Metric Grid (2x2) */}

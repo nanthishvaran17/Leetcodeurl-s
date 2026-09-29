@@ -545,10 +545,10 @@ export const ReportsPage: React.FC = () => {
       </div>
 
       {/* Main Tab Navigation */}
-      <div className="flex items-center space-x-2 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-2xl max-w-fit border border-slate-200 dark:border-slate-800 flex-wrap gap-1">
+      <div className="flex items-center gap-3 bg-slate-100 dark:bg-navy-950 p-2.5 rounded-2xl max-w-fit border border-slate-200 dark:border-slate-800 flex-wrap mt-4 mb-8 sm:mb-10 shadow-sm">
         <button
           onClick={() => startTransition(() => setActiveTab('reports'))}
-          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'reports'
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'reports'
               ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
@@ -559,7 +559,7 @@ export const ReportsPage: React.FC = () => {
 
         <button
           onClick={() => startTransition(() => setActiveTab('email'))}
-          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email'
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email'
               ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
@@ -575,7 +575,7 @@ export const ReportsPage: React.FC = () => {
         <>
 
           {/* Universal Institutional Reports Section */}
-          <div className={`glass-card p-6 md:p-8 rounded-3xl border border-brand-500/30 dark:border-brand-500/20 shadow-xl space-y-6 bg-gradient-to-r from-brand-500/5 via-cyan-500/5 to-transparent relative ${rptTypeOpen || rptYearOpen || rptScopeOpen ? 'z-50' : 'z-10'}`}>
+          <div className={`glass-card p-6 md:p-8 rounded-3xl border border-brand-500/30 dark:border-brand-500/20 shadow-xl space-y-6 bg-gradient-to-r from-brand-500/5 via-cyan-500/5 to-transparent relative mt-2 ${rptTypeOpen || rptYearOpen || rptScopeOpen ? 'z-50' : 'z-10'}`}>
             <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="flex items-center space-x-3">
                 <div className="p-3 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
@@ -656,9 +656,9 @@ export const ReportsPage: React.FC = () => {
                     ) || allOpts[0];
 
                     const renderCategory = (cat: any) => (
-                      <div key={cat.title} className="space-y-1.5 flex flex-col">
+                      <div key={cat.title} className="space-y-2 flex flex-col">
                         <div className="flex items-center gap-2 mb-1 px-1">
-                          <div className={`h-3 w-1 rounded-full bg-current ${cat.titleColor}`} />
+                          <div className={`h-3.5 w-1 rounded-full bg-current ${cat.titleColor}`} />
                           <div className={`text-[11px] font-black uppercase tracking-widest ${cat.titleColor}`}>
                             {cat.title}
                           </div>
@@ -675,15 +675,19 @@ export const ReportsPage: React.FC = () => {
                               type="button"
                               onMouseDown={(e) => e.preventDefault()}
                               onClick={() => { setSelectedReportType(opt.value); setRptTypeOpen(false); }}
-                              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all group ${isSelected ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20 ring-1 ring-brand-500/50' : 'hover:bg-slate-50 dark:hover:bg-navy-900 border border-transparent hover:border-slate-200 dark:hover:border-slate-800'}`}
+                              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-left transition-all duration-150 group cursor-pointer ${
+                                isSelected 
+                                  ? 'bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-brand-500/25 ring-2 ring-brand-500/40' 
+                                  : 'bg-white dark:bg-navy-900/60 hover:bg-slate-100/90 dark:hover:bg-navy-800 border border-slate-200/80 dark:border-slate-800 hover:border-brand-400/40 dark:hover:border-brand-500/40 shadow-2xs hover:shadow-xs hover:translate-x-0.5'
+                              }`}
                             >
-                              <span className={`w-20 min-w-[5rem] text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md text-center shrink-0 border transition-colors ${isSelected ? 'bg-white/20 text-white border-white/30' : opt.pillColor}`}>
+                              <span className={`w-24 min-w-[6rem] text-[9.5px] font-black uppercase tracking-wider px-2 py-1 rounded-xl text-center shrink-0 border transition-all ${isSelected ? 'bg-white/20 text-white border-white/30 backdrop-blur-xs' : opt.pillColor}`}>
                                 {opt.pill}
                               </span>
-                              <span className={`text-[11px] truncate flex-1 ${isSelected ? 'font-black text-white' : 'font-bold text-slate-700 dark:text-slate-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors'}`}>
+                              <span className={`text-[11.5px] truncate flex-1 ${isSelected ? 'font-black text-white' : 'font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors'}`}>
                                 {opt.label}
                               </span>
-                              {isSelected && <Check className="w-3.5 h-3.5 text-white shrink-0" strokeWidth={3} />}
+                              {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
                             </button>
                           );
                         })}
@@ -695,28 +699,30 @@ export const ReportsPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => { setRptTypeOpen(p => !p); setRptYearOpen(false); setRptScopeOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2 h-11 min-h-[44px] rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none cursor-pointer ${rptTypeOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-200 dark:border-slate-700 hover:border-brand-300'}`}
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 h-12 min-h-[48px] rounded-2xl bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-navy-950 dark:via-navy-900 dark:to-navy-950 border-2 text-left transition-all focus:outline-none cursor-pointer shadow-sm hover:shadow-md ${rptTypeOpen ? 'border-brand-500 ring-4 ring-brand-500/15' : 'border-slate-200 dark:border-slate-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
                         >
-                          <LayoutTemplate className="w-4 h-4 text-brand-500 shrink-0" />
+                          <div className="p-1.5 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 shrink-0">
+                            <LayoutTemplate className="w-4 h-4" />
+                          </div>
                           {currentOpt && (
-                            <span className={`w-24 min-w-[6rem] text-center shrink-0 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${currentOpt.pillColor}`}>
+                            <span className={`w-24 min-w-[6rem] text-center shrink-0 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border shadow-xs ${currentOpt.pillColor}`}>
                               {currentOpt.pill}
                             </span>
                           )}
-                          <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
+                          <span className="text-xs font-black text-slate-900 dark:text-white truncate flex-1">
                             {currentOpt ? currentOpt.label : selectedReportType}
                           </span>
-                          <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptTypeOpen ? 'rotate-180' : ''}`} />
+                          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${rptTypeOpen ? 'rotate-180 text-brand-500' : ''}`} />
                         </button>
 
                         {rptTypeOpen && (
-                          <div className="absolute z-[200] top-full left-0 right-0 sm:right-auto mt-2 bg-white/95 backdrop-blur-xl dark:bg-navy-950/95 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] overflow-y-auto overscroll-contain max-h-[55vh] sm:max-h-[70vh] min-w-[280px] w-full sm:w-[450px] md:w-[680px] grid grid-cols-1 md:grid-cols-2">
+                          <div className="absolute z-[200] top-full left-0 right-0 sm:right-auto mt-2.5 bg-white/98 backdrop-blur-2xl dark:bg-navy-950/98 border border-slate-200/90 dark:border-slate-700/80 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.2)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] overflow-y-auto overscroll-contain max-h-[60vh] sm:max-h-[75vh] min-w-[290px] w-full sm:w-[480px] md:w-[700px] grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800 animate-in fade-in slide-in-from-top-2 duration-200">
                             {/* LEFT COLUMN: A. CONTEST REPORTS */}
-                            <div className="p-4 sm:p-5 bg-slate-50/50 dark:bg-navy-900/20 border-r border-slate-100 dark:border-slate-800/50">
+                            <div className="p-5 sm:p-6 bg-slate-50/70 dark:bg-navy-900/30">
                               {renderCategory(reportCategories[0])}
                             </div>
                             {/* RIGHT COLUMN: B, C, D REPORTS */}
-                            <div className="p-4 sm:p-5 flex flex-col gap-y-6">
+                            <div className="p-5 sm:p-6 flex flex-col gap-y-7 bg-white dark:bg-navy-950">
                               {renderCategory(reportCategories[1])}
                               {renderCategory(reportCategories[2])}
                               {renderCategory(reportCategories[3])}
