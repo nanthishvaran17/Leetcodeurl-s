@@ -96,7 +96,7 @@ if "postgresql" in db_url or "postgres" in db_url:
 else:
     engine_kwargs.update({
         "poolclass": NullPool,
-        "connect_args": {"check_same_thread": False, "timeout": 60}
+        "connect_args": {"check_same_thread": False, "timeout": 5}
     })
 
 try:
@@ -114,7 +114,7 @@ except Exception as _engine_exc:
         db_url,
         echo=False,
         poolclass=NullPool,
-        connect_args={"check_same_thread": False, "timeout": 60}
+        connect_args={"check_same_thread": False, "timeout": 5}
     )
     try:
         from backend.logger import logger as _log
