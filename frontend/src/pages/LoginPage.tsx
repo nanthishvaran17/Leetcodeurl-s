@@ -252,6 +252,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     return `${maskedName}@${domain}`;
   };
 
+  // Load remembered username/credentials on mount for instant mobile quick login
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem('nec_remembered_username');
+      const savedPass = localStorage.getItem('nec_remembered_password');
+      if (savedUser) setUsername(savedUser);
+      if (savedPass) setPassword(savedPass);
+    } catch (e) {}
+  }, []);
+
   // 1. Password Login Handler
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -278,6 +288,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       if (res.data?.access_token) {
         setAuthStatusText('Authenticating...');
         setSuccessMsg('Authentication verified. Directing to workspace...');
+        if (rememberMe) {
+          localStorage.setItem('nec_remembered_username', username.trim());
+          localStorage.setItem('nec_remembered_password', password.trim());
+        } else {
+          localStorage.removeItem('nec_remembered_username');
+          localStorage.removeItem('nec_remembered_password');
+        }
         login(res.data.access_token, res.data.user);
         setTimeout(() => { onSuccess(); }, 180);
       }
