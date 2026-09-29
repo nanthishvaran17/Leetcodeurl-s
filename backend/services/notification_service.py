@@ -532,52 +532,6 @@ class NotificationService:
                     db.commit()
                     logger.info(f"[NOTIF_ENGINE] Deactivated {len(stale_tokens)} stale FCM tokens.")
 
-                # Also send to FCM global topic 'all_app_users' ONLY if scope is ALL/GLOBAL
-                if (recipient_scope or "").upper() in ("ALL", "GLOBAL") and (priority in ("high", "critical") or event_type in ("APP_UPDATE_AVAILABLE", "APP_UPDATE_REQUIRED", "URGENT_ANNOUNCEMENT")):
-                    try:
-                        topic_msg = messaging.Message(
-                            notification=messaging.Notification(title=title, body=body),
-                            topic="all_app_users",
-                            data={
-                                "notificationId": eff_event_id,
-                                "type": str(event_type),  # type: ignore
-                                "category": str(category),  # type: ignore
-                                "actionRoute": raw_route,
-                                "priority": str(eff_priority),  # type: ignore
-                                **({str(k): str(v) for k, v in (metadata or {}).items() if v is not None})  # type: ignore
-                            },
-                            android=messaging.AndroidConfig(
-                                priority="high" if is_high_priority else "normal",
-                                notification=messaging.AndroidNotification(
-                                    title=title,
-                                    body=body,
-                                    sound="default",
-                                    default_sound=True,
-                                    default_vibrate_timings=True,
-                                    channel_id="leetcode_intelligence_channel",
-                                    visibility="public"
-                                )
-                            ),
-                            webpush=messaging.WebpushConfig(
-                                headers={
-                                    "Urgency": "high" if is_high_priority else "normal"
-                                },
-                                notification=messaging.WebpushNotification(
-                                    title=title,
-                                    body=body,
-                                    icon="/logo.png",
-                                    badge="/logo.png",
-                                    tag=eff_event_id,
-                                    require_interaction=is_high_priority
-                                ),
-                                fcm_options=messaging.WebpushFCMOptions(
-                                    link=fcm_link
-                                )
-                            )
-                        )
-                        messaging.send(topic_msg)
-                    except Exception as t_err:
-                        logger.warning(f"[NOTIF_ENGINE] FCM topic broadcast notice: {t_err}")
 
             # 4. Optional Email Dispatch
             if send_email_notification:
@@ -644,12 +598,6 @@ class NotificationService:
 
             db.commit()
 
-            # Subscribe to FCM topic "all_app_users"
-            if FIREBASE_ADMIN_AVAILABLE and messaging:
-                try:
-                    messaging.subscribe_to_topic([device_token], "all_app_users")
-                except Exception as sub_err:
-                    logger.warning(f"[FCM] Topic sub notice: {sub_err}")
 
             return {"success": True, "token_id": tok.id, "user_id": user_id}
         except Exception as e:
@@ -729,13 +677,8 @@ class NotificationService:
 
     @staticmethod
     def subscribe_device_token_to_topic(token: str, topic: str = "all_app_users") -> Dict[str, Any]:
-        if FIREBASE_ADMIN_AVAILABLE and messaging:
-            try:
-                response = messaging.subscribe_to_topic([token], topic)
-                return {"success": response.success_count > 0, "topic": topic}
-            except Exception as e:
-                return {"success": True, "topic": topic, "note": str(e)}
-        return {"success": False, "note": "Firebase Admin SDK not loaded."}
+        """Legacy helper maintained for backward compatibility without calling deprecated IID APIs."""
+        return {"success": True, "topic": topic}
 
     @staticmethod
     def create_direct_notification(
