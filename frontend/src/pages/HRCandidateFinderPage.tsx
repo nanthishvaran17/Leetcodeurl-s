@@ -632,8 +632,8 @@ export const HRCandidateFinderPage: React.FC = () => {
   const batchOptions: SelectOption[] = [
     { value: "all", label: "All Batches", badge: "ALL", badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
     { value: "2023-2027", label: "2023–2027", badge: "2027", badgeColor: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300" },
-    { value: "2022-2026", label: "2022–2026", badge: "2026", badgeColor: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" },
-    { value: "2021-2025", label: "2021–2025", badge: "2025", badgeColor: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300" },
+    { value: "2024-2028", label: "2024–2028", badge: "2028", badgeColor: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" },
+    { value: "2025-2029", label: "2025–2029", badge: "2029", badgeColor: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300" },
   ];
 
   const yearOptions: SelectOption[] = [
