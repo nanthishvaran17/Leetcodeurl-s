@@ -77,10 +77,13 @@ if "postgresql" in db_url or "postgres" in db_url:
         "sslmode": "require",
     }
 
-    raw_pool_size = int(os.environ.get("DB_POOL_SIZE", 10))
-    raw_max_overflow = int(os.environ.get("DB_MAX_OVERFLOW", 10))
-    pool_size = raw_pool_size if os.environ.get("FORCE_LOW_POOL") == "true" else max(raw_pool_size, 8)
-    max_overflow = raw_max_overflow if os.environ.get("FORCE_LOW_POOL") == "true" else max(raw_max_overflow, 10)
+    is_render = bool(os.environ.get("RENDER") or os.environ.get("RENDER_SERVICE_ID"))
+    raw_pool_size = int(os.environ.get("DB_POOL_SIZE", 5 if is_render else 10))
+    raw_max_overflow = int(os.environ.get("DB_MAX_OVERFLOW", 5 if is_render else 10))
+    is_low_pool = is_render or os.environ.get("FORCE_LOW_POOL") == "true"
+    pool_size = raw_pool_size if is_low_pool else max(raw_pool_size, 8)
+    max_overflow = raw_max_overflow if is_low_pool else max(raw_max_overflow, 10)
+
 
     engine_kwargs.update({
         "pool_size": pool_size,

@@ -27,9 +27,11 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: DB_POOL_SIZE
-        value: "20"
+        value: "5"
       - key: DB_MAX_OVERFLOW
-        value: "30"
+        value: "5"
+      - key: FORCE_LOW_POOL
+        value: "true"
       - key: LEETCODE_SYNC_CONCURRENCY
         value: "3"
       - key: PYTHONUNBUFFERED
@@ -61,9 +63,11 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: DB_POOL_SIZE
-        value: "20"
+        value: "5"
       - key: DB_MAX_OVERFLOW
-        value: "30"
+        value: "5"
+      - key: FORCE_LOW_POOL
+        value: "true"
       - key: LEETCODE_SYNC_CONCURRENCY
         value: "3"
       - key: PYTHONUNBUFFERED
