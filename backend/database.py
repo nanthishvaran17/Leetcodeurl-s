@@ -129,16 +129,23 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     if "sqlite" in db_url:
         try:
             cursor = dbapi_connection.cursor()
-            cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.execute("PRAGMA busy_timeout=5000")  # Fast 5s timeout to prevent 30s Uvicorn worker freezes
+            try:
+                cursor.execute("PRAGMA journal_mode=WAL")
+            except Exception:
+                cursor.execute("PRAGMA journal_mode=DELETE")
             cursor.execute("PRAGMA synchronous=NORMAL")
-            cursor.execute("PRAGMA busy_timeout=60000")
-            cursor.execute("PRAGMA cache_size=-8000")   # 8MB lean page cache (OOM prevention)
-            cursor.execute("PRAGMA mmap_size=33554432")  # 32MB lean Memory-Mapped I/O
+            cursor.execute("PRAGMA cache_size=-4000")   # 4MB lean page cache (OOM prevention)
             cursor.execute("PRAGMA temp_store=MEMORY")
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.close()
-        except Exception:
-            pass
+        except Exception as _prag_err:
+            try:
+                from backend.logger import logger as _log
+                _log.warning(f"[DB_PRAGMA] SQLite pragma warning: {_prag_err}")
+            except Exception:
+                pass
+
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
