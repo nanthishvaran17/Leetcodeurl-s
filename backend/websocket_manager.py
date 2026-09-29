@@ -218,7 +218,9 @@ class ConnectionManager:
                     "authenticated": True
                 }
         except Exception as _fb_err:
-            logger.warning(f"[WS-AUTH] Firebase token verify notice: {_fb_err}")
+            err_msg = str(_fb_err)
+            if "kid" not in err_msg and "wrong number of segments" not in err_msg:
+                logger.warning(f"[WS-AUTH] Firebase token verify notice: {_fb_err}")
 
         # 3. Resilient Multi-Worker / Server Restart Fallback: Verify unexpired claims against active database user
         try:
