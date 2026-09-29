@@ -3,7 +3,7 @@ import { useAuth } from './AuthContext';
 import { useGlobalWebSocket } from './GlobalWebSocketProvider';
 import { useNotification as useToastNotification } from './NotificationContext';
 
-import { API_BASE_URL } from '../config/apiConfig';
+import { API_BASE_URL, getApiUrl } from '../config/apiConfig';
 
 export interface Notification {
   id: string;
@@ -90,7 +90,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   const registerFCMDeviceToken = useCallback(async (fcmToken: string, platform: string = 'web'): Promise<boolean> => {
     if (!token) return false;
     try {
-      const res = await fetch(`${API_BASE_URL}/notifications/register-device`, {
+      const res = await fetch(getApiUrl('/notifications/register-device'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   const fetchPreferences = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/notifications/preferences`, {
+      const res = await fetch(getApiUrl('/notifications/preferences'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -134,7 +134,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   const updatePreferences = async (newPrefs: NotificationPreferences) => {
     if (!token) return false;
     try {
-      const res = await fetch(`${API_BASE_URL}/notifications/preferences`, {
+      const res = await fetch(getApiUrl('/notifications/preferences'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +161,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
       return;
     }
     try {
-      const res = await fetch(`${API_BASE_URL}/notifications`, {
+      const res = await fetch(getApiUrl('/notifications'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {

@@ -3,6 +3,7 @@ import { downloadManager } from '../services/download/downloadManager';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertOctagon,
+  AlertCircle,
   CheckCircle2,
   AlertTriangle,
   XCircle,
@@ -989,7 +990,7 @@ export const StudentDataIssuesPage: React.FC = () => {
         </div>
 
         {/* Mobile Cards View (block md:hidden) */}
-        <div className="block md:hidden p-3 space-y-3">
+        <div className="block md:hidden p-4 sm:p-5 space-y-5 sm:space-y-6">
           {loading ? (
             <div className="p-10 text-center text-xs text-slate-500 font-bold space-y-2">
               <RefreshCw className="w-6 h-6 animate-spin text-amber-500 mx-auto" />
@@ -1002,150 +1003,196 @@ export const StudentDataIssuesPage: React.FC = () => {
               <p>All records within this selection meet verification standards.</p>
             </div>
           ) : (
-            paginatedStudents.map((student) => {
-              const isSelected = selectedStudentIds.includes(student.id);
-              const isVerifyingThis = verifyingRowId === student.id;
+            <div className="flex flex-col gap-4 sm:gap-5">
+              {paginatedStudents.map((student) => {
+                const isSelected = selectedStudentIds.includes(student.id);
+                const isVerifyingThis = verifyingRowId === student.id;
 
-              return (
-                <div
-                  key={student.id}
-                  className={`p-3.5 rounded-2xl border transition-all space-y-2.5 ${
-                    isSelected
-                      ? 'bg-indigo-50/70 border-indigo-300 dark:bg-indigo-950/40 dark:border-indigo-700/60'
-                      : 'bg-white dark:bg-navy-900/60 border-slate-200 dark:border-navy-800 shadow-sm'
-                  }`}
-                >
-                  {/* Top Row: Checkbox + Name + RegNo/Dept/Year + Severity Badge */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-2.5 min-w-0">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleToggleSelectRow(student.id)}
-                        className="mt-1 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
-                      />
-                      <div className="min-w-0">
-                        <div className="font-extrabold text-slate-900 dark:text-white text-sm truncate">
-                          {student.name}
+                return (
+                  <div
+                    key={student.id}
+                    className={`relative overflow-hidden rounded-3xl border transition-all duration-300 p-4 sm:p-5 space-y-3.5 shadow-sm hover:shadow-md ${
+                      isSelected
+                        ? 'bg-gradient-to-br from-indigo-50/90 via-slate-50 to-indigo-50/40 border-indigo-400 dark:from-indigo-950/60 dark:via-navy-950 dark:to-indigo-950/30 dark:border-indigo-600 ring-2 ring-indigo-500/20'
+                        : 'bg-white dark:bg-navy-950 border-slate-200/90 dark:border-navy-800 hover:border-slate-300 dark:hover:border-navy-700'
+                    }`}
+                  >
+                    {/* Header: Checkbox + Avatar + Name & Meta + Severity Badge */}
+                    <div className="flex items-start justify-between gap-3 pt-0.5">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelectRow(student.id)}
+                          className="rounded-lg border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer w-4 h-4 shrink-0"
+                        />
+
+                        {/* Initial Avatar Badge */}
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 via-brand-600 to-indigo-700 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20 border border-white/20">
+                          {(student.name || 'S').charAt(0).toUpperCase()}
                         </div>
-                        <div className="flex items-center gap-1.5 flex-wrap font-mono text-[11px] mt-0.5">
-                          <span className="font-bold text-indigo-600 dark:text-amber-400">{student.reg_no}</span>
-                          <span className="text-slate-300 dark:text-navy-700">•</span>
-                          <span className="font-semibold text-slate-600 dark:text-slate-300">{student.department_short}</span>
-                          <span className="text-slate-300 dark:text-navy-700">•</span>
-                          <span className="text-slate-500 dark:text-slate-400">{student.year_level}</span>
+
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-black text-slate-900 dark:text-white text-sm sm:text-base tracking-tight truncate">
+                            {student.name}
+                          </h4>
+                          <div className="flex items-center gap-1.5 flex-wrap font-mono text-[11px] mt-0.5">
+                            <span className="font-extrabold text-indigo-600 dark:text-amber-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-900/40">
+                              {student.reg_no}
+                            </span>
+                            <span className="text-slate-300 dark:text-navy-700">•</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">
+                              {student.department_short}
+                            </span>
+                            <span className="text-slate-300 dark:text-navy-700">•</span>
+                            <span className="text-slate-500 dark:text-slate-400 font-sans font-semibold">
+                              {student.year_level}
+                            </span>
+                          </div>
                         </div>
+                      </div>
+
+                      {/* Severity Badge */}
+                      <span
+                        className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 shadow-xs flex items-center gap-1 ${
+                          student.severity === 'CRITICAL'
+                            ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300 dark:border-rose-800/60'
+                            : student.severity === 'WARNING'
+                            ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60'
+                            : student.severity === 'INFO'
+                            ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300 border border-sky-300 dark:border-sky-800/60'
+                            : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/60'
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          student.severity === 'CRITICAL' ? 'bg-rose-500' : student.severity === 'WARNING' ? 'bg-amber-500' : 'bg-emerald-500'
+                        } animate-pulse`}></span>
+                        {student.issue_label}
+                      </span>
+                    </div>
+
+                    {/* Handle & URL Status Strip */}
+                    <div className="p-3 rounded-2xl bg-slate-50/90 dark:bg-navy-900/80 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-3 text-xs font-mono shadow-2xs">
+                      <div className="min-w-0 truncate flex items-center gap-1.5">
+                        <span className="text-slate-400 font-bold">Handle:</span>
+                        {student.username ? (
+                          <span className="font-black text-sky-600 dark:text-sky-400 truncate bg-sky-50 dark:bg-sky-950/50 px-2 py-0.5 rounded-lg border border-sky-200 dark:border-sky-800/40">
+                            @{student.username}
+                          </span>
+                        ) : (
+                          <span className="text-rose-500 italic font-bold text-[11px]">No username</span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {student.leetcode_url ? (
+                          <span
+                            className={`px-2.5 py-1 rounded-xl text-[9.5px] font-black uppercase tracking-wider flex items-center gap-1 ${
+                              student.url_status === 'VERIFIED'
+                                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
+                                : student.url_status === 'INVALID'
+                                ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30'
+                                : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30'
+                            }`}
+                          >
+                            <ShieldCheck className="w-3 h-3" />
+                            {student.url_status === 'VERIFIED'
+                              ? 'VERIFIED URL'
+                              : student.url_status === 'INVALID'
+                              ? 'INVALID URL'
+                              : 'NEEDS CHECK'}
+                          </span>
+                        ) : (
+                          <span className="text-[9.5px] text-slate-400">— No URL —</span>
+                        )}
                       </div>
                     </div>
 
-                    <span className={`px-2 py-0.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider shrink-0 ${
-                      student.severity === 'CRITICAL'
-                        ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/40'
-                        : student.severity === 'WARNING'
-                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-500/40'
-                        : student.severity === 'INFO'
-                        ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border border-sky-500/40'
-                        : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/40'
-                    }`}>
-                      {student.issue_label}
-                    </span>
-                  </div>
-
-                  {/* Middle Row: LeetCode Handle + URL Verification Status */}
-                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800 flex items-center justify-between gap-2 text-xs font-mono">
-                    <div className="min-w-0 truncate">
-                      {student.username ? (
-                        <span className="font-bold text-sky-600 dark:text-sky-400 truncate">@{student.username}</span>
-                      ) : (
-                        <span className="text-rose-500 italic font-bold text-[11px]">No username</span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {student.leetcode_url ? (
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
-                          student.url_status === 'VERIFIED'
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30'
-                            : student.url_status === 'INVALID'
-                            ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/30'
-                            : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-500/30'
-                        }`}>
-                          {student.url_status === 'VERIFIED' ? 'Verified URL' : student.url_status === 'INVALID' ? 'Invalid' : 'Needs Check'}
+                    {/* Problem Description & Action Details */}
+                    <div className="p-4 rounded-2xl bg-white dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-800 space-y-3 shadow-2xs">
+                      <p className="text-slate-900 dark:text-white font-extrabold text-xs leading-relaxed">
+                        {student.error_description}
+                      </p>
+                      
+                      <div className="flex items-center gap-2 flex-wrap text-xs pt-1 border-t border-slate-100 dark:border-navy-800">
+                        <span className="px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 font-black text-[9.5px] uppercase tracking-wider border border-amber-400/40 shrink-0 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 text-amber-500" />
+                          ACTION
                         </span>
-                      ) : (
-                        <span className="text-[9px] text-slate-400">— No URL —</span>
+                        <span className="font-extrabold text-slate-800 dark:text-slate-200 text-xs">
+                          {student.recommended_action}
+                        </span>
+                      </div>
+
+                      {student.last_sync && (
+                        <div className="text-xs font-mono pt-2 border-t border-slate-100 dark:border-navy-800/80 flex items-center justify-between gap-2">
+                          <span className="text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-slate-400" />
+                            Last Sync:
+                          </span>
+                          <span className="text-slate-900 dark:text-white font-black bg-slate-100 dark:bg-navy-950 px-2.5 py-0.5 rounded-lg border border-slate-200 dark:border-navy-700 text-[11px]">
+                            {student.last_sync}
+                          </span>
+                        </div>
                       )}
                     </div>
-                  </div>
 
-                  {/* Problem Description & Recommended Action */}
-                  <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-300 dark:border-navy-800 space-y-2">
-                    <p className="text-slate-950 dark:text-white font-extrabold text-xs leading-relaxed">
-                      {student.error_description}
-                    </p>
-                    <div className="flex items-center gap-1.5 flex-wrap text-xs pt-0.5">
-                      <span className="px-1.5 py-0.5 rounded bg-amber-200/80 dark:bg-amber-900/50 text-amber-950 dark:text-amber-200 font-black text-[10px] uppercase tracking-wider border border-amber-400/60 dark:border-amber-700/50 shrink-0">Action</span>
-                      <span className="font-bold text-slate-900 dark:text-slate-100">{student.recommended_action}</span>
+                    {/* Action Buttons Bar */}
+                    <div className="flex items-center justify-end gap-2 pt-1 flex-wrap">
+                      {student.leetcode_url && (
+                        <a
+                          href={student.leetcode_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all active:scale-95"
+                          title="Open profile"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Profile</span>
+                        </a>
+                      )}
+
+                      {student.leetcode_url && (
+                        <button
+                          onClick={() => handleCopyUrl(student)}
+                          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 cursor-pointer shadow-2xs transition-all active:scale-95"
+                          title="Copy URL"
+                        >
+                          {copiedId === student.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
+
+                      {student.username && (
+                        <button
+                          onClick={() => handleVerifySingleUrl(student)}
+                          disabled={isVerifyingThis}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          <ShieldCheck className={`w-3.5 h-3.5 ${isVerifyingThis ? 'animate-spin' : ''}`} />
+                          <span>Verify</span>
+                        </button>
+                      )}
+
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOpenRepairModal(student); }}
+                        className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all active:scale-95"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Repair</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRetrySyncSingle(student)}
+                        className="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all active:scale-95"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Retry</span>
+                      </button>
                     </div>
-                    {student.last_sync && (
-                      <div className="text-xs font-mono pt-2 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between gap-2">
-                        <span className="text-slate-600 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider">Last Sync:</span>
-                        <span className="text-slate-950 dark:text-white font-black bg-white dark:bg-navy-900 px-2.5 py-0.5 rounded-lg border border-slate-300 dark:border-navy-700 shadow-xs">{student.last_sync}</span>
-                      </div>
-                    )}
                   </div>
-
-                  {/* Action Buttons Strip */}
-                  <div className="flex items-center justify-end gap-1.5 pt-0.5">
-                    {student.leetcode_url && (
-                      <a
-                        href={student.leetcode_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-sky-600 dark:text-sky-400 border border-slate-200 dark:border-navy-700 text-xs font-bold flex items-center gap-1 cursor-pointer"
-                        title="Open profile"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Profile</span>
-                      </a>
-                    )}
-                    {student.leetcode_url && (
-                      <button
-                        onClick={() => handleCopyUrl(student)}
-                        className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-navy-700 cursor-pointer"
-                        title="Copy URL"
-                      >
-                        {copiedId === student.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
-                    )}
-                    {student.username && (
-                      <button
-                        onClick={() => handleVerifySingleUrl(student)}
-                        disabled={isVerifyingThis}
-                        className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold flex items-center gap-1 cursor-pointer"
-                      >
-                        <ShieldCheck className={`w-3.5 h-3.5 ${isVerifyingThis ? 'animate-spin' : ''}`} />
-                        <span>Verify</span>
-                      </button>
-                    )}
-                    <button
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOpenRepairModal(student); }}
-                      className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>Repair</span>
-                    </button>
-                    <button
-                      onClick={() => handleRetrySyncSingle(student)}
-                      className="px-2.5 py-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 text-xs font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      <span>Retry</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
         </div>
 

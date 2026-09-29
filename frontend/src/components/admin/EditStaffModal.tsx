@@ -10,6 +10,7 @@ import api from '../../services/api';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
 import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
 import { studentLiveStore, useStudentStoreVersion } from '../../stores/studentLiveStore';
+import { StaffActivityLogsModal } from './StaffActivityLogsModal';
 
 interface EditStaffModalProps {
   staff: any;
@@ -24,6 +25,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   staff, onClose, onSuccess, departments, staffList, notify 
 }) => {
   const storeVersion = useStudentStoreVersion();
+  const [showLogsModal, setShowLogsModal] = useState<boolean>(false);
   // const navigate = useNavigate();
   const [assignedSections, setAssignedSections] = useState('');
 
@@ -45,6 +47,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   });
 
   const [isActive, setIsActive] = useState(true);
+  const [automatedReportsEnabled, setAutomatedReportsEnabled] = useState<boolean>(true);
   const [dobDisplay, setDobDisplay] = useState('');
   const [initialSnapshot, setInitialSnapshot] = useState<string>('');
   // Tracks the actual last-modified timestamp — initialized from server data,
@@ -142,7 +145,8 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         institutional_id: staffObj.institutional_id || ''
       },
       isActive: staffObj.is_active ?? true,
-      dobDisplay: formattedDOBDisplay
+      dobDisplay: formattedDOBDisplay,
+      automatedReportsEnabled: staffObj.receive_email_reports ?? staffObj.automated_reports_enabled ?? true
     };
   };
 
@@ -154,13 +158,15 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         setFormData(normalized.formData);
         setIsActive(normalized.isActive);
         setDobDisplay(normalized.dobDisplay);
+        setAutomatedReportsEnabled(normalized.automatedReportsEnabled);
         setFormErrors({});
         setSubmitError(null);
         setTempPasswordResult(null);
         setInitialSnapshot(JSON.stringify({
           ...normalized.formData,
           is_active: normalized.isActive,
-          dobDisplay: normalized.dobDisplay
+          dobDisplay: normalized.dobDisplay,
+          receive_email_reports: normalized.automatedReportsEnabled
         }));
       }
     }
@@ -248,7 +254,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   const isGlobalRole = ['Principal', 'Management', 'Admin', 'Administrator', 'Super Admin', 'admin', 'administrator', 'super_admin'].includes(formData.role);
 
   // Check Dirty State
-  const currentSnapshot = JSON.stringify({ ...formData, is_active: isActive, dobDisplay });
+  const currentSnapshot = JSON.stringify({ ...formData, is_active: isActive, dobDisplay, receive_email_reports: automatedReportsEnabled });
   const isDirty = initialSnapshot !== '' && currentSnapshot !== initialSnapshot;
 
   // Handle Safe Close with Unsaved Warning
@@ -394,6 +400,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         department_id: deptIdToSend,
         is_active: isActive,
         date_of_birth: formattedDOB,
+        receive_email_reports: automatedReportsEnabled,
         reporting_manager_id: formData.reporting_manager === 'none' ? undefined : parseInt(formData.reporting_manager, 10)
       };
 
@@ -406,6 +413,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
       } : {
         ...staff,
         ...payload,
+        receive_email_reports: automatedReportsEnabled,
         department_id: deptIdToSend
       };
 
@@ -479,41 +487,9 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
           </div>
         </div>
 
-        {/* COMPACT STAFF SUMMARY BANNER */}
-        <div className="px-6 sm:px-8 py-3.5 bg-slate-100/90 dark:bg-navy-950/80 border-b border-slate-200 dark:border-navy-800 shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-white/90 dark:bg-navy-900/90 rounded-2xl p-2.5 border border-slate-200/90 dark:border-navy-800 shadow-2xs">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
-              <User className="w-3 h-3 text-brand-500" /> Full Name
-            </span>
-            <span className="font-black text-xs text-slate-950 dark:text-white truncate block">{formData.full_name || staff.username}</span>
-          </div>
-          <div className="bg-white/90 dark:bg-navy-900/90 rounded-2xl p-2.5 border border-slate-200/90 dark:border-navy-800 shadow-2xs">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
-              <Mail className="w-3 h-3 text-indigo-500" /> Official Email
-            </span>
-            <span className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate block">{formData.email}</span>
-          </div>
-          <div className="bg-white/90 dark:bg-navy-900/90 rounded-2xl p-2.5 border border-slate-200/90 dark:border-navy-800 shadow-2xs">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
-              <Briefcase className="w-3 h-3 text-emerald-500" /> Assigned Role
-            </span>
-            <span className="font-black text-xs text-indigo-600 dark:text-indigo-400 truncate block">{formData.role}</span>
-          </div>
-          <div className="bg-white/90 dark:bg-navy-900/90 rounded-2xl p-2.5 border border-slate-200/90 dark:border-navy-800 shadow-2xs">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
-              <Clock className="w-3 h-3 text-amber-500" /> Last Updated
-            </span>
-            <span className="font-mono font-bold text-[10px] sm:text-xs text-slate-700 dark:text-slate-300 truncate block">
-              {lastUpdatedAt
-                ? lastUpdatedAt.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
-                : 'Account Active'}
-            </span>
-          </div>
-        </div>
-
         {/* ERROR NOTIFICATION BANNER */}
         {submitError && (
-          <div className="mx-6 mt-4 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 flex items-start gap-3 text-rose-800 dark:text-rose-300 animate-fade-in">
+          <div className="mx-6 mt-4 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 flex items-start gap-3 text-rose-800 dark:text-rose-300 animate-fade-in shrink-0">
             <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
             <div>
               <h4 className="text-xs font-black uppercase tracking-wider">Unable to Save Changes</h4>
@@ -522,9 +498,41 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
           </div>
         )}
 
-        {/* MAIN STRUCTURED EDIT FORM BODY */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar bg-slate-50/50 dark:bg-navy-950/30">
-          <form id="edit-staff-form" onSubmit={handleSave} className="space-y-8">
+        {/* MAIN STRUCTURED EDIT FORM BODY - FULL HEIGHT SCROLLABLE */}
+        <div className="flex-1 overflow-y-auto p-5 sm:p-7 custom-scrollbar bg-slate-50/50 dark:bg-navy-950/30">
+          <form id="edit-staff-form" onSubmit={handleSave} className="space-y-6">
+            
+            {/* STAFF SUMMARY OVERVIEW BAR INSIDE SCROLLABLE AREA */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 bg-white/90 dark:bg-navy-950/90 rounded-2xl border border-slate-200/90 dark:border-navy-800 shadow-2xs">
+              <div className="bg-slate-50/90 dark:bg-navy-900/90 rounded-xl p-2.5 border border-slate-200/70 dark:border-navy-800">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
+                  <User className="w-3 h-3 text-brand-500" /> Full Name
+                </span>
+                <span className="font-black text-xs text-slate-950 dark:text-white truncate block">{formData.full_name || staff.username}</span>
+              </div>
+              <div className="bg-slate-50/90 dark:bg-navy-900/90 rounded-xl p-2.5 border border-slate-200/70 dark:border-navy-800">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
+                  <Mail className="w-3 h-3 text-indigo-500" /> Official Email
+                </span>
+                <span className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate block">{formData.email}</span>
+              </div>
+              <div className="bg-slate-50/90 dark:bg-navy-900/90 rounded-xl p-2.5 border border-slate-200/70 dark:border-navy-800">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
+                  <Briefcase className="w-3 h-3 text-emerald-500" /> Assigned Role
+                </span>
+                <span className="font-black text-xs text-indigo-600 dark:text-indigo-400 truncate block">{formData.role}</span>
+              </div>
+              <div className="bg-slate-50/90 dark:bg-navy-900/90 rounded-xl p-2.5 border border-slate-200/70 dark:border-navy-800">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
+                  <Clock className="w-3 h-3 text-amber-500" /> Last Updated
+                </span>
+                <span className="font-mono font-bold text-[10px] sm:text-xs text-slate-700 dark:text-slate-300 truncate block">
+                  {lastUpdatedAt
+                    ? lastUpdatedAt.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
+                    : 'Account Active'}
+                </span>
+              </div>
+            </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               
@@ -807,19 +815,62 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                   </div>
                   
                   {/* Automated Email Reports Toggle */}
-                  <div className="mt-4 p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-indigo-500/20 rounded-xl">
-                        <Mail className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-indigo-50/80 via-slate-50 to-indigo-50/50 dark:from-indigo-950/30 dark:via-navy-950 dark:to-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 shadow-xs flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors shrink-0 shadow-xs ${
+                        automatedReportsEnabled 
+                          ? 'bg-indigo-600 text-white shadow-indigo-500/20' 
+                          : 'bg-slate-200 dark:bg-navy-800 text-slate-400'
+                      }`}>
+                        <Mail className="w-5 h-5" />
                       </div>
-                      <div>
-                        <div className="text-xs font-black text-indigo-900 dark:text-indigo-300">Automated Email Reports</div>
-                        <div className="text-[10px] text-indigo-600/70 dark:text-indigo-400/70 font-medium mt-0.5">Receive weekly performance summaries for assigned cohorts.</div>
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white tracking-tight">
+                            Automated Email Reports
+                          </h4>
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-colors ${
+                            automatedReportsEnabled 
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' 
+                              : 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-300 dark:border-slate-700'
+                          }`}>
+                            {automatedReportsEnabled ? 'ACTIVE (ON)' : 'DISABLED (OFF)'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                          Receive weekly performance summaries for assigned cohorts directly in official email.
+                        </p>
                       </div>
                     </div>
-                    <div className="w-10 h-6 bg-indigo-500 rounded-full flex items-center p-1 cursor-pointer">
-                      <div className="w-4 h-4 bg-white rounded-full translate-x-4 shadow-sm transition-transform"></div>
-                    </div>
+
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={automatedReportsEnabled}
+                      onClick={() => {
+                        const nextState = !automatedReportsEnabled;
+                        setAutomatedReportsEnabled(nextState);
+                        notify.info(
+                          nextState ? 'Automated Email Reports Enabled' : 'Automated Email Reports Disabled',
+                          nextState ? 'Weekly performance summaries will be delivered to this staff member.' : 'Weekly automated report dispatch paused.',
+                          { category: 'NOTIFICATIONS' }
+                        );
+                      }}
+                      className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                        automatedReportsEnabled 
+                          ? 'bg-indigo-600 dark:bg-indigo-500' 
+                          : 'bg-slate-300 dark:bg-navy-700'
+                      }`}
+                      title={automatedReportsEnabled ? "Click to turn OFF automated email reports" : "Click to turn ON automated email reports"}
+                    >
+                      <span className="sr-only">Toggle automated email reports</span>
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                          automatedReportsEnabled ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
                   </div>
 
                   <p className="text-[10px] text-slate-400 font-medium italic mt-2">
@@ -928,10 +979,10 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                   <div className="pt-2">
                     <button
                       type="button"
-                      onClick={() => { onClose(); window.location.hash = '#/audit'; window.dispatchEvent(new CustomEvent('navigate_to_route', { detail: { route: 'audit' } })); }}
+                      onClick={() => setShowLogsModal(true)}
                       className="w-full py-3 px-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 text-xs font-black shadow-sm flex items-center justify-center space-x-2 transition-all cursor-pointer"
                     >
-                      <History className="w-4 h-4 text-slate-400" />
+                      <History className="w-4 h-4 text-brand-500" />
                       <span>View Staff Activity Logs</span>
                     </button>
                   </div>
@@ -1121,6 +1172,13 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
             </div>
           </GlobalModalBackdrop>
         )}
+
+        {/* Staff Activity Logs Dedicated Modal */}
+        <StaffActivityLogsModal 
+          staff={staff}
+          isOpen={showLogsModal}
+          onClose={() => setShowLogsModal(false)}
+        />
 
       </div>
     </GlobalModalBackdrop>

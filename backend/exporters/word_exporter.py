@@ -294,7 +294,7 @@ def export_word_from_dataset(dataset: dict) -> bytes:
                 str(s.get("medium", 0)),
                 str(s.get("hard", 0)),
                 str(s.get("total_solved", 0)),
-                f"{round(float(s.get('rating') or s.get('contest_rating') or s.get('contestRating')), 1):,}" if (s.get("rating") or s.get("contest_rating") or s.get("contestRating")) else "Unrated"
+                (lambda r: f"{round(float(str(r).replace(',', '').strip()), 1):,}" if str(r).replace(',', '').replace('.', '').replace('-', '').strip().isdigit() else "Unrated")(s.get('rating') or s.get('contest_rating') or s.get('contestRating'))
             ]
             for i, val in enumerate(row_vals):
                 p = row_cells[i].paragraphs[0]

@@ -6,6 +6,7 @@ Multi-Dimensional Scoping • Staff Allocation Manager • Dedicated Reports •
 """
 
 import datetime
+import secrets
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session, joinedload
@@ -71,7 +72,7 @@ def _real_dept_ids(db: Session) -> List[int]:
 def _log_admin_action(db: Session, action: str, target_id: str, description: str, status: str = "SUCCESS"):
     try:
         audit = AdminAuditLog(
-            audit_id=f"CC-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')}-{target_id[:6]}",
+            audit_id=f"CC-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S%f')}-{secrets.token_hex(4).upper()}-{target_id[:6]}",
             admin_name="Operations Staff",
             admin_email="nanthishvaran17@gmail.com",
             admin_role="admin",

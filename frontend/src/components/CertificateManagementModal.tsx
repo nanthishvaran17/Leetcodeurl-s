@@ -159,6 +159,7 @@ export const CertificateManagementModal: React.FC<{
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(preselectedStudent || null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [studentDeptFilter, setStudentDeptFilter] = useState<string>('all');
 
   // Certificate Generation State
   const [selectedCertType, setSelectedCertType] = useState('Certificate of Excellence');
@@ -248,13 +249,18 @@ export const CertificateManagementModal: React.FC<{
   // Filtered Students for Recipient Selector
   const filteredStudents = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return students;
-    return students.filter(s =>
-      s.name.toLowerCase().includes(q) ||
-      s.reg_no.toLowerCase().includes(q) ||
-      (s.username && s.username.toLowerCase().includes(q))
-    );
-  }, [students, searchQuery]);
+    return students.filter(s => {
+      const matchesSearch = !q ||
+        s.name.toLowerCase().includes(q) ||
+        s.reg_no.toLowerCase().includes(q) ||
+        (s.username && s.username.toLowerCase().includes(q));
+      
+      const deptCode = (s.department?.code || '').toUpperCase();
+      const matchesDept = studentDeptFilter === 'all' || deptCode === studentDeptFilter.toUpperCase();
+
+      return matchesSearch && matchesDept;
+    });
+  }, [students, searchQuery, studentDeptFilter]);
 
   // Signatures mapped
   const principalSig = useMemo(() => signatures.find(s => s.signature_type === 'PRINCIPAL' && s.is_active), [signatures]);
@@ -520,42 +526,42 @@ export const CertificateManagementModal: React.FC<{
           </div>
 
           {/* Right Navigation & Actions */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between md:justify-end gap-3 w-full lg:w-auto">
-            <div className="grid grid-cols-1 sm:flex bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 text-xs sm:text-sm font-bold shadow-inner gap-1">
+          <div className="flex flex-row items-center justify-between md:justify-end gap-2 w-full lg:w-auto overflow-x-auto no-scrollbar">
+            <div className="flex flex-row items-center bg-slate-900/90 p-1 rounded-2xl border border-slate-800 text-xs font-bold shadow-inner gap-1 shrink-0 overflow-x-auto no-scrollbar">
               <button
                 type="button"
                 onClick={() => setActiveMainTab('studio')}
-                className={`px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-2 whitespace-nowrap text-xs sm:text-sm ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 whitespace-nowrap text-xs ${
                   activeMainTab === 'studio'
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md border border-amber-400/40'
                     : 'text-slate-300 hover:text-white font-bold hover:bg-slate-800/60'
                 }`}
               >
-                <Sparkles className="w-4 h-4 text-amber-400" />
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 <span>Issuance Studio</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveMainTab('signatures')}
-                className={`px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-2 whitespace-nowrap text-xs sm:text-sm ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 whitespace-nowrap text-xs ${
                   activeMainTab === 'signatures'
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md border border-amber-400/40'
                     : 'text-slate-300 hover:text-white font-bold hover:bg-slate-800/60'
                 }`}
               >
-                <Upload className="w-4 h-4 text-indigo-400" />
+                <Upload className="w-3.5 h-3.5 text-indigo-400" />
                 <span>Signatures ({signatures.filter(s => s.is_active).length}/3)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveMainTab('registry')}
-                className={`px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-2 whitespace-nowrap text-xs sm:text-sm ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 whitespace-nowrap text-xs ${
                   activeMainTab === 'registry'
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md border border-amber-400/40'
                     : 'text-slate-300 hover:text-white font-bold hover:bg-slate-800/60'
                 }`}
               >
-                <FileCheck2 className="w-4 h-4 text-emerald-400" />
+                <FileCheck2 className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Issued Registry ({metrics.total})</span>
               </button>
             </div>
@@ -563,39 +569,39 @@ export const CertificateManagementModal: React.FC<{
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 sm:py-2 rounded-2xl bg-rose-500/10 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 transition-all font-black text-xs sm:text-sm flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm w-full sm:w-auto"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl bg-rose-500/10 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 transition-all font-black text-xs flex items-center justify-center space-x-1 cursor-pointer shadow-sm shrink-0 whitespace-nowrap"
             >
-              <X className="w-4.5 h-4.5" />
-              <span>Close Studio</span>
+              <X className="w-4 h-4" />
+              <span className="hidden xs:inline">Close</span>
             </button>
           </div>
         </div>
 
         {/* METRICS RIBBON (GROUND TRUTH NUMBERS) */}
-        <div className="px-4 sm:px-6 py-3 sm:py-2.5 bg-white dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700/80 flex flex-col md:flex-row md:items-center justify-between text-xs sm:text-sm font-black shrink-0 gap-3">
-          <div className="grid grid-cols-2 lg:flex lg:items-center gap-3 sm:gap-6 w-full">
-            <div className="flex items-center space-x-2 bg-slate-50 dark:bg-navy-900 lg:bg-transparent p-2 lg:p-0 rounded-xl lg:rounded-none">
-              <span className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-black">TOTAL ISSUED:</span>
-              <span className="text-slate-950 dark:text-white font-mono text-sm sm:text-base font-black">{metrics.total}</span>
+        <div className="px-3 sm:px-6 py-2 bg-white dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700/80 flex items-center justify-between text-xs font-black shrink-0 gap-3 overflow-x-auto no-scrollbar">
+          <div className="flex flex-row items-center gap-2 sm:gap-6 shrink-0 overflow-x-auto no-scrollbar">
+            <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-navy-900 lg:bg-transparent px-2.5 py-1 rounded-xl shrink-0">
+              <span className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase">ISSUED:</span>
+              <span className="text-slate-950 dark:text-white font-mono text-xs sm:text-sm font-black">{metrics.total}</span>
             </div>
-            <div className="flex items-center space-x-2 bg-slate-50 dark:bg-navy-900 lg:bg-transparent p-2 lg:p-0 rounded-xl lg:rounded-none">
-              <span className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-black">VERIFIED ACTIVE:</span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-mono text-sm sm:text-base font-black">{metrics.valid}</span>
+            <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-navy-900 lg:bg-transparent px-2.5 py-1 rounded-xl shrink-0">
+              <span className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase">ACTIVE:</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-mono text-xs sm:text-sm font-black">{metrics.valid}</span>
             </div>
-            <div className="flex items-center space-x-2 bg-slate-50 dark:bg-navy-900 lg:bg-transparent p-2 lg:p-0 rounded-xl lg:rounded-none">
-              <span className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-black">REVOKED:</span>
-              <span className="text-rose-600 dark:text-rose-400 font-mono text-sm sm:text-base font-black">{metrics.revoked}</span>
+            <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-navy-900 lg:bg-transparent px-2.5 py-1 rounded-xl shrink-0">
+              <span className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase">REVOKED:</span>
+              <span className="text-rose-600 dark:text-rose-400 font-mono text-xs sm:text-sm font-black">{metrics.revoked}</span>
             </div>
-            <div className="flex items-center space-x-2 bg-slate-50 dark:bg-navy-900 lg:bg-transparent p-2 lg:p-0 rounded-xl lg:rounded-none">
-              <span className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-black">AWAITING ISSUANCE:</span>
-              <span className="text-amber-600 dark:text-amber-400 font-mono text-sm sm:text-base font-black">{metrics.pending}</span>
+            <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-navy-900 lg:bg-transparent px-2.5 py-1 rounded-xl shrink-0">
+              <span className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase">AWAITING:</span>
+              <span className="text-amber-600 dark:text-amber-400 font-mono text-xs sm:text-sm font-black">{metrics.pending}</span>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 text-xs font-black text-slate-800 dark:text-slate-200">
-            <span className="flex items-center space-x-1.5 text-emerald-800 dark:text-emerald-400 font-black">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Secure Institutional Issuance & Audit</span>
+          <div className="hidden sm:flex items-center space-x-2 text-xs font-black text-slate-800 dark:text-slate-200 shrink-0">
+            <span className="flex items-center space-x-1 text-emerald-800 dark:text-emerald-400 font-black">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Secure Audit</span>
             </span>
           </div>
         </div>
@@ -608,8 +614,8 @@ export const CertificateManagementModal: React.FC<{
             <div className="flex-1 flex flex-col min-h-0">
 
               {/* 5-Step Workflow Stepper Bar */}
-              <div className="px-4 sm:px-6 py-3 sm:py-2.5 bg-slate-100 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 flex flex-col sm:flex-row items-stretch sm:items-center justify-between overflow-y-auto sm:overflow-x-auto shrink-0 custom-scrollbar max-h-60 sm:max-h-none">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 sm:min-w-max pb-1 sm:pb-0 w-full">
+              <div className="px-3 sm:px-6 py-2 bg-slate-100 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 flex flex-row items-center justify-between overflow-x-auto shrink-0 no-scrollbar">
+                <div className="flex flex-row items-center gap-2 shrink-0 min-w-max">
                   {[
                     { step: 1, label: 'RECIPIENT', desc: 'Select Student' },
                     { step: 2, label: 'DESIGN & TYPE', desc: 'Recognition Text' },
@@ -623,7 +629,7 @@ export const CertificateManagementModal: React.FC<{
                       <button
                         key={s.step}
                         onClick={() => setCurrentStep(s.step)}
-                        className={`flex items-center space-x-2.5 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black transition-all cursor-pointer w-full sm:w-auto text-left ${
+                        className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
                           isActive
                             ? 'bg-amber-500/20 text-amber-900 dark:text-amber-300 border-2 border-amber-500 dark:border-amber-400 shadow-sm'
                             : isCompleted
@@ -631,18 +637,18 @@ export const CertificateManagementModal: React.FC<{
                             : 'text-slate-950 dark:text-white hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-300/80 dark:border-navy-700/80'
                         }`}
                       >
-                        <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs sm:text-sm font-black shrink-0 transition-all ${
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 transition-all ${
                           isActive
                             ? 'bg-amber-400 text-slate-950 shadow-md ring-2 ring-amber-400/30 border border-amber-300'
                             : isCompleted
                             ? 'bg-emerald-600 dark:bg-emerald-500 text-white shadow-md'
                             : 'bg-slate-900 dark:bg-navy-800 text-white dark:text-amber-400 border border-slate-700 dark:border-navy-600 shadow-xs'
                         }`}>
-                          {isCompleted ? <Check className="w-4 h-4 text-white stroke-[3.5]" /> : s.step}
+                          {isCompleted ? <Check className="w-3.5 h-3.5 text-white stroke-[3.5]" /> : s.step}
                         </span>
                         <div className="text-left">
                           <span className="block text-xs font-black tracking-tight">{s.label}</span>
-                          <span className="block text-[10.5px] text-slate-700 dark:text-slate-300 font-bold -mt-0.5">{s.desc}</span>
+                          <span className="hidden sm:block text-[10px] text-slate-700 dark:text-slate-300 font-bold -mt-0.5">{s.desc}</span>
                         </div>
                       </button>
                     );
@@ -650,8 +656,8 @@ export const CertificateManagementModal: React.FC<{
                 </div>
 
                 <div className="hidden lg:flex items-center space-x-2 text-xs font-black text-slate-800 dark:text-slate-200">
-                  <span className="px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30 text-emerald-900 dark:text-emerald-300 font-mono font-black shadow-xs">
-                    RATIO: A4 LANDSCAPE (297mm × 210mm)
+                  <span className="px-3 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30 text-emerald-900 dark:text-emerald-300 font-mono font-black text-[11px] shadow-xs">
+                    A4 LANDSCAPE (297mm × 210mm)
                   </span>
                 </div>
               </div>
@@ -678,6 +684,44 @@ export const CertificateManagementModal: React.FC<{
                           <span className="text-xs text-slate-900 dark:text-slate-200 font-black">
                             {students.length} Verified Students
                           </span>
+                        </div>
+
+                        {/* Department Filter Pills */}
+                        <div className="flex items-center space-x-1.5 overflow-x-auto pb-1.5 custom-scrollbar text-xs">
+                          <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0 flex items-center space-x-1 mr-1">
+                            <Filter className="w-3.5 h-3.5 text-amber-500" />
+                            <span>Dept:</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setStudentDeptFilter('all')}
+                            className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
+                              studentDeptFilter === 'all'
+                                ? 'bg-amber-400 text-slate-950 shadow-sm border border-amber-300 font-black'
+                                : 'bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700'
+                            }`}
+                          >
+                            ALL ({students.length})
+                          </button>
+                          {departments.map((dept) => {
+                            const codeUpper = dept.code.toUpperCase();
+                            const count = students.filter(s => (s.department?.code || '').toUpperCase() === codeUpper).length;
+                            const isActive = studentDeptFilter.toUpperCase() === codeUpper;
+                            return (
+                              <button
+                                key={dept.id || dept.code}
+                                type="button"
+                                onClick={() => setStudentDeptFilter(codeUpper)}
+                                className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
+                                  isActive
+                                    ? 'bg-amber-400 text-slate-950 shadow-sm border border-amber-300 font-black'
+                                    : 'bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700'
+                                }`}
+                              >
+                                {dept.code} ({count})
+                              </button>
+                            );
+                          })}
                         </div>
 
                         {/* Search Input */}
@@ -828,13 +872,26 @@ export const CertificateManagementModal: React.FC<{
                             </div>
                           </div>
 
-                          <button
-                            onClick={() => setCurrentStep(2)}
-                            className="w-full py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center space-x-2 shadow-xl shadow-amber-500/25 cursor-pointer transition-all transform hover:scale-[1.01] active:scale-[0.99] relative z-10"
-                          >
-                            <span>Next: Configure Credential Type & Design</span>
-                            <ChevronRight className="w-4 h-4 stroke-[3]" />
-                          </button>
+                          <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 relative z-10">
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmIssueModal(true)}
+                              disabled={isGenerating || !selectedStudent}
+                              className="w-full sm:flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center space-x-2 shadow-xl shadow-emerald-500/25 cursor-pointer transition-all transform hover:scale-[1.01] active:scale-[0.99] border border-emerald-300"
+                            >
+                              <Zap className="w-4.5 h-4.5 text-slate-950 fill-current" />
+                              <span>⚡ Issue & Register Now</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCurrentStep(2)}
+                              className="w-full sm:w-auto px-4 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-400/40 font-black text-xs flex items-center justify-center space-x-1 cursor-pointer transition-all whitespace-nowrap"
+                              title="Customize certificate type, date override, or verify signatures"
+                            >
+                              <span>Customize & Preview</span>
+                              <ChevronRight className="w-4 h-4 stroke-[3]" />
+                            </button>
+                          </div>
                         </div>
                       )}
                     </motion.div>
@@ -893,16 +950,27 @@ export const CertificateManagementModal: React.FC<{
 
                         <div className="flex items-center space-x-2 pt-2">
                           <button
+                            type="button"
                             onClick={() => setCurrentStep(1)}
                             className="px-4 py-2.5 rounded-xl bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-900 dark:text-slate-200 font-black text-xs cursor-pointer transition-colors"
                           >
                             Back
                           </button>
                           <button
+                            type="button"
+                            onClick={() => setShowConfirmIssueModal(true)}
+                            disabled={isGenerating || !selectedStudent}
+                            className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs flex items-center justify-center space-x-1.5 shadow-md cursor-pointer transition-all border border-emerald-400/40"
+                          >
+                            <Zap className="w-4 h-4 text-slate-950 fill-current" />
+                            <span>⚡ Issue Now</span>
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setCurrentStep(3)}
                             className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs flex items-center justify-center space-x-2 shadow-lg shadow-amber-500/20 cursor-pointer transition-all"
                           >
-                            <span>Next: Verify Dual Signatures</span>
+                            <span>Next: Dual Signatures</span>
                             <ChevronRight className="w-4 h-4 stroke-[3]" />
                           </button>
                         </div>
@@ -971,16 +1039,27 @@ export const CertificateManagementModal: React.FC<{
 
                         <div className="flex items-center space-x-2 pt-2">
                           <button
+                            type="button"
                             onClick={() => setCurrentStep(2)}
                             className="px-4 py-2.5 rounded-xl bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-900 dark:text-slate-200 font-black text-xs cursor-pointer transition-colors"
                           >
                             Back
                           </button>
                           <button
+                            type="button"
+                            onClick={() => setShowConfirmIssueModal(true)}
+                            disabled={isGenerating || !selectedStudent}
+                            className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs flex items-center justify-center space-x-1.5 shadow-md cursor-pointer transition-all border border-emerald-400/40"
+                          >
+                            <Zap className="w-4 h-4 text-slate-950 fill-current" />
+                            <span>⚡ Issue Now</span>
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setCurrentStep(4)}
                             className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs flex items-center justify-center space-x-2 shadow-lg shadow-amber-500/20 cursor-pointer transition-all"
                           >
-                            <span>Next: Pre-flight Eligibility & Issue</span>
+                            <span>Next: Review & Issue</span>
                             <ChevronRight className="w-4 h-4 stroke-[3]" />
                           </button>
                         </div>
@@ -1599,103 +1678,163 @@ export const CertificateManagementModal: React.FC<{
                 </div>
               </div>
 
-              {/* Registry Table */}
-              <div className="overflow-x-auto rounded-3xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-2xl">
+              {/* Registry Table & Mobile Card View */}
+              <div className="rounded-3xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-2xl overflow-hidden">
                 {filteredHistory.length === 0 ? (
                   <div className="p-12 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-bold space-y-2">
                     <p className="text-base sm:text-lg font-black text-slate-700 dark:text-slate-300">No matching credentials found in the registry.</p>
                     <p>Issue a new certificate from the "Issuance Studio" tab to record it in the ledger.</p>
                   </div>
                 ) : (
-                  <table className="w-full text-left text-xs sm:text-sm">
-                    <thead>
-                      <tr className="bg-slate-100 dark:bg-navy-900 text-slate-900 dark:text-slate-200 uppercase tracking-wider font-black text-xs sm:text-sm border-b border-slate-300 dark:border-navy-700">
-                        <th className="py-4 px-4">Certificate ID</th>
-                        <th className="py-4 px-4">Student Name</th>
-                        <th className="py-4 px-4">Register No</th>
-                        <th className="py-4 px-4">Department</th>
-                        <th className="py-4 px-4">Issue Date</th>
-                        <th className="py-4 px-4 text-center">Status</th>
-                        <th className="py-4 px-4 text-center">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200 dark:divide-navy-800/80 font-bold text-slate-800 dark:text-slate-200">
+                  <>
+                    {/* Desktop View Table */}
+                    <div className="hidden lg:block w-full overflow-hidden">
+                      <table className="w-full table-fixed text-left text-xs sm:text-sm">
+                        <thead>
+                          <tr className="bg-slate-100 dark:bg-navy-900 text-slate-900 dark:text-slate-200 uppercase tracking-wider font-black text-xs border-b border-slate-300 dark:border-navy-700">
+                            <th className="py-3.5 px-3 w-[28%]">Certificate ID</th>
+                            <th className="py-3.5 px-3 w-[20%]">Student Name</th>
+                            <th className="py-3.5 px-3 w-[14%]">Register No</th>
+                            <th className="py-3.5 px-3 w-[10%]">Department</th>
+                            <th className="py-3.5 px-3 w-[11%]">Issue Date</th>
+                            <th className="py-3.5 px-3 w-[7%] text-center">Status</th>
+                            <th className="py-3.5 px-3 w-[10%] text-center">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 dark:divide-navy-800/80 font-bold text-slate-800 dark:text-slate-200">
+                          {filteredHistory.map((rec) => (
+                            <tr key={rec.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors">
+                              <td className="py-3 px-3 text-xs min-w-0">
+                                <span 
+                                  className="bg-amber-100/90 dark:bg-amber-500/10 text-amber-900 dark:text-amber-300 font-mono font-bold px-2.5 py-1 rounded-lg border border-amber-300 dark:border-amber-500/40 inline-block truncate max-w-full shadow-xs tracking-tight"
+                                  title={rec.verification_id}
+                                >
+                                  {rec.verification_id}
+                                </span>
+                              </td>
+                              <td className="py-3 px-3 font-black text-slate-950 dark:text-white text-xs sm:text-sm min-w-0">
+                                <span className="truncate block" title={rec.student_name}>
+                                  {rec.student_name}
+                                </span>
+                              </td>
+                              <td className="py-3 px-3 font-mono text-slate-900 dark:text-slate-100 font-extrabold text-xs min-w-0">
+                                <span className="truncate block" title={rec.register_no}>
+                                  {rec.register_no}
+                                </span>
+                              </td>
+                              <td className="py-3 px-3">
+                                <span className="px-2 py-0.5 rounded-lg bg-indigo-100 dark:bg-indigo-500/10 text-indigo-900 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-500/30 inline-block font-mono font-bold text-xs" title={rec.department_name}>
+                                  {rec.department || 'DEPT'}
+                                </span>
+                              </td>
+                              <td className="py-3 px-3 font-mono text-slate-900 dark:text-slate-100 font-bold text-xs whitespace-nowrap">
+                                {rec.issue_date}
+                              </td>
+                              <td className="py-3 px-3 text-center whitespace-nowrap">
+                                <span className={`px-2.5 py-1 rounded-full text-[11px] font-black shadow-xs ${
+                                  rec.status === 'VALID'
+                                    ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40'
+                                    : 'bg-rose-100 dark:bg-rose-500/20 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40'
+                                }`}>
+                                  {rec.status}
+                                </span>
+                              </td>
+                              <td className="py-3 px-3 text-center">
+                                <div className="flex items-center justify-center space-x-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDownloadPdf(rec.verification_id)}
+                                    className="p-1.5 rounded-lg bg-emerald-50 dark:bg-navy-800 hover:bg-emerald-100 dark:hover:bg-navy-700 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-navy-600 cursor-pointer shadow-xs hover:scale-105 transition-all"
+                                    title="Download Official Certificate PDF"
+                                  >
+                                    <Download className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDownloadForensicPdf(`CERT-${rec.register_no}-FORENSIC`)}
+                                    className="p-1.5 rounded-lg bg-indigo-50 dark:bg-navy-800 hover:bg-indigo-100 dark:hover:bg-navy-700 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-navy-600 cursor-pointer shadow-xs hover:scale-105 transition-all"
+                                    title="Download Forensic Audit Report PDF"
+                                  >
+                                    <FileText className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  <a
+                                    href={rec.verification_url || `/verify-certificate/${rec.verification_id}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="p-1.5 rounded-lg bg-sky-50 dark:bg-navy-800 hover:bg-sky-100 dark:hover:bg-sky-700 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-navy-600 cursor-pointer shadow-xs hover:scale-105 transition-all"
+                                    title="Verify Public QR Page"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                  </a>
+
+                                  {rec.status === 'VALID' && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRevokeCertificate(rec.verification_id)}
+                                      className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 cursor-pointer shadow-xs hover:scale-105 transition-all"
+                                      title="Revoke Certificate"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile & Tablet Card View */}
+                    <div className="block lg:hidden divide-y divide-slate-200 dark:divide-navy-800 p-3 space-y-3">
                       {filteredHistory.map((rec) => (
-                        <tr key={rec.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors">
-                          <td className="py-4 px-4 text-xs sm:text-sm">
-                            <span className="bg-amber-100/90 dark:bg-amber-500/10 text-amber-900 dark:text-amber-300 font-mono font-bold px-3 py-1.5 rounded-lg border border-amber-300 dark:border-amber-500/40 inline-block shadow-xs tracking-tight">
-                              {rec.verification_id}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 font-black text-slate-950 dark:text-white text-sm sm:text-base">
-                            {rec.student_name}
-                          </td>
-                          <td className="py-4 px-4 font-mono text-slate-900 dark:text-slate-100 font-extrabold text-xs sm:text-sm">
-                            {rec.register_no}
-                          </td>
-                          <td className="py-4 px-4">
-                            <span className="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-500/10 text-indigo-900 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-500/30 inline-block font-mono font-bold text-xs sm:text-sm" title={rec.department_name}>
-                              {rec.department || 'DEPT'}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 font-mono text-slate-900 dark:text-slate-100 font-bold text-xs sm:text-sm">
-                            {rec.issue_date}
-                          </td>
-                          <td className="py-4 px-4 text-center">
-                            <span className={`px-3 py-1.5 rounded-full text-xs font-black shadow-xs ${
+                        <div key={rec.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-2.5 shadow-sm">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <h4 className="font-black text-sm text-slate-950 dark:text-white">{rec.student_name}</h4>
+                              <p className="text-xs font-mono text-amber-600 dark:text-amber-400 font-bold">{rec.register_no} • {rec.department}</p>
+                            </div>
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 ${
                               rec.status === 'VALID'
                                 ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40'
                                 : 'bg-rose-100 dark:bg-rose-500/20 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40'
                             }`}>
                               {rec.status}
                             </span>
-                          </td>
-                          <td className="py-4 px-4 text-center">
-                            <div className="flex items-center justify-center space-x-2">
+                          </div>
+
+                          <div className="text-xs font-mono text-slate-600 dark:text-slate-300 bg-white dark:bg-navy-950 p-2 rounded-xl border border-slate-200 dark:border-navy-700 break-all">
+                            <span className="text-[10px] font-black text-slate-400 block uppercase">Certificate ID</span>
+                            <span className="font-bold text-amber-900 dark:text-amber-300">{rec.verification_id}</span>
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs font-mono pt-1 text-slate-500">
+                            <span>Issued: {rec.issue_date}</span>
+                            <div className="flex items-center gap-1">
                               <button
                                 type="button"
                                 onClick={() => handleDownloadPdf(rec.verification_id)}
-                                className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 dark:bg-navy-800 hover:bg-emerald-100 dark:hover:bg-navy-700 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-navy-600 cursor-pointer shadow-xs hover:scale-105 transition-all"
-                                title="Download Official Certificate PDF"
+                                className="p-2 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs flex items-center space-x-1"
                               >
-                                <Download className="w-4 h-4" />
+                                <Download className="w-3.5 h-3.5" />
+                                <span>PDF</span>
                               </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handleDownloadForensicPdf(`CERT-${rec.register_no}-FORENSIC`)}
-                                className="p-2 sm:p-2.5 rounded-xl bg-indigo-50 dark:bg-navy-800 hover:bg-indigo-100 dark:hover:bg-navy-700 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-navy-600 cursor-pointer shadow-xs hover:scale-105 transition-all"
-                                title="Download Forensic Audit Report PDF"
-                              >
-                                <FileText className="w-4 h-4" />
-                              </button>
-
                               <a
                                 href={rec.verification_url || `/verify-certificate/${rec.verification_id}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="p-2 sm:p-2.5 rounded-xl bg-sky-50 dark:bg-navy-800 hover:bg-sky-100 dark:hover:bg-sky-700 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-navy-600 cursor-pointer shadow-xs hover:scale-105 transition-all"
-                                title="Verify Public QR Page"
+                                className="p-2 rounded-lg bg-slate-200 dark:bg-navy-800 text-slate-900 dark:text-white"
                               >
-                                <ExternalLink className="w-4 h-4" />
+                                <ExternalLink className="w-3.5 h-3.5" />
                               </a>
-
-                              {rec.status === 'VALID' && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleRevokeCertificate(rec.verification_id)}
-                                  className="p-2 sm:p-2.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 cursor-pointer shadow-xs hover:scale-105 transition-all"
-                                  title="Revoke Certificate"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              )}
                             </div>
-                          </td>
-                        </tr>
+                          </div>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
+                    </div>
+                  </>
                 )}
               </div>
             </div>

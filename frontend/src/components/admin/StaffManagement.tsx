@@ -513,10 +513,10 @@ export const StaffManagement: React.FC = () => {
                           staff.is_active ? 'border-l-emerald-500' : 'border-l-rose-500'
                         }`}
                       >
-                        {/* Top Header: Avatar, Name, Email, Status */}
+                        {/* Top Header: Avatar, Name, Status */}
                         <div className="flex items-start justify-between gap-2.5">
-                          <div className="flex items-start gap-3 min-w-0 flex-1">
-                            <div className="relative shrink-0 mt-0.5">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="relative shrink-0">
                               <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-xs flex items-center justify-center shadow-sm uppercase tracking-wider">
                                 {initials}
                               </div>
@@ -527,7 +527,7 @@ export const StaffManagement: React.FC = () => {
 
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                                <h4 className="font-bold text-sm text-slate-900 dark:text-white leading-snug truncate flex-1">
+                                <h4 className="font-bold text-sm text-slate-900 dark:text-white leading-snug break-words flex-1">
                                   {staff.full_name || staff.username}
                                 </h4>
                                 {staff.role === 'Super Admin' && (
@@ -536,10 +536,6 @@ export const StaffManagement: React.FC = () => {
                                   </span>
                                 )}
                               </div>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1 mt-0.5 min-w-0">
-                                <Mail className="w-3 h-3 text-brand-500 shrink-0" />
-                                <span className="truncate">{staff.email || `@${staff.username}`}</span>
-                              </p>
                             </div>
                           </div>
 
@@ -558,6 +554,12 @@ export const StaffManagement: React.FC = () => {
                           </div>
                         </div>
 
+                        {/* Dedicated Single-Line Full Email Banner */}
+                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-navy-950/70 border border-slate-200/60 dark:border-navy-700 text-[10px] xs:text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 font-semibold min-w-0 w-full overflow-hidden shadow-2xs">
+                          <Mail className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                          <span className="tracking-tight font-mono truncate">{staff.email || `@${staff.username}`}</span>
+                        </div>
+
                         {/* Modern High-Contrast Vibrant Metric Grid (2x2) */}
                         <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                           {/* 1. Institutional ID */}
@@ -568,7 +570,7 @@ export const StaffManagement: React.FC = () => {
                             </span>
                             <div className="min-w-0 w-full">
                               <span 
-                                className="font-mono font-black text-[10.5px] xs:text-[11.5px] text-indigo-950 dark:text-white bg-white dark:bg-indigo-900/90 px-2 py-1 rounded-xl border border-indigo-300/80 dark:border-indigo-700 block w-full truncate text-center shadow-xs"
+                                className="font-mono font-black text-[10px] xs:text-[11px] text-indigo-950 dark:text-white bg-white dark:bg-indigo-900/90 px-1.5 py-1 rounded-xl border border-indigo-300/80 dark:border-indigo-700 block w-full break-all whitespace-normal text-center shadow-xs leading-tight"
                                 title={staff.institutional_id || `NEC-STAFF-${staff.id}`}
                               >
                                 {staff.institutional_id || `NEC-STAFF-${staff.id}`}

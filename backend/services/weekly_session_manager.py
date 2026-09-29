@@ -3,12 +3,12 @@ import datetime
 import hashlib
 import json
 import asyncio
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, cast
 from sqlalchemy.orm import Session, joinedload
 from backend.models import (
     WeeklySession, WeeklyPublicResult, WeeklyVirtualResult, 
     WeeklyContestErrorLog, OfficialWeeklySnapshot, Student,
-    WeeklyContestLiveEvent, PreviousWeekParticipationRecord, StudentContestSnapshot
+    WeeklyContestLiveEvent, PreviousWeekParticipationRecord
 )
 from backend.services.contest_discovery import discover_contest_metadata, get_current_ist_datetime, get_most_recent_sunday_date, IST_TZ
 from backend.services.contest_merger import retry_failed_student_fetches
@@ -437,7 +437,7 @@ def snapshot_supersedes(old_snapshot_id: int, new_snapshot_data: Dict[str, Any],
     db.flush()
 
     # Mark old snapshot as superseded without mutating dataset
-    old_snap.is_superseded = True
+    cast(Any, old_snap).is_superseded = True
     old_snap.superseded_by_id = new_snap.id
     db.commit()
     logger.info(f"[SNAPSHOT_IMMUTABLE] Snapshot {old_snapshot_id} superseded by new Snapshot {new_snap.id}.")
@@ -514,13 +514,11 @@ def _safe_purge_or_merge_session(db: Session, old_sess_id: int, target_sess_id: 
             db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == old_sess_id).update({WeeklyVirtualResult.session_id: target_sess_id}, synchronize_session=False)
             db.query(WeeklyContestErrorLog).filter(WeeklyContestErrorLog.session_id == old_sess_id).update({WeeklyContestErrorLog.session_id: target_sess_id}, synchronize_session=False)
             db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == old_sess_id).update({OfficialWeeklySnapshot.session_id: target_sess_id}, synchronize_session=False)
-            db.query(StudentContestSnapshot).filter(StudentContestSnapshot.session_id == old_sess_id).update({StudentContestSnapshot.session_id: target_sess_id}, synchronize_session=False)
         else:
             db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == old_sess_id).delete(synchronize_session=False)
             db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == old_sess_id).delete(synchronize_session=False)
             db.query(WeeklyContestErrorLog).filter(WeeklyContestErrorLog.session_id == old_sess_id).delete(synchronize_session=False)
             db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == old_sess_id).delete(synchronize_session=False)
-            db.query(StudentContestSnapshot).filter(StudentContestSnapshot.session_id == old_sess_id).delete(synchronize_session=False)
         
         old_sess = db.query(WeeklySession).filter(WeeklySession.id == old_sess_id).first()
         if old_sess:
@@ -597,7 +595,7 @@ def seed_institutional_historical_sessions(db: Session):
 
         # If not a valid Sunday contest session, purge it safely!
         logger.info(f"Purging non-canonical session ID {sess.id} ('{sess.contest_name}', date {sess.session_date})")
-        _safe_purge_or_merge_session(db, sess.id)
+        _safe_purge_or_merge_session(db, int(sess.id))
 
     # Step 2: For each canonical contest number, select the canonical session (highest result count)
     canonical_by_num = {}

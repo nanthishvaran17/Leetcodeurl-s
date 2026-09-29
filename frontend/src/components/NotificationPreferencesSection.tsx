@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { requestPushPermissionAndGetToken } from '../services/firebasePush';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
-import { API_BASE_URL } from '../config/apiConfig';
+import { API_BASE_URL, getApiUrl } from '../config/apiConfig';
 import { useNotification as useToastNotification } from '../context/NotificationContext';
 
 export const NotificationPreferencesSection: React.FC = () => {
@@ -171,7 +171,7 @@ export const NotificationPreferencesSection: React.FC = () => {
     setPushErrorMessage(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/notifications/test-push`, {
+      const res = await fetch(getApiUrl('/notifications/test-push'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

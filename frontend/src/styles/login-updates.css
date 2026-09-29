@@ -240,6 +240,8 @@
     height: 48px !important;
     font-size: 0.94rem !important;
     border-radius: 12px !important;
+    background: #091E36 !important;
+    color: #FFFFFF !important;
   }
 
   .help-card-row {
@@ -249,6 +251,9 @@
   .help-trigger-btn {
     min-height: 48px !important;
     padding: 0.7rem 0.9rem !important;
+    background: #F0F7FF !important;
+    border: 1px solid #E0F2FE !important;
+    border-radius: 14px !important;
   }
 
   .stamp {
@@ -344,6 +349,8 @@
   height: 46px !important;
   font-size: 0.9rem !important;
   border-radius: 12px !important;
+  background: #091E36 !important;
+  color: #FFFFFF !important;
 }
 
 .login-page-container.is-capacitor .help-card-row {

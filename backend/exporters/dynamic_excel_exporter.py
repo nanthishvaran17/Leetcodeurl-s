@@ -7,6 +7,35 @@ from openpyxl.utils import get_column_letter
 
 FONT_TNR = "Times New Roman"
 
+def _safe_float(val, default=0.0) -> float:
+    if val is None:
+        return default
+    if isinstance(val, (int, float)):
+        return float(val)
+    s = str(val).replace(",", "").replace("min", "").replace("%", "").strip()
+    if not s or s in ("—", "-", "N/A", "None", "nan", "NaN", "null"):
+        return default
+    try:
+        return float(s)
+    except (ValueError, TypeError):
+        return default
+
+def _safe_int(val, default=0) -> int:
+    if val is None:
+        return default
+    if isinstance(val, int):
+        return val
+    if isinstance(val, float):
+        return int(val)
+    s = str(val).replace(",", "").strip()
+    if not s or s in ("—", "-", "N/A", "None", "nan", "NaN", "null"):
+        return default
+    try:
+        return int(float(s))
+    except (ValueError, TypeError):
+        return default
+
+
 def export_dynamic_excel(dataset: dict) -> bytes:
     """
     MASTER INSTITUTIONAL DYNAMIC EXCEL EXPORTER
@@ -354,10 +383,10 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 q_t = r.get(f"{q_num}_time")
                 st_u = str(r.get("status") or r.get("attendance_status") or r.get("participation_status") or "").upper()
                 is_p = any(s in st_u for s in ["ATTENDED", "PUBLIC", "VIRTUAL", "LIVE", "VERIFIED", "COMPLETED"])
-                c_sol = int(r.get("contest_solved") or r.get("total_solved") or r.get("solved") or 0)
+                c_sol = _safe_int(r.get("contest_solved") or r.get("total_solved") or r.get("solved"))
                 
                 if c_sol == 0:
-                    score_val = float(str(r.get("contest_score") or r.get("score") or 0).replace(",", "").strip() or 0)
+                    score_val = _safe_float(r.get("contest_score")) or _safe_float(r.get("score"))
                     if score_val >= 17:
                         c_sol = 4
                     elif score_val >= 11:
@@ -372,7 +401,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 if is_solved:
                     if q_t and str(q_t) != "—":
                         try:
-                            t_f = float(str(q_t).replace("min", "").strip())
+                            t_f = _safe_float(q_t)
                             if t_f > 0:
                                 t_str = str(int(t_f)) if t_f.is_integer() else str(t_f)
                                 val = f"1 ({t_str} min)"
@@ -392,7 +421,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 val_str = str(val or "").strip()
                 st_u = str(r.get("status") or r.get("attendance_status") or r.get("participation_status") or "").upper()
                 is_p = any(s in st_u for s in ["ATTENDED", "PUBLIC", "VIRTUAL", "LIVE", "VERIFIED", "COMPLETED"])
-                c_sol = int(r.get("contest_solved") or r.get("total_solved") or r.get("solved") or 0)
+                c_sol = _safe_int(r.get("contest_solved") or r.get("total_solved") or r.get("solved"))
 
                 tot_t = (
                     r.get("total_time_display") or 
@@ -408,12 +437,9 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                     for qk in ("q1_time", "q2_time", "q3_time", "q4_time"):
                         tv = r.get(qk)
                         if tv is not None:
-                            try:
-                                t_f = float(str(tv).replace("min", "").strip())
-                                if t_f > 0:
-                                    q_times.append(t_f)
-                            except (ValueError, TypeError):
-                                pass
+                            t_f = _safe_float(tv)
+                            if t_f > 0:
+                                q_times.append(t_f)
                     if q_times:
                         max_t = max(q_times)
                         max_t_str = str(int(max_t)) if max_t.is_integer() else str(max_t)
@@ -438,28 +464,22 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 if val in (1500, 1500.0, 1500.7, "1500", "1500.0", 5000001, "5,000,001") or val_str in ("—", "None", "nan", "NaN", "null", ""):
                     val = "—"
                 elif title == "Global Rank":
-                    try:
-                        num = int(float(str(val).replace(",", "")))
-                        val = f"{num:,}" if num > 0 else "—"
-                    except (ValueError, TypeError):
-                        pass
+                    num = _safe_int(val)
+                    val = f"{num:,}" if num > 0 else "—"
                 elif title == "Contest Rating":
-                    try:
-                        num = round(float(str(val).replace(",", "")))
-                        val = f"{num:,}" if num > 0 and num != 1500 else "—"
-                    except (ValueError, TypeError):
-                        pass
+                    num = round(_safe_float(val))
+                    val = f"{num:,}" if num > 0 and num != 1500 else "—"
 
             title_lower = title.lower().strip()
 
             if val is None:
                 val = ""
             elif title_lower == "consistency pct":
-                try:
-                    v_float = float(val)
+                v_float = _safe_float(val, default=-1.0)
+                if v_float >= 0:
                     val = f"{int(v_float)}%" if v_float.is_integer() else f"{v_float:.1f}%"
-                except (ValueError, TypeError):
-                    pass
+                else:
+                    val = "—"
             elif isinstance(val, (int, float)):
                 pass  # Keep as numeric
             elif isinstance(val, str) and val.isdigit() and title_lower not in ("register no", "s.no"):
@@ -471,7 +491,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                     dt_utc = parse_iso_to_utc(val)
                     if dt_utc:
                         dt_ist = ensure_ist(dt_utc)
-                        val = dt_ist.strftime("%d %b %Y, %I:%M %p IST")
+                        if dt_ist is not None:
+                            val = dt_ist.strftime("%d %b %Y, %I:%M %p IST")
                 except Exception:
                     pass
                 
@@ -518,7 +539,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         col_letter = get_column_letter(col_idx)
         max_len = 0
         for cell in col:
-            if cell.row < header_row_idx:
+            if cell.row is not None and cell.row < header_row_idx:
                 continue
             v_str = str(cell.value or "")
             if cell.row == header_row_idx:  # Header row

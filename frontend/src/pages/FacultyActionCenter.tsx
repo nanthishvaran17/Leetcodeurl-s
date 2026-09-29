@@ -343,10 +343,10 @@ const StudentViewModal: React.FC<{
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 overflow-y-auto animate-fade-in"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-xl overflow-hidden my-auto text-slate-900 dark:text-white">
+      <div className="w-full max-w-4xl max-h-[94vh] sm:max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-xl overflow-hidden my-auto text-slate-900 dark:text-white">
         
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50 dark:bg-navy-950/60 shrink-0">
@@ -430,7 +430,7 @@ const StudentViewModal: React.FC<{
         </div>
 
         {/* Tab Content Body */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 custom-scrollbar bg-white dark:bg-transparent">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-6 custom-scrollbar bg-white dark:bg-transparent">
           {activeViewTab === 'pass' && (
             <div className="space-y-4">
               <IDCardGenerator

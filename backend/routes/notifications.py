@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, cast
 from pydantic import BaseModel
 
 from backend.database import get_db
@@ -17,7 +17,7 @@ from backend.services.notification_service import NotificationService
 
 router = APIRouter(prefix="/api/notifications", tags=["Notifications Engine"])
 
-def require_security_access(resource_name: str = "", required_roles: list = None):
+def require_security_access(resource_name: str = "", required_roles: Optional[list] = None):
     def check_access(current_user: User = Depends(get_current_active_user)):
         if required_roles:
             role_str = (current_user.role or "").lower()
@@ -62,6 +62,20 @@ class AppUpdateBroadcastRequest(BaseModel):
     action_route: str = "/dashboard"
 
 
+def get_primary_user_id(current_user: Any) -> str:
+    if hasattr(current_user, "email") and current_user.email and str(current_user.email).strip():
+        return str(current_user.email).strip().lower()
+    if hasattr(current_user, "reg_no") and current_user.reg_no and str(current_user.reg_no).strip():
+        return str(current_user.reg_no).strip().upper()
+    if hasattr(current_user, "username") and current_user.username and str(current_user.username).strip():
+        return str(current_user.username).strip()
+    if hasattr(current_user, "id") and current_user.id is not None and str(current_user.id) != "0":
+        role_str = str(getattr(current_user, "role", "")).upper()
+        if "STUDENT" in role_str:
+            return str(current_user.id)
+        return f"STAFF_{current_user.id}"
+    return "anonymous_user"
+
 # 1. FCM DEVICE TOKEN REGISTRATION 
 
 @router.post("/register-device")
@@ -71,9 +85,7 @@ def register_device_token_endpoint(
     current_user: Any = Depends(get_current_active_user)
 ):
     """Registers client FCM device token for multi-device push notification delivery."""
-    user_id = current_user.email if hasattr(current_user, "email") and current_user.email else (
-        current_user.reg_no if hasattr(current_user, "reg_no") else str(current_user.id)
-    )
+    user_id = get_primary_user_id(current_user)
     result = NotificationService.register_device_token(
         db=db,
         user_id=user_id,
@@ -94,24 +106,26 @@ def unregister_device_token_endpoint(
     current_user: Any = Depends(get_current_active_user)
 ):
     """Deactivates device token on user logout."""
-    user_id = current_user.email if hasattr(current_user, "email") and current_user.email else (
-        current_user.reg_no if hasattr(current_user, "reg_no") else str(current_user.id)
-    )
+    user_id = get_primary_user_id(current_user)
     return NotificationService.unregister_device_token(db, user_id=user_id, device_token=req.device_token)
 
 
 def get_user_id_variants(current_user: Any) -> set:
     user_id_variants = set()
-    if hasattr(current_user, "email") and current_user.email:
-        user_id_variants.add(current_user.email.lower().strip())
-        user_id_variants.add(current_user.email.strip())
-    if hasattr(current_user, "reg_no") and current_user.reg_no:
-        user_id_variants.add(current_user.reg_no.strip())
-        user_id_variants.add(current_user.reg_no.upper().strip())
-    if hasattr(current_user, "username") and current_user.username:
-        user_id_variants.add(current_user.username.strip())
-        user_id_variants.add(current_user.username.lower().strip())
-    if hasattr(current_user, "id"):
+    primary_id = get_primary_user_id(current_user)
+    if primary_id and primary_id != "anonymous_user":
+        user_id_variants.add(primary_id)
+        
+    if hasattr(current_user, "email") and current_user.email and str(current_user.email).strip():
+        user_id_variants.add(str(current_user.email).lower().strip())
+        user_id_variants.add(str(current_user.email).strip())
+    if hasattr(current_user, "reg_no") and current_user.reg_no and str(current_user.reg_no).strip():
+        user_id_variants.add(str(current_user.reg_no).strip())
+        user_id_variants.add(str(current_user.reg_no).upper().strip())
+    if hasattr(current_user, "username") and current_user.username and str(current_user.username).strip():
+        user_id_variants.add(str(current_user.username).strip())
+        user_id_variants.add(str(current_user.username).lower().strip())
+    if hasattr(current_user, "id") and current_user.id is not None and str(current_user.id) != "0":
         user_id_variants.add(str(current_user.id))
         user_id_variants.add(f"STAFF_{current_user.id}")
 
@@ -237,8 +251,8 @@ def mark_notification_read_endpoint(
     """Marks single notification as read."""
     record = db.query(NotificationRecord).filter_by(notification_id=notification_id).first()
     if record:
-        record.is_read = True
-        record.read_at = datetime.datetime.now(datetime.timezone.utc)
+        cast(Any, record).is_read = True
+        cast(Any, record).read_at = datetime.datetime.now(datetime.timezone.utc)
         db.commit()
 
     return {"success": True, "notification_id": notification_id, "is_read": True}
@@ -253,8 +267,8 @@ def mark_notification_unread_endpoint(
     """Marks single notification as unread."""
     record = db.query(NotificationRecord).filter_by(notification_id=notification_id).first()
     if record:
-        record.is_read = False
-        record.read_at = None
+        cast(Any, record).is_read = False
+        cast(Any, record).read_at = None
         db.commit()
 
     return {"success": True, "notification_id": notification_id, "is_read": False}
@@ -282,8 +296,8 @@ def mark_all_notifications_read_endpoint(
     ).all()
 
     for r in records:
-        r.is_read = True
-        r.read_at = now_utc
+        cast(Any, r).is_read = True
+        cast(Any, r).read_at = now_utc
 
     db.commit()
     return {"success": True, "marked_count": len(records)}
@@ -311,8 +325,10 @@ def get_notification_preferences_endpoint(
     current_user: Any = Depends(get_current_active_user)
 ):
     """Returns user notification preferences."""
-    user_id = current_user.email if hasattr(current_user, "email") and current_user.email else str(current_user.id)
-    pref = db.query(NotificationPreference).filter_by(user_id=user_id).first()
+    user_id_variants = list(get_user_id_variants(current_user))
+    pref = db.query(NotificationPreference).filter(
+        NotificationPreference.user_id.in_(user_id_variants)
+    ).first()
 
     default_categories = {
         "assignments": True, "attendance": True, "timetable": True,
@@ -329,7 +345,7 @@ def get_notification_preferences_endpoint(
             "categories": default_categories
         }
 
-    categories = json.loads(pref.categories_json) if pref.categories_json else default_categories
+    categories = json.loads(str(pref.categories_json)) if pref.categories_json else default_categories
     return {
         "push_enabled": pref.push_enabled,
         "email_enabled": pref.email_enabled,
@@ -345,23 +361,46 @@ def update_notification_preferences_endpoint(
     current_user: Any = Depends(get_current_active_user)
 ):
     """Updates user notification category preferences."""
-    user_id = current_user.email if hasattr(current_user, "email") and current_user.email else str(current_user.id)
-    pref = db.query(NotificationPreference).filter_by(user_id=user_id).first()
+    primary_id = get_primary_user_id(current_user)
+    user_id_variants = list(get_user_id_variants(current_user))
+
+    pref = db.query(NotificationPreference).filter(
+        NotificationPreference.user_id.in_(user_id_variants)
+    ).first()
 
     if not pref:
         pref = NotificationPreference(
-            user_id=user_id,
+            user_id=primary_id,
             push_enabled=req.push_enabled,
             email_enabled=req.email_enabled,
             categories_json=json.dumps(req.categories)
         )
         db.add(pref)
     else:
-        pref.push_enabled = req.push_enabled
-        pref.email_enabled = req.email_enabled
-        pref.categories_json = json.dumps(req.categories)
+        cast(Any, pref).push_enabled = req.push_enabled
+        cast(Any, pref).email_enabled = req.email_enabled
+        cast(Any, pref).categories_json = json.dumps(req.categories)
 
-    db.commit()
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        try:
+            # Fallback: update by primary_id directly if unique constraint triggered
+            pref_existing = db.query(NotificationPreference).filter_by(user_id=primary_id).first()
+            if pref_existing:
+                cast(Any, pref_existing).push_enabled = req.push_enabled
+                cast(Any, pref_existing).email_enabled = req.email_enabled
+                cast(Any, pref_existing).categories_json = json.dumps(req.categories)
+                db.commit()
+            else:
+                raise HTTPException(status_code=500, detail=f"Database error saving notification preferences: {str(e)}")
+        except HTTPException:
+            raise
+        except Exception as retry_err:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"Database error saving notification preferences: {str(retry_err)}")
+
     return {"success": True, "message": "Notification preferences updated successfully"}
 
 
@@ -433,9 +472,7 @@ def send_test_push_notification_endpoint(
     current_user: Any = Depends(get_current_active_user)
 ):
     """Triggers an immediate real system push notification to all active devices registered to current user."""
-    user_id = current_user.email if hasattr(current_user, "email") and current_user.email else (
-        current_user.reg_no if hasattr(current_user, "reg_no") else str(current_user.id)
-    )
+    user_id = get_primary_user_id(current_user)
 
     result = NotificationService.emit_event(
         event_type="CONTEST_REMINDER",
@@ -540,16 +577,20 @@ def download_notification_file_endpoint(
 ):
     """Secure stream download of notification attachment."""
     file_record = db.query(NotificationFile).filter_by(file_id=file_id, is_deleted=False).first()
-    if not file_record or not os.path.exists(file_record.storage_path):
+    storage_path = str(file_record.storage_path) if file_record and file_record.storage_path else ""
+    filename = str(file_record.filename) if file_record and file_record.filename else ""
+    access_scope = str(file_record.access_scope) if file_record and file_record.access_scope else ""
+
+    if not file_record or not os.path.exists(storage_path):
         raise HTTPException(status_code=440, detail="File document not found or expired.")
 
     user_role = str(getattr(current_user, "role", "")).upper()
-    if file_record.access_scope.upper() == "ADMIN_ONLY" and "ADMIN" not in user_role:
+    if access_scope.upper() == "ADMIN_ONLY" and "ADMIN" not in user_role:
         raise HTTPException(status_code=403, detail="Access denied.")
 
     return FileResponse(
-        path=file_record.storage_path,
-        filename=file_record.filename,
+        path=storage_path,
+        filename=filename,
         media_type="application/octet-stream"
     )
 
@@ -562,16 +603,21 @@ def preview_notification_file_endpoint(
 ):
     """Secure preview stream for PDF/images."""
     file_record = db.query(NotificationFile).filter_by(file_id=file_id, is_deleted=False).first()
-    if not file_record or not os.path.exists(file_record.storage_path):
+    storage_path = str(file_record.storage_path) if file_record and file_record.storage_path else ""
+    filename = str(file_record.filename) if file_record and file_record.filename else ""
+    access_scope = str(file_record.access_scope) if file_record and file_record.access_scope else ""
+    file_type = str(file_record.file_type) if file_record and file_record.file_type else ""
+
+    if not file_record or not os.path.exists(storage_path):
         raise HTTPException(status_code=440, detail="File document not found or expired.")
 
     user_role = str(getattr(current_user, "role", "")).upper()
-    if file_record.access_scope.upper() == "ADMIN_ONLY" and "ADMIN" not in user_role:
+    if access_scope.upper() == "ADMIN_ONLY" and "ADMIN" not in user_role:
         raise HTTPException(status_code=403, detail="Access denied.")
 
-    media_type = "application/pdf" if file_record.file_type.lower() == "pdf" else "image/png"
+    media_type = "application/pdf" if file_type.lower() == "pdf" else "image/png"
     return FileResponse(
-        path=file_record.storage_path,
-        filename=file_record.filename,
+        path=storage_path,
+        filename=filename,
         media_type=media_type
     )

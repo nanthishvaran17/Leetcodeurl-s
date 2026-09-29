@@ -5,6 +5,8 @@ from sqlalchemy import text
 from typing import Dict, Any, Optional
 import os
 import datetime
+import secrets
+import uuid
 
 from backend.database import get_db
 from backend.models import AdminSettingsModel, AuditLog, AdminAuditLog, WeeklySession, SyncJob, Student
@@ -418,7 +420,7 @@ def run_live_data_integrity_audit(
 
     # Write durable AdminAuditLog row
     audit = AdminAuditLog(
-        audit_id=f"AUDIT-INTEGRITY-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')}",
+        audit_id=f"AUDIT-INTEGRITY-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S%f')}-{secrets.token_hex(4).upper()}",
         admin_name=getattr(current_user, 'username', 'Admin'),
         admin_email=getattr(current_user, 'email', 'nanthishvaran17@gmail.com'),
         admin_role=getattr(current_user, 'role', 'admin'),
@@ -468,6 +470,7 @@ def get_audit_logs(
 @router.get("/security-activity")
 def get_security_activity(
     filter_type: Optional[str] = Query("ALL"),
+    username: Optional[str] = Query(None),
     limit: int = Query(50),
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Security Activity", required_roles=["admin", "super admin"]))
@@ -475,6 +478,7 @@ def get_security_activity(
     """
     Fetches recent Security Activity logs & Security Alerts for Admin Security View.
     Supported filters: ALL, SUCCESS, BLOCKED, ALERTS
+    Can filter by specific staff username or email if provided.
     """
     query = db.query(AdminAuditLog)
     
@@ -485,8 +489,16 @@ def get_security_activity(
         query = query.filter(AdminAuditLog.status == "BLOCKED")
     elif clean_filter == "ALERTS":
         query = query.filter((AdminAuditLog.status == "ALERT") | (AdminAuditLog.action == "SECURITY_ALERT"))
-    else:
+    elif clean_filter != "ALL":
         query = query.filter(AdminAuditLog.action_type.in_(["SECURITY_ACCESS", "SECURITY"]))
+
+    if username and username.strip():
+        search_term = f"%{username.strip().lower()}%"
+        query = query.filter(
+            (AdminAuditLog.admin_name.ilike(search_term)) |
+            (AdminAuditLog.target_id.ilike(search_term)) |
+            (AdminAuditLog.description.ilike(search_term))
+        )
 
     logs = query.order_by(AdminAuditLog.id.desc()).limit(limit).all()
     
@@ -639,7 +651,7 @@ def trigger_advanced_operation(
 
     # 3. Write durable AdminAuditLog
     audit = AdminAuditLog(
-        audit_id=f"AUDIT-ADV-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')}",
+        audit_id=f"AUDIT-ADV-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S%f')}-{secrets.token_hex(4).upper()}",
         admin_name=getattr(current_user, 'username', 'Admin'),
         admin_email=getattr(current_user, 'email', 'nanthishvaran17@gmail.com'),
         admin_role=getattr(current_user, 'role', 'admin'),
@@ -1031,7 +1043,7 @@ async def probe_all_services_live(
 
     # Write durable AdminAuditLog
     audit = AdminAuditLog(
-        audit_id=f"AUDIT-PROBE-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')}",
+        audit_id=f"AUDIT-PROBE-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S%f')}-{secrets.token_hex(4).upper()}",
         admin_name=getattr(current_user, 'username', 'Admin'),
         admin_email=getattr(current_user, 'email', 'nanthishvaran17@gmail.com'),
         admin_role=getattr(current_user, 'role', 'admin'),

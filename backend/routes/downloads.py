@@ -1,9 +1,10 @@
 import os
 import time
+import datetime
 import secrets
 import hashlib
 import threading
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, cast
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -166,7 +167,7 @@ def execute_secure_download(
     # Audit Logging (Without raw tokens or file contents)
     try:
         audit = AdminAuditLog(
-            audit_id=f"DL-{secrets.token_hex(4).upper()}",
+            audit_id=f"DL-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S%f')}-{secrets.token_hex(4).upper()}",
             admin_user_id=user.id,
             admin_name=user.username,
             admin_email=user.email,
@@ -205,18 +206,18 @@ def download_direct_report(filename: str, db: Session = Depends(get_db)):
     import mimetypes
     
     record = db.query(ReportCache).filter(ReportCache.filename == filename).first()
-    
-    if not record or not record.storage_path or not os.path.exists(record.storage_path):
+    storage_path = str(record.storage_path) if record and record.storage_path else ""
+    if not record or not storage_path or not os.path.exists(storage_path):
         raise HTTPException(status_code=404, detail="Report data not found.")
         
-    mime_type = record.mime_type or mimetypes.guess_type(record.storage_path)[0] or "application/octet-stream"
+    mime_type_str = str(record.mime_type) if record and record.mime_type else (mimetypes.guess_type(storage_path)[0] or "application/octet-stream")
     
-    with open(record.storage_path, "rb") as f:
+    with open(storage_path, "rb") as f:
         file_bytes = f.read()
         
     return Response(
         content=file_bytes,
-        media_type=mime_type,
+        media_type=mime_type_str,
         headers={
             "Content-Disposition": f'attachment; filename="{filename}"',
             "Cache-Control": "private, no-cache, no-store",
@@ -315,21 +316,23 @@ def _dispatch_internal_endpoint(
             disp = resp.headers["Content-Disposition"]
             if 'filename="' in disp:
                 out_fn = disp.split('filename="')[1].rstrip('"')
-        return resp.body, "application/pdf", out_fn
+        return bytes(resp.body), "application/pdf", out_fn
 
     # 13. Forensic Audit PDF Download
     elif "/certificates/" in clean_endpoint and "forensic" in clean_endpoint:
         from backend.routes.certificates import download_forensic_contest_pdf
         parts = clean_endpoint.split("/")
         identifier = parts[-1]
-        resp = download_forensic_contest_pdf(verification_id=identifier, identifier=identifier, student_id=merged_params.get("student_id"), db=db)
-        return resp.body, "application/pdf", default_filename or "Forensic_Audit_Report.pdf"
+        raw_std_id = merged_params.get("student_id")
+        std_id_int = int(raw_std_id) if raw_std_id is not None and str(raw_std_id).isdigit() else None
+        resp = download_forensic_contest_pdf(verification_id=identifier, identifier=identifier, student_id=std_id_int, db=db)
+        return bytes(resp.body), "application/pdf", default_filename or "Forensic_Audit_Report.pdf"
 
     # 14. Sample Student Import Excel
     elif clean_endpoint == "/api/students/sample-excel":
         from backend.routes.students import download_sample_student_excel
         resp = download_sample_student_excel()
-        return resp.body, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Student_Import_Sample.xlsx"
+        return bytes(resp.body), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Student_Import_Sample.xlsx"
 
     # 15. Database Backup File Download
     elif "/api/settings/backups/" in clean_endpoint and clean_endpoint.endswith("/download"):
@@ -346,10 +349,12 @@ def _dispatch_internal_endpoint(
     elif clean_endpoint == "/api/weekly-contests/post-930-solvers/export":
         from backend.routes.weekly_contests import get_post_930_solvers
         from backend.exporters.excel_exporter import export_excel_from_dataset
+        raw_min_solves = merged_params.get("min_post_window_solves", 1)
+        min_solves_int = int(raw_min_solves) if raw_min_solves is not None and str(raw_min_solves).isdigit() else 1
         data = get_post_930_solvers(
-            request=None, session_date=merged_params.get("session_date"), dept=merged_params.get("dept"),
+            request=cast(Any, None), session_date=merged_params.get("session_date"), dept=merged_params.get("dept"),
             year_level=merged_params.get("year_level"), section=merged_params.get("section"),
-            min_post_window_solves=merged_params.get("min_post_window_solves", 1),
+            min_post_window_solves=min_solves_int,
             sort_by="latest", search=None, student_id=None, db=db
         )
         excel_bytes = export_excel_from_dataset(data) if isinstance(data, dict) else b""
@@ -362,7 +367,7 @@ def _dispatch_internal_endpoint(
         resp = download_cached_report_file(cache_id=cache_id, db=db, current_user=user)
         with open(resp.path, "rb") as f:
             f_bytes = f.read()
-        return f_bytes, resp.media_type, os.path.basename(resp.path)
+        return f_bytes, str(resp.media_type or "application/octet-stream"), os.path.basename(str(resp.path))
 
     # General Fallback: Attempt to generate via generate_report_bytes
     else:

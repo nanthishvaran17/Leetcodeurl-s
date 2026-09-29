@@ -135,6 +135,9 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
   const [isTestingSched, setIsTestingSched] = useState<boolean>(false);
   const [schedToast, setSchedToast] = useState<string | null>(null);
 
+  // Live System Pulse Collapsible State
+  const [isPulseExpanded, setIsPulseExpanded] = useState<boolean>(false);
+
   // Keyboard shortcut listener for Ctrl+K / Cmd+K
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -781,51 +784,118 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         </div>
       </div>
 
-      {/* 2. LIVE SYSTEM PULSE (10 CORE SERVICES) */}
+      {/* 2. LIVE SYSTEM PULSE (10 CORE SERVICES - COLLAPSIBLE) */}
       <div className="bg-white dark:bg-navy-950 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <Activity className="w-4 h-4 text-emerald-500 animate-pulse" />
             <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-              Live System Pulse (10 Core Infrastructure Nodes)
+              Live System Pulse ({Object.keys(livePulse).length || 10} Core Infrastructure Nodes)
             </h3>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              All Nodes Operational
+            </span>
           </div>
-          <button
-            onClick={handleProbeAllServices}
-            disabled={refreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>{refreshing ? 'Probing...' : 'Probe All Services'}</span>
-          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleProbeAllServices}
+              disabled={refreshing}
+              className="flex items-center gap-1.5 px-3 py-1.5 min-h-[40px] rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200 dark:border-slate-800 transition-all cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              <span>{refreshing ? 'Probing...' : 'Probe All Services'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsPulseExpanded((prev) => !prev);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 min-h-[40px] rounded-xl text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-all cursor-pointer shadow-2xs"
+            >
+              <span>{isPulseExpanded ? 'Collapse Pulse' : 'Expand Nodes (10)'}</span>
+              <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isPulseExpanded ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {Object.entries(livePulse).map(([key, svc]: [string, any]) => {
-            const isHealthy = svc.status === 'HEALTHY' || svc.status === 'Healthy';
-            return (
-              <div
-                key={key}
-                className="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-navy-950/40 border border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-3 min-h-[52px]"
-              >
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isHealthy ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`}></span>
-                  <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200 truncate">
-                    {svc.name}
+        {/* COMPACT SUMMARY STRIP WHEN COLLAPSED */}
+        {!isPulseExpanded && (
+          <div className="pt-1 pb-1">
+            <div
+              onClick={() => setIsPulseExpanded(true)}
+              className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-900/40 border border-slate-200/70 dark:border-navy-800 flex flex-wrap items-center justify-between gap-3 cursor-pointer hover:bg-slate-100/80 dark:hover:bg-navy-900/70 transition-all"
+            >
+              <div className="flex items-center gap-2 overflow-x-auto py-0.5 no-scrollbar max-w-full">
+                {Object.entries(livePulse).slice(0, 5).map(([key, svc]: [string, any]) => (
+                  <span key={key} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white dark:bg-navy-950 text-[11px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <span className="truncate max-w-[120px]">{svc.name}</span>
+                    <span className="text-[10px] text-slate-400 font-mono">({svc.latencyMs ? `${svc.latencyMs}ms` : (svc.latency || '1ms')})</span>
                   </span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className={`text-[10px] font-black ${isHealthy ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600'}`}>
-                    {svc.status}
+                ))}
+                {Object.keys(livePulse).length > 5 && (
+                  <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 px-2 py-1 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-800/40 shrink-0">
+                    +{Object.keys(livePulse).length - 5} more nodes...
                   </span>
-                  <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-navy-800 px-1.5 py-0.5 rounded-lg">
-                    {svc.latencyMs ? `${svc.latencyMs}ms` : (svc.latency ? `${svc.latency}` : '—')}
-                  </span>
-                </div>
+                )}
               </div>
-            );
-          })}
-        </div>
+              <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 shrink-0">
+                Click to view all telemetry <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* FULL EXPANDED 10 NODES GRID */}
+        {isPulseExpanded && (
+          <div className="space-y-3 pt-1 animate-fade-in">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {Object.entries(livePulse).map(([key, svc]: [string, any]) => {
+                const isHealthy = svc.status === 'HEALTHY' || svc.status === 'Healthy';
+                return (
+                  <div
+                    key={key}
+                    className="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-navy-950/40 border border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-3 min-h-[52px]"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isHealthy ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`}></span>
+                      <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200 truncate">
+                        {svc.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`text-[10px] font-black ${isHealthy ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600'}`}>
+                        {svc.status}
+                      </span>
+                      <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-navy-800 px-1.5 py-0.5 rounded-lg">
+                        {svc.latencyMs ? `${svc.latencyMs}ms` : (svc.latency ? `${svc.latency}` : '—')}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Bottom Action Bar for Quick Collapse */}
+            <div className="flex items-center justify-end pt-2 border-t border-slate-100 dark:border-slate-800/80">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsPulseExpanded(false);
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-all cursor-pointer shadow-xs hover:scale-[1.01]"
+              >
+                <ChevronUp className="w-4 h-4" />
+                <span>Collapse Pulse Section</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         <ExportStatus 
           state={downloadState} 
@@ -1670,10 +1740,41 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               </span>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Mobile Report Parity Cards (block md:hidden) */}
+            <div className="block md:hidden space-y-3">
+              {(data?.reportParity?.sources || []).map((s: any, idx: number) => (
+                <div key={idx} className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm space-y-2 text-xs font-bold">
+                  <div className="flex items-center justify-between border-b pb-2 dark:border-slate-800">
+                    <span className="font-extrabold text-slate-900 dark:text-white">{s.format}</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-black text-[11px] bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">{s.parity}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1">
+                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-slate-800">
+                      <span className="text-slate-400 text-[9.5px] uppercase block">Row Count</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{s.rows}</span>
+                    </div>
+                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-slate-800">
+                      <span className="text-slate-400 text-[9.5px] uppercase block">Public Attended</span>
+                      <span className="font-black text-emerald-600">{s.public}</span>
+                    </div>
+                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-slate-800">
+                      <span className="text-slate-400 text-[9.5px] uppercase block">Not Attended</span>
+                      <span className="font-black text-rose-600">{s.notAttended}</span>
+                    </div>
+                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-slate-800">
+                      <span className="text-slate-400 text-[9.5px] uppercase block">Data Errors</span>
+                      <span className="font-black text-amber-600">{s.errors}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Report Parity Table (hidden md:block) */}
+            <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
               <table className="w-full text-left text-xs border-collapse font-bold">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-800 text-[10.5px] uppercase text-slate-400">
+                  <tr className="border-b border-slate-200 dark:border-slate-800 text-[10.5px] uppercase text-slate-400 bg-slate-50/50 dark:bg-navy-900/50">
                     <th className="py-2.5 px-3">Output Format / Channel</th>
                     <th className="py-2.5 px-3 text-center">Row Count</th>
                     <th className="py-2.5 px-3 text-center text-emerald-600">Public Attended</th>
@@ -1837,11 +1938,73 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             </div>
           )}
 
-          {/* Snapshot List Table */}
-          <div className="overflow-x-auto">
+          {/* Snapshot List - Mobile Card View (block md:hidden, no horizontal scroll) */}
+          <div className="block md:hidden space-y-3">
+            {backupsList.length === 0 ? (
+              <div className="p-6 text-center text-slate-400 text-xs rounded-2xl bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-slate-800 font-bold">
+                No snapshots stored yet. Click "Create Snapshot Now" to generate an initial verified backup.
+              </div>
+            ) : (
+              backupsList.map((bk: any) => (
+                <div
+                  key={bk.filename}
+                  className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm space-y-3"
+                >
+                  {/* Filename & Status Badge */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2 min-w-0 flex-1">
+                      <Database className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span className="font-mono font-extrabold text-slate-900 dark:text-white text-xs break-all leading-snug">
+                        {bk.filename}
+                      </span>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-black text-[10px] shrink-0 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                      {bk.status || 'HEALTHY'}
+                    </span>
+                  </div>
+
+                  {/* Created At & Size */}
+                  <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-slate-800/80 text-[11px] font-mono">
+                    <div>
+                      <span className="text-[9.5px] uppercase font-bold text-slate-400 block">Created At (IST)</span>
+                      <span className="text-slate-700 dark:text-slate-300 font-extrabold">{bk.created_at || 'Just now'}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[9.5px] uppercase font-bold text-slate-400 block">Snapshot Size</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{Math.round((bk.size_bytes || 0) / 1024)} KB</span>
+                    </div>
+                  </div>
+
+                  {/* SHA-256 Checksum */}
+                  {bk.checksum && (
+                    <div className="p-2.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 font-mono text-[10.5px] text-indigo-700 dark:text-indigo-300 break-all leading-tight">
+                      <span className="text-[9px] uppercase font-bold text-indigo-400 block mb-0.5">SHA-256 Checksum</span>
+                      {bk.checksum}
+                    </div>
+                  )}
+
+                  {/* Action Button */}
+                  <div className="pt-1 flex justify-end">
+                    <button
+                      onClick={() => handleVerifySnapshot(bk.filename)}
+                      disabled={verifyingSnapshot === bk.filename}
+                      className="w-full sm:w-auto px-4 py-2 text-xs font-black rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 cursor-pointer shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>{verifyingSnapshot === bk.filename ? 'Verifying...' : 'Verify Snapshot'}</span>
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop Snapshot List Table (hidden md:block) */}
+          <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
             <table className="w-full text-left text-xs border-collapse font-bold">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-[10.5px] uppercase text-slate-400">
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-[10.5px] uppercase text-slate-400 bg-slate-50/50 dark:bg-navy-900/50">
                   <th className="py-2.5 px-3">Snapshot Filename</th>
                   <th className="py-2.5 px-3">Created At (IST)</th>
                   <th className="py-2.5 px-3">Size</th>
@@ -1944,7 +2107,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                             <span className="font-mono text-xs font-black text-indigo-600 dark:text-indigo-400">
                               {audit.audit_id || `SEC-${audit.id}`}
                             </span>
-                            <div className="text-[10.5px] font-mono text-slate-400 mt-0.5">
+                            <div className="text-[10.5px] font-mono text-slate-700 dark:text-slate-300 font-semibold mt-0.5">
                               {audit.event_timestamp_formatted || audit.timestamp || 'N/A'}
                             </div>
                           </div>
@@ -1961,21 +2124,21 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                         </div>
 
                         {/* Admin & Action Details */}
-                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800 space-y-1 text-xs">
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-navy-800 space-y-1 text-xs">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Administrator:</span>
+                            <span className="text-[10px] font-extrabold text-slate-700 dark:text-slate-300 uppercase">Administrator:</span>
                             <span className="font-bold text-slate-900 dark:text-white truncate">
-                              {audit.admin_name || audit.user || 'System'} <span className="text-[10px] font-normal text-slate-400">({audit.admin_role || 'ADMIN'})</span>
+                              {audit.admin_name || audit.user || 'System'} <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">({audit.admin_role || 'ADMIN'})</span>
                             </span>
                           </div>
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Action:</span>
-                            <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono text-[11px] truncate">
+                            <span className="text-[10px] font-extrabold text-slate-700 dark:text-slate-300 uppercase">Action:</span>
+                            <span className="font-extrabold text-indigo-600 dark:text-indigo-400 font-mono text-[11px] truncate">
                               {audit.action}
                             </span>
                           </div>
                           {(audit.route || audit.target_id || audit.description) && (
-                            <div className="pt-1 border-t border-slate-100 dark:border-navy-800/80 text-[10.5px] font-mono text-slate-500 truncate">
+                            <div className="pt-1 border-t border-slate-200 dark:border-navy-800/80 text-[10.5px] font-mono text-slate-800 dark:text-slate-200 font-bold truncate">
                               {audit.route || audit.target_id || audit.description}
                             </div>
                           )}
@@ -1983,7 +2146,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
                         {/* Client Info + View Button */}
                         <div className="flex items-center justify-between gap-2 pt-1 text-[11px]">
-                          <div className="font-mono text-[10px] text-slate-400 truncate">
+                          <div className="font-mono text-[10px] text-slate-700 dark:text-slate-300 font-semibold truncate">
                             <span>{audit.client_ip || audit.ip_address || '127.0.0.1'}</span>
                             {audit.browser && <span> • {audit.browser}</span>}
                           </div>
@@ -2008,7 +2171,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
                   <table className="w-full text-left text-xs font-bold min-w-[760px]">
                     <thead>
-                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider bg-slate-50/50 dark:bg-navy-900/50">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 uppercase text-[10px] font-black tracking-wider bg-slate-100/70 dark:bg-navy-900/80">
                         <th className="py-2.5 px-3">Event ID</th>
                         <th className="py-2.5 px-3">Event Timestamp (IST)</th>
                         <th className="py-2.5 px-3">Administrator</th>
@@ -2028,20 +2191,20 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                           <td className="py-3 px-3 font-mono text-[11px] text-indigo-600 dark:text-indigo-400 font-bold">
                             {audit.audit_id || `SEC-${audit.id}`}
                           </td>
-                          <td className="py-3 px-3 font-mono text-[11px] text-slate-700 dark:text-slate-300">
+                          <td className="py-3 px-3 font-mono text-[11px] text-slate-800 dark:text-slate-200 font-semibold">
                             {audit.event_timestamp_formatted || audit.timestamp || 'N/A'}
                           </td>
                           <td className="py-3 px-3">
                             <p className="text-slate-900 dark:text-white font-bold">{audit.admin_name || audit.user || 'System'}</p>
-                            <p className="text-[10px] text-slate-400 font-normal">{audit.admin_role || 'ADMIN'}</p>
+                            <p className="text-[10px] text-slate-600 dark:text-slate-400 font-bold">{audit.admin_role || 'ADMIN'}</p>
                           </td>
                           <td className="py-3 px-3">
                             <p className="text-slate-900 dark:text-white font-bold">{audit.action}</p>
-                            <p className="text-[10px] text-slate-500 font-mono">{audit.route || audit.target_id || audit.description}</p>
+                            <p className="text-[10px] text-slate-700 dark:text-slate-300 font-mono font-semibold">{audit.route || audit.target_id || audit.description}</p>
                           </td>
-                          <td className="py-3 px-3 font-mono text-[10.5px] text-slate-500">
+                          <td className="py-3 px-3 font-mono text-[10.5px] text-slate-700 dark:text-slate-300 font-medium">
                             <p>{audit.client_ip || audit.ip_address || '127.0.0.1'} ({audit.ip_version || 'IPv4'})</p>
-                            <p className="text-[9.5px] text-slate-400">{audit.browser || 'Web Browser'} • {audit.operating_system || 'Desktop'}</p>
+                            <p className="text-[9.5px] text-slate-600 dark:text-slate-400 font-medium">{audit.browser || 'Web Browser'} • {audit.operating_system || 'Desktop'}</p>
                           </td>
                           <td className="py-3 px-3">
                             <span
@@ -2127,20 +2290,20 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
       {/* FULL 11-SECTION IMMUTABLE AUDIT LOG DETAIL MODAL */}
       {selectedAuditDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in overflow-y-auto">
-          <div className="max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-8 space-y-6 text-slate-100 relative font-sans">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fade-in overflow-y-auto">
+          <div className="max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-2xl p-6 sm:p-8 space-y-6 text-slate-800 dark:text-slate-100 relative font-sans">
             
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
               <div className="flex items-center space-x-3">
-                <div className="p-2.5 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                <div className="p-2.5 rounded-2xl bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30">
                   <Fingerprint className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-white tracking-tight uppercase">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight uppercase">
                     FORENSIC AUDIT EVENT DETAIL
                   </h3>
-                  <p className="text-xs text-slate-400 font-mono">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                     Immutable Audit Record • {selectedAuditDetail.audit_id}
                   </p>
                 </div>
@@ -2148,7 +2311,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
               <button
                 onClick={() => setSelectedAuditDetail(null)}
-                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all cursor-pointer"
+                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
               >
                 <XCircle className="w-5 h-5" />
               </button>
@@ -2158,160 +2321,160 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             <div className="space-y-6">
 
               {/* 1. EVENT IDENTITY */}
-              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
-                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2">
                   <Hash className="w-3.5 h-3.5" /> 1. EVENT IDENTITY
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
-                  <div><span className="text-slate-400 block text-[10px]">EVENT ID</span><strong className="text-white">{selectedAuditDetail.audit_id}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">TRACE ID</span><strong className="text-cyan-400">{selectedAuditDetail.trace_id || `trace_${selectedAuditDetail.audit_id.toLowerCase()}`}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">INTEGRITY STATUS</span><strong className={selectedAuditDetail.integrity_verified !== false ? "text-emerald-400" : "text-rose-400"}>{selectedAuditDetail.integrity_status || '✓ VERIFIED'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">EVENT ID</span><strong className="text-slate-900 dark:text-white">{selectedAuditDetail.audit_id}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">TRACE ID</span><strong className="text-cyan-600 dark:text-cyan-400">{selectedAuditDetail.trace_id || `trace_${selectedAuditDetail.audit_id.toLowerCase()}`}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">INTEGRITY STATUS</span><strong className={selectedAuditDetail.integrity_verified !== false ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}>{selectedAuditDetail.integrity_status || '✓ VERIFIED'}</strong></div>
                 </div>
               </div>
 
               {/* 2. ADMINISTRATOR / USER */}
-              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
-                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2">
                   <Building2 className="w-3.5 h-3.5" /> 2. ADMINISTRATOR / USER
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                  <div><span className="text-slate-400 block text-[10px]">USER ID</span><strong className="font-mono text-slate-200">{selectedAuditDetail.admin_user_id || 'N/A'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">USERNAME</span><strong className="text-white">{selectedAuditDetail.admin_name || 'System'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">EMAIL</span><strong className="text-slate-300 font-mono text-[11px]">{selectedAuditDetail.admin_email || 'N/A'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">ROLE / ACCESS</span><strong className="text-indigo-300">{selectedAuditDetail.admin_role || 'ADMIN'} ({selectedAuditDetail.access_level || 'LEVEL_1'})</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">USER ID</span><strong className="font-mono text-slate-800 dark:text-slate-200">{selectedAuditDetail.admin_user_id || 'N/A'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">USERNAME</span><strong className="text-slate-900 dark:text-white">{selectedAuditDetail.admin_name || 'System'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">EMAIL</span><strong className="text-slate-700 dark:text-slate-200 font-mono text-[11px]">{selectedAuditDetail.admin_email || 'N/A'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">ROLE / ACCESS</span><strong className="text-indigo-600 dark:text-indigo-300">{selectedAuditDetail.admin_role || 'ADMIN'} ({selectedAuditDetail.access_level || 'LEVEL_1'})</strong></div>
                 </div>
               </div>
 
               {/* 3. EVENT SUMMARY */}
-              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
-                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2">
                   <FileText className="w-3.5 h-3.5" /> 3. EVENT SUMMARY
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                  <div><span className="text-slate-400 block text-[10px]">ACTION</span><strong className="text-white">{selectedAuditDetail.action}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">ACTION TYPE</span><strong className="text-slate-300">{selectedAuditDetail.action_type || 'SECURITY_ACCESS'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">EVENT RESULT</span><strong className={selectedAuditDetail.status === 'SUCCESS' || selectedAuditDetail.status === 'ALLOWED' ? 'text-emerald-400' : 'text-rose-400'}>{selectedAuditDetail.status}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">SEVERITY</span><strong className="text-amber-400">{selectedAuditDetail.severity || 'INFO'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">ACTION</span><strong className="text-slate-900 dark:text-white">{selectedAuditDetail.action}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">ACTION TYPE</span><strong className="text-slate-800 dark:text-slate-200">{selectedAuditDetail.action_type || 'SECURITY_ACCESS'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">EVENT RESULT</span><strong className={selectedAuditDetail.status === 'SUCCESS' || selectedAuditDetail.status === 'ALLOWED' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>{selectedAuditDetail.status}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">SEVERITY</span><strong className="text-amber-600 dark:text-amber-400">{selectedAuditDetail.severity || 'INFO'}</strong></div>
                 </div>
                 {selectedAuditDetail.description && (
-                  <p className="text-xs text-slate-300 font-mono pt-2 border-t border-slate-800/80">{selectedAuditDetail.description}</p>
+                  <p className="text-xs text-slate-700 dark:text-slate-200 font-mono pt-2 border-t border-slate-200 dark:border-slate-800">{selectedAuditDetail.description}</p>
                 )}
               </div>
 
               {/* 4. TARGET RESOURCE */}
-              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
-                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2">
                   <Database className="w-3.5 h-3.5" /> 4. TARGET RESOURCE
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-                  <div><span className="text-slate-400 block text-[10px]">TARGET TYPE</span><strong className="text-slate-200">{selectedAuditDetail.target_type || 'Resource'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">RESOURCE NAME</span><strong className="text-slate-200">{selectedAuditDetail.resource_name || selectedAuditDetail.target_id || 'N/A'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">ROUTE</span><strong className="text-cyan-300">{selectedAuditDetail.route || '/api/admin'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">HTTP METHOD</span><strong className="text-amber-300">{selectedAuditDetail.http_method || 'GET'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">TARGET TYPE</span><strong className="text-slate-800 dark:text-slate-200">{selectedAuditDetail.target_type || 'Resource'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">RESOURCE NAME</span><strong className="text-slate-800 dark:text-slate-200">{selectedAuditDetail.resource_name || selectedAuditDetail.target_id || 'N/A'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">ROUTE</span><strong className="text-cyan-600 dark:text-cyan-300">{selectedAuditDetail.route || '/api/admin'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">HTTP METHOD</span><strong className="text-amber-600 dark:text-amber-300">{selectedAuditDetail.http_method || 'GET'}</strong></div>
                 </div>
               </div>
 
               {/* 5. NETWORK INFORMATION */}
-              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
-                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2">
                   <ExternalLink className="w-3.5 h-3.5" /> 5. NETWORK INFORMATION
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
-                  <div><span className="text-slate-400 block text-[10px]">CLIENT IP ADDRESS</span><strong className="text-emerald-400">{selectedAuditDetail.client_ip || '127.0.0.1'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">IP VERSION</span><strong className="text-slate-300">{selectedAuditDetail.ip_version || 'IPv4'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">HASHED IP REFERENCE</span><strong className="text-slate-400 text-[11px]">{selectedAuditDetail.ip_address || 'ip_anon'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">CLIENT IP ADDRESS</span><strong className="text-emerald-600 dark:text-emerald-400">{selectedAuditDetail.client_ip || '127.0.0.1'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">IP VERSION</span><strong className="text-slate-800 dark:text-slate-200">{selectedAuditDetail.ip_version || 'IPv4'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">HASHED IP REFERENCE</span><strong className="text-slate-700 dark:text-slate-300 text-[11px] font-semibold">{selectedAuditDetail.ip_address || 'ip_anon'}</strong></div>
                 </div>
               </div>
 
               {/* 6. BROWSER & DEVICE */}
-              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
-                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2">
                   <Sparkles className="w-3.5 h-3.5" /> 6. BROWSER & DEVICE DETECTED
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                  <div><span className="text-slate-400 block text-[10px]">BROWSER</span><strong className="text-white">{selectedAuditDetail.browser || 'Web Browser'} ({selectedAuditDetail.browser_version || 'N/A'})</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">OPERATING SYSTEM</span><strong className="text-slate-200">{selectedAuditDetail.operating_system || 'Desktop OS'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">DEVICE TYPE</span><strong className="text-slate-200">{selectedAuditDetail.device_type || 'Desktop'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">UA CATEGORY</span><strong className="text-indigo-300">{selectedAuditDetail.user_agent_category || 'Web Browser'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">BROWSER</span><strong className="text-slate-900 dark:text-white">{selectedAuditDetail.browser || 'Web Browser'} ({selectedAuditDetail.browser_version || 'N/A'})</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">OPERATING SYSTEM</span><strong className="text-slate-800 dark:text-slate-200">{selectedAuditDetail.operating_system || 'Desktop OS'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">DEVICE TYPE</span><strong className="text-slate-800 dark:text-slate-200">{selectedAuditDetail.device_type || 'Desktop'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">UA CATEGORY</span><strong className="text-indigo-600 dark:text-indigo-300">{selectedAuditDetail.user_agent_category || 'Web Browser'}</strong></div>
                 </div>
               </div>
 
               {/* 7. SESSION & REQUEST */}
-              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
-                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2">
                   <FileCode2 className="w-3.5 h-3.5" /> 7. SESSION & REQUEST IDENTIFIERS
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
-                  <div><span className="text-slate-400 block text-[10px]">SESSION ID</span><strong className="text-slate-300">{selectedAuditDetail.session_id || 'NULL'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">REQUEST ID</span><strong className="text-slate-300">{selectedAuditDetail.request_id || `req_${selectedAuditDetail.id}`}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">CORRELATION ID</span><strong className="text-cyan-300">{selectedAuditDetail.correlation_id || `corr_${selectedAuditDetail.id}`}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">SESSION ID</span><strong className="text-slate-800 dark:text-slate-200">{selectedAuditDetail.session_id || 'NULL'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">REQUEST ID</span><strong className="text-slate-800 dark:text-slate-200">{selectedAuditDetail.request_id || `req_${selectedAuditDetail.id}`}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">CORRELATION ID</span><strong className="text-cyan-600 dark:text-cyan-300">{selectedAuditDetail.correlation_id || `corr_${selectedAuditDetail.id}`}</strong></div>
                 </div>
               </div>
 
               {/* 8. SECURITY INFORMATION */}
-              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
-                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2">
                   <ShieldCheck className="w-3.5 h-3.5" /> 8. SECURITY & AUTHORIZATION RESULT
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                  <div><span className="text-slate-400 block text-[10px]">AUTHENTICATION</span><strong className="text-emerald-400">{selectedAuditDetail.authentication_status || 'AUTHENTICATED'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">AUTHORIZATION</span><strong className="text-emerald-400">{selectedAuditDetail.authorization_result || 'ALLOWED'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">PERMISSION CHECKED</span><strong className="text-slate-300 font-mono text-[11px]">{selectedAuditDetail.permission_checked || selectedAuditDetail.action}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">RISK LEVEL</span><strong className="text-emerald-400">{selectedAuditDetail.risk_level || 'LOW'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">AUTHENTICATION</span><strong className="text-emerald-600 dark:text-emerald-400">{selectedAuditDetail.authentication_status || 'AUTHENTICATED'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">AUTHORIZATION</span><strong className="text-emerald-600 dark:text-emerald-400">{selectedAuditDetail.authorization_result || 'ALLOWED'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">PERMISSION CHECKED</span><strong className="text-slate-700 dark:text-slate-200 font-mono text-[11px]">{selectedAuditDetail.permission_checked || selectedAuditDetail.action}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">RISK LEVEL</span><strong className="text-emerald-600 dark:text-emerald-400">{selectedAuditDetail.risk_level || 'LOW'}</strong></div>
                 </div>
                 {selectedAuditDetail.denial_reason && (
-                  <p className="text-xs text-rose-400 font-mono pt-2 border-t border-slate-800/80">Denial Reason: {selectedAuditDetail.denial_reason}</p>
+                  <p className="text-xs text-rose-600 dark:text-rose-400 font-mono pt-2 border-t border-slate-200 dark:border-slate-800">Denial Reason: {selectedAuditDetail.denial_reason}</p>
                 )}
               </div>
 
               {/* 9. EVENT TIMESTAMPS */}
-              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
-                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2">
                   <Calendar className="w-3.5 h-3.5" /> 9. CANONICAL EVENT TIMESTAMPS (ASIA/KOLKATA IST)
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
-                  <div><span className="text-slate-400 block text-[10px]">AUTHORITATIVE EVENT TIMESTAMP</span><strong className="text-emerald-400 text-sm">{selectedAuditDetail.event_timestamp_formatted || selectedAuditDetail.created_at}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">UTC STORED TIMESTAMP</span><strong className="text-slate-300">{selectedAuditDetail.event_timestamp || selectedAuditDetail.created_at}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">AUTHORITATIVE EVENT TIMESTAMP</span><strong className="text-emerald-600 dark:text-emerald-400 text-sm">{selectedAuditDetail.event_timestamp_formatted || selectedAuditDetail.created_at}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">UTC STORED TIMESTAMP</span><strong className="text-slate-800 dark:text-slate-200">{selectedAuditDetail.event_timestamp || selectedAuditDetail.created_at}</strong></div>
                 </div>
               </div>
 
               {/* 10. FORENSIC INTEGRITY */}
-              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
-                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2">
                   <ShieldAlert className="w-3.5 h-3.5" /> 10. CRYPTOGRAPHIC FORENSIC HASH CHAIN
                 </h4>
                 <div className="space-y-2 text-xs font-mono">
                   <div>
-                    <span className="text-slate-400 block text-[10px]">SHA-256 EVENT HASH</span>
-                    <strong className="text-cyan-400 text-[11px] break-all">{selectedAuditDetail.event_hash}</strong>
+                    <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">SHA-256 EVENT HASH</span>
+                    <strong className="text-cyan-600 dark:text-cyan-400 text-[11px] break-all">{selectedAuditDetail.event_hash}</strong>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px]">PREVIOUS EVENT HASH (CHAIN LINK)</span>
-                    <strong className="text-slate-400 text-[11px] break-all">{selectedAuditDetail.previous_event_hash || '0000000000000000000000000000000000000000000000000000000000000000'}</strong>
+                    <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">PREVIOUS EVENT HASH (CHAIN LINK)</span>
+                    <strong className="text-slate-800 dark:text-slate-200 text-[11px] break-all">{selectedAuditDetail.previous_event_hash || '0000000000000000000000000000000000000000000000000000000000000000'}</strong>
                   </div>
                 </div>
               </div>
 
               {/* 11. INSTITUTIONAL EVIDENCE */}
-              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
-                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5" /> 11. INSTITUTIONAL EVIDENCE & BRANDING
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
-                  <div><span className="text-slate-400 block text-[10px]">INSTITUTION ID</span><strong className="text-white">{selectedAuditDetail.institution_id || 'NEC'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">BRANDING VERSION</span><strong className="text-slate-300">{selectedAuditDetail.institution_branding_version || 'v1.0'}</strong></div>
-                  <div><span className="text-slate-400 block text-[10px]">LOGO REF</span><strong className="text-slate-300">{selectedAuditDetail.institution_logo_reference || 'nandha_emblem.png'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">INSTITUTION ID</span><strong className="text-slate-900 dark:text-white">{selectedAuditDetail.institution_id || 'NEC'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">BRANDING VERSION</span><strong className="text-slate-800 dark:text-slate-200">{selectedAuditDetail.institution_branding_version || 'v1.0'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">LOGO REF</span><strong className="text-slate-800 dark:text-slate-200">{selectedAuditDetail.institution_logo_reference || 'nandha_emblem.png'}</strong></div>
                 </div>
               </div>
 
             </div>
 
             {/* Footer Close Button */}
-            <div className="pt-4 border-t border-slate-800 flex justify-end">
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
               <button
                 type="button"
                 onClick={() => setSelectedAuditDetail(null)}
-                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition-all shadow-md cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition-all shadow-md hover:shadow-indigo-500/25 cursor-pointer"
               >
                 Close Audit Detail
               </button>

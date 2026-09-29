@@ -819,16 +819,6 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                   })()}
 
                   <button
-                    type="button"
-                    onClick={() => setShowEditOverlay(true)}
-                    className="shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-xs font-black shadow-md shadow-amber-500/30 transition-all cursor-pointer active:scale-95 touch-manipulation select-none"
-                    title="Edit Student Record"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>Edit</span>
-                  </button>
-
-                  <button
                     onClick={handleRefreshStudent}
                     disabled={refreshing}
                     className="shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-black shadow-md shadow-brand-600/30 transition-all cursor-pointer"

@@ -135,23 +135,23 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
       </div>
 
       {/* 2. EXPLAINABLE AI RISK PREDICTION ENGINE PANEL */}
-      <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
-              <ShieldAlert className="w-6 h-6 stroke-[2.5]" />
+      <div className="bg-white dark:bg-navy-950 rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start space-x-3 min-w-0 flex-1">
+            <div className="p-2.5 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5">
+              <ShieldAlert className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
             </div>
-            <div>
-              <h3 className="text-lg font-black text-slate-900 dark:text-white">AI Risk Prediction & Early Disengagement Warning</h3>
-              <p className="text-xs text-slate-500 font-bold">10-Signal Automated Risk Scoring & Explainable AI Diagnosis</p>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug break-words">AI Risk Prediction & Early Disengagement Warning</h3>
+              <p className="text-xs text-slate-500 font-bold mt-0.5">10-Signal Automated Risk Scoring & Explainable AI Diagnosis</p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
-            <span className={`px-3 py-1 rounded-xl text-xs font-black border ${getRiskBadgeColor(risk_engine.risk_level)}`}>
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            <span className={`px-2.5 py-1 rounded-xl text-xs font-black border whitespace-nowrap ${getRiskBadgeColor(risk_engine.risk_level)}`}>
               RISK SCORE: {risk_engine.risk_score}/100 ({risk_engine.risk_level})
             </span>
-            <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-navy-800 px-3 py-1 rounded-xl">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-navy-800 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-navy-700 whitespace-nowrap">
               Confidence: {risk_engine.confidence_pct}%
             </span>
           </div>
@@ -210,19 +210,19 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
       </div>
 
       {/* 3. DSA SKILL KNOWLEDGE MAP (16 TOPICS) */}
-      <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-              <BarChart2 className="w-6 h-6 stroke-[2.5]" />
+      <div className="bg-white dark:bg-navy-950 rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-start space-x-3 min-w-0 flex-1">
+            <div className="p-2.5 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5">
+              <BarChart2 className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
             </div>
-            <div>
-              <h3 className="text-lg font-black text-slate-900 dark:text-white">DSA Skill Knowledge Map (16 Topics)</h3>
-              <p className="text-xs text-slate-500 font-bold">Topic-Level Accuracy & Problem-Solving Proficiency</p>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug">DSA Skill Knowledge Map (16 Topics)</h3>
+              <p className="text-xs text-slate-500 font-bold mt-0.5">Topic-Level Accuracy & Problem-Solving Proficiency</p>
             </div>
           </div>
 
-          <span className="text-xs font-black text-slate-500">
+          <span className="text-xs font-black text-slate-500 shrink-0">
             Next Recommended: <strong className="text-brand-600 dark:text-brand-400">{profile.next_recommended_skill}</strong>
           </span>
         </div>
@@ -344,19 +344,19 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
       </div>
 
       {/* 5. PERSONALIZED 4-WEEK AI LEARNING PATH */}
-      <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
-              <BookOpen className="w-6 h-6 stroke-[2.5]" />
+      <div className="bg-white dark:bg-navy-950 rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start space-x-3 min-w-0 flex-1">
+            <div className="p-2.5 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5">
+              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
             </div>
-            <div>
-              <h3 className="text-lg font-black text-slate-900 dark:text-white">{learning_path.title}</h3>
-              <p className="text-xs text-slate-500 font-bold">Adaptive 4-Week Skill Roadmap Tailored to Student Weakness</p>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug break-words">{learning_path.title}</h3>
+              <p className="text-xs text-slate-500 font-bold mt-0.5">Adaptive 4-Week Skill Roadmap Tailored to Student Weakness</p>
             </div>
           </div>
 
-          <span className="px-3 py-1 rounded-xl text-xs font-black bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+          <span className="px-3 py-1 rounded-xl text-xs font-black bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shrink-0 self-start sm:self-auto whitespace-nowrap">
             WEEK {learning_path.current_week} OF 4 ACTIVE
           </span>
         </div>
