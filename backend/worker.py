@@ -13,7 +13,8 @@ from backend.migrate_db import run_db_migrations
 from backend.models import AdminSettingsModel
 
 async def heartbeat_loop():
-    """Write heartbeat to DB every 60s so web process can verify worker is alive."""
+    """Write heartbeat to DB and ping web API every 4min to keep Render Web Service 100% active 24/7 (eliminates 502 cold-starts)."""
+    counter = 0
     while True:
         try:
             with SessionLocal() as db:
@@ -27,6 +28,19 @@ async def heartbeat_loop():
                 db.commit()
         except Exception as e:
             logger.warning(f"[WORKER] Heartbeat error: {e}")
+
+        # Ping web service every 4 minutes (every 4 loops) to prevent Render free-tier sleep
+        counter += 1
+        if counter % 4 == 0:
+            try:
+                web_url = os.environ.get("WEB_SERVICE_URL", "https://leetcodeurl-s-ipfr.onrender.com/health")
+                import urllib.request
+                req = urllib.request.Request(web_url, headers={"User-Agent": "RenderWorkerKeepAlive/1.0"})
+                with urllib.request.urlopen(req, timeout=10) as _resp:
+                    logger.info("[WORKER_KEEP_ALIVE] Render Web Service keep-alive ping success (200 OK).")
+            except Exception as _ping_err:
+                logger.debug(f"[WORKER_KEEP_ALIVE] Ping note: {_ping_err}")
+
         await asyncio.sleep(60)
 
 async def run_worker():
