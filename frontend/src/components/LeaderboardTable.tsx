@@ -640,15 +640,15 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
             <span>Showing <strong className="text-slate-900 dark:text-white font-extrabold">{(currentPage - 1) * Number(pageSize) + 1}</strong> to <strong className="text-slate-900 dark:text-white font-extrabold">{Math.min(currentPage * Number(pageSize), effectiveStudents.length)}</strong> of <strong className="text-brand-600 dark:text-brand-400 font-extrabold">{effectiveStudents.length}</strong> solvers</span>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
             {/* Rows Per Page Selector */}
-            <div className="flex items-center space-x-1.5">
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
               <span className="text-[11px] font-bold text-slate-400">Per Page:</span>
               {(['25', '50', '100', '200'] as const).map((size) => (
                 <button
                   key={size}
                   type="button"
-                  onClick={() => setPageSize(size)}
+                  onClick={() => handlePageSizeChange(size)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
                     pageSize === size
                       ? 'bg-brand-600 text-white shadow-sm'
@@ -662,7 +662,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex items-center space-x-1">
+              <div className="flex flex-wrap items-center justify-center gap-1">
                 <button
                   type="button"
                   onClick={() => handlePageChange(1)}

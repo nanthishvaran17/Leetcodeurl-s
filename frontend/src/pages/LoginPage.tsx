@@ -52,6 +52,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Fix for mobile overscroll showing white body background
+  useEffect(() => {
+    const originalBg = document.body.style.backgroundColor;
+    document.body.style.setProperty('background-color', 'var(--bg-page)', 'important');
+    return () => {
+      document.body.style.backgroundColor = originalBg;
+      // also remove the property if it was empty originally
+      if (!originalBg) {
+        document.body.style.removeProperty('background-color');
+      }
+    };
+  }, []);
+
   // Proactive background server pre-warm to eliminate cold-start connection errors
   useEffect(() => {
     let active = true;

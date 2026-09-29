@@ -174,6 +174,15 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   onSaveSuccess
 }) => {
   const { notify } = useNotification();
+  
+  const [canClose, setCanClose] = useState(false);
+  useEffect(() => {
+    if (isOpen) {
+      setCanClose(false);
+      const timer = setTimeout(() => setCanClose(true), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   const [name, setName] = useState('');
   const [regNo, setRegNo] = useState('');
@@ -606,7 +615,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       style={{ zIndex: 99999999 }}
       onClick={(e) => {
         e.stopPropagation();
-        if (e.target === e.currentTarget && !isSaving) handleAttemptClose();
+        if (e.target === e.currentTarget && !isSaving && canClose) handleAttemptClose();
       }}
     >
       <div

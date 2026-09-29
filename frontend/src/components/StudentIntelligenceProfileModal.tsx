@@ -680,13 +680,14 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
   return typeof document !== 'undefined'
     ? createPortal(
         <div
-          className="fixed inset-0 z-[999999] bg-slate-900/50 backdrop-blur-md flex items-center justify-center animate-fade-in text-slate-900 font-sans p-2 sm:p-4 md:p-6"
+          id="modal-scroll-container"
+          className="fixed inset-0 z-[999999] bg-slate-900/50 backdrop-blur-md overflow-y-auto animate-fade-in text-slate-900 font-sans sm:p-4 md:p-6 flex flex-col"
           onClick={(e) => {
             if (e.target === e.currentTarget) onClose();
           }}
         >
           <div
-            className="w-full max-w-4xl lg:max-w-5xl h-[94vh] sm:h-[90vh] my-auto bg-white text-slate-900 shadow-2xl border border-slate-200 rounded-2xl sm:rounded-[32px] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+            className="w-full max-w-4xl lg:max-w-5xl h-full sm:h-auto min-h-[100dvh] sm:min-h-0 m-0 sm:my-auto sm:mx-auto bg-white text-slate-900 shadow-2xl sm:border border-slate-200 sm:rounded-[32px] flex flex-col animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 1. TOP HERO HEADER & IDENTITY */}
@@ -711,7 +712,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                     <ArrowLeft className="w-5 h-5" />
                   </button>
 
-                  <div className="min-w-0 flex-1 flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="min-w-0 flex-1 flex flex-row items-start sm:items-center gap-3">
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black text-xl sm:text-2xl shadow-xl border-2 border-white/20 shrink-0">
                       {st.name ? st.name.charAt(0).toUpperCase() : (initialStudent?.name?.charAt(0)?.toUpperCase() || 'S')}
                     </div>
@@ -822,11 +823,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        setShowEditOverlay(true);
-                      }}
+                      onClick={() => setShowEditOverlay(true)}
                       className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-xs font-black shadow-md shadow-amber-500/30 transition-all cursor-pointer active:scale-95 sm:hover:scale-[1.04] touch-manipulation select-none"
                       title="Edit Student Record"
                     >
@@ -854,8 +851,8 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
               </div>
             </div>
 
-            {/* TAB SELECTOR NAVIGATION BAR - SLEEK LIGHT HORIZONTAL SCROLL STRIP */}
-            <div className="bg-white px-3 sm:px-6 py-2.5 border-b border-slate-200 flex items-center gap-2 shrink-0 sticky top-0 z-20 overflow-x-auto no-scrollbar scroll-smooth">
+            {/* TAB SELECTOR NAVIGATION BAR - EQUAL SIZED GRID ON MOBILE */}
+            <div className="bg-white px-3 sm:px-6 py-3 border-b border-slate-200 grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-start gap-2 shrink-0 sticky top-0 z-50">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -863,8 +860,9 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                     key={tab.id}
                     onClick={() => {
                       setActiveTab(tab.id as any);
+                      document.getElementById('modal-scroll-container')?.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                    className={`px-2 py-2 sm:px-3.5 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] sm:text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center sm:justify-start gap-1.5 w-full ${
                       isActive
                         ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30 border border-brand-500 scale-[1.02]'
                         : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 hover:text-slate-900 border border-slate-200'
@@ -878,7 +876,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
             </div>
 
             {/* 2. MAIN CONTENT BODY (BRIGHT LIGHT THEME) */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50 text-slate-900">
+            <div className="flex-1 p-4 sm:p-6 bg-slate-50 text-slate-900 flex flex-col gap-6 pb-24">
               {loading ? (
                 <div className="py-24 flex flex-col items-center justify-center gap-3">
                   <RefreshCw className="w-10 h-10 text-brand-600 animate-spin" />
@@ -891,7 +889,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                 <>
                   {/* TAB 1: EXECUTIVE PERFORMANCE KPI DASHBOARD */}
                   {activeTab === 'overview' && (
-                    <div className="space-y-4 animate-fade-in">
+                    <div id="overview" className="space-y-4 animate-fade-in scroll-mt-20">
                       <div className="flex items-center justify-between">
                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                           <Activity className="w-4 h-4 text-brand-600" />
@@ -979,7 +977,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   {/* TAB 2: DSA / PROBLEM-SOLVING DIFFICULTY INTELLIGENCE */}
                   {activeTab === 'dsa' && (
-                    <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 animate-fade-in">
+                    <div id="dsa" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 animate-fade-in scroll-mt-20">
                       <div className="flex items-center justify-between">
                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                           <Brain className="w-4 h-4 text-indigo-600" />
@@ -1105,7 +1103,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   {/* TAB 3: CONTEST INTELLIGENCE */}
                   {activeTab === 'contests' && (
-                    <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 animate-fade-in">
+                    <div id="contests" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 animate-fade-in scroll-mt-20">
                       <div className="flex items-center justify-between">
                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                           <Trophy className="w-4 h-4 text-purple-600" />
@@ -1234,7 +1232,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   {/* TAB 4: CODING ACTIVITY HEATMAP */}
                   {activeTab === 'activity' && (
-                    <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 animate-fade-in">
+                    <div id="activity" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 animate-fade-in scroll-mt-20">
                       <div className="flex items-center justify-between">
                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                           <Zap className="w-4 h-4 text-amber-500" />
@@ -1323,7 +1321,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   {/* TAB 5: DEDICATED RECENT SUBMISSIONS PAGE */}
                   {activeTab === 'submissions' && (
-                    <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 animate-fade-in">
+                    <div id="submissions" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 animate-fade-in scroll-mt-20">
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div>
                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
@@ -1403,7 +1401,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   {/* TAB 6: EARNED BADGES & ACHIEVEMENTS */}
                   {activeTab === 'badges' && (
-                    <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 animate-fade-in">
+                    <div id="badges" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 animate-fade-in scroll-mt-20">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
@@ -1469,7 +1467,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   {/* TAB 7: LANGUAGE INTELLIGENCE */}
                   {activeTab === 'languages' && (
-                    <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 animate-fade-in">
+                    <div id="languages" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 animate-fade-in scroll-mt-20">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
@@ -1531,7 +1529,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   {/* TAB 8: TOPIC & SKILL INTELLIGENCE */}
                   {activeTab === 'topics' && (
-                    <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 animate-fade-in">
+                    <div id="topics" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 animate-fade-in scroll-mt-20">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
