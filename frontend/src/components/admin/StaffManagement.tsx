@@ -526,19 +526,19 @@ export const StaffManagement: React.FC = () => {
                             </div>
 
                             <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <h4 className="font-bold text-sm text-slate-900 dark:text-white leading-snug break-words">
+                              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                                <h4 className="font-bold text-sm text-slate-900 dark:text-white leading-snug truncate flex-1">
                                   {staff.full_name || staff.username}
                                 </h4>
                                 {staff.role === 'Super Admin' && (
-                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0">
                                     ROOT
                                   </span>
                                 )}
                               </div>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium break-all flex items-center gap-1 mt-0.5">
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1 mt-0.5 min-w-0">
                                 <Mail className="w-3 h-3 text-brand-500 shrink-0" />
-                                <span>{staff.email || `@${staff.username}`}</span>
+                                <span className="truncate">{staff.email || `@${staff.username}`}</span>
                               </p>
                             </div>
                           </div>
