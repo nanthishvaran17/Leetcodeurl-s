@@ -553,6 +553,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         width={828}
         height={600}
       />
+      <div className="mobile-lcp-hero-overlay hide-on-desktop" aria-hidden="true" />
       {/* ========================================================
           MOBILE HERO / HEADER: Official Floating Institutional Branding
           ======================================================== */}
