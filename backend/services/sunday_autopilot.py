@@ -1034,7 +1034,18 @@ class SundayAutopilotCoordinator:
             db, session_id = db_or_session_id, None
         else:
             session_id = db_or_session_id
-        return weekly_contest_autopilot.phase_3_live_monitoring_cycle(session_id, db)
+        res = weekly_contest_autopilot.phase_3_live_monitoring_cycle(session_id, db)
+        try:
+            from backend.websocket_manager import connection_manager
+            await connection_manager.broadcast({
+                "type": "SYNC_COMPLETED",
+                "job_id": "sunday_autopilot_live_monitor",
+                "status": "success",
+                "summary": "Live telemetry synchronized"
+            })
+        except Exception as e:
+            logger.warning(f"[AUTOPILOT] Failed to broadcast SYNC_COMPLETED after live monitoring cycle: {e}")
+        return res
 
     @classmethod
     async def phase_4_finalization_0930(cls, db_or_session_id: Any = None, db: Optional[Session] = None) -> Dict[str, Any]:
