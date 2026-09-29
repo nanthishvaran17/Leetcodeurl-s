@@ -296,7 +296,7 @@ export const StaffDashboardView: React.FC = () => {
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-indigo-500/30">
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1 min-w-0">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-black border border-indigo-400/30">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>MY MENTORING DASHBOARD</span>

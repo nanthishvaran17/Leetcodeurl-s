@@ -89,7 +89,7 @@ export const StudentDashboardView: React.FC = () => {
               </div>
             )}
 
-            <div className="space-y-1">
+            <div className="space-y-1 flex-1 min-w-0">
               <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 text-brand-300 text-xs font-black border border-brand-400/30">
                 <Shield className="w-3.5 h-3.5 text-amber-400" />
                 <span>AUTHENTICATED STUDENT DASHBOARD</span>

@@ -75,7 +75,8 @@ const CustomSelect: React.FC<{
   options: { label: string; value: string; icon?: React.ReactNode; badge?: string; badgeColor?: string }[];
   placeholder: string;
   icon?: React.ReactNode;
-}> = ({ value, onChange, options, placeholder, icon }) => {
+  alignRight?: boolean;
+}> = ({ value, onChange, options, placeholder, icon, alignRight = false }) => {
   const [open, setOpen] = useState(false);
   const selected = options.find(o => o.value === value);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -120,7 +121,7 @@ const CustomSelect: React.FC<{
       </button>
 
       {open && (
-        <div className="absolute z-50 top-[110%] left-0 w-full min-w-[220px] sm:min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up">
+        <div className={`absolute z-50 top-[110%] ${alignRight ? 'right-0' : 'left-0'} w-[240px] sm:min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up`}>
           <button
             onClick={() => { onChange(''); setOpen(false); }}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
@@ -1125,6 +1126,7 @@ export const FacultyActionCenter: React.FC = () => {
             onChange={v => { setFilterYear(v); setPage(1); }}
             placeholder="All Years"
             icon={<GraduationCap size={15} />}
+            alignRight={true}
             options={[
               { label: 'I Year', value: 'I Year', icon: <User size={14} />, badge: 'Y1', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' },
               { label: 'II Year', value: 'II Year', icon: <User size={14} />, badge: 'Y2', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
@@ -1135,7 +1137,7 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
 
         {/* Count & Page Size Toggle */}
-        <div className="w-full flex items-center justify-between xl:w-auto xl:ml-auto gap-3 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-navy-800">
+        <div className="w-full flex flex-wrap items-center justify-between xl:w-auto xl:ml-auto gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-navy-800">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-xs font-bold text-slate-600 dark:text-navy-300 truncate">
               {filteredCount === totalCount ? (
@@ -1300,8 +1302,8 @@ export const FacultyActionCenter: React.FC = () => {
                       <h4 className="font-bold text-sm text-slate-800 dark:text-white truncate">
                         {item.student_name}
                       </h4>
-                      <div className="text-[11.5px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                        <span className="font-mono text-slate-600 dark:text-slate-300">{item.reg_no}</span> · {item.department_code} · {formatYearLevel(item.year_level)}
+                      <div className="text-[11.5px] font-bold text-slate-600 dark:text-slate-300 truncate mt-0.5">
+                        <span className="font-mono font-black text-slate-800 dark:text-slate-100">{item.reg_no}</span> · {item.department_code} · {formatYearLevel(item.year_level)}
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
@@ -1315,29 +1317,29 @@ export const FacultyActionCenter: React.FC = () => {
                   {/* Stats & Signal Grid */}
                   <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-navy-900/60 p-2.5 rounded-xl text-xs border border-slate-100 dark:border-navy-800">
                     <div>
-                      <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Coding Stats</div>
-                      <div className="font-mono font-bold text-slate-700 dark:text-slate-200 mt-0.5 text-[11.5px]">
-                        Solved: {item.total_solved} <span className="text-slate-400 font-normal">| R: {item.current_rating || 0}</span>
+                      <div className="text-[10px] uppercase font-black text-slate-700 dark:text-slate-300">Coding Stats</div>
+                      <div className="font-mono font-bold text-slate-800 dark:text-slate-100 mt-0.5 text-[11.5px]">
+                        Solved: {item.total_solved} <span className="text-slate-600 dark:text-slate-300 font-semibold">| R: {item.current_rating || 0}</span>
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Signal Trigger</div>
-                      <div className="font-semibold text-slate-700 dark:text-slate-300 truncate mt-0.5 text-[11.5px]" title={item.signal_type}>
+                      <div className="text-[10px] uppercase font-black text-slate-700 dark:text-slate-300">Signal Trigger</div>
+                      <div className="font-bold text-slate-800 dark:text-slate-200 truncate mt-0.5 text-[11.5px]" title={item.signal_type}>
                         {formatSignalLabel(item.signal_type)}
                       </div>
                     </div>
                   </div>
 
                   {/* Mentor & Due Date Row */}
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                  <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300">
                     <div className="flex items-center gap-1.5 truncate max-w-[60%]">
-                      <User size={12} className="text-slate-400 shrink-0" />
-                      <span className="truncate font-medium text-slate-700 dark:text-slate-300 text-[11.5px]">
+                      <User size={12} className="text-slate-500 dark:text-slate-400 shrink-0" />
+                      <span className="truncate font-bold text-slate-800 dark:text-slate-200 text-[11.5px]">
                         {item.assigned_faculty_name || 'Unassigned'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-[11px] font-mono shrink-0">
-                      <Calendar size={12} className="text-slate-400" />
+                    <div className="flex items-center gap-1 text-[11px] font-mono shrink-0 text-slate-700 dark:text-slate-300 font-bold">
+                      <Calendar size={12} className="text-slate-500 dark:text-slate-400" />
                       <span>{formatDate(item.due_date)}</span>
                     </div>
                   </div>

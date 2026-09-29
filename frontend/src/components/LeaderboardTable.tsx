@@ -552,7 +552,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       )}
 
 
-      <div className="responsive-table-container w-full min-w-0 overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm bg-white dark:bg-navy-950 flex flex-col">
+      <div className="responsive-table-container w-full min-w-0 overflow-x-auto md:rounded-2xl md:border md:border-slate-200 md:dark:border-navy-800 md:shadow-sm md:bg-white md:dark:bg-navy-950 flex flex-col space-y-4 md:space-y-0">
         {/* Table Header Wrapper (Sticky) */}
         <div className="hidden md:flex bg-slate-100/90 dark:bg-navy-900 text-slate-800 dark:text-slate-100 font-extrabold border-b border-slate-300 dark:border-navy-700 uppercase tracking-wider text-xs w-full min-w-full md:min-w-[1100px] items-center py-3.5">
           <div className="flex-none w-10 px-3 text-center">
@@ -584,7 +584,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               <span className="text-sm font-bold text-slate-800 dark:text-slate-200">No students match the selected filters.</span>
             </div>
           ) : (
-            paginatedStudents.length > 50 ? (
+            (paginatedStudents.length > 50 && (typeof window !== 'undefined' && window.innerWidth >= 768)) ? (
               <List
                 height={800}
                 itemCount={paginatedStudents.length}
@@ -612,7 +612,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 }}
               </List>
             ) : (
-              <div className="flex flex-col space-y-1">
+              <div className="flex flex-col space-y-4 md:space-y-1">
                 {paginatedStudents.map((student, idx) => (
                   <FastStudentRow
                     key={student.id}
@@ -635,39 +635,41 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
       {/* Sleek Ultra-Fast Pagination Bar */}
       {effectiveStudents.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 mt-3 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-2xl text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-sm">
-          <div className="flex items-center space-x-2">
+        <div className="flex flex-col sm:flex-row flex-wrap items-center justify-between gap-4 p-4 mt-3 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-2xl text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-sm w-full overflow-hidden">
+          <div className="flex items-center justify-center w-full sm:w-auto space-x-2 text-center sm:text-left">
             <span>Showing <strong className="text-slate-900 dark:text-white font-extrabold">{(currentPage - 1) * Number(pageSize) + 1}</strong> to <strong className="text-slate-900 dark:text-white font-extrabold">{Math.min(currentPage * Number(pageSize), effectiveStudents.length)}</strong> of <strong className="text-brand-600 dark:text-brand-400 font-extrabold">{effectiveStudents.length}</strong> solvers</span>
           </div>
 
-          <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-4 w-full sm:w-auto">
             {/* Rows Per Page Selector */}
-            <div className="flex flex-wrap items-center justify-center gap-1.5">
-              <span className="text-[11px] font-bold text-slate-400">Per Page:</span>
-              {(['25', '50', '100', '200'] as const).map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => handlePageSizeChange(size)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                    pageSize === size
-                      ? 'bg-brand-600 text-white shadow-sm'
-                      : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-700'
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <span className="text-[11px] font-bold text-slate-400 whitespace-nowrap">Per Page:</span>
+              <div className="flex flex-wrap items-center justify-center gap-1.5">
+                {(['25', '50', '100', '200'] as const).map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => handlePageSizeChange(size)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      pageSize === size
+                        ? 'bg-brand-600 text-white shadow-sm'
+                        : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-700'
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex flex-wrap items-center justify-center gap-1">
+              <div className="flex flex-wrap items-center justify-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => handlePageChange(1)}
                   disabled={currentPage === 1}
-                  className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold"
                   title="First Page"
                 >
                   «
@@ -676,26 +678,28 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                   type="button"
                   onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold"
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold flex items-center gap-1"
                 >
-                  ‹ Prev
+                  <span>‹</span>
+                  <span className="hidden sm:inline">Prev</span>
                 </button>
-                <span className="px-2 font-mono font-bold text-slate-900 dark:text-white">
+                <span className="px-3 font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
                   {currentPage} / {totalPages}
                 </span>
                 <button
                   type="button"
                   onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold"
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold flex items-center gap-1"
                 >
-                  Next ›
+                  <span className="hidden sm:inline">Next</span>
+                  <span>›</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handlePageChange(totalPages)}
                   disabled={currentPage === totalPages}
-                  className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-navy-700 disabled:opacity-40 font-bold"
                   title="Last Page"
                 >
                   »

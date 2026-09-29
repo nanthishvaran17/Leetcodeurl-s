@@ -159,6 +159,26 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { data: initialStudents = [] } = useStudentsQuery();
+  const globalTotalCount = initialStudents.length > 0 ? initialStudents.length : 0;
+
+  // Local state for debounced search
+  const [localSearch, setLocalSearch] = useState(filters.searchQuery || '');
+
+  // Sync if filter changes from outside
+  useEffect(() => {
+    setLocalSearch(filters.searchQuery || '');
+  }, [filters.searchQuery]);
+
+  // Debounce logic
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (filters.searchQuery !== localSearch) {
+        filters.setSearchQuery(localSearch);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [localSearch, filters]);
 
   // New Student Form State
   const [regNo, setRegNo] = useState('');
@@ -436,12 +456,8 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           <div className="space-y-3.5 max-w-2xl">
             {/* Live Pulsing Badge */}
             <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black uppercase tracking-wider backdrop-blur-md shadow-xs">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
               <UserPlus className="w-3.5 h-3.5 text-amber-400" />
-              <span>STUDENT DIRECTORY — {serverTotalCount} ENROLLED</span>
+              <span>STUDENT DIRECTORY — {globalTotalCount || serverTotalCount} ENROLLED</span>
             </div>
 
             <div className="space-y-1.5">
@@ -508,14 +524,14 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           <Search className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" />
           <input
             type="text"
-            value={filters.searchQuery}
-            onChange={(e) => filters.setSearchQuery(e.target.value)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             placeholder="Search name, register no, username..."
             className="w-full pl-12 pr-12 py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all"
           />
-          {filters.searchQuery && (
+          {localSearch && (
             <button
-              onClick={() => filters.setSearchQuery('')}
+              onClick={() => setLocalSearch('')}
               className="absolute right-3 top-3 p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
               title="Clear search"
             >

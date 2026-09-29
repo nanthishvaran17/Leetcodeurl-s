@@ -912,11 +912,11 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                             Copy Password
                           </button>
                         </div>
-                        <div className="flex items-center justify-between text-xs bg-white dark:bg-navy-950 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-navy-700">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs bg-white dark:bg-navy-950 px-3 py-2.5 rounded-xl border border-emerald-100 dark:border-navy-700">
                           <span className="font-mono font-black text-emerald-700 dark:text-emerald-300 tracking-wider">
                             {tempPasswordResult.password}
                           </span>
-                          <span className="text-[10px] text-slate-500">
+                          <span className="text-[10px] text-slate-500 break-all sm:break-words">
                             Dispatched to {tempPasswordResult.email}
                           </span>
                         </div>
