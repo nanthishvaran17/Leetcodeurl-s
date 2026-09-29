@@ -607,9 +607,9 @@ async def get_students(
                 st_out.overall_participation_mode = "PUBLIC" if is_att else "NONE"  # type: ignore
                 st_out.contest_status = pub_res.participation_status or "NOT_ATTENDED"
                 st_out.public_contest_result = ContestResultOut(  # type: ignore
-                    contest_name=pub_res.session.contest_name if pub_res.session else target_contest_name,
+                    contest_name=target_contest_name,
                     contest_number=c_num,
-                    contest_date=pub_res.session.session_date if pub_res.session else target_contest_date,
+                    contest_date=target_contest_date,
                     questions_solved=tot_solved if is_att else 0,
                     questions_total=4,
                     score_display=score_disp,
