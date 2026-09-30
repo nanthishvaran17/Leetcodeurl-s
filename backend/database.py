@@ -622,11 +622,10 @@ def run_migrations():
         import logging
         logging.warning(f"PostgreSQL migration check completed: {e}")
 
-    # SQLite-specific column migrations and triggers (only run on SQLite)
-    if engine.dialect.name == "sqlite":
-        try:
-            with engine.connect() as conn:
-                # Check leetcode_profile_stats columns
+    try:
+        with engine.connect() as conn:
+            # Check leetcode_profile_stats columns
+            if engine.dialect.name == "sqlite":
                 result = conn.execute(
                     sqlalchemy.text("PRAGMA table_info(leetcode_profile_stats)")
                 )
