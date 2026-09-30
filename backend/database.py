@@ -330,15 +330,49 @@ def run_migrations():
 
                 migration_statements = [
                     """
+                    ALTER TABLE users
+                        ADD COLUMN IF NOT EXISTS full_name VARCHAR(150),
+                        ADD COLUMN IF NOT EXISTS designation VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS institutional_id VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30),
+                        ADD COLUMN IF NOT EXISTS whatsapp_verified BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS date_of_birth DATE,
+                        ADD COLUMN IF NOT EXISTS profile_photo TEXT,
+                        ADD COLUMN IF NOT EXISTS department_id INTEGER,
+                        ADD COLUMN IF NOT EXISTS section_id INTEGER,
+                        ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20),
+                        ADD COLUMN IF NOT EXISTS mentoring_role VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS require_password_change BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
+                        ADD COLUMN IF NOT EXISTS last_login TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS last_activity TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS is_2fa_enabled BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        ADD COLUMN IF NOT EXISTS reporting_manager_id INTEGER;
+                    """,
+                    """
                     ALTER TABLE students
+                        ADD COLUMN IF NOT EXISTS people_id VARCHAR(50),
                         ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
                         ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
                         ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none',
                         ADD COLUMN IF NOT EXISTS accommodation VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS twelfth_cutoff DOUBLE PRECISION;
+                        ADD COLUMN IF NOT EXISTS twelfth_cutoff DOUBLE PRECISION,
+                        ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30),
+                        ADD COLUMN IF NOT EXISTS whatsapp_verified BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS date_of_birth DATE,
+                        ADD COLUMN IF NOT EXISTS batch VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS institutional_email VARCHAR(150),
+                        ADD COLUMN IF NOT EXISTS email_status VARCHAR(50) DEFAULT 'pending',
+                        ADD COLUMN IF NOT EXISTS allocation VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS codeforces_username VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS hackerrank_username VARCHAR(100);
                     """,
                     """
                     ALTER TABLE student_contest_participations
+                        ADD COLUMN IF NOT EXISTS is_public_attended BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS is_virtual_attended BOOLEAN DEFAULT FALSE,
                         ADD COLUMN IF NOT EXISTS official_attendance_state VARCHAR(30),
                         ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE,
                         ADD COLUMN IF NOT EXISTS frozen_at TIMESTAMP WITH TIME ZONE,
@@ -431,6 +465,26 @@ def run_migrations():
                     """,
                     """
                     ALTER TABLE weekly_sessions
+                        ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20) DEFAULT '2026-27',
+                        ADD COLUMN IF NOT EXISTS week_number INTEGER,
+                        ADD COLUMN IF NOT EXISTS session_code VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS session_date VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS contest_id VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS contest_name VARCHAR(150),
+                        ADD COLUMN IF NOT EXISTS start_time VARCHAR(20) DEFAULT '08:00',
+                        ADD COLUMN IF NOT EXISTS end_time VARCHAR(20) DEFAULT '09:30',
+                        ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'SCHEDULED',
+                        ADD COLUMN IF NOT EXISTS baseline_snapshot_id VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS final_snapshot_id VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS total_students INTEGER DEFAULT 273,
+                        ADD COLUMN IF NOT EXISTS official_participants INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS virtual_participants INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS not_participated INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS failed_verification INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS dataset_hash VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS finalized_at TIMESTAMP WITH TIME ZONE,
                         ADD COLUMN IF NOT EXISTS manual_review_required_at TIMESTAMP WITH TIME ZONE,
                         ADD COLUMN IF NOT EXISTS manual_review_reason TEXT,
                         ADD COLUMN IF NOT EXISTS last_successful_source_fetch TIMESTAMP WITH TIME ZONE,
@@ -440,6 +494,98 @@ def run_migrations():
                         ADD COLUMN IF NOT EXISTS last_error_message_safe TEXT,
                         ADD COLUMN IF NOT EXISTS finalization_method VARCHAR(50),
                         ADD COLUMN IF NOT EXISTS finalized_by VARCHAR(150);
+                    """,
+                    """
+                    ALTER TABLE leetcode_profile_stats
+                        ADD COLUMN IF NOT EXISTS sync_status VARCHAR(50) DEFAULT 'not_started',
+                        ADD COLUMN IF NOT EXISTS source VARCHAR(100) DEFAULT 'leetcode_public_profile',
+                        ADD COLUMN IF NOT EXISTS last_verified_at TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS last_attempt_at TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS retry_count INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS fetch_duration DOUBLE PRECISION,
+                        ADD COLUMN IF NOT EXISTS validation_status VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS error_code VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS recent_contest_name VARCHAR(150),
+                        ADD COLUMN IF NOT EXISTS recent_contest_score VARCHAR(20),
+                        ADD COLUMN IF NOT EXISTS source_total_solved INTEGER,
+                        ADD COLUMN IF NOT EXISTS derived_total_solved INTEGER;
+                    """,
+                    """
+                    ALTER TABLE hod_snapshots
+                        ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20) DEFAULT '2026-27',
+                        ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'READY',
+                        ADD COLUMN IF NOT EXISTS created_by VARCHAR(150) DEFAULT 'HOD / System',
+                        ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP WITH TIME ZONE;
+                    """,
+                    """
+                    ALTER TABLE weekly_public_results
+                        ADD COLUMN IF NOT EXISTS data_fetch_status VARCHAR(50) DEFAULT 'DATA_UNAVAILABLE',
+                        ADD COLUMN IF NOT EXISTS confidence VARCHAR(50) DEFAULT 'UNVERIFIED';
+                    """,
+                    """
+                    ALTER TABLE sync_jobs
+                        ADD COLUMN IF NOT EXISTS progress DOUBLE PRECISION DEFAULT 0.0,
+                        ADD COLUMN IF NOT EXISTS processed_count INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS last_synced_at TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS error_message TEXT;
+                    """,
+                    """
+                    ALTER TABLE official_weekly_snapshots
+                        ADD COLUMN IF NOT EXISTS is_superseded BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS superseded_by_id INTEGER;
+                    """,
+                    """
+                    ALTER TABLE email_otp_records
+                        ADD COLUMN IF NOT EXISTS delivery_status VARCHAR(50) DEFAULT 'PENDING',
+                        ADD COLUMN IF NOT EXISTS provider_message_id VARCHAR(255);
+                    """,
+                    """
+                    ALTER TABLE email_dispatch_logs
+                        ADD COLUMN IF NOT EXISTS email_id VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS report_id VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS session_id INTEGER,
+                        ADD COLUMN IF NOT EXISTS idempotency_key VARCHAR(255),
+                        ADD COLUMN IF NOT EXISTS recipient VARCHAR(150),
+                        ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'HOD',
+                        ADD COLUMN IF NOT EXISTS subject VARCHAR(255),
+                        ADD COLUMN IF NOT EXISTS dispatch_type VARCHAR(30) DEFAULT 'AUTOMATED',
+                        ADD COLUMN IF NOT EXISTS provider VARCHAR(50) DEFAULT 'BREVO_API',
+                        ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'QUEUED',
+                        ADD COLUMN IF NOT EXISTS attachment_count INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS total_attachment_bytes INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS error_message TEXT,
+                        ADD COLUMN IF NOT EXISTS retry_count INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS sent_at TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE;
+                    """,
+                    """
+                    ALTER TABLE faculty_action_queue
+                        ADD COLUMN IF NOT EXISTS priority_score INTEGER DEFAULT 20,
+                        ADD COLUMN IF NOT EXISTS signal_type VARCHAR(80) DEFAULT 'ROUTINE_MONITORING',
+                        ADD COLUMN IF NOT EXISTS contest_id VARCHAR(60),
+                        ADD COLUMN IF NOT EXISTS assigned_faculty_name VARCHAR(150),
+                        ADD COLUMN IF NOT EXISTS due_date TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS follow_up_date TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS next_review_date TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS action_taken TEXT,
+                        ADD COLUMN IF NOT EXISTS faculty_notes TEXT,
+                        ADD COLUMN IF NOT EXISTS evidence_remarks TEXT,
+                        ADD COLUMN IF NOT EXISTS is_escalated BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS escalated_to VARCHAR(150),
+                        ADD COLUMN IF NOT EXISTS escalated_at TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS resolved_at TIMESTAMP WITH TIME ZONE;
+                    """,
+                    """
+                    ALTER TABLE messages
+                        ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS read_at TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS is_edited BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS is_deleted_everyone BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS deleted_by_users TEXT DEFAULT '[]',
+                        ADD COLUMN IF NOT EXISTS reply_to_message_id VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS reactions TEXT DEFAULT '{}',
+                        ADD COLUMN IF NOT EXISTS attachment_file_id VARCHAR(100);
                     """
                 ]
                 for stmt in migration_statements:
@@ -476,24 +622,26 @@ def run_migrations():
         import logging
         logging.warning(f"PostgreSQL migration check completed: {e}")
 
-    try:
-        with engine.connect() as conn:
-            # Check leetcode_profile_stats columns
-            result = conn.execute(
-                sqlalchemy.text("PRAGMA table_info(leetcode_profile_stats)")
-            )
-            existing_cols = {row[1] for row in result}
+    # SQLite-specific column migrations and triggers (only run on SQLite)
+    if engine.dialect.name == "sqlite":
+        try:
+            with engine.connect() as conn:
+                # Check leetcode_profile_stats columns
+                result = conn.execute(
+                    sqlalchemy.text("PRAGMA table_info(leetcode_profile_stats)")
+                )
+                existing_cols = {row[1] for row in result}
 
-            migrations = [
-                ("sync_status",     "ALTER TABLE leetcode_profile_stats ADD COLUMN sync_status VARCHAR DEFAULT 'success'"),
-                ("source",          "ALTER TABLE leetcode_profile_stats ADD COLUMN source VARCHAR DEFAULT 'leetcode_public_profile'"),
-                ("last_verified_at","ALTER TABLE leetcode_profile_stats ADD COLUMN last_verified_at DATETIME"),
-            ]
-            for col_name, sql in migrations:
-                if col_name not in existing_cols:
-                    conn.execute(sqlalchemy.text(sql))
-                    conn.commit()
-                    print(f"[DB Migration] Added column: {col_name}")
+                migrations = [
+                    ("sync_status",     "ALTER TABLE leetcode_profile_stats ADD COLUMN sync_status VARCHAR DEFAULT 'success'"),
+                    ("source",          "ALTER TABLE leetcode_profile_stats ADD COLUMN source VARCHAR DEFAULT 'leetcode_public_profile'"),
+                    ("last_verified_at","ALTER TABLE leetcode_profile_stats ADD COLUMN last_verified_at DATETIME"),
+                ]
+                for col_name, sql in migrations:
+                    if col_name not in existing_cols:
+                        conn.execute(sqlalchemy.text(sql))
+                        conn.commit()
+                        print(f"[DB Migration] Added column: {col_name}")
 
             # Check hod_snapshots columns
             result_hod = conn.execute(
@@ -1254,3 +1402,7 @@ def run_migrations():
             print(f"[DB Migration] PostgreSQL index note: {_pge}")
 
 # Migrations are deferred to FastAPI lifespan in main.py to prevent blocking port binding.
+if __name__ == "__main__":
+    print("[DB] Running migrations manually...")
+    run_migrations()
+    print("[DB] Migrations completed successfully.")
