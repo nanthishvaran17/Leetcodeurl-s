@@ -293,17 +293,17 @@ export const StaffDashboardView: React.FC = () => {
       <LiveContestPanel />
 
       {/* Staff Mentoring Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-indigo-500/30">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-4 sm:p-6 md:p-8 shadow-lg border border-indigo-500/30">
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-2 flex-1 min-w-0">
+          <div className="space-y-2 flex-1 min-w-0 max-w-full">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-black border border-indigo-400/30">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>MY MENTORING DASHBOARD</span>
             </div>
             <AnimatedWelcomeHeading
-              className="text-lg sm:text-2xl md:text-3xl font-black text-white leading-tight uppercase max-w-full"
-              nameClassName="text-indigo-300"
+              className="text-white uppercase max-w-full"
+              nameClassName="text-indigo-300 font-extrabold"
             />
             <p className="text-sm md:text-base text-slate-300 font-medium">Your mentoring dashboard is ready.</p>
             <p className="text-xs text-slate-300 flex items-center gap-2">

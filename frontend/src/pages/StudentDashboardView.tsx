@@ -73,30 +73,30 @@ export const StudentDashboardView: React.FC = () => {
     <div className="space-y-8 py-2">
 
       {/* Student Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-brand-950 text-white p-8 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-brand-950 text-white p-4 sm:p-6 md:p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-6">
-          <div className="flex items-center space-x-5">
+          <div className="flex items-center space-x-5 flex-1 min-w-0 max-w-full">
             {user?.photoURL ? (
               <img
                 src={user.photoURL}
                 alt={user.name}
-                className="w-20 h-20 rounded-3xl border-4 border-brand-400 shadow-xl object-cover"
+                className="w-20 h-20 rounded-3xl border-4 border-brand-400 shadow-xl object-cover shrink-0"
               />
             ) : (
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-brand-600 to-indigo-600 font-black text-2xl flex items-center justify-center shadow-xl border-2 border-white/20">
+              <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-brand-600 to-indigo-600 font-black text-2xl flex items-center justify-center shadow-xl border-2 border-white/20 shrink-0">
                 {user?.name ? user.name[0] : 'S'}
               </div>
             )}
 
-            <div className="space-y-1 flex-1 min-w-0">
+            <div className="space-y-1 flex-1 min-w-0 max-w-full">
               <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 text-brand-300 text-xs font-black border border-brand-400/30">
                 <Shield className="w-3.5 h-3.5 text-amber-400" />
                 <span>AUTHENTICATED STUDENT DASHBOARD</span>
               </div>
               <AnimatedWelcomeHeading
-                className="text-lg sm:text-2xl md:text-3xl font-black text-white leading-tight uppercase max-w-full"
-                nameClassName="text-brand-300"
+                className="text-white uppercase max-w-full"
+                nameClassName="text-brand-300 font-extrabold"
               />
               <p className="text-sm md:text-base text-slate-300 font-medium pb-1">Track your LeetCode progress, contests, and learning activity.</p>
               <p className="text-xs text-slate-300 font-mono font-bold">

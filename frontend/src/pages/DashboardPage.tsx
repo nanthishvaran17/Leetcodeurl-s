@@ -475,16 +475,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-2 pb-2 animate-page-enter w-full">
       
       {/* 1. INSTITUTIONAL PERFORMANCE OVERVIEW */}
-      <div className="stagger-1 relative overflow-hidden rounded-3xl bg-slate-900/95 dark:bg-navy-950/95 text-white p-6 sm:p-8 shadow-2xl border border-slate-700/80 dark:border-brand-500/30">
+      <div className="stagger-1 relative overflow-hidden rounded-3xl bg-slate-900/95 dark:bg-navy-950/95 text-white p-4 sm:p-6 lg:p-8 shadow-2xl border border-slate-700/80 dark:border-brand-500/30">
         
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8">
           {/* Left: Title & Description */}
-          <div className="space-y-3.5 min-w-0 flex-1">
+          <div className="space-y-3.5 min-w-0 flex-1 max-w-full">
 
 
             <AnimatedWelcomeHeading
-              className="text-lg sm:text-2xl lg:text-3xl font-display font-extrabold tracking-tight text-white uppercase leading-tight drop-shadow-sm max-w-full"
-              nameClassName="text-brand-400"
+              className="font-display font-black tracking-tight text-white uppercase drop-shadow-sm max-w-full"
+              nameClassName="text-brand-400 font-extrabold"
             />
 
             {!(['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())) && (
