@@ -346,12 +346,14 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
           'LEADERBOARD': 'Official_Institutional_Leaderboard_Report',
           'MASTER_10_SHEET': 'Master_10_Sheet_Institutional_Report',
           'STUDENT_PERFORMANCE': 'Student_Performance_Detail_Report',
+          'ASSIGNED_STUDENTS': 'Mentoring_Assigned_Students_Report',
+          'STAFF_MENTORING': 'Mentoring_Assigned_Students_Report',
           'OFFICIAL_SUMMARY': 'Official_College_Summary_Report',
           'HOD_DEPARTMENT_INTELLIGENCE': 'HOD_Department_Intelligence_Report',
           'FACULTY_CONSOLIDATED': 'Faculty_Consolidated_Performance_Report',
           'PRINCIPAL_EXECUTIVE': 'Principal_Executive_Intelligence_Report',
         };
-        titlePart = typeMap[report?.reportType] || (report?.reportType || 'LeetCode_Report').replace(/\s+/g, '_');
+        titlePart = typeMap[report?.reportType] || (report?.reportType || 'Student_Performance_Detail').replace(/\s+/g, '_');
       }
 
       let sessionTag = '';
@@ -361,11 +363,13 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
         sessionTag += `_${report.prevContest}_vs_${report.currContest}`;
       }
 
-      const dateVal = report?.contestDate || report?.sessionDate || report?.session_date || report?.currDate || '';
+      const isLiveReport = ['STUDENT_PERFORMANCE', 'ASSIGNED_STUDENTS', 'STAFF_MENTORING'].includes(report?.reportType || '');
+      const dateVal = isLiveReport ? '' : (report?.contestDate || report?.sessionDate || report?.session_date || report?.currDate || '');
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
       if (dateVal) {
         const parts = dateVal.split(/[.-]/);
         if (parts.length === 3) {
-          const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
           let dd = parts[0], mm = parseInt(parts[1], 10), yyyy = parts[2];
           if (parts[0].length === 4) { yyyy = parts[0]; mm = parseInt(parts[1], 10); dd = parts[2]; }
           if (mm >= 1 && mm <= 12) {
@@ -376,6 +380,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
         } else {
           sessionTag += `_${dateVal.replace(/[^\w]/g, '_')}`;
         }
+      } else {
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, '0');
+        const mm = months[now.getMonth()];
+        const yyyy = now.getFullYear();
+        sessionTag += `_${dd}${mm}${yyyy}`;
       }
 
       let filterTag = '';

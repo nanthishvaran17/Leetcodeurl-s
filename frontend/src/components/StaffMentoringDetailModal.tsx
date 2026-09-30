@@ -190,9 +190,8 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
   const hardSolved = currentStudent?.stats?.hard_solved ?? currentStudent?.hard_solved ?? student?.stats?.hard_solved ?? student?.hard_solved ?? 0;
   
   const rawRating = currentStudent?.stats?.contest_rating ?? currentStudent?.contest_rating ?? student?.stats?.contest_rating ?? student?.contest_rating;
-  const numericRating = rawRating ? Number(rawRating) : 0;
-  // If rating is default 1500 placeholder or 0 or unrated, display null (Unrated)
-  const rating = (numericRating > 0 && numericRating !== 1500 && numericRating !== 1500.7 && numericRating !== 1500.0) ? numericRating : null;
+  const numericRating = rawRating != null ? Number(rawRating) : 0;
+  const rating = numericRating > 0 ? numericRating : null;
 
   const streak = currentStudent?.stats?.current_streak ?? currentStudent?.stats?.max_streak ?? currentStudent?.current_streak ?? currentStudent?.max_streak ?? student?.stats?.current_streak ?? student?.stats?.max_streak ?? student?.current_streak ?? student?.max_streak ?? 0;
   const leetcodeHandle = currentStudent?.stats?.leetcode_username || currentStudent?.username || student?.username || student?.leetcode_username;

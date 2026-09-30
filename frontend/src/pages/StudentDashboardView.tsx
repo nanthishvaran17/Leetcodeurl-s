@@ -159,7 +159,7 @@ export const StudentDashboardView: React.FC = () => {
                 <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
               </div>
               <h3 className="text-3xl font-black text-amber-500">
-                {studentData.stats?.contest_rating ? Math.round(studentData.stats.contest_rating) : 'Unrated'}
+                {(studentData.stats?.contest_rating ?? (studentData as any).contest_rating) ? Math.round(Number(studentData.stats?.contest_rating ?? (studentData as any).contest_rating)) : 'Unrated'}
               </h3>
               <p className="text-xs text-slate-500 font-medium">
                 Global Rank: {studentData.stats?.contest_global_ranking ? `#${studentData.stats.contest_global_ranking}` : 'N/A'}

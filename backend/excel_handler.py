@@ -1059,10 +1059,16 @@ def generate_student_performance_detail_excel(db: Session, current_user: Optiona
                         cell.alignment = left_align
                 row_idx += 1
 
+            ws.sheet_view.showGridLines = True
             for col in ws.columns:
-                max_len = max(len(str(cell.value or '')) for cell in col)
+                max_len = 0
+                for cell in col:
+                    if cell.row is not None and cell.row >= 6:
+                        val_s = str(cell.value or '').strip()
+                        if val_s and len(val_s) > max_len and len(val_s) < 90:
+                            max_len = len(val_s)
                 col_letter = get_column_letter(col[0].column)
-                ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+                ws.column_dimensions[col_letter].width = max(max_len + 4, 14)
 
     output = io.BytesIO()
     wb.save(output)
@@ -1247,10 +1253,16 @@ def generate_8_sheet_master_tracker(db: Session, current_user: Optional[User] = 
             c.alignment = center_align if c_idx in (1, 4, 6) else left_align
 
     for sheet in wb.worksheets:
+        sheet.sheet_view.showGridLines = True
         for col in sheet.columns:
-            max_len = max(len(str(cell.value or '')) for cell in col)
+            max_len = 0
+            for cell in col:
+                if cell.row is not None and cell.row >= 6:
+                    val_s = str(cell.value or '').strip()
+                    if val_s and len(val_s) > max_len and len(val_s) < 90:
+                        max_len = len(val_s)
             col_letter = get_column_letter(col[0].column)  # type: ignore
-            sheet.column_dimensions[col_letter].width = max(max_len + 3, 12)
+            sheet.column_dimensions[col_letter].width = max(max_len + 4, 14)
 
     output = io.BytesIO()
     wb.save(output)

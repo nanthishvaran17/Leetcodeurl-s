@@ -1210,31 +1210,58 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
                 "student_id": student.id,  # type: ignore
                 "version": student.version,  # type: ignore
                 "changes": {
-                    "reg_no": student.reg_no,  # type: ignore
-                    "name": student.name,  # type: ignore
-                    "username": student.username,  # type: ignore
+                    "reg_no": student.reg_no,
+                    "name": student.name,
+                    "username": student.username,
+                    "total_solved": student.stats.total_solved if student.stats else None,
+                    "easy_solved": student.stats.easy_solved if student.stats else None,
+                    "medium_solved": student.stats.medium_solved if student.stats else None,
+                    "hard_solved": student.stats.hard_solved if student.stats else None,
+                    "contest_rating": student.stats.contest_rating if student.stats else None,
+                    "contest_global_ranking": student.stats.contest_global_ranking if student.stats else None,
                     "stats": {
-                        "total_solved": student.stats.total_solved if student.stats else None,  # type: ignore
-                        "sync_status": student.stats.sync_status if student.stats else "failed",  # type: ignore
-                        "status": student.stats.status if student.stats else "pending",  # type: ignore
-                        "last_verified_at": student.stats.last_verified_at.isoformat() if student.stats and student.stats.last_verified_at else None  # type: ignore
-                    }  # type: ignore
-                }  # type: ignore
-            }))  # type: ignore
-        except Exception:  # type: ignore
-            pass  # type: ignore
-  # type: ignore
+                        "total_solved": student.stats.total_solved if student.stats else None,
+                        "easy_solved": student.stats.easy_solved if student.stats else None,
+                        "medium_solved": student.stats.medium_solved if student.stats else None,
+                        "hard_solved": student.stats.hard_solved if student.stats else None,
+                        "contest_rating": student.stats.contest_rating if student.stats else None,
+                        "contest_global_ranking": student.stats.contest_global_ranking if student.stats else None,
+                        "sync_status": student.stats.sync_status if student.stats else "failed",
+                        "status": student.stats.status if student.stats else "pending",
+                        "last_verified_at": student.stats.last_verified_at.isoformat() if student.stats and student.stats.last_verified_at else None
+                    }
+                }
+            }))
+        except Exception:
+            pass
+
         return {
             "status": "success" if is_success else "partial" if is_partial else "error",
-            "student_id": student.id,  # type: ignore
-            "name": student.name,  # type: ignore
-            "reg_no": student.reg_no,  # type: ignore
-            "username": student.username,  # type: ignore
-            "leetcode_url": student.leetcode_url,  # type: ignore
-            "total_solved": student.stats.total_solved if student.stats else None,  # type: ignore
-            "sync_status": student.stats.sync_status if student.stats else "failed",  # type: ignore
-            "error_message": student.stats.error_message if student.stats else None,  # type: ignore
-            "last_verified_at": student.stats.last_verified_at.isoformat() if (student.stats and student.stats.last_verified_at) else None  # type: ignore
+            "student_id": student.id,
+            "name": student.name,
+            "reg_no": student.reg_no,
+            "username": student.username,
+            "leetcode_url": student.leetcode_url,
+            "total_solved": student.stats.total_solved if student.stats else None,
+            "easy_solved": student.stats.easy_solved if student.stats else None,
+            "medium_solved": student.stats.medium_solved if student.stats else None,
+            "hard_solved": student.stats.hard_solved if student.stats else None,
+            "contest_rating": student.stats.contest_rating if student.stats else None,
+            "contest_global_ranking": student.stats.contest_global_ranking if student.stats else None,
+            "sync_status": student.stats.sync_status if student.stats else "failed",
+            "error_message": student.stats.error_message if student.stats else None,
+            "last_verified_at": student.stats.last_verified_at.isoformat() if (student.stats and student.stats.last_verified_at) else None,
+            "stats": {
+                "total_solved": student.stats.total_solved if student.stats else None,
+                "easy_solved": student.stats.easy_solved if student.stats else None,
+                "medium_solved": student.stats.medium_solved if student.stats else None,
+                "hard_solved": student.stats.hard_solved if student.stats else None,
+                "contest_rating": student.stats.contest_rating if student.stats else None,
+                "contest_global_ranking": student.stats.contest_global_ranking if student.stats else None,
+                "sync_status": student.stats.sync_status if student.stats else "failed",
+                "status": student.stats.status if student.stats else "pending",
+                "last_verified_at": student.stats.last_verified_at.isoformat() if student.stats and student.stats.last_verified_at else None
+            }
         }
     finally:
         with _single_fetch_lock:

@@ -364,30 +364,31 @@ def write_kpi_grid(ws, kpi_list: List[Dict[str, Any]], primary_hex: str, light_h
 # 6. TABLE BUILDER WITH CONTENT-AWARE WIDTHS
 # ==========================================
 COLUMN_WIDTH_MAP = {
-    "S.No": 8,
-    "Rank": 8,
-    "Register No": 18,
-    "Student Name": 28,
-    "Department": 20,
-    "Year": 12,
+    "S.No": 12,
+    "Rank": 12,
+    "Register No": 22,
+    "Student Name": 32,
+    "Department": 22,
+    "Year": 14,
     "LeetCode Handle": 26,
     "Username": 26,
     "Status": 24,
     "Attendance": 24,
-    "Q1": 8,
-    "Q2": 8,
-    "Q3": 8,
-    "Q4": 8,
-    "Solved": 12,
-    "Score": 12,
-    "Mentor Signal": 24,
-    "Staff / Mentor": 24
+    "Q1": 12,
+    "Q2": 12,
+    "Q3": 12,
+    "Q4": 12,
+    "Solved": 15,
+    "Score": 15,
+    "Mentor Signal": 26,
+    "Staff / Mentor": 26
 }
 
 def apply_column_widths(ws, headers: List[str]):
+    ws.sheet_view.showGridLines = True
     for col_idx, h in enumerate(headers, 1):
         col_letter = get_column_letter(col_idx)
-        w = COLUMN_WIDTH_MAP.get(h, 18)
+        w = COLUMN_WIDTH_MAP.get(h, 20)
         ws.column_dimensions[col_letter].width = w
 
 
@@ -398,10 +399,11 @@ def write_table_data(
     data_rows: List[List[Any]],
     primary_hex: str
 ):
+    ws.sheet_view.showGridLines = True
     # Table Header Row
     ws.row_dimensions[start_row].height = 28
     hdr_fill = PatternFill(start_color=primary_hex, end_color=primary_hex, fill_type="solid")
-    hdr_font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF")
+    hdr_font = Font(name=PRIMARY_FONT, size=9.5, bold=True, color="FFFFFF")
 
     for col_idx, h in enumerate(headers, 1):
         cell = ws.cell(row=start_row, column=col_idx, value=h)
@@ -419,11 +421,11 @@ def write_table_data(
 
     # Data Rows
     row_idx = start_row + 1
-    body_font = Font(name=PRIMARY_FONT, size=9)
+    body_font = Font(name=PRIMARY_FONT, size=9.5)
     alt_fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
 
     for r_data in data_rows:
-        ws.row_dimensions[row_idx].height = 20
+        ws.row_dimensions[row_idx].height = 24
         use_alt = (row_idx % 2 == 0)
 
         for col_idx, val in enumerate(r_data, 1):

@@ -492,7 +492,12 @@ async def get_students(
             st_out = StudentListOut.model_validate(st)
 
             # Rule 1 & 2: Canonical accuracy check — zero out fake/guessed data on invalid/pending profiles
-            is_verified = bool(st.stats and st.stats.sync_status in ("success", "verified") and st.stats.status == "verified" and st.stats.total_solved is not None)
+            is_verified = bool(
+                st.stats and 
+                st.stats.sync_status in ("success", "verified", "OK", "stale") and 
+                (st.stats.status in ("verified", "success", "OK", "PROFILE_VERIFIED", "STALE") or st.stats.total_solved is not None) and 
+                st.stats.total_solved is not None
+            )
             is_invalid = bool(st.stats and (st.stats.sync_status == "invalid_username" or st.stats.status == "INVALID_USERNAME"))
             is_pending = bool(not st.username or not str(st.username).strip() or (st.stats and (st.stats.sync_status == "pending_username" or st.stats.status == "PENDING_USERNAME")))
 
@@ -1734,11 +1739,30 @@ async def refresh_single_student(
         except Exception:
             pass
 
+        db.refresh(student)
+        st = student.stats
         return {
             "message": f"Refreshed stats for {result.get('name')}",
             "status": result.get("status"),
             "last_verified_at": result.get("last_verified_at"),
-            "stats": result.get("stats")
+            "total_solved": st.total_solved if st else None,
+            "easy_solved": st.easy_solved if st else None,
+            "medium_solved": st.medium_solved if st else None,
+            "hard_solved": st.hard_solved if st else None,
+            "contest_rating": st.contest_rating if st else None,
+            "contest_global_ranking": st.contest_global_ranking if st else None,
+            "stats": {
+                "total_solved": st.total_solved if st else None,
+                "easy_solved": st.easy_solved if st else None,
+                "medium_solved": st.medium_solved if st else None,
+                "hard_solved": st.hard_solved if st else None,
+                "contest_rating": st.contest_rating if st else None,
+                "contest_global_ranking": st.contest_global_ranking if st else None,
+                "sync_status": st.sync_status if st else "failed",
+                "status": st.status if st else "pending",
+                "last_verified_at": st.last_verified_at.isoformat() if st and st.last_verified_at else None
+            },
+            "profile_data": result.get("stats")
         }
     except HTTPException:
         raise

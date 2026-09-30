@@ -1024,6 +1024,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
 
     for ws_item in wb.worksheets:
         s_title = ws_item.title
+        ws_item.sheet_view.showGridLines = True
         for col in ws_item.columns:
             if not col or col[0].column is None:
                 continue
@@ -1034,51 +1035,51 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             hdr_val = ""
             for r_chk in range(12, 0, -1):
                 cell_v = str(ws_item.cell(row=r_chk, column=col_idx).value or "").strip().upper()
-                if cell_v and not cell_v.startswith("NANDHA") and not cell_v.startswith("(AUTONOMOUS)") and not cell_v.startswith("CONTEST") and not cell_v.startswith("DEPARTMENT OF"):
+                if cell_v and not any(cell_v.startswith(p) for p in ("NANDHA", "(AUTONOMOUS)", "CONTEST", "DEPARTMENT OF", "COORDINATOR", "SUMMARY", "TOTAL")):
                     hdr_val = cell_v
                     break
 
             max_len = len(hdr_val)
             for cell in col:
                 if cell.row is not None and cell.row >= 7:
-                    val_s = str(cell.value or "")
-                    if len(val_s) > max_len and len(val_s) < 80:
+                    val_s = str(cell.value or "").strip()
+                    if val_s and len(val_s) > max_len and len(val_s) < 90:
                         max_len = len(val_s)
             
             if s_title == "Executive Summary":
                 if col_idx == 1:
-                    w = 18.0  # Metric / Student Counts
+                    w = max(22.0, max_len + 4)  # Metric / Student Counts
                 elif col_idx in (2, 3, 4, 5):
-                    w = 15.0  # 4/4, 3/4, 2/4, 1/4 Solvers
+                    w = 18.0  # 4/4, 3/4, 2/4, 1/4 Solvers
                 elif col_idx == 6:
-                    w = 16.0  # 0/4 / Absent
+                    w = 18.0  # 0/4 / Absent
                 else:
-                    w = 14.0  # Q1, Q2, Q3, Q4 Solves
+                    w = 15.0  # Q1, Q2, Q3, Q4 Solves
             else:
-                if "REGISTER NO" in hdr_val:
-                    w = max(18.0, max_len + 3)
-                elif "STUDENT NAME" in hdr_val:
-                    w = max(28.0, max_len + 3)
-                elif "DEPARTMENT" in hdr_val or hdr_val == "DEPT":
-                    w = max(16.0, max_len + 3)
-                elif "YEAR" in hdr_val:
-                    w = max(12.0, max_len + 3)
+                if "REGISTER" in hdr_val:
+                    w = max(22.0, max_len + 5)
+                elif "NAME" in hdr_val or "STUDENT" in hdr_val:
+                    w = max(32.0, max_len + 5)
+                elif "DEPARTMENT" in hdr_val or hdr_val in ("DEPT", "DEPARTMENT NAME"):
+                    w = max(20.0, max_len + 5)
+                elif "YEAR" in hdr_val or hdr_val in ("YR", "YEAR LEVEL"):
+                    w = max(14.0, max_len + 5)
                 elif "USERNAME" in hdr_val or "LEETCODE" in hdr_val or "HANDLE" in hdr_val:
-                    w = max(18.0, max_len + 3)
+                    w = max(26.0, max_len + 5)
                 elif "STATUS" in hdr_val or "ATTENDANCE" in hdr_val:
-                    w = max(16.0, max_len + 3)
+                    w = max(22.0, max_len + 5)
                 elif "EVIDENCE" in hdr_val:
-                    w = max(30.0, max_len + 3)
+                    w = max(36.0, max_len + 5)
                 elif hdr_val in ("Q1", "Q2", "Q3", "Q4"):
-                    w = 9.0
-                elif hdr_val in ("SOLVED", "SCORE", "LIVE", "VIRTUAL"):
                     w = 12.0
-                elif hdr_val in ("S.NO", "NO", "RANK", "S. NO"):
-                    w = 12.0
+                elif hdr_val in ("SOLVED", "SCORE", "LIVE", "VIRTUAL", "ATTENDED"):
+                    w = 15.0
+                elif hdr_val in ("S.NO", "NO", "RANK", "S. NO", "S.NO."):
+                    w = 14.0
                 else:
-                    w = max(12.0, min(max_len + 4, 40.0))
+                    w = max(14.0, min(max_len + 5, 45.0))
 
-            ws_item.column_dimensions[col_letter].width = ws_item.column_dimensions[col_letter].width = w
+            ws_item.column_dimensions[col_letter].width = w
 
     output = io.BytesIO()
     wb.save(output)

@@ -1000,8 +1000,8 @@ export const StaffDashboardView: React.FC = () => {
           </div>
         )}
 
-        {/* MOBILE CARDS VIEW (md:hidden) - ZERO horizontal scroll on phone/small screens */}
-        <div className="block md:hidden space-y-3">
+        {/* MOBILE CARDS VIEW (md:hidden) - ZERO horizontal scroll on phone/small screens with clean spacious card gaps */}
+        <div className="block md:hidden flex flex-col gap-4 sm:gap-5 py-1">
           {loading ? (
             <div className="p-8 text-center text-slate-400 font-bold animate-pulse">
               Loading your assigned students...
@@ -1021,15 +1021,15 @@ export const StaffDashboardView: React.FC = () => {
               return (
                 <div
                   key={st.id}
-                  className="bg-white dark:bg-navy-900 rounded-2xl p-4 border border-slate-200 dark:border-navy-700 shadow-sm space-y-3 transition-all hover:shadow-md"
+                  className="bg-white dark:bg-navy-900 rounded-2xl p-4.5 sm:p-5 border border-slate-200/90 dark:border-navy-700/80 shadow-md shadow-slate-200/50 dark:shadow-none space-y-3.5 transition-all hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-600/60 ring-1 ring-slate-100 dark:ring-navy-800/40"
                 >
                   {/* Header: Name, Reg No, Dept & Status */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <h4 className="font-black text-sm text-slate-900 dark:text-white truncate">
+                      <h4 className="font-black text-sm sm:text-base text-slate-900 dark:text-white truncate">
                         {st.name}
                       </h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
                         <span className="font-mono font-bold">{st.reg_no}</span> • {st.department || 'CSE'} ({cleanYr || 'III'} Year)
                       </p>
                       <p className="text-xs font-bold text-brand-600 dark:text-brand-400 mt-0.5 truncate">
@@ -1082,7 +1082,7 @@ export const StaffDashboardView: React.FC = () => {
                   </div>
 
                   {/* Quick Numbers & Inspect Button */}
-                  <div className="flex items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-navy-800">
+                  <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-slate-100 dark:border-navy-800">
                     <div className="flex items-center gap-4 text-xs">
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold uppercase block">Solved</span>

@@ -1091,14 +1091,18 @@ def get_contest_filename_base(
     NEC-branded compact, clean, highly-descriptive filename base:
     Format: NEC_<ReportTypeSlug>_<DeptSlug>_<YearSlug>_<DateSlug>
     Examples:
-      NEC_Faculty_Perf_CSE-CS_IV-Yr_20Sep2026
-      NEC_Hist_Intel_All-Depts_All-Yrs_20Sep2026
-      NEC_WoW_Intel_AIDS_II-Yr_20Sep2026
-      NEC_Trend_5W_IT_III-Yr_20Sep2026
-      NEC_Student_Perf_ECE_IV-Yr_20Sep2026
-      NEC_WC520_All-Depts_All-Yrs_20Sep2026
+      NEC_Faculty_Perf_CSE-CS_IV-Yr_30Sep2026
+      NEC_Mentoring_Assigned_Students_CSE-CS_III-Yr_30Sep2026
+      NEC_Student_Performance_Detail_All-Depts_All-Yrs_30Sep2026
+      NEC_WC520_All-Depts_All-Yrs_30Sep2026
     """
     import re
+    import datetime
+
+    # Current IST Date for dynamic current report generation
+    now_ist = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=5, minutes=30)
+    MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    today_date_seg = f"{now_ist.day:02d}{MONTHS[now_ist.month-1]}{now_ist.year}"
 
     # --- 1. Report Type / Name Slug ---
     rtype_str = (report_type or "").upper().strip()
@@ -1106,7 +1110,9 @@ def get_contest_filename_base(
 
     type_slug = None
 
-    if "FACULTY" in rtype_str or "FACULTY" in cname_str:
+    if "ASSIGNED" in rtype_str or "MENTORING" in rtype_str or "ASSIGNED" in cname_str:
+        type_slug = "Mentoring_Assigned_Students"
+    elif "FACULTY" in rtype_str or "FACULTY" in cname_str:
         type_slug = "Faculty_Perf"
     elif "HISTORICAL" in rtype_str or "HISTORICAL" in cname_str or "HIST" in rtype_str:
         type_slug = "Hist_Intel"
@@ -1123,7 +1129,7 @@ def get_contest_filename_base(
     elif "MASTER" in rtype_str or "MASTER" in cname_str:
         type_slug = "Master_Tracker"
     elif "STUDENT_PERFORMANCE" in rtype_str or "STUDENT PERFORMANCE" in cname_str:
-        type_slug = "Student_Perf"
+        type_slug = "Student_Performance_Detail"
 
     # If still not determined, look for contest numbers (e.g. Weekly Contest 520, WC520)
     if not type_slug:
@@ -1147,29 +1153,22 @@ def get_contest_filename_base(
         if contest_num:
             type_slug = f"WC{contest_num}"
         else:
-            type_slug = "Contest_Report"
+            type_slug = "Student_Performance_Report"
 
-    # If session_date is not provided, resolve from db using contest_name or latest completed session
-    if not session_date and db is not None:
-        m_c = re.search(r'\d+', contest_name or "")
-        if m_c:
-            c_val = int(m_c.group(0))
-            ws_by_id = db.query(WeeklySession).filter(WeeklySession.id == c_val).first()
-            if not ws_by_id:
-                ws_by_id = db.query(WeeklySession).filter(WeeklySession.contest_name.ilike(f"%{c_val}%")).first()
-            if ws_by_id and ws_by_id.session_date:
-                session_date = str(ws_by_id.session_date)
-        
-        if not session_date:
-            ws_last = _get_latest_completed_session(db)
-            if ws_last and ws_last.session_date:
-                session_date = str(ws_last.session_date)
+    # --- 2. Date Segment ---
+    # For live student performance / assigned students / general export, if session_date is not specifically a past contest date, default to TODAY'S date!
+    is_live_performance_report = rtype_str in (
+        "STUDENT_PERFORMANCE", 
+        "STUDENT_PERFORMANCE_DETAIL", 
+        "ASSIGNED_STUDENTS", 
+        "STAFF_MENTORING",
+        "ROSTER", 
+        "CURRENT_SNAPSHOT"
+    )
 
-    # --- 2. Date Segment: DDMonYYYY (e.g. 20Sep2026) ---
-    MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
     date_seg = None
 
-    if session_date:
+    if session_date and not is_live_performance_report:
         s_date_str = session_date.strip()
         parts = re.split(r'[.\-/]', s_date_str)
         try:
@@ -1185,25 +1184,8 @@ def get_contest_filename_base(
         except Exception:
             date_seg = s_date_str.replace(".", "")
 
-    if not date_seg and db is not None:
-        ws_last = _get_latest_completed_session(db)
-        if ws_last and ws_last.session_date:
-            parts = re.split(r'[.\-/]', str(ws_last.session_date).strip())
-            try:
-                if len(parts) == 3:
-                    if len(parts[0]) == 4:
-                        dd, mm, yyyy = int(parts[2]), int(parts[1]), parts[0]
-                    else:
-                        dd, mm, yyyy = int(parts[0]), int(parts[1]), parts[2]
-                    if 1 <= mm <= 12:
-                        date_seg = f"{dd:02d}{MONTHS[mm-1]}{yyyy}"
-            except Exception:
-                pass
-
     if not date_seg:
-        import datetime
-        now = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=5, minutes=30)
-        date_seg = f"{now.day:02d}{MONTHS[now.month-1]}{now.year}"
+        date_seg = today_date_seg
 
     # --- 3. Department Slug ---
     DEPT_SLUG = {
