@@ -66,7 +66,7 @@ def prepare_secure_download(
     user_role = getattr(current_user, "role", "User")
     suggested_filename = payload.filename or "download_file"
 
-    expires_at = time.time() + 60.0  # 60 seconds TTL
+    expires_at = time.time() + 300.0  # 300 seconds TTL (5 minutes to support repeat downloads)
 
     with _TOKEN_LOCK:
         _SECURE_DOWNLOAD_TOKENS[token_hash] = {
@@ -81,7 +81,7 @@ def prepare_secure_download(
             "method": (payload.method or "GET").upper(),
             "created_at": time.time(),
             "expires_at": expires_at,
-            "is_used": False
+            "use_count": 0
         }
 
     secure_url = f"/api/downloads/secure/{raw_token}"
@@ -91,7 +91,7 @@ def prepare_secure_download(
         "download_url": secure_url,
         "filename": suggested_filename,
         "mime_type": payload.mime_type or "application/octet-stream",
-        "expires_in": 60,
+        "expires_in": 300,
         "status": "READY"
     }
 
@@ -104,7 +104,7 @@ def execute_secure_download(
 ):
     """
     PUBLIC SECURE DOWNLOAD DISPATCHER
-    Validates token hash, expiration, and single-use status.
+    Validates token hash, expiration, and multi-use window.
     Executes underlying resource generation/stream in user's authorized context.
     Enforces strict file integrity & header validation before returning binary stream.
     """
@@ -125,11 +125,12 @@ def execute_secure_download(
             _SECURE_DOWNLOAD_TOKENS.pop(token_hash, None)
             raise HTTPException(status_code=410, detail="Download link expired. Please try again.")
 
-        if token_record.get("is_used"):
-            raise HTTPException(status_code=410, detail="Download link has already been used.")
+        use_count = token_record.get("use_count", 0)
+        if use_count >= 10:
+            raise HTTPException(status_code=410, detail="Maximum repeat download limit reached for this link. Please generate a new download link.")
 
-        # Mark as used (One-time download protection)
-        token_record["is_used"] = True
+        # Increment download use counter (Supports repeat download)
+        token_record["use_count"] = use_count + 1
 
     # Retrieve user from DB to verify active status & role context
     user_id = token_record["user_id"]

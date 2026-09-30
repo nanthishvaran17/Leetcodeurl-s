@@ -7,7 +7,7 @@ from backend.models import (
     Student, User
 )
 from backend.logger import logger
-from backend.time_utils import ensure_utc
+from backend.time_utils import ensure_utc, now_ist, format_ist_datetime
 
 VALID_PARTICIPATION_STATUSES = {
     "PUBLIC", "VIRTUAL", "NOT_ATTENDED", "NOT_VERIFIED",
@@ -910,7 +910,7 @@ def _build_canonical_contest_dataset_internal(
         "isLive": session_obj.status == "LIVE",
         "isScheduled": session_obj.status == "SCHEDULED",
         "isFinalized": session_obj.status == "FINALIZED",
-        "generatedAtIST": datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST"),
+        "generatedAtIST": format_ist_datetime(now_ist()),
         "rows": filtered_rows,
         "all_rows": canonical_rows,
         "metrics": metrics,

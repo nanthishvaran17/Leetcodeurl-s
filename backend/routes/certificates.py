@@ -68,8 +68,7 @@ def resolve_certificate_record(
     # 1. Check existing CertificateRecord in database
     cert = db.query(CertificateRecord).filter(
         (CertificateRecord.verification_id.in_(variants)) |
-        (CertificateRecord.certificate_code.in_(variants)) |
-        (CertificateRecord.verification_id.ilike(f"%{raw_id}%"))
+        (CertificateRecord.certificate_code.in_(variants))
     ).first()
 
     is_forensic_request = (

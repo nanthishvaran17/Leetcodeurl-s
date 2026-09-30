@@ -56,10 +56,24 @@ def build_normalized_forensic_report(
     if student_id:
         student = db.query(Student).filter(Student.id == student_id).first()
 
+    if not student and clean_search:
+        if clean_search.isdigit():
+            student = db.query(Student).filter(
+                (Student.id == int(clean_search)) |
+                (Student.reg_no == clean_search)
+            ).first()
+
+        if not student:
+            student = db.query(Student).filter(
+                (Student.reg_no.ilike(clean_search)) |
+                (Student.username.ilike(clean_search)) |
+                (Student.name.ilike(clean_search))
+            ).first()
+
     if not student and target_trace:
         cert = db.query(CertificateRecord).filter(
-            (CertificateRecord.verification_id.ilike(target_trace)) |
-            (CertificateRecord.certificate_code.ilike(target_trace))
+            (CertificateRecord.verification_id == target_trace) |
+            (CertificateRecord.certificate_code == target_trace)
         ).first()
         if cert and cert.student_id:
             student = db.query(Student).filter(Student.id == cert.student_id).first()
@@ -69,20 +83,12 @@ def build_normalized_forensic_report(
                     session_id = int(clean_c)
 
     if not student and clean_search:
-        # Check CertificateRecord first
         cert = db.query(CertificateRecord).filter(
-            (CertificateRecord.verification_id.ilike(clean_search)) |
-            (CertificateRecord.certificate_code.ilike(clean_search))
+            (CertificateRecord.verification_id == clean_search) |
+            (CertificateRecord.certificate_code == clean_search)
         ).first()
         if cert and cert.student_id:
             student = db.query(Student).filter(Student.id == cert.student_id).first()
-
-    if not student and clean_search:
-        student = db.query(Student).filter(
-            (Student.reg_no.ilike(f"%{clean_search}%")) |
-            (Student.username.ilike(f"%{clean_search}%")) |
-            (Student.name.ilike(f"%{clean_search}%"))
-        ).first()
 
     if not student:
         raise ValueError("Insufficient verified data to generate forensic report: Student record not found.")

@@ -213,6 +213,7 @@ class MessagingService:
     @staticmethod
     def get_available_recipients(db: Session, current_user) -> list:
         """RBAC-enforced method returning a list of valid message recipients."""
+        from backend.services.authorization_service import get_hod_authorized_department_ids
         role = str(getattr(current_user, "role", "Student")).upper()
         dept_id = getattr(current_user, "department_id", None)
         current_id = MessagingService._get_user_id(current_user)
@@ -221,24 +222,53 @@ class MessagingService:
             staff = db.query(User).filter(User.is_active == True, User.id != current_user.id).all()
             students = db.query(Student).filter(Student.is_active == True).all()
         elif "HOD" in role:
-            staff = db.query(User).filter(
-                User.is_active == True, User.id != current_user.id,
-                or_(User.department_id == dept_id, User.role.ilike("%admin%"))
-            ).all()
-            students = db.query(Student).filter(Student.is_active == True, Student.department_id == dept_id).all()
+            hod_dept_ids = get_hod_authorized_department_ids(db, current_user)
+            if hod_dept_ids:
+                staff = db.query(User).filter(
+                    User.is_active == True, User.id != current_user.id,
+                    or_(User.department_id.in_(hod_dept_ids), User.role.ilike("%admin%"), User.role.ilike("%hod%"))
+                ).all()
+                students = db.query(Student).filter(Student.is_active == True, Student.department_id.in_(hod_dept_ids)).all()
+            else:
+                staff_filter = [User.id != current_user.id, User.is_active == True]
+                if dept_id:
+                    staff_filter.append(or_(User.department_id == dept_id, User.role.ilike("%admin%"), User.role.ilike("%hod%")))
+                staff = db.query(User).filter(*staff_filter).all()
+                student_filter = [Student.is_active == True]
+                if dept_id:
+                    student_filter.append(Student.department_id == dept_id)
+                students = db.query(Student).filter(*student_filter).all()
         elif "FACULTY" in role or "STAFF" in role:
-            staff = db.query(User).filter(
-                User.is_active == True, User.id != current_user.id,
-                or_(User.department_id == dept_id, User.role.ilike("%admin%"))
-            ).all()
+            staff_filter = [User.id != current_user.id, User.is_active == True]
+            if dept_id:
+                staff_filter.append(or_(User.department_id == dept_id, User.department_id.is_(None), User.role.ilike("%admin%"), User.role.ilike("%hod%")))
+            staff = db.query(User).filter(*staff_filter).all()
+            
             assignments = db.query(FacultyStudentAssignment).filter_by(faculty_id=current_user.id, is_active=True).all()
-            students = [a.student for a in assignments if a.student and a.student.is_active]
+            assigned_students = [a.student for a in assignments if a.student and a.student.is_active]
+            
+            student_query_filter = [Student.is_active == True]
+            if dept_id:
+                student_query_filter.append(Student.department_id == dept_id)
+            dept_students = db.query(Student).filter(*student_query_filter).all()
+            
+            # Combine assigned students and department students without duplicates
+            seen_st_ids = {s.id for s in assigned_students}
+            students = list(assigned_students)
+            for ds in dept_students:
+                if ds.id not in seen_st_ids:
+                    seen_st_ids.add(ds.id)
+                    students.append(ds)
         else:
-            staff_query = db.query(User).filter(User.is_active == True, or_(User.role.ilike("%admin%"), User.role.ilike("%hod%")))
+            staff_query = db.query(User).filter(
+                User.is_active == True,
+                or_(User.role.ilike("%admin%"), User.role.ilike("%hod%"), User.role.ilike("%faculty%"), User.role.ilike("%staff%"))
+            )
             staff = staff_query.all()
             assignment = db.query(FacultyStudentAssignment).filter_by(student_id=current_user.id, is_active=True).first()
-            if assignment and assignment.faculty:
-                staff.append(assignment.faculty)
+            if assignment and assignment.faculty and assignment.faculty.id != getattr(current_user, "id", None):
+                if assignment.faculty not in staff:
+                    staff.append(assignment.faculty)
             students = []
 
         seen = set([current_id])

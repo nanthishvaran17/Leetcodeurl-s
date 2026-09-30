@@ -233,12 +233,12 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                   )}
 
                   <div className="flex flex-col min-w-0 w-full">
-                    <span className={`truncate text-xs text-left ${isSelected ? 'font-black text-white' : 'font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-brand-600'}`}>
+                    <span className={`truncate text-xs text-left ${isSelected ? 'font-black text-white' : 'font-extrabold text-slate-900 dark:text-slate-100 group-hover:text-brand-600'}`}>
                       {opt.label}
                     </span>
                     {opt.sublabel && (
-                      <span className={`text-[10px] font-medium truncate text-left ${
-                        isSelected ? 'text-indigo-100' : 'text-slate-400 dark:text-slate-500'
+                      <span className={`text-[10px] font-bold truncate text-left ${
+                        isSelected ? 'text-indigo-100' : 'text-slate-700 dark:text-slate-200'
                       }`}>
                         {opt.sublabel}
                       </span>

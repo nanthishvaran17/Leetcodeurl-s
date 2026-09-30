@@ -285,7 +285,8 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     contest_name = dataset.get("contestName") or metrics.get("contestName") or dataset.get("contest_name") or _def_cname
     contest_date_str = dataset.get("sessionDate") or dataset.get("session_date") or _def_cdate
     snapshot_id = str(dataset.get("snapshotId") or dataset.get("snapshot_id") or dataset.get("reportId") or f"SNAPSHOT_{calculate_contest_number(_prev_sun)}")
-    gen_time_str = dataset.get("generatedAtIST") or datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
+    from backend.time_utils import now_ist, format_ist_datetime
+    gen_time_str = dataset.get("generatedAtIST") or format_ist_datetime(now_ist())
 
     # Dynamic Department resolution helper
     def resolve_dept_full_name(d_raw: str, reg_no: str = "") -> str:

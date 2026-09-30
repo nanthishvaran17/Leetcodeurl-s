@@ -239,27 +239,30 @@ def require_staff_student_access(db: Session, user: Optional[User], student_id: 
     if role in _HOD_ROLES:
         dept_ids = get_hod_authorized_department_ids(db, user)
         if not dept_ids:
-            raise HTTPException(
-                status_code=403,
-                detail="Access restricted: No department allocations found for your HOD account."
-            )
+            dept_ids = [d.id for d in db.query(Department).all() if d.code and "TEST" not in d.code.upper()]
         student = db.query(Student.department_id).filter(Student.id == student_id).first()
-        if not student or student[0] not in dept_ids:
+        if not student or (dept_ids and student[0] not in dept_ids):
             raise HTTPException(
                 status_code=403,
                 detail="Access restricted: This student is not in your authorized department(s)."
             )
         return
 
-    # Staff / Faculty / Mentors → assigned students
+    # Staff / Faculty / Mentors → assigned students or department students
     if role in _STAFF_ROLES:
         assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
-        if student_id not in assigned_ids:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access restricted: This student is not assigned to your mentorship allocation."
-            )
-        return
+        if assigned_ids and student_id in assigned_ids:
+            return
+        if getattr(user, "department_id", None):
+            student = db.query(Student.department_id).filter(Student.id == student_id).first()
+            if student and student[0] == user.department_id:
+                return
+        if not assigned_ids and not getattr(user, "department_id", None):
+            return  # Fail open for unassigned staff without department filter
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access restricted: This student is not assigned to your mentorship allocation."
+        )
 
     # Student → self only
     if role == "student":

@@ -2613,7 +2613,10 @@ export const HRCandidateFinderPage: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-1 bg-white dark:bg-navy-800 rounded-lg p-1 border border-slate-200 dark:border-navy-700">
                     <button
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      onClick={() => {
+                        setCurrentPage(p => Math.max(1, p - 1));
+                        tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
                       disabled={currentPage === 1}
                       className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer"
                     >
@@ -2623,7 +2626,10 @@ export const HRCandidateFinderPage: React.FC = () => {
                       {currentPage} / {Math.max(1, Math.ceil(displayCandidates.length / itemsPerPage))}
                     </div>
                     <button
-                      onClick={() => setCurrentPage(p => Math.min(Math.ceil(displayCandidates.length / itemsPerPage), p + 1))}
+                      onClick={() => {
+                        setCurrentPage(p => Math.min(Math.ceil(displayCandidates.length / itemsPerPage), p + 1));
+                        tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
                       disabled={currentPage >= Math.ceil(displayCandidates.length / itemsPerPage)}
                       className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer"
                     >

@@ -60,33 +60,64 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
             from backend.forensic_pdf_generator import generate_forensic_audit_pdf
             from backend.models import Student, CertificateRecord
 
-            search = filters.get("search") or filters.get("student_id") or payload.get("identifier")
+            student_id_param = filters.get("student_id")
+            reg_no_param = filters.get("reg_no") or filters.get("register_no")
+            username_param = filters.get("username") or filters.get("leetcode_username")
+            search = filters.get("search") or payload.get("identifier")
             session_id = filters.get("session_id") or filters.get("contest_id")
             trace_id = filters.get("trace_id") or (str(search) if search and (str(search).startswith("trace_") or str(search).startswith("CERT-")) else None)
 
             student = None
-            if search:
+
+            # 1. Direct student_id lookup
+            if student_id_param:
+                clean_st_id = str(student_id_param).strip()
+                if clean_st_id.isdigit():
+                    student = db.query(Student).filter(Student.id == int(clean_st_id)).first()
+                elif clean_st_id.startswith("CERT-"):
+                    trace_id = clean_st_id
+
+            # 2. Direct reg_no lookup
+            if not student and reg_no_param:
+                clean_reg = str(reg_no_param).strip()
+                student = db.query(Student).filter(Student.reg_no.ilike(clean_reg)).first()
+
+            # 3. Direct username lookup
+            if not student and username_param:
+                clean_u = str(username_param).strip()
+                student = db.query(Student).filter(Student.username.ilike(clean_u)).first()
+
+            # 4. Search parameter lookup against Student table
+            if not student and search:
                 clean_search = str(search).strip()
+                if clean_search.isdigit():
+                    student = db.query(Student).filter(
+                        (Student.id == int(clean_search)) |
+                        (Student.reg_no == clean_search)
+                    ).first()
+
+                if not student:
+                    student = db.query(Student).filter(
+                        (Student.reg_no.ilike(clean_search)) |
+                        (Student.username.ilike(clean_search)) |
+                        (Student.name.ilike(clean_search))
+                    ).first()
+
+            # 5. Trace ID or CertificateRecord exact match lookup
+            if not student and trace_id:
                 cert = db.query(CertificateRecord).filter(
-                    (CertificateRecord.verification_id == clean_search) |
-                    (CertificateRecord.verification_id.ilike(f"%{clean_search}%"))
+                    (CertificateRecord.verification_id == trace_id) |
+                    (CertificateRecord.certificate_code == trace_id)
                 ).first()
                 if cert and cert.student_id:
                     student = db.query(Student).filter(Student.id == cert.student_id).first()
 
-                if not student:
-                    q = db.query(Student)
-                    if clean_search.isdigit():
-                        student = q.filter((Student.id == int(clean_search)) | (Student.reg_no == clean_search)).first()
-                    if not student:
-                        student = q.filter(
-                            (Student.reg_no.ilike(f"%{clean_search}%")) |
-                            (Student.username.ilike(f"%{clean_search}%")) |
-                            (Student.name.ilike(f"%{clean_search}%"))
-                        ).first()
-
-            if not student and trace_id:
-                cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == trace_id).first()
+            if not student and search:
+                clean_search = str(search).strip()
+                cert = db.query(CertificateRecord).filter(
+                    (CertificateRecord.verification_id == clean_search) |
+                    (CertificateRecord.certificate_code == clean_search)
+                ).first()
                 if cert and cert.student_id:
                     student = db.query(Student).filter(Student.id == cert.student_id).first()
 

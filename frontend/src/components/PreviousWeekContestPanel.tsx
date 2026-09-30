@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useDeferredValue } from 'react';
+import { createPortal } from 'react-dom';
 import { useDebounce } from '../hooks/useDebounce';
 import { 
   ShieldCheck, 
@@ -222,7 +223,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     setPage(1);
   }, [searchTerm, selectedTypeFilter, selectedDeptFilter]);
 
-  // Handle Escape key to close the modal
+  // Handle Escape key & body scroll lock/unlock for forensic modal
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && selectedForensicRecord) {
@@ -230,7 +231,17 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    if (selectedForensicRecord) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
   }, [selectedForensicRecord]);
 
   // Hook up live websocket updates in a batched way
@@ -923,7 +934,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     <div className="space-y-6">
 
       {/* Top Banner Card */}
-      <div className="p-6 rounded-3xl bg-[#0b1120] text-white border border-slate-800/90 shadow-2xl flex flex-wrap items-center justify-between gap-4">
+      <div className="p-6 rounded-3xl bg-[#0b1120] text-white border border-slate-800/90 shadow-2xl flex flex-wrap items-center justify-between gap-4 mb-4">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
@@ -971,7 +982,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
       {/* Disconnection Notice if completely offline */}
       {wsStatus !== 'LIVE' && (
-        <div className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-between">
+        <div className="p-3.5 sm:p-4 my-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 shrink-0 text-indigo-500" />
             <span>Realtime Auto-Sync active in background • Last sync: {lastSyncAt || 'Live'}</span>
@@ -1776,9 +1787,16 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           };
         });
 
-        return (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-            <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh] animate-scale-in">
+        return typeof document !== 'undefined'
+          ? createPortal(
+              <div className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fade-in text-slate-900 dark:text-white"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) setSelectedForensicRecord(null);
+                }}
+              >
+                <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[90vh] my-auto animate-scale-in"
+                  onClick={(e) => e.stopPropagation()}
+                >
               {/* Modal Header */}
               <div className="relative p-4 sm:p-5 bg-gradient-to-br from-indigo-50/95 via-white to-sky-50/90 dark:bg-gradient-to-r dark:from-slate-900 dark:via-indigo-950 dark:to-navy-950 text-slate-900 dark:text-white flex items-start justify-between border-b border-indigo-100 dark:border-slate-800 shrink-0">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 dark:bg-brand-500/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
@@ -2014,7 +2032,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                         await downloadManager.downloadJob({
                           report_type: 'CERTIFICATE_FORENSIC_PDF',
                           format: 'pdf',
-                          filters: { student_id: rec.student_id, session_id: rec.session_id || summary?.session_id },
+                          filters: {
+                            student_id: rec.student_id,
+                            reg_no: rec.reg_no,
+                            leetcode_username: rec.leetcode_username,
+                            session_id: rec.session_id || summary?.session_id
+                          },
                           filename
                         });
                       }}
@@ -2039,10 +2062,11 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                 </div>
               </div>
             </div>
-          </div>
-        );
-      })()}
-
+          </div>,
+          document.body
+        )
+      : null;
+  })()}
     </div>
   );
 };

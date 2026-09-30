@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { 
-  User, Shield, CheckCircle, Building2, Key, Check, Loader2, FileCheck, 
-  X, Briefcase, ChevronRight, ChevronLeft, Hash, Mail, Phone, Calendar, 
+import {
+  User, Shield, CheckCircle, Building2, Key, Check, Loader2, FileCheck,
+  X, Briefcase, ChevronRight, ChevronLeft, Hash, Mail, Phone, Calendar,
   Search, Sparkles, Eye, EyeOff, AlertCircle, GraduationCap, ChevronDown,
   Lock, AlertTriangle, ArrowRight, UploadCloud, FileText, CheckCircle2, ShieldCheck
 } from 'lucide-react';
@@ -18,8 +18,8 @@ interface CreateStaffModalProps {
   notify: any;
 }
 
-export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({ 
-  onClose, onSuccess, departments, staffList, notify 
+export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
+  onClose, onSuccess, departments, staffList, notify
 }) => {
   const storeVersion = useStudentStoreVersion();
   const [activeStep, setActiveStep] = useState<number>(1);
@@ -72,7 +72,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   const academicYearOptions = useMemo(() => {
     const students = Object.values(studentLiveStore.getAllEntities());
     const years = new Set<string>();
-    
+
     years.add('2023-2027');
     years.add('2024-2028');
     years.add('2025-2029');
@@ -83,7 +83,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
         years.add(s.academic_year.trim());
       }
     });
-    
+
     const sortedYears = Array.from(years).sort((a, b) => (a > b ? 1 : -1));
 
     const options: DropdownOption[] = [
@@ -119,7 +119,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
         badgeColor: 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border border-brand-200 dark:border-brand-500/30'
       }
     ];
-    
+
     departments.forEach(d => {
       opts.push({
         value: String(d.id),
@@ -128,7 +128,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
         badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30'
       });
     });
-    
+
     return opts;
   }, [departments]);
 
@@ -483,7 +483,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   return (
     <GlobalModalBackdrop isOpen={true} onClose={onClose} zIndex={100000} className="flex items-end sm:items-center justify-center p-0 sm:p-6 bg-navy-950/70 backdrop-blur-md overflow-hidden">
       <div className="bg-white dark:bg-navy-950 rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[95dvh] sm:h-[92vh] sm:max-h-[850px] overflow-hidden border-t sm:border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
-        
+
         {/* HEADER */}
         <div className="px-6 py-4 bg-slate-50/90 dark:bg-navy-950/80 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-20">
           <div className="flex items-center space-x-3.5">
@@ -509,8 +509,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200/60 dark:bg-navy-800 text-slate-600 dark:text-slate-300 text-xs font-mono font-bold">
               <Lock className="w-3.5 h-3.5 text-indigo-500" /> SECURE ADMINISTRATION
             </div>
-            <button 
-              onClick={onClose} 
+            <button
+              onClick={onClose}
               className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 dark:hover:text-white dark:hover:bg-navy-800 transition-all cursor-pointer"
             >
               <X className="w-5 h-5" />
@@ -524,7 +524,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
             <div className="w-20 h-20 rounded-3xl bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xl shadow-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 animate-bounce-short">
               <CheckCircle2 className="w-10 h-10" />
             </div>
-            
+
             <div className="max-w-md space-y-2">
               <h3 className="text-2xl font-black text-slate-900 dark:text-white">Account Created Successfully</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
@@ -578,13 +578,13 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
         ) : (
           /* MAIN TWO-COLUMN BODY */
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-50/50 dark:bg-navy-950/30">
-            
+
             {/* LEFT STEPPER SIDEBAR */}
             <div className="w-full md:w-72 bg-white dark:bg-navy-950 border-r border-slate-200/80 dark:border-navy-800 p-4 sm:p-6 shrink-0 overflow-x-auto md:overflow-y-auto custom-scrollbar">
               <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 mb-4 hidden md:block">
                 Provisioning Steps
               </div>
-              
+
               <div className="flex md:flex-col gap-2 min-w-max md:min-w-0">
                 {stepsList.map(s => {
                   const isCurrent = activeStep === s.num;
@@ -595,41 +595,37 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                       key={s.num}
                       type="button"
                       onClick={() => handleStepClick(s.num)}
-                      className={`flex items-center gap-3.5 p-3 rounded-2xl transition-all duration-200 text-left cursor-pointer w-full ${
-                        isCurrent
+                      className={`flex items-center gap-3.5 p-3 rounded-2xl transition-all duration-200 text-left cursor-pointer w-full ${isCurrent
                           ? 'bg-brand-50 dark:bg-brand-500/10 border-2 border-brand-500 dark:border-brand-400 shadow-sm ring-2 ring-brand-500/20'
                           : isCompleted
-                          ? 'bg-emerald-50/80 dark:bg-emerald-950/30 hover:bg-emerald-100/70 border border-emerald-200 dark:border-emerald-800/60'
-                          : 'bg-slate-100/80 dark:bg-navy-900/60 hover:bg-slate-200/80 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700'
-                      }`}
+                            ? 'bg-emerald-50/80 dark:bg-emerald-950/30 hover:bg-emerald-100/70 border border-emerald-200 dark:border-emerald-800/60'
+                            : 'bg-slate-100/80 dark:bg-navy-900/60 hover:bg-slate-200/80 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700'
+                        }`}
                     >
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-mono text-xs font-black transition-all ${
-                        isCurrent
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-mono text-xs font-black transition-all ${isCurrent
                           ? 'bg-brand-600 text-white shadow-md shadow-brand-500/30'
                           : isCompleted
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-slate-200 dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-navy-600'
-                      }`}>
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-slate-200 dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-navy-600'
+                        }`}>
                         {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : s.id}
                       </div>
 
                       <div className="hidden md:flex flex-col min-w-0">
-                        <span className={`text-xs truncate ${
-                          isCurrent
+                        <span className={`text-xs truncate ${isCurrent
                             ? 'text-brand-950 dark:text-brand-100 font-black'
                             : isCompleted
-                            ? 'text-slate-900 dark:text-slate-100 font-bold'
-                            : 'text-slate-800 dark:text-slate-200 font-bold'
-                        }`}>
+                              ? 'text-slate-900 dark:text-slate-100 font-bold'
+                              : 'text-slate-800 dark:text-slate-200 font-bold'
+                          }`}>
                           {s.title}
                         </span>
-                        <span className={`text-[10px] font-medium truncate ${
-                          isCurrent
+                        <span className={`text-[10px] font-medium truncate ${isCurrent
                             ? 'text-brand-700 dark:text-brand-300 font-bold'
                             : isCompleted
-                            ? 'text-emerald-700 dark:text-emerald-400'
-                            : 'text-slate-600 dark:text-slate-400'
-                        }`}>
+                              ? 'text-emerald-700 dark:text-emerald-400'
+                              : 'text-slate-600 dark:text-slate-400'
+                          }`}>
                           {s.desc}
                         </span>
                       </div>
@@ -657,7 +653,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
             {/* RIGHT FORM CONTENT PANEL */}
             <div ref={formContainerRef} className="flex-1 overflow-y-auto p-6 sm:p-8 pb-12 custom-scrollbar">
-              
+
               {Object.keys(formErrors).length > 0 && (
                 <div className="mb-6 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border-2 border-rose-400 dark:border-rose-700 flex items-start gap-3 text-rose-900 dark:text-rose-100 shadow-md animate-shake">
                   <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
@@ -688,7 +684,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
               )}
 
               <form id="create-staff-form" onSubmit={handleCreate} className="space-y-6 max-w-3xl" autoComplete="off">
-                
+
                 {/* STEP 1: ROLE & ACADEMIC SCOPE */}
                 {activeStep === 1 && (
                   <section className="space-y-6 animate-fade-in">
@@ -696,13 +692,13 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                       <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                         <Building2 className="w-5 h-5 text-brand-500" /> 1. Role & Academic Scope
                       </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                      <p className="text-xs text-slate-700 dark:text-slate-300 font-extrabold mt-1">
                         Define the staff member's institutional role and academic responsibility within Nandha Engineering College.
                       </p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      
+
                       {/* Staff Role Trigger */}
                       {(() => {
                         const rc = getRoleConfig(formData.role);
@@ -715,11 +711,10 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             <button
                               type="button"
                               onClick={() => setRoleOpen(o => !o)}
-                              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer group shadow-sm ${
-                                roleOpen
+                              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer group shadow-sm ${roleOpen
                                   ? `${rc.bgColor} ${rc.borderColor} ring-2 ring-brand-500/20`
                                   : `bg-white dark:bg-navy-950 border-slate-200 dark:border-navy-700 hover:${rc.borderColor}`
-                              }`}
+                                }`}
                             >
                               <div className="flex items-center gap-3">
                                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${rc.bgColor} border ${rc.borderColor}`}>
@@ -732,7 +727,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                                     </span>
                                     <span className="text-sm font-black text-slate-900 dark:text-white">{formData.role}</span>
                                   </div>
-                                  <span className="text-xs text-slate-400 font-medium mt-0.5">{rc.desc}</span>
+                                  <span className="text-xs text-slate-700 dark:text-slate-200 font-bold mt-0.5">{rc.desc}</span>
                                 </div>
                               </div>
                               <ChevronDown className={`w-4 h-4 shrink-0 ${rc.color} transition-transform duration-200 ${roleOpen ? 'rotate-180' : ''}`} />
@@ -748,10 +743,9 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                                     <button
                                       key={opt.value}
                                       type="button"
-                                      onClick={() => { setFormData({...formData, role: opt.value}); setRoleOpen(false); }}
-                                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                                        isSel ? `${cfg.bgColor} border ${cfg.borderColor}` : 'hover:bg-slate-50 dark:hover:bg-navy-800'
-                                      }`}
+                                      onClick={() => { setFormData({ ...formData, role: opt.value }); setRoleOpen(false); }}
+                                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${isSel ? `${cfg.bgColor} border ${cfg.borderColor}` : 'hover:bg-slate-50 dark:hover:bg-navy-800'
+                                        }`}
                                     >
                                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.bgColor} border ${cfg.borderColor}`}>
                                         <OptIcon className={`w-4 h-4 ${cfg.color}`} />
@@ -759,9 +753,9 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                                       <div className="flex flex-col flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
                                           <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${cfg.badgeColor}`}>{opt.badge}</span>
-                                          <span className={`text-xs font-black truncate ${isSel ? cfg.color : 'text-slate-800 dark:text-slate-100'}`}>{opt.label}</span>
+                                          <span className={`text-xs font-black truncate ${isSel ? cfg.color : 'text-slate-900 dark:text-slate-100'}`}>{opt.label}</span>
                                         </div>
-                                        <span className="text-[10px] text-slate-400 font-medium truncate mt-0.5">{opt.sublabel}</span>
+                                        <span className="text-[10px] text-slate-700 dark:text-slate-200 font-bold truncate mt-0.5">{opt.sublabel}</span>
                                       </div>
                                       {isSel && <Check className={`w-4 h-4 ${cfg.color} stroke-[2.5]`} />}
                                     </button>
@@ -788,7 +782,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             options={departmentOptions}
                             label=""
                             value={formData.department_id}
-                            onChange={(val) => setFormData({...formData, department_id: val})}
+                            onChange={(val) => setFormData({ ...formData, department_id: val })}
                             placeholder="Select Department..."
                             icon={Building2}
                           />
@@ -807,7 +801,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             options={academicYearOptions}
                             label=""
                             value={formData.academic_year}
-                            onChange={(val) => setFormData({...formData, academic_year: val})}
+                            onChange={(val) => setFormData({ ...formData, academic_year: val })}
                             placeholder="Select Academic Year..."
                             icon={GraduationCap}
                           />
@@ -821,7 +815,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                         <input
                           type="text"
                           value={formData.designation}
-                          onChange={e => setFormData({...formData, designation: e.target.value})}
+                          onChange={e => setFormData({ ...formData, designation: e.target.value })}
                           placeholder="e.g. Assistant Professor / DEPT"
                           className="w-full h-12 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"
                         />
@@ -843,7 +837,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      
+
                       {/* Full Legal Name */}
                       <div className="space-y-1.5 col-span-1 sm:col-span-2">
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Full Legal Name *</label>
@@ -903,7 +897,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Suggest Username
                           </button>
                         </div>
-                        
+
                         {/* Real-time allocated username detection warning */}
                         {(() => {
                           const uLower = formData.username.trim().toLowerCase();
@@ -949,7 +943,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             <input
                               type={showPassword ? "text" : "password"}
                               value={formData.password}
-                              onChange={e => setFormData({...formData, password: e.target.value})}
+                              onChange={e => setFormData({ ...formData, password: e.target.value })}
                               placeholder="••••••••"
                               className={`w-full h-12 pl-4 pr-10 rounded-2xl border ${formErrors.password ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
                             />
@@ -975,9 +969,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                           <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden">
                             <div
-                              className={`h-full transition-all duration-300 ${
-                                strengthScore <= 2 ? 'bg-rose-500 w-1/3' : strengthScore <= 4 ? 'bg-amber-500 w-2/3' : 'bg-emerald-500 w-full'
-                              }`}
+                              className={`h-full transition-all duration-300 ${strengthScore <= 2 ? 'bg-rose-500 w-1/3' : strengthScore <= 4 ? 'bg-amber-500 w-2/3' : 'bg-emerald-500 w-full'
+                                }`}
                             />
                           </div>
 
@@ -1009,7 +1002,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             <input
                               type={showConfirmPassword ? "text" : "password"}
                               value={formData.confirm_password}
-                              onChange={e => setFormData({...formData, confirm_password: e.target.value})}
+                              onChange={e => setFormData({ ...formData, confirm_password: e.target.value })}
                               placeholder="••••••••"
                               className={`w-full h-12 pl-4 pr-10 rounded-2xl border ${formData.confirm_password && !passwordsMatch ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
                             />
@@ -1052,14 +1045,14 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      
+
                       {/* Email Address */}
                       <div className="space-y-1.5 col-span-1 sm:col-span-2">
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Email Address (Official / Primary) *</label>
                         <input
                           type="email"
                           value={formData.email}
-                          onChange={e => setFormData({...formData, email: e.target.value})}
+                          onChange={e => setFormData({ ...formData, email: e.target.value })}
                           placeholder="faculty@nandhaengg.org or name@gmail.com"
                           className={`w-full h-12 px-4 rounded-2xl border ${formErrors.email ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
                         />
@@ -1072,8 +1065,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                         <input
                           type="tel"
                           value={formData.phone_number}
-                          onChange={e => setFormData({...formData, phone_number: e.target.value})}
-                          placeholder="+91 98765 43210"
+                          onChange={e => setFormData({ ...formData, phone_number: e.target.value })}
+                          placeholder="+91 87604 55822"
                           className={`w-full h-12 px-4 rounded-2xl border ${formErrors.phone_number ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
                         />
                         {formErrors.phone_number && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.phone_number}</p>}
@@ -1102,7 +1095,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                           <input
                             type="text"
                             value={formData.institutional_id}
-                            onChange={e => setFormData({...formData, institutional_id: e.target.value})}
+                            onChange={e => setFormData({ ...formData, institutional_id: e.target.value })}
                             placeholder="e.g. NEC-STAFF-FAC-098"
                             className={`flex-1 h-12 px-4 rounded-2xl border ${formErrors.institutional_id ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
                           />
@@ -1138,7 +1131,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                     </div>
 
                     <div className="space-y-5">
-                      
+
                       {/* Document Upload Card */}
                       <div className="space-y-1.5">
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">
@@ -1176,7 +1169,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                           options={staffOptions}
                           label=""
                           value={formData.reporting_manager}
-                          onChange={(val) => setFormData({...formData, reporting_manager: val})}
+                          onChange={(val) => setFormData({ ...formData, reporting_manager: val })}
                           placeholder="Select Reporting Manager..."
                           icon={User}
                         />
@@ -1199,13 +1192,13 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                     </div>
 
                     <div className="space-y-5">
-                      
+
                       {/* Permissions List */}
                       <div className="bg-white dark:bg-navy-950 rounded-2xl p-5 border border-slate-200 dark:border-navy-800 space-y-3">
                         <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider">
                           Inherited Role Permissions
                         </h4>
-                        
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                           <div className="flex items-center gap-2.5 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 text-emerald-800 dark:text-emerald-400 text-xs font-bold">
                             <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" /> View Student Profiles
@@ -1235,7 +1228,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                           <input
                             type="checkbox"
                             checked={formData.send_email}
-                            onChange={e => setFormData({...formData, send_email: e.target.checked})}
+                            onChange={e => setFormData({ ...formData, send_email: e.target.checked })}
                             className="w-5 h-5 min-w-[20px] min-h-[20px] accent-brand-600 rounded cursor-pointer shrink-0"
                           />
                           <div>
@@ -1244,28 +1237,26 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                           </div>
                         </label>
 
-                        <label className={`flex items-start gap-3 p-4 rounded-2xl border transition-all cursor-pointer min-h-[56px] ${
-                          formErrors.consent 
+                        <label className={`flex items-start gap-3 p-4 rounded-2xl border transition-all cursor-pointer min-h-[56px] ${formErrors.consent
                             ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-800/60 ring-2 ring-rose-500/20'
                             : formData.consent_checked
-                            ? 'bg-brand-50/40 dark:bg-brand-950/20 border-brand-200 dark:border-brand-800/60'
-                            : 'bg-slate-50 dark:bg-navy-950 border-slate-200 dark:border-navy-800'
-                        }`}>
+                              ? 'bg-brand-50/40 dark:bg-brand-950/20 border-brand-200 dark:border-brand-800/60'
+                              : 'bg-slate-50 dark:bg-navy-950 border-slate-200 dark:border-navy-800'
+                          }`}>
                           <div className="relative flex items-center justify-center shrink-0 mt-0.5">
                             <input
                               type="checkbox"
                               checked={formData.consent_checked}
                               onChange={e => {
-                                setFormData({...formData, consent_checked: e.target.checked});
-                                if (formErrors.consent) setFormErrors({...formErrors, consent: ''});
+                                setFormData({ ...formData, consent_checked: e.target.checked });
+                                if (formErrors.consent) setFormErrors({ ...formErrors, consent: '' });
                               }}
                               className="peer absolute w-full h-full opacity-0 cursor-pointer z-10"
                             />
-                            <div className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${
-                              formData.consent_checked
+                            <div className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${formData.consent_checked
                                 ? 'bg-brand-600 border-brand-600'
                                 : 'bg-white dark:bg-navy-950 border-slate-300 dark:border-navy-600 peer-hover:border-brand-400'
-                            }`}>
+                              }`}>
                               {formData.consent_checked && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
                             </div>
                           </div>

@@ -491,12 +491,12 @@ def _log_to_db(msg_id: str, recipient: str, subject: str, status: str, err: Opti
             # Upsert logic to handle retries without duplicating
             existing = db.query(EmailDelivery).filter(EmailDelivery.message_id == msg_id).first()
             if existing:
-                existing.status = status
-                existing.error_message = err or last_error
+                existing.status = status  # type: ignore
+                existing.error_message = err or last_error  # type: ignore
                 if status == "SENT":
-                    existing.sent_at = datetime.datetime.now(datetime.timezone.utc)
+                    existing.sent_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore
                 else:
-                    existing.failed_at = datetime.datetime.now(datetime.timezone.utc)
+                    existing.failed_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore
             else:
                 new_delivery = EmailDelivery(
                     message_id=msg_id,
@@ -670,12 +670,12 @@ def send_email(
     record_email_delivery_diagnostic(
         recipient=recipient,
         smtp_server="ALL_TRANSPORTS",
-        smtp_response=str(last_error or "Provider error"),
+        smtp_response=last_error or "Provider error",
         delivery_status=STATUS_DELIVERY_FAILED,
         error_code="DELIVERY_FAILED_ALL_TRANSPORTS",
         is_permanent=False
     )
-    _log_to_db(generated_msg_id, recipient, subject, "FAILED", None, str(last_error or "Provider error"), "SYSTEM", "AUTOMATED")
+    _log_to_db(generated_msg_id, recipient, subject, "FAILED", None, last_error or "Provider error", "SYSTEM", "AUTOMATED")
     return False, last_error or "EMAIL_PROVIDER_NOT_CONFIGURED: Failed to deliver email."
 
 
@@ -770,7 +770,7 @@ Please do not reply directly to this email.
 
 def mask_email_str(email_str: str) -> str:
     if not email_str or "@" not in email_str:
-        return str(email_str)
+        return email_str
     user_part, domain_part = email_str.split("@", 1)
     if len(user_part) <= 2:
         return f"{user_part[0]}***@{domain_part}"
@@ -1035,7 +1035,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
 
         except smtplib.SMTPResponseException as resp_err:
             code = resp_err.smtp_code
-            err_msg = resp_err.smtp_error.decode('utf-8', errors='ignore') if isinstance(resp_err.smtp_error, bytes) else str(resp_err.smtp_error)
+            err_msg = resp_err.smtp_error.decode('utf-8', errors='ignore') if isinstance(resp_err.smtp_error, bytes) else resp_err.smtp_error
             is_perm = code in (550, 551, 552, 553, 554) or "5.1.10" in err_msg or "RecipientNotFound" in err_msg or "User unknown" in err_msg
             if is_perm:
                 logger.error(f"[{now_iso}] [OTP] stage=smtp_failed code={code} classification=PERMANENT_RECIPIENT_FAILURE: {err_msg}")
@@ -1060,10 +1060,10 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
     # ================================================================
     # FALLBACK: Brevo HTTPS API (if SMTP failed on local, or no SMTP creds)
     # ================================================================
-    if brevo_key and is_local:
+    if brevo_keys:
         try:
             t_brevo_start = time.time()
-            ok, msg_id = send_email_via_brevo(brevo_key, from_email, clean_rec, subject, html_body, None, text_body, max_retries=1)
+            ok, msg_id = send_email_via_brevo(brevo_keys[0], from_email, clean_rec, subject, html_body, None, text_body, max_retries=1)
             dur = (time.time() - t_brevo_start) * 1000
             now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f")[:-3]
             if ok:
@@ -1328,7 +1328,7 @@ def _process_email_queue_worker():
         from_email = (os.environ.get("REPORT_FROM_EMAIL") or smtp_user or "reports@nandha.edu.in").strip()
 
         for log in pending_logs:
-            log.status = "SENDING"
+            log.status = "SENDING"  # type: ignore
             db.commit()
 
             session = db.query(WeeklySession).filter(WeeklySession.id == log.session_id).first() if log.session_id else None
@@ -1337,8 +1337,8 @@ def _process_email_queue_worker():
             # Build MIME email message
             msg = MIMEMultipart()
             msg['From'] = from_email
-            msg['To'] = log.recipient
-            msg['Subject'] = log.subject
+            msg['To'] = str(log.recipient)
+            msg['Subject'] = str(log.subject)
             msg.attach(MIMEText(body_html, 'html'))
 
             # Attach report files
@@ -1359,19 +1359,19 @@ def _process_email_queue_worker():
 
             if resend_key:
                 delivered, err_details = send_email_via_resend(
-                    resend_key, from_email, log.recipient, log.subject, body_html,
+                    resend_key, from_email, str(log.recipient), str(log.subject), body_html,
                     [("Nandha_Weekly_Report.pdf", report_files['pdf']), ("Nandha_Weekly_Report.xlsx", report_files['excel'])]
                 )
             elif brevo_key:
                 delivered, err_details = send_email_via_brevo(
-                    brevo_key, from_email, log.recipient, log.subject, body_html,
+                    brevo_key, from_email, str(log.recipient), str(log.subject), body_html,
                     [("Nandha_Weekly_Report.pdf", report_files['pdf']), ("Nandha_Weekly_Report.xlsx", report_files['excel'])]
                 )
             elif smtp_user and smtp_pass:
                 try:
                     server = connect_and_login_smtp(smtp_host, smtp_port, smtp_user, smtp_pass, timeout=15)
                     try:
-                        server.sendmail(from_email, log.recipient, msg.as_string())
+                        server.sendmail(from_email, str(log.recipient), msg.as_string())
                     finally:
                         try:
                             server.quit()
@@ -1384,25 +1384,25 @@ def _process_email_queue_worker():
                         err_details += " | Render Free Tier blocks outbound SMTP ports 587/465. Set RESEND_API_KEY or BREVO_API_KEY in Render env vars."
 
             if delivered:
-                log.status = "SENT"
-                log.sent_at = datetime.datetime.now(datetime.timezone.utc)
-                log.error_message = None
+                log.status = "SENT"  # type: ignore
+                log.sent_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore
+                log.error_message = None  # type: ignore
                 db.commit()
                 logger.info(f"Successfully delivered email report to {log.recipient}")
             elif err_details:
-                log.retry_count += 1
+                log.retry_count = int(log.retry_count or 0) + 1  # type: ignore
                 if log.retry_count >= 3:
-                    log.status = "FAILED"
-                    log.error_message = f"Failed after 3 attempts: {err_details}"
+                    log.status = "FAILED"  # type: ignore
+                    log.error_message = f"Failed after 3 attempts: {err_details}"  # type: ignore
                 else:
-                    log.status = "RETRYING"
-                    log.error_message = err_details
+                    log.status = "RETRYING"  # type: ignore
+                    log.error_message = err_details  # type: ignore
                 db.commit()
             else:
                 # Local development fallback — mark as SENT for demo
-                log.status = "SENT"
-                log.sent_at = datetime.datetime.now(datetime.timezone.utc)
-                log.error_message = "SMTP / API credentials missing — logged in local simulation mode."
+                log.status = "SENT"  # type: ignore
+                log.sent_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore
+                log.error_message = "SMTP / API credentials missing — logged in local simulation mode."  # type: ignore
                 db.commit()
 
     except Exception as exc:
@@ -1460,7 +1460,8 @@ def send_manual_report_email(
     total_students_cnt = len(dataset.get("rows", []))
     contest_name = dataset.get("contestName") or "Weekly Contest"
     metrics = dataset.get("metrics", {})
-    gen_time_str = dataset.get("generatedAtIST") or datetime.datetime.now(datetime.timezone.utc).strftime("%d %b %Y, %I:%M %p IST")
+    from backend.time_utils import now_ist, format_ist_datetime
+    gen_time_str = dataset.get("generatedAtIST") or format_ist_datetime(now_ist())
 
     # Format department, year, attendance labels for display
     dept_label = "All Departments" if dept == "ALL" else dept
@@ -1581,15 +1582,15 @@ def send_manual_report_email(
         )
 
         if delivered:
-            log.status = "SENT"
-            log.sent_at = datetime.datetime.now(datetime.timezone.utc)
-            log.error_message = None
+            log.status = "SENT"  # type: ignore
+            log.sent_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore
+            log.error_message = None  # type: ignore
             db.commit()
             dispatched_count += 1
             logger.info(f"[REPORT EMAIL DELIVERED] To: {email} | Files: {len(attachments_bundle)} | Students: {total_students_cnt}")
         elif err_details:
-            log.status = "FAILED"
-            log.error_message = err_details or "Email delivery failed"
+            log.status = "FAILED"  # type: ignore
+            log.error_message = err_details or "Email delivery failed"  # type: ignore
             db.commit()
             errors.append(f"{email}: {err_details or 'Delivery failed'}")
             logger.error(f"[REPORT EMAIL FAILED] To: {email} | Error: {err_details}")

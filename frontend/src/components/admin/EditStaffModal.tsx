@@ -702,7 +702,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                                       <OptIcon className={`w-4 h-4 ${cfg.color}`} />
                                       <div className="flex flex-col flex-1 min-w-0">
                                         <span className={`text-xs font-black truncate ${isSel ? cfg.color : 'text-slate-800 dark:text-slate-100'}`}>{opt.label}</span>
-                                        <span className="text-[10px] text-slate-400 font-medium truncate">{opt.sublabel}</span>
+                                        <span className="text-[10px] text-slate-700 dark:text-slate-200 font-bold truncate">{opt.sublabel}</span>
                                       </div>
                                       {isSel && <Check className={`w-4 h-4 ${cfg.color}`} />}
                                     </button>

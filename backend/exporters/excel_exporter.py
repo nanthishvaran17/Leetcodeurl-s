@@ -542,7 +542,8 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     contest_name = dataset.get("contestName") or metrics.get("contestName") or dataset.get("contest_name") or _def_cname
     contest_date_str = dataset.get("sessionDate") or dataset.get("session_date") or _def_cdate
     snapshot_id = str(dataset.get("snapshotId") or dataset.get("snapshot_id") or dataset.get("reportId") or f"SESSION_{calculate_contest_number(_prev_sun)}_OFFICIAL")
-    gen_time_str = dataset.get("generatedAtIST") or datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
+    from backend.time_utils import now_ist, format_ist_datetime
+    gen_time_str = dataset.get("generatedAtIST") or format_ist_datetime(now_ist())
 
     depts_present = sorted(list({r["dept"] for r in rows if not ("TEST" in r["dept"].upper())}))
     years_present = sorted(list({r["year"] for r in rows}))

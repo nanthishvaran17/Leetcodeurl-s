@@ -279,7 +279,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     ws.row_dimensions[4].height = 20
 
     # Row 5: Metadata Block (Session Date, Timestamp, Scope Roster)
-    now_str = datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
+    from backend.time_utils import now_ist, format_ist_datetime
+    now_str = format_ist_datetime(now_ist())
     meta_str = f"Session Date: {session_date or 'N/A'}   |   Department: {dept}   |   Year: {year}   |   Total Roster: {len(rows)} Students   |   Generated: {now_str}"
     ws.merge_cells(f"A5:{last_col}5")
     for c in range(1, cols + 1):

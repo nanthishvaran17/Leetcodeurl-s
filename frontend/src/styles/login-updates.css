@@ -82,7 +82,9 @@
   margin-top: auto !important;
   flex-shrink: 0 !important;
   color: #FFFFFF !important;
-  background: linear-gradient(180deg, rgba(7, 19, 36, 0) 0%, rgba(7, 19, 36, 0.85) 40%, #071324 100%) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
   z-index: 10 !important;
 }
 
