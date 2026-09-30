@@ -9,6 +9,7 @@ Does NOT modify or remove any existing sheets or data.
 import datetime
 from collections import defaultdict
 from typing import Dict, Any, List
+from backend.time_utils import format_ist, now_utc
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -156,7 +157,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws14.merge_cells("A2:K2"); ws14["A2"] = "NANDHA INTELLIGENCE — WEEK-ON-WEEK INTELLIGENCE"
     ws14["A2"].font = Font(name=PRIMARY_FONT, size=11, bold=True, color="FFFFFF"); ws14["A2"].fill = HEADER_FILL; ws14["A2"].alignment = ALIGN_CENTER
 
-    curr_time_str = datetime.datetime.now().strftime("%d-%m-%Y %I:%M %p")
+    curr_time_str = format_ist(now_utc(), "%d-%m-%Y %I:%M %p IST")
     ws14["A4"] = f"Previous Contest: Contest {prev_c_num}"; ws14["C4"] = f"Current Contest: Contest {curr_c_num}"; ws14["F4"] = f"Generated At: {curr_time_str}"
     ws14["A5"] = f"Previous Date: {getattr(prev_sess, 'session_date', 'N/A')}"; ws14["C5"] = f"Current Date: {getattr(curr_sess, 'session_date', 'N/A')}"; ws14["F5"] = "Data Version: v2026.1"
     for r in [4, 5]:

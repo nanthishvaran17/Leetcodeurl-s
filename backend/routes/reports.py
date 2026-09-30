@@ -1099,10 +1099,10 @@ def get_contest_filename_base(
     import re
     import datetime
 
-    # Current IST Date for dynamic current report generation
-    now_ist = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=5, minutes=30)
+    from backend.time_utils import now_ist
+    now_ist_dt = now_ist()
     MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-    today_date_seg = f"{now_ist.day:02d}{MONTHS[now_ist.month-1]}{now_ist.year}"
+    today_date_seg = f"{now_ist_dt.day:02d}{MONTHS[now_ist_dt.month-1]}{now_ist_dt.year}"
 
     # --- 1. Report Type / Name Slug ---
     rtype_str = (report_type or "").upper().strip()

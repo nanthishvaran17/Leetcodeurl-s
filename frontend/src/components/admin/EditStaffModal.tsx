@@ -4,7 +4,8 @@ import {
   User, Mail, Phone, Calendar, Shield, Key, CheckCircle, Building2, 
   History, CreditCard, Clock, KeyRound, Award, GraduationCap, X, 
   AlertCircle, AlertTriangle, ChevronDown, Check, Loader2, Sparkles, 
-  Edit3, ShieldAlert, Lock, UserCheck, ShieldCheck, RefreshCcw, Briefcase
+  Edit3, ShieldAlert, Lock, UserCheck, ShieldCheck, RefreshCcw, Briefcase,
+  Camera, Trash2
 } from 'lucide-react';
 import api from '../../services/api';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
@@ -43,8 +44,10 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
     date_of_birth: '',
     mentoring_role: '',
     reporting_manager: 'none',
-    institutional_id: ''
+    institutional_id: '',
+    profile_photo: ''
   });
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
 
   const [isActive, setIsActive] = useState(true);
   const [automatedReportsEnabled, setAutomatedReportsEnabled] = useState<boolean>(true);
@@ -142,7 +145,8 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         date_of_birth: dobVal,
         mentoring_role: staffObj.mentoring_role || '',
         reporting_manager: staffObj.reporting_manager ? String(staffObj.reporting_manager) : 'none',
-        institutional_id: staffObj.institutional_id || ''
+        institutional_id: staffObj.institutional_id || '',
+        profile_photo: staffObj.profile_photo || ''
       },
       isActive: staffObj.is_active ?? true,
       dobDisplay: formattedDOBDisplay,
@@ -156,6 +160,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
       const normalized = normalizeStaffForForm(staff);
       if (normalized) {
         setFormData(normalized.formData);
+        setProfilePhotoPreview(normalized.formData.profile_photo || null);
         setIsActive(normalized.isActive);
         setDobDisplay(normalized.dobDisplay);
         setAutomatedReportsEnabled(normalized.automatedReportsEnabled);
@@ -171,6 +176,23 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
       }
     }
   }, [staff]);
+
+  const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        notify.error('Profile photo must be less than 5 MB', '', { category: 'ADMIN' });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const b64 = reader.result as string;
+        setProfilePhotoPreview(b64);
+        setFormData(prev => ({ ...prev, profile_photo: b64 }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Derive Academic Year Options dynamically from store
   const academicYearOptions = useMemo(() => {
@@ -401,7 +423,8 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         is_active: isActive,
         date_of_birth: formattedDOB,
         receive_email_reports: automatedReportsEnabled,
-        reporting_manager_id: formData.reporting_manager === 'none' ? undefined : parseInt(formData.reporting_manager, 10)
+        reporting_manager_id: formData.reporting_manager === 'none' ? undefined : parseInt(formData.reporting_manager, 10),
+        profile_photo: formData.profile_photo || undefined
       };
 
       const res = await api.put(`/admin/staff/${staff.id}`, payload);
@@ -436,60 +459,72 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   if (!staff) return null;
 
   return (
-    <GlobalModalBackdrop isOpen={true} onClose={handleAttemptClose} className="flex items-center justify-center p-3 sm:p-6 bg-navy-950/70 backdrop-blur-md overflow-y-auto z-[999]">
-      <div className="bg-white dark:bg-navy-950 rounded-[2.2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[92vh] max-h-[880px] overflow-hidden border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
+    <GlobalModalBackdrop isOpen={true} onClose={handleAttemptClose} className="flex items-end sm:items-center justify-center p-0 sm:p-6 bg-navy-950/70 backdrop-blur-md overflow-hidden z-[999]">
+      <div className="bg-white dark:bg-navy-950 rounded-t-[2rem] sm:rounded-[2.2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[96dvh] sm:h-[92vh] sm:max-h-[880px] overflow-hidden border-t sm:border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
         
-        {/* HEADER */}
-        <div className="px-6 sm:px-8 py-5 bg-gradient-to-r from-slate-50 via-indigo-50/40 to-slate-50 dark:from-navy-950 dark:via-indigo-950/30 dark:to-navy-950 border-b border-slate-200 dark:border-navy-800 flex items-start justify-between shrink-0 z-20 gap-4">
-          <div className="flex items-start space-x-4 min-w-0 flex-1">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 via-brand-600 to-indigo-700 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 border border-indigo-400/30 shrink-0 mt-0.5">
-              <Edit3 className="w-6 h-6" />
+        {/* RICH HEADER BANNER */}
+        <div className="px-4 sm:px-8 py-4 sm:py-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border-b border-indigo-500/30 flex items-start justify-between shrink-0 z-20 gap-3 shadow-md relative overflow-hidden">
+          {/* Ambient Lighting Glow Effects */}
+          <div className="absolute -top-12 -left-12 w-48 h-48 bg-brand-500/15 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-indigo-500/15 rounded-full blur-2xl pointer-events-none" />
+
+          <div className="flex items-start space-x-3 sm:space-x-4 min-w-0 flex-1 relative z-10">
+            {/* Edit Icon Badge */}
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-brand-500 via-indigo-600 to-indigo-700 text-white flex items-center justify-center shadow-lg shadow-brand-500/25 border border-brand-400/40 shrink-0 mt-0.5">
+              <Edit3 className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h2 className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white tracking-tight">
+
+            <div className="min-w-0 flex-1 space-y-1">
+              {/* Title & Badges Row */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5">
+                <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight">
                   Edit Staff Member
                 </h2>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 font-mono font-black text-xs shadow-2xs">
-                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
-                  {staff.institutional_id || `NEC-STAFF-${String(staff.id).padStart(3, '0')}`}
-                </span>
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl border text-xs font-black shadow-2xs ${
-                  isActive 
-                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30' 
-                    : 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30'
-                }`}>
-                  <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
-                  {isActive ? 'ACTIVE ACCOUNT' : 'SUSPENDED ACCOUNT'}
-                </span>
+
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 font-mono font-black text-[10px] sm:text-xs backdrop-blur-md shadow-2xs">
+                    <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-400" />
+                    {staff.institutional_id || `NEC-STAFF-${String(staff.id).padStart(3, '0')}`}
+                  </span>
+
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-xl border text-[10px] sm:text-xs font-black backdrop-blur-md shadow-2xs ${
+                    isActive 
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40' 
+                      : 'bg-rose-500/20 text-rose-300 border-rose-400/40'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${isActive ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`}></span>
+                    {isActive ? 'ACTIVE ACCOUNT' : 'SUSPENDED'}
+                  </span>
+                </div>
               </div>
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
+
+              <p className="text-[11px] sm:text-xs font-bold text-slate-300 leading-relaxed">
                 Update staff identity, academic scope, access roles, and security credentials
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0 self-start pt-0.5">
+          <div className="flex items-center gap-2 shrink-0 self-start relative z-10 pt-0.5">
             {isDirty && (
-              <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs font-black border border-amber-500/30 animate-pulse">
-                <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 text-xs font-black border border-amber-400/30 animate-pulse">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
                 Unsaved Changes
               </span>
             )}
             <button 
               type="button"
               onClick={handleAttemptClose} 
-              className="w-10 h-10 rounded-2xl bg-white dark:bg-navy-900 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-slate-200 dark:border-navy-700 transition-all shadow-sm flex items-center justify-center active:scale-95 cursor-pointer hover:scale-105"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-rose-500/30 text-slate-300 hover:text-white border border-white/15 transition-all shadow-sm flex items-center justify-center active:scale-95 cursor-pointer hover:scale-105"
               title="Close Modal"
             >
-              <X className="w-5 h-5 stroke-[2.5]" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
             </button>
           </div>
         </div>
 
         {/* ERROR NOTIFICATION BANNER */}
         {submitError && (
-          <div className="mx-6 mt-4 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 flex items-start gap-3 text-rose-800 dark:text-rose-300 animate-fade-in shrink-0">
+          <div className="mx-4 sm:mx-6 mt-3 sm:mt-4 p-3.5 sm:p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 flex items-start gap-3 text-rose-800 dark:text-rose-300 animate-fade-in shrink-0">
             <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
             <div>
               <h4 className="text-xs font-black uppercase tracking-wider">Unable to Save Changes</h4>
@@ -499,34 +534,43 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         )}
 
         {/* MAIN STRUCTURED EDIT FORM BODY - FULL HEIGHT SCROLLABLE */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-7 custom-scrollbar bg-slate-50/50 dark:bg-navy-950/30">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-7 custom-scrollbar bg-slate-50/50 dark:bg-navy-950/30 overscroll-contain">
           <form id="edit-staff-form" onSubmit={handleSave} className="space-y-6">
             
             {/* STAFF SUMMARY OVERVIEW BAR INSIDE SCROLLABLE AREA */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 bg-white/90 dark:bg-navy-950/90 rounded-2xl border border-slate-200/90 dark:border-navy-800 shadow-2xs">
-              <div className="bg-slate-50/90 dark:bg-navy-900/90 rounded-xl p-2.5 border border-slate-200/70 dark:border-navy-800">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
-                  <User className="w-3 h-3 text-brand-500" /> Full Name
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 p-3.5 sm:p-4 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm">
+              <div className="bg-slate-50/90 dark:bg-navy-950/70 rounded-xl p-3 sm:p-3.5 border border-slate-200/80 dark:border-navy-800/80 flex flex-col justify-center min-w-0 transition-all">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5 mb-1 truncate">
+                  <User className="w-3.5 h-3.5 text-brand-500 shrink-0" /> Full Name
                 </span>
-                <span className="font-black text-xs text-slate-950 dark:text-white break-all [overflow-wrap:anywhere] block" title={formData.full_name || staff.username}>{formData.full_name || staff.username}</span>
+                <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white truncate block" title={formData.full_name || staff.username}>
+                  {formData.full_name || staff.username}
+                </span>
               </div>
-              <div className="bg-slate-50/90 dark:bg-navy-900/90 rounded-xl p-2.5 border border-slate-200/70 dark:border-navy-800">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
-                  <Mail className="w-3 h-3 text-indigo-500" /> Official Email
+
+              <div className="bg-slate-50/90 dark:bg-navy-950/70 rounded-xl p-3 sm:p-3.5 border border-slate-200/80 dark:border-navy-800/80 flex flex-col justify-center min-w-0 transition-all">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5 mb-1 truncate">
+                  <Mail className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Official Email
                 </span>
-                <span className="font-bold text-xs text-slate-800 dark:text-slate-200 break-all [overflow-wrap:anywhere] block" title={formData.email}>{formData.email}</span>
+                <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 truncate block" title={formData.email}>
+                  {formData.email}
+                </span>
               </div>
-              <div className="bg-slate-50/90 dark:bg-navy-900/90 rounded-xl p-2.5 border border-slate-200/70 dark:border-navy-800">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
-                  <Briefcase className="w-3 h-3 text-emerald-500" /> Assigned Role
+
+              <div className="bg-slate-50/90 dark:bg-navy-950/70 rounded-xl p-3 sm:p-3.5 border border-slate-200/80 dark:border-navy-800/80 flex flex-col justify-center min-w-0 transition-all">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5 mb-1 truncate">
+                  <Briefcase className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> Assigned Role
                 </span>
-                <span className="font-black text-xs text-indigo-600 dark:text-indigo-400 truncate block">{formData.role}</span>
+                <span className="font-extrabold text-xs sm:text-sm text-indigo-600 dark:text-indigo-400 truncate block">
+                  {formData.role}
+                </span>
               </div>
-              <div className="bg-slate-50/90 dark:bg-navy-900/90 rounded-xl p-2.5 border border-slate-200/70 dark:border-navy-800">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
-                  <Clock className="w-3 h-3 text-amber-500" /> Last Updated
+
+              <div className="bg-slate-50/90 dark:bg-navy-950/70 rounded-xl p-3 sm:p-3.5 border border-slate-200/80 dark:border-navy-800/80 flex flex-col justify-center min-w-0 transition-all">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5 mb-1 truncate">
+                  <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" /> Last Updated
                 </span>
-                <span className="font-mono font-bold text-[10px] sm:text-xs text-slate-700 dark:text-slate-300 truncate block">
+                <span className="font-mono font-bold text-xs text-slate-800 dark:text-slate-200 truncate block">
                   {lastUpdatedAt
                     ? lastUpdatedAt.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
                     : 'Account Active'}
@@ -549,70 +593,115 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    {/* Profile Photo Avatar & Upload */}
+                    <div className="sm:col-span-2 p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-900/60 border border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row items-center gap-4">
+                      <div className="relative shrink-0">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-brand-500/40 bg-white dark:bg-navy-950 flex items-center justify-center shadow-xs">
+                          {profilePhotoPreview ? (
+                            <img
+                              src={profilePhotoPreview}
+                              alt="Staff Profile"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <User className="w-8 h-8 text-slate-400 dark:text-slate-500" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-1 text-center sm:text-left space-y-1.5">
+                        <span className="block text-xs font-black text-slate-900 dark:text-slate-100">Profile Photo</span>
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                          <label className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer inline-flex items-center gap-1">
+                            <Camera className="w-3.5 h-3.5" />
+                            {profilePhotoPreview ? 'Change Photo' : 'Upload Photo'}
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/png, image/jpeg, image/webp"
+                              onChange={handleProfilePhotoChange}
+                            />
+                          </label>
+                          {profilePhotoPreview && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProfilePhotoPreview(null);
+                                setFormData(prev => ({ ...prev, profile_photo: '' }));
+                              }}
+                              className="px-2.5 py-1.5 rounded-xl bg-slate-200 dark:bg-navy-800 hover:bg-rose-100 text-rose-700 dark:text-rose-300 text-xs font-bold transition-all inline-flex items-center gap-1 border border-rose-200 dark:border-rose-900/30"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" /> Remove
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Full Name */}
                     <div className="space-y-1.5 sm:col-span-2">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Full Legal Name *</label>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Full Legal Name *</label>
                       <input
                         type="text"
                         value={formData.full_name}
                         onChange={e => setFormData({...formData, full_name: e.target.value})}
-                        className={`w-full h-11 px-4 rounded-2xl border ${formErrors.full_name ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
+                        className={`w-full h-11 px-4 rounded-2xl border ${formErrors.full_name ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-300 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-white dark:bg-navy-950 text-xs font-extrabold text-slate-900 dark:text-white outline-none transition-all shadow-2xs`}
                       />
                       {formErrors.full_name && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.full_name}</p>}
                     </div>
 
                     {/* Official Email */}
                     <div className="space-y-1.5 sm:col-span-2">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Official College Email *</label>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Official College Email *</label>
                       <input
                         type="email"
                         value={formData.email}
                         onChange={e => setFormData({...formData, email: e.target.value})}
-                        className={`w-full h-11 px-4 rounded-2xl border ${formErrors.email ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
+                        className={`w-full h-11 px-4 rounded-2xl border ${formErrors.email ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-300 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-white dark:bg-navy-950 text-xs font-extrabold text-slate-900 dark:text-white outline-none transition-all shadow-2xs`}
                       />
                       {formErrors.email && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.email}</p>}
                     </div>
 
                     {/* Username (Immutable) */}
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">
-                        Username <span className="text-[10px] text-slate-400 font-normal">(Locked)</span>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">
+                        Username <span className="text-[10px] text-slate-600 dark:text-slate-300 font-bold">(Locked)</span>
                       </label>
                       <input
                         type="text"
                         value={formData.username}
                         disabled
-                        className="w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-100 dark:bg-navy-800 text-xs font-mono font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed opacity-70"
+                        className="w-full h-11 px-4 rounded-2xl border border-slate-300 dark:border-navy-700 bg-slate-100 dark:bg-navy-900 text-xs font-mono font-black text-slate-800 dark:text-slate-200 cursor-not-allowed opacity-90 shadow-2xs"
                       />
                     </div>
 
                     {/* Employee ID (Institutional ID) */}
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Employee ID / Staff ID</label>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Employee ID / Staff ID</label>
                       <input
                         type="text"
                         value={formData.institutional_id || ''}
                         onChange={e => setFormData({...formData, institutional_id: e.target.value})}
                         placeholder="e.g. NEC-EMP-104"
-                        className="w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                        className="w-full h-11 px-4 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-extrabold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
                       />
                     </div>
 
                     {/* Phone Number */}
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Phone Number</label>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Phone Number</label>
                       <input
                         type="tel"
                         value={formData.phone_number}
                         onChange={e => setFormData({...formData, phone_number: e.target.value})}
                         placeholder="+91..."
-                        className="w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                        className="w-full h-11 px-4 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-extrabold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
                       />
                     </div>
 
                     {/* Date of Birth */}
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Date of Birth (DD/MM/YYYY)</label>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Date of Birth (DD/MM/YYYY)</label>
                       <input
                         type="text"
                         name="staff_dob_ignore_autofill"
@@ -621,7 +710,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                         value={dobDisplay}
                         onChange={handleDOBChange}
                         placeholder="DD / MM / YYYY"
-                        className={`w-full h-11 px-4 rounded-2xl border ${formErrors.date_of_birth ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-mono font-bold text-slate-900 dark:text-white outline-none transition-all`}
+                        className={`w-full h-11 px-4 rounded-2xl border ${formErrors.date_of_birth ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-300 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-white dark:bg-navy-950 text-xs font-mono font-extrabold text-slate-900 dark:text-white outline-none transition-all shadow-2xs`}
                       />
                       {formErrors.date_of_birth && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.date_of_birth}</p>}
                     </div>
@@ -640,31 +729,31 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Designation */}
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Designation</label>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Designation</label>
                       <input
                         type="text"
                         value={formData.designation}
                         onChange={e => setFormData({...formData, designation: e.target.value})}
                         placeholder="e.g. AP / CSE"
-                        className="w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all"
+                        className="w-full h-11 px-4 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-extrabold text-slate-900 dark:text-white outline-none transition-all shadow-2xs"
                       />
                     </div>
 
                     {/* Mentoring Role */}
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Mentoring Role</label>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Mentoring Role</label>
                       <input
                         type="text"
                         value={formData.mentoring_role}
                         onChange={e => setFormData({...formData, mentoring_role: e.target.value})}
                         placeholder="e.g. Class Mentor"
-                        className="w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all"
+                        className="w-full h-11 px-4 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-extrabold text-slate-900 dark:text-white outline-none transition-all shadow-2xs"
                       />
                     </div>
 
                     {/* Institutional Role Dropdown */}
                     <div className="space-y-1.5 sm:col-span-2 relative z-[105]" ref={roleRef}>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Institutional Role *</label>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Institutional Role *</label>
                       {(() => {
                         const rc = getRoleConfig(formData.role);
                         const RoleIcon = rc.icon;
@@ -673,8 +762,8 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                             <button
                               type="button"
                               onClick={() => setRoleOpen(o => !o)}
-                              className={`w-full flex items-center justify-between px-4 py-2.5 rounded-2xl border-2 transition-all text-left cursor-pointer ${
-                                roleOpen ? `${rc.bgColor} ${rc.borderColor} ring-2 ring-indigo-500/20` : 'bg-slate-50 dark:bg-navy-950 border-slate-200 dark:border-navy-700'
+                              className={`w-full flex items-center justify-between px-4 py-2.5 rounded-2xl border-2 transition-all text-left cursor-pointer shadow-2xs ${
+                                roleOpen ? `${rc.bgColor} ${rc.borderColor} ring-2 ring-indigo-500/20` : 'bg-white dark:bg-navy-950 border-slate-300 dark:border-navy-700'
                               }`}
                             >
                               <div className="flex items-center gap-3">
@@ -685,7 +774,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                             </button>
 
                             {roleOpen && (
-                              <div className="absolute left-0 right-0 z-[9999] mt-2 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-2xl p-2 space-y-1">
+                              <div className="absolute left-0 right-0 z-[9999] mt-2 rounded-2xl bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-700 shadow-2xl p-2 space-y-1">
                                 {roleOptions.map(opt => {
                                   const cfg = getRoleConfig(opt.value);
                                   const OptIcon = cfg.icon;
@@ -701,8 +790,8 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                                     >
                                       <OptIcon className={`w-4 h-4 ${cfg.color}`} />
                                       <div className="flex flex-col flex-1 min-w-0">
-                                        <span className={`text-xs font-black truncate ${isSel ? cfg.color : 'text-slate-800 dark:text-slate-100'}`}>{opt.label}</span>
-                                        <span className="text-[10px] text-slate-700 dark:text-slate-200 font-bold truncate">{opt.sublabel}</span>
+                                        <span className={`text-xs font-black truncate ${isSel ? cfg.color : 'text-slate-900 dark:text-slate-100'}`}>{opt.label}</span>
+                                        <span className="text-[10px] text-slate-700 dark:text-slate-200 font-extrabold truncate">{opt.sublabel}</span>
                                       </div>
                                       {isSel && <Check className={`w-4 h-4 ${cfg.color}`} />}
                                     </button>
@@ -734,9 +823,9 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Department Dropdown */}
                     <div className="space-y-1.5 relative z-[104]">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Department *</label>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Department *</label>
                       {isGlobalRole ? (
-                        <div className="w-full h-11 px-4 flex items-center rounded-2xl border border-dashed border-brand-300 dark:border-brand-500/40 bg-brand-50/50 dark:bg-brand-500/5 text-xs font-black text-brand-900 dark:text-brand-200">
+                        <div className="w-full h-11 px-4 flex items-center rounded-2xl border border-dashed border-brand-400 dark:border-brand-500/40 bg-brand-50/50 dark:bg-brand-500/5 text-xs font-black text-brand-950 dark:text-brand-200">
                           All Departments (Global Scope)
                         </div>
                       ) : (
@@ -753,9 +842,9 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
 
                     {/* Academic Year Cohort */}
                     <div className="space-y-1.5 relative z-[103]">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Academic Year / Cohort</label>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Academic Year / Cohort</label>
                       {isGlobalRole ? (
-                        <div className="w-full h-11 px-4 flex items-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-navy-800/40 text-xs font-black text-slate-600 dark:text-slate-300">
+                        <div className="w-full h-11 px-4 flex items-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-navy-800/40 text-xs font-black text-slate-800 dark:text-slate-200">
                           All Years (Global Access)
                         </div>
                       ) : (
@@ -772,13 +861,13 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
 
                     {/* Assigned Sections */}
                     <div className="space-y-1.5 relative sm:col-span-2">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Assigned Sections (Optional)</label>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Assigned Sections (Optional)</label>
                       <input
                         type="text"
                         value={assignedSections}
                         onChange={(e) => setAssignedSections(e.target.value)}
                         placeholder="e.g. A, B, C (Global Access if empty)"
-                        className="w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                        className="w-full h-11 px-4 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-extrabold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
                       />
                     </div>
                   </div>
@@ -888,40 +977,53 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                   </div>
 
                   {/* Last Login Info & 2FA */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xs">
                     <div>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-1">
-                        <History className="w-3.5 h-3.5 text-slate-400" /> Last Login Information
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-1">
+                        <History className="w-3.5 h-3.5 text-indigo-500" /> Last Login Information
                       </span>
-                      <div className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">
-                        27 Sept 2026, 10:41 AM <span className="text-slate-400 dark:text-slate-500 font-medium">(IP: 127.0.0.1)</span>
+                      <div className="text-xs font-bold text-slate-900 dark:text-white font-mono">
+                        27 Sept 2026, 10:41 AM <span className="text-slate-700 dark:text-slate-300 font-bold">(IP: 127.0.0.1)</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50">
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                      <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400">2FA ENABLED</span>
+                      <span className="text-[10px] font-black">2FA ENABLED</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
-                    <div>
-                      <span className="text-xs font-black text-slate-900 dark:text-white block mb-0.5">
-                        {isActive ? 'Account Active' : 'Account Suspended'}
-                      </span>
-                      <span className="text-[11px] text-slate-500 font-medium">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xs">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                        <span className="text-xs font-black text-slate-950 dark:text-white block">
+                          {isActive ? 'Account Active' : 'Account Suspended'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-700 dark:text-slate-300 font-bold mt-1 leading-relaxed">
                         {isActive ? 'Staff member can log in and access assigned resources.' : 'Access is disabled.'}
-                      </span>
+                      </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setShowSuspendModal(true)}
-                      className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs whitespace-nowrap shrink-0 flex items-center justify-center gap-1.5 active:scale-95 ${
                         isActive
-                          ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400 hover:bg-rose-200'
-                          : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 hover:bg-emerald-200'
+                          ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30'
+                          : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30'
                       }`}
                     >
-                      {isActive ? 'Mark Suspended' : 'Reactivate Account'}
+                      {isActive ? (
+                        <>
+                          <ShieldAlert className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                          <span>Mark Suspended</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span>Reactivate Account</span>
+                        </>
+                      )}
                     </button>
                   </div>
 
@@ -1016,23 +1118,23 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         </div>
 
         {/* STICKY FOOTER ACTIONS */}
-        <div className="px-6 py-4 bg-slate-50/90 dark:bg-navy-950/80 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-20">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-50/90 dark:bg-navy-950/80 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-20">
           <div className="flex items-center gap-2">
             {isDirty ? (
-              <span className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+              <span className="text-[11px] sm:text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Modified fields ready to save
               </span>
             ) : (
-              <span className="text-xs font-semibold text-slate-400">No changes made</span>
+              <span className="text-[11px] sm:text-xs font-semibold text-slate-400">No changes made</span>
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={handleAttemptClose}
               disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-navy-800 transition-all cursor-pointer"
+              className="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-navy-800 transition-all cursor-pointer"
             >
               Cancel
             </button>
@@ -1040,12 +1142,13 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
               form="edit-staff-form"
               type="submit"
               disabled={isSubmitting || !isDirty}
-              className="px-7 py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-500/25 flex items-center gap-2 cursor-pointer active:scale-95"
+              className="px-4 sm:px-7 py-2 sm:py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-500/25 flex items-center gap-2 cursor-pointer active:scale-95"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Saving Changes...</span>
+                  <span className="hidden sm:inline">Saving Changes...</span>
+                  <span className="sm:hidden">Saving...</span>
                 </>
               ) : (
                 <>

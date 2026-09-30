@@ -695,33 +695,33 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
             onClick={(e) => e.stopPropagation()}
           >
             {/* 1. TOP HERO HEADER & IDENTITY - SLEEK COMPACT HEADER */}
-            <div className="bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950 text-white px-4 sm:px-6 py-3 border-b border-indigo-500/20 shrink-0 relative z-10 rounded-t-2xl sm:rounded-t-[32px]">
-              <div className="flex items-center justify-between gap-3 min-w-0">
+            <div className="bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950 text-white px-3 sm:px-6 py-2.5 sm:py-3 border-b border-indigo-500/20 shrink-0 relative z-10 rounded-t-2xl sm:rounded-t-[32px]">
+              <div className="flex items-center justify-between gap-2 sm:gap-3 min-w-0">
                 {/* Avatar & Student Name */}
-                <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                   <button
                     onClick={onClose}
-                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-slate-200 hover:text-white transition-all cursor-pointer shrink-0 shadow-md"
+                    className="hidden sm:flex p-2 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-slate-200 hover:text-white transition-all cursor-pointer shrink-0 shadow-md"
                     title="Back"
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </button>
 
-                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black text-lg shadow-md border border-white/20 shrink-0">
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black text-base sm:text-lg shadow-md border border-white/20 shrink-0">
                     {st.name ? st.name.charAt(0).toUpperCase() : (initialStudent?.name?.charAt(0)?.toUpperCase() || 'S')}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
                       <h2 className="text-sm sm:text-lg font-black text-white tracking-tight truncate">
                         {st.name || initialStudent?.name || 'Student Profile'}
                       </h2>
-                      <span className="px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-400/30 text-[9px] sm:text-[10px] font-black uppercase tracking-wider shrink-0">
+                      <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-400/30 text-[9px] sm:text-[10px] font-black uppercase tracking-wider shrink-0">
                         Institutional Intelligence
                       </span>
                     </div>
 
-                    <div className="text-[11px] text-slate-100 font-bold truncate">
+                    <div className="text-[10px] sm:text-[11px] text-slate-100 font-bold truncate">
                       {(() => {
                         const reg = st.reg_no || initialStudent?.reg_no;
                         const dept = st.department || st.dept_code || initialStudent?.department?.name || initialStudent?.department?.code || initialStudent?.dept;
@@ -749,7 +749,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                 </div>
 
                 {/* Header Action Buttons */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   {st.leetcode_url && (
                     <a
                       href={st.leetcode_url}
@@ -766,7 +766,8 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                   <button
                     onClick={handleRefreshStudent}
                     disabled={refreshing}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer"
+                    className="p-2 sm:px-3 sm:py-1 rounded-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                    title="Live Refresh LeetCode Data"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
                     <span className="hidden sm:inline">{refreshing ? 'Syncing...' : 'Live Refresh'}</span>
@@ -774,7 +775,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   <button
                     onClick={handlePrintDossier}
-                    className="p-1.5 sm:px-3 sm:py-1 rounded-full bg-white/10 hover:bg-white/20 text-slate-200 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 border border-white/20 shadow-xs"
+                    className="p-2 sm:px-3 sm:py-1 rounded-full bg-white/10 hover:bg-white/20 text-slate-200 font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 border border-white/20 shadow-xs shrink-0"
                     title="Print Dossier"
                   >
                     <FileText className="w-3.5 h-3.5" />
@@ -783,7 +784,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   <button
                     onClick={onClose}
-                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-slate-200 hover:text-white transition-all cursor-pointer shrink-0 shadow-md ml-1"
+                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-slate-200 hover:text-white transition-all cursor-pointer shrink-0 shadow-md flex items-center justify-center"
                     title="Close Modal"
                   >
                     <X className="w-4 h-4" />
@@ -792,8 +793,8 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
               </div>
             </div>
 
-            {/* TAB SELECTOR NAVIGATION BAR - 2 LINES OF 4 TABS EACH */}
-            <div className="bg-slate-100/80 px-3 sm:px-6 py-2.5 border-b border-slate-200 grid grid-cols-4 gap-1.5 sm:gap-2 shrink-0 sticky top-0 z-50">
+            {/* TAB SELECTOR NAVIGATION BAR - 2 COLS ON MOBILE, 4 ON DESKTOP */}
+            <div className="bg-slate-100/80 px-3 sm:px-6 py-2.5 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 shrink-0 sticky top-0 z-50">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -803,14 +804,14 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                       setActiveTab(tab.id as any);
                       document.getElementById('modal-content-body')?.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className={`px-2 sm:px-3 py-2 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 w-full text-center shadow-2xs ${
+                    className={`px-2.5 sm:px-3 py-2 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer flex items-center justify-start gap-1.5 w-full text-left shadow-2xs ${
                       isActive
                         ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30 border border-brand-500 scale-[1.02] z-10'
                         : 'bg-white hover:bg-slate-50 text-slate-900 hover:text-brand-600 border border-slate-300/90 hover:border-slate-400'
                     }`}
                   >
                     <tab.icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : 'text-brand-600'}`} />
-                    <span className="truncate">{tab.label}</span>
+                    <span className="truncate text-left flex-1 min-w-0">{tab.label}</span>
                   </button>
                 );
               })}

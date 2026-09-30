@@ -653,6 +653,7 @@ class User(Base):
     phone_number = Column(String(30), unique=True, index=True, nullable=True)
     whatsapp_verified = Column(Boolean, default=False)
     date_of_birth = Column(Date, nullable=True)
+    profile_photo = Column(Text, nullable=True)
     
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True, index=True)
     section_id = Column(Integer, ForeignKey("sections.id"), nullable=True, index=True)

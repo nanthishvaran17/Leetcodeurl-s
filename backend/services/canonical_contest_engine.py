@@ -7,7 +7,7 @@ from backend.models import (
     Student, User
 )
 from backend.logger import logger
-from backend.time_utils import ensure_utc, now_ist, format_ist_datetime
+from backend.time_utils import ensure_utc, now_ist, format_ist_datetime, format_ist
 
 VALID_PARTICIPATION_STATUSES = {
     "PUBLIC", "VIRTUAL", "NOT_ATTENDED", "NOT_VERIFIED",
@@ -804,7 +804,7 @@ def _build_canonical_contest_dataset_internal(
             "virtual1Solved": scope_virtual1,
             "topPerformers": top_performers,
             "reconciliationPassed": reconciliation_passed,
-            "last_synced": session_obj.last_synced.strftime("%d %b %Y, %I:%M %p IST") if getattr(session_obj, "last_synced", None) else None
+            "last_synced": format_ist(session_obj.last_synced, "%d %b %Y, %I:%M %p IST") if getattr(session_obj, "last_synced", None) else None
         }
     else:
         public_cnt = status_counts.get("PUBLIC", 0)
@@ -892,7 +892,7 @@ def _build_canonical_contest_dataset_internal(
             "virtual1Solved": virtual1_all,
             "topPerformers": top_performers_global,
             "reconciliationPassed": reconciliation_passed,
-            "last_synced": session_obj.last_synced.strftime("%d %b %Y, %I:%M %p IST") if getattr(session_obj, "last_synced", None) else None
+            "last_synced": format_ist(session_obj.last_synced, "%d %b %Y, %I:%M %p IST") if getattr(session_obj, "last_synced", None) else None
         }
 
     # Department and Year percentages

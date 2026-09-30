@@ -8,6 +8,7 @@ and zero hardcoded sample values.
 import datetime
 import json
 import hashlib
+from backend.time_utils import now_ist
 from typing import Dict, Any, List, Optional
 from collections import defaultdict
 from sqlalchemy.orm import Session
@@ -86,15 +87,15 @@ def generate_live_weekly_intelligence_data(
     Generates the complete Live Weekly LeetCode Intelligence Report dataset.
     Strictly role-aware and database-driven.
     """
-    now_ist = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=5, minutes=30)
-    timestamp_str = now_ist.strftime("%d %b %Y, %I:%M %p IST")
-    today_str = now_ist.strftime("%d-%m-%Y")
+    now_ist_dt = now_ist()
+    timestamp_str = now_ist_dt.strftime("%d %b %Y, %I:%M %p IST")
+    today_str = now_ist_dt.strftime("%d-%m-%Y")
 
     # ─────────────────────────────────────────────────────────────────────────────
     # STEP 1: DYNAMIC REPORTING SESSIONS & 3-WEEK ROLLING WINDOW
     # ─────────────────────────────────────────────────────────────────────────────
     from backend.services.weekly_session_resolver import parse_session_date
-    today_date = now_ist.date()
+    today_date = now_ist_dt.date()
 
     all_sessions = db.query(WeeklySession).all()
     valid_completed_sessions = []

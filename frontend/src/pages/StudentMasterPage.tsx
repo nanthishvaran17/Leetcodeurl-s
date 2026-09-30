@@ -455,8 +455,8 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3.5 max-w-2xl">
             {/* Live Pulsing Badge */}
-            <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black uppercase tracking-wider backdrop-blur-md shadow-xs whitespace-nowrap">
-              <span>STUDENT DIRECTORY — {globalTotalCount || serverTotalCount} ENROLLED</span>
+            <div className="inline-flex items-center px-3 sm:px-3.5 py-1 rounded-xl sm:rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[9px] sm:text-xs font-black uppercase tracking-wider backdrop-blur-md shadow-xs max-w-full">
+              <span className="whitespace-normal sm:whitespace-nowrap leading-tight">STUDENT DIRECTORY — {globalTotalCount || serverTotalCount} ENROLLED</span>
             </div>
 
             <div className="space-y-1.5">

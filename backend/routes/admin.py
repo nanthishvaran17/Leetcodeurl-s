@@ -740,6 +740,7 @@ class CreateStaffRequest(BaseModel):
     require_password_change: bool = True
     reporting_manager_id: Optional[int] = None
     send_email: bool = True
+    profile_photo: Optional[str] = None
 
 class UpdateStaffRequest(BaseModel):
     institutional_id: Optional[str] = None
@@ -756,6 +757,7 @@ class UpdateStaffRequest(BaseModel):
     mentoring_role: Optional[str] = None
     date_of_birth: Optional[str] = None
     is_active: Optional[bool] = None
+    profile_photo: Optional[str] = None
 
 class BulkAssignRequest(BaseModel):
     staff_id: int
@@ -890,7 +892,8 @@ def create_staff_user(
         date_of_birth=_parse_dob(payload.date_of_birth),
         require_password_change=payload.require_password_change,
         is_active=payload.is_active,
-        reporting_manager_id=payload.reporting_manager_id
+        reporting_manager_id=payload.reporting_manager_id,
+        profile_photo=payload.profile_photo
     )
     db.add(staff_user)
     db.commit()
@@ -1091,6 +1094,10 @@ def update_staff_user(
         staff_user.section_id = payload.section_id
 
     update_data = payload.dict(exclude_unset=True)
+
+    if payload.profile_photo is not None:
+        staff_user.profile_photo = payload.profile_photo
+        changes_made["profile_photo"] = "Updated"
 
     if "mentoring_role" in update_data:
         staff_user.mentoring_role = payload.mentoring_role.strip() if payload.mentoring_role else None
@@ -1441,6 +1448,7 @@ def get_all_staff_users(
             "academic_year": s.academic_year or "",
             "mentoring_role": s.mentoring_role or "",
             "is_active": s.is_active,
+            "profile_photo": getattr(s, "profile_photo", None) or "",
             "assigned_count": counts_map.get(s.id, 0),
             "max_capacity": 30,
             "capacity_remaining": max(0, 30 - counts_map.get(s.id, 0)),

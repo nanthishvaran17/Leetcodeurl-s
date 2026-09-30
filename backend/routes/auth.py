@@ -1287,11 +1287,13 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
         "user": {
             "id": user.id,
             "username": user.username,
+            "full_name": getattr(user, "full_name", None) or user.username,
             "email": user.email,
             "role": user.role,
             "department_id": user.department_id,
             "section_id": user.section_id,
             "require_password_change": getattr(user, "require_password_change", False),
+            "profile_photo": getattr(user, "profile_photo", None) or "",
             **dept_scope
         }
     }
@@ -1310,12 +1312,14 @@ def get_auth_session(request: Request, db: Session = Depends(get_db)):
         "user": {
             "id": user.id,
             "username": user.username,
+            "full_name": getattr(user, "full_name", None) or user.username,
             "email": user.email,
             "role": user.role,
             "department_id": user.department_id,
             "section_id": user.section_id,
             "is_active": user.is_active,
             "require_password_change": getattr(user, "require_password_change", False),
+            "profile_photo": getattr(user, "profile_photo", None) or "",
             **dept_scope
         }
     }

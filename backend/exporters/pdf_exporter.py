@@ -49,12 +49,12 @@ def _get_contest_score(s: dict) -> int:
     return _to_int(s.get("contest_score") or s.get("score"))
 
 def resolve_dept_full_name(d_raw: str, reg_no: str = "") -> str:
-    r_upper = str(reg_no).upper()
+    r_upper = (reg_no or "").upper()
     if "CC" in r_upper:
         return "Computer Science and Engineering (Cyber Security)"
     if "CI" in r_upper or "CIR" in r_upper:
         return "Computer Science and Engineering (Internet of Things)"
-    d = str(d_raw).strip().upper()
+    d = (d_raw or "").strip().upper()
     if d in ("CSE(CS)", "CS", "CYBER", "CYBER SECURITY", "CSE_CS", "CSE-CS", "CSE (CS)"):
         return "Computer Science and Engineering (Cyber Security)"
     if d in ("CSE(IOT)", "IOT", "INTERNET OF THINGS", "CSE_IOT", "CSE-IOT", "CSE (IOT)"):
@@ -77,15 +77,15 @@ def resolve_dept_full_name(d_raw: str, reg_no: str = "") -> str:
         return "Biomedical Engineering"
     if d in ("CSE", "COMPUTER SCIENCE"):
         return "Computer Science and Engineering"
-    return str(d_raw).strip() or "Computer Science and Engineering"
+    return (d_raw or "").strip() or "Computer Science and Engineering"
 
 def resolve_dept_code(d_raw: str, reg_no: str = "") -> str:
-    r_upper = str(reg_no).upper()
+    r_upper = (reg_no or "").upper()
     if "CC" in r_upper:
         return "CSE(CS)"
     if "CI" in r_upper or "CIR" in r_upper:
         return "CSE(IOT)"
-    d = str(d_raw).strip().upper()
+    d = (d_raw or "").strip().upper()
     if d in ("CSE(CS)", "CS", "CYBER", "CYBER SECURITY", "CSE_CS", "CSE-CS", "CSE (CS)"):
         return "CSE(CS)"
     if d in ("CSE(IOT)", "IOT", "INTERNET OF THINGS", "CSE_IOT", "CSE-IOT", "CSE (IOT)"):
@@ -108,7 +108,7 @@ def resolve_dept_code(d_raw: str, reg_no: str = "") -> str:
         return "BME"
     if d in ("CSE", "COMPUTER SCIENCE"):
         return "CSE"
-    return str(d_raw).strip() or "CSE"
+    return (d_raw or "").strip() or "CSE"
 
 def make_numbered_canvas(header_info: Dict[str, str]):
     class CustomNumberedCanvas(canvas.Canvas):
@@ -116,6 +116,9 @@ def make_numbered_canvas(header_info: Dict[str, str]):
         Two-pass canvas to dynamically compute and print 'Page X of Y' in footer,
         along with institutional security tags and generation timestamp.
         """
+        _startPage: Any
+        _pageNumber: int
+
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self._saved_page_states = []
@@ -290,12 +293,12 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
 
     # Dynamic Department resolution helper
     def resolve_dept_full_name(d_raw: str, reg_no: str = "") -> str:
-        r_upper = str(reg_no).upper()
+        r_upper = (reg_no or "").upper()
         if "CC" in r_upper:
             return "Computer Science and Engineering (Cyber Security)"
         if "CI" in r_upper or "CIR" in r_upper:
             return "Computer Science and Engineering (Internet of Things)"
-        d = str(d_raw).strip().upper()
+        d = (d_raw or "").strip().upper()
         if d in ("CSE(CS)", "CS", "CYBER", "CYBER SECURITY", "CSE_CS", "CSE-CS", "CSE (CS)"):
             return "Computer Science and Engineering (Cyber Security)"
         if d in ("CSE(IOT)", "IOT", "INTERNET OF THINGS", "CSE_IOT", "CSE-IOT", "CSE (IOT)"):
@@ -318,15 +321,15 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
             return "Biomedical Engineering"
         if d in ("CSE", "COMPUTER SCIENCE"):
             return "Computer Science and Engineering"
-        return str(d_raw).strip() or "Computer Science and Engineering"
+        return (d_raw or "").strip() or "Computer Science and Engineering"
 
     def resolve_dept_code(d_raw: str, reg_no: str = "") -> str:
-        r_upper = str(reg_no).upper()
+        r_upper = (reg_no or "").upper()
         if "CC" in r_upper:
             return "CSE(CS)"
         if "CI" in r_upper or "CIR" in r_upper:
             return "CSE(IOT)"
-        d = str(d_raw).strip().upper()
+        d = (d_raw or "").strip().upper()
         if d in ("CSE(CS)", "CS", "CYBER", "CYBER SECURITY", "CSE_CS", "CSE-CS", "CSE (CS)"):
             return "CSE(CS)"
         if d in ("CSE(IOT)", "IOT", "INTERNET OF THINGS", "CSE_IOT", "CSE-IOT", "CSE (IOT)"):
@@ -349,7 +352,7 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
             return "BME"
         if d in ("CSE", "COMPUTER SCIENCE"):
             return "CSE"
-        return str(d_raw).strip() or "CSE"
+        return (d_raw or "").strip() or "CSE"
 
     def _get_platform_solved(s: dict) -> int:
         p = _to_int(s.get("profile_total_solved") or s.get("platform_total_solved") or s.get("cumulative_solved"))

@@ -149,7 +149,7 @@ def get_authorized_student_ids(db: Session, user: Optional[User]) -> Optional[Li
 
     # 3. Staff / Faculty / Mentors → assigned students only
     if role in _STAFF_ROLES:
-        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(user.id))
         return assigned_ids
 
     # 4. Student → self only
@@ -250,7 +250,7 @@ def require_staff_student_access(db: Session, user: Optional[User], student_id: 
 
     # Staff / Faculty / Mentors → assigned students or department students
     if role in _STAFF_ROLES:
-        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(user.id))
         if assigned_ids and student_id in assigned_ids:
             return
         if getattr(user, "department_id", None):

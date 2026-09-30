@@ -252,7 +252,8 @@ def build_normalized_forensic_report(
         {"q_num": 4, "name": "Q4", "status": "Accepted" if q4_val else "Not Solved", "points": q4_pts, "max_points": 6, "solved": bool(q4_val)},
     ]
 
-    retrieved_at = datetime.datetime.now(datetime.timezone.utc).strftime("%d %b %Y, %I:%M %p IST")
+    from backend.time_utils import format_ist, now_utc
+    retrieved_at = format_ist(now_utc(), "%d %b %Y, %I:%M %p IST")
 
     # Sync / Provision CertificateRecord in Database for public resolver consistency
     try:

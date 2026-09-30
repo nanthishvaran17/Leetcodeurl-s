@@ -754,41 +754,34 @@ export const StudentDataIssuesPage: React.FC = () => {
       </div>
 
       {/* 3. ADMINISTRATIVE QUICK VIEWS & SAVED PRESETS BAR */}
-      <div className="p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
-            <Bookmark className="w-4 h-4 text-amber-500" />
-            <span>Administrative Quick Views &amp; Saved Presets</span>
-          </span>
+      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <div className="flex items-center justify-between gap-2.5">
+          <div className="flex items-center space-x-1.5 min-w-0 flex-1">
+            <Bookmark className="w-4 h-4 text-amber-500 shrink-0" />
+            <h3 className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+              Administrative Quick Views &amp; Saved Presets
+            </h3>
+          </div>
           <button
             onClick={() => setShowSaveViewModal(true)}
-            className="px-3.5 py-1.5 bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-300 border border-brand-500/30 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1"
+            className="px-3 py-1.5 bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-300 border border-brand-500/30 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1 shadow-2xs"
           >
             <span>+ Save Current View</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-2 md:flex md:flex-wrap lg:flex-nowrap gap-2 overflow-x-auto no-scrollbar pb-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5">
           {savedViews.map((view) => (
             <button
               key={view.id}
               onClick={() => handleApplySavedView(view)}
-              className={`px-2 py-2 min-h-[44px] rounded-xl text-[11px] font-bold transition-all border cursor-pointer flex flex-col items-center justify-center text-center leading-tight ${
+              className={`px-3 py-2.5 min-h-[46px] h-full rounded-xl text-[11px] sm:text-xs font-extrabold transition-all border cursor-pointer flex items-center justify-center text-center leading-snug w-full ${
                 selectedDept === view.dept && selectedYear === view.year && selectedIssue === view.issue && searchQuery === view.search
                   ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 shadow-sm font-black'
                   : 'bg-slate-50 hover:bg-slate-100 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'
               }`}
             >
-              <span className="w-full truncate whitespace-normal break-words">{view.name}</span>
-              {view.id.startsWith('custom_') && (
-                <span
-                  onClick={(e) => handleDeleteSavedView(view.id, e)}
-                  className="text-slate-400 hover:text-rose-500 mt-1"
-                  title="Delete preset"
-                >
-                 
-                </span>
-              )}
+              <span className="w-full text-center leading-tight line-clamp-2">{view.name}</span>
             </button>
           ))}
         </div>
@@ -797,40 +790,40 @@ export const StudentDataIssuesPage: React.FC = () => {
       {/* 4. DEPARTMENT & ACADEMIC YEAR BREAKDOWN MATRICES */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Department Breakdown */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <div className="p-3.5 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
-              <Building2 className="w-4 h-4 text-indigo-600 dark:text-amber-400" />
+              <Building2 className="w-4 h-4 text-indigo-600 dark:text-amber-400 shrink-0" />
               <span>Department Issue Breakdown</span>
             </h4>
-            <span className="text-[11px] text-slate-400 font-bold">Click row to filter</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-400 font-bold shrink-0">Click row to filter</span>
           </div>
 
-          <div className="overflow-x-auto table-responsive-container rounded-2xl border border-slate-100 dark:border-slate-800">
-            <table className="w-full text-left text-xs">
+          <div className="rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <table className="w-full text-center text-xs table-fixed">
               <thead>
-                <tr className="bg-navy-950 text-white uppercase font-black text-[10px]">
-                  <th className="py-2.5 px-3">Department</th>
-                  <th className="py-2.5 px-2 text-center">Total</th>
-                  <th className="py-2.5 px-2 text-center text-rose-400">Sync Fail</th>
-                  <th className="py-2.5 px-2 text-center text-purple-400">No User</th>
-                  <th className="py-2.5 px-2 text-center text-sky-400">Not Started</th>
-                  <th className="py-2.5 px-2 text-center text-emerald-400">Healthy</th>
+                <tr className="bg-navy-950 text-white uppercase font-black text-[9px] sm:text-[10px]">
+                  <th className="py-2 px-1.5 sm:px-3 text-center w-[26%]">Dept</th>
+                  <th className="py-2 px-1 sm:px-2 text-center w-[12%]">Total</th>
+                  <th className="py-2 px-1 sm:px-2 text-center text-rose-400 w-[15%]">Sync Fail</th>
+                  <th className="py-2 px-1 sm:px-2 text-center text-purple-400 w-[15%]">No User</th>
+                  <th className="py-2 px-1 sm:px-2 text-center text-sky-400 w-[16%]">Not Started</th>
+                  <th className="py-2 px-1 sm:px-2 text-center text-emerald-400 w-[16%]">Healthy</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-bold text-slate-800 dark:text-slate-200">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-bold text-slate-800 dark:text-slate-200 text-[11px] sm:text-xs">
                 {deptBreakdown.map((row, idx) => (
                   <tr
                     key={idx}
                     onClick={() => setSelectedDept(row.department)}
                     className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors cursor-pointer"
                   >
-                    <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">{row.department}</td>
-                    <td className="py-2.5 px-2 text-center font-mono">{row.total}</td>
-                    <td className="py-2.5 px-2 text-center font-mono text-rose-600 dark:text-rose-400">{row.sync_failed}</td>
-                    <td className="py-2.5 px-2 text-center font-mono text-purple-600 dark:text-purple-400">{row.missing_username}</td>
-                    <td className="py-2.5 px-2 text-center font-mono text-sky-600 dark:text-sky-400">{row.not_started}</td>
-                    <td className="py-2.5 px-2 text-center font-mono text-emerald-600 dark:text-emerald-400">{row.healthy}</td>
+                    <td className="py-2 px-1.5 sm:px-3 text-center font-extrabold text-slate-900 dark:text-white truncate" title={row.department}>{row.department}</td>
+                    <td className="py-2 px-1 sm:px-2 text-center font-mono">{row.total}</td>
+                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-rose-600 dark:text-rose-400">{row.sync_failed}</td>
+                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-purple-600 dark:text-purple-400">{row.missing_username}</td>
+                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-sky-600 dark:text-sky-400">{row.not_started}</td>
+                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-emerald-600 dark:text-emerald-400">{row.healthy}</td>
                   </tr>
                 ))}
               </tbody>
@@ -839,28 +832,28 @@ export const StudentDataIssuesPage: React.FC = () => {
         </div>
 
         {/* Academic Year Breakdown */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <div className="p-3.5 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
-              <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-amber-400" />
+              <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-amber-400 shrink-0" />
               <span>Academic Year Issue Breakdown</span>
             </h4>
-            <span className="text-[11px] text-slate-400 font-bold">Click row to filter</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-400 font-bold shrink-0">Click row to filter</span>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
-            <table className="w-full text-left text-xs">
+          <div className="rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <table className="w-full text-center text-xs table-fixed">
               <thead>
-                <tr className="bg-navy-950 text-white uppercase font-black text-[10px]">
-                  <th className="py-2.5 px-3">Year Level</th>
-                  <th className="py-2.5 px-2 text-center">Total</th>
-                  <th className="py-2.5 px-2 text-center text-rose-400">Sync Fail</th>
-                  <th className="py-2.5 px-2 text-center text-purple-400">No User</th>
-                  <th className="py-2.5 px-2 text-center text-sky-400">Not Started</th>
-                  <th className="py-2.5 px-2 text-center text-emerald-400">Healthy</th>
+                <tr className="bg-navy-950 text-white uppercase font-black text-[9px] sm:text-[10px]">
+                  <th className="py-2 px-1.5 sm:px-3 text-center w-[26%]">Year</th>
+                  <th className="py-2 px-1 sm:px-2 text-center w-[12%]">Total</th>
+                  <th className="py-2 px-1 sm:px-2 text-center text-rose-400 w-[15%]">Sync Fail</th>
+                  <th className="py-2 px-1 sm:px-2 text-center text-purple-400 w-[15%]">No User</th>
+                  <th className="py-2 px-1 sm:px-2 text-center text-sky-400 w-[16%]">Not Started</th>
+                  <th className="py-2 px-1 sm:px-2 text-center text-emerald-400 w-[16%]">Healthy</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-bold text-slate-800 dark:text-slate-200">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-bold text-slate-800 dark:text-slate-200 text-[11px] sm:text-xs">
                 {yearBreakdown.map((row, idx) => (
                   <tr
                     key={idx}
@@ -870,12 +863,12 @@ export const StudentDataIssuesPage: React.FC = () => {
                     }}
                     className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors cursor-pointer"
                   >
-                    <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">{row.year}</td>
-                    <td className="py-2.5 px-2 text-center font-mono">{row.total}</td>
-                    <td className="py-2.5 px-2 text-center font-mono text-rose-600 dark:text-rose-400">{row.sync_failed}</td>
-                    <td className="py-2.5 px-2 text-center font-mono text-purple-600 dark:text-purple-400">{row.missing_username}</td>
-                    <td className="py-2.5 px-2 text-center font-mono text-sky-600 dark:text-sky-400">{row.not_started}</td>
-                    <td className="py-2.5 px-2 text-center font-mono text-emerald-600 dark:text-emerald-400">{row.healthy}</td>
+                    <td className="py-2 px-1.5 sm:px-3 text-center font-extrabold text-slate-900 dark:text-white truncate" title={row.year}>{row.year}</td>
+                    <td className="py-2 px-1 sm:px-2 text-center font-mono">{row.total}</td>
+                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-rose-600 dark:text-rose-400">{row.sync_failed}</td>
+                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-purple-600 dark:text-purple-400">{row.missing_username}</td>
+                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-sky-600 dark:text-sky-400">{row.not_started}</td>
+                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-emerald-600 dark:text-emerald-400">{row.healthy}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1007,50 +1000,45 @@ export const StudentDataIssuesPage: React.FC = () => {
                 return (
                   <div
                     key={student.id}
-                    className={`relative overflow-hidden rounded-3xl border transition-all duration-300 p-4 sm:p-5 space-y-3.5 shadow-sm hover:shadow-md ${
+                    className={`relative overflow-hidden rounded-2xl border transition-all duration-300 p-3 sm:p-4 space-y-2.5 shadow-sm hover:shadow-md ${
                       isSelected
                         ? 'bg-gradient-to-br from-indigo-50/90 via-slate-50 to-indigo-50/40 border-indigo-400 dark:from-indigo-950/60 dark:via-navy-950 dark:to-indigo-950/30 dark:border-indigo-600 ring-2 ring-indigo-500/20'
                         : 'bg-white dark:bg-navy-950 border-slate-200/90 dark:border-navy-800 hover:border-slate-300 dark:hover:border-navy-700'
                     }`}
                   >
-                    {/* Header: Checkbox + Avatar + Name & Meta + Severity Badge */}
-                    <div className="flex items-start justify-between gap-3 pt-0.5">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                    {/* Header: Checkbox + Avatar + Name/Reg/Dept + Severity Badge */}
+                    <div className="flex items-start justify-between gap-2 pt-0.5">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleToggleSelectRow(student.id)}
-                          className="rounded-lg border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer w-4 h-4 shrink-0"
+                          className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer w-3.5 h-3.5 shrink-0"
                         />
 
                         {/* Initial Avatar Badge */}
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 via-brand-600 to-indigo-700 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20 border border-white/20">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 via-brand-600 to-indigo-700 text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-sm border border-white/20">
                           {(student.name || 'S').charAt(0).toUpperCase()}
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-black text-slate-900 dark:text-white text-sm sm:text-base tracking-tight truncate">
-                            {student.name}
-                          </h4>
-                          <div className="flex items-center gap-1.5 flex-wrap font-mono text-[11px] mt-0.5">
-                            <span className="font-extrabold text-indigo-600 dark:text-amber-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-900/40">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-black text-slate-900 dark:text-white text-xs sm:text-sm tracking-tight truncate sm:whitespace-normal">
+                              {student.name}
+                            </h4>
+                            <span className="font-mono font-black text-indigo-600 dark:text-amber-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-900/40 text-[10px] shrink-0">
                               {student.reg_no}
                             </span>
-                            <span className="text-slate-300 dark:text-navy-700">•</span>
-                            <span className="font-bold text-slate-700 dark:text-slate-300">
-                              {student.department_short}
-                            </span>
-                            <span className="text-slate-300 dark:text-navy-700">•</span>
-                            <span className="text-slate-500 dark:text-slate-400 font-sans font-semibold">
-                              {student.year_level}
-                            </span>
+                          </div>
+                          <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 font-bold">
+                            {student.department_short} • {student.year_level}
                           </div>
                         </div>
                       </div>
 
                       {/* Severity Badge */}
                       <span
-                        className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 shadow-xs flex items-center gap-1 ${
+                        className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider shrink-0 shadow-2xs flex items-center gap-1 ${
                           student.severity === 'CRITICAL'
                             ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300 dark:border-rose-800/60'
                             : student.severity === 'WARNING'
@@ -1068,22 +1056,22 @@ export const StudentDataIssuesPage: React.FC = () => {
                     </div>
 
                     {/* Handle & URL Status Strip */}
-                    <div className="p-3 rounded-2xl bg-slate-50/90 dark:bg-navy-900/80 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-3 text-xs font-mono shadow-2xs">
-                      <div className="min-w-0 truncate flex items-center gap-1.5">
+                    <div className="px-2.5 py-1.5 rounded-xl bg-slate-50/90 dark:bg-navy-900/80 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-2 text-[11px] font-mono shadow-2xs">
+                      <div className="min-w-0 truncate flex items-center gap-1">
                         <span className="text-slate-400 font-bold">Handle:</span>
                         {student.username ? (
-                          <span className="font-black text-sky-600 dark:text-sky-400 truncate bg-sky-50 dark:bg-sky-950/50 px-2 py-0.5 rounded-lg border border-sky-200 dark:border-sky-800/40">
+                          <span className="font-black text-sky-600 dark:text-sky-400 truncate bg-sky-50 dark:bg-sky-950/50 px-1.5 py-0.5 rounded border border-sky-200 dark:border-sky-800/40">
                             @{student.username}
                           </span>
                         ) : (
-                          <span className="text-rose-500 italic font-bold text-[11px]">No username</span>
+                          <span className="text-rose-500 italic font-bold text-[10px]">No username</span>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-1 shrink-0">
                         {student.leetcode_url ? (
                           <span
-                            className={`px-2.5 py-1 rounded-xl text-[9.5px] font-black uppercase tracking-wider flex items-center gap-1 ${
+                            className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1 ${
                               student.url_status === 'VERIFIED'
                                 ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
                                 : student.url_status === 'INVALID'
@@ -1099,51 +1087,50 @@ export const StudentDataIssuesPage: React.FC = () => {
                               : 'NEEDS CHECK'}
                           </span>
                         ) : (
-                          <span className="text-[9.5px] text-slate-400">— No URL —</span>
+                          <span className="text-[9px] text-slate-400">— No URL —</span>
                         )}
                       </div>
                     </div>
 
                     {/* Problem Description & Action Details */}
-                    <div className="p-4 rounded-2xl bg-white dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-800 space-y-3 shadow-2xs">
-                      <p className="text-slate-900 dark:text-white font-extrabold text-xs leading-relaxed">
+                    <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-800 space-y-1.5 shadow-2xs">
+                      <p className="text-slate-900 dark:text-white font-extrabold text-[11.5px] leading-snug">
                         {student.error_description}
                       </p>
                       
-                      <div className="flex items-center gap-2 flex-wrap text-xs pt-1 border-t border-slate-100 dark:border-navy-800">
-                        <span className="px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 font-black text-[9.5px] uppercase tracking-wider border border-amber-400/40 shrink-0 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3 text-amber-500" />
-                          ACTION
-                        </span>
-                        <span className="font-extrabold text-slate-800 dark:text-slate-200 text-xs">
-                          {student.recommended_action}
-                        </span>
-                      </div>
-
-                      {student.last_sync && (
-                        <div className="text-xs font-mono pt-2 border-t border-slate-100 dark:border-navy-800/80 flex items-center justify-between gap-2">
-                          <span className="text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-slate-400" />
-                            Last Sync:
+                      <div className="flex items-center justify-between gap-2 flex-wrap text-[10.5px] pt-1 border-t border-slate-100 dark:border-navy-800">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300 font-black text-[9px] uppercase tracking-wider border border-amber-400/40 shrink-0 flex items-center gap-1">
+                            <AlertCircle className="w-2.5 h-2.5 text-amber-500" />
+                            ACTION
                           </span>
-                          <span className="text-slate-900 dark:text-white font-black bg-slate-100 dark:bg-navy-950 px-2.5 py-0.5 rounded-lg border border-slate-200 dark:border-navy-700 text-[11px]">
-                            {student.last_sync}
+                          <span className="font-extrabold text-slate-800 dark:text-slate-200 truncate">
+                            {student.recommended_action}
                           </span>
                         </div>
-                      )}
+
+                        {student.last_sync && (
+                          <div className="text-[10px] font-mono flex items-center gap-1 shrink-0">
+                            <span className="text-slate-400">Sync:</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-bold bg-slate-100 dark:bg-navy-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-navy-700">
+                              {student.last_sync}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Action Buttons Bar */}
-                    <div className="flex items-center justify-end gap-2 pt-1 flex-wrap">
+                    <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-slate-100 dark:border-navy-800/80 flex-wrap">
                       {student.leetcode_url && (
                         <a
                           href={student.leetcode_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all active:scale-95"
+                          className="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60 text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95"
                           title="Open profile"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
+                          <ExternalLink className="w-3 h-3 shrink-0" />
                           <span>Profile</span>
                         </a>
                       )}
@@ -1151,10 +1138,20 @@ export const StudentDataIssuesPage: React.FC = () => {
                       {student.leetcode_url && (
                         <button
                           onClick={() => handleCopyUrl(student)}
-                          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 cursor-pointer shadow-2xs transition-all active:scale-95"
+                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95"
                           title="Copy URL"
                         >
-                          {copiedId === student.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                          {copiedId === student.id ? (
+                            <>
+                              <Check className="w-3 h-3 text-emerald-500 shrink-0" />
+                              <span className="text-emerald-600 dark:text-emerald-400">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3 h-3 shrink-0" />
+                              <span>Copy</span>
+                            </>
+                          )}
                         </button>
                       )}
 
@@ -1162,26 +1159,26 @@ export const StudentDataIssuesPage: React.FC = () => {
                         <button
                           onClick={() => handleVerifySingleUrl(student)}
                           disabled={isVerifyingThis}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all active:scale-95 disabled:opacity-50"
+                          className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95 disabled:opacity-50"
                         >
-                          <ShieldCheck className={`w-3.5 h-3.5 ${isVerifyingThis ? 'animate-spin' : ''}`} />
+                          <ShieldCheck className={`w-3 h-3 shrink-0 ${isVerifyingThis ? 'animate-spin' : ''}`} />
                           <span>Verify</span>
                         </button>
                       )}
 
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOpenRepairModal(student); }}
-                        className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all active:scale-95"
+                        className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95"
                       >
-                        <Edit3 className="w-3.5 h-3.5" />
+                        <Edit3 className="w-3 h-3 shrink-0" />
                         <span>Repair</span>
                       </button>
 
                       <button
                         onClick={() => handleRetrySyncSingle(student)}
-                        className="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all active:scale-95"
+                        className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95"
                       >
-                        <RefreshCw className="w-3.5 h-3.5" />
+                        <RefreshCw className="w-3 h-3 shrink-0" />
                         <span>Retry</span>
                       </button>
                     </div>
@@ -1386,16 +1383,16 @@ export const StudentDataIssuesPage: React.FC = () => {
         {/* Dynamic Pagination Controls */}
         {students.length > 0 && (
           <div className="p-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-            <div className="text-slate-500 dark:text-slate-400 font-medium">
-              Showing <span className="font-bold text-slate-900 dark:text-white">{(currentPage - 1) * pageSize + 1}</span> to{' '}
-              <span className="font-bold text-slate-900 dark:text-white">{Math.min(currentPage * pageSize, students.length)}</span> of{' '}
-              <span className="font-bold text-slate-900 dark:text-white">{students.length}</span> issues
+            <div className="text-slate-700 dark:text-slate-200 font-bold">
+              Showing <span className="font-extrabold text-slate-900 dark:text-white">{(currentPage - 1) * pageSize + 1}</span> to{' '}
+              <span className="font-extrabold text-slate-900 dark:text-white">{Math.min(currentPage * pageSize, students.length)}</span> of{' '}
+              <span className="font-extrabold text-slate-900 dark:text-white">{students.length}</span> issues
             </div>
 
             <div className="flex items-center gap-3 flex-wrap justify-center">
               {/* Page Size Selector */}
-              <div className="flex items-center gap-1 text-slate-500 font-mono">
-                <span className="text-[11px]">Per page:</span>
+              <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200 font-mono font-bold">
+                <span className="text-xs text-slate-800 dark:text-slate-200 font-bold">Per page:</span>
                 {[10, 25, 50, 100].map(sz => (
                   <button
                     key={sz}
@@ -1403,10 +1400,10 @@ export const StudentDataIssuesPage: React.FC = () => {
                       setPageSize(sz);
                       setCurrentPage(1);
                     }}
-                    className={`px-2 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
                       pageSize === sz
                         ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'bg-white dark:bg-navy-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-navy-700 hover:bg-slate-100'
+                        : 'bg-white dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-navy-700 hover:bg-slate-100 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     {sz}
@@ -1415,21 +1412,21 @@ export const StudentDataIssuesPage: React.FC = () => {
               </div>
 
               {/* Page Navigation */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <button
                   disabled={currentPage <= 1}
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-navy-700 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-800 text-slate-900 dark:text-white font-extrabold hover:bg-slate-100 dark:hover:bg-navy-700 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
                 >
                   Previous
                 </button>
-                <span className="font-mono font-bold text-slate-700 dark:text-slate-300 px-2">
+                <span className="font-mono font-black text-slate-900 dark:text-white px-2.5 py-1 bg-slate-100 dark:bg-navy-900 rounded-lg border border-slate-200 dark:border-slate-800">
                   {currentPage} / {totalPages}
                 </span>
                 <button
                   disabled={currentPage >= totalPages}
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-navy-700 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-800 text-slate-900 dark:text-white font-extrabold hover:bg-slate-100 dark:hover:bg-navy-700 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
                 >
                   Next
                 </button>

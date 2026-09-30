@@ -183,15 +183,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               {isAuthenticated && user ? (
                 <div className="hidden sm:flex items-center space-x-1 sm:space-x-2 pl-1 border-l border-slate-200 dark:border-navy-700">
                   <div className="flex items-center space-x-1.5 flex-shrink-0">
-                    {user.photoURL ? (
+                    {(user.photoURL || (user as any).profile_photo) ? (
                       <img
-                        src={user.photoURL}
-                        alt={user.name}
-                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-brand-500 object-cover"
+                        src={user.photoURL || (user as any).profile_photo}
+                        alt={user.full_name || user.name || user.username}
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-brand-500 object-cover bg-white dark:bg-navy-900"
                       />
                     ) : (
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-brand-600 text-white font-black text-xs flex items-center justify-center">
-                        {user.name ? user.name[0] : 'U'}
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-brand-600 text-white font-black text-xs flex items-center justify-center uppercase">
+                        {(user.full_name || user.name || user.username || 'U')[0]}
                       </div>
                     )}
                     <div className="hidden sm:block text-left">

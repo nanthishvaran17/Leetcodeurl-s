@@ -54,7 +54,7 @@ const getRoleStyle = (role: string): string => {
   if (r.includes('HOD')) return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700';
   if (r.includes('MANAGEMENT') || r.includes('MGMT')) return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-700';
   if (r.includes('SYSTEM')) return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700';
-  if (r.includes('ADMIN')) return 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-700';
+  if (r.includes('ADMIN')) return 'bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800';
   return 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
 };
 
@@ -68,7 +68,7 @@ export const AuditLogPage: React.FC = () => {
 
   const roleOptions: DropdownOption[] = useMemo(() => [
     { value: 'ALL', label: 'All Roles', badge: 'ALL', badgeColor: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700' },
-    { value: 'ADMIN', label: 'ADMIN', badge: 'ROLE', badgeColor: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700' },
+    { value: 'ADMIN', label: 'ADMIN', badge: 'ROLE', badgeColor: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300 dark:border-rose-700' },
     { value: 'Super Admin', label: 'Super Admin', badge: 'SUPER', badgeColor: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-300 dark:border-purple-700' },
     { value: 'MANAGEMENT', label: 'MANAGEMENT', badge: 'MGMT', badgeColor: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 dark:border-blue-700' },
     { value: 'HOD', label: 'HOD', badge: 'DEPT', badgeColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700' },
@@ -404,9 +404,9 @@ export const AuditLogPage: React.FC = () => {
             if (e.target === e.currentTarget) setSelectedLog(null);
           }}
         >
-          <div className="modal-container-responsive max-w-xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl p-6 space-y-4 animate-modal-content">
+          <div className="modal-container-responsive max-w-xl w-full max-h-[85vh] sm:max-h-[90vh] flex flex-col bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl animate-modal-content overflow-hidden">
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
+            <div className="flex items-center justify-between p-5 sm:p-6 pb-4 border-b border-slate-100 dark:border-navy-800 flex-shrink-0">
               <div className="flex items-center space-x-2.5">
                 <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900/40 dark:to-violet-900/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-700/40">
                   <ShieldAlert className="w-5 h-5" />
@@ -429,7 +429,8 @@ export const AuditLogPage: React.FC = () => {
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
+            {/* Scrollable Body */}
+            <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-3.5 text-xs custom-scrollbar">
               {/* Status + Action row */}
               <div className="flex items-center gap-2 flex-wrap">
                 {(() => {
@@ -542,7 +543,8 @@ export const AuditLogPage: React.FC = () => {
               )}
             </div>
 
-            <div className="pt-2 flex justify-end">
+            {/* Modal Footer */}
+            <div className="p-4 px-6 border-t border-slate-100 dark:border-navy-800/80 flex justify-end bg-slate-50/50 dark:bg-navy-900/40 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => setSelectedLog(null)}

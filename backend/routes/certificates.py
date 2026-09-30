@@ -82,15 +82,15 @@ def resolve_certificate_record(
     if cert:
         # Ensure document_type is properly populated
         if is_forensic_request and cert.document_type != "FORENSIC_VERIFICATION_REPORT":
-            cert.document_type = "FORENSIC_VERIFICATION_REPORT"
-            cert.certificate_type = "Official LeetCode Contest Forensic Verification Audit Report"
+            cert.document_type = "FORENSIC_VERIFICATION_REPORT"  # type: ignore[assignment]
+            cert.certificate_type = "Official LeetCode Contest Forensic Verification Audit Report"  # type: ignore[assignment]
             try:
                 db.commit()
                 db.refresh(cert)
             except Exception:
                 db.rollback()
         elif not is_forensic_request and cert.document_type != "CERTIFICATE_OF_EXCELLENCE":
-            cert.document_type = "CERTIFICATE_OF_EXCELLENCE"
+            cert.document_type = "CERTIFICATE_OF_EXCELLENCE"  # type: ignore[assignment]
             try:
                 db.commit()
                 db.refresh(cert)
@@ -120,13 +120,13 @@ def resolve_certificate_record(
 
     dept_code = student_obj.department.code if student_obj.department else "CSE(CS)"
     dept_full = resolve_department_name(dept_code)
-    clean_reg_str = re.sub(r'[^A-Za-z0-9]+', '', student_obj.reg_no or "").strip().upper()
+    clean_reg_str = re.sub(r'[^A-Za-z0-9]+', '', str(student_obj.reg_no or "")).strip().upper()
 
     if is_forensic_request:
         # Resolve Forensic Contest Audit Record 
         q_p = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.student_id == student_obj.id)
         if contest:
-            clean_c = str(contest).strip()
+            clean_c = contest.strip()
             c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
             q_p = q_p.join(WeeklySession, WeeklyPublicResult.session_id == WeeklySession.id).filter(
                 (WeeklySession.contest_id == c_slug) |
@@ -138,7 +138,7 @@ def resolve_certificate_record(
         if not p_res:
             q_v = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.student_id == student_obj.id)
             if contest:
-                clean_c = str(contest).strip()
+                clean_c = contest.strip()
                 c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
                 q_v = q_v.join(WeeklySession, WeeklyVirtualResult.session_id == WeeklySession.id).filter(
                     (WeeklySession.contest_id == c_slug) |
@@ -157,7 +157,7 @@ def resolve_certificate_record(
         elif v_res and v_res.session:
             session_obj = v_res.session
         elif contest:
-            clean_c = str(contest).strip()
+            clean_c = contest.strip()
             c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
             session_obj = db.query(WeeklySession).filter(
                 (WeeklySession.contest_id == c_slug) |
@@ -321,10 +321,10 @@ def verify_certificate_public(
             try:
                 norm_report = build_normalized_forensic_report(
                     db,
-                    search=cert.verification_id,
+                    search=str(cert.verification_id),
                     session_id=sess_id_target,
-                    trace_id=cert.verification_id,
-                    student_id=cert.student_id
+                    trace_id=str(cert.verification_id),
+                    student_id=int(cert.student_id) if cert.student_id is not None else None
                 )
                 resp_content = {
                     "verified": True,
@@ -448,7 +448,7 @@ def list_certificates(
 
     if current_user and getattr(current_user, "role", "").lower() in ("staff", "faculty"):
         from backend.services.faculty_assignment_service import faculty_assignment_service
-        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))
         query = query.filter(CertificateRecord.student_id.in_(assigned_ids))
 
     if department:
@@ -567,7 +567,7 @@ def download_certificate_pdf(
                 session_id = int(clean_c)
 
         try:
-            pdf_bytes = generate_forensic_audit_pdf(db, student_id=cert.student_id, session_id=session_id, trace_id=cert.verification_id)
+            pdf_bytes = generate_forensic_audit_pdf(db, student_id=int(cert.student_id) if cert.student_id is not None else None, session_id=session_id, trace_id=str(cert.verification_id))
             logger.info(f"[forensic_pdf_generated] Successfully generated {len(pdf_bytes)} bytes for {cert.verification_id}")
         except Exception as gen_err:
             logger.error(f"[forensic_pdf_generation_failed] Exception generating forensic PDF for {cert.verification_id}: {gen_err}", exc_info=True)
@@ -673,7 +673,7 @@ def download_forensic_contest_pdf(
 
     session_id_val = None
     if contest:
-        clean_c = str(contest).replace("weekly-contest-", "").strip()
+        clean_c = contest.replace("weekly-contest-", "").strip()
         if clean_c.isdigit():
             session_id_val = int(clean_c)
         else:
@@ -692,9 +692,9 @@ def download_forensic_contest_pdf(
             if clean_c.isdigit():
                 session_id_val = int(clean_c)
 
-    clean_reg = re.sub(r'[^A-Za-z0-9]+', '', student.reg_no or "").strip().upper()
+    clean_reg = re.sub(r'[^A-Za-z0-9]+', '', str(student.reg_no or "")).strip().upper()
     trace_id = raw_id if (raw_id and (raw_id.startswith("CERT-") or raw_id.startswith("trace_"))) else f"CERT-{clean_reg}-FORENSIC"
-    pdf_bytes = generate_forensic_audit_pdf(db, student.id, session_id=session_id_val, trace_id=trace_id)
+    pdf_bytes = generate_forensic_audit_pdf(db, int(student.id), session_id=session_id_val, trace_id=trace_id)
 
     clean_name = re.sub(r'[^A-Za-z0-9]+', '_', (student.name or "STUDENT").strip().upper()).strip('_')
     f_parts = [clean_name, clean_reg, "Forensic_Audit_Report.pdf"]
@@ -726,9 +726,9 @@ def revoke_certificate_endpoint(
     if not cert:
         raise HTTPException(status_code=404, detail="Certificate not found.")
 
-    cert.status = "REVOKED"
-    cert.revoked_at = datetime.datetime.now(datetime.timezone.utc)
-    cert.revocation_reason = req.reason or "Administrative Revocation"
+    cert.status = "REVOKED"  # type: ignore[assignment]
+    cert.revoked_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore[assignment]
+    cert.revocation_reason = req.reason or "Administrative Revocation"  # type: ignore[assignment]
     db.commit()
 
     return {
@@ -760,7 +760,7 @@ def list_signatures(db: Session = Depends(get_db)):
             "signatory_title": s.signatory_title,
             "signatory_name": s.signatory_name,
             "version": s.version,
-            "has_image": bool(s.image_data or (s.image_path and os.path.exists(s.image_path))),
+            "has_image": bool(s.image_data or (s.image_path and os.path.exists(str(s.image_path)))),
             "image_preview": s.image_data,
             "is_active": s.is_active,
             "uploaded_at": uploaded_str,
@@ -878,9 +878,9 @@ def delete_signature(signature_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Signature not found.")
 
     sig_type = sig.signature_type
-    if sig.image_path and os.path.exists(sig.image_path):
+    if sig.image_path and os.path.exists(str(sig.image_path)):
         try:
-            os.remove(sig.image_path)
+            os.remove(str(sig.image_path))
         except Exception:
             pass
 
@@ -893,7 +893,7 @@ def delete_signature(signature_id: int, db: Session = Depends(get_db)):
     ).order_by(AuthorizedSignature.id.desc()).first()
 
     if remaining:
-        remaining.is_active = True
+        remaining.is_active = True  # type: ignore[assignment]
         db.commit()
 
     return {"success": True, "message": f"Signature {signature_id} deleted."}
@@ -908,9 +908,9 @@ def delete_all_signatures_of_type(sig_type: str, db: Session = Depends(get_db)):
         return {"success": True, "message": f"No signatures found for type {sig_type_clean}."}
 
     for sig in sigs:
-        if sig.image_path and os.path.exists(sig.image_path):
+        if sig.image_path and os.path.exists(str(sig.image_path)):
             try:
-                os.remove(sig.image_path)
+                os.remove(str(sig.image_path))
             except Exception:
                 pass
         db.delete(sig)

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_, desc
 
 from backend.models import (
-    User, Student, Conversation, Message, FacultyStudentAssignment
+    User, Student, Conversation, Message, FacultyStudentAssignment, NotificationFile
 )
 from backend.services.notification_service import NotificationService
 from backend.websocket_manager import manager
@@ -13,7 +13,7 @@ from backend.logger import logger
 
 class MessagingService:
     @staticmethod
-    def _format_utc_iso(dt) -> str:
+    def _format_utc_iso(dt) -> str | None:
         if not dt:
             return None
         iso = dt.isoformat()
@@ -78,7 +78,7 @@ class MessagingService:
         if not user_id_str:
             return False
 
-        target_clean = str(user_id_str).strip().lower()
+        target_clean = user_id_str.strip().lower()
         targets = {target_clean}
 
         if target_clean.startswith("staff_"):
@@ -137,18 +137,18 @@ class MessagingService:
         return {"id": user_id, "name": "Unknown User", "role": "Unknown", "department": "", "type": "UNKNOWN"}
 
     @staticmethod
-    def _format_message_dict(db: Session, m: Message, current_user_id: str = None) -> dict:
+    def _format_message_dict(db: Session, m: Message, current_user_id: str | None = None) -> dict | None:
         """Formats a Message database model into a full JSON payload."""
         # Check delete for me list
         deleted_by = []
         if m.deleted_by_users:
             try:
-                deleted_by = json.loads(m.deleted_by_users)
+                deleted_by = json.loads(str(m.deleted_by_users))
             except Exception:
                 deleted_by = []
 
         if current_user_id:
-            curr_clean = str(current_user_id).strip().lower()
+            curr_clean = current_user_id.strip().lower()
             if any(str(d).strip().lower() == curr_clean for d in deleted_by):
                 return None # Hidden for this user
 
@@ -156,7 +156,7 @@ class MessagingService:
         reactions_dict = {}
         if m.reactions:
             try:
-                reactions_dict = json.loads(m.reactions)
+                reactions_dict = json.loads(str(m.reactions))
             except Exception:
                 reactions_dict = {}
 
@@ -198,7 +198,7 @@ class MessagingService:
             "editedAt": MessagingService._format_utc_iso(m.edited_at),
             "isEdited": bool(m.is_edited),
             "isDeletedEveryone": bool(m.is_deleted_everyone),
-            "deletedByUsers": json.loads(m.deleted_by_users) if m.deleted_by_users else [],
+            "deletedByUsers": json.loads(str(m.deleted_by_users)) if m.deleted_by_users else [],
             "replyToMessageId": m.reply_to_message_id,
             "replyToMessage": reply_to_data,
             "clientMessageId": m.client_message_id,
@@ -311,10 +311,10 @@ class MessagingService:
         current_user, 
         receiver_id: str, 
         content: str, 
-        attachment_file_id: str = None,
-        reply_to_message_id: str = None,
-        client_message_id: str = None,
-        t0_client_send: int = None
+        attachment_file_id: str | None = None,
+        reply_to_message_id: str | None = None,
+        client_message_id: str | None = None,
+        t0_client_send: int | None = None
     ) -> Message:
         import time
         t1_server_receive = int(time.time() * 1000)
@@ -330,7 +330,7 @@ class MessagingService:
 
         if not conv_exists:
             allowed = MessagingService.get_available_recipients(db, current_user)
-            if not any(str(r["id"]).lower() == str(receiver_id).lower() for r in allowed):
+            if not any(str(r["id"]).lower() == receiver_id.lower() for r in allowed):
                 user_or_student = MessagingService._get_user_display(db, receiver_id)
                 if user_or_student.get("type") == "UNKNOWN":
                     raise ValueError("You are not authorized to message this user.")
@@ -376,31 +376,31 @@ class MessagingService:
         
         # 4. Update Conversation state
         preview_text = content[:100] if content else "Sent an attachment"
-        conv.last_message_preview = preview_text
-        conv.last_message_at = datetime.datetime.now(datetime.timezone.utc)
+        conv.last_message_preview = preview_text  # type: ignore[assignment]
+        conv.last_message_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore[assignment]
         if conv.participant_1_id == receiver_id:
-            conv.unread_count_1 = (conv.unread_count_1 or 0) + 1
+            conv.unread_count_1 = (conv.unread_count_1 or 0) + 1  # type: ignore[assignment]
         else:
-            conv.unread_count_2 = (conv.unread_count_2 or 0) + 1
+            conv.unread_count_2 = (conv.unread_count_2 or 0) + 1  # type: ignore[assignment]
             
         db.commit()
         t2_auth_persist = int(time.time() * 1000)
         
-        # We manually update these after commit to avoid another full DB flush if not strict,
-        # but for telemetry it's better to update and commit again or just flush. 
-        # Actually, let's just update and commit.
-        msg.t2_auth_persist = t2_auth_persist
+        # We manually update these after commit to avoid another full DB flush if not strict
+        msg.t2_auth_persist = t2_auth_persist  # type: ignore[assignment]
         
         db.refresh(msg)
         
         message_payload = MessagingService._format_message_dict(db, msg, sender_id)
-        # Pass telemetry data down to the payload
-        message_payload["t0_client_send"] = msg.t0_client_send
-        message_payload["t1_server_receive"] = msg.t1_server_receive
-        message_payload["t2_auth_persist"] = msg.t2_auth_persist
+        if message_payload is not None:
+            # Pass telemetry data down to the payload
+            message_payload["t0_client_send"] = msg.t0_client_send
+            message_payload["t1_server_receive"] = msg.t1_server_receive
+            message_payload["t2_auth_persist"] = msg.t2_auth_persist
 
-        msg.t3_fanout = int(time.time() * 1000)
-        message_payload["t3_fanout"] = msg.t3_fanout
+        msg.t3_fanout = int(time.time() * 1000)  # type: ignore[assignment]
+        if message_payload is not None:
+            message_payload["t3_fanout"] = msg.t3_fanout
         db.commit()
 
         # Secure WebSocket Dispatch: Only send to active participants
@@ -410,9 +410,10 @@ class MessagingService:
         })
         
         # Check if recipient is actively viewing this specific conversation via WebSocket
-        if manager.is_user_in_conversation(receiver_id, conv.conversation_id):
-            logger.info(f"[MESSAGING] Recipient {receiver_id} is active in {conv.conversation_id}, marking READ instantly.")
-            MessagingService.mark_as_read(db, current_user, conv.conversation_id)
+        conv_id_str = str(conv.conversation_id)
+        if manager.is_user_in_conversation(receiver_id, conv_id_str):
+            logger.info(f"[MESSAGING] Recipient {receiver_id} is active in {conv_id_str}, marking READ instantly.")
+            MessagingService.mark_as_read(db, current_user, conv_id_str)
             return msg
         
         # 5. Emit Notification (Deep linked to exact conversation)
@@ -458,20 +459,20 @@ class MessagingService:
         if msg.is_deleted_everyone:
             raise ValueError("Cannot edit a deleted message.")
 
-        msg.content = new_content
-        msg.is_edited = True
-        msg.edited_at = datetime.datetime.now(datetime.timezone.utc)
+        msg.content = new_content  # type: ignore[assignment]
+        msg.is_edited = True  # type: ignore[assignment]
+        msg.edited_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore[assignment]
         db.commit()
 
         updated_payload = MessagingService._format_message_dict(db, msg, user_id)
         conv = db.query(Conversation).filter_by(conversation_id=msg.conversation_id).first()
-        p1 = conv.participant_1_id if conv else msg.sender_id
-        p2 = conv.participant_2_id if conv else msg.receiver_id
+        p1 = str(conv.participant_1_id) if conv else str(msg.sender_id)
+        p2 = str(conv.participant_2_id) if conv else str(msg.receiver_id)
         manager.send_to_users_sync([p1, p2], {
             "type": "MESSAGE_EDITED",
             "message": updated_payload
         })
-        return updated_payload
+        return updated_payload or {}
 
     @staticmethod
     def delete_message(db: Session, current_user, message_id: str, mode: str) -> dict:
@@ -484,16 +485,16 @@ class MessagingService:
             raise ValueError("Message not found")
 
         conv = db.query(Conversation).filter_by(conversation_id=msg.conversation_id).first()
-        p1 = conv.participant_1_id if conv else msg.sender_id
-        p2 = conv.participant_2_id if conv else msg.receiver_id
+        p1 = str(conv.participant_1_id) if conv else str(msg.sender_id)
+        p2 = str(conv.participant_2_id) if conv else str(msg.receiver_id)
 
         if mode == "FOR_EVERYONE":
             role = str(getattr(current_user, "role", "")).upper()
             if msg.sender_id != user_id and "ADMIN" not in role:
                 raise ValueError("Unauthorized: You can only delete your own messages for everyone.")
             
-            msg.is_deleted_everyone = True
-            msg.content = "This message was deleted"
+            msg.is_deleted_everyone = True  # type: ignore[assignment]
+            msg.content = "This message was deleted"  # type: ignore[assignment]
             db.commit()
 
             updated_payload = MessagingService._format_message_dict(db, msg, user_id)
@@ -510,12 +511,12 @@ class MessagingService:
             deleted_by = []
             if msg.deleted_by_users:
                 try:
-                    deleted_by = json.loads(msg.deleted_by_users)
+                    deleted_by = json.loads(str(msg.deleted_by_users))
                 except Exception:
                     deleted_by = []
             if user_id not in deleted_by:
                 deleted_by.append(user_id)
-                msg.deleted_by_users = json.dumps(deleted_by)
+                msg.deleted_by_users = json.dumps(deleted_by)  # type: ignore[assignment]
                 db.commit()
 
             return {"success": True, "mode": "FOR_ME", "messageId": message_id}
@@ -526,8 +527,8 @@ class MessagingService:
         if not conv or not MessagingService._is_participant(conv, current_user):
             raise ValueError("Conversation not found or unauthorized")
             
-        p1 = conv.participant_1_id
-        p2 = conv.participant_2_id
+        p1 = str(conv.participant_1_id)
+        p2 = str(conv.participant_2_id)
         
         # Cascade delete all messages in this conversation to prevent orphaned rows
         db.query(Message).filter_by(conversation_id=conversation_id).delete()
@@ -552,7 +553,7 @@ class MessagingService:
         pinned_by = []
         if conv.pinned_by_users:
             try:
-                pinned_by = json.loads(conv.pinned_by_users)
+                pinned_by = json.loads(str(conv.pinned_by_users))
                 if not isinstance(pinned_by, list):
                     pinned_by = []
             except Exception:
@@ -566,7 +567,7 @@ class MessagingService:
             pinned_by.append(canonical_id)
             now_pinned = True
             
-        conv.pinned_by_users = json.dumps(pinned_by)
+        conv.pinned_by_users = json.dumps(pinned_by)  # type: ignore[assignment]
         db.commit()
         return {"success": True, "is_pinned": now_pinned, "conversationId": conversation_id}
 
@@ -582,7 +583,7 @@ class MessagingService:
         archived_by = []
         if conv.archived_by_users:
             try:
-                archived_by = json.loads(conv.archived_by_users)
+                archived_by = json.loads(str(conv.archived_by_users))
                 if not isinstance(archived_by, list):
                     archived_by = []
             except Exception:
@@ -596,7 +597,7 @@ class MessagingService:
             archived_by.append(canonical_id)
             now_archived = True
             
-        conv.archived_by_users = json.dumps(archived_by)
+        conv.archived_by_users = json.dumps(archived_by)  # type: ignore[assignment]
         db.commit()
         return {"success": True, "is_archived": now_archived, "conversationId": conversation_id}
 
@@ -614,7 +615,7 @@ class MessagingService:
             deleted_by = []
             if msg.deleted_by_users:
                 try:
-                    deleted_by = json.loads(msg.deleted_by_users)
+                    deleted_by = json.loads(str(msg.deleted_by_users))
                     if not isinstance(deleted_by, list):
                         deleted_by = []
                 except Exception:
@@ -622,7 +623,7 @@ class MessagingService:
             
             if not any(str(d).strip().lower() in user_ids for d in deleted_by):
                 deleted_by.append(canonical_id)
-                msg.deleted_by_users = json.dumps(deleted_by)
+                msg.deleted_by_users = json.dumps(deleted_by)  # type: ignore[assignment]
         
         db.commit()
         return {"success": True, "conversationId": conversation_id}
@@ -654,7 +655,7 @@ class MessagingService:
         reactions_dict = {}
         if msg.reactions:
             try:
-                reactions_dict = json.loads(msg.reactions)
+                reactions_dict = json.loads(str(msg.reactions))
             except Exception:
                 reactions_dict = {}
 
@@ -664,13 +665,13 @@ class MessagingService:
         else:
             reactions_dict[user_id] = emoji
 
-        msg.reactions = json.dumps(reactions_dict)
+        msg.reactions = json.dumps(reactions_dict)  # type: ignore[assignment]
         db.commit()
 
         updated_payload = MessagingService._format_message_dict(db, msg, user_id)
         conv = db.query(Conversation).filter_by(conversation_id=msg.conversation_id).first()
-        p1 = conv.participant_1_id if conv else msg.sender_id
-        p2 = conv.participant_2_id if conv else msg.receiver_id
+        p1 = str(conv.participant_1_id) if conv else str(msg.sender_id)
+        p2 = str(conv.participant_2_id) if conv else str(msg.receiver_id)
         manager.send_to_users_sync([p1, p2], {
             "type": "MESSAGE_REACTION",
             "messageId": message_id,
@@ -689,7 +690,7 @@ class MessagingService:
         result = []
         for c in user_convs:
             is_p1 = MessagingService._is_user_p1(c, current_user)
-            other_id = c.participant_2_id if is_p1 else c.participant_1_id
+            other_id = str(c.participant_2_id) if is_p1 else str(c.participant_1_id)
             unread = c.unread_count_1 if is_p1 else c.unread_count_2
             other_info = MessagingService._get_user_display(db, other_id)
             
@@ -700,7 +701,7 @@ class MessagingService:
             pinned_by = []
             if c.pinned_by_users:
                 try:
-                    pinned_by = json.loads(c.pinned_by_users)
+                    pinned_by = json.loads(str(c.pinned_by_users))
                     if not isinstance(pinned_by, list):
                         pinned_by = []
                 except Exception:
@@ -709,7 +710,7 @@ class MessagingService:
             archived_by = []
             if c.archived_by_users:
                 try:
-                    archived_by = json.loads(c.archived_by_users)
+                    archived_by = json.loads(str(c.archived_by_users))
                     if not isinstance(archived_by, list):
                         archived_by = []
                 except Exception:
@@ -746,8 +747,8 @@ class MessagingService:
             now = datetime.datetime.now(datetime.timezone.utc)
             for m in pending_sent:
                 if str(m.receiver_id).strip().lower() in user_ids:
-                    m.status = "DELIVERED"
-                    m.delivered_at = now
+                    m.status = "DELIVERED"  # type: ignore[assignment]
+                    m.delivered_at = now  # type: ignore[assignment]
             db.commit()
 
         messages = db.query(Message).filter_by(conversation_id=conversation_id).order_by(desc(Message.created_at)).limit(limit).all()
@@ -768,9 +769,9 @@ class MessagingService:
         user_ids = MessagingService._get_all_user_identifiers(current_user)
         is_p1 = MessagingService._is_user_p1(conv, current_user)
         if is_p1:
-            conv.unread_count_1 = 0
+            conv.unread_count_1 = 0  # type: ignore[assignment]
         else:
-            conv.unread_count_2 = 0
+            conv.unread_count_2 = 0  # type: ignore[assignment]
             
         # Mark messages as read
         messages = db.query(Message).filter(
@@ -782,16 +783,16 @@ class MessagingService:
         updated_ids = []
         for m in messages:
             if str(m.receiver_id).strip().lower() in user_ids:
-                m.status = "READ"
-                m.read_at = now
+                m.status = "READ"  # type: ignore[assignment]
+                m.read_at = now  # type: ignore[assignment]
                 if not m.delivered_at:
-                    m.delivered_at = now
+                    m.delivered_at = now  # type: ignore[assignment]
                 updated_ids.append(m.message_id)
             
         db.commit()
 
         if updated_ids:
-            manager.send_to_users_sync([conv.participant_1_id, conv.participant_2_id], {
+            manager.send_to_users_sync([str(conv.participant_1_id), str(conv.participant_2_id)], {
                 "type": "MESSAGE_STATUS_UPDATE",
                 "conversationId": conversation_id,
                 "status": "READ",
@@ -807,10 +808,10 @@ class MessagingService:
         
         is_p1 = MessagingService._is_user_p1(conv, current_user)
         if is_p1:
-            conv.unread_count_1 = max(1, (conv.unread_count_1 or 0) + 1)
+            conv.unread_count_1 = max(1, (conv.unread_count_1 or 0) + 1)  # type: ignore[assignment]
             unread = conv.unread_count_1
         else:
-            conv.unread_count_2 = max(1, (conv.unread_count_2 or 0) + 1)
+            conv.unread_count_2 = max(1, (conv.unread_count_2 or 0) + 1)  # type: ignore[assignment]
             unread = conv.unread_count_2
             
         db.commit()
@@ -819,17 +820,17 @@ class MessagingService:
     @staticmethod
     def search_messages(db: Session, current_user, query: str) -> list:
         user_id = MessagingService._get_user_id(current_user)
-        if not query or len(query.trim()) < 2:
+        if not query or len(query.strip()) < 2:
             return []
 
         clean_q = f"%{query.strip()}%"
         # Find conversations belonging to current user
-        convs = db.query(Conversation.conversation_id).filter(
+        convs_stmt = db.query(Conversation.conversation_id).filter(
             or_(Conversation.participant_1_id == user_id, Conversation.participant_2_id == user_id)
-        ).subquery()
+        ).scalar_subquery()
 
         msgs = db.query(Message).filter(
-            Message.conversation_id.in_(convs),
+            Message.conversation_id.in_(convs_stmt),
             Message.content.ilike(clean_q),
             Message.is_deleted_everyone == False
         ).order_by(desc(Message.created_at)).limit(30).all()

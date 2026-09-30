@@ -2660,29 +2660,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         <>
           {/* 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR */}
           <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 no-print mb-10">
-        {/* Row 1: Search Input + Full Consolidated Action Toolbar */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          {/* Real-time Search Input */}
-          <div className="flex-1 min-w-[260px] max-w-md relative flex items-center bg-slate-50 dark:bg-navy-950 px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 focus-within:ring-2 focus-within:ring-brand-500/40 focus-within:border-brand-500 transition-all shadow-inner">
-            <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search student by name, reg no, or LeetCode handle..."
-              className="w-full bg-transparent border-none p-0 m-0 text-xs font-bold text-slate-900 dark:text-white placeholder-gray-400 outline-none focus:ring-0 focus:outline-none focus:border-transparent"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="w-5 h-5 rounded-full bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-[10px] hover:bg-slate-300 cursor-pointer shrink-0 ml-1"
-                title="Clear Search"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-
+        {/* Row 1: Full Consolidated Action Toolbar */}
+        <div className="flex items-center justify-end flex-wrap gap-3">
           {/* Consolidated Action Toolbar */}
           <div className="flex items-center flex-wrap gap-2">
             

@@ -718,7 +718,7 @@ const ReportHubModal: React.FC<{
             <div className="p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-md space-y-4 text-slate-900 dark:text-white">
               <div className="border-b border-slate-200 dark:border-navy-800 pb-3 flex justify-between items-end flex-wrap gap-2">
                 <div>
-                  <div className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</div>
+                  <div className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider">INSTITUTIONAL AUDIT & PERFORMANCE REPORT</div>
                   <h2 className="text-base sm:text-lg font-black text-slate-950 dark:text-white mt-0.5 tracking-tight">{reportData?.report_title}</h2>
                 </div>
                 <div className="text-right text-xs text-slate-600 dark:text-slate-300 font-bold">
@@ -1233,7 +1233,7 @@ export const HODCommandCenter: React.FC = () => {
           <div className="space-y-3">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
               <span className="uppercase tracking-tight">
-                {user?.role?.toLowerCase() === 'hod' ? `DEPARTMENT: ${departments[0]?.name || 'Loading...'}` : "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"}
+                {user?.role?.toLowerCase() === 'hod' ? `DEPARTMENT: ${departments[0]?.name || 'Loading...'}` : "EXECUTIVE OPERATIONS COMMAND"}
               </span>
             </div>
             <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white mt-1 uppercase">

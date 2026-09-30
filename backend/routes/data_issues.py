@@ -127,11 +127,12 @@ def classify_student_issue(student: Student) -> dict:
     short_dept = dept_code  # Use the actual department code as short label
     canonical_dept = dept_name  # Use the actual full name
 
+    from backend.time_utils import format_ist
     last_sync_str = "Never"
     if stats and stats.last_successful_sync:
-        last_sync_str = stats.last_successful_sync.strftime("%d %b %Y, %I:%M %p")
+        last_sync_str = format_ist(stats.last_successful_sync, "%d %b %Y, %I:%M %p IST")
     elif stats and stats.last_attempt_at:
-        last_sync_str = f"Attempted: {stats.last_attempt_at.strftime('%d %b %Y, %I:%M %p')}"
+        last_sync_str = f"Attempted: {format_ist(stats.last_attempt_at, '%d %b %Y, %I:%M %p IST')}"
 
     return {
         "id": student.id,

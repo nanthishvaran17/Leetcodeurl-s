@@ -8,7 +8,13 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfgen import canvas
 
+from typing import Any, Callable, Tuple
+
 class NumberedCanvas(canvas.Canvas):
+    _startPage: Callable[[], None]
+    _pagesize: Tuple[float, float]
+    _pageNumber: int
+
     def __init__(self, *args, **kwargs):
         canvas.Canvas.__init__(self, *args, **kwargs)
         self._saved_page_states = []
@@ -38,6 +44,8 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
     
     # Pre-calculate headers to determine dynamic page width
     clean_headers = []
+    first_row = {}
+    weekly_data_keys = []
     if rows:
         first_row = rows[0]
         weekly_data_keys = []

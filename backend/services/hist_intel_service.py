@@ -11,6 +11,7 @@ import re
 from typing import Any, Dict, List, Optional
 from backend.logger import logger
 from backend.models import Student, WeeklySession, WeeklyPublicResult, Department
+from backend.time_utils import format_ist, now_utc
 from sqlalchemy.orm import joinedload
 
 
@@ -231,7 +232,7 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
             "report_type": "HISTORICAL_CONTEST_INTELLIGENCE",
             "reportTitle": "Historical Contest Intelligence",
             "collegeName": "NANDHA ENGINEERING COLLEGE",
-            "generatedAt": datetime.datetime.now().strftime("%d-%m-%Y %I:%M %p IST"),
+            "generatedAt": format_ist(now_utc(), "%d-%m-%Y %I:%M %p IST"),
             "sessionDate": latest_date,
             "session_date": latest_date,
             "contestName": latest_name,
@@ -258,7 +259,7 @@ def _empty_hist_report(reason: str) -> Dict[str, Any]:
         "report_type": "HISTORICAL_CONTEST_INTELLIGENCE",
         "reportTitle": "Historical Contest Intelligence",
         "collegeName": "NANDHA ENGINEERING COLLEGE",
-        "generatedAt": datetime.datetime.now().strftime("%d-%m-%Y %I:%M %p IST"),
+        "generatedAt": format_ist(now_utc(), "%d-%m-%Y %I:%M %p IST"),
         "error": reason,
         "sessionHeaders": [],
         "histSummary": {"totalStudents": 0, "numSessions": 0},

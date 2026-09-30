@@ -644,8 +644,8 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
 
           {/* Left: Title Block */}
           <div className="space-y-2.5 max-w-2xl min-w-0 flex-1">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black uppercase max-w-full">
-              <span className="truncate">Institutional Configuration • System Control Center</span>
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black uppercase max-w-full">
+              <span className="whitespace-normal sm:whitespace-nowrap leading-tight">Institutional Configuration • System Control Center</span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
@@ -712,19 +712,24 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
       </div>
 
       {/* 2. COMPACT SYSTEM STATUS STRIP WITH LIVE PROBING */}
-      <div className="glass-card p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-navy-700 space-y-4 shadow-sm">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-navy-800">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Activity className={`w-4 h-4 ${isProbing ? 'text-amber-500 animate-spin' : 'text-emerald-500'}`} />
-              <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-950 dark:text-white">
+      <div className="glass-card p-4 sm:p-6 rounded-3xl border border-slate-200 dark:border-navy-700 space-y-5 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 sm:pb-5 border-b border-slate-100 dark:border-navy-800">
+          <div className="flex flex-col gap-3 sm:gap-3.5">
+            <div className="flex items-center gap-2.5">
+              <Activity className={`w-5 h-5 ${isProbing ? 'text-amber-500 animate-spin' : 'text-emerald-500'}`} />
+              <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-950 dark:text-white leading-tight">
                 Live Subsystem Health Probes
               </h3>
             </div>
             {lastProbed && !isProbing ? (
-              <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-slate-600 dark:text-slate-300">
-                <Clock className="w-3.5 h-3.5 text-brand-500 shrink-0" />
-                <span>Last probed at <strong className="text-slate-950 dark:text-white">{lastProbed.toLocaleTimeString()}</strong></span>
+              <div className="flex flex-wrap items-center gap-2 text-xs font-mono font-bold text-slate-600 dark:text-slate-300">
+                <Clock className="w-4 h-4 text-brand-500 shrink-0" />
+                <span className="inline-flex items-center gap-1.5 flex-wrap">
+                  <span>Last probed at</span>
+                  <strong className="text-slate-950 dark:text-white px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xs">
+                    {lastProbed.toLocaleTimeString()}
+                  </strong>
+                </span>
               </div>
             ) : (
               <div className="text-[11px] font-bold text-slate-400">
@@ -738,7 +743,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
             type="button"
             onClick={fetchSystemHealth}
             disabled={isProbing}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all shadow-md active:scale-95 cursor-pointer shrink-0 mt-3 sm:mt-0 ${
               isProbing
                 ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 cursor-not-allowed'
                 : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-500/25 border border-brand-500'

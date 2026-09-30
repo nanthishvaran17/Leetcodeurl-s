@@ -514,27 +514,35 @@ export const StaffManagement: React.FC = () => {
                         }`}
                       >
                         {/* Top Header: Avatar, Name, Status */}
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2.5 min-w-0">
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden">
                             <div className="relative shrink-0">
-                              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-sm flex items-center justify-center shadow-md uppercase tracking-wider border border-white/20">
-                                {initials}
-                              </div>
+                              {staff.profile_photo ? (
+                                <img
+                                  src={staff.profile_photo}
+                                  alt={staff.full_name || staff.username}
+                                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl object-cover border-2 border-brand-500/40 shadow-md bg-white dark:bg-navy-950"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-md uppercase tracking-wider border border-white/20">
+                                  {initials}
+                                </div>
+                              )}
                               <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-navy-900 ${
                                 staff.is_active ? 'bg-emerald-500 shadow-xs' : 'bg-rose-500'
                               }`} />
                             </div>
 
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                            <div className="min-w-0 flex-1 overflow-hidden">
+                              <div className="flex items-center gap-1.5 min-w-0 flex-nowrap">
                                 <h4 
-                                  className="font-black text-sm sm:text-base text-slate-900 dark:text-white leading-tight break-words min-w-0"
+                                  className="font-black text-xs xs:text-sm sm:text-base text-slate-900 dark:text-white leading-tight whitespace-nowrap truncate min-w-0 shrink flex-1"
                                   title={staff.full_name || staff.username}
                                 >
                                   {staff.full_name || staff.username}
                                 </h4>
                                 {staff.role === 'Super Admin' && (
-                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0">
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0 whitespace-nowrap">
                                     ROOT
                                   </span>
                                 )}
@@ -542,14 +550,14 @@ export const StaffManagement: React.FC = () => {
                             </div>
                           </div>
 
-                          <div className="shrink-0">
+                          <div className="shrink-0 ml-1">
                             {staff.is_active ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30 shadow-2xs">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30 shadow-2xs whitespace-nowrap">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                                 Active
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-300 dark:border-rose-500/30 shadow-2xs">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-300 dark:border-rose-500/30 shadow-2xs whitespace-nowrap">
                                 <span className="w-2 h-2 rounded-full bg-rose-500" />
                                 Suspended
                               </span>

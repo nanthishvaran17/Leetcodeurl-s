@@ -110,8 +110,9 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-6">
           <div className="space-y-3 max-w-3xl">
-            <div className="inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[9px] min-[380px]:text-[10px] sm:text-xs font-black tracking-wider leading-tight max-w-full">
-              <span className="break-words">DATA INTEGRITY & PROFILE HEALTH • REALTIME AUDIT BOARD</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl sm:rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black tracking-wider leading-snug">
+              <ShieldCheck className="w-3.5 h-3.5 text-brand-400 shrink-0" />
+              <span>DATA INTEGRITY & PROFILE HEALTH • REALTIME AUDIT BOARD</span>
             </div>
 
             <h1 className="text-3xl md:text-4xl font-black tracking-tight">
@@ -397,24 +398,24 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
             </div>
 
             {/* Pagination Controls */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-500 font-medium">
-              <div>
-                Showing <strong className="text-slate-900 dark:text-white">{Math.min((page - 1) * pageSize + 1, filteredIssues.length)}</strong> to{' '}
-                <strong className="text-slate-900 dark:text-white">{Math.min(page * pageSize, filteredIssues.length)}</strong> of{' '}
-                <strong className="text-slate-900 dark:text-white">{filteredIssues.length}</strong> items
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 text-xs text-slate-700 dark:text-slate-200 font-bold border-t border-slate-200 dark:border-slate-800">
+              <div className="text-slate-700 dark:text-slate-200 font-bold">
+                Showing <strong className="text-slate-900 dark:text-white font-extrabold">{Math.min((page - 1) * pageSize + 1, filteredIssues.length)}</strong> to{' '}
+                <strong className="text-slate-900 dark:text-white font-extrabold">{Math.min(page * pageSize, filteredIssues.length)}</strong> of{' '}
+                <strong className="text-slate-900 dark:text-white font-extrabold">{filteredIssues.length}</strong> items
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold">
-                  <span className="text-[10px] text-slate-400 px-1 font-mono">Show:</span>
+                <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-navy-900 p-1 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold">
+                  <span className="text-xs text-slate-700 dark:text-slate-200 px-1 font-mono font-bold">Show:</span>
                   {[10, 25, 50, 100].map((sz) => (
                     <button
                       key={sz}
                       onClick={() => { setPageSize(sz); setPage(1); }}
-                      className={`px-2 py-0.5 rounded-lg transition-all cursor-pointer ${
+                      className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer text-xs ${
                         pageSize === sz
                           ? 'bg-brand-600 text-white shadow-xs font-black'
-                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                          : 'text-slate-800 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 font-bold bg-white dark:bg-navy-800 border border-slate-200 dark:border-slate-700'
                       }`}
                     >
                       {sz}
@@ -422,21 +423,21 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
                   ))}
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <button
                     disabled={page <= 1}
                     onClick={() => setPage((p) => p - 1)}
-                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 disabled:opacity-30 hover:bg-slate-50 dark:hover:bg-navy-800 transition font-bold cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-slate-900 dark:text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-navy-800 transition font-extrabold cursor-pointer shadow-2xs"
                   >
                     Previous
                   </button>
-                  <span className="text-xs font-mono font-bold px-1">
+                  <span className="text-xs font-mono font-black px-2.5 py-1 bg-slate-100 dark:bg-navy-900 rounded-lg text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800">
                     {page} / {Math.ceil(filteredIssues.length / pageSize) || 1}
                   </span>
                   <button
                     disabled={page >= Math.ceil(filteredIssues.length / pageSize)}
                     onClick={() => setPage((p) => p + 1)}
-                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 disabled:opacity-30 hover:bg-slate-50 dark:hover:bg-navy-800 transition font-bold cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-slate-900 dark:text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-navy-800 transition font-extrabold cursor-pointer shadow-2xs"
                   >
                     Next
                   </button>

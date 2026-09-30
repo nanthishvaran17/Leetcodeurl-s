@@ -279,6 +279,11 @@
   text-rendering: optimizeLegibility;
 }
 
+.modal-container-responsive.overflow-y-auto,
+.modal-container-responsive.overflow-auto {
+  overflow-y: auto !important;
+}
+
 @media (min-width: 640px) {
   .modal-container-responsive {
     max-height: calc(100dvh - 2.5rem) !important;

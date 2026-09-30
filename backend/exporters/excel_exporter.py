@@ -473,7 +473,7 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
         for col in sheet.columns:
             if not col or col[0].column is None:
                 continue
-            col_idx = int(col[0].column)
+            col_idx = col[0].column
             col_letter = get_column_letter(col_idx)
             hdr_val = ""
             for r_chk in range(12, 0, -1):
@@ -1029,7 +1029,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         for col in ws_item.columns:
             if not col or col[0].column is None:
                 continue
-            col_idx = int(col[0].column)
+            col_idx = col[0].column
             col_letter = get_column_letter(col_idx)
             
             # Lookup column header title from row 7 or row 11

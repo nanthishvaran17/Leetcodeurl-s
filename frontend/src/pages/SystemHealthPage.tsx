@@ -827,23 +827,23 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           <div className="pt-1 pb-1">
             <div
               onClick={() => setIsPulseExpanded(true)}
-              className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-900/40 border border-slate-200/70 dark:border-navy-800 flex flex-wrap items-center justify-between gap-3 cursor-pointer hover:bg-slate-100/80 dark:hover:bg-navy-900/70 transition-all"
+              className="p-3.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 flex flex-wrap items-center justify-between gap-3 cursor-pointer hover:border-indigo-400/60 dark:hover:border-indigo-500/50 transition-all shadow-2xs"
             >
               <div className="flex items-center gap-2 overflow-x-auto py-0.5 no-scrollbar max-w-full">
                 {Object.entries(livePulse).slice(0, 5).map(([key, svc]: [string, any]) => (
-                  <span key={key} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white dark:bg-navy-950 text-[11px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 shrink-0">
+                  <span key={key} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-navy-900 text-[11px] font-extrabold text-slate-900 dark:text-white border border-slate-200 dark:border-navy-700 shrink-0 shadow-2xs">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     <span className="truncate max-w-[120px]">{svc.name}</span>
-                    <span className="text-[10px] text-slate-400 font-mono">({svc.latencyMs ? `${svc.latencyMs}ms` : (svc.latency || '1ms')})</span>
+                    <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-mono font-bold">({svc.latencyMs ? `${svc.latencyMs}ms` : (svc.latency || '1ms')})</span>
                   </span>
                 ))}
                 {Object.keys(livePulse).length > 5 && (
-                  <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 px-2 py-1 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-800/40 shrink-0">
+                  <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/60 rounded-xl border border-indigo-200 dark:border-indigo-800/60 shrink-0">
                     +{Object.keys(livePulse).length - 5} more nodes...
                   </span>
                 )}
               </div>
-              <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 shrink-0">
+              <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 flex items-center gap-1 shrink-0">
                 Click to view all telemetry <ChevronRight className="w-3.5 h-3.5" />
               </span>
             </div>
@@ -859,19 +859,19 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 return (
                   <div
                     key={key}
-                    className="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-navy-950/40 border border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-3 min-h-[52px]"
+                    className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 flex items-center justify-between gap-3 min-h-[52px] shadow-2xs"
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isHealthy ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`}></span>
-                      <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200 truncate">
+                      <span className="text-xs font-black text-slate-900 dark:text-white truncate">
                         {svc.name}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className={`text-[10px] font-black ${isHealthy ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600'}`}>
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${isHealthy ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60'}`}>
                         {svc.status}
                       </span>
-                      <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-navy-800 px-1.5 py-0.5 rounded-lg">
+                      <span className="text-[10px] font-mono font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-navy-800 border border-indigo-100 dark:border-navy-700 px-2 py-0.5 rounded-lg">
                         {svc.latencyMs ? `${svc.latencyMs}ms` : (svc.latency ? `${svc.latency}` : '—')}
                       </span>
                     </div>
@@ -904,34 +904,23 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       </div>
 
       {/* 3. EXCEPTION-FIRST "ATTENTION REQUIRED" & NEXT BEST ACTION */}
+      {/* 3. EXCEPTION-FIRST "ATTENTION REQUIRED" & NEXT BEST ACTION */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Left Column: Attention Required */}
-        <div className="lg:col-span-2 p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
-            <div className="flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-amber-500" />
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                Attention Required (Exception-First Operational Monitor)
-              </h3>
-            </div>
-            <span className="text-[10px] font-bold text-slate-400">
-              {attentionItems.length === 0 ? '0 Exceptions' : `${attentionItems.length} Exceptions Detected`}
-            </span>
-          </div>
-
-          {attentionItems.length === 0 ? (
-            <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-              <div>
-                <h4 className="text-xs font-black text-emerald-900 dark:text-emerald-200">
-                  NO ACTION REQUIRED — All Systems Operating at 100% Integrity
-                </h4>
-                <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5">
-                  Database verified, report parity confirmed, and upcoming Sunday automation session is fully armed.
-                </p>
+        {/* Left Column: Attention Required (Shown only when exceptions are present) */}
+        {attentionItems.length > 0 && (
+          <div className="lg:col-span-2 p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-amber-500" />
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                  Attention Required (Exception-First Operational Monitor)
+                </h3>
               </div>
+              <span className="text-[10px] font-bold text-slate-400">
+                {`${attentionItems.length} Exceptions Detected`}
+              </span>
             </div>
-          ) : (
+
             <div className="space-y-2">
               {attentionItems.map((item: any) => (
                 <div
@@ -960,11 +949,11 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Right Column: Intelligent Next Best Action */}
-        <div className="p-5 rounded-3xl bg-gradient-to-br from-navy-900 via-indigo-950 to-navy-900 text-white border border-indigo-900/50 shadow-sm flex flex-col justify-between space-y-4">
+        {/* Right Column: Intelligent Next Best Action (Full width when 0 exceptions) */}
+        <div className={`${attentionItems.length > 0 ? 'lg:col-span-1' : 'lg:col-span-3'} p-5 rounded-3xl bg-gradient-to-br from-navy-900 via-indigo-950 to-navy-900 text-white border border-indigo-900/50 shadow-sm flex flex-col justify-between space-y-4`}>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="px-2 py-0.5 text-[9.5px] font-black uppercase rounded bg-indigo-500/30 text-indigo-300 border border-indigo-400/30">
@@ -1015,20 +1004,20 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               className={`w-full lg:w-auto px-4 py-3 rounded-2xl text-xs transition-all cursor-pointer flex items-center justify-between gap-3.5 text-left border ${
                 isActive
                   ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white shadow-md shadow-blue-500/20 border-blue-500/40 ring-1 ring-white/20'
-                  : 'bg-white dark:bg-navy-950 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-navy-900 border-slate-200 dark:border-navy-800 shadow-xs'
+                  : 'bg-white dark:bg-navy-950 text-slate-900 dark:text-slate-100 hover:border-indigo-400/50 dark:hover:border-indigo-500/50 border-slate-200 dark:border-navy-800 shadow-xs'
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className={`p-2 rounded-xl shrink-0 transition-colors ${
-                  isActive ? 'bg-white/20 text-white backdrop-blur-sm' : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-400'
+                  isActive ? 'bg-white/20 text-white backdrop-blur-sm' : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/40'
                 }`}>
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="min-w-0 leading-snug">
-                  <div className={`font-bold text-sm tracking-tight truncate ${isActive ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+                  <div className={`font-black text-sm tracking-tight truncate ${isActive ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
                     {tab.label}
                   </div>
-                  <div className={`text-[11px] font-medium truncate mt-0.5 ${isActive ? 'text-blue-100/90' : 'text-slate-500 dark:text-slate-400'}`}>
+                  <div className={`text-[11px] font-bold truncate mt-0.5 ${isActive ? 'text-blue-100/90' : 'text-slate-500 dark:text-slate-400'}`}>
                     {tab.desc}
                   </div>
                 </div>
@@ -1090,8 +1079,9 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           <div className="p-6 rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white border border-brand-500/30 shadow-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
               <div className="space-y-1">
-                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-amber-300 text-[9px] min-[380px]:text-[10px] sm:text-xs font-black uppercase max-w-full leading-tight">
-                  <span className="break-words">DATA INTEGRITY & PROFILE HEALTH • REALTIME AUDIT BOARD</span>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl sm:rounded-full bg-brand-500/20 border border-brand-400/30 text-amber-300 text-[10px] sm:text-xs font-black uppercase tracking-wider leading-snug">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>DATA INTEGRITY & PROFILE HEALTH • REALTIME AUDIT BOARD</span>
                 </div>
                 <h4 className="text-base font-black text-white">Data Quality & Profile Health Dashboard</h4>
                 <p className="text-xs text-slate-300">
@@ -2235,16 +2225,16 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 </div>
 
                 {/* Pagination Controls */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-500 font-medium">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-700 dark:text-slate-300 font-bold">
                   <div>
-                    Showing <strong className="text-slate-900 dark:text-white">{Math.min((auditPage - 1) * auditPageSize + 1, rawAudits.length)}</strong> to{' '}
-                    <strong className="text-slate-900 dark:text-white">{Math.min(auditPage * auditPageSize, rawAudits.length)}</strong> of{' '}
-                    <strong className="text-slate-900 dark:text-white">{rawAudits.length}</strong> Logs
+                    Showing <strong className="text-slate-950 dark:text-white font-black">{Math.min((auditPage - 1) * auditPageSize + 1, rawAudits.length)}</strong> to{' '}
+                    <strong className="text-slate-950 dark:text-white font-black">{Math.min(auditPage * auditPageSize, rawAudits.length)}</strong> of{' '}
+                    <strong className="text-slate-950 dark:text-white font-black">{rawAudits.length}</strong> Logs
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold">
-                      <span className="text-[10px] text-slate-400 px-1 font-mono">Show:</span>
+                    <div className="flex items-center gap-1 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-navy-800 text-[11px] font-bold shadow-2xs">
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 px-1 font-mono font-bold">Show:</span>
                       {[10, 25, 50, 100].map((sz) => (
                         <button
                           key={sz}
@@ -2252,7 +2242,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                           className={`px-2 py-0.5 rounded-lg transition-all cursor-pointer ${
                             auditPageSize === sz
                               ? 'bg-brand-600 text-white shadow-xs font-black'
-                              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                              : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
                           }`}
                         >
                           {sz}
@@ -2264,17 +2254,17 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                       <button
                         disabled={auditPage <= 1}
                         onClick={() => setAuditPage((p) => p - 1)}
-                        className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 disabled:opacity-30 hover:bg-slate-50 dark:hover:bg-navy-800 transition font-bold cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-800 dark:text-slate-200 disabled:opacity-30 hover:bg-indigo-50 dark:hover:bg-navy-900 transition font-bold cursor-pointer shadow-2xs"
                       >
                         Previous
                       </button>
-                      <span className="text-xs font-mono font-bold px-1">
+                      <span className="text-xs font-mono font-bold px-1 text-slate-800 dark:text-slate-200">
                         {auditPage} / {Math.ceil(rawAudits.length / auditPageSize) || 1}
                       </span>
                       <button
                         disabled={auditPage >= Math.ceil(rawAudits.length / auditPageSize)}
                         onClick={() => setAuditPage((p) => p + 1)}
-                        className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 disabled:opacity-30 hover:bg-slate-50 dark:hover:bg-navy-800 transition font-bold cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-800 dark:text-slate-200 disabled:opacity-30 hover:bg-indigo-50 dark:hover:bg-navy-900 transition font-bold cursor-pointer shadow-2xs"
                       >
                         Next
                       </button>

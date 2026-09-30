@@ -11,6 +11,7 @@ import re
 from typing import Any, Dict, List, Optional
 from backend.logger import logger
 from backend.models import Student, WeeklySession, WeeklyPublicResult, Department
+from backend.time_utils import format_ist, now_utc
 from sqlalchemy.orm import joinedload
 
 
@@ -223,7 +224,7 @@ def build_wow_intel_report(db, config, current_user=None) -> Dict[str, Any]:
             "report_type": "WEEK_ON_WEEK_INTELLIGENCE",
             "reportTitle": "Week-on-Week Intelligence",
             "collegeName": "NANDHA ENGINEERING COLLEGE",
-            "generatedAt": datetime.datetime.now().strftime("%d-%m-%Y %I:%M %p IST"),
+            "generatedAt": format_ist(now_utc(), "%d-%m-%Y %I:%M %p IST"),
             "prevContest": f"Contest {prev_num}",
             "currContest": f"Contest {curr_num}",
             "prevDate": prev_date,
@@ -262,7 +263,7 @@ def _empty_wow_report(reason: str) -> Dict[str, Any]:
         "report_type": "WEEK_ON_WEEK_INTELLIGENCE",
         "reportTitle": "Week-on-Week Intelligence",
         "collegeName": "NANDHA ENGINEERING COLLEGE",
-        "generatedAt": datetime.datetime.now().strftime("%d-%m-%Y %I:%M %p IST"),
+        "generatedAt": format_ist(now_utc(), "%d-%m-%Y %I:%M %p IST"),
         "error": reason,
         "wowSummary": {"totalStudents": 0},
         "allStudents": [],

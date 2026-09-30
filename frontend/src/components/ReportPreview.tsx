@@ -831,17 +831,17 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <span className="text-[10px] font-mono font-black text-indigo-700 dark:text-indigo-300 block">Score: {lb.score ?? "—"}</span>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs pt-0.5">
-                          <div className="bg-slate-100 dark:bg-navy-950 p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 text-xs pt-0.5">
+                          <div className="bg-slate-100 dark:bg-navy-950 p-2 rounded-xl border border-slate-200 dark:border-slate-800 min-w-0">
                             <span className="text-slate-900 dark:text-slate-100 text-[10px] uppercase font-black block mb-1">Questions</span>
-                            <div className="flex items-center space-x-1 font-mono text-[10px] font-black">
-                              <span className={lb.q1 === 1 ? "text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.5 rounded" : "text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-950 px-1 py-0.5 rounded"}>Q1:{lb.q1 ?? 0}</span>
-                              <span className={lb.q2 === 1 ? "text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.5 rounded" : "text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-950 px-1 py-0.5 rounded"}>Q2:{lb.q2 ?? 0}</span>
-                              <span className={lb.q3 === 1 ? "text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.5 rounded" : "text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-950 px-1 py-0.5 rounded"}>Q3:{lb.q3 ?? 0}</span>
-                              <span className={lb.q4 === 1 ? "text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.5 rounded" : "text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-950 px-1 py-0.5 rounded"}>Q4:{lb.q4 ?? 0}</span>
+                            <div className="flex flex-wrap items-center gap-1 font-mono text-[10px] font-black">
+                              <span className={`px-1.5 py-0.5 rounded shrink-0 ${lb.q1 === 1 ? "text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950" : "text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-950"}`}>Q1:{lb.q1 ?? 0}</span>
+                              <span className={`px-1.5 py-0.5 rounded shrink-0 ${lb.q2 === 1 ? "text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950" : "text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-950"}`}>Q2:{lb.q2 ?? 0}</span>
+                              <span className={`px-1.5 py-0.5 rounded shrink-0 ${lb.q3 === 1 ? "text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950" : "text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-950"}`}>Q3:{lb.q3 ?? 0}</span>
+                              <span className={`px-1.5 py-0.5 rounded shrink-0 ${lb.q4 === 1 ? "text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950" : "text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-950"}`}>Q4:{lb.q4 ?? 0}</span>
                             </div>
                           </div>
-                          <div className="bg-slate-100 dark:bg-navy-950 p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-right">
+                          <div className="bg-slate-100 dark:bg-navy-950 p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-left xs:text-right min-w-0">
                             <span className="text-slate-900 dark:text-slate-100 text-[10px] uppercase font-black block mb-1">Rank & Rating</span>
                             <span className="font-black text-amber-700 dark:text-amber-400 text-xs block">
                               Global: {formatRank(lb.global_rank || lb.rank_val || lb.rank)}
@@ -1190,22 +1190,22 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             {getStatusBadge(s.status)}
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs pt-0.5">
-                          <div className="bg-slate-100 dark:bg-navy-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 text-xs pt-0.5">
+                          <div className="bg-slate-100 dark:bg-navy-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 min-w-0">
                             <span className="text-slate-900 dark:text-slate-100 text-[10px] uppercase font-black tracking-wider block mb-1">Contest / Questions</span>
-                            <span className={`font-black text-xs block ${isPart && cSolved !== null && cSolved > 0 ? 'text-emerald-700 dark:text-emerald-400' : isPart ? 'text-amber-700 dark:text-amber-400' : 'text-rose-700 dark:text-rose-400'}`}>
+                            <span className={`font-black text-xs block leading-tight ${isPart && cSolved !== null && cSolved > 0 ? 'text-emerald-700 dark:text-emerald-400' : isPart ? 'text-amber-700 dark:text-amber-400' : 'text-rose-700 dark:text-rose-400'}`}>
                               {isPart && cSolved !== null ? `${cSolved} Solved` : '0 Solved (Not Attended)'}
                             </span>
                             {s.q1 !== undefined && (
-                              <div className="flex items-center space-x-1 mt-1.5 font-mono text-[10px] font-black">
-                                <span className={s.q1 === 1 ? "text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-700" : "text-rose-800 dark:text-rose-300 font-black bg-rose-100 dark:bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-300 dark:border-rose-700"}>Q1:{s.q1 ?? 0}</span>
-                                <span className={s.q2 === 1 ? "text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-700" : "text-rose-800 dark:text-rose-300 font-black bg-rose-100 dark:bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-300 dark:border-rose-700"}>Q2:{s.q2 ?? 0}</span>
-                                <span className={s.q3 === 1 ? "text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-700" : "text-rose-800 dark:text-rose-300 font-black bg-rose-100 dark:bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-300 dark:border-rose-700"}>Q3:{s.q3 ?? 0}</span>
-                                <span className={s.q4 === 1 ? "text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-700" : "text-rose-800 dark:text-rose-300 font-black bg-rose-100 dark:bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-300 dark:border-rose-700"}>Q4:{s.q4 ?? 0}</span>
+                              <div className="flex flex-wrap items-center gap-1 mt-1.5 font-mono text-[10px] font-black">
+                                <span className={`px-1.5 py-0.5 rounded border shrink-0 ${s.q1 === 1 ? "text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-700" : "text-rose-800 dark:text-rose-300 font-black bg-rose-100 dark:bg-rose-950/80 border-rose-300 dark:border-rose-700"}`}>Q1:{s.q1 ?? 0}</span>
+                                <span className={`px-1.5 py-0.5 rounded border shrink-0 ${s.q2 === 1 ? "text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-700" : "text-rose-800 dark:text-rose-300 font-black bg-rose-100 dark:bg-rose-950/80 border-rose-300 dark:border-rose-700"}`}>Q2:{s.q2 ?? 0}</span>
+                                <span className={`px-1.5 py-0.5 rounded border shrink-0 ${s.q3 === 1 ? "text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-700" : "text-rose-800 dark:text-rose-300 font-black bg-rose-100 dark:bg-rose-950/80 border-rose-300 dark:border-rose-700"}`}>Q3:{s.q3 ?? 0}</span>
+                                <span className={`px-1.5 py-0.5 rounded border shrink-0 ${s.q4 === 1 ? "text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-700" : "text-rose-800 dark:text-rose-300 font-black bg-rose-100 dark:bg-rose-950/80 border-rose-300 dark:border-rose-700"}`}>Q4:{s.q4 ?? 0}</span>
                               </div>
                             )}
                           </div>
-                          <div className="bg-slate-100 dark:bg-navy-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-right">
+                          <div className="bg-slate-100 dark:bg-navy-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-left xs:text-right min-w-0">
                             <span className="text-slate-900 dark:text-slate-100 text-[10px] uppercase font-black tracking-wider block mb-1">Rank & Rating</span>
                             <span className="font-black text-amber-700 dark:text-amber-400 text-xs block">
                               Rank: {isPart ? formatRank(s.global_rank || s.rank || s.profile_rank) : "—"}

@@ -716,20 +716,37 @@ def run_migrations():
                 )
                 conn.commit()
 
-            # Check users table columns for WhatsApp integration
+            # Check users table columns for all User model fields
             result_users = conn.execute(
                 sqlalchemy.text("PRAGMA table_info(users)")
             )
             users_cols = {row[1] for row in result_users}
             if users_cols:
-                if "phone_number" not in users_cols:
-                    conn.execute(sqlalchemy.text("ALTER TABLE users ADD COLUMN phone_number VARCHAR(30)"))
-                    conn.commit()
-                    print("[DB Migration] Added users column: phone_number")
-                if "whatsapp_verified" not in users_cols:
-                    conn.execute(sqlalchemy.text("ALTER TABLE users ADD COLUMN whatsapp_verified BOOLEAN DEFAULT 0"))
-                    conn.commit()
-                    print("[DB Migration] Added users column: whatsapp_verified")
+                user_migrations = [
+                    ("phone_number", "ALTER TABLE users ADD COLUMN phone_number VARCHAR(30)"),
+                    ("whatsapp_verified", "ALTER TABLE users ADD COLUMN whatsapp_verified BOOLEAN DEFAULT 0"),
+                    ("date_of_birth", "ALTER TABLE users ADD COLUMN date_of_birth DATE"),
+                    ("profile_photo", "ALTER TABLE users ADD COLUMN profile_photo TEXT"),
+                    ("designation", "ALTER TABLE users ADD COLUMN designation VARCHAR(100)"),
+                    ("institutional_id", "ALTER TABLE users ADD COLUMN institutional_id VARCHAR(50)"),
+                    ("academic_year", "ALTER TABLE users ADD COLUMN academic_year VARCHAR(20)"),
+                    ("mentoring_role", "ALTER TABLE users ADD COLUMN mentoring_role VARCHAR(50)"),
+                    ("require_password_change", "ALTER TABLE users ADD COLUMN require_password_change BOOLEAN DEFAULT 0"),
+                    ("is_active", "ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1"),
+                    ("last_login", "ALTER TABLE users ADD COLUMN last_login DATETIME"),
+                    ("last_activity", "ALTER TABLE users ADD COLUMN last_activity DATETIME"),
+                    ("totp_secret", "ALTER TABLE users ADD COLUMN totp_secret VARCHAR(100)"),
+                    ("is_2fa_enabled", "ALTER TABLE users ADD COLUMN is_2fa_enabled BOOLEAN DEFAULT 0"),
+                    ("reporting_manager_id", "ALTER TABLE users ADD COLUMN reporting_manager_id INTEGER"),
+                ]
+                for col_name, sql in user_migrations:
+                    if col_name not in users_cols:
+                        try:
+                            conn.execute(sqlalchemy.text(sql))
+                            conn.commit()
+                            print(f"[DB Migration] Added users column: {col_name}")
+                        except Exception as col_err:
+                            print(f"[DB Migration Warning] Could not add column {col_name} to users: {col_err}")
 
             # Check students table columns for WhatsApp integration
             result_students = conn.execute(

@@ -676,7 +676,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                         </div>
 
                         {/* Snapshot History Table on Mobile */}
-                        <div className="space-y-2">
+                        <div className="space-y-2 max-w-full overflow-hidden">
                           <h6 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
                             <Clock className="w-3.5 h-3.5 text-brand-500" />
                             <span>Time Machine Snapshots</span>
@@ -687,27 +687,27 @@ export const GrowthIntelligencePage: React.FC = () => {
                               Loading history snapshots...
                             </div>
                           ) : historySnapshots.length > 0 ? (
-                            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-950">
-                              <table className="w-full text-left text-xs min-w-[340px]">
+                            <div className="rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-950 max-w-full overflow-hidden">
+                              <table className="w-full text-left text-[11px] table-fixed">
                                 <thead className="bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 uppercase font-black text-[9px] border-b border-slate-200 dark:border-navy-800">
                                   <tr>
-                                    <th className="py-2 px-2.5">Date</th>
-                                    <th className="py-2 px-2.5">Solved</th>
-                                    <th className="py-2 px-2.5 text-emerald-600">Delta</th>
-                                    <th className="py-2 px-2.5">Rating</th>
+                                    <th className="py-2 px-2 w-[42%] truncate">Date</th>
+                                    <th className="py-2 px-1 text-center w-[18%]">Solved</th>
+                                    <th className="py-2 px-1 text-center text-emerald-600 w-[18%]">Delta</th>
+                                    <th className="py-2 px-1.5 text-right w-[22%]">Rating</th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-200 dark:divide-navy-800 font-mono text-[11px]">
+                                <tbody className="divide-y divide-slate-200 dark:divide-navy-800 font-mono text-[10px]">
                                   {historySnapshots.map((snap) => (
                                     <tr key={snap.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/60">
-                                      <td className="py-2 px-2.5 font-sans font-bold text-slate-800 dark:text-slate-200">
+                                      <td className="py-2 px-2 font-sans font-bold text-slate-800 dark:text-slate-200 truncate">
                                         {new Date(snap.captured_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                       </td>
-                                      <td className="py-2 px-2.5 font-black text-slate-900 dark:text-white">{snap.total_solved}</td>
-                                      <td className="py-2 px-2.5 font-bold text-emerald-600">
+                                      <td className="py-2 px-1 text-center font-black text-slate-900 dark:text-white">{snap.total_solved}</td>
+                                      <td className="py-2 px-1 text-center font-bold text-emerald-600">
                                         {snap.delta_total > 0 ? `+${snap.delta_total}` : snap.delta_total === snap.total_solved ? 'Base' : '0'}
                                       </td>
-                                      <td className="py-2 px-2.5 text-slate-600 dark:text-slate-400">{snap.contest_rating ?? '—'}</td>
+                                      <td className="py-2 px-1.5 text-right text-slate-700 dark:text-slate-300 font-bold truncate">{snap.contest_rating ?? '—'}</td>
                                     </tr>
                                   ))}
                                 </tbody>
