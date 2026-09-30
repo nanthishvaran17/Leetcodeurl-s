@@ -250,9 +250,24 @@ def _filter_canonical_dataset_in_memory(
     pending = sum(1 for r in scope_rows if r.get("status") == "PENDING")
 
     def _get_solved(r):
-        if r.get("total_solved") is not None:
-            return int(r.get("total_solved") or 0)
-        return (1 if r.get("q1") == 1 else 0) + (1 if r.get("q2") == 1 else 0) + (1 if r.get("q3") == 1 else 0) + (1 if r.get("q4") == 1 else 0)
+        def _is_q_solved(q_val):
+            if q_val is True or q_val == 1 or q_val == "1" or str(q_val).lower() == "true":
+                return 1
+            try:
+                return 1 if int(q_val or 0) > 0 else 0
+            except (ValueError, TypeError):
+                return 0
+
+        q_sum = _is_q_solved(r.get("q1")) + _is_q_solved(r.get("q2")) + _is_q_solved(r.get("q3")) + _is_q_solved(r.get("q4"))
+        ts = r.get("total_solved") or r.get("problems_solved") or r.get("total_contest_solved") or r.get("score_solved")
+        if ts is not None and ts != "" and ts != "—":
+            try:
+                v = int(ts)
+                if v > q_sum:
+                    return v
+            except (ValueError, TypeError):
+                pass
+        return q_sum
 
     q4 = sum(1 for r in scope_rows if _get_solved(r) >= 4 and r.get("status") in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED"))
     q3 = sum(1 for r in scope_rows if _get_solved(r) == 3 and r.get("status") in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED"))

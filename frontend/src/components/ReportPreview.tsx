@@ -437,27 +437,27 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
   const getStatusBadge = (status: string) => {
     const s = (status || '').toUpperCase();
     if (s === 'PUBLIC_ATTENDED' || s === 'PUBLIC' || s === 'PUBLIC_LIVE' || s === 'ATTENDED') {
-      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 leading-none">PUBLIC ATTENDED</span>;
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-black rounded-full bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 leading-none shadow-xs">PUBLIC ATTENDED</span>;
     }
     if (s === 'VIRTUAL_ATTENDED' || s === 'VIRTUAL' || s === 'VIRTUAL_PRACTICE') {
-      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 leading-none">VIRTUAL ATTENDED</span>;
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-black rounded-full bg-purple-100 text-purple-950 dark:bg-purple-950 dark:text-purple-200 border border-purple-400 dark:border-purple-700 leading-none shadow-xs">VIRTUAL ATTENDED</span>;
     }
     if (s === 'NOT_ATTENDED' || s === 'PUBLIC_NOT_ATTENDED' || s === 'ABSENT') {
-      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 leading-none">NOT ATTENDED</span>;
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-black rounded-full bg-rose-100 text-rose-950 dark:bg-rose-950 dark:text-rose-200 border border-rose-400 dark:border-rose-700 leading-none shadow-xs">NOT ATTENDED</span>;
     }
     if (s === 'PENDING_USERNAME' || s === 'PENDING') {
-      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 leading-none">PENDING USERNAME</span>;
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-black rounded-full bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-200 border border-amber-400 dark:border-amber-700 leading-none shadow-xs">PENDING USERNAME</span>;
     }
     if (s === 'DATA_ERROR') {
-      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-orange-500/15 text-orange-700 dark:text-orange-300 border border-orange-500/30 leading-none">DATA ERROR</span>;
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-black rounded-full bg-orange-100 text-orange-950 dark:bg-orange-950 dark:text-orange-200 border border-orange-400 dark:border-orange-700 leading-none shadow-xs">DATA ERROR</span>;
     }
     if (s === 'FETCH_FAILED' || s === 'FETCH_ERROR') {
-      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 leading-none">FETCH FAILED</span>;
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-black rounded-full bg-rose-100 text-rose-950 dark:bg-rose-950 dark:text-rose-200 border border-rose-400 dark:border-rose-700 leading-none shadow-xs">FETCH FAILED</span>;
     }
     if (s === 'INVALID_USERNAME' || s === 'USERNAME_NOT_FOUND') {
-      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-orange-500/15 text-orange-700 dark:text-orange-300 border border-orange-500/30 leading-none">INVALID USERNAME</span>;
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-black rounded-full bg-orange-100 text-orange-950 dark:bg-orange-950 dark:text-orange-200 border border-orange-400 dark:border-orange-700 leading-none shadow-xs">INVALID USERNAME</span>;
     }
-    return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30 leading-none">UNKNOWN</span>;
+    return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-black rounded-full bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-100 border border-slate-400 leading-none shadow-xs">UNKNOWN</span>;
   };
 
   return createPortal(
@@ -712,7 +712,28 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
                     <span>Question-Wise Official Result</span>
                   </h3>
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
+                  {/* Mobile Cards View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2">
+                    {report.questionWiseResult.map((q: any, i: number) => (
+                      <div key={i} className="p-3 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm flex items-center justify-between">
+                        <div>
+                          <span className="text-xs font-black text-slate-950 dark:text-white">{q.question}</span>
+                          <div className="text-[11px] text-slate-800 dark:text-slate-200 font-bold mt-0.5 space-x-2">
+                            <span className="text-emerald-700 dark:text-emerald-400 font-black">{q.solved} Solved</span>
+                            <span>•</span>
+                            <span className="text-rose-700 dark:text-rose-400 font-bold">{q.not_solved} Unsolved</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] uppercase font-black text-slate-900 dark:text-slate-100 block">Solve Rate</span>
+                          <span className="text-sm font-black text-brand-700 dark:text-brand-300">{q.solve_rate}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
                     <table className="w-full text-left text-xs min-w-[500px]">
                       <thead className="bg-[#16324F] text-white font-black uppercase">
                         <tr>
@@ -743,7 +764,26 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
                     <span>Solve Distribution (4/4 – 0/4)</span>
                   </h3>
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
+                  {/* Mobile Cards View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2">
+                    {report.solveDistributionList.map((sd: any, i: number) => (
+                      <div key={i} className="p-3 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm flex items-center justify-between">
+                        <div>
+                          <span className="text-xs font-black text-slate-950 dark:text-white">{sd.category}</span>
+                          <div className="text-[11px] text-slate-800 dark:text-slate-200 font-bold mt-0.5">
+                            <span className="text-emerald-700 dark:text-emerald-400 font-black">{sd.count} Students</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] uppercase font-black text-slate-900 dark:text-slate-100 block">Percentage</span>
+                          <span className="text-sm font-black text-indigo-700 dark:text-indigo-300">{sd.percentage}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
                     <table className="w-full text-left text-xs min-w-[500px]">
                       <thead className="bg-[#16324F] text-white font-black uppercase">
                         <tr>
@@ -772,7 +812,51 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
                     <span>Official Leaderboard & Top Performers</span>
                   </h3>
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
+                  {/* Mobile Cards View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                    {report.officialLeaderboard.slice(0, 25).map((lb: any, i: number) => (
+                      <div key={i} className="p-3.5 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm space-y-2">
+                        <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                          <div className="flex items-center space-x-2 min-w-0">
+                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-mono font-black bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border border-amber-300 shrink-0">
+                              #{lb.rank}
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-black text-slate-950 dark:text-white truncate">{formatStudentName(lb.student_name || lb.student)}</h4>
+                              <p className="text-[11px] text-slate-800 dark:text-slate-200 font-black font-mono">{lb.reg_no} • {lb.dept} ({lb.year})</p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 block">{lb.solved} Solved</span>
+                            <span className="text-[10px] font-mono font-black text-indigo-700 dark:text-indigo-300 block">Score: {lb.score ?? "—"}</span>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs pt-0.5">
+                          <div className="bg-slate-100 dark:bg-navy-950 p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                            <span className="text-slate-900 dark:text-slate-100 text-[10px] uppercase font-black block mb-1">Questions</span>
+                            <div className="flex items-center space-x-1 font-mono text-[10px] font-black">
+                              <span className={lb.q1 === 1 ? "text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.5 rounded" : "text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-950 px-1 py-0.5 rounded"}>Q1:{lb.q1 ?? 0}</span>
+                              <span className={lb.q2 === 1 ? "text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.5 rounded" : "text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-950 px-1 py-0.5 rounded"}>Q2:{lb.q2 ?? 0}</span>
+                              <span className={lb.q3 === 1 ? "text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.5 rounded" : "text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-950 px-1 py-0.5 rounded"}>Q3:{lb.q3 ?? 0}</span>
+                              <span className={lb.q4 === 1 ? "text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.5 rounded" : "text-rose-800 dark:text-rose-300 bg-rose-100 dark:bg-rose-950 px-1 py-0.5 rounded"}>Q4:{lb.q4 ?? 0}</span>
+                            </div>
+                          </div>
+                          <div className="bg-slate-100 dark:bg-navy-950 p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-right">
+                            <span className="text-slate-900 dark:text-slate-100 text-[10px] uppercase font-black block mb-1">Rank & Rating</span>
+                            <span className="font-black text-amber-700 dark:text-amber-400 text-xs block">
+                              Global: {formatRank(lb.global_rank || lb.rank_val || lb.rank)}
+                            </span>
+                            <span className="font-mono text-slate-950 dark:text-white font-black text-[11px] block mt-0.5">
+                              Rating: {formatRating(lb.rating || lb.contest_rating)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
                     <table className="w-full text-left text-xs min-w-[850px]">
                       <thead className="bg-[#16324F] text-white font-black uppercase">
                         <tr>
@@ -821,7 +905,34 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
                     <span>Department-Wise Official Result</span>
                   </h3>
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
+                  {/* Mobile Cards View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2.5">
+                    {report.departmentResults.map((dr: any, i: number) => (
+                      <div key={i} className="p-3.5 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm space-y-2">
+                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                          <h4 className="text-xs font-black text-brand-700 dark:text-brand-300">{dr.department}</h4>
+                          <span className="text-xs font-black text-emerald-700 dark:text-emerald-400">{dr.participants}/{dr.total_students} ({dr.participation_pct})</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div><span className="text-slate-800 dark:text-slate-200 font-bold">Total Solves:</span> <span className="font-black text-slate-950 dark:text-white">{dr.total_solves?.toLocaleString()}</span></div>
+                          <div><span className="text-slate-800 dark:text-slate-200 font-bold">Avg Solved:</span> <span className="font-mono font-black text-slate-950 dark:text-white">{dr.average_solved}</span></div>
+                          <div className="col-span-2 pt-1">
+                            <span className="text-[10px] uppercase font-black text-slate-900 dark:text-slate-100 block mb-1">Solve Distribution (4/4 to 0/4)</span>
+                            <div className="flex items-center justify-between text-[10px] font-black bg-slate-100 dark:bg-navy-950 p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                              <span className="text-emerald-700 dark:text-emerald-300">4/4: {dr.solved_4}</span>
+                              <span className="text-teal-700 dark:text-teal-300">3/4: {dr.solved_3}</span>
+                              <span className="text-brand-700 dark:text-brand-300">2/4: {dr.solved_2}</span>
+                              <span className="text-amber-700 dark:text-amber-300">1/4: {dr.solved_1}</span>
+                              <span className="text-rose-700 dark:text-rose-300">0/4: {dr.solved_0}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
                     <table className="w-full text-left text-xs min-w-[850px]">
                       <thead className="bg-[#16324F] text-white font-black uppercase">
                         <tr>
@@ -947,6 +1058,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               )}
 
               {/* ===== HISTORICAL INTEL PREVIEW ===== */}
+              {/* Historical Performance per Student Table (Section for Historical Intelligence Report) */}
               {isHistIntel && (
                 <div className="space-y-4 pt-2">
                   <div className="overflow-x-auto">
@@ -964,7 +1076,39 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
                     Historical Performance per Student ({report.rows?.length || 0} Students · {report.histSummary?.numSessions || 0} Contests)
                   </h3>
-                  <div className="border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm max-h-[520px] overflow-y-auto">
+                  {/* Mobile Card View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                    {(report.rows || []).map((r: any, idx: number) => (
+                      <div key={idx} className="p-3.5 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm space-y-2.5">
+                        <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                          <div className="flex items-center space-x-2 min-w-0">
+                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-mono font-black bg-slate-200 dark:bg-navy-700 text-slate-950 dark:text-white shrink-0">
+                              #{r.s_no || idx + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-black text-slate-950 dark:text-white truncate">{formatStudentName(r.name || r.student_name)}</h4>
+                              <p className="text-[11px] text-slate-800 dark:text-slate-200 font-black font-mono">{r.reg_no} • {r.dept} ({r.year})</p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-xs font-black text-brand-700 dark:text-brand-300 block">{r.totalSolved} Solved</span>
+                            <span className={`text-[10px] font-black ${r.consistencyPct >= 75 ? 'text-emerald-700 dark:text-emerald-300' : r.consistencyPct >= 40 ? 'text-amber-700 dark:text-amber-300' : 'text-rose-700 dark:text-rose-300'}`}>{r.consistencyPct}% Consistency</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5 text-[10px] bg-slate-100 dark:bg-navy-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                          <span className="text-slate-900 dark:text-slate-100 font-black mr-1">Sessions ({r.totalAttended} Attended):</span>
+                          {(r.weeklyData || []).map((wd: any, widx: number) => (
+                            <span key={widx} className={`px-1.5 py-0.5 rounded-md font-mono font-black ${wd.att ? (wd.solved >= 3 ? 'bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-400' : wd.solved >= 1 ? 'bg-brand-100 text-brand-950 dark:bg-brand-950 dark:text-brand-200 border border-brand-400' : 'bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-200 border border-amber-400') : 'bg-rose-100 text-rose-950 dark:bg-rose-950 dark:text-rose-200 border border-rose-400'}`}>
+                              C{widx + 1}: {wd.att ? wd.solved : '—'}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm max-h-[520px] overflow-y-auto">
                     <table className="w-full text-xs">
                       <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10">
                         <tr>
@@ -1024,9 +1168,62 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   )}
                 </div>
 
-                <div className="border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[480px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
-                  <table className="w-full text-left text-xs mobile-card-table min-w-[950px] print:min-w-0 print:w-full">
-                    <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10 hidden md:table-header-group print:table-header-group print:bg-slate-200 print:text-black">
+                {/* Mobile Card View (< sm) */}
+                <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                  {displayedStudents.map((s: any, idx: number) => {
+                    const st = (s.status || '').toUpperCase();
+                    const isPart = ['PUBLIC_ATTENDED', 'VIRTUAL_ATTENDED', 'PUBLIC', 'VIRTUAL', 'PUBLIC_LIVE', 'VIRTUAL_PRACTICE', 'ATTENDED', 'VERIFIED', 'COMPLETED', 'ATTENDED_SOLVED', 'ATTENDED_ZERO'].includes(st) || (s.total_solved !== undefined && s.total_solved !== null);
+                    const cSolved = s.contest_solved !== undefined && s.contest_solved !== null ? s.contest_solved : (s.total_solved !== undefined && s.total_solved !== null ? s.total_solved : (s.solved !== undefined && s.solved !== null ? s.solved : null));
+                    return (
+                      <div key={idx} className="p-3.5 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm space-y-2.5">
+                        <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                          <div className="flex items-center space-x-2 min-w-0">
+                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-mono font-black bg-slate-200 dark:bg-navy-700 text-slate-950 dark:text-white shrink-0">
+                              #{idx + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-black text-slate-950 dark:text-white truncate">{formatStudentName(s.name || s.student_name)}</h4>
+                              <p className="text-[11px] text-slate-800 dark:text-slate-200 font-black font-mono">{s.reg_no} • {s.dept} ({s.year})</p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            {getStatusBadge(s.status)}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs pt-0.5">
+                          <div className="bg-slate-100 dark:bg-navy-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                            <span className="text-slate-900 dark:text-slate-100 text-[10px] uppercase font-black tracking-wider block mb-1">Contest / Questions</span>
+                            <span className={`font-black text-xs block ${isPart && cSolved !== null && cSolved > 0 ? 'text-emerald-700 dark:text-emerald-400' : isPart ? 'text-amber-700 dark:text-amber-400' : 'text-rose-700 dark:text-rose-400'}`}>
+                              {isPart && cSolved !== null ? `${cSolved} Solved` : '0 Solved (Not Attended)'}
+                            </span>
+                            {s.q1 !== undefined && (
+                              <div className="flex items-center space-x-1 mt-1.5 font-mono text-[10px] font-black">
+                                <span className={s.q1 === 1 ? "text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-700" : "text-rose-800 dark:text-rose-300 font-black bg-rose-100 dark:bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-300 dark:border-rose-700"}>Q1:{s.q1 ?? 0}</span>
+                                <span className={s.q2 === 1 ? "text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-700" : "text-rose-800 dark:text-rose-300 font-black bg-rose-100 dark:bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-300 dark:border-rose-700"}>Q2:{s.q2 ?? 0}</span>
+                                <span className={s.q3 === 1 ? "text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-700" : "text-rose-800 dark:text-rose-300 font-black bg-rose-100 dark:bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-300 dark:border-rose-700"}>Q3:{s.q3 ?? 0}</span>
+                                <span className={s.q4 === 1 ? "text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-700" : "text-rose-800 dark:text-rose-300 font-black bg-rose-100 dark:bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-300 dark:border-rose-700"}>Q4:{s.q4 ?? 0}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="bg-slate-100 dark:bg-navy-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-right">
+                            <span className="text-slate-900 dark:text-slate-100 text-[10px] uppercase font-black tracking-wider block mb-1">Rank & Rating</span>
+                            <span className="font-black text-amber-700 dark:text-amber-400 text-xs block">
+                              Rank: {isPart ? formatRank(s.global_rank || s.rank || s.profile_rank) : "—"}
+                            </span>
+                            <span className="font-mono text-slate-950 dark:text-white font-black text-[11px] block mt-0.5">
+                              Rating: {isPart ? formatRating(s.rating || s.contest_rating) : "—"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop Table View (>= sm) */}
+                <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[480px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
+                  <table className="w-full text-left text-xs mobile-card-table min-w-[650px] sm:min-w-[950px] print:min-w-0 print:w-full">
+                    <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10 table-header-group print:table-header-group print:bg-slate-200 print:text-black">
                       {isFridayOfficial ? (
                         <tr>
                           <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
@@ -1315,7 +1512,29 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   {report.department_summaries && Array.isArray(report.department_summaries) && report.department_summaries.length > 0 && (
                     <div className="space-y-3">
                       <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">Department Performance Summary</h3>
-                      <div className="border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
+                      {/* Mobile Card View (< sm) */}
+                      <div className="block sm:hidden print:hidden space-y-2.5">
+                        {report.department_summaries.filter((d: any) => (d.total_students || 0) > 0).map((d: any, idx: number) => (
+                          <div key={idx} className="p-3.5 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm space-y-2.5">
+                            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                              <div className="flex items-center space-x-2">
+                                <span className="px-2.5 py-0.5 rounded-lg text-xs font-mono font-black bg-slate-200 dark:bg-navy-700 text-slate-950 dark:text-white">#{idx + 1}</span>
+                                <h4 className="text-xs font-black text-brand-700 dark:text-brand-300">{d.department}</h4>
+                              </div>
+                              <span className="text-[11px] text-slate-800 dark:text-slate-200 font-black">Coord: {d.coordinator || '—'}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div><span className="text-slate-800 dark:text-slate-200 font-bold">Students:</span> <span className="font-black text-slate-950 dark:text-white">{d.total_students}</span> ({d.metrics?.verified} verified)</div>
+                              <div><span className="text-slate-800 dark:text-slate-200 font-bold">Total Solved:</span> <span className="font-black text-slate-950 dark:text-white">{d.metrics?.total_solved?.toLocaleString()}</span></div>
+                              <div><span className="text-slate-800 dark:text-slate-200 font-bold">Avg Solved:</span> <span className="font-mono font-black text-slate-950 dark:text-white">{d.metrics?.avg_solved}</span></div>
+                              <div><span className="text-slate-800 dark:text-slate-200 font-bold">Above 500:</span> <span className="font-black text-purple-700 dark:text-purple-300">{d.metrics?.above_500}</span></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Desktop Table View (>= sm) */}
+                      <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
                         <table className="w-full text-left text-xs min-w-[900px]">
                           <thead className="bg-[#16324F] text-white font-black uppercase">
                             <tr>
@@ -1362,7 +1581,26 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   {report.batch_summaries && Array.isArray(report.batch_summaries) && report.batch_summaries.length > 0 && (
                     <div className="space-y-3">
                       <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">Batch-wise Performance Summary</h3>
-                      <div className="border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
+                      {/* Mobile Card View (< sm) */}
+                      <div className="block sm:hidden print:hidden space-y-2.5">
+                        {report.batch_summaries.filter((b: any) => (b.total_students || 0) > 0).map((b: any, idx: number) => (
+                          <div key={idx} className="p-3.5 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm space-y-2.5">
+                            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                              <h4 className="text-xs font-black text-brand-700 dark:text-brand-300">{b.batch} ({b.year})</h4>
+                              <span className="text-xs font-black text-slate-950 dark:text-white">{b.total_students} Students</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div><span className="text-slate-800 dark:text-slate-200 font-bold">Above 500:</span> <span className="font-black text-purple-700 dark:text-purple-300">{b.categories?.['Above 500'] ?? '—'}</span></div>
+                              <div><span className="text-slate-800 dark:text-slate-200 font-bold">250–500:</span> <span className="font-black text-indigo-700 dark:text-indigo-300">{b.categories?.['250 - 500'] ?? '—'}</span></div>
+                              <div><span className="text-slate-800 dark:text-slate-200 font-bold">Rating &gt; 1500:</span> <span className="font-black text-emerald-700 dark:text-emerald-300">{b.rating_1500 ?? '—'}</span></div>
+                              <div><span className="text-slate-800 dark:text-slate-200 font-bold">4/4 Solvers:</span> <span className="font-black text-emerald-700 dark:text-emerald-300">{b.current_week?.q4 ?? '—'}</span></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Desktop Table View (>= sm) */}
+                      <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
                         <table className="w-full text-left text-xs min-w-[700px]">
                           <thead className="bg-[#16324F] text-white font-black uppercase">
                             <tr>
@@ -1410,7 +1648,55 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
                           Full Student Roster ({rosterList.length} Students)
                         </h3>
-                        <div className="border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm max-h-[450px] overflow-y-auto">
+                        {/* Mobile Card View (< sm) */}
+                        <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                          {rosterList.map((s: any, idx: number) => {
+                            const pubResult = typeof s.public_result === 'string' ? s.public_result : '';
+                            const lastPubResult = typeof s.last_public_result === 'string' ? s.last_public_result : '';
+                            const formatOutcome = (r: string) => {
+                              if (!r) return '—';
+                              if (r.includes('SOLVED')) return r.replace('_SOLVED', '/4');
+                              if (r === 'NOT_PARTICIPATED' || r === 'NOT_ATTENDED') return '—';
+                              return r;
+                            };
+                            return (
+                              <div key={idx} className="p-3.5 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm space-y-2.5">
+                                <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                                  <div className="flex items-center space-x-2 min-w-0">
+                                    <span className="px-2.5 py-0.5 rounded-lg text-xs font-mono font-black bg-slate-200 dark:bg-navy-700 text-slate-950 dark:text-white shrink-0">
+                                      #{s.s_no || idx + 1}
+                                    </span>
+                                    <div className="min-w-0">
+                                      <h4 className="text-xs font-black text-slate-950 dark:text-white truncate">{formatStudentName(s.name || s.student_name)}</h4>
+                                      <p className="text-[11px] text-slate-800 dark:text-slate-200 font-black font-mono">{s.reg_no} • {s.dept} ({s.year})</p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                    <span className="text-xs font-black text-brand-700 dark:text-brand-300 block">{s.total_solved ?? '—'} Solved</span>
+                                    <span className="text-[10px] text-slate-800 dark:text-slate-200 font-black block">{s.category || '—'}</span>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-3 gap-1.5 text-center text-[11px] pt-0.5">
+                                  <div className="p-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                                    <div className="text-[9px] font-black text-emerald-800 dark:text-emerald-300 uppercase">Easy / Med / Hard</div>
+                                    <div className="font-black text-emerald-800 dark:text-emerald-300">{s.easy ?? 0}/{s.medium ?? 0}/{s.hard ?? 0}</div>
+                                  </div>
+                                  <div className="p-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+                                    <div className="text-[9px] font-black text-indigo-800 dark:text-indigo-300 uppercase">Curr Week</div>
+                                    <div className="font-black text-indigo-800 dark:text-indigo-300">{formatOutcome(pubResult)}</div>
+                                  </div>
+                                  <div className="p-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                                    <div className="text-[9px] font-black text-purple-800 dark:text-purple-300 uppercase">Last Week</div>
+                                    <div className="font-black text-purple-800 dark:text-purple-300">{formatOutcome(lastPubResult)}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Desktop Table View (>= sm) */}
+                        <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm max-h-[450px] overflow-y-auto">
                           <table className="w-full text-xs min-w-[1000px]">
                             <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10">
                               <tr>
@@ -1518,9 +1804,33 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     <Building2 className="w-4 h-4 text-brand-500" />
                     <span>HOD Department Intelligence Summary</span>
                   </h3>
-                  <div className="border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
-                    <table className="w-full text-left text-xs mobile-card-table min-w-[750px]">
-                      <thead className="bg-[#16324F] text-white font-black uppercase hidden md:table-header-group">
+                  {/* Mobile Card View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2.5">
+                    {report.departmentSummary.map((d: any, idx: number) => (
+                      <div key={idx} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-xs space-y-2">
+                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                          <div className="flex items-center space-x-2">
+                            <span className="px-2 py-0.5 rounded-lg text-xs font-mono font-black bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300">
+                              #{idx + 1}
+                            </span>
+                            <h4 className="text-xs font-bold text-brand-700 dark:text-brand-300">{d.department}</h4>
+                          </div>
+                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">{d.attendance_pct}% Active</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div><span className="text-slate-500">Students:</span> <span className="font-bold text-slate-900 dark:text-white">{d.total}</span> (Active: {d.active_solvers})</div>
+                          <div><span className="text-slate-500">Total Solved:</span> <span className="font-bold text-slate-900 dark:text-white">{d.total_solved?.toLocaleString()}</span></div>
+                          <div><span className="text-slate-500">Avg Solved:</span> <span className="font-mono font-bold text-slate-900 dark:text-white">{d.avg_solved}</span></div>
+                          <div><span className="text-slate-500">4/4 Solvers:</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{d.solvers_4}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[550px] sm:min-w-[750px]">
+                      <thead className="bg-[#16324F] text-white font-black uppercase table-header-group">
                         <tr>
                           <th className="px-4 py-3 text-center">S.No</th>
                           <th className="px-4 py-3">Department</th>
@@ -1558,9 +1868,33 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     <GraduationCap className="w-4 h-4 text-emerald-500" />
                     <span>Faculty & Mentor Consolidated Performance</span>
                   </h3>
-                  <div className="border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
-                    <table className="w-full text-left text-xs mobile-card-table min-w-[750px]">
-                      <thead className="bg-[#16324F] text-white font-black uppercase hidden md:table-header-group">
+                  {/* Mobile Card View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2.5">
+                    {report.facultySummary.map((f: any, idx: number) => (
+                      <div key={idx} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-xs space-y-2">
+                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                          <div className="flex items-center space-x-2">
+                            <span className="px-2 py-0.5 rounded-lg text-xs font-mono font-black bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300">
+                              #{idx + 1}
+                            </span>
+                            <h4 className="text-xs font-bold text-slate-900 dark:text-white">{f.staff_name}</h4>
+                          </div>
+                          <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">{f.department}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div><span className="text-slate-500">Assigned:</span> <span className="font-bold text-slate-900 dark:text-white">{f.total_assigned}</span> (Active: {f.active_solvers})</div>
+                          <div><span className="text-slate-500">Active %:</span> <span className="font-bold text-brand-600 dark:text-brand-400">{f.active_pct}%</span></div>
+                          <div><span className="text-slate-500">Total Solved:</span> <span className="font-bold text-slate-900 dark:text-white">{f.total_solved?.toLocaleString()}</span></div>
+                          <div><span className="text-slate-500">Avg Solved:</span> <span className="font-mono font-bold text-slate-900 dark:text-white">{f.avg_solved}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[550px] sm:min-w-[750px]">
+                      <thead className="bg-[#16324F] text-white font-black uppercase table-header-group">
                         <tr>
                           <th className="px-4 py-3 text-center">S.No</th>
                           <th className="px-4 py-3">Faculty / Mentor Name</th>
@@ -1598,9 +1932,58 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     <Trophy className="w-4 h-4 text-indigo-500" />
                     <span>Five-Week Longitudinal Performance Matrix</span>
                   </h3>
-                  <div className="border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[480px] overflow-y-auto">
-                    <table className="w-full text-left text-xs mobile-card-table min-w-[950px]">
-                      <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10 hidden md:table-header-group">
+                  {/* Mobile Card View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                    {(report.allStudents || report.rows || []).map((s: any, idx: number) => (
+                      <div key={idx} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-xs space-y-2">
+                        <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                          <div className="flex items-center space-x-2 min-w-0">
+                            <span className="px-2 py-0.5 rounded-lg text-xs font-mono font-black bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 shrink-0">
+                              #{idx + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                                {formatStudentName(s.name || s.student_name)}
+                              </h4>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                                {s.reg_no} • {s.dept} ({s.year})
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className={`px-2.5 py-1 text-[10px] font-black rounded-lg border block mb-1 ${
+                              s.trajectory?.includes('IMPROVING') ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' :
+                              s.trajectory?.includes('STABLE') ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30' :
+                              s.trajectory?.includes('DECLINING') ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30' :
+                              'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30'
+                            }`}>
+                              {s.trajectory || 'FOLLOW-UP'}
+                            </span>
+                            <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 block">{s.total_solved ?? 0} Solved ({s.attendance_rate || '0%'})</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px] bg-slate-50 dark:bg-navy-950 p-2 rounded-xl">
+                          <span className="text-slate-500 font-medium">Contests 1–5:</span>
+                          <div className="flex items-center space-x-2 font-mono font-black text-slate-900 dark:text-white">
+                            <span>{s.c1_solved ?? 0}</span>
+                            <span>•</span>
+                            <span>{s.c2_solved ?? 0}</span>
+                            <span>•</span>
+                            <span>{s.c3_solved ?? 0}</span>
+                            <span>•</span>
+                            <span>{s.c4_solved ?? 0}</span>
+                            <span>•</span>
+                            <span>{s.c5_solved ?? 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[480px] overflow-y-auto">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[650px] sm:min-w-[950px]">
+                      <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10 table-header-group">
                         <tr>
                           <th className="px-3.5 py-3 text-center w-12">S.No</th>
                           <th className="px-3.5 py-3 text-center">Register No</th>
@@ -1655,9 +2038,57 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     <Trophy className="w-4 h-4 text-amber-500" />
                     <span>Top Performers Leaderboard</span>
                   </h3>
-                  <div className="border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
-                    <table className="w-full text-left text-xs mobile-card-table min-w-[750px] md:min-w-[750px]">
-                      <thead className="bg-[#16324F] text-white font-black uppercase hidden md:table-header-group">
+                  {/* Mobile Card View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2.5">
+                    {report.topStudents.map((s: any, idx: number) => {
+                      const r = s.rating ?? s.contest_rating ?? s.contestRating ?? s.stats?.contest_rating;
+                      const formattedRating = (r !== null && r !== undefined && r !== '' && r !== '—' && !isNaN(Number(r)) && Number(r) > 0)
+                        ? Math.round(Number(r)).toLocaleString()
+                        : "—";
+                      return (
+                        <div key={idx} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-xs space-y-2">
+                          <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                            <div className="flex items-center space-x-2 min-w-0">
+                              <span className="px-2 py-0.5 rounded-lg text-xs font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
+                                #{idx + 1}
+                              </span>
+                              <div className="min-w-0">
+                                <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                                  {formatStudentName(s.name || s.student_name)}
+                                </h4>
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                                  {s.reg_no} • {s.dept} ({s.year})
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <span className="text-xs font-black text-brand-600 dark:text-brand-400 block">{s.total_solved ?? "—"} Solved</span>
+                              <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">Rating: {formattedRating}</span>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-1.5 pt-0.5 text-center text-[11px]">
+                            <div className="p-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                              <div className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">Easy</div>
+                              <div className="font-black text-emerald-700 dark:text-emerald-300">{s.easy ?? "—"}</div>
+                            </div>
+                            <div className="p-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                              <div className="text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase">Medium</div>
+                              <div className="font-black text-amber-700 dark:text-amber-300">{s.medium ?? "—"}</div>
+                            </div>
+                            <div className="p-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                              <div className="text-[9px] font-bold text-rose-700 dark:text-rose-400 uppercase">Hard</div>
+                              <div className="font-black text-rose-700 dark:text-rose-300">{s.hard ?? "—"}</div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[550px] sm:min-w-[750px]">
+                      <thead className="bg-[#16324F] text-white font-black uppercase table-header-group">
                         <tr>
                           <th className="px-4 py-3 text-center">Rank</th>
                           <th className="px-4 py-3 text-center">Reg No</th>
@@ -1705,9 +2136,53 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
                     Full Student Performance Roster ({allRows.length} Students)
                   </h3>
-                  <div className="border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[450px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
-                    <table className="w-full text-left text-xs mobile-card-table min-w-[800px] print:min-w-0 print:w-full">
-                      <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10 hidden md:table-header-group print:table-header-group print:bg-slate-200 print:text-black">
+                  {/* Mobile Card View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                    {allRows.map((s: any, idx: number) => (
+                      <div key={idx} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-xs space-y-2">
+                        <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                          <div className="flex items-center space-x-2 min-w-0">
+                            <span className="px-2 py-0.5 rounded-lg text-xs font-mono font-black bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 shrink-0">
+                              #{idx + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                                {formatStudentName(s.name || s.student_name)}
+                              </h4>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                                {s.reg_no} • {s.dept} ({s.year})
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className={`px-2 py-0.5 text-[10px] font-black rounded-full block text-center mb-1 ${s.status === 'VERIFIED' ? 'bg-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-200 text-rose-900 dark:bg-rose-950 dark:text-rose-300'}`}>
+                              {s.status}
+                            </span>
+                            <span className="text-xs font-black text-brand-600 dark:text-brand-400 block">{s.total_solved !== null ? s.total_solved : "—"} Solved</span>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1.5 pt-0.5 text-center text-[11px]">
+                          <div className="p-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                            <div className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">Easy</div>
+                            <div className="font-black text-emerald-700 dark:text-emerald-300">{s.easy ?? "—"}</div>
+                          </div>
+                          <div className="p-1 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                            <div className="text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase">Medium</div>
+                            <div className="font-black text-amber-700 dark:text-amber-300">{s.medium ?? "—"}</div>
+                          </div>
+                          <div className="p-1 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                            <div className="text-[9px] font-bold text-rose-700 dark:text-rose-400 uppercase">Hard</div>
+                            <div className="font-black text-rose-700 dark:text-rose-300">{s.hard ?? "—"}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[450px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[550px] sm:min-w-[800px] print:min-w-0 print:w-full">
+                      <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10 table-header-group print:table-header-group print:bg-slate-200 print:text-black">
                         <tr>
                           <th className="px-4 py-3 text-center print:border-b print:border-black">S.No</th>
                           <th className="px-4 py-3 sticky left-0 bg-[#16324F] print:bg-slate-200 print:border-b print:border-black z-20">Reg No</th>
@@ -1752,34 +2227,31 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
         </div>
 
         {/* 4. FOOTER / EXPORT ACTIONS */}
-        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0 print:hidden">
-          <div className="text-xs text-slate-500 font-semibold flex items-center space-x-2">
+        <div className="p-3.5 sm:p-5 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 print:hidden">
+          <div className="text-xs text-slate-500 font-semibold flex items-center justify-center sm:justify-start space-x-2">
             <span>Official Institutional Report Dataset</span>
           </div>
-          <div className="flex items-center space-x-2 flex-wrap gap-2">
-            <button onClick={() => window.print()} className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
-              <FileText className="w-4 h-4" />
-              <span>Print UI</span>
+          <div className="grid grid-cols-3 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-2">
+            <button
+              onClick={() => downloadFile('excel')}
+              className="flex items-center justify-center space-x-1 sm:space-x-1.5 px-1.5 sm:px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] sm:text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 w-full sm:w-auto text-center truncate"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="truncate">Excel (.xlsx)</span>
             </button>
-            <button onClick={() => downloadFile('excel')} className="flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
-              <FileSpreadsheet className="w-4 h-4" />
-              <span>Excel</span>
+            <button
+              onClick={() => downloadFile('pdf')}
+              className="flex items-center justify-center space-x-1 sm:space-x-1.5 px-1.5 sm:px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[10px] sm:text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 w-full sm:w-auto text-center truncate"
+            >
+              <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="truncate">PDF (.pdf)</span>
             </button>
-            <button onClick={() => downloadFile('pdf')} className="flex items-center space-x-1.5 px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
-              <FileText className="w-4 h-4" />
-              <span>PDF</span>
-            </button>
-            <button onClick={() => downloadFile('word')} className="flex items-center space-x-1.5 px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
-              <FileText className="w-4 h-4" />
-              <span>Word</span>
-            </button>
-            <button onClick={() => downloadFile('csv')} className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
-              <FileText className="w-4 h-4" />
-              <span>CSV</span>
-            </button>
-            <button onClick={() => downloadFile('zip')} className="flex items-center space-x-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
-              <Download className="w-4 h-4" />
-              <span>All (.zip)</span>
+            <button
+              onClick={() => downloadFile('word')}
+              className="flex items-center justify-center space-x-1 sm:space-x-1.5 px-1.5 sm:px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-[10px] sm:text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 w-full sm:w-auto text-center truncate"
+            >
+              <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="truncate">Word (.docx)</span>
             </button>
           </div>
         </div>

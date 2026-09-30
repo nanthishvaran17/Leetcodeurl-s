@@ -502,17 +502,17 @@ export const CertificateManagementModal: React.FC<{
       >
 
         {/* TOP INSTITUTIONAL HEADER & SYSTEM STATUS */}
-        <div className="px-4 sm:px-6 py-3 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-b border-brand-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-3 shrink-0 shadow-lg">
-          <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
+        <div className="px-3 sm:px-6 py-3 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-b border-brand-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-3 shrink-0 shadow-lg">
+          <div className="flex items-center space-x-2.5 sm:space-x-4 min-w-0">
             <div className="p-2 sm:p-2.5 rounded-2xl bg-brand-500/10 text-brand-400 border border-brand-500/30 shadow-lg shrink-0">
-              <Award className="w-6 h-6 sm:w-7 sm:h-7 drop-shadow-md" />
+              <Award className="w-5 h-5 sm:w-7 sm:h-7 drop-shadow-md" />
             </div>
-            <div className="space-y-0.5 min-w-0">
+            <div className="space-y-0.5 min-w-0 flex-1">
               <div className="flex items-center space-x-2 flex-wrap gap-1.5">
-                <h2 className="text-sm sm:text-base md:text-lg lg:text-xl font-black text-white tracking-tight uppercase truncate">
+                <h2 className="text-xs sm:text-base md:text-lg lg:text-xl font-black text-white tracking-tight uppercase leading-snug">
                   INSTITUTIONAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">CREDENTIAL ISSUANCE HUB</span>
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1.5 shadow-sm shrink-0">
+                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1 shadow-sm shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
                   <span className="hidden sm:inline"> CREDENTIAL SYSTEM OPERATIONAL</span>
                   <span className="sm:hidden">OPERATIONAL</span>
@@ -525,51 +525,54 @@ export const CertificateManagementModal: React.FC<{
             </div>
           </div>
 
-          {/* Right Navigation & Actions */}
-          <div className="flex flex-wrap items-center justify-start lg:justify-end gap-2 shrink-0">
-            <div className="flex flex-wrap items-center bg-slate-900/90 p-1 rounded-2xl border border-slate-800 text-xs font-bold shadow-inner gap-1 shrink-0">
+          {/* Right Navigation & Actions — 100% Mobile Screen Fit Grid */}
+          <div className="flex items-center justify-between lg:justify-end gap-2 shrink-0 w-full lg:w-auto">
+            <div className="grid grid-cols-3 sm:flex items-center bg-slate-900/90 p-1 rounded-2xl border border-slate-800 text-xs font-bold shadow-inner gap-1 flex-1 sm:flex-initial">
               <button
                 type="button"
                 onClick={() => setActiveMainTab('studio')}
-                className={`px-3 sm:px-4 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 whitespace-nowrap text-xs ${
+                className={`px-2 sm:px-4 py-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5 whitespace-nowrap text-[11px] sm:text-xs ${
                   activeMainTab === 'studio'
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md border border-amber-400/40'
                     : 'text-slate-300 hover:text-white font-bold hover:bg-slate-800/60'
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>Issuance Studio</span>
+                <span className="hidden sm:inline">Issuance Studio</span>
+                <span className="sm:hidden">Studio</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveMainTab('signatures')}
-                className={`px-3 sm:px-4 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 whitespace-nowrap text-xs ${
+                className={`px-2 sm:px-4 py-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5 whitespace-nowrap text-[11px] sm:text-xs ${
                   activeMainTab === 'signatures'
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md border border-amber-400/40'
                     : 'text-slate-300 hover:text-white font-bold hover:bg-slate-800/60'
                 }`}
               >
                 <Upload className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                <span>Signatures ({signatures.filter(s => s.is_active).length}/3)</span>
+                <span className="hidden sm:inline">Signatures ({signatures.filter(s => s.is_active).length}/3)</span>
+                <span className="sm:hidden">Sigs ({signatures.filter(s => s.is_active).length}/3)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveMainTab('registry')}
-                className={`px-3 sm:px-4 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 whitespace-nowrap text-xs ${
+                className={`px-2 sm:px-4 py-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5 whitespace-nowrap text-[11px] sm:text-xs ${
                   activeMainTab === 'registry'
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md border border-amber-400/40'
                     : 'text-slate-300 hover:text-white font-bold hover:bg-slate-800/60'
                 }`}
               >
                 <FileCheck2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Issued Registry ({metrics.total})</span>
+                <span className="hidden sm:inline">Issued Registry ({metrics.total})</span>
+                <span className="sm:hidden">Registry ({metrics.total})</span>
               </button>
             </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl bg-rose-500/10 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 transition-all font-black text-xs flex items-center justify-center space-x-1 cursor-pointer shadow-sm shrink-0 whitespace-nowrap"
+              className="px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl bg-rose-500/10 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 transition-all font-black text-xs flex items-center justify-center space-x-1 cursor-pointer shadow-sm shrink-0 whitespace-nowrap"
             >
               <X className="w-4 h-4" />
               <span className="hidden xs:inline">Close</span>
@@ -578,22 +581,22 @@ export const CertificateManagementModal: React.FC<{
         </div>
 
         {/* METRICS RIBBON (GROUND TRUTH NUMBERS) */}
-        <div className="px-3 sm:px-6 py-2 bg-white dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700/80 flex items-center justify-between text-xs font-black shrink-0 gap-3 overflow-x-auto no-scrollbar">
-          <div className="flex flex-row items-center gap-2 sm:gap-6 shrink-0 overflow-x-auto no-scrollbar">
-            <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-navy-900 lg:bg-transparent px-2.5 py-1 rounded-xl shrink-0">
-              <span className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase">ISSUED:</span>
+        <div className="px-2 sm:px-6 py-2 bg-white dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700/80 flex items-center justify-between text-xs font-black shrink-0 gap-2 overflow-x-auto no-scrollbar">
+          <div className="grid grid-cols-4 gap-1 sm:flex sm:flex-row sm:items-center sm:gap-6 w-full sm:w-auto text-center sm:text-left">
+            <div className="flex flex-col sm:flex-row items-center justify-center space-x-0 sm:space-x-1.5 bg-slate-100 dark:bg-navy-900 lg:bg-transparent px-1.5 sm:px-2.5 py-1 rounded-xl shrink-0">
+              <span className="text-slate-500 dark:text-slate-400 text-[9px] sm:text-[10px] font-black uppercase">ISSUED</span>
               <span className="text-slate-950 dark:text-white font-mono text-xs sm:text-sm font-black">{metrics.total}</span>
             </div>
-            <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-navy-900 lg:bg-transparent px-2.5 py-1 rounded-xl shrink-0">
-              <span className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase">ACTIVE:</span>
+            <div className="flex flex-col sm:flex-row items-center justify-center space-x-0 sm:space-x-1.5 bg-slate-100 dark:bg-navy-900 lg:bg-transparent px-1.5 sm:px-2.5 py-1 rounded-xl shrink-0">
+              <span className="text-slate-500 dark:text-slate-400 text-[9px] sm:text-[10px] font-black uppercase">ACTIVE</span>
               <span className="text-emerald-600 dark:text-emerald-400 font-mono text-xs sm:text-sm font-black">{metrics.valid}</span>
             </div>
-            <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-navy-900 lg:bg-transparent px-2.5 py-1 rounded-xl shrink-0">
-              <span className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase">REVOKED:</span>
+            <div className="flex flex-col sm:flex-row items-center justify-center space-x-0 sm:space-x-1.5 bg-slate-100 dark:bg-navy-900 lg:bg-transparent px-1.5 sm:px-2.5 py-1 rounded-xl shrink-0">
+              <span className="text-slate-500 dark:text-slate-400 text-[9px] sm:text-[10px] font-black uppercase">REVOKED</span>
               <span className="text-rose-600 dark:text-rose-400 font-mono text-xs sm:text-sm font-black">{metrics.revoked}</span>
             </div>
-            <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-navy-900 lg:bg-transparent px-2.5 py-1 rounded-xl shrink-0">
-              <span className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase">AWAITING:</span>
+            <div className="flex flex-col sm:flex-row items-center justify-center space-x-0 sm:space-x-1.5 bg-slate-100 dark:bg-navy-900 lg:bg-transparent px-1.5 sm:px-2.5 py-1 rounded-xl shrink-0">
+              <span className="text-slate-500 dark:text-slate-400 text-[9px] sm:text-[10px] font-black uppercase">AWAITING</span>
               <span className="text-amber-600 dark:text-amber-400 font-mono text-xs sm:text-sm font-black">{metrics.pending}</span>
             </div>
           </div>

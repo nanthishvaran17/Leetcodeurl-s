@@ -119,18 +119,33 @@ def get_paginated_matrix_rows(
             )
         # NOT_ATTENDED / PUBLIC_NOT_ATTENDED — students with valid usernames who did not participate
         elif att in ['NOT_ATTENDED', 'PUBLIC_NOT_ATTENDED']:
+            is_pub_attended = func.coalesce(func.upper(WeeklyPublicResult.participation_status), '').in_([
+                'PUBLIC', 'PUBLIC_ATTENDED', 'ATTENDED', 'OFFICIAL', 'ACTUAL',
+                'ATTENDED_ZERO', 'ATTENDED_SOLVED', 'PUBLIC_LIVE',
+                'PUBLIC_LIVE_VERIFIED', 'PUBLIC_ATTENDED_ZERO', 'PUBLIC_ATTENDED_SOLVED'
+            ])
+            is_virt_attended = (
+                (func.coalesce(func.upper(WeeklyVirtualResult.participation_status), '') == 'VIRTUAL') |
+                (func.coalesce(func.upper(WeeklyPublicResult.participation_status), '').in_(['VIRTUAL', 'VIRTUAL_ATTENDED'])) |
+                (func.coalesce(WeeklyVirtualResult.total_contest_solved, 0) > 0)
+            )
+            is_err = (
+                (Student.username.is_(None)) |
+                (Student.username == '') |
+                (func.coalesce(func.upper(WeeklyPublicResult.participation_status), '').in_([
+                    'DATA_ERROR', 'FETCH_ERROR', 'USERNAME_NOT_FOUND', 'DATA_MISMATCH',
+                    'AUTH_REQUIRED', 'SOURCE_UNAVAILABLE', 'CONFLICT', 'ERROR', 'INVALID'
+                ])) |
+                (func.coalesce(func.upper(WeeklyPublicResult.fetch_status), '').in_([
+                    'FETCH_ERROR', 'USERNAME_NOT_FOUND', 'BLOCKED', 'AUTH_REQUIRED', 'DATA_MISMATCH'
+                ]))
+            )
             query = query.filter(
                 (Student.username.isnot(None)) &
                 (Student.username != '') &
-                func.coalesce(func.upper(WeeklyPublicResult.participation_status), 'NOT_ATTENDED').in_(['NOT_ATTENDED', 'PUBLIC_NOT_ATTENDED', 'ABSENT', 'PENDING', 'INITIALIZING', 'DATA_PENDING', 'UNKNOWN', '']) &
-                func.coalesce(func.upper(WeeklyPublicResult.fetch_status), '').notin_(['FETCH_ERROR', 'USERNAME_NOT_FOUND', 'BLOCKED', 'AUTH_REQUIRED', 'DATA_MISMATCH']) &
-                (
-                    WeeklyVirtualResult.id.is_(None) |
-                    (
-                        func.coalesce(func.upper(WeeklyVirtualResult.participation_status), '').notin_(['VIRTUAL', 'VIRTUAL_ATTENDED']) &
-                        (func.coalesce(WeeklyVirtualResult.total_contest_solved, 0) == 0)
-                    )
-                )
+                ~is_pub_attended &
+                ~is_virt_attended &
+                ~is_err
             )
         # DATA_ERROR — matches actionable errors: missing username or explicit fetch/verification error
         elif att in ['DATA_ERROR', 'ERROR', 'UNKNOWN']:

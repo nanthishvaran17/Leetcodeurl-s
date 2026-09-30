@@ -248,9 +248,11 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
                     {statusLabel}
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 font-mono mt-0.5 truncate">
-                  Reg: <span className="font-bold text-white">{displayRegNo}</span> • {displayDept} ({cleanDisplayYear} Year)
-                </p>
+                <div className="text-xs text-slate-200 font-mono mt-1 truncate flex items-center gap-1.5 flex-wrap">
+                  <span className="font-bold">Reg: <span className="font-black text-white bg-white/15 px-2 py-0.5 rounded-md border border-white/20">{displayRegNo}</span></span>
+                  <span className="text-indigo-400/80">•</span>
+                  <span className="font-black text-cyan-200 bg-cyan-950/60 px-2 py-0.5 rounded-md border border-cyan-400/40">{displayDept} ({cleanDisplayYear} Year)</span>
+                </div>
               </div>
             </div>
 
@@ -297,7 +299,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
             className={`py-3 border-b-2 flex items-center justify-center space-x-1 sm:space-x-2 transition-all cursor-pointer text-center ${
               activeTab === 'overview'
                 ? 'border-brand-500 text-brand-600 dark:text-brand-400 font-black'
-                : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold'
             }`}
           >
             <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
@@ -313,7 +315,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
             className={`py-3 border-b-2 flex items-center justify-center space-x-1 sm:space-x-2 transition-all cursor-pointer text-center ${
               activeTab === 'notes'
                 ? 'border-brand-500 text-brand-600 dark:text-brand-400 font-black'
-                : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold'
             }`}
           >
             <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
@@ -329,7 +331,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
             className={`py-3 border-b-2 flex items-center justify-center space-x-1 sm:space-x-2 transition-all cursor-pointer text-center ${
               activeTab === 'followups'
                 ? 'border-brand-500 text-brand-600 dark:text-brand-400 font-black'
-                : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold'
             }`}
           >
             <CheckSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
@@ -352,7 +354,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
                   <div className="flex items-center space-x-3">
                     <User className="w-5 h-5 text-indigo-500" />
                     <div>
-                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300">LeetCode Profile Handle</p>
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">LeetCode Profile Handle</p>
                       <p className="text-sm font-black text-brand-600 dark:text-brand-400">@{leetcodeHandle}</p>
                     </div>
                   </div>
@@ -370,53 +372,53 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
 
               {/* Performance Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-800 border space-y-1">
-                  <span className="text-[10px] font-black uppercase text-slate-400">Total Solved</span>
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 space-y-1">
+                  <span className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300">Total Solved</span>
                   <p className="text-2xl font-black text-brand-600 dark:text-brand-400">{totalSolved}</p>
-                  <p className="text-[10px] text-slate-500">Problems</p>
+                  <p className="text-[10px] text-slate-700 dark:text-slate-300 font-bold">Problems</p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-500/20 space-y-1">
-                  <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400">Easy</span>
+                  <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300">Easy</span>
                   <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{easySolved}</p>
-                  <p className="text-[10px] text-emerald-600/70">Solved</p>
+                  <p className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold">Solved</p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-500/20 space-y-1">
-                  <span className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">Medium</span>
+                  <span className="text-[10px] font-black uppercase text-amber-700 dark:text-amber-300">Medium</span>
                   <p className="text-2xl font-black text-amber-600 dark:text-amber-400">{mediumSolved}</p>
-                  <p className="text-[10px] text-amber-600/70">Solved</p>
+                  <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold">Solved</p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-500/20 space-y-1">
-                  <span className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400">Hard</span>
+                  <span className="text-[10px] font-black uppercase text-rose-700 dark:text-rose-300">Hard</span>
                   <p className="text-2xl font-black text-rose-600 dark:text-rose-400">{hardSolved}</p>
-                  <p className="text-[10px] text-rose-600/70">Solved</p>
+                  <p className="text-[10px] text-rose-700 dark:text-rose-300 font-bold">Solved</p>
                 </div>
               </div>
 
               {/* Contest & Activity Summary */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-navy-800 border space-y-2">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
                     <span>Contest Rating</span>
                     <Award className="w-4 h-4 text-amber-500" />
                   </div>
                   <p className="text-2xl font-black text-slate-900 dark:text-white">
                     {rating ? Math.round(rating) : 'Unrated'}
                   </p>
-                  <p className="text-xs text-slate-500">Institutional Contest Track</p>
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Institutional Contest Track</p>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-navy-800 border space-y-2">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
                     <span>Active Streak</span>
                     <Activity className="w-4 h-4 text-emerald-500" />
                   </div>
                   <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
                     {streak} Days
                   </p>
-                  <p className="text-xs text-slate-500">Consecutive Activity</p>
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Consecutive Activity</p>
                 </div>
               </div>
 
@@ -428,8 +430,8 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
             <div className="space-y-6">
 
               {/* Add Note Form */}
-              <form onSubmit={handleAddNote} className="p-5 rounded-2xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 space-y-3.5 shadow-sm">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              <form onSubmit={handleAddNote} className="p-5 rounded-2xl bg-slate-50 dark:bg-navy-800/90 border border-slate-200 dark:border-navy-700 space-y-3.5 shadow-sm">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
                   Add Private Mentoring Note
                 </h4>
                 <textarea
@@ -437,25 +439,25 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
                   onChange={(e) => setNewNote(e.target.value)}
                   placeholder="Record private observation or action recommendation for this student..."
                   rows={3}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-navy-600 bg-white dark:bg-navy-950 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 text-xs font-medium focus:ring-2 focus:ring-brand-500 shadow-inner"
                   required
                 />
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs text-slate-500 font-bold mr-1">Priority:</span>
+                    <span className="text-xs text-slate-800 dark:text-slate-200 font-black mr-1">Priority:</span>
                     {[
-                      { id: 'NORMAL', label: 'Normal', color: 'bg-brand-500/15 text-brand-600 dark:text-brand-400 border-brand-500/30' },
-                      { id: 'WARNING', label: 'Warning', color: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' },
-                      { id: 'CRITICAL', label: 'Critical Escalation', color: 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30' }
+                      { id: 'NORMAL', label: 'Normal', color: 'bg-brand-500/20 text-brand-700 dark:text-brand-300 border-brand-500/40' },
+                      { id: 'WARNING', label: 'Warning', color: 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40' },
+                      { id: 'CRITICAL', label: 'Critical Escalation', color: 'bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/40' }
                     ].map((opt) => (
                       <button
                         key={opt.id}
                         type="button"
                         onClick={() => setEscalation(opt.id)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl text-xs transition-all border cursor-pointer ${
                           escalation === opt.id
                             ? `${opt.color} ring-2 ring-brand-500 shadow-sm font-black`
-                            : 'bg-white dark:bg-navy-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-navy-700 hover:bg-slate-100 dark:hover:bg-navy-800'
+                            : 'bg-white dark:bg-navy-950 text-slate-800 dark:text-slate-200 font-bold border-slate-300 dark:border-navy-600 hover:bg-slate-100 dark:hover:bg-navy-800'
                         }`}
                       >
                         {opt.label}
@@ -466,7 +468,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
                   <button
                     type="submit"
                     disabled={submittingNote || !newNote.trim()}
-                    className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold flex items-center justify-center space-x-2 transition-all shadow-md shadow-brand-600/20"
+                    className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-black flex items-center justify-center space-x-2 transition-all shadow-md shadow-brand-600/20"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>Save Note</span>
@@ -476,19 +478,21 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
 
               {/* Notes List */}
               <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase text-slate-400">Past Notes History</h4>
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Past Notes History</h4>
                 {loadingNotes ? (
-                  <p className="text-xs text-slate-500 animate-pulse">Loading notes...</p>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold animate-pulse">Loading notes...</p>
                 ) : notes.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic">No private notes recorded yet.</p>
+                  <div className="p-4 rounded-xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-center">
+                    <p className="text-xs text-slate-700 dark:text-slate-200 font-bold">No private notes recorded yet.</p>
+                  </div>
                 ) : (
                   notes.map((n: any) => (
-                    <div key={n.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 space-y-2">
+                    <div key={n.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 space-y-2 shadow-sm">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-brand-600 dark:text-brand-400">{n.faculty_name}</span>
-                        <span className="text-slate-400 text-[10px]">{n.created_at ? new Date(n.created_at).toLocaleDateString() : ''}</span>
+                        <span className="font-black text-brand-600 dark:text-brand-400">{n.faculty_name}</span>
+                        <span className="text-slate-600 dark:text-slate-300 font-bold text-[10px]">{n.created_at ? new Date(n.created_at).toLocaleDateString() : ''}</span>
                       </div>
-                      <p className="text-xs text-slate-800 dark:text-slate-200">{n.note}</p>
+                      <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">{n.note}</p>
                     </div>
                   ))
                 )}
@@ -502,26 +506,26 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
             <div className="space-y-6">
 
               {/* Schedule Follow-Up Form */}
-              <form onSubmit={handleAddFollowUp} className="p-5 rounded-2xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 space-y-3.5 shadow-sm">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              <form onSubmit={handleAddFollowUp} className="p-5 rounded-2xl bg-slate-50 dark:bg-navy-800/90 border border-slate-200 dark:border-navy-700 space-y-3.5 shadow-sm">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
                   Schedule Follow-Up Task
                 </h4>
                 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Task Title</label>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Task Title</label>
                   <input
                     type="text"
                     value={followUpTitle}
                     onChange={(e) => setFollowUpTitle(e.target.value)}
                     placeholder="e.g. Check Weekly 10 Problems"
-                    className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold"
+                    className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-navy-600 bg-white dark:bg-navy-950 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 text-xs font-bold shadow-inner"
                     required
                   />
                 </div>
 
                 {/* Modern Due Date Selector with Quick Preset Chips */}
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
                     <span>Due Date Target</span>
                     <span className="font-mono text-brand-600 dark:text-brand-400 font-black">{dueDate}</span>
                   </div>
@@ -540,7 +544,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
                           d.setDate(d.getDate() + preset.days);
                           setDueDate(d.toISOString().split('T')[0]);
                         }}
-                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-700 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-400 text-slate-700 dark:text-slate-300 transition-all cursor-pointer shadow-sm"
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-600 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-400 text-slate-800 dark:text-slate-100 transition-all cursor-pointer shadow-sm"
                       >
                         {preset.label}
                       </button>
@@ -550,26 +554,26 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
                       value={dueDate}
                       onChange={(e) => setDueDate(e.target.value)}
                       placeholder="YYYY-MM-DD"
-                      className="flex-1 min-w-[130px] px-3 py-1.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-mono font-bold text-center"
+                      className="flex-1 min-w-[130px] px-3 py-1.5 rounded-xl border border-slate-300 dark:border-navy-600 bg-white dark:bg-navy-950 text-slate-900 dark:text-white text-xs font-mono font-bold text-center"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Instruction Notes (Optional)</label>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Instruction Notes (Optional)</label>
                   <textarea
                     value={followUpNotes}
                     onChange={(e) => setFollowUpNotes(e.target.value)}
                     placeholder="Optional instruction details..."
                     rows={2}
-                    className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs"
+                    className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-navy-600 bg-white dark:bg-navy-950 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 text-xs font-medium shadow-inner"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={submittingFollowUp || !followUpTitle.trim()}
-                  className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold flex items-center space-x-2 transition-all shadow-md shadow-brand-600/20"
+                  className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-black flex items-center space-x-2 transition-all shadow-md shadow-brand-600/20"
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
                   <span>Schedule Task</span>
@@ -578,33 +582,35 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
 
               {/* Follow-Ups List */}
               <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase text-slate-400">Scheduled Follow-Ups</h4>
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Scheduled Follow-Ups</h4>
                 {loadingFollowUps ? (
-                  <p className="text-xs text-slate-500 animate-pulse">Loading tasks...</p>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold animate-pulse">Loading tasks...</p>
                 ) : followUps.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic">No scheduled follow-up tasks for this student.</p>
+                  <div className="p-4 rounded-xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-center">
+                    <p className="text-xs text-slate-700 dark:text-slate-200 font-bold">No scheduled follow-up tasks for this student.</p>
+                  </div>
                 ) : (
                   followUps.map((f: any) => (
-                    <div key={f.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-800 border flex items-start justify-between">
+                    <div key={f.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 flex items-start justify-between shadow-sm">
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-black ${
-                            f.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-amber-500/20 text-amber-500'
+                            f.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30'
                           }`}>
                             {f.status}
                           </span>
-                          <span className="text-xs font-bold text-slate-900 dark:text-white">{f.title}</span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white">{f.title}</span>
                         </div>
-                        <p className="text-[10px] text-slate-400">Due Date: {f.due_date}</p>
-                        {f.notes && <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">{f.notes}</p>}
+                        <p className="text-[10px] text-slate-700 dark:text-slate-300 font-bold">Due Date: {f.due_date}</p>
+                        {f.notes && <p className="text-xs text-slate-800 dark:text-slate-200 font-medium mt-1">{f.notes}</p>}
                       </div>
 
                       <button
                         onClick={() => handleToggleFollowUpStatus(f.id, f.status)}
                         className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
                           f.status === 'COMPLETED'
-                            ? 'bg-slate-200 dark:bg-navy-700 text-slate-700 dark:text-slate-300'
-                            : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                            ? 'bg-slate-200 dark:bg-navy-700 text-slate-800 dark:text-slate-200'
+                            : 'bg-emerald-600 text-white hover:bg-emerald-700'
                         }`}
                       >
                         {f.status === 'COMPLETED' ? 'Mark Pending' : 'Complete'}

@@ -9,7 +9,7 @@ interface AnimatedWelcomeHeadingProps {
 
 export const AnimatedWelcomeHeading: React.FC<AnimatedWelcomeHeadingProps> = ({
   className = "",
-  nameClassName = "text-brand-300",
+  nameClassName = "text-indigo-300 font-extrabold",
   prefix = "WELCOME BACK"
 }) => {
   const { user } = useAuth();
@@ -83,28 +83,16 @@ export const AnimatedWelcomeHeading: React.FC<AnimatedWelcomeHeadingProps> = ({
     ? canonicalName.slice(0, displayedCount - prefixAndCommaLength)
     : '';
 
-  // Calculate dynamic responsive font size scaling based on fullText character length.
-  // Guarantees very long names scale down gracefully on mobile/tablet so the heading stays on a single line!
-  const textLen = fullText.length;
-  let dynamicFontClasses = "text-base sm:text-2xl md:text-3xl lg:text-4xl";
-  if (textLen > 40) {
-    dynamicFontClasses = "text-[11px] xs:text-xs sm:text-base md:text-lg lg:text-xl";
-  } else if (textLen > 28) {
-    dynamicFontClasses = "text-xs xs:text-sm sm:text-lg md:text-xl lg:text-2xl";
-  } else if (textLen > 20) {
-    dynamicFontClasses = "text-sm xs:text-base sm:text-xl md:text-2xl lg:text-3xl";
+  // Responsive font sizing based on canonicalName character length for standalone line 2
+  const nameLen = canonicalName.length;
+  let nameFontClasses = "text-xl sm:text-2xl md:text-3xl lg:text-4xl";
+  if (nameLen > 28) {
+    nameFontClasses = "text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl";
+  } else if (nameLen > 20) {
+    nameFontClasses = "text-sm xs:text-base sm:text-xl md:text-2xl lg:text-3xl";
+  } else if (nameLen > 14) {
+    nameFontClasses = "text-base xs:text-lg sm:text-2xl md:text-3xl lg:text-4xl";
   }
-
-  // Clean up any break-words, break-all, or whitespace-pre overrides that could cause 2-line wraps
-  const safeClassName = (className || '')
-    .replace(/\bbreak-words\b/g, '')
-    .replace(/\bbreak-all\b/g, '')
-    .replace(/\bwhitespace-\S+\b/g, '')
-    .trim();
-
-  // Check if passed className already includes an explicit Tailwind text size
-  const hasExplicitFontSize = /\btext-(xs|sm|base|lg|[0-9]+xl|\[[^\]]+\])\b/.test(safeClassName);
-  const finalFontClasses = hasExplicitFontSize ? safeClassName : `${dynamicFontClasses} ${safeClassName}`;
 
   const safeNameClassName = (nameClassName || '')
     .replace(/\bbreak-words\b/g, '')
@@ -113,20 +101,28 @@ export const AnimatedWelcomeHeading: React.FC<AnimatedWelcomeHeadingProps> = ({
     .trim();
 
   return (
-    <h1
-      className={`whitespace-nowrap overflow-hidden text-ellipsis max-w-full block leading-tight font-black uppercase tracking-tight ${finalFontClasses}`}
-      title={fullText}
-    >
-      <span>{revealedPrefix}</span>
-      {hasCommaOnly && <span>,</span>}
-      {hasCommaAndSpace && <span>, </span>}
+    <div className={`space-y-1.5 sm:space-y-2 max-w-full block my-2 ${className}`}>
+      {/* Line 1: WELCOME BACK, */}
+      <div className="text-xs sm:text-sm font-extrabold tracking-widest uppercase text-slate-300/90 flex items-center gap-0.5">
+        <span>{revealedPrefix}</span>
+        {(hasCommaOnly || hasCommaAndSpace) && <span>,</span>}
+        {isTyping && displayedCount <= prefixAndCommaLength && (
+          <span className="inline-block w-[2px] h-[1em] ml-1 bg-brand-400 animate-pulse rounded-xs align-middle" />
+        )}
+      </div>
+
+      {/* Line 2: STAFF / USER NAME (Placed on next line with clear spacing, single line, no cut-off) */}
       {canonicalName && (
-        <span className={`inline-block ${safeNameClassName}`}>{revealedName}</span>
+        <h1
+          className={`font-black uppercase tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full block leading-tight pt-0.5 ${nameFontClasses} ${safeNameClassName}`}
+          title={canonicalName}
+        >
+          <span>{revealedName}</span>
+          {isTyping && displayedCount > prefixAndCommaLength && (
+            <span className="inline-block w-[2px] sm:w-[3px] h-[0.85em] ml-1 bg-brand-400 animate-pulse rounded-xs align-middle shadow-[0_0_10px_rgba(129,140,248,0.9)]" />
+          )}
+        </h1>
       )}
-      {isTyping && (
-        <span className="inline-block w-[2px] sm:w-[3px] h-[0.85em] ml-1 bg-brand-400 animate-pulse rounded-xs align-middle shadow-[0_0_10px_rgba(129,140,248,0.9)]" />
-      )}
-    </h1>
+    </div>
   );
 };
-

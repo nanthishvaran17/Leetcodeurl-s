@@ -110,9 +110,8 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-6">
           <div className="space-y-3 max-w-3xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-              <span>DATA INTEGRITY & PROFILE HEALTH • REALTIME AUDIT BOARD</span>
+            <div className="inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[9px] min-[380px]:text-[10px] sm:text-xs font-black tracking-wider leading-tight max-w-full">
+              <span className="break-words">DATA INTEGRITY & PROFILE HEALTH • REALTIME AUDIT BOARD</span>
             </div>
 
             <h1 className="text-3xl md:text-4xl font-black tracking-tight">

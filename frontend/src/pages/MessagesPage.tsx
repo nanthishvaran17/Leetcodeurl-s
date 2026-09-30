@@ -613,16 +613,30 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
           )}
 
           <div>
-            <h1 className="text-base sm:text-lg md:text-xl font-black tracking-wider leading-tight text-white uppercase">
-              INSTITUTIONAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-300">INTELLIGENCE HUB</span>
+            <h1 className="text-[13px] xs:text-sm sm:text-lg md:text-xl font-black tracking-tight sm:tracking-wider leading-tight text-white uppercase whitespace-nowrap">
+              INSTITUTIONAL <span className="inline-block bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-300 whitespace-nowrap">INTELLIGENCE HUB</span>
             </h1>
-            <p className="text-[11px] sm:text-xs text-slate-300 font-semibold mt-0.5 tracking-wide flex flex-wrap items-center gap-1.5">
+            {/* Desktop Subtitle (Single Line) */}
+            <p className="hidden sm:flex text-xs text-slate-300 font-semibold mt-0.5 tracking-wide flex-wrap items-center gap-1.5">
               <span>Communication</span> <span className="text-indigo-400/60">•</span>
               <span>Context</span> <span className="text-indigo-400/60">•</span>
               <span>Verified Data</span> <span className="text-indigo-400/60">•</span>
               <span>Intelligence</span> <span className="text-indigo-400/60">•</span>
               <span>Action</span>
             </p>
+
+            {/* Mobile Subtitle (3 Top, 2 Bottom) */}
+            <div className="flex sm:hidden flex-col gap-0.5 text-[9.5px] xs:text-[10px] text-slate-300 font-semibold mt-0.5 tracking-normal">
+              <div className="flex items-center space-x-1 whitespace-nowrap">
+                <span>Communication</span> <span className="text-indigo-400/60">•</span>
+                <span>Context</span> <span className="text-indigo-400/60">•</span>
+                <span>Verified Data</span>
+              </div>
+              <div className="flex items-center space-x-1 whitespace-nowrap">
+                <span>Intelligence</span> <span className="text-indigo-400/60">•</span>
+                <span>Action</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -284,6 +284,7 @@ def get_unread_notification_count_endpoint(
 
 
 @router.put("/{notification_id}/read")
+@router.post("/{notification_id}/read")
 def mark_notification_read_endpoint(
     notification_id: str,
     db: Session = Depends(get_db),
@@ -291,6 +292,27 @@ def mark_notification_read_endpoint(
 ):
     """Marks notification as read (updates all duplicate records matching event_id or notification_id for current user)."""
     user_id_variants = get_user_id_variants(current_user)
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    updated_count = 0
+
+    # Handle special case 'all' or 'mark-all'
+    if notification_id.lower() in ['all', 'mark-all', 'mark-all-read', 'read-all']:
+        records = db.query(NotificationRecord).filter(
+            and_(
+                NotificationRecord.recipient_user_id.in_(list(user_id_variants)),
+                or_(
+                    NotificationRecord.is_read == False,
+                    NotificationRecord.is_read == None,
+                    NotificationRecord.is_read.is_(None)
+                )
+            )
+        ).all()
+        for r in records:
+            cast(Any, r).is_read = True
+            cast(Any, r).read_at = now_utc
+            updated_count += 1
+        db.commit()
+        return {"success": True, "marked_count": updated_count}
 
     # Locate target record to extract notification_id, event_id, title & body
     target = db.query(NotificationRecord).filter(
@@ -299,9 +321,6 @@ def mark_notification_read_endpoint(
             NotificationRecord.event_id == notification_id
         )
     ).first()
-
-    now_utc = datetime.datetime.now(datetime.timezone.utc)
-    updated_count = 0
 
     if target:
         event_id = target.event_id
@@ -329,11 +348,28 @@ def mark_notification_read_endpoint(
             updated_count += 1
 
         db.commit()
+    else:
+        # Fallback: update any unread records for current user variants
+        records = db.query(NotificationRecord).filter(
+            and_(
+                NotificationRecord.recipient_user_id.in_(list(user_id_variants)),
+                or_(
+                    NotificationRecord.notification_id == notification_id,
+                    NotificationRecord.event_id == notification_id
+                )
+            )
+        ).all()
+        for r in records:
+            cast(Any, r).is_read = True
+            cast(Any, r).read_at = now_utc
+            updated_count += 1
+        db.commit()
 
     return {"success": True, "notification_id": notification_id, "is_read": True, "marked_count": updated_count}
 
 
 @router.put("/{notification_id}/unread")
+@router.post("/{notification_id}/unread")
 def mark_notification_unread_endpoint(
     notification_id: str,
     db: Session = Depends(get_db),
@@ -381,6 +417,11 @@ def mark_notification_unread_endpoint(
 
 
 @router.post("/mark-all-read")
+@router.put("/mark-all-read")
+@router.post("/mark-all-as-read")
+@router.put("/mark-all-as-read")
+@router.post("/read-all")
+@router.put("/read-all")
 def mark_all_notifications_read_endpoint(
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_active_user)
@@ -392,7 +433,11 @@ def mark_all_notifications_read_endpoint(
     records = db.query(NotificationRecord).filter(
         and_(
             NotificationRecord.recipient_user_id.in_(list(user_id_variants)),
-            NotificationRecord.is_read == False
+            or_(
+                NotificationRecord.is_read == False,
+                NotificationRecord.is_read == None,
+                NotificationRecord.is_read.is_(None)
+            )
         )
     ).all()
 

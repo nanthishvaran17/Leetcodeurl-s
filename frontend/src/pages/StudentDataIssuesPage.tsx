@@ -601,10 +601,6 @@ export const StudentDataIssuesPage: React.FC = () => {
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2.5 max-w-2xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-400/30">
-                <AlertOctagon className="w-3.5 h-3.5 text-rose-400" />
-                <span>DATA INTEGRITY & RECOVERY</span>
-              </span>
               <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                 <span>CANONICAL URL VALIDATOR ACTIVE</span>

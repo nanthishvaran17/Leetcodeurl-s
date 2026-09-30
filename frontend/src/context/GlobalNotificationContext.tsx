@@ -155,6 +155,28 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     return false;
   };
 
+  // Local read cache to prevent unread state flickers on polling/re-open
+  const readIdsRef = React.useRef<Set<string>>(new Set<string>());
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('read_notification_ids');
+      if (stored) {
+        const arr = JSON.parse(stored);
+        arr.forEach((id: string) => readIdsRef.current.add(String(id)));
+      }
+    } catch (_e) {}
+  }, []);
+
+  const saveLocalReadId = (idStr: string) => {
+    if (!idStr) return;
+    readIdsRef.current.add(idStr);
+    try {
+      const arr = Array.from(readIdsRef.current).slice(-200); // keep recent 200
+      localStorage.setItem('read_notification_ids', JSON.stringify(arr));
+    } catch (_e) {}
+  };
+
   const fetchFromBackendAPI = useCallback(async () => {
     if (!token) {
       setIsLoading(false);
@@ -166,17 +188,26 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
       });
       if (res.ok) {
         const data = await res.json();
-        const items = (data.items || []).map((it: any) => ({
-          ...it,
-          message: it.message || it.body,
-          body: it.body || it.message,
-          category: normalizeCategory(it.category || it.type || it.event_type),
-          priority: it.priority || 'normal',
-          recipientUserId: user?.email || 'user'
-        }));
+        const items = (data.items || []).map((it: any) => {
+          const idStr = String(it.id || '');
+          const eventIdStr = String(it.eventId || '');
+          const isLocallyRead = readIdsRef.current.has(idStr) || (eventIdStr && readIdsRef.current.has(eventIdStr));
+          const finalIsRead = isLocallyRead ? true : Boolean(it.isRead);
+
+          return {
+            ...it,
+            isRead: finalIsRead,
+            message: it.message || it.body,
+            body: it.body || it.message,
+            category: normalizeCategory(it.category || it.type || it.event_type),
+            priority: it.priority || 'normal',
+            recipientUserId: user?.email || 'user'
+          };
+        });
 
         setAllNotifications(items);
-        setUnreadCount(data.unreadCount || items.filter((n: Notification) => !n.isRead).length);
+        const actualUnread = items.filter((n: Notification) => !n.isRead).length;
+        setUnreadCount(actualUnread);
       } else {
         console.warn("[GlobalNotificationContext] Non-ok status from backend:", res.status);
       }
@@ -348,11 +379,18 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   }, [isAuthenticated, fetchPreferences]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
-    setAllNotifications(prev => prev.map(n => (n.id === notificationId || n.eventId === notificationId) ? { ...n, isRead: true } : n));
-    setUnreadCount(prev => {
-      const isTargetUnread = allNotifications.some(n => (n.id === notificationId || n.eventId === notificationId) && !n.isRead);
-      return isTargetUnread ? Math.max(0, prev - 1) : prev;
-    });
+    saveLocalReadId(notificationId);
+
+    setAllNotifications(prev => prev.map(n => {
+      if (n.id === notificationId || n.eventId === notificationId) {
+        if (n.id) saveLocalReadId(n.id);
+        if (n.eventId) saveLocalReadId(n.eventId);
+        return { ...n, isRead: true };
+      }
+      return n;
+    }));
+
+    setUnreadCount(prev => Math.max(0, prev - 1));
 
     if (token) {
       try {
@@ -364,11 +402,13 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
         console.warn("REST API mark read notice:", err);
       }
     }
-  }, [allNotifications, token]);
+  }, [token]);
 
   const markAllAsRead = useCallback(async () => {
-    const unreadNotifs = allNotifications.filter(n => !n.isRead);
-    if (unreadNotifs.length === 0) return;
+    allNotifications.forEach(n => {
+      if (n.id) saveLocalReadId(n.id);
+      if (n.eventId) saveLocalReadId(n.eventId);
+    });
 
     setAllNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     setUnreadCount(0);

@@ -481,10 +481,10 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
             className="space-y-6 w-full"
           >
       {activeTab === 'overview' && (
@@ -493,7 +493,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         {/* Left Section: Rankings & Activity (7 columns) */}
-        <div className="lg:col-span-7 bg-white dark:bg-navy-900/40 rounded-3xl border border-slate-200 dark:border-navy-700 p-5 sm:p-6 shadow-sm relative overflow-hidden backdrop-blur-xl">
+        <div className="lg:col-span-7 bg-white dark:bg-navy-900/40 rounded-3xl border border-slate-200 dark:border-navy-700 p-5 sm:p-6 shadow-sm relative overflow-hidden sm:backdrop-blur-md backdrop-blur-none">
           <div className="absolute top-0 right-0 p-32 bg-brand-500/5 dark:bg-brand-500/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/3"></div>
           
           <div className="flex items-center space-x-2 mb-5 relative z-10">
@@ -502,7 +502,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           </div>
 
           <div className="grid grid-cols-2 gap-4 relative z-10">
-            <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform hover:scale-[1.02] shadow-2xs">
+            <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform sm:hover:scale-[1.02] shadow-2xs">
               <div className="flex items-center space-x-2 mb-2">
                 <div className="p-1.5 rounded-lg bg-brand-500/15 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300">
                   <Trophy className="w-3.5 h-3.5" />
@@ -512,7 +512,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               <h3 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white">#{detail?.college_rank || '—'}</h3>
             </div>
 
-            <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform hover:scale-[1.02] shadow-2xs">
+            <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform sm:hover:scale-[1.02] shadow-2xs">
               <div className="flex items-center space-x-2 mb-2">
                 <div className="p-1.5 rounded-lg bg-indigo-500/15 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
                   <Medal className="w-3.5 h-3.5" />
@@ -522,7 +522,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               <h3 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white">#{detail?.dept_rank || '—'}</h3>
             </div>
 
-            <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform hover:scale-[1.02] shadow-2xs">
+            <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform sm:hover:scale-[1.02] shadow-2xs">
               <div className="flex items-center space-x-2 mb-2">
                 <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
                   <TrendingUp className="w-3.5 h-3.5" />
@@ -532,7 +532,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               <h3 className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">+{detail?.weekly_progress || 0}</h3>
             </div>
 
-            <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform hover:scale-[1.02] shadow-2xs">
+            <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform sm:hover:scale-[1.02] shadow-2xs">
               <div className="flex items-center space-x-2 mb-2">
                 <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
                   <Flame className="w-3.5 h-3.5" />
@@ -545,7 +545,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         </div>
 
         {/* Right Section: Contest Metrics (5 columns) */}
-        <div className="lg:col-span-5 bg-white dark:bg-navy-900/40 rounded-3xl border border-slate-200 dark:border-navy-700 p-5 sm:p-6 shadow-sm relative overflow-hidden backdrop-blur-xl flex flex-col">
+        <div className="lg:col-span-5 bg-white dark:bg-navy-900/40 rounded-3xl border border-slate-200 dark:border-navy-700 p-5 sm:p-6 shadow-sm relative overflow-hidden sm:backdrop-blur-md backdrop-blur-none flex flex-col">
           <div className="absolute bottom-0 right-0 p-32 bg-indigo-500/5 dark:bg-indigo-500/10 blur-3xl rounded-full translate-y-1/3 translate-x-1/3"></div>
           
           <div className="flex items-center space-x-2 mb-5 relative z-10">

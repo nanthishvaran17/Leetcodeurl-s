@@ -296,7 +296,7 @@ export const StaffDashboardView: React.FC = () => {
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-4 sm:p-6 md:p-8 shadow-lg border border-indigo-500/30">
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-2 flex-1 min-w-0 max-w-full">
+          <div className="space-y-3.5 flex-1 min-w-0 max-w-full">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-black border border-indigo-400/30">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>MY MENTORING DASHBOARD</span>
@@ -305,7 +305,7 @@ export const StaffDashboardView: React.FC = () => {
               className="text-white uppercase max-w-full"
               nameClassName="text-indigo-300 font-extrabold"
             />
-            <p className="text-sm md:text-base text-slate-300 font-medium">Your mentoring dashboard is ready.</p>
+            <p className="text-sm md:text-base text-slate-300 font-medium pt-1">Your mentoring dashboard is ready.</p>
             <p className="text-xs text-slate-300 flex items-center gap-2">
               <span>Restricted Portfolio • Monitoring {totalAssignedCount === 0 ? '0' : totalAssignedCount} Assigned Students</span>
               {lastSyncTime && (
@@ -585,9 +585,14 @@ export const StaffDashboardView: React.FC = () => {
               <div className="p-1.5 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400">
                 <AlertCircle className="w-5 h-5 animate-pulse" />
               </div>
-              <h3 className="text-base font-black text-slate-900 dark:text-white">
-                Today's Priority — ({priorityStudents.length} Students Need Attention)
-              </h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  Today's Priority
+                </h3>
+                <span className="text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-500/15 px-2.5 py-0.5 rounded-full border border-amber-400/30">
+                  ({priorityStudents.length} Students Need Attention)
+                </span>
+              </div>
             </div>
             <span className="text-xs text-amber-800 dark:text-amber-300 font-black bg-amber-100 dark:bg-amber-950/60 px-2.5 py-1 rounded-full border border-amber-300/80 dark:border-amber-800/60">
               Restricted to your assigned portfolio
@@ -1021,24 +1026,26 @@ export const StaffDashboardView: React.FC = () => {
               return (
                 <div
                   key={st.id}
-                  className="bg-white dark:bg-navy-900 rounded-2xl p-4.5 sm:p-5 border border-slate-200/90 dark:border-navy-700/80 shadow-md shadow-slate-200/50 dark:shadow-none space-y-3.5 transition-all hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-600/60 ring-1 ring-slate-100 dark:ring-navy-800/40"
+                  className="bg-white dark:bg-navy-900 rounded-2xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-700/80 shadow-md shadow-slate-200/50 dark:shadow-none space-y-3 transition-all hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-600/60 ring-1 ring-slate-100 dark:ring-navy-800/40"
                 >
-                  {/* Header: Name, Reg No, Dept & Status */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-black text-sm sm:text-base text-slate-900 dark:text-white truncate">
-                        {st.name}
-                      </h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
-                        <span className="font-mono font-bold">{st.reg_no}</span> • {st.department || 'CSE'} ({cleanYr || 'III'} Year)
-                      </p>
-                      <p className="text-xs font-bold text-brand-600 dark:text-brand-400 mt-0.5 truncate">
-                        {st.username ? `@${st.username}` : 'Not Linked'}
-                      </p>
+                  {/* Top Bar: Reg No, Dept/Year & Status Pills */}
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-navy-800/80 pb-2.5">
+                    <div className="flex items-center gap-1.5 text-xs font-bold overflow-hidden min-w-0">
+                      <span className="font-mono font-black text-slate-900 dark:text-white bg-slate-100 dark:bg-navy-800 px-2.5 py-0.5 rounded-lg border border-slate-300 dark:border-navy-600 shrink-0 shadow-xs">
+                        {st.reg_no}
+                      </span>
+                      <span className="truncate text-[11px] font-black text-indigo-950 dark:text-indigo-100 bg-indigo-100/80 dark:bg-indigo-950/80 px-2 py-0.5 rounded-lg border border-indigo-300/80 dark:border-indigo-700/80">
+                        {st.department || 'CSE'} ({cleanYr || 'III'} Year)
+                      </span>
                     </div>
 
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border ${
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {badgeColor === 'red' && st.days_inactive !== undefined && st.days_inactive > 0 && (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 whitespace-nowrap">
+                          Inactive {st.days_inactive}d
+                        </span>
+                      )}
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border whitespace-nowrap ${
                         badgeColor === 'emerald'
                           ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                           : badgeColor === 'red'
@@ -1049,25 +1056,39 @@ export const StaffDashboardView: React.FC = () => {
                       }`}>
                         {statusLabel}
                       </span>
-                      {badgeColor === 'red' && st.days_inactive !== undefined && st.days_inactive > 0 && (
-                        <span className="text-[9px] font-bold text-rose-500 dark:text-rose-400">
-                          Inactive {st.days_inactive}d
-                        </span>
-                      )}
                     </div>
                   </div>
 
+                  {/* Student Name & Handle */}
+                  <div>
+                    <h4 className="font-black text-base text-slate-900 dark:text-white leading-tight">
+                      {st.name}
+                    </h4>
+                    {st.username ? (
+                      <a
+                        href={`https://leetcode.com/u/${st.username}/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-bold font-mono text-brand-600 dark:text-brand-400 hover:underline mt-0.5"
+                      >
+                        @{st.username}
+                      </a>
+                    ) : (
+                      <span className="text-xs font-mono text-slate-400 italic block mt-0.5">Not Linked</span>
+                    )}
+                  </div>
+
                   {/* Progress Bar & Stats Row */}
-                  <div className="space-y-1.5 pt-1">
-                    <div className="flex items-center justify-between text-xs font-black">
-                      <span className="text-slate-700 dark:text-slate-300">Target Progress</span>
-                      <span className="text-indigo-600 dark:text-indigo-400 font-mono">
+                  <div className="space-y-1.5 pt-0.5">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-slate-800 dark:text-slate-200 font-bold">Target Progress</span>
+                      <span className="text-brand-600 dark:text-brand-400 font-mono font-black">
                         {targetPct}% ({Math.min(solved, 100)}/100)
                       </span>
                     </div>
-                    <div className="w-full bg-slate-100 dark:bg-navy-800 rounded-full h-2 overflow-hidden border border-slate-200/60 dark:border-navy-700/60">
+                    <div className="w-full bg-slate-100 dark:bg-navy-800 rounded-full h-2.5 overflow-hidden border border-slate-200/60 dark:border-navy-700/60 p-0.5">
                       <div
-                        className={`h-2 rounded-full transition-all duration-500 ${
+                        className={`h-1.5 rounded-full transition-all duration-500 ${
                           solved >= 100
                             ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
                             : solved >= 50
@@ -1083,21 +1104,21 @@ export const StaffDashboardView: React.FC = () => {
 
                   {/* Quick Numbers & Inspect Button */}
                   <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-slate-100 dark:border-navy-800">
-                    <div className="flex items-center gap-4 text-xs">
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Solved</span>
-                        <span className="font-black text-slate-900 dark:text-white">{solved}</span>
+                    <div className="flex items-center gap-2.5 text-xs">
+                      <div className="bg-slate-50 dark:bg-navy-950 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-navy-800">
+                        <span className="text-[10px] text-slate-700 dark:text-slate-300 font-black uppercase block">Solved</span>
+                        <span className="font-black text-slate-900 dark:text-white text-xs">{solved}</span>
                       </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Rating</span>
-                        <span className="font-bold text-amber-500">{st.contest_rating ? Math.round(st.contest_rating) : 'N/A'}</span>
+                      <div className="bg-slate-50 dark:bg-navy-950 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-navy-800">
+                        <span className="text-[10px] text-slate-700 dark:text-slate-300 font-black uppercase block">Rating</span>
+                        <span className="font-black text-amber-500 dark:text-amber-400 text-xs">{st.contest_rating ? Math.round(st.contest_rating) : 'N/A'}</span>
                       </div>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => setSelectedStudent(st)}
-                      className="px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 active:scale-95 text-white text-xs font-black inline-flex items-center space-x-1.5 transition-all shadow-sm cursor-pointer"
+                      className="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-white text-xs font-black inline-flex items-center space-x-1.5 transition-all shadow-md shadow-brand-500/20 cursor-pointer shrink-0"
                     >
                       <Eye className="w-4 h-4" />
                       <span>Inspect</span>
