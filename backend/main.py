@@ -85,10 +85,44 @@ async def _deferred_startup_tasks():
             if is_pg:
                 pg_statements = [
                     """
+                    ALTER TABLE users
+                        ADD COLUMN IF NOT EXISTS full_name VARCHAR(150),
+                        ADD COLUMN IF NOT EXISTS designation VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS institutional_id VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30),
+                        ADD COLUMN IF NOT EXISTS whatsapp_verified BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS date_of_birth DATE,
+                        ADD COLUMN IF NOT EXISTS profile_photo TEXT,
+                        ADD COLUMN IF NOT EXISTS department_id INTEGER,
+                        ADD COLUMN IF NOT EXISTS section_id INTEGER,
+                        ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20),
+                        ADD COLUMN IF NOT EXISTS mentoring_role VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS require_password_change BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
+                        ADD COLUMN IF NOT EXISTS last_login TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS last_activity TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS is_2fa_enabled BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        ADD COLUMN IF NOT EXISTS reporting_manager_id INTEGER;
+                    """,
+                    """
                     ALTER TABLE students
+                        ADD COLUMN IF NOT EXISTS people_id VARCHAR(50),
                         ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
                         ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none';
+                        ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none',
+                        ADD COLUMN IF NOT EXISTS accommodation VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS twelfth_cutoff DOUBLE PRECISION,
+                        ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30),
+                        ADD COLUMN IF NOT EXISTS whatsapp_verified BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS date_of_birth DATE,
+                        ADD COLUMN IF NOT EXISTS batch VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS institutional_email VARCHAR(150),
+                        ADD COLUMN IF NOT EXISTS email_status VARCHAR(50) DEFAULT 'pending',
+                        ADD COLUMN IF NOT EXISTS allocation VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS codeforces_username VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS hackerrank_username VARCHAR(100);
                     """,
                     """
                     ALTER TABLE student_contest_participations
