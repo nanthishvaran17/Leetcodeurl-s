@@ -149,25 +149,25 @@ const ContestCountdown = memo(({ initialSec }: { initialSec: number }) => {
   const minutes = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
   const seconds = String(sec % 60).padStart(2, '0');
   return (
-    <div className="flex items-center gap-2 sm:gap-3">
-      <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
+    <div className="flex items-center justify-center gap-1 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+      <div className="px-2 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[64px] sm:min-w-[70px] shadow-inner flex-1 sm:flex-none">
         <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{days}</span>
-        <span className="text-[9px] uppercase font-extrabold text-amber-200/90 block">Days</span>
+        <span className="text-[8px] sm:text-[9px] uppercase font-extrabold text-amber-200/90 block">Days</span>
       </div>
-      <span className="text-2xl font-mono font-black text-amber-500">:</span>
-      <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
+      <span className="text-lg sm:text-2xl font-mono font-black text-amber-500 shrink-0">:</span>
+      <div className="px-2 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[64px] sm:min-w-[70px] shadow-inner flex-1 sm:flex-none">
         <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{hours}</span>
-        <span className="text-[9px] uppercase font-extrabold text-amber-200/90 block">Hours</span>
+        <span className="text-[8px] sm:text-[9px] uppercase font-extrabold text-amber-200/90 block">Hours</span>
       </div>
-      <span className="text-2xl font-mono font-black text-amber-500">:</span>
-      <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
+      <span className="text-lg sm:text-2xl font-mono font-black text-amber-500 shrink-0">:</span>
+      <div className="px-2 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[64px] sm:min-w-[70px] shadow-inner flex-1 sm:flex-none">
         <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{minutes}</span>
-        <span className="text-[9px] uppercase font-extrabold text-amber-200/90 block">Minutes</span>
+        <span className="text-[8px] sm:text-[9px] uppercase font-extrabold text-amber-200/90 block">Minutes</span>
       </div>
-      <span className="text-2xl font-mono font-black text-amber-500">:</span>
-      <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
+      <span className="text-lg sm:text-2xl font-mono font-black text-amber-500 shrink-0">:</span>
+      <div className="px-2 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[64px] sm:min-w-[70px] shadow-inner flex-1 sm:flex-none">
         <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{seconds}</span>
-        <span className="text-[9px] uppercase font-extrabold text-amber-200/90 block">Seconds</span>
+        <span className="text-[8px] sm:text-[9px] uppercase font-extrabold text-amber-200/90 block">Seconds</span>
       </div>
     </div>
   );

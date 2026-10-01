@@ -509,9 +509,6 @@ export const ReportsPage: React.FC = () => {
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
-              <span>NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>
-            </div>
 
             <h1 className="text-3xl md:text-4xl font-black tracking-tight uppercase">
               {['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? (
@@ -610,7 +607,7 @@ export const ReportsPage: React.FC = () => {
                 </span>
                 <div className={`relative ${rptTypeOpen ? 'z-30' : 'z-10'}`}>
                   {(() => {
-                    const reportCategories = [
+                    const rawCategories = [
                       {
                         title: 'A. CONTEST REPORTS',
                         titleColor: 'text-brand-600 dark:text-brand-400',
@@ -652,6 +649,31 @@ export const ReportsPage: React.FC = () => {
                         ]
                       }
                     ];
+
+                    const roleClean = (user?.role || '').trim().toLowerCase();
+                    const isFaculty = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(roleClean);
+                    const isHod = ['hod', 'head of department', 'head'].includes(roleClean);
+                    const isCoordinator = ['coordinator', 'academic coordinator'].includes(roleClean);
+
+                    const reportCategories = rawCategories.map(cat => {
+                      if (cat.title === 'A. CONTEST REPORTS' || cat.title === 'B. PERFORMANCE REPORTS') return cat;
+                      if (cat.title === 'C. CONSOLIDATED REPORTS') {
+                        let allowedOptions = cat.options;
+                        if (isFaculty) {
+                          allowedOptions = allowedOptions.filter(o => o.value === 'FACULTY_CONSOLIDATED');
+                        } else if (isCoordinator) {
+                          allowedOptions = allowedOptions.filter(o => o.value === 'FACULTY_CONSOLIDATED' || o.value === 'FACULTY_COORDINATOR_CONSOLIDATED' || o.value === 'WEEKLY_PERFORMANCE');
+                        } else if (isHod) {
+                          allowedOptions = allowedOptions.filter(o => o.value === 'FACULTY_CONSOLIDATED' || o.value === 'HOD_DEPARTMENT_INTELLIGENCE');
+                        }
+                        return { ...cat, options: allowedOptions };
+                      }
+                      if (cat.title === 'D. EXECUTIVE REPORTS') {
+                        if (isFaculty || isCoordinator || isHod) return { ...cat, options: [] };
+                        return cat;
+                      }
+                      return cat;
+                    }).filter(cat => cat.options.length > 0);
 
                     const allOpts = reportCategories.flatMap(c => c.options);
                     const currentOpt = allOpts.find(o => 

@@ -221,7 +221,7 @@ const PremiumSelect: React.FC<{
   );
 };
 
-// Helper to convert any raw DOB string (ISO, YYYY-MM-DD, DD/MM/YYYY) to DD/MM/YYYY
+// Helper to convert any raw DOB string (ISO, YYYY-MM-DD, MM/DD/YYYY) to MM/DD/YYYY
 const parseDOBToDisplay = (rawDob: any): string => {
   if (!rawDob) return '';
   const str = String(rawDob).trim();
@@ -235,7 +235,7 @@ const parseDOBToDisplay = (rawDob: any): string => {
     if (parts.length === 3) {
       const [y, m, d] = parts;
       if (y.length === 4) {
-        return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+        return `${m.padStart(2, '0')}/${d.padStart(2, '0')}/${y}`;
       }
     }
   }
@@ -245,7 +245,7 @@ const parseDOBToDisplay = (rawDob: any): string => {
       const day = String(dateObj.getDate()).padStart(2, '0');
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
       const year = dateObj.getFullYear();
-      return `${day}/${month}/${year}`;
+      return `${month}/${day}/${year}`;
     }
   } catch {}
   return str;
@@ -1649,13 +1649,13 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     />
                   </div>
 
-                  {/* Date of Birth (DD/MM/YYYY) */}
+                  {/* Date of Birth (MM/DD/YYYY) */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="block text-xs font-black text-slate-900 dark:text-slate-100">
                         Date of Birth
                       </label>
-                      <span className="text-xs text-brand-600 dark:text-brand-400 font-bold font-mono bg-brand-50 dark:bg-brand-950/60 px-2 py-0.5 rounded-md border border-brand-200 dark:border-brand-800/80">DD/MM/YYYY</span>
+                      <span className="text-xs text-brand-600 dark:text-brand-400 font-bold font-mono bg-brand-50 dark:bg-brand-950/60 px-2 py-0.5 rounded-md border border-brand-200 dark:border-brand-800/80">MM/DD/YYYY</span>
                     </div>
                     <div className="relative">
                       <input
@@ -1667,7 +1667,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           else if (val.length >= 5) val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
                           setDateOfBirth(val);
                         }}
-                        placeholder="DD/MM/YYYY (e.g. 15/08/1990)"
+                        placeholder="MM/DD/YYYY (e.g. 08/15/1990)"
                         maxLength={10}
                         className="w-full h-11 pl-4 pr-10 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-mono font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
                       />

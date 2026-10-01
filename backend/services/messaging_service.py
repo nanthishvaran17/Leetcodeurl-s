@@ -247,18 +247,8 @@ class MessagingService:
             assignments = db.query(FacultyStudentAssignment).filter_by(faculty_id=current_user.id, is_active=True).all()
             assigned_students = [a.student for a in assignments if a.student and a.student.is_active]
             
-            student_query_filter = [Student.is_active == True]
-            if dept_id:
-                student_query_filter.append(Student.department_id == dept_id)
-            dept_students = db.query(Student).filter(*student_query_filter).all()
-            
-            # Combine assigned students and department students without duplicates
-            seen_st_ids = {s.id for s in assigned_students}
+            # Provide only assigned students for messaging, as per requirement
             students = list(assigned_students)
-            for ds in dept_students:
-                if ds.id not in seen_st_ids:
-                    seen_st_ids.add(ds.id)
-                    students.append(ds)
         else:
             staff_query = db.query(User).filter(
                 User.is_active == True,

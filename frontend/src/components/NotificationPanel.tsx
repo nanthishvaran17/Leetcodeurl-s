@@ -56,6 +56,85 @@ const CATEGORIES = [
   { id: 'contests', label: 'Contests' },
   { id: 'announcements', label: 'Announcements' },
 ];
+
+const NotificationItem = ({ n, handleNotificationClick, deleteNotification, setActiveFileModal, getIcon }: any) => {
+  const [isSwiped, setIsSwiped] = useState(false);
+
+  return (
+    <div className="relative overflow-hidden group border-b border-slate-100 dark:border-navy-800/60 last:border-0">
+      {/* Background action (Delete) */}
+      <div className="absolute inset-y-0 right-0 w-full flex items-center justify-end bg-rose-500 z-0">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            deleteNotification(n.id);
+          }}
+          className="text-white flex items-center justify-center gap-2 font-bold text-sm h-full w-20 cursor-pointer"
+        >
+          <Trash2 size={18} />
+        </button>
+      </div>
+
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: -80, right: 0 }}
+        dragElastic={0.1}
+        onDragEnd={(e, info) => {
+          if (info.offset.x < -40 || info.velocity.x < -200) {
+            setIsSwiped(true);
+          } else {
+            setIsSwiped(false);
+          }
+        }}
+        animate={{ x: isSwiped ? -80 : 0 }}
+        className={`relative z-10 flex items-start gap-3 p-3.5 sm:p-4 transition-all duration-200 cursor-pointer min-h-[64px] min-w-[44px] bg-white dark:bg-navy-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 ${!n.isRead ? 'bg-brand-500/5 dark:bg-brand-500/10 font-medium' : ''}`}
+        onClick={() => {
+          if (isSwiped) {
+            setIsSwiped(false);
+            return;
+          }
+          handleNotificationClick(n);
+        }}
+      >
+        {!n.isRead && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 bg-brand-500 rounded-r-full" />
+        )}
+
+        <div className={`mt-0.5 shrink-0 p-2 rounded-xl bg-slate-100 dark:bg-navy-800 group-hover:shadow-sm transition-shadow ${n.isRead ? 'opacity-70' : ''}`}>
+          {getIcon(n.type, n.priority)}
+        </div>
+
+        <div className={`flex-1 min-w-0 pr-4 ${n.isRead ? 'opacity-80' : ''}`}>
+          <div className="flex items-center justify-between gap-2 mb-0.5">
+            <h4 className={`text-xs sm:text-sm font-bold truncate ${!n.isRead ? 'text-slate-900 dark:text-white font-extrabold' : 'text-slate-700 dark:text-slate-300'}`}>
+              {n.title}
+            </h4>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 font-semibold transition-colors">
+              {timeAgo(n.createdAt)}
+            </span>
+          </div>
+
+          <p className={`text-xs leading-relaxed ${!n.isRead ? 'text-slate-700 dark:text-slate-200 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
+            {n.message}
+          </p>
+
+          {n.fileId && (
+            <div className="mt-2.5 flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setActiveFileModal({ fileId: n.fileId, title: n.title }); }}
+                className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1 bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
+              >
+                <Eye size={13} /> Preview
+              </button>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, onNavigateTab }) => {
   const {
     notifications,
@@ -329,37 +408,6 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
     }
   };
 
-  const handleAskAI = (e: React.MouseEvent, n: Notification) => {
-    e.stopPropagation();
-    if (!n.isRead) markAsRead(n.id);
-    
-    const target = resolveNotificationDestination(n);
-    
-    if (target.path) {
-      if (onNavigateTab) {
-        onNavigateTab(target.path);
-      } else {
-        window.location.hash = `#${target.path}`;
-      }
-    }
-    
-    onClose();
-    
-    window.dispatchEvent(
-      new CustomEvent('open-ai-chat', {
-        detail: {
-          query: target.aiPrompt || `Analyze notification: "${n.title}"`,
-          mode: 'institutional',
-          context: {
-            type: target.contextType || 'GENERAL',
-            id: target.entityId,
-            title: n.title,
-            aiPrompt: target.aiPrompt
-          }
-        }
-      })
-    );
-  };
 
   const handleFileDownload = (fileId: string) => {
     downloadManager.download({
@@ -495,80 +543,14 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
               ) : (
                 <div className="divide-y divide-slate-100 dark:divide-navy-800/60">
                   {notifications.map((n) => (
-                    <div
+                    <NotificationItem
                       key={n.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => handleNotificationClick(n)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          handleNotificationClick(n);
-                        }
-                      }}
-                      className={`group relative flex items-start gap-3 p-3.5 sm:p-4 transition-all duration-200 cursor-pointer min-h-[64px] min-w-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:bg-slate-50 dark:focus-visible:bg-navy-800/60 hover:bg-slate-50 dark:hover:bg-navy-800/60 active:bg-slate-100 dark:active:bg-navy-800 ${
-                        !n.isRead ? 'bg-brand-500/5 dark:bg-brand-500/10 font-medium' : 'opacity-80'
-                      }`}
-                    >
-                      {!n.isRead && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 bg-brand-500 rounded-r-full" />
-                      )}
-
-                      <div className="mt-0.5 shrink-0 p-2 rounded-xl bg-slate-100 dark:bg-navy-800 group-hover:shadow-sm transition-shadow">
-                        {getIcon(n.type, n.priority)}
-                      </div>
-
-                      <div className="flex-1 min-w-0 pr-8">
-                        <div className="flex items-center justify-between gap-2 mb-0.5">
-                          <h4 className={`text-xs sm:text-sm font-bold truncate ${!n.isRead ? 'text-slate-900 dark:text-white font-extrabold' : 'text-slate-700 dark:text-slate-300'}`}>
-                            {n.title}
-                          </h4>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 font-semibold group-hover:text-slate-500 transition-colors">
-                            {timeAgo(n.createdAt)}
-                          </span>
-                        </div>
-
-                        <p className={`text-xs leading-relaxed ${!n.isRead ? 'text-slate-700 dark:text-slate-200 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
-                          {n.message}
-                        </p>
-
-                        <div className="mt-2.5 flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                          {n.fileId && (
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); setActiveFileModal({ fileId: n.fileId!, title: n.title }); }}
-                              className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1 bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
-                            >
-                              <Eye size={13} /> Preview
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={(e) => handleAskAI(e, n)}
-                            className="text-[11px] font-extrabold text-brand-600 dark:text-brand-400 flex items-center gap-1.5 bg-brand-50 dark:bg-brand-950/60 hover:bg-brand-100 dark:hover:bg-brand-900/60 border border-brand-200 dark:border-brand-800 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs"
-                            title="Ask AI to analyze this alert"
-                          >
-                            <Sparkles size={13} className="text-brand-500 animate-pulse" /> Ask AI
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-slate-400">
-                        <ChevronRight size={18} />
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteNotification(n.id);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-all absolute right-2 top-2 cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center z-10"
-                        title="Delete notification"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
+                      n={n}
+                      handleNotificationClick={handleNotificationClick}
+                      deleteNotification={deleteNotification}
+                      setActiveFileModal={setActiveFileModal}
+                      getIcon={getIcon}
+                    />
                   ))}
                 </div>
               )}

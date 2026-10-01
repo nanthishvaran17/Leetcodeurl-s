@@ -959,14 +959,14 @@ export const HODCommandCenter: React.FC = () => {
     const yearLevel = selectedYear !== 'ALL' ? selectedYear : undefined;
 
     try {
-      if (isRefresh || isInitial) {
+      if (isRefresh) {
         clearApiCache();
       }
       const summaryData = await getCommandCenterSummary({
         dept_id: deptId,
         staff_id: staffId,
         year_level: yearLevel,
-        refresh: isRefresh || isInitial
+        refresh: isRefresh
       });
       setSummary(summaryData);
       if (summaryData.staff_list) setStaffList(summaryData.staff_list);

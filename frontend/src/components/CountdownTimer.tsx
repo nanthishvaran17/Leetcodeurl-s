@@ -16,32 +16,20 @@ export function getIstSessionTiming(userName: string = 'User'): {
   subTitle: string;
 } {
   try {
-    const now = new Date();
-    // Format to Asia/Kolkata timezone components
-    const istFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Asia/Kolkata',
-      year: 'numeric',
-      month: 'numeric',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      second: 'numeric',
-      hour12: false
-    });
-    const parts = istFormatter.formatToParts(now);
-    const getPart = (type: string) => parseInt(parts.find(p => p.type === type)?.value || '0', 10);
+    // Get absolute UTC milliseconds since epoch
+    const nowMs = Date.now();
+    // Calculate IST time using fixed offset (UTC + 5:30)
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istTimeMs = nowMs + istOffset;
+    const istDate = new Date(istTimeMs);
 
-    const year = getPart('year');
-    const month = getPart('month') - 1; // 0-indexed month
-    const dayDate = getPart('day');
-    const hour = getPart('hour');
-    const minute = getPart('minute');
-    const second = getPart('second');
-
-    const istDate = new Date(Date.UTC(year, month, dayDate, hour, minute, second));
+    // Extract IST time components using UTC methods on the shifted date
     const dayOfWeek = istDate.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const secondsToday = hour * 3600 + minute * 60 + second;
+    const hour = istDate.getUTCHours();
+    const minute = istDate.getUTCMinutes();
+    const second = istDate.getUTCSeconds();
 
+    const secondsToday = hour * 3600 + minute * 60 + second;
     const startSec = 8 * 3600;         // 08:00:00 AM IST = 28,800s
     const endSec = 9 * 3600 + 30 * 60; // 09:30:00 AM IST = 34,200s
 
@@ -101,7 +89,8 @@ export function getIstSessionTiming(userName: string = 'User'): {
 
 export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _propTarget, isLive: propIsLive }) => {
   const { user } = useAuth();
-  const firstName = user?.name ? user.name.split(' ')[0] : 'Nanthish';
+  const rawName = user?.name ? user.name.split(' ')[0] : 'Nanthish';
+  const firstName = rawName.length > 12 ? rawName.substring(0, 12) + '...' : rawName;
 
   const [timing, setTiming] = useState(() => getIstSessionTiming(firstName));
 
@@ -188,15 +177,15 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
           </div>
 
           {/* Titles and Badges */}
-          <div className="space-y-1">
+          <div className="space-y-1 flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2.5">
-              <h4 className="font-black text-xl sm:text-2xl tracking-tight flex items-center gap-2">
+              <h4 className="font-black text-xl sm:text-2xl tracking-tight flex items-center gap-2 w-full">
                 {isSessionLive ? (
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 truncate block w-full">
                     SUNDAY SESSION LIVE NOW
                   </span>
                 ) : (
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-100 to-blue-200 drop-shadow-sm">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-100 to-blue-200 drop-shadow-sm line-clamp-2 break-words max-w-full">
                     {timing.headerTitle}
                   </span>
                 )}
@@ -219,9 +208,9 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
               ) : null}
             </div>
 
-            <p className="text-xs sm:text-sm font-bold text-indigo-200/90 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-400" />
-              <span>{timing.subTitle}</span>
+            <p className="text-xs sm:text-sm font-bold text-indigo-200/90 flex items-start gap-1.5 mt-1">
+              <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-400 mt-0.5" />
+              <span className="line-clamp-2 break-words max-w-full">{timing.subTitle}</span>
             </p>
           </div>
         </div>
