@@ -1821,13 +1821,6 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </div>
               </div>
 
-              {/* Academic Badges & Recognitions Picker with Lucide Icons */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 gap-2 sm:gap-0">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2 shrink-0">
-                    <Award className="w-4 h-4 text-amber-500 shrink-0" /> Academic & Professional Badges
-                  </h3>
-                  <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">Displays on ID Card & Profile</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -2065,6 +2058,13 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         placeholder="nanthish_nec"
                         className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:border-brand-500 font-mono"
                       />
+              {/* Academic Badges & Recognitions Picker with Lucide Icons */}
+              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 gap-2 sm:gap-0">
+                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2 shrink-0">
+                    <Award className="w-4 h-4 text-amber-500 shrink-0" /> Academic & Professional Badges
+                  </h3>
+                  <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">Displays on ID Card & Profile</span>
                     </div>
                   </div>
                 </div>
