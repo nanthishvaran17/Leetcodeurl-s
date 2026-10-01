@@ -24,6 +24,7 @@ dependencies = [
     "qrcode>=7.4.2",
     "pillow>=9.5.0",
     "pytz>=2023.3",
+    "redis>=5.0.0",
 ]
 
 [tool.vercel]
