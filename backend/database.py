@@ -85,14 +85,20 @@ if "postgresql" in db_url or "postgres" in db_url:
     max_overflow = raw_max_overflow if is_low_pool else max(raw_max_overflow, 10)
 
 
-    engine_kwargs.update({
-        "pool_size": pool_size,
-        "max_overflow": max_overflow,
-        "pool_timeout": int(os.environ.get("DB_POOL_TIMEOUT", 30)), # wait up to 30s to checkout a connection under load
-        "pool_pre_ping": True,       # verify liveness before returning from pool
-        "pool_recycle": int(os.environ.get("DB_POOL_RECYCLE", 300)), # recycle after 5min; pool_pre_ping handles stale detection
-        "connect_args": pg_connect_args
-    })
+    if is_render or os.environ.get("FORCE_NULL_POOL") == "true":
+        engine_kwargs.update({
+            "poolclass": NullPool,
+            "connect_args": pg_connect_args
+        })
+    else:
+        engine_kwargs.update({
+            "pool_size": pool_size,
+            "max_overflow": max_overflow,
+            "pool_timeout": int(os.environ.get("DB_POOL_TIMEOUT", 30)),
+            "pool_pre_ping": True,
+            "pool_recycle": int(os.environ.get("DB_POOL_RECYCLE", 300)),
+            "connect_args": pg_connect_args
+        })
 else:
     engine_kwargs.update({
         "poolclass": NullPool,
