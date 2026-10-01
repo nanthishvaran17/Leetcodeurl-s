@@ -12,6 +12,7 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session, joinedload, defer
+from backend.time_utils import now_ist
 
 from backend.models import (
     Student, Department, LeetCodeProfileStats, LeetCodeAccount, WeeklyStudentProgress,
@@ -623,7 +624,7 @@ def _add_cover_sheet(wb, logo_path: str):
     ws["A11"].alignment = center
 
     ws.merge_cells("A12:L12")
-    ws["A12"] = f"Generated on: {datetime.datetime.now().strftime('%d %B %Y, %I:%M %p')}"
+    ws["A12"] = f"Generated on: {now_ist().strftime('%d %B %Y, %I:%M %p')}"
     ws["A12"].font = info_font
     ws["A12"].alignment = center
 
@@ -1229,7 +1230,7 @@ def generate_8_sheet_master_tracker(db: Session, current_user: Optional[User] = 
         ("Verified Profiles", verified_cnt, "Validated via LeetCode GraphQL API"),
         ("Unverified / Pending Profiles", unver_cnt, "Awaiting valid handle or sync"),
         ("Missing Username Handles", pending_cnt, "No handle specified"),
-        ("Last Audit Timestamp", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S IST"), "System Time")
+        ("Last Audit Timestamp", now_ist().strftime("%Y-%m-%d %H:%M:%S IST"), "System Time")
     ]
     for r_idx, (m, v, n) in enumerate(dq_rows, start=2):
         for c_idx, val in enumerate([m, v, n], start=1):

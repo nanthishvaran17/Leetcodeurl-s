@@ -724,7 +724,7 @@ export const AccountProfileSettings: React.FC = () => {
 
   // Dynamic Scannable Verification Payload (vCard + Official Accreditation verification)
   const qrVerificationPayload = useMemo(() => {
-    return `BEGIN:VCARD\nVERSION:3.0\nFN:${fullName || 'Faculty Member'}\nTITLE:${designation || 'Staff'}\nORG:Nandha Engineering College (Autonomous);${departmentName}\nTEL;TYPE=WORK,VOICE:${phoneNumber || '9042020879'}\nEMAIL;TYPE=WORK:${user?.email || 'nanthishvaran17@gmail.com'}\nNOTE:Institutional ID: ${institutionalId} | Status: VERIFIED ACTIVE | Auth: SHA256-${institutionalId.toLowerCase()}-verified\nURL:https://nandhaengg.org\nEND:VCARD`;
+    return `BEGIN:VCARD\r\nVERSION:3.0\r\nN:${fullName || 'Faculty Member'};;;;\r\nFN:${fullName || 'Faculty Member'}\r\nTITLE:${designation || 'Staff'}\r\nORG:Nandha Engineering College (Autonomous);${departmentName}\r\nTEL;TYPE=WORK,VOICE:${phoneNumber || '9042020879'}\r\nEMAIL;TYPE=WORK:${user?.email || 'nanthishvaran17@gmail.com'}\r\nNOTE:Institutional ID: ${institutionalId} | Status: VERIFIED ACTIVE | Auth: SHA256-${institutionalId.toLowerCase()}-verified\r\nURL:https://nandhaengg.org\r\nEND:VCARD`;
   }, [institutionalId, fullName, designation, departmentName, phoneNumber, user?.email]);
 
   // Dynamic Scannable TOTP Authenticator URI
@@ -1628,31 +1628,25 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   {/* Professional Designation / Title */}
                   <div className="space-y-1.5 sm:col-span-2">
                     <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Professional Designation / Academic Title</label>
-                    <div className="relative">
-                      <Award className="w-4 h-4 text-slate-500 dark:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        value={designation}
-                        onChange={e => setDesignation(e.target.value)}
-                        placeholder="e.g. Assistant Professor, Lead System Architect, HOD"
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      value={designation}
+                      onChange={e => setDesignation(e.target.value)}
+                      placeholder="e.g. Assistant Professor, Lead System Architect, HOD"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                    />
                   </div>
 
                   {/* Phone / Mobile Number */}
                   <div className="space-y-1.5">
                     <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Mobile / Contact Number</label>
-                    <div className="relative">
-                      <Phone className="w-4 h-4 text-slate-500 dark:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="tel"
-                        value={phoneNumber}
-                        onChange={e => setPhoneNumber(e.target.value)}
-                        placeholder="+91 9876543210"
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
-                      />
-                    </div>
+                    <input
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={e => setPhoneNumber(e.target.value)}
+                      placeholder="+91 9876543210"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                    />
                   </div>
 
                   {/* Date of Birth (DD/MM/YYYY) */}
@@ -1664,7 +1658,6 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <span className="text-xs text-brand-600 dark:text-brand-400 font-bold font-mono bg-brand-50 dark:bg-brand-950/60 px-2 py-0.5 rounded-md border border-brand-200 dark:border-brand-800/80">DD/MM/YYYY</span>
                     </div>
                     <div className="relative">
-                      <Calendar className="w-4 h-4 text-slate-500 dark:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
                         type="text"
                         value={dateOfBirth}
@@ -1676,7 +1669,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         }}
                         placeholder="DD/MM/YYYY (e.g. 15/08/1990)"
                         maxLength={10}
-                        className="w-full h-11 pl-10 pr-10 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-mono font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                        className="w-full h-11 pl-4 pr-10 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-mono font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
                       />
                       <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center">
                         <input
@@ -1715,16 +1708,13 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   {/* Office Cabin / Room Location */}
                   <div className="space-y-1.5">
                     <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Office Cabin / Room Location</label>
-                    <div className="relative">
-                      <MapPin className="w-4 h-4 text-slate-500 dark:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        value={officeLocation}
-                        onChange={e => setOfficeLocation(e.target.value)}
-                        placeholder="e.g. CS Block Room 204"
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      value={officeLocation}
+                      onChange={e => setOfficeLocation(e.target.value)}
+                      placeholder="e.g. CS Block Room 204"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                    />
                   </div>
 
                   {/* Emergency Contact Name */}
@@ -1754,46 +1744,37 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   {/* Highest Degree */}
                   <div className="space-y-1.5 sm:col-span-2">
                     <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Highest Academic Degree & Institution</label>
-                    <div className="relative">
-                      <GraduationCap className="w-4 h-4 text-slate-500 dark:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        value={highestDegree}
-                        onChange={e => setHighestDegree(e.target.value)}
-                        placeholder="e.g. M.E. Computer Science & Engineering • Anna University"
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      value={highestDegree}
+                      onChange={e => setHighestDegree(e.target.value)}
+                      placeholder="e.g. M.E. Computer Science & Engineering • Anna University"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                    />
                   </div>
 
                   {/* Research Specialization */}
                   <div className="space-y-1.5 sm:col-span-2">
                     <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Specialization & Research Domains</label>
-                    <div className="relative">
-                      <BookOpen className="w-4 h-4 text-slate-500 dark:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        value={specialization}
-                        onChange={e => setSpecialization(e.target.value)}
-                        placeholder="e.g. Algorithms, Distributed Cloud Systems, Deep Learning"
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      value={specialization}
+                      onChange={e => setSpecialization(e.target.value)}
+                      placeholder="e.g. Algorithms, Distributed Cloud Systems, Deep Learning"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                    />
                   </div>
 
                   {/* Courses Taught */}
                   <div className="space-y-1.5 sm:col-span-2">
                     <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Courses & Lab Subjects Handling</label>
-                    <div className="relative">
-                      <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        value={coursesTaught}
-                        onChange={e => setCoursesTaught(e.target.value)}
-                        placeholder="e.g. CS8451 Design & Analysis of Algorithms, Data Structures Lab"
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      value={coursesTaught}
+                      onChange={e => setCoursesTaught(e.target.value)}
+                      placeholder="e.g. CS8451 Design & Analysis of Algorithms, Data Structures Lab"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                    />
                   </div>
 
                   {/* Faculty Bio with Templates */}

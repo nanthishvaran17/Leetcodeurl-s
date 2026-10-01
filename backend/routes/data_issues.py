@@ -1,5 +1,6 @@
 import datetime
 import io
+from backend.time_utils import now_ist
 from typing import List, Optional, Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -575,7 +576,7 @@ def generate_data_issues_excel_bytes(
     # Subtitle Block (Row 2) - Dark Navy
     ws.merge_cells("A2:O2")
     sub_cell = ws["A2"]
-    date_str = datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
+    date_str = now_ist().strftime("%d %b %Y, %I:%M %p IST")
     if student_ids and student_ids.strip():
         sub_cell.value = f"Selected Student Data Quality Audit Report • Generated: {date_str} • ({len(students_data)} Selected Records)"
     else:
@@ -768,7 +769,7 @@ def export_issues_excel(
         db=db, department=department, year_level=year_level, 
         issue_type=issue_type, search=search, student_ids=student_ids
     )
-    date_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    date_str = now_ist().strftime("%Y-%m-%d")
     filename = f"NANDHA_Data_Issues_Report_{date_str}.xlsx"
     return StreamingResponse(
         io.BytesIO(excel_bytes),
@@ -792,7 +793,7 @@ def export_issues_csv(
         db=db, department=department, year_level=year_level, 
         issue_type=issue_type, search=search, student_ids=student_ids
     )
-    date_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    date_str = now_ist().strftime("%Y-%m-%d")
     filename = f"NANDHA_Data_Issues_Report_{date_str}.csv"
     return StreamingResponse(
         io.BytesIO(csv_bytes),

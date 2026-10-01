@@ -3,7 +3,7 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 import datetime
-
+from backend.time_utils import now_ist
 def generate_comprehensive_excel(db) -> bytes:
     """
     Generates a master institutional Excel workbook (.xlsx) containing:
@@ -48,7 +48,7 @@ def generate_comprehensive_excel(db) -> bytes:
     ws_summary['A1'].alignment = align_center
 
     ws_summary.merge_cells('A2:M2')
-    ws_summary['A2'] = f"LEETCODE PERFORMANCE WEEKLY REPORT — Date: {datetime.datetime.now().strftime('%d.%m.%Y')}"
+    ws_summary['A2'] = f"LEETCODE PERFORMANCE WEEKLY REPORT — Date: {now_ist().strftime('%d.%m.%Y')}"
     ws_summary['A2'].font = font_sub
     ws_summary['A2'].fill = brand_fill
     ws_summary['A2'].alignment = align_center
@@ -165,7 +165,7 @@ def generate_comprehensive_excel(db) -> bytes:
         ws['A1'].alignment = align_center
 
         ws.merge_cells('A2:J2')
-        ws['A2'] = f"Total Students: {len(filtered_students)} | Generated: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M')}"
+        ws['A2'] = f"Total Students: {len(filtered_students)} | Generated: {now_ist().strftime('%d.%m.%Y %H:%M')}"
         ws['A2'].font = font_sub
         ws['A2'].fill = brand_fill
         ws['A2'].alignment = align_center

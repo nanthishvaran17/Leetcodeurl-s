@@ -2,6 +2,7 @@ import os
 import io
 import datetime
 import json
+from backend.time_utils import now_ist
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, Query, HTTPException, Request, Response
 from fastapi.responses import FileResponse, StreamingResponse
@@ -1281,7 +1282,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     avg_acc = round(sum(float(c.get("acceptance_rate", 0) or 0) for c in candidates) / tot_cnt, 1) if tot_cnt > 0 else 0
     avg_rat = round(sum(float(c.get("contest_rating", 0) or 0) for c in candidates) / tot_cnt, 1) if tot_cnt > 0 else 0
 
-    date_str = datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
+    date_str = now_ist().strftime("%d %b %Y, %I:%M %p IST")
 
     # ==========================================
     # SHEET 1: Student Intelligence (Main Executive Report)
@@ -1670,7 +1671,7 @@ def export_candidates_excel_post(payload: ExportExcelPayload):
         candidates=payload.candidates or [],
         filters_desc=payload.filters_desc or "Default Filters"
     )
-    filename = f"NANDHA_Management_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    filename = f"NANDHA_Management_Report_{now_ist().strftime('%Y%m%d_%H%M%S')}.xlsx"
     headers = {"Content-Disposition": f"attachment; filename={filename}"}
     return StreamingResponse(
         io.BytesIO(excel_bytes),
@@ -1722,7 +1723,7 @@ def export_candidates_excel_get(
     candidates = search_res.get("candidates", [])
     filters_desc = f"Department = {department} | Language = {primary_language} | Year = {year_level}"
     excel_bytes = generate_hr_candidate_finder_excel(candidates=candidates, filters_desc=filters_desc)
-    filename = f"NANDHA_Management_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    filename = f"NANDHA_Management_Report_{now_ist().strftime('%Y%m%d_%H%M%S')}.xlsx"
     headers = {"Content-Disposition": f"attachment; filename={filename}"}
     return StreamingResponse(
         io.BytesIO(excel_bytes),

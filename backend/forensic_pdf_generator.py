@@ -4,6 +4,7 @@ import hashlib
 import datetime
 import qrcode
 from typing import Optional
+from backend.time_utils import now_ist
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -370,7 +371,7 @@ def generate_forensic_audit_pdf(
             Paragraph("<b>Source Engine:</b>", body_style),
             Paragraph(v_data.get("sourceEngine", "LeetCode GraphQL API"), body_style),
             Paragraph("<b>Retrieved Timestamp:</b>", body_style),
-            Paragraph(v_data.get("retrievedAt") or datetime.datetime.now().strftime("%d %b %Y, %I:%M:%S %p IST"), body_style)
+            Paragraph(v_data.get("retrievedAt") or now_ist().strftime("%d %b %Y, %I:%M:%S %p IST"), body_style)
         ],
         [
             Paragraph("<b>SHA-256 Checksum:</b>", body_style),
