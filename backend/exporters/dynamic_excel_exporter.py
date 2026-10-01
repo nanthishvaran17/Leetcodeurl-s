@@ -290,7 +290,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
     # Row 5: Metadata Block (Session Date, Timestamp, Scope Roster)
     from backend.time_utils import now_ist, format_ist_datetime
-    now_str = format_ist_datetime(now_ist())
+    now_str = dataset.get("generatedAtIST") or dataset.get("generated_at") or format_ist_datetime(now_ist())
     meta_str = f"Session Date: {session_date or 'N/A'}   |   Department: {dept}   |   Year: {year}   |   Total Roster: {len(rows)} Students   |   Generated: {now_str}"
     ws.merge_cells(f"A5:{last_col}5")
     for c in range(1, cols + 1):
@@ -601,6 +601,124 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
     # Add AutoFilter so users can filter by Department, Year, Status, etc. on Row 6
     ws.auto_filter.ref = f"A{header_row_idx}:{last_col}{len(rows) + header_row_idx}"
+
+    # Generate Extra Sheet: 12th Cutoff Band Intelligence
+    # First, try to use pre-calculated summary from dataset if available
+    cutoff_summary = dataset.get("cutoffBandSummary") or dataset.get("cutoff_band_summary")
+    if not cutoff_summary and rows:
+        # Compute it on the fly from rows
+        from typing import List, Dict, Any
+        CUTOFF_BANDS = [
+            {"label": "190+ Cut-off",      "min": 190.0, "max": 200.0},
+            {"label": "180+ Cut-off",      "min": 180.0, "max": 189.99},
+            {"label": "170–179",           "min": 170.0, "max": 179.99},
+            {"label": "160–169",           "min": 160.0, "max": 169.99},
+            {"label": "150–159",           "min": 150.0, "max": 159.99},
+            {"label": "140–149",           "min": 140.0, "max": 149.99},
+            {"label": "Below 140",         "min": 0.0,   "max": 139.99},
+            {"label": "Not Recorded",      "min": None,  "max": None},
+        ]
+        
+        computed_summary = []
+        for band in CUTOFF_BANDS:
+            b_total = 0
+            b_active = 0
+            b_solved = 0
+            b_4sol = 0
+            for r in rows:
+                c_val = r.get("twelfth_cutoff") or r.get("Twelfth Cutoff")
+                
+                try:
+                    co = float(c_val) if c_val is not None and str(c_val).strip() not in ("—", "None", "") else None
+                except ValueError:
+                    co = None
+
+                if band["min"] is None:
+                    if co is None:
+                        b_total += 1
+                        tot_sol = int(r.get("solved") or r.get("total_solved") or 0)
+                        b_solved += tot_sol
+                        if tot_sol > 0: b_active += 1
+                        if tot_sol >= 4: b_4sol += 1
+                else:
+                    if co is not None and band["min"] <= co <= band["max"]:
+                        b_total += 1
+                        tot_sol = int(r.get("solved") or r.get("total_solved") or 0)
+                        b_solved += tot_sol
+                        if tot_sol > 0: b_active += 1
+                        if tot_sol >= 4: b_4sol += 1
+                        
+            if b_total > 0:
+                computed_summary.append({
+                    "band": band["label"],
+                    "total": b_total,
+                    "active_solvers": b_active,
+                    "total_solved": b_solved,
+                    "solvers_4": b_4sol,
+                    "avg_solved": round(b_solved / max(b_active, 1), 2),
+                    "attendance_pct": round((b_active / max(b_total, 1)) * 100, 2)
+                })
+        cutoff_summary = computed_summary
+
+    if cutoff_summary:
+        ws_cutoff = wb.create_sheet(title="12th Cutoff Band Intelligence")
+        ws_cutoff.sheet_view.showGridLines = True
+        
+        _apply_thin_border = lambda cell: setattr(cell, 'border', openpyxl.styles.Border(
+            left=openpyxl.styles.Side(style='thin', color='E2E8F0'),
+            right=openpyxl.styles.Side(style='thin', color='E2E8F0'),
+            top=openpyxl.styles.Side(style='thin', color='E2E8F0'),
+            bottom=openpyxl.styles.Side(style='thin', color='E2E8F0')
+        ))
+
+        # Title
+        ws_cutoff.merge_cells("A1:H1")
+        title_cell = ws_cutoff["A1"]
+        title_cell.value = "12TH CUTOFF BAND INTELLIGENCE"
+        title_cell.font = openpyxl.styles.Font(name="Arial", size=14, bold=True, color="1E293B")
+        title_cell.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+        ws_cutoff.row_dimensions[1].height = 30
+        
+        # Headers
+        c_headers = ["S.No", "12th Cutoff Band", "Total Students", "Active Solvers", "Participation %", "Total Solved", "Avg Solved", "4/4 Solvers"]
+        for c_i, h in enumerate(c_headers, 1):
+            c = ws_cutoff.cell(row=3, column=c_i, value=h)
+            c.font = openpyxl.styles.Font(name="Arial", size=10, bold=True, color="FFFFFF")
+            c.fill = openpyxl.styles.PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
+            c.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+            _apply_thin_border(c)
+        ws_cutoff.row_dimensions[3].height = 25
+
+        # Data
+        r_start = 4
+        for idx, row_data in enumerate(cutoff_summary, 1):
+            r_idx = r_start + idx - 1
+            band = str(row_data.get("band") or row_data.get("band_name") or "Unknown")
+            tot = int(row_data.get("total", row_data.get("total_students", 0)))
+            act = int(row_data.get("active_solvers", row_data.get("attended", 0)))
+            pct_val = row_data.get("attendance_pct", row_data.get("participation_pct", 0.0))
+            p_pct = f"{pct_val:.2f}%" if isinstance(pct_val, float) else pct_val
+            tot_sol = int(row_data.get("total_solved", row_data.get("total_solves", 0)))
+            avg_sol = float(row_data.get("avg_solved", row_data.get("avg_solves", 0.0)))
+            p4 = int(row_data.get("solvers_4", row_data.get("perfect_solvers", 0)))
+            
+            vals = [idx, band, tot, act, p_pct, tot_sol, avg_sol, p4]
+            for c_i, v in enumerate(vals, 1):
+                c = ws_cutoff.cell(row=r_idx, column=c_i, value=v)
+                c.font = openpyxl.styles.Font(name="Arial", size=10)
+                c.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+                _apply_thin_border(c)
+            ws_cutoff.row_dimensions[r_idx].height = 22
+
+        # Widths
+        ws_cutoff.column_dimensions["A"].width = 8
+        ws_cutoff.column_dimensions["B"].width = 25
+        ws_cutoff.column_dimensions["C"].width = 16
+        ws_cutoff.column_dimensions["D"].width = 16
+        ws_cutoff.column_dimensions["E"].width = 18
+        ws_cutoff.column_dimensions["F"].width = 16
+        ws_cutoff.column_dimensions["G"].width = 16
+        ws_cutoff.column_dimensions["H"].width = 16
 
     output = io.BytesIO()
     wb.save(output)

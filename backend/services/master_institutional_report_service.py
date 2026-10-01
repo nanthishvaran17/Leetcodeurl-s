@@ -827,9 +827,16 @@ def generate_master_10_sheet_workbook(
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "03 Contest Attendance":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
-            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Attendance Status", "Status"]
-            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["attendance"], s["status"]] for idx, s in enumerate(normalized_students)]
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=10)
+            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Attendance Status", "Live", "Virtual", "Evidence Summary"]
+            rows = []
+            for idx, s in enumerate(normalized_students):
+                is_virt = bool(s.get("is_virtual")) or s.get("status") in ("VIRTUAL", "VIRTUAL_PRACTICE")
+                is_live = s["is_att"] and not is_virt
+                live_str = "YES" if is_live else "NO"
+                virt_str = "YES" if is_virt else "NO"
+                ev_label = "VERIFIED_LIVE_CONTEST_EVIDENCE" if is_live else ("VERIFIED_VIRTUAL_PRACTICE_EVIDENCE" if is_virt else f"NO_{contest_title.upper().replace(' ', '_')}_EVIDENCE")
+                rows.append([idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["attendance"], live_str, virt_str, ev_label])
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "04 Contest Performance":
@@ -838,9 +845,9 @@ def generate_master_10_sheet_workbook(
                 headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Q1", "Q2", "Q3", "Q4", "Solved", "Mentor Signal"]
                 rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["mentor_signal"]] for idx, s in enumerate(normalized_students)]
             else:
-                write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=13)
-                headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Attendance", "Q1 Time", "Q2 Time", "Q3 Time", "Q4 Time", "Contest Solved", "Total Time"]
-                rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["attendance"], "—", "—", "—", "—", s["solved"], "—"] for idx, s in enumerate(normalized_students)]
+                write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=12)
+                headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Attendance", "Q1", "Q2", "Q3", "Q4", "Contest Solved"]
+                rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["attendance"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"]] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "05 Top Performers":

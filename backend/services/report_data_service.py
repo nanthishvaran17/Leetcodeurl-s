@@ -313,7 +313,8 @@ def fetch_normalized_students(
             rating=round(st.contest_rating, 1) if (is_verified and st and st.contest_rating) else None,
             global_rank=st.contest_global_ranking if (is_verified and st and st.contest_global_ranking) else None,
             category=category,
-            status="VERIFIED" if is_verified else "UNVERIFIED"
+            status="VERIFIED" if is_verified else "UNVERIFIED",
+            twelfth_cutoff=float(s.twelfth_cutoff) if (hasattr(s, 'twelfth_cutoff') and s.twelfth_cutoff is not None) else None
         ))
 
     # Centralized Sorting Logic: Total Solved (DESC) -> Rating (DESC) -> Name (ASC)

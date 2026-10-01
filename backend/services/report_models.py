@@ -34,6 +34,7 @@ class StudentRow(BaseModel):
     college_rank: Optional[int] = None
     category: str = "0 Solved"
     status: str = "UNVERIFIED"
+    twelfth_cutoff: Optional[float] = None
 
 class ContestRow(BaseModel):
     s_no: int

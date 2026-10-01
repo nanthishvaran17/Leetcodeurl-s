@@ -1062,14 +1062,14 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   key={key}
                   className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950/40 border border-slate-100 dark:border-slate-800"
                 >
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  <span className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-200 tracking-wider">
                     {key.replace(/([A-Z])/g, ' $1')}
                   </span>
                   <div className="flex items-center gap-1.5 mt-1">
                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                     <span className="text-xs font-black text-slate-900 dark:text-white">{item.status}</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-0.5">{item.timeAgo}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{item.timeAgo}</p>
                 </div>
               ))}
             </div>
@@ -1132,18 +1132,22 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               {(data?.recentAudits || []).slice(0, 3).map((audit: any) => (
                 <div
                   key={audit.id}
-                  className="p-3 rounded-2xl bg-slate-50/70 dark:bg-navy-950/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 text-xs font-bold"
+                  className="p-3 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-navy-800 flex items-center justify-between gap-4 text-xs font-bold border-l-4 border-l-indigo-400 dark:border-l-indigo-500"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-[11px] text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="font-mono text-[11px] text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 px-2 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800 shrink-0">
                       {audit.timestamp}
                     </span>
-                    <div>
-                      <p className="text-slate-900 dark:text-white">{audit.action}</p>
-                      <p className="text-[11px] text-slate-500 font-normal">{audit.description || audit.user}</p>
+                    <div className="min-w-0">
+                      <p className="text-slate-900 dark:text-white font-black text-[11px] uppercase tracking-wide truncate">
+                        {audit.action}
+                      </p>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-0.5 truncate">
+                        {audit.description || audit.user}
+                      </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                  <span className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shrink-0">
                     {audit.status}
                   </span>
                 </div>

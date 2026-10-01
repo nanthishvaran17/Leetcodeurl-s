@@ -185,7 +185,7 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
     
     # Add Download Timestamp
     from backend.time_utils import now_ist, format_ist_datetime
-    now_str = format_ist_datetime(now_ist())
+    now_str = dataset.get("generatedAtIST") or dataset.get("generated_at") or format_ist_datetime(now_ist())
     elements.append(Paragraph(f"Generated at: {now_str}", timestamp_style))
     
     if not rows:

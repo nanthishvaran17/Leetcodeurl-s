@@ -337,6 +337,81 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         d_info["attendance_pct"] = round((act / max(tot, 1)) * 100, 2)
         dept_summary_list.append(d_info)
 
+    # ── Year-wise Breakdown (per-year aggregation across all filtered students) ──
+    YEAR_ORDER = ["1", "2", "3", "4", "I", "II", "III", "IV"]
+    YEAR_LABELS = {
+        "1": "I Year", "2": "II Year", "3": "III Year", "4": "IV Year",
+        "I": "I Year", "II": "II Year", "III": "III Year", "IV": "IV Year"
+    }
+    year_breakdown: Dict[str, Any] = {}
+    for s in students:
+        yr_raw = (s.year or "").strip().upper()
+        yr_label = YEAR_LABELS.get(yr_raw, yr_raw or "Unknown")
+        yr_key = yr_label
+        if yr_key not in year_breakdown:
+            year_breakdown[yr_key] = {
+                "year": yr_label,
+                "total": 0, "verified": 0, "active_solvers": 0,
+                "total_solved": 0, "solvers_4": 0, "_sort_key": YEAR_ORDER.index(yr_raw) if yr_raw in YEAR_ORDER else 99
+            }
+        year_breakdown[yr_key]["total"] += 1
+        if s.status == "VERIFIED" or (s.total_solved or 0) > 0:
+            year_breakdown[yr_key]["verified"] += 1
+        t_sol = s.total_solved or 0
+        year_breakdown[yr_key]["total_solved"] += t_sol
+        if t_sol > 0:
+            year_breakdown[yr_key]["active_solvers"] += 1
+        if t_sol >= 4:
+            year_breakdown[yr_key]["solvers_4"] += 1
+
+    year_summary_list = []
+    for yr_key, yr_info in sorted(year_breakdown.items(), key=lambda x: x[1]["_sort_key"]):
+        tot = yr_info["total"]
+        act = yr_info["active_solvers"]
+        sol = yr_info["total_solved"]
+        yr_info["avg_solved"] = round(sol / max(act, 1), 2)
+        yr_info["attendance_pct"] = round((act / max(tot, 1)) * 100, 2)
+        yr_info.pop("_sort_key", None)
+        year_summary_list.append(yr_info)
+
+    # ── Cutoff Band Breakdown (based on 12th std cutoff marks) ──
+    CUTOFF_BANDS = [
+        {"label": "180+ Cut-off",  "min": 180.0, "max": 999.0},
+        {"label": "170–179",       "min": 170.0, "max": 179.99},
+        {"label": "160–169",       "min": 160.0, "max": 169.99},
+        {"label": "150–159",       "min": 150.0, "max": 159.99},
+        {"label": "140–149",       "min": 140.0, "max": 149.99},
+        {"label": "Below 140",     "min": 0.0,   "max": 139.99},
+        {"label": "Not Recorded",  "min": None,  "max": None},
+    ]
+    cutoff_band_breakdown: list = []
+    for band in CUTOFF_BANDS:
+        band_students = []
+        for s in students:
+            co = s.twelfth_cutoff
+            if band["min"] is None:
+                if co is None:
+                    band_students.append(s)
+            else:
+                if co is not None and band["min"] <= co <= band["max"]:
+                    band_students.append(s)
+        if not band_students:
+            continue
+        b_total = len(band_students)
+        b_active = sum(1 for s in band_students if (s.total_solved or 0) > 0)
+        b_solved = sum((s.total_solved or 0) for s in band_students)
+        b_4sol  = sum(1 for s in band_students if (s.total_solved or 0) >= 4)
+        cutoff_band_breakdown.append({
+            "band": band["label"],
+            "total": b_total,
+            "active_solvers": b_active,
+            "total_solved": b_solved,
+            "solvers_4": b_4sol,
+            "avg_solved": round(b_solved / max(b_active, 1), 2),
+            "attendance_pct": round((b_active / max(b_total, 1)) * 100, 2),
+        })
+
+
     # Faculty / Mentor Breakdown
     faculty_breakdown = {}
     for s in students:
@@ -415,6 +490,8 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         "metrics": metrics_dict,
         "distribution": distribution,
         "departmentSummary": dept_summary_list,
+        "yearSummary": year_summary_list,
+        "cutoffBandSummary": cutoff_band_breakdown,
         "facultySummary": faculty_summary_list,
         "dataQuality": data_quality.model_dump(),
         "topStudents": top_students,

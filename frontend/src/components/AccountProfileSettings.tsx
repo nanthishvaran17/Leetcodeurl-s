@@ -1821,8 +1821,14 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </div>
               </div>
 
+              {/* Academic Badges & Recognitions Picker with Lucide Icons */}
+              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 gap-2 sm:gap-0">
+                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2 shrink-0">
+                    <Award className="w-4 h-4 text-amber-500 shrink-0" /> Academic & Professional Badges
+                  </h3>
+                  <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">Displays on ID Card & Profile</span>
                 </div>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {AVAILABLE_BADGES.map(b => {
                     const isSelected = selectedBadges.includes(b.id);
@@ -1855,36 +1861,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </div>
               </div>
 
-              {/* Languages Spoken */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-indigo-500" /> Language Proficiencies
-                  </h3>
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Multi-lingual Communication</span>
-                </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {AVAILABLE_LANGUAGES.map(lang => {
-                    const isSelected = selectedLanguages.includes(lang);
-                    return (
-                      <button
-                        key={lang}
-                        type="button"
-                        onClick={() => handleToggleLanguage(lang)}
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all border-2 cursor-pointer flex items-center gap-1.5 ${
-                          isSelected 
-                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs' 
-                            : 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-indigo-400'
-                        }`}
-                      >
-                        <span>{lang}</span>
-                        {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
 
             </div>
 
@@ -2011,7 +1988,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       value={linkedinUrl}
                       onChange={e => setLinkedinUrl(e.target.value)}
                       placeholder="https://linkedin.com/in/username"
-                      className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:border-brand-500"
+                      className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:outline-none focus-visible:outline-none focus:border-brand-500 focus:ring-0 focus:ring-offset-0"
+                      style={{ boxShadow: 'none' }}
+                      onFocus={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.outline = 'none'; }}
                     />
                   </div>
 
@@ -2022,7 +2001,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       value={githubUrl}
                       onChange={e => setGithubUrl(e.target.value)}
                       placeholder="https://github.com/username"
-                      className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:border-brand-500"
+                      className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:outline-none focus-visible:outline-none focus:border-brand-500 focus:ring-0 focus:ring-offset-0"
+                      style={{ boxShadow: 'none' }}
+                      onFocus={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.outline = 'none'; }}
                     />
                   </div>
 
@@ -2033,7 +2014,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       value={scholarUrl}
                       onChange={e => setScholarUrl(e.target.value)}
                       placeholder="https://scholar.google.com/citations?user=..."
-                      className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:border-brand-500"
+                      className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:outline-none focus-visible:outline-none focus:border-brand-500 focus:ring-0 focus:ring-offset-0"
+                      style={{ boxShadow: 'none' }}
+                      onFocus={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.outline = 'none'; }}
                     />
                   </div>
 
@@ -2045,7 +2028,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         value={orcidId}
                         onChange={e => setOrcidId(e.target.value)}
                         placeholder="0000-0002-1825-0097"
-                        className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:border-brand-500 font-mono"
+                        className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:outline-none focus-visible:outline-none focus:border-brand-500 focus:ring-0 focus:ring-offset-0 font-mono"
+                        style={{ boxShadow: 'none' }}
+                        onFocus={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.outline = 'none'; }}
                       />
                     </div>
 
@@ -2056,17 +2041,43 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         value={leetcodeHandle}
                         onChange={e => setLeetcodeHandle(e.target.value)}
                         placeholder="nanthish_nec"
-                        className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:border-brand-500 font-mono"
+                        className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:outline-none focus-visible:outline-none focus:border-brand-500 focus:ring-0 focus:ring-offset-0 font-mono"
+                        style={{ boxShadow: 'none' }}
+                        onFocus={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.outline = 'none'; }}
                       />
-              {/* Academic Badges & Recognitions Picker with Lucide Icons */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 gap-2 sm:gap-0">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2 shrink-0">
-                    <Award className="w-4 h-4 text-amber-500 shrink-0" /> Academic & Professional Badges
-                  </h3>
-                  <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">Displays on ID Card & Profile</span>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Languages Spoken */}
+              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
+                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-indigo-500" /> Language Proficiencies
+                  </h3>
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Multi-lingual Communication</span>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {AVAILABLE_LANGUAGES.map(lang => {
+                    const isSelected = selectedLanguages.includes(lang);
+                    return (
+                      <button
+                        key={lang}
+                        type="button"
+                        onClick={() => handleToggleLanguage(lang)}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all border-2 cursor-pointer flex items-center gap-1.5 ${
+                          isSelected 
+                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs' 
+                            : 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-indigo-400'
+                        }`}
+                      >
+                        <span>{lang}</span>
+                        {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

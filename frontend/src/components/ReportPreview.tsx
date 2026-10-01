@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Trophy, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Flame, Filter, Building2, GraduationCap } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Trophy, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Flame, Filter, Building2, GraduationCap, Target } from 'lucide-react';
 import api from '../services/api';
 import { FullScreenLoadingOverlay } from './ui/FullScreenLoadingOverlay';
 
@@ -1860,6 +1860,123 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   </div>
                 </div>
               )}
+
+              {/* Year-wise Intelligence Summary Table (HOD Report) */}
+              {!isWeeklyPerformance && ['HOD_DEPARTMENT_INTELLIGENCE', 'PRINCIPAL_EXECUTIVE', 'MANAGEMENT_EXECUTIVE_SUMMARY'].includes(rType) && report.yearSummary && Array.isArray(report.yearSummary) && report.yearSummary.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
+                    <GraduationCap className="w-4 h-4 text-indigo-500" />
+                    <span>Year-wise Intelligence Summary</span>
+                  </h3>
+                  {/* Mobile Card View */}
+                  <div className="block sm:hidden print:hidden space-y-2.5">
+                    {report.yearSummary.map((y: any, idx: number) => (
+                      <div key={idx} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-xs space-y-2">
+                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                          <h4 className="text-xs font-bold text-indigo-700 dark:text-indigo-300">{y.year}</h4>
+                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">{y.attendance_pct}% Active</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div><span className="text-slate-500">Students:</span> <span className="font-bold text-slate-900 dark:text-white">{y.total}</span></div>
+                          <div><span className="text-slate-500">Active Solvers:</span> <span className="font-bold text-slate-900 dark:text-white">{y.active_solvers}</span></div>
+                          <div><span className="text-slate-500">Total Solved:</span> <span className="font-bold text-slate-900 dark:text-white">{y.total_solved?.toLocaleString()}</span></div>
+                          <div><span className="text-slate-500">4/4 Solvers:</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{y.solvers_4}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Desktop Table View */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
+                    <table className="w-full text-left text-xs min-w-[520px]">
+                      <thead className="bg-[#2F5D8A] text-white font-black uppercase">
+                        <tr>
+                          <th className="px-4 py-3 text-center">S.No</th>
+                          <th className="px-4 py-3">Academic Year</th>
+                          <th className="px-4 py-3 text-center">Total Students</th>
+                          <th className="px-4 py-3 text-center">Active Solvers</th>
+                          <th className="px-4 py-3 text-center">Participation %</th>
+                          <th className="px-4 py-3 text-right">Total Solved</th>
+                          <th className="px-4 py-3 text-right">Avg Solved</th>
+                          <th className="px-4 py-3 text-center">4/4 Solvers</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                        {report.yearSummary.map((y: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
+                            <td className="px-4 py-2.5 text-center font-mono text-[11px] font-black text-slate-900 dark:text-slate-100">{idx + 1}</td>
+                            <td className="px-4 py-2.5 font-black text-indigo-700 dark:text-indigo-300">{y.year}</td>
+                            <td className="px-4 py-2.5 text-center font-black">{y.total}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{y.active_solvers}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{y.attendance_pct}%</td>
+                            <td className="px-4 py-2.5 text-right font-black text-slate-950 dark:text-white">{y.total_solved?.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-right font-mono font-black">{y.avg_solved}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{y.solvers_4}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Cutoff Band Intelligence Table (HOD Report) */}
+              {!isWeeklyPerformance && ['HOD_DEPARTMENT_INTELLIGENCE', 'PRINCIPAL_EXECUTIVE', 'MANAGEMENT_EXECUTIVE_SUMMARY'].includes(rType) && report.cutoffBandSummary && Array.isArray(report.cutoffBandSummary) && report.cutoffBandSummary.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
+                    <Target className="w-4 h-4 text-rose-500" />
+                    <span>12th Cutoff Band Intelligence</span>
+                  </h3>
+                  {/* Mobile Card View */}
+                  <div className="block sm:hidden print:hidden space-y-2.5">
+                    {report.cutoffBandSummary.map((b: any, idx: number) => (
+                      <div key={idx} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-xs space-y-2">
+                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                          <h4 className="text-xs font-bold text-rose-700 dark:text-rose-300">{b.band}</h4>
+                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">{b.attendance_pct}% Active</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div><span className="text-slate-500">Students:</span> <span className="font-bold text-slate-900 dark:text-white">{b.total}</span></div>
+                          <div><span className="text-slate-500">Active Solvers:</span> <span className="font-bold text-slate-900 dark:text-white">{b.active_solvers}</span></div>
+                          <div><span className="text-slate-500">Total Solved:</span> <span className="font-bold text-slate-900 dark:text-white">{b.total_solved?.toLocaleString()}</span></div>
+                          <div><span className="text-slate-500">Avg Solved:</span> <span className="font-mono font-bold text-slate-900 dark:text-white">{b.avg_solved}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Desktop Table View */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
+                    <table className="w-full text-left text-xs min-w-[520px]">
+                      <thead className="bg-[#8A4054] text-white font-black uppercase">
+                        <tr>
+                          <th className="px-4 py-3 text-center">S.No</th>
+                          <th className="px-4 py-3">12th Cutoff Band</th>
+                          <th className="px-4 py-3 text-center">Total Students</th>
+                          <th className="px-4 py-3 text-center">Active Solvers</th>
+                          <th className="px-4 py-3 text-center">Participation %</th>
+                          <th className="px-4 py-3 text-right">Total Solved</th>
+                          <th className="px-4 py-3 text-right">Avg Solved</th>
+                          <th className="px-4 py-3 text-center">4/4 Solvers</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                        {report.cutoffBandSummary.map((b: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
+                            <td className="px-4 py-2.5 text-center font-mono text-[11px] font-black text-slate-900 dark:text-slate-100">{idx + 1}</td>
+                            <td className="px-4 py-2.5 font-black text-rose-700 dark:text-rose-300">{b.band}</td>
+                            <td className="px-4 py-2.5 text-center font-black">{b.total}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{b.active_solvers}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{b.attendance_pct}%</td>
+                            <td className="px-4 py-2.5 text-right font-black text-slate-950 dark:text-white">{b.total_solved?.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-right font-mono font-black">{b.avg_solved}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{b.solvers_4}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
 
               {/* Faculty / Staff Allocation Performance Table */}
               {!isWeeklyPerformance && (['FACULTY_CONSOLIDATED', 'FACULTY_COORDINATOR_CONSOLIDATED'].includes(rType) || !rType) && report.facultySummary && Array.isArray(report.facultySummary) && report.facultySummary.length > 0 && (
