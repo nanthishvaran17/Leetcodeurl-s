@@ -1091,25 +1091,25 @@ export const StaffManagement: React.FC = () => {
           {previewingPhoto && (
             <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4 z-[999999]" onClose={() => setPreviewingPhoto(null)}>
               <div 
-                className="bg-slate-950/95 dark:bg-black/95 p-4 sm:p-5 rounded-3xl border border-slate-700/80 shadow-2xl max-w-sm w-full flex flex-col items-center space-y-4 relative animate-modal-content"
+                className="bg-white dark:bg-navy-900 p-4 sm:p-5 rounded-3xl border-2 border-brand-500/50 shadow-2xl max-w-sm w-full flex flex-col items-center space-y-4 relative animate-modal-content"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="w-full flex items-center justify-between pb-2 border-b border-slate-800">
+                <div className="w-full flex items-center justify-between pb-2 border-b border-slate-200 dark:border-navy-800">
                   <div className="min-w-0 flex-1 pr-2">
-                    <h4 className="text-sm font-black text-white truncate">{previewingPhoto.name}</h4>
-                    <p className="text-[10px] text-slate-400 font-mono">{previewingPhoto.id} • {previewingPhoto.role}</p>
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white truncate">{previewingPhoto.name}</h4>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">{previewingPhoto.id} • {previewingPhoto.role}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setPreviewingPhoto(null)}
-                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
+                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 transition cursor-pointer"
                     title="Close preview"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="w-full max-h-[60vh] flex items-center justify-center overflow-hidden rounded-2xl bg-slate-900 border border-slate-800/80 p-1">
+                <div className="w-full max-h-[60vh] flex items-center justify-center overflow-hidden rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 p-1">
                   <img
                     src={previewingPhoto.url}
                     alt={previewingPhoto.name}
