@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Mail, Send, RefreshCw, CheckCircle2, XCircle, Clock, AlertTriangle,
   Trash2, Plus, Users, ChevronDown, X, Eye, Loader2, RotateCcw, Download,
@@ -2039,9 +2040,9 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       )}
 
       {/* 9. DELIVERY DETAIL DRAWER / MODAL */}
-      {selectedLogDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-lg w-full p-6 shadow-lg space-y-5 relative">
+      {selectedLogDetail && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-slate-950/65 dark:bg-navy-950/80 backdrop-blur-md animate-fade-in select-none">
+          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 relative">
             <button
               onClick={() => setSelectedLogDetail(null)}
               className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full transition-colors cursor-pointer"
@@ -2113,13 +2114,14 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 10. CONFIRMATION & DUPLICATE MODALS */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-4">
+      {showConfirmModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-slate-950/65 dark:bg-navy-950/80 backdrop-blur-md animate-fade-in select-none">
+          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center space-x-3 text-brand-600 dark:text-brand-400">
               <Zap className="w-6 h-6 text-amber-400" />
               <h3 className="text-lg font-black text-slate-900 dark:text-white">Confirm Manual Dispatch</h3>
@@ -2148,12 +2150,13 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {showDuplicateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-4">
+      {showDuplicateModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-slate-950/65 dark:bg-navy-950/80 backdrop-blur-md animate-fade-in select-none">
+          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center space-x-3 text-amber-600 dark:text-amber-400">
               <AlertTriangle className="w-6 h-6" />
               <h3 className="text-lg font-black text-slate-900 dark:text-white">Duplicate Delivery Detected</h3>
@@ -2190,13 +2193,14 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 11. SCHEDULE SETTINGS MODAL */}
-      {showScheduleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-5">
+      {showScheduleModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-slate-950/65 dark:bg-navy-950/80 backdrop-blur-md animate-fade-in select-none">
+          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Settings className="w-5 h-5 text-brand-500" />
@@ -2366,13 +2370,14 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 12. ADD RECIPIENT MODAL */}
-      {showAddRecipientModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-4">
+      {showAddRecipientModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-slate-950/65 dark:bg-navy-950/80 backdrop-blur-md animate-fade-in select-none">
+          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Plus className="w-5 h-5 text-teal-500" />
@@ -2499,7 +2504,8 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Global Status Notification Modal */}

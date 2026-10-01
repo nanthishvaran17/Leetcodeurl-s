@@ -663,6 +663,8 @@ class User(Base):
     require_password_change = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True, index=True)
     last_login = Column(DateTime, nullable=True)
+    last_login_ip = Column(String(50), nullable=True)
+    last_login_device = Column(String(255), nullable=True)
     last_activity = Column(DateTime, nullable=True)
     totp_secret = Column(String(100), nullable=True)
     is_2fa_enabled = Column(Boolean, default=False)

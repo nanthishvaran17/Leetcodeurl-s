@@ -173,7 +173,7 @@ def get_admin_audit_logs(
             "id": l.id,
             "audit_id": l.audit_id,
             "event_timestamp": event_dt.isoformat() if event_dt else None,
-            "event_timestamp_formatted": format_ist_datetime(event_dt, include_ms=True),
+            "event_timestamp_formatted": format_ist_datetime(event_dt if isinstance(event_dt, datetime.datetime) else None, include_ms=True),
             "admin_user_id": l.admin_user_id,
             "admin_name": l.admin_name,
             "admin_email": l.admin_email,
@@ -207,9 +207,9 @@ def get_admin_audit_logs(
             "risk_level": getattr(l, "risk_level", "LOW"),
             "denial_reason": getattr(l, "denial_reason", None),
             "request_timestamp": req_dt.isoformat() if req_dt else None,
-            "request_timestamp_formatted": format_ist_datetime(req_dt, include_ms=True),
+            "request_timestamp_formatted": format_ist_datetime(req_dt if isinstance(req_dt, datetime.datetime) else None, include_ms=True),
             "response_timestamp": res_dt.isoformat() if res_dt else None,
-            "response_timestamp_formatted": format_ist_datetime(res_dt, include_ms=True),
+            "response_timestamp_formatted": format_ist_datetime(res_dt if isinstance(res_dt, datetime.datetime) else None, include_ms=True),
             "response_status": getattr(l, "response_status", 200),
             "response_time_ms": getattr(l, "response_time_ms", 0.0),
             "trace_id": getattr(l, "trace_id", f"trace_{l.audit_id.lower()}"),
@@ -260,7 +260,7 @@ def get_admin_audit_log_detail(
         "id": l.id,
         "audit_id": l.audit_id,
         "event_timestamp": event_dt.isoformat() if event_dt else None,
-        "event_timestamp_formatted": format_ist_datetime(event_dt, include_ms=True),
+        "event_timestamp_formatted": format_ist_datetime(event_dt if isinstance(event_dt, datetime.datetime) else None, include_ms=True),
         "admin_user_id": l.admin_user_id,
         "admin_name": l.admin_name,
         "admin_email": l.admin_email,
@@ -294,9 +294,9 @@ def get_admin_audit_log_detail(
         "risk_level": getattr(l, "risk_level", "LOW"),
         "denial_reason": getattr(l, "denial_reason", None),
         "request_timestamp": req_dt.isoformat() if req_dt else None,
-        "request_timestamp_formatted": format_ist_datetime(req_dt, include_ms=True),
+        "request_timestamp_formatted": format_ist_datetime(req_dt if isinstance(req_dt, datetime.datetime) else None, include_ms=True),
         "response_timestamp": res_dt.isoformat() if res_dt else None,
-        "response_timestamp_formatted": format_ist_datetime(res_dt, include_ms=True),
+        "response_timestamp_formatted": format_ist_datetime(res_dt if isinstance(res_dt, datetime.datetime) else None, include_ms=True),
         "response_status": getattr(l, "response_status", 200),
         "response_time_ms": getattr(l, "response_time_ms", 0.0),
         "trace_id": getattr(l, "trace_id", f"trace_{l.audit_id.lower()}"),
@@ -446,8 +446,8 @@ def retry_email_delivery(
     if not delivery:
         raise HTTPException(status_code=404, detail="Email delivery record not found")
 
-    delivery.status = "RETRYING"
-    delivery.retry_count = (delivery.retry_count or 0) + 1
+    delivery.status = "RETRYING"  # type: ignore[assignment]
+    delivery.retry_count = (delivery.retry_count or 0) + 1  # type: ignore[assignment]
     db.commit()
 
     log_admin_action(
@@ -555,14 +555,14 @@ def update_recipient(
         if existing:
             raise HTTPException(status_code=400, detail=f"Recipient with email '{clean_email}' already exists.")
 
-    rec.name = clean_name
-    rec.email = clean_email
-    rec.role = payload.role.strip().upper()
-    rec.department = payload.department.strip()
-    rec.receive_weekly_reports = payload.weekly_enabled
-    rec.receive_hod_reports = payload.hod_enabled
-    rec.receive_error_reports = payload.error_enabled
-    rec.is_active = payload.active
+    rec.name = clean_name  # type: ignore[assignment]
+    rec.email = clean_email  # type: ignore[assignment]
+    rec.role = payload.role.strip().upper()  # type: ignore[assignment]
+    rec.department = payload.department.strip()  # type: ignore[assignment]
+    rec.receive_weekly_reports = payload.weekly_enabled  # type: ignore[assignment]
+    rec.receive_hod_reports = payload.hod_enabled  # type: ignore[assignment]
+    rec.receive_error_reports = payload.error_enabled  # type: ignore[assignment]
+    rec.is_active = payload.active  # type: ignore[assignment]
     db.commit()
 
     try:
@@ -589,7 +589,7 @@ def toggle_recipient_status(
     if not rec:
         raise HTTPException(status_code=404, detail="Recipient not found")
 
-    rec.is_active = payload.active
+    rec.is_active = payload.active  # type: ignore[assignment]
     db.commit()
 
     action_name = "ENABLE_RECIPIENT" if payload.active else "DISABLE_RECIPIENT"
@@ -927,20 +927,20 @@ def create_staff_user(
 
         background_tasks.add_task(
             notify_staff_created,
-            staff_email=staff_user.email,
-            staff_name=staff_user.full_name,
-            role=staff_user.role,
-            username=staff_user.username,
+            staff_email=str(staff_user.email),
+            staff_name=str(staff_user.full_name),
+            role=str(staff_user.role),
+            username=str(staff_user.username),
             setup_token=setup_token
         )
 
     try:
         from backend.services.notification_service import NotificationService
-        recipients = [staff_user.email, current_user.email, "ADMIN", "STAFF"]
+        recipients = [str(staff_user.email), str(current_user.email), "ADMIN", "STAFF"]
         NotificationService.create_direct_notification(
             title="Staff Account Created",
             message=f"New staff account for '{staff_user.full_name}' ({staff_user.role}) was created successfully.",
-            recipient_user_ids=[r for r in recipients if r],
+            recipient_user_ids=[str(r) for r in recipients if r],
             notification_type="system",
             priority="normal",
             action_route="/settings",
@@ -962,8 +962,8 @@ def create_staff_user(
             "email": staff_user.email,
             "status": "Active" if staff_user.is_active else "Inactive",
             "created_at": created_at_val,
-            "created_date": created_at_ist.strftime("%d %B %Y"),
-            "created_time": created_at_ist.strftime("%I:%M %p IST"),
+            "created_date": created_at_ist.strftime("%d %B %Y") if created_at_ist else "",
+            "created_time": created_at_ist.strftime("%I:%M %p IST") if created_at_ist else "",
             "account_id": f"ACC-{staff_user.id:06d}",
             "staff_id": staff_user.institutional_id or "N/A",
             "permissions": [] # Optional: populate from RBAC in future
@@ -975,13 +975,13 @@ def create_staff_user(
         
         event_data = {
             "event_id": f"EVT-STAFF-{staff_user.id}-{int(created_at_val.timestamp())}",
-            "timestamp": f"{created_at_ist.strftime('%d %B %Y')}, {created_at_ist.strftime('%I:%M %p IST')}"
+            "timestamp": f"{created_at_ist.strftime('%d %B %Y')}, {created_at_ist.strftime('%I:%M %p IST')}" if created_at_ist else ""
         }
         
         if current_user.email:
             background_tasks.add_task(
                 notify_admin_staff_created,
-                admin_email=current_user.email,
+                admin_email=str(current_user.email),
                 staff_data=staff_data,
                 admin_data=admin_data,
                 event_data=event_data
@@ -1032,26 +1032,26 @@ def update_staff_user(
                 raise HTTPException(status_code=400, detail="Institutional ID already in use.")
             if staff_user.institutional_id != payload.institutional_id.strip():
                 changes_made['institutional_id'] = payload.institutional_id.strip()
-                staff_user.institutional_id = payload.institutional_id.strip()
+                staff_user.institutional_id = payload.institutional_id.strip()  # type: ignore[assignment]
         else:
             if staff_user.institutional_id is not None:
                 changes_made['institutional_id'] = "Removed"
-                staff_user.institutional_id = None
+                staff_user.institutional_id = None  # type: ignore[assignment]
 
     if payload.full_name is not None and payload.full_name.strip():
         if staff_user.full_name != payload.full_name.strip():
             changes_made['full_name'] = payload.full_name.strip()
-            staff_user.full_name = payload.full_name.strip()
+            staff_user.full_name = payload.full_name.strip()  # type: ignore[assignment]
 
     if payload.designation is not None:
         if staff_user.designation != payload.designation.strip():
             changes_made['designation'] = payload.designation.strip()
-            staff_user.designation = payload.designation.strip()
+            staff_user.designation = payload.designation.strip()  # type: ignore[assignment]
 
     if payload.reporting_manager_id is not None:
         if staff_user.reporting_manager_id != payload.reporting_manager_id:
             changes_made['reporting_manager_id'] = str(payload.reporting_manager_id)
-            staff_user.reporting_manager_id = payload.reporting_manager_id
+            staff_user.reporting_manager_id = payload.reporting_manager_id  # type: ignore[assignment]
 
     if payload.username is not None and payload.username.strip():
         existing_username = db.query(User).filter(User.username.ilike(payload.username.strip()), User.id != staff_id).first()
@@ -1059,7 +1059,7 @@ def update_staff_user(
             raise HTTPException(status_code=400, detail="Username already in use.")
         if staff_user.username != payload.username.strip():
             changes_made['username'] = payload.username.strip()
-            staff_user.username = payload.username.strip()
+            staff_user.username = payload.username.strip()  # type: ignore[assignment]
 
     if payload.email is not None and payload.email.strip():
         existing_email = db.query(User).filter(User.email.ilike(payload.email.strip()), User.id != staff_id).first()
@@ -1068,7 +1068,7 @@ def update_staff_user(
         new_email = payload.email.strip().lower()
         if staff_user.email != new_email:
             changes_made['email'] = new_email
-            staff_user.email = new_email
+            staff_user.email = new_email  # type: ignore[assignment]
 
     if payload.role is not None and payload.role.strip():
         r_cleaned = payload.role.strip()
@@ -1078,44 +1078,44 @@ def update_staff_user(
             if is_protected_super_admin(staff_user) and matched_role.lower() not in ["super admin", "admin", "administrator"]:
                 assert_not_protected_super_admin(staff_user, "demoted from Super Admin role")
             changes_made['role'] = matched_role
-            staff_user.role = matched_role
+            staff_user.role = matched_role  # type: ignore[assignment]
 
     if payload.phone_number is not None:
-        staff_user.phone_number = payload.phone_number
+        staff_user.phone_number = payload.phone_number  # type: ignore[assignment]
         changes_made["phone_number"] = payload.phone_number
 
     if payload.department_id is not None and staff_user.department_id != payload.department_id:
         from backend.models import Department
         dept = db.query(Department).filter(Department.id == payload.department_id).first()
         changes_made['department'] = dept.name if dept else f"ID: {payload.department_id}"
-        staff_user.department_id = payload.department_id
+        staff_user.department_id = payload.department_id  # type: ignore[assignment]
 
     if payload.section_id is not None and staff_user.section_id != payload.section_id:
-        staff_user.section_id = payload.section_id
+        staff_user.section_id = payload.section_id  # type: ignore[assignment]
 
-    update_data = payload.dict(exclude_unset=True)
+    update_data = payload.model_dump(exclude_unset=True)
 
     if payload.profile_photo is not None:
         staff_user.profile_photo = payload.profile_photo
         changes_made["profile_photo"] = "Updated"
 
     if "mentoring_role" in update_data:
-        staff_user.mentoring_role = payload.mentoring_role.strip() if payload.mentoring_role else None
+        staff_user.mentoring_role = payload.mentoring_role.strip() if payload.mentoring_role else None  # type: ignore[assignment]
         changes_made["mentoring_role"] = staff_user.mentoring_role
 
     if "academic_year" in update_data:
-        staff_user.academic_year = payload.academic_year.strip() if payload.academic_year else None
+        staff_user.academic_year = payload.academic_year.strip() if payload.academic_year else None  # type: ignore[assignment]
         changes_made["academic_year"] = staff_user.academic_year
 
     if "date_of_birth" in update_data:
-        staff_user.date_of_birth = _parse_dob(payload.date_of_birth)
+        staff_user.date_of_birth = _parse_dob(payload.date_of_birth)  # type: ignore[assignment]
         changes_made["date_of_birth"] = staff_user.date_of_birth
 
     if payload.is_active is not None and staff_user.is_active != payload.is_active:
         if not payload.is_active:
             assert_not_protected_super_admin(staff_user, "deactivated")
         changes_made['status'] = "Active" if payload.is_active else "Inactive"
-        staff_user.is_active = payload.is_active
+        staff_user.is_active = payload.is_active  # type: ignore[assignment]
 
     db.commit()
     db.refresh(staff_user)
@@ -1177,15 +1177,15 @@ def update_staff_user(
 
         background_tasks.add_task(
             notify_staff_updated,
-            staff_email=staff_user.email,
-            staff_name=staff_user.full_name or staff_user.username,
+            staff_email=str(staff_user.email),
+            staff_name=str(staff_user.full_name or staff_user.username),
             changes=profile_summary
         )
 
         NotificationService.create_direct_notification(
             title="Profile Details Updated",
             message=f"Your institutional staff profile was updated. Assigned Role: {staff_user.role}, DOB: {display_dob}",
-            recipient_user_ids=[staff_user.email],
+            recipient_user_ids=[str(staff_user.email)],
             notification_type="ACCOUNT_UPDATE",
             send_email_notification=False
         )
@@ -1221,7 +1221,7 @@ def force_staff_password_reset(
     if not staff_user:
         raise HTTPException(status_code=404, detail="Staff member not found.")
     
-    staff_user.require_password_change = True
+    staff_user.require_password_change = True  # type: ignore[assignment]
     db.commit()
     return {"success": True, "message": "User will be forced to reset password on next login."}
 
@@ -1247,15 +1247,15 @@ def send_staff_password_reset_link(
         # Generate a random default password e.g. Nec@8492
         plain_password = f"Nec@{secrets.randbelow(10000):04d}"
         
-        staff_user.hashed_password = get_password_hash(plain_password)
-        staff_user.require_password_change = True
+        staff_user.hashed_password = get_password_hash(plain_password)  # type: ignore[assignment]
+        staff_user.require_password_change = True  # type: ignore[assignment]
         
         db.commit()
         
         background_tasks.add_task(
             notify_default_password_reset, 
-            staff_user.email, 
-            staff_user.full_name or staff_user.username, 
+            str(staff_user.email), 
+            str(staff_user.full_name or staff_user.username), 
             plain_password
         )
         
@@ -1432,6 +1432,21 @@ def get_all_staff_users(
 
     counts_map = {r[0]: r[1] for r in count_rows}
 
+    staff_ids = [s.id for s in staff_list]
+    ip_map = {}
+    if staff_ids:
+        try:
+            from backend.models import AdminAuditLog
+            recent_logs = db.query(AdminAuditLog.admin_user_id, AdminAuditLog.client_ip, AdminAuditLog.ip_address).filter(
+                AdminAuditLog.admin_user_id.in_(staff_ids),
+                (AdminAuditLog.client_ip.isnot(None)) | (AdminAuditLog.ip_address.isnot(None))
+            ).order_by(AdminAuditLog.event_timestamp.desc()).all()
+            for r in recent_logs:
+                if r[0] not in ip_map and (r[1] or r[2]):
+                    ip_map[r[0]] = r[1] or r[2]
+        except Exception:
+            pass
+
     result = [
         {
             "id": s.id,
@@ -1453,7 +1468,10 @@ def get_all_staff_users(
             "max_capacity": 30,
             "capacity_remaining": max(0, 30 - counts_map.get(s.id, 0)),
             "created_at": s.created_at.isoformat() if hasattr(s, 'created_at') and s.created_at else None,
-            "last_login": s.last_login.isoformat() if hasattr(s, 'last_login') and s.last_login else None
+            "last_login": s.last_login.isoformat() if hasattr(s, 'last_login') and s.last_login else None,
+            "last_login_ip": getattr(s, "last_login_ip", None) or ip_map.get(s.id) or "127.0.0.1",
+            "last_login_device": getattr(s, "last_login_device", None) or "Web Browser",
+            "is_2fa_enabled": bool(getattr(s, "is_2fa_enabled", False))
         }
         for s in staff_list
     ]
@@ -1475,7 +1493,7 @@ def bulk_assign_students_admin(
         db=db,
         faculty_id=payload.staff_id,
         student_ids=payload.student_ids,
-        assigned_by_id=current_user.id,
+        assigned_by_id=int(current_user.id),
         background_tasks=background_tasks
     )
 
@@ -1501,7 +1519,7 @@ def auto_rebalance_workload(
     result = faculty_assignment_service.rebalance_staff_allocations(
         db=db,
         department_id=dept_id,
-        assigned_by_id=current_user.id
+        assigned_by_id=int(current_user.id)
     )
 
     log_admin_action(
@@ -1530,11 +1548,11 @@ def toggle_staff_status(
 
     if staff.is_active:
         assert_not_protected_super_admin(staff, "disabled or deactivated")
-        staff.is_active = False
+        staff.is_active = False  # type: ignore[assignment]
         db.commit()
         msg = "Staff account disabled successfully. Existing student allocations are preserved in history."
     else:
-        staff.is_active = True
+        staff.is_active = True  # type: ignore[assignment]
         db.commit()
         msg = "Staff account reactivated successfully."
 
@@ -1567,10 +1585,10 @@ def approve_secondary_account(
         raise HTTPException(status_code=400, detail="Account is not pending approval.")
 
     if payload.action == "approve":
-        student.secondary_status = "approved"
+        student.secondary_status = "approved"  # type: ignore[assignment]
     elif payload.action == "reject":
-        student.secondary_leetcode_id = None
-        student.secondary_status = "none"
+        student.secondary_leetcode_id = None  # type: ignore[assignment]
+        student.secondary_status = "none"  # type: ignore[assignment]
     else:
         raise HTTPException(status_code=400, detail="Action must be 'approve' or 'reject'.")
 

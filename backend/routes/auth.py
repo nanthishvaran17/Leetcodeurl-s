@@ -171,6 +171,23 @@ def create_server_admin_session(db: Session, user: User, request: Request, respo
     return raw_token, s_id
 
 
+def _record_user_login(db: Session, user: User, request: Optional[Request] = None):
+    """Records authenticated login event with real client IP, user agent, and timestamp."""
+    try:
+        now = _utcnow()
+        setattr(user, "last_login", now)
+        if request:
+            forwarded = request.headers.get("x-forwarded-for") or request.headers.get("cf-connecting-ip") or request.headers.get("x-real-ip")
+            client_ip = (forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "127.0.0.1"))
+            ua_str = request.headers.get("User-Agent", "Web Browser")
+            setattr(user, "last_login_ip", client_ip)
+            setattr(user, "last_login_device", ua_str[:250] if ua_str else "Web Browser")
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.warning(f"[AUTH_LOGIN_RECORD_FAIL] Could not update last_login: {e}")
+
+
 def uuid_hex_short() -> str:
     import uuid
     return uuid.uuid4().hex[:12]
@@ -797,11 +814,7 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Access denied: Account is inactive.")
 
-    try:
-        setattr(user, "last_login", _utcnow())
-        db.commit()
-    except Exception:
-        db.rollback()
+    _record_user_login(db, user, request)
 
     # 3. Create Server Session & Set HttpOnly Cookie (Graceful fallback)
     session_id = None
@@ -929,11 +942,7 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
 
     logger.info(f"[GOOGLE_AUTH_AUTHORIZED] User {user.username} ({user.email}) authorized via Google with role '{user.role}'.")
 
-    try:
-        setattr(user, "last_login", _utcnow())
-        db.commit()
-    except Exception:
-        db.rollback()
+    _record_user_login(db, user, request)
 
     # Step 3: Create Server Session & Set HttpOnly Cookie
     session_id = None
@@ -1096,11 +1105,7 @@ def exchange_google_auth_code(payload: ExchangeGoogleAuthCodeRequest, request: R
     if not user or not user.is_active:
         raise HTTPException(status_code=403, detail="User account is inactive or not found.")
 
-    try:
-        setattr(user, "last_login", _utcnow())
-        db.commit()
-    except Exception:
-        db.rollback()
+    _record_user_login(db, user, request)
 
     session_id = None
     refresh_token_value = None
@@ -1244,12 +1249,7 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
         except Exception:
             db.rollback()
 
-    old_last_login = user.last_login
-    try:
-        setattr(user, "last_login", _utcnow())
-        db.commit()
-    except Exception:
-        db.rollback()
+    _record_user_login(db, user, request)
 
     # Create Server Session & Set HttpOnly Cookie (Graceful fallback)
     session_id = None
@@ -1318,8 +1318,152 @@ def get_auth_session(request: Request, db: Session = Depends(get_db)):
             "department_id": user.department_id,
             "section_id": user.section_id,
             "is_active": user.is_active,
+            "phone_number": getattr(user, "phone_number", "") or "",
+            "date_of_birth": user.date_of_birth.isoformat() if getattr(user, "date_of_birth", None) else "",
+            "institutional_id": getattr(user, "institutional_id", "") or f"NEC-STAFF-{user.id:03d}",
+            "designation": getattr(user, "designation", "") or "",
+            "academic_year": getattr(user, "academic_year", "") or "",
+            "mentoring_role": getattr(user, "mentoring_role", "") or "",
             "require_password_change": getattr(user, "require_password_change", False),
             "profile_photo": getattr(user, "profile_photo", None) or "",
+            "is_2fa_enabled": bool(getattr(user, "is_2fa_enabled", False)),
+            **dept_scope
+        }
+    }
+
+
+class UpdateProfileRequest(BaseModel):
+    full_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    profile_photo: Optional[str] = None
+    designation: Optional[str] = None
+    is_2fa_enabled: Optional[bool] = None
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None
+
+
+@router.get("/me")
+def get_my_profile(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Returns the authenticated user's profile and active session details."""
+    user = get_current_user_from_request(request, db)
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthenticated")
+    
+    dept_scope = _get_user_dept_scope(db, user)
+    return {
+        "success": True,
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "full_name": getattr(user, "full_name", None) or user.username,
+            "email": user.email,
+            "role": user.role,
+            "phone_number": getattr(user, "phone_number", "") or "",
+            "date_of_birth": user.date_of_birth.isoformat() if getattr(user, "date_of_birth", None) else "",
+            "institutional_id": getattr(user, "institutional_id", "") or f"NEC-STAFF-{user.id:03d}",
+            "designation": getattr(user, "designation", "") or "",
+            "academic_year": getattr(user, "academic_year", "") or "",
+            "mentoring_role": getattr(user, "mentoring_role", "") or "",
+            "profile_photo": getattr(user, "profile_photo", "") or "",
+            "department_id": user.department_id,
+            "section_id": user.section_id,
+            "is_2fa_enabled": bool(getattr(user, "is_2fa_enabled", False)),
+            "created_at": user.created_at.isoformat() if getattr(user, "created_at", None) else "",
+            "last_login": user.last_login.isoformat() if getattr(user, "last_login", None) else "",
+            **dept_scope
+        }
+    }
+
+
+@router.put("/profile")
+def update_user_profile(
+    payload: UpdateProfileRequest,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Allows any logged-in staff member or admin to update their own personal details and password."""
+    user = get_current_user_from_request(request, db)
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthenticated")
+
+    if payload.full_name is not None:
+        user.full_name = payload.full_name.strip()
+    if payload.phone_number is not None:
+        user.phone_number = payload.phone_number.strip()
+    if payload.profile_photo is not None:
+        user.profile_photo = payload.profile_photo
+    if payload.designation is not None:
+        user.designation = payload.designation.strip()
+    if payload.is_2fa_enabled is not None:
+        setattr(user, "is_2fa_enabled", bool(payload.is_2fa_enabled))
+    if payload.date_of_birth is not None:
+        dob_str = payload.date_of_birth.strip()
+        if dob_str:
+            parsed_date = None
+            if "/" in dob_str:
+                parts = dob_str.split("/")
+                if len(parts) == 3:
+                    try:
+                        d, m, y = [int(p) for p in parts]
+                        parsed_date = datetime.date(y, m, d)
+                    except Exception:
+                        pass
+            elif "-" in dob_str:
+                parts = dob_str.split("T")[0].split("-")
+                if len(parts) == 3:
+                    try:
+                        if len(parts[0]) == 4:
+                            parsed_date = datetime.date(int(parts[0]), int(parts[1]), int(parts[2]))
+                        else:
+                            parsed_date = datetime.date(int(parts[2]), int(parts[1]), int(parts[0]))
+                    except Exception:
+                        pass
+            if parsed_date:
+                user.date_of_birth = parsed_date
+            elif not dob_str:
+                user.date_of_birth = None
+        else:
+            user.date_of_birth = None
+
+    if payload.new_password:
+        if not payload.current_password:
+            raise HTTPException(status_code=400, detail="Current password is required to change password.")
+        if not verify_password(payload.current_password, user.hashed_password):
+            raise HTTPException(status_code=400, detail="Current password entered is incorrect.")
+        if len(payload.new_password) < 6:
+            raise HTTPException(status_code=400, detail="New password must be at least 6 characters long.")
+        user.hashed_password = get_password_hash(payload.new_password)
+        user.require_password_change = False
+
+    db.commit()
+    db.refresh(user)
+    dept_scope = _get_user_dept_scope(db, user)
+
+    return {
+        "success": True,
+        "message": "Profile updated successfully.",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "full_name": getattr(user, "full_name", None) or user.username,
+            "email": user.email,
+            "role": user.role,
+            "phone_number": getattr(user, "phone_number", "") or "",
+            "date_of_birth": user.date_of_birth.isoformat() if getattr(user, "date_of_birth", None) else "",
+            "institutional_id": getattr(user, "institutional_id", "") or f"NEC-STAFF-{user.id:03d}",
+            "designation": getattr(user, "designation", "") or "",
+            "academic_year": getattr(user, "academic_year", "") or "",
+            "mentoring_role": getattr(user, "mentoring_role", "") or "",
+            "profile_photo": getattr(user, "profile_photo", "") or "",
+            "department_id": user.department_id,
+            "section_id": user.section_id,
+            "is_2fa_enabled": bool(getattr(user, "is_2fa_enabled", False)),
+            "created_at": user.created_at.isoformat() if getattr(user, "created_at", None) else "",
+            "last_login": user.last_login.isoformat() if getattr(user, "last_login", None) else "",
             **dept_scope
         }
     }

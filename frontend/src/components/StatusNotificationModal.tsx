@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
@@ -109,17 +110,19 @@ export const StatusNotificationModal: React.FC<StatusNotificationModalProps> = (
     onClose();
   };
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="notif-modal-title"
-      className="modal-overlay-responsive animate-modal-backdrop"
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-slate-950/65 dark:bg-navy-950/80 backdrop-blur-md animate-modal-backdrop select-none"
       onClick={handleCancelClick}
     >
       {/* Modal Container Card */}
       <div
-        className={`modal-container-responsive max-w-[500px] bg-slate-900/95 dark:bg-navy-950/95 backdrop-blur-2xl rounded-3xl border ${config.borderGlow} p-6 sm:p-8 text-center space-y-5 text-white animate-modal-content transition-all shadow-lg overflow-y-auto`}
+        className={`relative w-full max-w-[500px] bg-slate-900/95 dark:bg-navy-950/95 backdrop-blur-2xl rounded-3xl border ${config.borderGlow} p-6 sm:p-8 text-center space-y-5 text-white animate-modal-content transition-all shadow-2xl overflow-y-auto max-h-[90vh]`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Subtle Top Close Icon */}
@@ -178,6 +181,7 @@ export const StatusNotificationModal: React.FC<StatusNotificationModalProps> = (
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

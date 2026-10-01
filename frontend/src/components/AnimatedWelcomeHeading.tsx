@@ -83,15 +83,15 @@ export const AnimatedWelcomeHeading: React.FC<AnimatedWelcomeHeadingProps> = ({
     ? canonicalName.slice(0, displayedCount - prefixAndCommaLength)
     : '';
 
-  // Responsive font sizing based on canonicalName character length for standalone line 2
+  // Responsive font sizing based on canonicalName character length for line 2
   const nameLen = canonicalName.length;
-  let nameFontClasses = "text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl";
+  let nameFontClasses = "text-2xl sm:text-3xl md:text-4xl";
   if (nameLen > 28) {
-    nameFontClasses = "text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl";
-  } else if (nameLen > 20) {
-    nameFontClasses = "text-base xs:text-lg sm:text-2xl md:text-3xl lg:text-4xl";
-  } else if (nameLen > 14) {
-    nameFontClasses = "text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl";
+    nameFontClasses = "text-base sm:text-lg md:text-xl";
+  } else if (nameLen > 18) {
+    nameFontClasses = "text-lg sm:text-xl md:text-2xl";
+  } else if (nameLen > 12) {
+    nameFontClasses = "text-xl sm:text-2xl md:text-3xl";
   }
 
   const safeNameClassName = (nameClassName || '')
@@ -101,27 +101,27 @@ export const AnimatedWelcomeHeading: React.FC<AnimatedWelcomeHeadingProps> = ({
     .trim();
 
   return (
-    <div className={`space-y-1.5 sm:space-y-2 max-w-full block pl-1 sm:pl-2 ${className}`}>
+    <div className={`space-y-1 sm:space-y-1.5 max-w-full block ${className}`}>
       {/* Line 1: WELCOME BACK, */}
-      <div className="text-sm xs:text-base sm:text-lg font-black tracking-widest uppercase text-slate-200 flex items-center">
+      <div className="text-xs sm:text-sm font-extrabold tracking-wider uppercase text-slate-300 flex items-center">
         <span>
           {revealedPrefix}
           {(hasCommaOnly || hasCommaAndSpace) ? ',' : ''}
         </span>
         {isTyping && displayedCount <= prefixAndCommaLength && (
-          <span className="inline-block w-[2.5px] h-[1em] ml-1 bg-brand-400 animate-pulse rounded-xs align-middle" />
+          <span className="inline-block w-[2px] h-[1em] ml-1 bg-brand-400 animate-pulse rounded-xs align-middle" />
         )}
       </div>
 
-      {/* Line 2: STAFF / USER NAME */}
+      {/* Line 2: USER / ADMIN / STAFF NAME (Below line 1 with slight start indent & balanced size) */}
       {canonicalName && (
         <h1
-          className={`font-black uppercase tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full block leading-tight ${nameFontClasses} ${safeNameClassName}`}
+          className={`font-black uppercase tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full block leading-tight pl-1 sm:pl-1.5 ${nameFontClasses} ${safeNameClassName}`}
           title={canonicalName}
         >
           <span>{revealedName}</span>
           {isTyping && displayedCount > prefixAndCommaLength && (
-            <span className="inline-block w-[3px] sm:w-[4px] h-[0.85em] ml-1.5 bg-brand-400 animate-pulse rounded-xs align-middle shadow-[0_0_12px_rgba(129,140,248,0.9)]" />
+            <span className="inline-block w-[2.5px] sm:w-[3px] h-[0.85em] ml-1 bg-brand-400 animate-pulse rounded-xs align-middle shadow-[0_0_8px_rgba(129,140,248,0.8)]" />
           )}
         </h1>
       )}

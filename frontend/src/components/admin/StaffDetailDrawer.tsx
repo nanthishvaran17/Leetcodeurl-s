@@ -21,6 +21,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
 
   const [mentees, setMentees] = useState<StudentRecord[]>([]);
   const [loadingMentees, setLoadingMentees] = useState<boolean>(true);
+  const [showPhotoZoom, setShowPhotoZoom] = useState<boolean>(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -70,8 +71,22 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
           
           <div className="flex justify-between items-start mb-4 relative z-10 gap-3">
             <div className="flex items-center gap-4 min-w-0 flex-1">
-              <div className="w-16 h-16 rounded-3xl bg-white/10 backdrop-blur-md text-brand-300 font-extrabold flex items-center justify-center text-2xl shadow-lg border border-white/20 shrink-0">
-                {staff.username ? staff.username.charAt(0).toUpperCase() : 'S'}
+              <div 
+                className={`relative shrink-0 ${staff.profile_photo ? 'cursor-pointer active:scale-95 hover:scale-105 transition-transform' : ''}`}
+                onClick={() => { if (staff.profile_photo) setShowPhotoZoom(true); }}
+                title={staff.profile_photo ? "Tap to view enlarged photo" : ""}
+              >
+                {staff.profile_photo ? (
+                  <img
+                    src={staff.profile_photo}
+                    alt={staff.full_name || staff.username}
+                    className="w-16 h-16 rounded-3xl object-cover border-2 border-brand-400/40 shadow-lg bg-white dark:bg-navy-950"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-3xl bg-white/10 backdrop-blur-md text-brand-300 font-extrabold flex items-center justify-center text-2xl shadow-lg border border-white/20">
+                    {staff.username ? staff.username.charAt(0).toUpperCase() : 'S'}
+                  </div>
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="font-display text-xl font-bold text-white tracking-tight flex items-center gap-2">
@@ -294,6 +309,42 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Full Screen Photo Lightbox for Mobile APK & Desktop */}
+      {showPhotoZoom && staff.profile_photo && (
+        <div 
+          className="fixed inset-0 z-[100060] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in select-none"
+          onClick={() => setShowPhotoZoom(false)}
+        >
+          <div 
+            className="bg-slate-950/95 dark:bg-black/95 p-4 sm:p-5 rounded-3xl border border-slate-700/80 shadow-2xl max-w-sm w-full flex flex-col items-center space-y-4 relative animate-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-full flex items-center justify-between pb-2 border-b border-slate-800">
+              <div className="min-w-0 flex-1 pr-2">
+                <h4 className="text-sm font-black text-white truncate">{staff.full_name || staff.username}</h4>
+                <p className="text-[10px] text-slate-400 font-mono">{staff.department_code || 'STAFF'} • {staff.role || 'Faculty'}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPhotoZoom(false)}
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
+                title="Close preview"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="w-full max-h-[60vh] flex items-center justify-center overflow-hidden rounded-2xl bg-slate-900 border border-slate-800/80 p-1">
+              <img
+                src={staff.profile_photo}
+                alt={staff.full_name || staff.username}
+                className="max-h-[55vh] w-auto max-w-full object-contain rounded-xl shadow-2xl"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

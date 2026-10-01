@@ -74,6 +74,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   const [isTerminatingSessions, setIsTerminatingSessions] = useState(false);
   const [showTerminateConfirmModal, setShowTerminateConfirmModal] = useState(false);
   const [terminateSuccessMsg, setTerminateSuccessMsg] = useState<string | null>(null);
+  const [showPhotoZoom, setShowPhotoZoom] = useState(false);
 
   // Role Dropdown Stacking State
   const [roleOpen, setRoleOpen] = useState(false);
@@ -597,7 +598,11 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                     {/* Profile Photo Avatar & Upload */}
                     <div className="sm:col-span-2 p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-900/60 border border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row items-center gap-4">
                       <div className="relative shrink-0">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-brand-500/40 bg-white dark:bg-navy-950 flex items-center justify-center shadow-xs">
+                        <div 
+                          className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-brand-500/40 bg-white dark:bg-navy-950 flex items-center justify-center shadow-xs ${profilePhotoPreview ? 'cursor-zoom-in hover:scale-105 hover:border-brand-500 transition-all' : ''}`}
+                          onClick={() => { if (profilePhotoPreview) setShowPhotoZoom(true); }}
+                          title={profilePhotoPreview ? "Click to view enlarged photo" : "No photo uploaded"}
+                        >
                           {profilePhotoPreview ? (
                             <img
                               src={profilePhotoPreview}
@@ -977,20 +982,68 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                   </div>
 
                   {/* Last Login Info & 2FA */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xs">
-                    <div>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-1">
-                        <History className="w-3.5 h-3.5 text-indigo-500" /> Last Login Information
-                      </span>
-                      <div className="text-xs font-bold text-slate-900 dark:text-white font-mono">
-                        27 Sept 2026, 10:41 AM <span className="text-slate-700 dark:text-slate-300 font-bold">(IP: 127.0.0.1)</span>
+                  {(() => {
+                    const formatDateTime = (rawDate: any) => {
+                      if (!rawDate) return null;
+                      try {
+                        const d = new Date(rawDate);
+                        if (isNaN(d.getTime())) return null;
+                        return d.toLocaleString('en-US', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true
+                        });
+                      } catch {
+                        return null;
+                      }
+                    };
+
+                    const lastLoginFormatted = formatDateTime(staff?.last_login);
+                    const lastLoginIp = staff?.last_login_ip || '127.0.0.1';
+                    const lastLoginDevice = staff?.last_login_device;
+                    const is2FaEnabled = Boolean(staff?.is_2fa_enabled || staff?.two_factor_enabled);
+
+                    return (
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xs">
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-1">
+                            <History className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Last Login Information
+                          </span>
+                          {lastLoginFormatted ? (
+                            <div>
+                              <div className="text-xs font-bold text-slate-900 dark:text-white font-mono">
+                                {lastLoginFormatted}{' '}
+                                <span className="text-indigo-600 dark:text-indigo-400 font-bold">(IP: {lastLoginIp})</span>
+                              </div>
+                              {lastLoginDevice && lastLoginDevice !== 'Web Browser' && (
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-sm mt-0.5" title={lastLoginDevice}>
+                                  {lastLoginDevice}
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                              No recorded logins yet • <span className="font-semibold text-[11px] text-slate-500 dark:text-slate-400">Account provisioned {staff?.created_at ? formatDateTime(staff.created_at) : 'recently'}</span>
+                            </div>
+                          )}
+                        </div>
+                        {is2FaEnabled ? (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 shrink-0">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                            <span className="text-[10px] font-black">2FA ENABLED</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-400 border border-slate-300 dark:border-navy-700 shrink-0">
+                            <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
+                            <span className="text-[10px] font-black">2FA DISABLED</span>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                      <span className="text-[10px] font-black">2FA ENABLED</span>
-                    </div>
-                  </div>
+                    );
+                  })()}
 
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xs">
                     <div className="min-w-0 flex-1">
@@ -1271,6 +1324,31 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                     <span>Confirm Terminate</span>
                   )}
                 </button>
+              </div>
+            </div>
+          </GlobalModalBackdrop>
+        )}
+
+        {/* Photo Zoom Lightbox Modal */}
+        {showPhotoZoom && profilePhotoPreview && (
+          <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4 z-[99999]" onClose={() => setShowPhotoZoom(false)}>
+            <div className="bg-slate-950/95 p-3 sm:p-4 rounded-3xl border border-slate-700 shadow-2xl max-w-md w-full flex flex-col items-center space-y-3 relative">
+              <div className="w-full flex items-center justify-between pb-2 border-b border-slate-800">
+                <span className="text-xs font-bold text-slate-200 truncate">{formData.full_name || staff.username} — Profile Photo</span>
+                <button
+                  type="button"
+                  onClick={() => setShowPhotoZoom(false)}
+                  className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="w-full max-h-[70vh] flex items-center justify-center overflow-hidden rounded-2xl bg-black/50">
+                <img
+                  src={profilePhotoPreview}
+                  alt={formData.full_name || staff.username}
+                  className="max-h-[65vh] w-auto object-contain rounded-2xl shadow-xl"
+                />
               </div>
             </div>
           </GlobalModalBackdrop>

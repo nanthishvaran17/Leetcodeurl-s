@@ -26,6 +26,11 @@ export const AdminStaffAllocationPanel: React.FC = () => {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [showAllocationConfirmModal, setShowAllocationConfirmModal] = useState<boolean>(false);
 
+  // Range Selection States
+  const [rangeFrom, setRangeFrom] = useState<string>('1');
+  const [rangeTo, setRangeTo] = useState<string>('20');
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
+
   // Filter States for Unassigned Queue
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
@@ -465,6 +470,55 @@ export const AdminStaffAllocationPanel: React.FC = () => {
     );
   };
 
+  const handleStudentRowClick = (id: number, index: number, e?: React.MouseEvent | React.SyntheticEvent | any) => {
+    if (e && 'shiftKey' in e && e.shiftKey && lastSelectedIndex !== null) {
+      const start = Math.min(lastSelectedIndex, index);
+      const end = Math.max(lastSelectedIndex, index);
+      const rangeSlice = filteredUnassigned.slice(start, end + 1);
+      const rangeIds = rangeSlice.map(s => s.id);
+      setSelectedStudents(prev => Array.from(new Set([...prev, ...rangeIds])));
+      notify.info('Range Selected', `Selected ${rangeIds.length} students (#${start + 1} to #${end + 1}).`);
+    } else {
+      toggleSelectStudent(id);
+      setLastSelectedIndex(index);
+    }
+  };
+
+  const selectFirstN = (count: number) => {
+    if (filteredUnassigned.length === 0) {
+      notify.warning('Queue Empty', 'No unassigned students to select.');
+      return;
+    }
+    const slice = filteredUnassigned.slice(0, count);
+    const ids = slice.map(s => s.id);
+    setSelectedStudents(ids);
+    setRangeFrom('1');
+    setRangeTo(String(ids.length));
+    notify.info('Range Selected', `Selected first ${ids.length} students (#1 to #${ids.length}).`);
+  };
+
+  const selectRange = (fromStr: string, toStr: string) => {
+    if (filteredUnassigned.length === 0) {
+      notify.warning('Queue Empty', 'No unassigned students to select.');
+      return;
+    }
+    const from = Math.max(1, parseInt(fromStr, 10) || 1);
+    const to = Math.max(from, parseInt(toStr, 10) || 1);
+
+    const startIndex = from - 1;
+    const endIndex = Math.min(to, filteredUnassigned.length);
+
+    if (startIndex >= filteredUnassigned.length) {
+      notify.warning('Out of Range', `Starting number (#${from}) exceeds available students count (${filteredUnassigned.length}).`);
+      return;
+    }
+
+    const slice = filteredUnassigned.slice(startIndex, endIndex);
+    const ids = slice.map(s => s.id);
+    setSelectedStudents(ids);
+    notify.success('Range Selected', `Selected ${ids.length} students from #${from} to #${endIndex}.`);
+  };
+
   const toggleSelectAll = () => {
     if (selectedStudents.length === filteredUnassigned.length) {
       setSelectedStudents([]);
@@ -532,11 +586,11 @@ export const AdminStaffAllocationPanel: React.FC = () => {
         </div>
 
         {/* Staff Roster Search & Filter Controls + Capacity Config (Premium System Control Center Style) */}
-        <div className="p-4 rounded-3xl bg-slate-50/90 dark:bg-navy-900/80 border border-slate-200/90 dark:border-navy-700/80 backdrop-blur-md shadow-md space-y-3">
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+        <div className="p-3.5 sm:p-4 rounded-3xl bg-slate-50/90 dark:bg-navy-900/80 border border-slate-200/90 dark:border-navy-700/80 backdrop-blur-md shadow-md space-y-3">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
             
             {/* Search Bar Input Container */}
-            <div className="relative flex-1 min-w-[260px] flex items-center rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700/80 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all shadow-xs group">
+            <div className="relative flex-1 min-w-[200px] flex items-center rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700/80 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all shadow-xs group">
               <div className="pl-3.5 flex items-center pointer-events-none">
                 <Search className="w-4 h-4 text-slate-400 dark:text-navy-400 group-focus-within:text-brand-500 group-focus-within:scale-110 transition-all" />
               </div>
@@ -549,9 +603,9 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                 value={staffSearchQuery}
                 onChange={(e) => setStaffSearchQuery(e.target.value)}
                 placeholder="Search staff by name, email or department..."
-                className="w-full pl-2.5 pr-24 py-2.5 bg-transparent border-0 outline-none focus:outline-none focus:ring-0 text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-navy-400"
+                className="w-full pl-2.5 pr-20 py-2.5 bg-transparent border-0 outline-none focus:outline-none focus:ring-0 text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-navy-400"
               />
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-1.5 z-10">
+              <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center gap-1.5 z-10">
                 {staffSearchQuery && (
                   <button
                     type="button"
@@ -568,11 +622,11 @@ export const AdminStaffAllocationPanel: React.FC = () => {
               </div>
             </div>
 
-            {/* Filter Controls Row */}
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5">
+            {/* Filter Controls Row: Aligned in ONE unified row side-by-side */}
+            <div className="flex items-center gap-2 shrink-0 flex-nowrap w-full md:w-auto">
               
               {/* Premium Custom Capacity Cap Dropdown (Portal-Backed) */}
-              <div className="shrink-0">
+              <div className="flex-1 md:flex-none shrink-0 min-w-0">
                 <CustomDropdown
                   id="staff-capacity-cap-select"
                   label=""
@@ -587,12 +641,12 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                     { value: '100', label: '100 Students', badge: 'MAX', badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' },
                     { value: '9999', label: 'Unlimited', badge: 'UNLIMITED', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' }
                   ]}
-                  triggerClassName="px-3.5 py-2 rounded-xl border bg-white dark:bg-navy-950 border-slate-200/90 dark:border-navy-600 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-sm hover:border-sky-500"
+                  triggerClassName="w-full md:w-auto px-3.5 py-2.5 rounded-2xl border bg-white dark:bg-navy-950 border-slate-200/90 dark:border-navy-600 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-xs hover:border-sky-500 whitespace-nowrap"
                 />
               </div>
 
               {/* Premium Custom Workload Status Filter Dropdown (Portal-Backed) */}
-              <div className="shrink-0">
+              <div className="flex-1 md:flex-none shrink-0 min-w-0">
                 <CustomDropdown
                   id="staff-workload-status-filter"
                   label=""
@@ -607,7 +661,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                     { value: 'EMPTY', label: `Unallocated (0/${capacityCap >= 9999 ? '∞' : capacityCap})`, badge: 'EMPTY', badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20' },
                     { value: 'DISABLED', label: 'Disabled Accounts', badge: 'DISABLED', badgeColor: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20' }
                   ]}
-                  triggerClassName="px-3.5 py-2 rounded-xl border bg-white dark:bg-navy-950 border-slate-200/90 dark:border-navy-600 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-sm hover:border-sky-500"
+                  triggerClassName="w-full md:w-auto px-3.5 py-2.5 rounded-2xl border bg-white dark:bg-navy-950 border-slate-200/90 dark:border-navy-600 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-xs hover:border-sky-500 whitespace-nowrap"
                 />
               </div>
 
@@ -619,7 +673,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                     setStaffSearchQuery('');
                     setStaffWorkloadFilter('ALL');
                   }}
-                  className="px-3 py-2.5 rounded-xl bg-slate-200 dark:bg-navy-800 hover:bg-rose-100 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
+                  className="px-3 py-2.5 rounded-2xl bg-slate-200 dark:bg-navy-800 hover:bg-rose-100 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
                   title="Reset Search and Filters"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -665,131 +719,152 @@ export const AdminStaffAllocationPanel: React.FC = () => {
               return (
                 <div
                   key={st.id}
-                  className={`relative rounded-3xl border overflow-hidden transition-all shadow-md hover:shadow-xl w-full max-w-full min-w-0 box-border ${!st.is_active
-                    ? 'bg-slate-100/80 dark:bg-navy-950/60 border-slate-200 opacity-70'
+                  className={`group relative rounded-2xl border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden w-full max-w-full min-w-0 box-border flex flex-col justify-between ${!st.is_active
+                    ? 'bg-slate-50/80 dark:bg-navy-950/50 border-slate-200 dark:border-navy-800 opacity-60'
                     : isFull
-                      ? 'bg-gradient-to-br from-rose-50/80 via-white to-orange-50/30 dark:from-rose-950/30 dark:via-navy-900 dark:to-navy-950 border-rose-300/80 dark:border-rose-800/60'
-                      : 'bg-gradient-to-br from-white via-slate-50/50 to-sky-50/30 dark:from-navy-900 dark:via-navy-950 dark:to-navy-900 border-slate-200/90 dark:border-navy-700/80 hover:border-sky-400/60'
+                      ? 'bg-gradient-to-b from-rose-50/40 via-white to-white dark:from-rose-950/20 dark:via-navy-900/90 dark:to-navy-950 border-rose-200/90 dark:border-rose-900/70 hover:border-rose-400 dark:hover:border-rose-600 shadow-rose-500/5'
+                      : count >= 20
+                        ? 'bg-gradient-to-b from-amber-50/40 via-white to-white dark:from-amber-950/20 dark:via-navy-900/90 dark:to-navy-950 border-amber-200/90 dark:border-amber-900/70 hover:border-amber-400 dark:hover:border-amber-600 shadow-amber-500/5'
+                        : 'bg-white/95 dark:bg-navy-900/90 border-slate-200/90 dark:border-navy-700/80 hover:border-indigo-400/80 dark:hover:border-indigo-500/80 hover:shadow-indigo-500/10 shadow-sm'
                     }`}
                 >
-                  {/* Top accent bar */}
-                  <div className={`h-1.5 w-full ${!st.is_active ? 'bg-slate-400' : isFull
+                  {/* Subtle top ambient glow strip */}
+                  <div className={`h-1 w-full shrink-0 ${!st.is_active ? 'bg-slate-300 dark:bg-navy-700' : isFull
                     ? 'bg-gradient-to-r from-rose-500 via-pink-500 to-orange-500'
-                    : 'bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-600'
+                    : count >= 20
+                      ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500'
+                      : 'bg-gradient-to-r from-sky-400 via-indigo-500 to-violet-600'
                     }`} />
 
-                  <div className="p-4 sm:p-5 flex flex-col w-full max-w-full min-w-0 box-border space-y-4">
-                    {/* Row 1: Avatar + Name & Email + Status Pill */}
-                    <div className="flex items-start justify-between gap-3 w-full min-w-0">
+                  {/* Ambient corner light */}
+                  <div className={`absolute -top-10 -right-10 w-24 h-24 rounded-full blur-2xl pointer-events-none opacity-20 group-hover:opacity-60 transition-opacity duration-500 ${isFull ? 'bg-rose-500' : count >= 20 ? 'bg-amber-500' : 'bg-indigo-500'
+                    }`} />
+
+                  <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between space-y-3.5 relative z-1">
+                    {/* Header: Avatar + Staff Info + Status Pill */}
+                    <div className="flex items-start justify-between gap-2.5 w-full min-w-0">
                       <div className="flex items-center space-x-3 min-w-0 flex-1">
-                        <div className={`relative w-11 h-11 rounded-2xl flex items-center justify-center text-lg font-black text-white shadow-md shrink-0 ${!st.is_active ? 'bg-slate-400'
-                          : isFull ? 'bg-gradient-to-br from-rose-500 to-orange-500'
-                            : 'bg-gradient-to-br from-sky-500 to-indigo-600'
+                        <div className={`relative w-11 h-11 rounded-xl flex items-center justify-center text-base font-black text-white shadow-md ring-2 ring-white dark:ring-navy-800 shrink-0 ${!st.is_active ? 'bg-slate-400'
+                          : isFull ? 'bg-gradient-to-tr from-rose-600 to-orange-500'
+                            : count >= 20 ? 'bg-gradient-to-tr from-amber-500 to-orange-500'
+                              : 'bg-gradient-to-tr from-indigo-600 via-blue-600 to-sky-500'
                           }`}>
                           {st.username?.charAt(0)?.toUpperCase() || '?'}
                           {st.is_active && (
-                            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-navy-900 bg-emerald-500" />
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-navy-900 bg-emerald-500 shadow-2xs" />
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-black text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate" title={st.username}>
+                          <h4 className="font-black text-sm text-slate-900 dark:text-white leading-tight truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" title={st.username}>
                             {st.username}
                           </h4>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-mono mt-0.5" title={st.email}>
-                            {st.email || 'No email registered'}
+                            {st.email || 'No email configured'}
                           </p>
                         </div>
                       </div>
 
-                      {/* Status Pill */}
-                      <div className="shrink-0 pt-0.5">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide whitespace-nowrap shadow-2xs ${!st.is_active ? 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                          : isFull ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-900'
-                            : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900'
+                      {/* Status Badge */}
+                      <div className="shrink-0">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap shadow-2xs ${!st.is_active
+                          ? 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-navy-800 dark:text-slate-400 dark:border-navy-700'
+                          : isFull
+                            ? 'bg-rose-50 text-rose-700 border border-rose-200/80 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-900/60'
+                            : count >= 20
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-900/60'
+                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-900/60'
                           }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${!st.is_active ? 'bg-slate-400' : isFull ? 'bg-rose-500' : count >= 20 ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
                           {!st.is_active ? 'DISABLED' : isFull ? 'FULL' : 'AVAILABLE'}
                         </span>
                       </div>
                     </div>
 
-                    {/* Row 2: Department Badge + Quick Action Toolbar */}
-                    <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-100 dark:border-navy-800/60">
+                    {/* Department Tag & Quick Action Buttons */}
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-navy-800/80">
                       <div className="min-w-0 flex-1">
-                        {st.department ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-indigo-50/90 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-black border border-indigo-200/60 dark:border-indigo-800/40 uppercase tracking-wider truncate max-w-full">
-                            {st.department}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">
-                            GENERAL
-                          </span>
-                        )}
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100/90 dark:bg-navy-800/90 text-slate-700 dark:text-slate-300 text-[10px] font-bold border border-slate-200/60 dark:border-navy-700/60 uppercase tracking-wider truncate max-w-full">
+                          <Building2 className="w-3 h-3 text-indigo-500 shrink-0" />
+                          <span className="truncate">{st.department || 'GENERAL'}</span>
+                        </span>
                       </div>
 
-                      {/* Quick Action Toolbar */}
+                      {/* Action buttons toolbar */}
                       <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
                           onClick={() => handleOpenStaffRoster(st)}
-                          className="p-1.5 rounded-xl bg-sky-50 hover:bg-sky-500 hover:text-white dark:bg-sky-950/60 dark:hover:bg-sky-500 dark:hover:text-white text-sky-600 dark:text-sky-400 transition-all cursor-pointer shadow-2xs"
-                          title="View Roster"
+                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-navy-800 hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 dark:hover:text-white text-slate-600 dark:text-slate-300 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                          title="View Student Roster"
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => triggerToggleStatusModal(st)}
-                          className={`p-1.5 rounded-xl transition-all cursor-pointer shadow-2xs ${st.is_active
-                            ? 'bg-amber-50 hover:bg-amber-500 hover:text-white dark:bg-amber-950/60 dark:hover:bg-amber-500 text-amber-600 dark:text-amber-400'
-                            : 'bg-emerald-50 hover:bg-emerald-500 hover:text-white dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400'
+                          className={`p-1.5 rounded-lg transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs ${st.is_active
+                            ? 'bg-slate-100 dark:bg-navy-800 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 text-slate-600 dark:text-slate-300'
+                            : 'bg-emerald-50 hover:bg-emerald-500 hover:text-white dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300'
                             }`}
-                          title={st.is_active ? 'Disable Staff' : 'Enable Staff'}
+                          title={st.is_active ? 'Disable Staff Account' : 'Enable Staff Account'}
                         >
                           <Power className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => triggerDeleteStaffModal(st)}
-                          className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-500 hover:text-white dark:bg-rose-950/60 dark:hover:bg-rose-500 dark:hover:text-white text-rose-600 dark:text-rose-400 transition-all cursor-pointer shadow-2xs"
-                          title="Delete Staff"
+                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-navy-800 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 dark:hover:text-white text-slate-600 dark:text-slate-300 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                          title="Delete Staff Account"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
 
-                    {/* Row 3: Progress Bar & Footer */}
-                    <div className="space-y-2 w-full max-w-full min-w-0 pt-0.5">
-                      <div className="flex items-center justify-between gap-2 text-xs font-bold w-full">
-                        <span className="text-slate-600 dark:text-slate-400 font-extrabold text-[11px]">Student Allocation</span>
-                        <span className={`shrink-0 font-mono font-black text-xs ${isFull ? 'text-rose-500' : count >= 20 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                          {count} / {maxCap}
-                        </span>
+                    {/* Allocation Progress Inset Card */}
+                    <div className="p-3 rounded-xl bg-slate-50/90 dark:bg-navy-950/60 border border-slate-200/60 dark:border-navy-800/60 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-600 dark:text-slate-400 font-bold text-[11px]">Mentee Capacity</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`font-mono font-black text-xs ${isFull ? 'text-rose-500' : count >= 20 ? 'text-amber-500' : 'text-slate-900 dark:text-white'}`}>
+                            {count} <span className="text-slate-400 font-normal">/ {maxCap}</span>
+                          </span>
+                          <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${isFull ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300' : 'bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-400'}`}>
+                            {percent}%
+                          </span>
+                        </div>
                       </div>
-                      <div className="w-full h-2 rounded-full bg-slate-200/80 dark:bg-navy-800 overflow-hidden shrink-0 shadow-inner">
+
+                      {/* Progress bar */}
+                      <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden shadow-inner">
                         <div
-                          className={`h-full rounded-full transition-all duration-700 ${isFull ? 'bg-gradient-to-r from-rose-500 to-orange-500'
-                            : count >= 20 ? 'bg-gradient-to-r from-amber-400 to-orange-400'
-                              : 'bg-gradient-to-r from-sky-500 to-indigo-500'
+                          className={`h-full rounded-full transition-all duration-700 ease-out ${isFull
+                            ? 'bg-gradient-to-r from-rose-500 via-pink-500 to-orange-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]'
+                            : count >= 20
+                              ? 'bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500'
+                              : 'bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-600'
                             }`}
                           style={{ width: `${percent}%` }}
                         />
                       </div>
 
-                      <div className="flex items-center justify-between text-xs pt-1 gap-2 w-full">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenStaffRoster(st)}
-                          className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-500 hover:text-white dark:bg-sky-950/60 dark:hover:bg-sky-500 dark:hover:text-white text-sky-600 dark:text-sky-400 font-bold transition-all active:scale-95 cursor-pointer shadow-2xs inline-flex items-center gap-1.5 text-[11px]"
-                        >
-                          <span>Inspect Progress</span>
-                          <span>→</span>
-                        </button>
-                        <span className={`font-mono text-[11px] font-bold shrink-0 ${isFull ? 'text-rose-500' : availableSlots <= 5 ? 'text-amber-500' : 'text-slate-500 dark:text-slate-400'}`}>
-                          {isFull ? 'Cap Reached' : `${availableSlots} slots free`}
+                      <div className="flex items-center justify-between text-[11px] pt-0.5">
+                        <span className={`font-mono font-bold ${isFull ? 'text-rose-500' : availableSlots <= 5 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                          {isFull ? 'Capacity Reached' : `${availableSlots} slots available`}
                         </span>
                       </div>
                     </div>
+
+                    {/* Primary Button Action */}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenStaffRoster(st)}
+                      className="w-full py-2 px-3.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white dark:bg-indigo-950/40 dark:hover:bg-indigo-600 dark:text-indigo-300 dark:hover:text-white border border-indigo-200/60 dark:border-indigo-800/40 shadow-2xs group/btn active:scale-98 cursor-pointer"
+                    >
+                      <UserCheck className="w-3.5 h-3.5" />
+                      <span>Inspect Progress</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
+                    </button>
                   </div>
                 </div>
               );
@@ -803,18 +878,18 @@ export const AdminStaffAllocationPanel: React.FC = () => {
       <div className="bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl overflow-hidden">
 
         {/* Tab Header */}
-        <div className="flex items-stretch border-b border-slate-200 dark:border-navy-700">
+        <div className="flex items-center border-b border-slate-200/80 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-900/80 p-2 gap-2">
           <button
             onClick={() => setActiveTab('assign')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 text-sm font-black transition-all ${activeTab === 'assign'
-              ? 'bg-sky-600 text-white'
-              : 'bg-slate-50 dark:bg-navy-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-700'
+            className={`flex-1 flex items-center justify-center gap-2.5 px-6 py-3.5 text-xs sm:text-sm font-black rounded-2xl transition-all duration-300 cursor-pointer ${activeTab === 'assign'
+              ? 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-indigo-500/25 scale-[1.01]'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-white/90 dark:hover:bg-navy-800 hover:text-slate-900 dark:hover:text-white'
               }`}
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>Assign Students</span>
             {unassigned.length > 0 && (
-              <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-black ${activeTab === 'assign' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700'
+              <span className={`ml-1 px-2.5 py-0.5 rounded-full text-[10px] font-black ${activeTab === 'assign' ? 'bg-white/20 text-white shadow-2xs' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
                 }`}>
                 {unassigned.length} pending
               </span>
@@ -822,9 +897,9 @@ export const AdminStaffAllocationPanel: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('unassign')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 text-sm font-black transition-all ${activeTab === 'unassign'
-              ? 'bg-rose-600 text-white'
-              : 'bg-slate-50 dark:bg-navy-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-700'
+            className={`flex-1 flex items-center justify-center gap-2.5 px-6 py-3.5 text-xs sm:text-sm font-black rounded-2xl transition-all duration-300 cursor-pointer ${activeTab === 'unassign'
+              ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md shadow-rose-500/25 scale-[1.01]'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-white/90 dark:hover:bg-navy-800 hover:text-slate-900 dark:hover:text-white'
               }`}
           >
             <UserMinus className="w-4 h-4" />
@@ -918,14 +993,109 @@ export const AdminStaffAllocationPanel: React.FC = () => {
               </div>
             </div>
 
+            {/* Quick Range & Batch Selection Control Bar */}
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700/80 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+              
+              {/* Left: Quick Preset Count Buttons */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-navy-400 mr-1 flex items-center gap-1">
+                  <Sliders className="w-3.5 h-3.5 text-sky-500" />
+                  <span>Quick Select:</span>
+                </span>
+
+                {[10, 20, 30, 45, 50].map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => selectFirstN(num)}
+                    disabled={filteredUnassigned.length === 0}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer border ${
+                      selectedStudents.length === Math.min(num, filteredUnassigned.length) && selectedStudents.length > 0
+                        ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
+                        : 'bg-slate-100 hover:bg-sky-50 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:border-sky-300'
+                    }`}
+                  >
+                    1 to {Math.min(num, filteredUnassigned.length || num)}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={toggleSelectAll}
+                  disabled={filteredUnassigned.length === 0}
+                  className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer border ${
+                    selectedStudents.length === filteredUnassigned.length && filteredUnassigned.length > 0
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                      : 'bg-slate-100 hover:bg-indigo-50 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:border-indigo-300'
+                  }`}
+                >
+                  All ({filteredUnassigned.length})
+                </button>
+
+                {selectedStudents.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStudents([])}
+                    className="px-2 py-1 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer flex items-center gap-1"
+                  >
+                    <X className="w-3 h-3" />
+                    <span>Clear</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Right: Custom Range Inputs (From # to #) */}
+              <div className="flex items-center gap-2 self-start md:self-auto flex-wrap sm:flex-nowrap">
+                <div className="flex items-center gap-1.5 bg-slate-100/90 dark:bg-navy-950 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-navy-700 text-xs">
+                  <span className="font-bold text-slate-500 dark:text-navy-400 text-[11px]">Range:</span>
+                  <span className="text-[11px] font-mono text-slate-400">#</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={filteredUnassigned.length || 1}
+                    value={rangeFrom}
+                    onChange={(e) => setRangeFrom(e.target.value)}
+                    placeholder="1"
+                    className="w-12 py-0.5 px-1 bg-white dark:bg-navy-800 border border-slate-300 dark:border-navy-600 rounded-lg text-center font-bold text-xs text-slate-900 dark:text-white outline-none focus:ring-1 focus:ring-sky-500"
+                  />
+                  <span className="font-bold text-slate-500 dark:text-navy-400 text-[11px]">to</span>
+                  <span className="text-[11px] font-mono text-slate-400">#</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={filteredUnassigned.length || 1}
+                    value={rangeTo}
+                    onChange={(e) => setRangeTo(e.target.value)}
+                    placeholder="20"
+                    className="w-12 py-0.5 px-1 bg-white dark:bg-navy-800 border border-slate-300 dark:border-navy-600 rounded-lg text-center font-bold text-xs text-slate-900 dark:text-white outline-none focus:ring-1 focus:ring-sky-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => selectRange(rangeFrom, rangeTo)}
+                    className="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Apply Range</span>
+                  </button>
+                </div>
+
+                {selectedStudents.length > 0 && (
+                  <span className="px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 text-[11px] font-black shrink-0">
+                    {selectedStudents.length} Selected
+                  </span>
+                )}
+              </div>
+            </div>
+
             {/* Table */}
             <div className="overflow-hidden md:overflow-x-auto rounded-2xl border-0 md:border border-slate-200 dark:border-navy-700 bg-transparent md:bg-transparent w-full max-w-full box-border">
               <table className="w-full table-fixed md:table-auto text-left text-xs mobile-card-table box-border">
                 <thead className="hidden md:table-header-group">
                   <tr className="bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-navy-300 font-bold border-b border-slate-200 dark:border-navy-700">
-                    <th className="p-3 text-center">
+                    <th className="p-3 text-center w-12">
                       <input type="checkbox" checked={selectedStudents.length === filteredUnassigned.length && filteredUnassigned.length > 0} onChange={toggleSelectAll} className="rounded border-slate-300 text-sky-600 cursor-pointer" />
                     </th>
+                    <th className="p-3 w-14 text-center">#</th>
                     <th className="p-3">Register No</th>
                     <th className="p-3">Student Name</th>
                     <th className="p-3">Department</th>
@@ -936,31 +1106,34 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-navy-800 block md:table-row-group">
                   {loading ? (
-                    <tr className="block md:table-row"><td colSpan={7} className="p-6 text-center text-slate-500 animate-pulse block md:table-cell">Loading unassigned students...</td></tr>
+                    <tr className="block md:table-row"><td colSpan={8} className="p-6 text-center text-slate-500 animate-pulse block md:table-cell">Loading unassigned students...</td></tr>
                   ) : filteredUnassigned.length === 0 ? (
-                    <tr className="block md:table-row"><td colSpan={7} className="p-8 text-center block md:table-cell">
+                    <tr className="block md:table-row"><td colSpan={8} className="p-8 text-center block md:table-cell">
                       <div className="flex flex-col items-center gap-2">
                         <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                         <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">All students are currently assigned to primary mentors!</p>
                       </div>
                     </td></tr>
                   ) : (
-                    filteredUnassigned.map((st: any) => {
+                    filteredUnassigned.map((st: any, index: number) => {
                       const isSelected = selectedStudents.includes(st.id);
                       return (
-                        <tr key={st.id} onClick={() => toggleSelectStudent(st.id)}
-                          className={`cursor-pointer transition-all block md:table-row rounded-2xl md:rounded-none mb-2.5 md:mb-0 overflow-hidden box-border ${isSelected ? 'bg-sky-50/90 dark:bg-sky-950/60 border-2 border-sky-500 dark:border-sky-400 md:border-0 shadow-sm' : 'bg-white md:bg-transparent dark:bg-navy-950 border border-slate-200/90 md:border-0 dark:border-navy-800 shadow-2xs md:shadow-none hover:bg-slate-50 dark:hover:bg-navy-800/50'}`}
+                        <tr key={st.id} onClick={(e) => handleStudentRowClick(st.id, index, e)}
+                          className={`cursor-pointer transition-all duration-200 block md:table-row rounded-2xl md:rounded-none mb-2.5 md:mb-0 overflow-hidden box-border border border-slate-200/80 dark:border-navy-800 md:border-0 shadow-2xs md:shadow-none ${isSelected ? 'bg-sky-50/60 dark:bg-sky-950/40' : 'bg-white md:bg-transparent dark:bg-navy-950 hover:bg-slate-50/80 dark:hover:bg-navy-800/50'}`}
                         >
                           {/* MOBILE COMPACT CARD VIEW */}
-                          <td className="md:hidden p-2.5 sm:p-3 border-0 w-full block overflow-hidden box-border" colSpan={7}>
+                          <td className="md:hidden p-2.5 sm:p-3 border-0 w-full block overflow-hidden box-border" colSpan={8}>
                             <div className="flex flex-col space-y-2 w-full max-w-full overflow-hidden box-border">
-                              {/* Row 1: Checkbox + Name + Solved Badge */}
+                              {/* Row 1: Index + Checkbox + Name + Solved Badge */}
                               <div className="flex items-center justify-between gap-2 w-full min-w-0">
                                 <div className="flex items-center gap-2 min-w-0 flex-1">
+                                  <span className="font-mono text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-navy-800 px-1.5 py-0.5 rounded">
+                                    #{index + 1}
+                                  </span>
                                   <input
                                     type="checkbox"
                                     checked={isSelected}
-                                    onChange={() => toggleSelectStudent(st.id)}
+                                    onChange={() => handleStudentRowClick(st.id, index)}
                                     className="rounded border-slate-300 text-sky-600 cursor-pointer w-4 h-4 shrink-0"
                                     onClick={(e) => e.stopPropagation()}
                                   />
@@ -996,6 +1169,9 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                           {/* DESKTOP TABLE VIEW */}
                           <td className="hidden md:table-cell p-3 text-center" onClick={(e) => e.stopPropagation()}>
                             <input type="checkbox" checked={isSelected} onChange={() => toggleSelectStudent(st.id)} className="rounded border-slate-300 text-sky-600 cursor-pointer w-4 h-4" />
+                          </td>
+                          <td className="hidden md:table-cell p-3 font-mono font-bold text-slate-400 text-center text-xs">
+                            #{index + 1}
                           </td>
                           <td className="hidden md:table-cell p-3 font-bold text-slate-800 dark:text-slate-200">{st.reg_no}</td>
                           <td className="hidden md:table-cell p-3 font-extrabold text-slate-900 dark:text-white">{st.name}</td>
@@ -1111,9 +1287,9 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                       filteredRoster.map((s: any) => {
                         const isSel = selectedAssignedStudents.includes(s.id);
                         return (
-                          <tr key={s.id} onClick={() => toggleAssignedStudent(s.id)}
-                            className={`cursor-pointer transition-all block md:table-row rounded-2xl md:rounded-none mb-2.5 md:mb-0 overflow-hidden box-border ${isSel ? 'bg-rose-50/90 dark:bg-rose-950/60 border-2 border-rose-500 dark:border-rose-400 md:border-0 shadow-sm' : 'bg-white md:bg-transparent dark:bg-navy-950 border border-slate-200/90 md:border-0 dark:border-navy-800 shadow-2xs md:shadow-none hover:bg-slate-50 dark:hover:bg-navy-800/50'}`}
-                          >
+                        <tr key={s.id} onClick={() => toggleAssignedStudent(s.id)}
+                          className={`cursor-pointer transition-all duration-200 block md:table-row rounded-2xl md:rounded-none mb-2.5 md:mb-0 overflow-hidden box-border border border-slate-200/80 dark:border-navy-800 md:border-0 shadow-2xs md:shadow-none ${isSel ? 'bg-rose-50/60 dark:bg-rose-950/40' : 'bg-white md:bg-transparent dark:bg-navy-950 hover:bg-slate-50/80 dark:hover:bg-navy-800/50'}`}
+                        >
                             {/* MOBILE COMPACT CARD VIEW */}
                             <td className="md:hidden p-2.5 sm:p-3 border-0 w-full block overflow-hidden box-border" colSpan={7}>
                               <div className="flex flex-col space-y-2 w-full max-w-full overflow-hidden box-border">

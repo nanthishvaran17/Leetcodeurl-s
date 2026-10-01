@@ -93,6 +93,14 @@ class FastCache:
             self._expiry.clear()
             self._tags.clear()
 
+    def delete_pattern(self, pattern: str) -> None:
+        """Delete all keys matching a simple glob pattern (supports leading/trailing *)."""
+        import fnmatch
+        with self._lock:
+            matching = [k for k in list(self._store.keys()) if fnmatch.fnmatch(k, pattern)]
+            for key in matching:
+                self._delete_key(key)
+
     def _delete_key(self, key: str) -> None:
         self._store.pop(key, None)
         self._expiry.pop(key, None)
@@ -229,6 +237,22 @@ class HybridRedisCache:
             except Exception:
                 pass
         self.local_cache.clear()
+
+    def delete_pattern(self, pattern: str) -> None:
+        """Delete all keys matching a glob pattern. Uses Redis SCAN if available."""
+        if self.use_redis:
+            try:
+                cursor = 0
+                while True:
+                    cursor, keys = self.redis_sync.scan(cursor, match=pattern, count=100)
+                    if keys:
+                        self.redis_sync.delete(*keys)
+                    if cursor == 0:
+                        break
+                return
+            except Exception:
+                pass
+        self.local_cache.delete_pattern(pattern)
 
     async def async_get_or_compute(
         self,

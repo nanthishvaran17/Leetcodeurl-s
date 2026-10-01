@@ -6,7 +6,7 @@ import {
   Shield, Server, FileText, CheckCircle, FileSpreadsheet, Archive,
   Send, Fingerprint, Search, Filter, Download, Upload, Eye, 
   Check, HardDrive, Terminal, Sparkles, SlidersHorizontal, UserCheck,
-  Camera, Play, ShieldAlert, ChevronRight, Info, X, Copy, Code, Zap, FileCode, Bell, RotateCcw, Trash2
+  Camera, Play, ShieldAlert, ChevronRight, Info, X, Copy, Code, Zap, FileCode, Bell, RotateCcw, Trash2, User
 } from 'lucide-react';
 import api from '../services/api';
 import { SecurityActivitySection } from '../components/SecurityActivitySection';
@@ -16,6 +16,7 @@ import { StaffManagement } from '../components/admin/StaffManagement';
 import { AdminStaffAllocationPanel } from '../components/AdminStaffAllocationPanel';
 import { StaffVerificationSection } from '../components/StaffVerificationSection';
 import { NotificationPreferencesSection } from '../components/NotificationPreferencesSection';
+import { AccountProfileSettings } from '../components/AccountProfileSettings';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
@@ -33,9 +34,16 @@ const smtpEncryptionOptions: GlobalFilterOption[] = [
   { value: 'NONE', label: 'None (Plain / Unencrypted)', pillText: 'NONE' },
 ];
 
-export const SettingsPage: React.FC = () => {
+interface SettingsPageProps {
+  initialSection?: string;
+}
+
+export const SettingsPage: React.FC<SettingsPageProps> = ({ initialSection }) => {
   const { notify, confirmAction } = useNotification();
   const { user: currentUser, isAuthenticated } = useAuth();
+  const roleClean = (currentUser?.role || '').trim().toLowerCase();
+  const isAdmin = ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean);
+
   const [initialSettings, setInitialSettings] = useState<any>({});
   const [settings, setSettings] = useState<any>({
     SESSION_START: '08:00',
@@ -92,8 +100,8 @@ export const SettingsPage: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [showFullAuditLog, setShowFullAuditLog] = useState(false);
 
-  // Search & Filter State (Default single section: staff)
-  const [activeSectionFilter, setActiveSectionFilter] = useState<string>('staff');
+  // Search & Filter State (Default: staff)
+  const [activeSectionFilter, setActiveSectionFilter] = useState<string>(initialSection || 'staff');
   const [settingsSearch, setSettingsSearch] = useState<string>('');
   const [auditSearch, setAuditSearch] = useState<string>('');
   const [auditActionFilter, setAuditActionFilter] = useState<string>('ALL');
@@ -104,6 +112,20 @@ export const SettingsPage: React.FC = () => {
   const [selectedIntegrityRule, setSelectedIntegrityRule] = useState<any>(null);
   const [inspectorTab, setInspectorTab] = useState<'overview' | 'sql' | 'telemetry' | 'actions'>('overview');
   const [customSnapshotTag, setCustomSnapshotTag] = useState<string>('');
+
+  // Update activeSectionFilter when initialSection prop changes
+  useEffect(() => {
+    if (initialSection) {
+      setActiveSectionFilter(initialSection);
+    }
+  }, [initialSection]);
+
+  // Auto-switch away from admin-only tabs if non-admin user
+  useEffect(() => {
+    if (currentUser && !isAdmin && !['profile', 'notifications', 'security'].includes(activeSectionFilter)) {
+      setActiveSectionFilter('profile');
+    }
+  }, [currentUser, isAdmin, activeSectionFilter]);
 
   const configFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -645,15 +667,23 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
           {/* Left: Title Block */}
           <div className="space-y-2.5 max-w-2xl min-w-0 flex-1">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black uppercase max-w-full">
-              <span className="whitespace-normal sm:whitespace-nowrap leading-tight">Institutional Configuration • System Control Center</span>
+              <span className="whitespace-normal sm:whitespace-nowrap leading-tight">
+                {isAdmin ? 'Institutional Configuration • System Control Center' : 'Staff Self-Service • Account & Profile Management'}
+              </span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
-              Admin System <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Control Center</span>
+              {isAdmin ? (
+                <>Admin System <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Control Center</span></>
+              ) : (
+                <>Account & Profile <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Settings</span></>
+              )}
             </h1>
 
             <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
-              Manage institutional parameters, role-based access, system synchronization health, and background data integrity checks.
+              {isAdmin 
+                ? 'Manage institutional parameters, staff profiles & access, system synchronization health, and background data integrity checks.'
+                : 'Manage your personal staff details, profile photo, contact number, date of birth, and security credentials.'}
             </p>
           </div>
 
@@ -663,7 +693,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
               <span className="px-3 py-1.5 rounded-full font-black text-xs border flex items-center space-x-1.5 whitespace-nowrap flex-shrink-0"
                 style={{ background: 'rgba(16,185,129,0.15)', borderColor: 'rgba(16,185,129,0.3)', color: '#34d399' }}>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
-                <span>PRODUCTION</span>
+                <span>{currentUser?.role ? currentUser.role.toUpperCase() : 'ACTIVE'}</span>
               </span>
 
               <span className="px-3 py-1.5 rounded-full font-bold text-xs border flex items-center space-x-1.5 whitespace-nowrap flex-shrink-0"
@@ -673,33 +703,35 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
               </span>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={handleExportConfigJson}
-                className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap"
-                style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.35)', color: '#a5b4fc' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.35)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.2)')}
-                title="Export complete configuration JSON"
-              >
-                <Download className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>Export JSON</span>
-              </button>
+            {isAdmin && (
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={handleExportConfigJson}
+                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap"
+                  style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.35)', color: '#a5b4fc' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.35)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.2)')}
+                  title="Export complete configuration JSON"
+                >
+                  <Download className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>Export JSON</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => configFileInputRef.current?.click()}
-                className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap"
-                style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.35)', color: '#a5b4fc' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.35)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.2)')}
-                title="Import configuration JSON"
-              >
-                <Upload className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>Import JSON</span>
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => configFileInputRef.current?.click()}
+                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap"
+                  style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.35)', color: '#a5b4fc' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.35)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.2)')}
+                  title="Import configuration JSON"
+                >
+                  <Upload className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>Import JSON</span>
+                </button>
+              </div>
+            )}
             <input
               type="file"
               ref={configFileInputRef}
@@ -711,104 +743,106 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
         </div>
       </div>
 
-      {/* 2. COMPACT SYSTEM STATUS STRIP WITH LIVE PROBING */}
-      <div className="glass-card p-4 sm:p-6 rounded-3xl border border-slate-200 dark:border-navy-700 space-y-5 shadow-sm">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 sm:pb-5 border-b border-slate-100 dark:border-navy-800">
-          <div className="flex flex-col gap-3 sm:gap-3.5">
-            <div className="flex items-center gap-2.5">
-              <Activity className={`w-5 h-5 ${isProbing ? 'text-amber-500 animate-spin' : 'text-emerald-500'}`} />
-              <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-950 dark:text-white leading-tight">
-                Live Subsystem Health Probes
-              </h3>
+      {/* 2. COMPACT SYSTEM STATUS STRIP WITH LIVE PROBING (Admin Only) */}
+      {isAdmin && (
+        <div className="glass-card p-4 sm:p-6 rounded-3xl border border-slate-200 dark:border-navy-700 space-y-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 sm:pb-5 border-b border-slate-100 dark:border-navy-800">
+            <div className="flex flex-col gap-3 sm:gap-3.5">
+              <div className="flex items-center gap-2.5">
+                <Activity className={`w-5 h-5 ${isProbing ? 'text-amber-500 animate-spin' : 'text-emerald-500'}`} />
+                <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-950 dark:text-white leading-tight">
+                  Live Subsystem Health Probes
+                </h3>
+              </div>
+              {lastProbed && !isProbing ? (
+                <div className="flex flex-wrap items-center gap-2 text-xs font-mono font-bold text-slate-600 dark:text-slate-300">
+                  <Clock className="w-4 h-4 text-brand-500 shrink-0" />
+                  <span className="inline-flex items-center gap-1.5 flex-wrap">
+                    <span>Last probed at</span>
+                    <strong className="text-slate-950 dark:text-white px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xs">
+                      {lastProbed.toLocaleTimeString()}
+                    </strong>
+                  </span>
+                </div>
+              ) : (
+                <div className="text-[11px] font-bold text-slate-400">
+                  Automatic real-time system monitoring & health diagnostics
+                </div>
+              )}
             </div>
-            {lastProbed && !isProbing ? (
-              <div className="flex flex-wrap items-center gap-2 text-xs font-mono font-bold text-slate-600 dark:text-slate-300">
-                <Clock className="w-4 h-4 text-brand-500 shrink-0" />
-                <span className="inline-flex items-center gap-1.5 flex-wrap">
-                  <span>Last probed at</span>
-                  <strong className="text-slate-950 dark:text-white px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xs">
-                    {lastProbed.toLocaleTimeString()}
-                  </strong>
-                </span>
-              </div>
-            ) : (
-              <div className="text-[11px] font-bold text-slate-400">
-                Automatic real-time system monitoring & health diagnostics
-              </div>
-            )}
+
+            {/* Probe Now button aligned top right */}
+            <button
+              type="button"
+              onClick={fetchSystemHealth}
+              disabled={isProbing}
+              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all shadow-md active:scale-95 cursor-pointer shrink-0 mt-3 sm:mt-0 ${
+                isProbing
+                  ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 cursor-not-allowed'
+                  : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-500/25 border border-brand-500'
+              }`}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-white ${isProbing ? 'animate-spin' : ''}`} />
+              <span>{isProbing ? 'Probing...' : 'Probe Now'}</span>
+            </button>
           </div>
 
-          {/* Probe Now button aligned top right */}
-          <button
-            type="button"
-            onClick={fetchSystemHealth}
-            disabled={isProbing}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all shadow-md active:scale-95 cursor-pointer shrink-0 mt-3 sm:mt-0 ${
-              isProbing
-                ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 cursor-not-allowed'
-                : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-500/25 border border-brand-500'
-            }`}
-          >
-            <RefreshCw className={`w-3.5 h-3.5 text-white ${isProbing ? 'animate-spin' : ''}`} />
-            <span>{isProbing ? 'Probing...' : 'Probe Now'}</span>
-          </button>
+          {/* Inject ripple keyframe once */}
+          <style>{`
+            @keyframes probe-ripple { to { transform: scale(2.5); opacity: 0; } }
+            @keyframes card-pop { 0% { transform: scale(0.94); opacity: 0.5; } 60% { transform: scale(1.03); } 100% { transform: scale(1); opacity: 1; } }
+          `}</style>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2.5 font-mono text-[11px]">
+            {HEALTH_ITEMS.map((item, idx) => {
+              const rawVal = systemHealth?.components?.[item.key];
+              const isChecking = isProbing || systemHealth === null;
+              const isHealthy = rawVal === 'HEALTHY' || (!isChecking && !rawVal);
+              const isDegraded = rawVal === 'DEGRADED';
+              const isOffline = rawVal === 'OFFLINE';
+              const isUnknown = rawVal === 'UNKNOWN';
+              const isFailed = rawVal === 'FAILED';
+
+              return (
+                <div
+                  key={`${item.key}-${probeKey}`}
+                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 shadow-2xs ${
+                    isChecking
+                      ? 'bg-slate-50 dark:bg-navy-900/60 border-slate-200 dark:border-navy-700'
+                      : isHealthy
+                        ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-emerald-400/60 dark:border-emerald-600/60 hover:border-emerald-500'
+                        : isDegraded
+                          ? 'bg-amber-500/5 dark:bg-amber-950/20 border-amber-400/60 dark:border-amber-600/60'
+                          : isFailed
+                            ? 'bg-rose-500/5 dark:bg-rose-950/20 border-rose-400/60 dark:border-rose-600/60'
+                            : 'bg-slate-50 dark:bg-navy-900/60 border-slate-200 dark:border-navy-700'
+                  }`}
+                  style={{
+                    animation: probeKey > 0 ? `card-pop 0.35s cubic-bezier(0.4,0,0.2,1) ${idx * 40}ms both` : 'none'
+                  }}
+                >
+                  <span className="text-[10.5px] uppercase font-black text-slate-900 dark:text-white tracking-wider truncate w-full text-center">{item.label}</span>
+                  <span className={`font-black text-[10px] mt-2 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${
+                    isChecking
+                      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 animate-pulse'
+                      : isHealthy
+                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                        : isDegraded
+                          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30'
+                          : isOffline || isUnknown
+                            ? 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30'
+                            : 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30'
+                  }`}>
+                    {isChecking && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />}
+                    {isHealthy && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                    {isChecking ? 'Checking' : isHealthy ? 'Healthy' : isDegraded ? 'Degraded' : isOffline ? 'Offline' : isUnknown ? 'Unknown' : isFailed ? 'Failed' : 'Healthy'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
-
-        {/* Inject ripple keyframe once */}
-        <style>{`
-          @keyframes probe-ripple { to { transform: scale(2.5); opacity: 0; } }
-          @keyframes card-pop { 0% { transform: scale(0.94); opacity: 0.5; } 60% { transform: scale(1.03); } 100% { transform: scale(1); opacity: 1; } }
-        `}</style>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2.5 font-mono text-[11px]">
-          {HEALTH_ITEMS.map((item, idx) => {
-            const rawVal = systemHealth?.components?.[item.key];
-            const isChecking = isProbing || systemHealth === null;
-            const isHealthy = rawVal === 'HEALTHY' || (!isChecking && !rawVal); // Default healthy if backend operational
-            const isDegraded = rawVal === 'DEGRADED';
-            const isOffline = rawVal === 'OFFLINE';
-            const isUnknown = rawVal === 'UNKNOWN';
-            const isFailed = rawVal === 'FAILED';
-
-            return (
-              <div
-                key={`${item.key}-${probeKey}`}
-                className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 shadow-2xs ${
-                  isChecking
-                    ? 'bg-slate-50 dark:bg-navy-900/60 border-slate-200 dark:border-navy-700'
-                    : isHealthy
-                      ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-emerald-400/60 dark:border-emerald-600/60 hover:border-emerald-500'
-                      : isDegraded
-                        ? 'bg-amber-500/5 dark:bg-amber-950/20 border-amber-400/60 dark:border-amber-600/60'
-                        : isFailed
-                          ? 'bg-rose-500/5 dark:bg-rose-950/20 border-rose-400/60 dark:border-rose-600/60'
-                          : 'bg-slate-50 dark:bg-navy-900/60 border-slate-200 dark:border-navy-700'
-                }`}
-                style={{
-                  animation: probeKey > 0 ? `card-pop 0.35s cubic-bezier(0.4,0,0.2,1) ${idx * 40}ms both` : 'none'
-                }}
-              >
-                <span className="text-[10.5px] uppercase font-black text-slate-900 dark:text-white tracking-wider truncate w-full text-center">{item.label}</span>
-                <span className={`font-black text-[10px] mt-2 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${
-                  isChecking
-                    ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 animate-pulse'
-                    : isHealthy
-                      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
-                      : isDegraded
-                        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30'
-                        : isOffline || isUnknown
-                          ? 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30'
-                          : 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30'
-                }`}>
-                  {isChecking && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />}
-                  {isHealthy && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
-                  {isChecking ? 'Checking' : isHealthy ? 'Healthy' : isDegraded ? 'Degraded' : isOffline ? 'Offline' : isUnknown ? 'Unknown' : isFailed ? 'Failed' : 'Healthy'}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      )}
 
       {/* 3. QUICK JUMP / SECTION NAVIGATION BAR */}
       <div className="flex flex-col gap-3 p-3 sm:p-4 rounded-2xl glass-card border border-slate-200 dark:border-navy-700">
@@ -816,7 +850,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="w-4 h-4 text-brand-500" />
             <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
-              System Modules & Sections
+              {isAdmin ? 'System Modules & Sections' : 'Account Management Tabs'}
             </span>
           </div>
           <div className="relative w-full sm:w-72 flex items-center rounded-xl border border-slate-300 dark:border-navy-600 bg-white dark:bg-navy-950 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 shadow-xs transition-all group">
@@ -888,6 +922,13 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
       )}
 
       <div className="space-y-6">
+
+        {/* SECTION: MY ACCOUNT & PROFILE */}
+        {activeSectionFilter === 'profile' && (
+          <div className="animate-fade-in">
+            <AccountProfileSettings />
+          </div>
+        )}
 
         {/* SECTION: NOTIFICATIONS */}
         {activeSectionFilter === 'notifications' && (
@@ -1205,85 +1246,198 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
 
         {/* 5. SECTION II — CONTEST DATA ENGINE */}
         {activeSectionFilter === 'contest' && (
-          <div className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-navy-700 space-y-4 animate-fade-in">
-            <div className="flex items-center justify-between border-b pb-2.5 dark:border-navy-700">
-              <h2 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
-                <RefreshCw className="w-4 h-4 text-indigo-500" />
-                <span>Contest Data Engine</span>
-              </h2>
-              <span className="text-[10px] font-mono text-slate-400 uppercase">Section II</span>
+          <div className="glass-card p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-navy-700 bg-white dark:bg-navy-950/90 space-y-5 animate-fade-in shadow-xl relative overflow-hidden">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3 dark:border-navy-800">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                  <RefreshCw className="w-4 h-4 animate-spin-slow" />
+                </div>
+                <div>
+                  <h2 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <span>Contest Data Engine</span>
+                    <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                      Pipeline
+                    </span>
+                  </h2>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    High-performance parallel ingestion parameters, timeout limits, and automated sync guards.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2 self-start sm:self-auto">
+                <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
+                  Section II
+                </span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Fetch Timeout (Sec)</label>
-                <input
-                  type="number"
-                  value={settings.FETCH_TIMEOUT || 30}
-                  onChange={(e) => setSettings({ ...settings, FETCH_TIMEOUT: e.target.value })}
-                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 font-mono font-bold"
-                />
-              </div>
+            {/* 1. Compact Numeric Parameter Cards */}
+            <div>
+              <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">
+                Network & Concurrency Limits
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Card 1: Fetch Timeout */}
+                <div className="p-3.5 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 bg-slate-50/60 dark:bg-navy-900/40 hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-indigo-500" />
+                      Fetch Timeout
+                    </span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold">
+                      Network Cap
+                    </span>
+                  </div>
+                  <div className="relative flex items-center">
+                    <input
+                      type="number"
+                      min="5"
+                      max="120"
+                      value={settings.FETCH_TIMEOUT || 30}
+                      onChange={(e) => setSettings({ ...settings, FETCH_TIMEOUT: e.target.value })}
+                      className="w-full h-9 pl-3 pr-14 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-sm font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
+                    />
+                    <span className="absolute right-2 text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded-md pointer-events-none uppercase">
+                      SEC
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 leading-tight">
+                    Max request wait time before abort
+                  </p>
+                </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Retry Count</label>
-                <input
-                  type="number"
-                  value={settings.RETRY_COUNT || 3}
-                  onChange={(e) => setSettings({ ...settings, RETRY_COUNT: e.target.value })}
-                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 font-mono font-bold"
-                />
-              </div>
+                {/* Card 2: Retry Count */}
+                <div className="p-3.5 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 bg-slate-50/60 dark:bg-navy-900/40 hover:border-amber-300 dark:hover:border-amber-500/40 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <RotateCcw className="w-3.5 h-3.5 text-amber-500" />
+                      Retry Count
+                    </span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 font-semibold">
+                      Backoff
+                    </span>
+                  </div>
+                  <div className="relative flex items-center">
+                    <input
+                      type="number"
+                      min="0"
+                      max="10"
+                      value={settings.RETRY_COUNT || 3}
+                      onChange={(e) => setSettings({ ...settings, RETRY_COUNT: e.target.value })}
+                      className="w-full h-9 pl-3 pr-16 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-sm font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all outline-none"
+                    />
+                    <span className="absolute right-2 text-[10px] font-extrabold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded-md pointer-events-none uppercase">
+                      TRIES
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 leading-tight">
+                    Attempts on upstream failure
+                  </p>
+                </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Parallel Concurrency</label>
-                <input
-                  type="number"
-                  value={settings.PARALLEL_CONCURRENCY || 8}
-                  onChange={(e) => setSettings({ ...settings, PARALLEL_CONCURRENCY: e.target.value })}
-                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 font-mono font-bold"
-                />
+                {/* Card 3: Parallel Concurrency */}
+                <div className="p-3.5 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 bg-slate-50/60 dark:bg-navy-900/40 hover:border-emerald-300 dark:hover:border-emerald-500/40 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-emerald-500" />
+                      Parallel Concurrency
+                    </span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-semibold">
+                      Workers
+                    </span>
+                  </div>
+                  <div className="relative flex items-center">
+                    <input
+                      type="number"
+                      min="1"
+                      max="32"
+                      value={settings.PARALLEL_CONCURRENCY || 8}
+                      onChange={(e) => setSettings({ ...settings, PARALLEL_CONCURRENCY: e.target.value })}
+                      className="w-full h-9 pl-3 pr-16 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-sm font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
+                    />
+                    <span className="absolute right-2 text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded-md pointer-events-none uppercase">
+                      JOBS
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 leading-tight">
+                    Concurrent async ingest workers
+                  </p>
+                </div>
               </div>
+            </div>
 
-              <div className="md:col-span-3 flex flex-wrap items-center gap-4 pt-3">
-                <label className="flex items-center space-x-2">
+            {/* 2. Automated Pipeline Feature Toggles */}
+            <div>
+              <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">
+                Sync Modes & Guard Protocols
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <label className={`flex items-start space-x-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                  settings.AUTO_CONTEST_SYNC === 'true'
+                    ? 'border-indigo-300 dark:border-indigo-700/80 bg-indigo-50/40 dark:bg-indigo-950/20 shadow-xs ring-1 ring-indigo-500/20'
+                    : 'border-slate-200 dark:border-navy-700 bg-slate-50/40 dark:bg-navy-900/30 opacity-75'
+                }`}>
                   <input
                     type="checkbox"
                     checked={settings.AUTO_CONTEST_SYNC === 'true'}
                     onChange={(e) => setSettings({ ...settings, AUTO_CONTEST_SYNC: e.target.checked ? 'true' : 'false' })}
-                    className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                    className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                   />
-                  <span className="font-bold text-slate-800 dark:text-slate-200">Automatic Contest Sync</span>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Automatic Contest Sync</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block leading-tight mt-0.5">
+                      Poll live weekly contests on Sunday schedule
+                    </span>
+                  </div>
                 </label>
 
-                <label className="flex items-center space-x-2">
+                <label className={`flex items-start space-x-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                  settings.HISTORICAL_ARCHIVE_SYNC === 'true'
+                    ? 'border-indigo-300 dark:border-indigo-700/80 bg-indigo-50/40 dark:bg-indigo-950/20 shadow-xs ring-1 ring-indigo-500/20'
+                    : 'border-slate-200 dark:border-navy-700 bg-slate-50/40 dark:bg-navy-900/30 opacity-75'
+                }`}>
                   <input
                     type="checkbox"
                     checked={settings.HISTORICAL_ARCHIVE_SYNC === 'true'}
                     onChange={(e) => setSettings({ ...settings, HISTORICAL_ARCHIVE_SYNC: e.target.checked ? 'true' : 'false' })}
-                    className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                    className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                   />
-                  <span className="font-bold text-slate-800 dark:text-slate-200">Archive Reconciliation</span>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Archive Reconciliation</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block leading-tight mt-0.5">
+                      Auto-heal missing historical weekly sessions
+                    </span>
+                  </div>
                 </label>
 
-                <label className="flex items-center space-x-2">
+                <label className={`flex items-start space-x-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                  settings.STRICT_ZERO_SCORE_GUARD !== 'false'
+                    ? 'border-indigo-300 dark:border-indigo-700/80 bg-indigo-50/40 dark:bg-indigo-950/20 shadow-xs ring-1 ring-indigo-500/20'
+                    : 'border-slate-200 dark:border-navy-700 bg-slate-50/40 dark:bg-navy-900/30 opacity-75'
+                }`}>
                   <input
                     type="checkbox"
                     checked={settings.STRICT_ZERO_SCORE_GUARD !== 'false'}
                     onChange={(e) => setSettings({ ...settings, STRICT_ZERO_SCORE_GUARD: e.target.checked ? 'true' : 'false' })}
-                    className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                    className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                   />
-                  <span className="font-bold text-slate-800 dark:text-slate-200">Zero-Score Guard</span>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Zero-Score Guard</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block leading-tight mt-0.5">
+                      Enforce strict audit checks for 0-point entries
+                    </span>
+                  </div>
                 </label>
               </div>
             </div>
 
             {/* Action Buttons Toolbar */}
-            <div className="flex flex-wrap gap-2.5 pt-3 border-t dark:border-navy-700">
+            <div className="flex flex-wrap items-center gap-2.5 pt-3 border-t dark:border-navy-800">
               <button
                 type="button"
                 onClick={() => triggerAdvancedOp('refetch-selected', 'Sync Selected Contest Only', 'Fetch authentic participant data ONLY for the currently selected weekly contest session.', 'Does NOT touch other contests.')}
-                className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm flex items-center space-x-1.5 cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm flex items-center space-x-1.5 cursor-pointer transition-all hover:shadow-indigo-500/20"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Sync Selected Contest</span>
@@ -1292,7 +1446,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
               <button
                 type="button"
                 onClick={() => triggerAdvancedOp('reconcile-sessions', 'Sync All Historical Contests', 'Reconcile all historical Sunday contest sessions across canonical range 510–515.', 'Full archive sync.')}
-                className="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm flex items-center space-x-1.5 cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm flex items-center space-x-1.5 cursor-pointer transition-all hover:shadow-brand-500/20"
               >
                 <Database className="w-3.5 h-3.5" />
                 <span>Sync All Historical Contests</span>
@@ -1301,7 +1455,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
               <button
                 type="button"
                 onClick={() => triggerAdvancedOp('trigger-sunday', 'Force Trigger Sunday Session', 'Manually trigger Sunday contest sync and snapshot sequence right now.', 'Will initiate immediate student leetcode score sync.')}
-                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center space-x-1.5 cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center space-x-1.5 cursor-pointer transition-all hover:shadow-emerald-500/20"
               >
                 <Play className="w-3.5 h-3.5" />
                 <span>Force Trigger Live Sync</span>
@@ -1310,7 +1464,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
               <button
                 type="button"
                 onClick={() => triggerAdvancedOp('rebuild-index', 'Rebuild Leaderboard Index', 'Re-index student roster mappings and historical contest scores.', 'Re-indexes 590 student roster entries.')}
-                className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-sm flex items-center space-x-1.5 cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-sm flex items-center space-x-1.5 cursor-pointer transition-all hover:shadow-purple-500/20"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Rebuild Leaderboard Index</span>

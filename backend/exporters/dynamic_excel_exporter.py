@@ -94,10 +94,9 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     # ----------------------------------------------------
     # DEDUPLICATED CANONICAL COLUMN MAPPING
     # ----------------------------------------------------
-    # Collect all available keys across rows
     first_row = rows[0]
     all_keys = set()
-    for r in rows[:10]:
+    for r in rows[:20]:
         all_keys.update(r.keys())
 
     # ----------------------------------------------------
@@ -105,24 +104,30 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     # ----------------------------------------------------
     CANONICAL_COLUMNS = [
         ("S.No", ["s_no", "sno", "s_number", "serial_no", "index", "__sno__", "s_no."]),
-        ("Register No", ["reg_no", "register_no", "regno", "reg_number", "registration_no"]),
+        ("Register No", ["reg_no", "register_no", "regno", "reg_number", "registration_no", "register_number"]),
         ("Student Name", ["name", "student_name", "student", "full_name"]),
-        ("Department", ["dept", "department", "dept_name", "department_code"]),
+        ("Department", ["dept", "department", "dept_name", "department_code", "department_name"]),
         ("Year Level", ["year", "year_level", "academic_year", "yr"]),
-        ("LeetCode Username", ["username", "leetcode_username", "leetcode_handle", "handle"]),
+        ("Section", ["section", "sec"]),
+        ("LeetCode Username", ["username", "leetcode_username", "leetcode_handle", "handle", "primary_leetcode_id", "primary_leetcode_username"]),
         ("Attendance Status", ["status", "participation_status", "attendance_status", "attendance"]),
         ("Q1", ["q1_display", "q1", "q1_time"]),
         ("Q2", ["q2_display", "q2", "q2_time"]),
         ("Q3", ["q3_display", "q3", "q3_time"]),
         ("Q4", ["q4_display", "q4", "q4_time"]),
         ("Solved", ["contest_solved", "solved", "total_solved", "solved_str", "problems_solved"]),
-        ("Score", ["score", "performance_score", "total_score"]),
+        ("Score", ["score", "performance_score", "total_score", "contest_score"]),
         ("Global Rank", ["global_rank", "rank", "contest_ranking", "profile_rank", "profile_ranking", "rank_val"]),
         ("Contest Rating", ["rating", "contest_rating", "rating_val", "contest_rating_after"]),
         ("Total Time", ["total_time_display", "total_time", "total_time_min", "finish_time"]),
         ("Weekly Contest", ["contest_name", "session_name", "weekly_contest"]),
         ("Session Date", ["session_date", "contest_date", "report_date"]),
-        ("Batch Cohort", ["batch", "batch_cohort"]),
+        ("Batch Cohort", ["batch", "batch_cohort", "batch_year"]),
+        ("Easy", ["easy", "easy_solved", "easy_count"]),
+        ("Medium", ["medium", "medium_solved", "medium_count"]),
+        ("Hard", ["hard", "hard_solved", "hard_count"]),
+        ("College Rank", ["college_rank", "inst_rank", "institution_rank"]),
+        ("Institutional Email", ["institutional_email", "college_email", "email", "student_email"]),
         ("Total Attended", ["totalattended", "total_attended", "total_attendance"]),
         ("Total Solved", ["totalsolved", "total_solved"]),
         ("Consistency Pct", ["consistencypct", "consistency_pct", "consistency", "consistency_percentage"])
@@ -163,15 +168,19 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
     # 3. Exclude internal/redundant keys from leaking into extra unmapped columns
     EXCLUDE_KEYS = {
-        "id", "student_id", "people_id", "department_id", "dept_id", 
+        "id", "student_id", "people_id", "department_id", "dept_id", "institution_id",
+        "secondary_leetcode_id", "secondary_leetcode_url", "primary_leetcode_id", "primary_leetcode_url",
         "leetcode_url", "fetch_status", "public_result", "virtual_result", 
         "last_public_result", "last_virtual_result", "verification_status",
         "category", "is_att", "is_virtual", "rating_raw", "rank_raw", "all_rows",
+        "password_hash", "is_active", "created_at", "updated_at", "token", "auth_token", "hash",
+        "session_id", "snapshot_id", "final_snapshot_id", "batch_year",
         "s_no", "sno", "s_number", "serial_no", "index", "__sno__", "s_no.",
         "reg_no", "register_no", "regno", "reg_number", "registration_no",
         "name", "student_name", "student", "full_name",
-        "dept", "department", "dept_name", "department_code",
+        "dept", "department", "dept_name", "department_code", "department_name",
         "year", "year_level", "academic_year", "yr",
+        "section", "sec",
         "username", "leetcode_username", "leetcode_handle", "handle",
         "status", "participation_status", "attendance_status", "attendance",
         "q1", "q2", "q3", "q4", "q1_display", "q2_display", "q3_display", "q4_display",
@@ -180,9 +189,10 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         "rank", "global_rank", "contest_ranking", "profile_rank", "profile_ranking", "rank_val",
         "rating", "contest_rating", "rating_val", "contest_rating_after",
         "solved", "total_solved", "solved_str", "contest_solved", "problems_solved",
-        "score", "performance_score", "total_score",
+        "score", "performance_score", "total_score", "contest_score",
         "contest_name", "session_name", "weekly_contest", "session_date", "contest_date", "report_date",
-        "batch", "batch_cohort"
+        "batch", "batch_cohort", "easy", "easy_solved", "medium", "medium_solved", "hard", "hard_solved",
+        "college_rank", "institutional_email", "college_email", "email", "student_email"
     }
 
     for k in list(first_row.keys()):
@@ -318,7 +328,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
     # Row 6: Table Headers (No empty spacing row)
     r_hdr = 6
-    ws.row_dimensions[r_hdr].height = 24
+    ws.row_dimensions[r_hdr].height = 26
     for col_idx, h_text in enumerate(clean_headers, 1):
         cell = ws.cell(row=r_hdr, column=col_idx, value=h_text)
         cell.font = FONT_HDR
@@ -340,17 +350,21 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
     LEFT_ALIGN_TITLES = {
         "student name", "name", "full name", "student", 
-        "leetcode username", "username", "leetcode handle", "handle", "email",
+        "leetcode username", "username", "leetcode handle", "handle",
+        "institutional email", "college email", "student email", "email",
+        "department name",
         "error description", "recommended action",
         "fetch status", "verification status", "profile url", "leetcode url", "url",
         "profile_url", "leetcode_url", "profile link", "profile"
     }
 
     CENTER_TITLES = {
-        "s.no", "register no", "department", "year level", "attendance status", "data source", "error reason", 
+        "s.no", "register no", "reg no", "department", "dept", "year level", "year", "section", "sec",
+        "attendance status", "data source", "error reason", 
         "prev status", "curr status", "status",
         "q1", "q2", "q3", "q4", "solved", "score", "contest rating", 
         "global rank", "total time", "weekly contest", "session date", "batch cohort",
+        "easy", "medium", "hard", "college rank",
         "total attended", "total solved", "consistency pct",
         "prev q1", "prev q2", "prev q3", "prev q4", "prev solved", "prev score",
         "curr q1", "curr q2", "curr q3", "curr q4", "curr solved", "curr score",
@@ -455,9 +469,9 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                             est_min = 15 + (u_seed % 15)
                         elif c_sol == 1:
                             est_min = 8 + (u_seed % 10)
-                            val = f"{est_min} min"
                         else:
-                            val = "0 min"
+                            est_min = 0
+                        val = f"{est_min} min" if est_min > 0 else "0 min"
                     else:
                         val = "—"
             elif title in ("Contest Rating", "Global Rank"):
@@ -473,8 +487,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
             title_lower = title.lower().strip()
 
-            if val is None:
-                val = ""
+            if val is None or str(val).strip() in ("None", "null", "nan", "NaN"):
+                val = "—" if title_lower in ("batch cohort", "total time", "global rank", "contest rating", "score") else ""
             elif title_lower == "consistency pct":
                 v_float = _safe_float(val, default=-1.0)
                 if v_float >= 0:
@@ -483,7 +497,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                     val = "—"
             elif isinstance(val, (int, float)):
                 pass  # Keep as numeric
-            elif isinstance(val, str) and val.isdigit() and title_lower not in ("register no", "s.no"):
+            elif isinstance(val, str) and val.isdigit() and title_lower not in ("register no", "s.no", "batch cohort"):
                 val = int(val)
             elif isinstance(val, str) and ("T" in val or "-" in val) and len(val) >= 16:
                 # Format ISO 8601 timestamps nicely into local IST time display
@@ -504,7 +518,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             if is_alt:
                 cell.fill = ALT_ROW_FILL
 
-            if (title_lower in LEFT_ALIGN_TITLES or "url" in title_lower or "link" in title_lower) and title_lower not in ("data source", "error reason", "error_reason"):
+            if title_lower in LEFT_ALIGN_TITLES or ("url" in title_lower and title_lower not in ("data source", "error reason")):
                 cell.alignment = Alignment(horizontal="left", vertical="center")
             else:
                 cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -534,33 +548,54 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
         ws.row_dimensions[r_idx].height = 22
 
-    # Auto-adjust column widths cleanly with generous padding for filter buttons
+    # Auto-adjust column widths cleanly with generous padding for filter buttons & long text
     header_row_idx = 6
     for col_idx, col in enumerate(ws.columns, 1):
         col_letter = get_column_letter(col_idx)
-        max_len = 0
-        for cell in col:
-            if cell.row is not None and cell.row < header_row_idx:
-                continue
-            v_str = str(cell.value or "")
-            if cell.row == header_row_idx:  # Header row
-                max_len = max(max_len, len(v_str))
-                continue
-                
-            if len(v_str) > max_len:
-                max_len = len(v_str)
+        header_name = str(ws.cell(row=header_row_idx, column=col_idx).value or "").strip()
+        h_lower = header_name.lower()
         
-        header_name = str(ws.cell(row=header_row_idx, column=col_idx).value or "").lower().strip()
-        if "status" in header_name:
-            final_width = max(max_len + 6, 18)
-        elif header_name == "student name":
-            final_width = min(max(max_len + 6, 22), 35)
-        elif header_name in ("leetcode username", "email"):
-            final_width = min(max(max_len + 4, 16), 25)
-        elif header_name in ("data source", "error reason", "error description", "recommended action", "profile url", "leetcode url"):
-            final_width = min(max(max_len + 8, 28), 65)
+        # Calculate max length among data rows
+        max_data_len = 0
+        for cell in col:
+            if cell.row is not None and cell.row > header_row_idx:
+                v_str = str(cell.value or "").strip()
+                if v_str:
+                    max_data_len = max(max_data_len, len(v_str))
+        
+        # Header length with extra padding for Excel's auto-filter dropdown icon (requires ~4-5 chars)
+        hdr_len = len(header_name) + 5
+        content_len = max(hdr_len, max_data_len + 4)
+        
+        # Determine optimal column width based on field type
+        if h_lower == "s.no":
+            final_width = max(content_len, 8)
+        elif h_lower in ("register no", "reg no"):
+            final_width = max(content_len, 16)
+        elif h_lower in ("student name", "name"):
+            final_width = min(max(content_len, 24), 38)
+        elif h_lower in ("department", "dept"):
+            final_width = max(content_len, 14)
+        elif h_lower == "department name":
+            final_width = min(max(content_len, 32), 52)
+        elif h_lower in ("year level", "year", "section", "sec"):
+            final_width = max(content_len, 12)
+        elif h_lower in ("leetcode username", "username"):
+            final_width = min(max(content_len, 20), 30)
+        elif h_lower in ("attendance status", "status"):
+            final_width = max(content_len, 20)
+        elif h_lower in ("q1", "q2", "q3", "q4", "solved", "score", "easy", "medium", "hard"):
+            final_width = max(content_len, 10)
+        elif h_lower in ("global rank", "college rank", "rank"):
+            final_width = max(content_len, 14)
+        elif h_lower in ("contest rating", "rating", "total time", "batch cohort"):
+            final_width = max(content_len, 15)
+        elif "email" in h_lower:
+            final_width = min(max(content_len, 26), 40)
+        elif any(w in h_lower for w in ["url", "link", "description", "action", "reason"]):
+            final_width = min(max(content_len, 30), 65)
         else:
-            final_width = min(max(max_len + 6, 14), 38)
+            final_width = min(max(content_len, 14), 45)
 
         ws.column_dimensions[col_letter].width = final_width
 

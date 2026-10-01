@@ -99,6 +99,8 @@ export interface StaffRecord {
   id: number;
   username: string;
   email: string;
+  full_name?: string;
+  profile_photo?: string;
   department_id?: number;
   department_code?: string;
   assigned_count: number;

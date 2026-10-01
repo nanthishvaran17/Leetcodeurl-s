@@ -6,6 +6,7 @@ import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
 import { LiveIndicator } from './LiveIndicator';
+import { SignOutConfirmModal } from './SignOutConfirmModal';
 const NotificationPanel = lazy(() => import('./NotificationPanel').then(m => ({ default: m.NotificationPanel })));
 import { useGlobalNotifications } from '../context/GlobalNotificationContext';
 
@@ -182,27 +183,32 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Auth Profile / Login */}
               {isAuthenticated && user ? (
                 <div className="hidden sm:flex items-center space-x-1 sm:space-x-2 pl-1 border-l border-slate-200 dark:border-navy-700">
-                  <div className="flex items-center space-x-1.5 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('account-settings')}
+                    className="flex items-center space-x-1.5 flex-shrink-0 hover:opacity-85 transition-all cursor-pointer p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 text-left"
+                    title="Open Account & Profile Settings"
+                  >
                     {(user.photoURL || (user as any).profile_photo) ? (
                       <img
                         src={user.photoURL || (user as any).profile_photo}
-                        alt={user.full_name || user.name || user.username}
-                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-brand-500 object-cover bg-white dark:bg-navy-900"
+                        alt={user.full_name || user.displayName || user.name || user.username}
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-brand-500 object-contain p-0.5 bg-white dark:bg-navy-900"
                       />
                     ) : (
                       <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-brand-600 text-white font-black text-xs flex items-center justify-center uppercase">
-                        {(user.full_name || user.name || user.username || 'U')[0]}
+                        {(user.full_name || user.displayName || user.name || user.username || 'U')[0]}
                       </div>
                     )}
                     <div className="hidden sm:block text-left">
                       <div className="text-xs font-extrabold text-slate-900 dark:text-white truncate max-w-[120px]">
-                        {user.name || user.username}
+                        {user.full_name || user.displayName || user.name || user.username}
                       </div>
                       <div className="text-[10px] text-brand-600 dark:text-brand-400 font-bold uppercase tracking-wider">
                         {user.role || 'User'}
                       </div>
                     </div>
-                  </div>
+                  </button>
                   <button
                     type="button"
                     onClick={() => setShowLogoutConfirm(true)}
@@ -232,43 +238,12 @@ export const Navbar: React.FC<NavbarProps> = ({
       </header>
 
       {/* Sign Out Confirmation Modal */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center mx-auto">
-              <LogOut className="w-7 h-7" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                Sign Out Confirmation
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Are you sure you want to sign out from <span className="font-bold text-slate-800 dark:text-slate-200">{user?.name || user?.username}</span>?
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowLogoutConfirm(false)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-navy-700 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition-all cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowLogoutConfirm(false);
-                  logout();
-                }}
-                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-lg shadow-rose-600/30 transition-all cursor-pointer flex items-center justify-center space-x-1.5"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Yes, Sign Out</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <SignOutConfirmModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={logout}
+        user={user}
+      />
 
       {/* Sync Engine Status Top-Level Portal Modal */}
       <SyncStatusModal

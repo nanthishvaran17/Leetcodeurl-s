@@ -641,8 +641,15 @@ def require_role(*allowed_roles: str, dept_scoped: bool = False, faculty_scoped:
 
 def get_current_user_optional(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
     """Safely resolves current authenticated user from HttpOnly cookie or Bearer header."""
-    from backend.routes.auth import get_current_user_from_request
-    return get_current_user_from_request(request, db)
+    try:
+        from backend.routes.auth import get_current_user_from_request
+        return get_current_user_from_request(request, db)
+    except Exception:
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        return None
 
 def get_authenticated_user_scope(db: Session, user: User) -> dict:
     """

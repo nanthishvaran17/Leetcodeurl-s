@@ -53,12 +53,15 @@ def run_db_migrations():
             ("users", "phone_number", "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30)"),
             ("users", "whatsapp_verified", "ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_verified BOOLEAN DEFAULT FALSE"),
             ("users", "date_of_birth", "ALTER TABLE users ADD COLUMN IF NOT EXISTS date_of_birth DATE"),
+            ("users", "profile_photo", "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo TEXT"),
             ("users", "department_id", "ALTER TABLE users ADD COLUMN IF NOT EXISTS department_id INTEGER"),
             ("users", "section_id", "ALTER TABLE users ADD COLUMN IF NOT EXISTS section_id INTEGER"),
             ("users", "academic_year", "ALTER TABLE users ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20)"),
             ("users", "mentoring_role", "ALTER TABLE users ADD COLUMN IF NOT EXISTS mentoring_role VARCHAR(50)"),
             ("users", "require_password_change", "ALTER TABLE users ADD COLUMN IF NOT EXISTS require_password_change BOOLEAN DEFAULT FALSE"),
             ("users", "last_login", "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP"),
+            ("users", "last_login_ip", "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_ip VARCHAR(50)"),
+            ("users", "last_login_device", "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_device VARCHAR(255)"),
             ("users", "last_activity", "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_activity TIMESTAMP"),
             ("users", "totp_secret", "ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(64)"),
             ("users", "is_2fa_enabled", "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_2fa_enabled BOOLEAN DEFAULT FALSE"),
@@ -255,6 +258,58 @@ def run_db_migrations():
             ("report_cache", "generation_time_ms", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS generation_time_ms FLOAT"),
             ("report_cache", "file_size_bytes", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS file_size_bytes INTEGER"),
             ("report_cache", "error_message", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS error_message TEXT"),
+            # weekly_session_snapshots
+            ("weekly_session_snapshots", "is_sequence_broken", "ALTER TABLE weekly_session_snapshots ADD COLUMN IF NOT EXISTS is_sequence_broken BOOLEAN DEFAULT FALSE"),
+            # admin_audit_logs
+            ("admin_audit_logs", "audit_id", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS audit_id VARCHAR(100)"),
+            ("admin_audit_logs", "event_timestamp", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS event_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"),
+            ("admin_audit_logs", "admin_user_id", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS admin_user_id INTEGER"),
+            ("admin_audit_logs", "admin_name", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS admin_name VARCHAR(150)"),
+            ("admin_audit_logs", "admin_email", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS admin_email VARCHAR(150)"),
+            ("admin_audit_logs", "admin_role", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS admin_role VARCHAR(50) DEFAULT 'ADMIN'"),
+            ("admin_audit_logs", "access_level", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS access_level VARCHAR(50) DEFAULT 'LEVEL_1'"),
+            ("admin_audit_logs", "action", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS action VARCHAR(100)"),
+            ("admin_audit_logs", "action_type", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS action_type VARCHAR(50) DEFAULT 'GENERAL'"),
+            ("admin_audit_logs", "action_classification", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS action_classification VARCHAR(50) DEFAULT 'SECURITY_ACCESS'"),
+            ("admin_audit_logs", "status", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'SUCCESS'"),
+            ("admin_audit_logs", "severity", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS severity VARCHAR(30) DEFAULT 'INFO'"),
+            ("admin_audit_logs", "target_type", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS target_type VARCHAR(50)"),
+            ("admin_audit_logs", "target_id", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS target_id VARCHAR(100)"),
+            ("admin_audit_logs", "resource_name", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS resource_name VARCHAR(150)"),
+            ("admin_audit_logs", "route", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS route VARCHAR(255)"),
+            ("admin_audit_logs", "http_method", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS http_method VARCHAR(10)"),
+            ("admin_audit_logs", "ip_address", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS ip_address VARCHAR(50)"),
+            ("admin_audit_logs", "client_ip", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS client_ip VARCHAR(50)"),
+            ("admin_audit_logs", "ip_version", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS ip_version VARCHAR(10) DEFAULT 'IPv4'"),
+            ("admin_audit_logs", "session_id", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS session_id VARCHAR(100)"),
+            ("admin_audit_logs", "request_id", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS request_id VARCHAR(100)"),
+            ("admin_audit_logs", "correlation_id", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS correlation_id VARCHAR(100)"),
+            ("admin_audit_logs", "browser", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS browser VARCHAR(100)"),
+            ("admin_audit_logs", "browser_version", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS browser_version VARCHAR(50)"),
+            ("admin_audit_logs", "operating_system", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS operating_system VARCHAR(100)"),
+            ("admin_audit_logs", "device_type", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS device_type VARCHAR(50)"),
+            ("admin_audit_logs", "user_agent_category", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS user_agent_category VARCHAR(100)"),
+            ("admin_audit_logs", "user_agent", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS user_agent VARCHAR(500)"),
+            ("admin_audit_logs", "authentication_status", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS authentication_status VARCHAR(50) DEFAULT 'AUTHENTICATED'"),
+            ("admin_audit_logs", "authorization_result", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS authorization_result VARCHAR(50) DEFAULT 'ALLOWED'"),
+            ("admin_audit_logs", "permission_checked", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS permission_checked VARCHAR(100)"),
+            ("admin_audit_logs", "risk_level", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS risk_level VARCHAR(30) DEFAULT 'LOW'"),
+            ("admin_audit_logs", "denial_reason", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS denial_reason TEXT"),
+            ("admin_audit_logs", "request_timestamp", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS request_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"),
+            ("admin_audit_logs", "response_timestamp", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS response_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"),
+            ("admin_audit_logs", "response_status", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS response_status INTEGER DEFAULT 200"),
+            ("admin_audit_logs", "response_time_ms", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS response_time_ms DOUBLE PRECISION DEFAULT 0.0"),
+            ("admin_audit_logs", "trace_id", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS trace_id VARCHAR(100)"),
+            ("admin_audit_logs", "event_hash", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS event_hash VARCHAR(100)"),
+            ("admin_audit_logs", "previous_event_hash", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS previous_event_hash VARCHAR(100)"),
+            ("admin_audit_logs", "integrity_status", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS integrity_status VARCHAR(30) DEFAULT 'VERIFIED'"),
+            ("admin_audit_logs", "institution_id", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS institution_id VARCHAR(50) DEFAULT 'NEC'"),
+            ("admin_audit_logs", "institution_branding_version", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS institution_branding_version VARCHAR(50) DEFAULT 'v1.0'"),
+            ("admin_audit_logs", "institution_logo_reference", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS institution_logo_reference VARCHAR(100) DEFAULT 'nandha_emblem.png'"),
+            ("admin_audit_logs", "description", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS description TEXT"),
+            ("admin_audit_logs", "metadata_json", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS metadata_json JSONB"),
+            ("admin_audit_logs", "created_at", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"),
+            ("admin_audit_logs", "updated_at", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"),
         ]
 
         for t_name, c_name, migration_sql in pg_migrations:
@@ -267,6 +322,27 @@ def run_db_migrations():
                     print(f"[PG Migration] Added column {c_name} to {t_name}")
             except Exception as _col_err:
                 print(f"[PG Migration] Note ({t_name}.{c_name}): {_col_err}")
+
+        # Ensure weekly_verification_records exists in PostgreSQL
+        try:
+            with engine.begin() as pg_conn:
+                pg_conn.execute(sql_text("""
+                    CREATE TABLE IF NOT EXISTS weekly_verification_records (
+                        id SERIAL PRIMARY KEY,
+                        student_id INTEGER NOT NULL REFERENCES students(id),
+                        verification_week INTEGER NOT NULL,
+                        notification_type VARCHAR(50) NOT NULL,
+                        primary_solved INTEGER,
+                        secondary_solved INTEGER,
+                        status VARCHAR(30),
+                        email_dispatched BOOLEAN,
+                        timestamp TIMESTAMP,
+                        CONSTRAINT uq_weekly_verification_record
+                            UNIQUE (student_id, verification_week, notification_type)
+                    );
+                """))
+        except Exception as _wvr_err:
+            pass
 
         # Session Recovery 
         try:
@@ -317,6 +393,45 @@ def run_db_migrations():
             continue
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
+
+        # Ensure all users columns exist in SQLite
+        try:
+            cursor.execute("PRAGMA table_info(users)")
+            user_cols = {info[1] for info in cursor.fetchall()}
+            if user_cols:
+                user_migrations_sqlite = [
+                    ("full_name", "ALTER TABLE users ADD COLUMN full_name VARCHAR(150)"),
+                    ("designation", "ALTER TABLE users ADD COLUMN designation VARCHAR(100)"),
+                    ("institutional_id", "ALTER TABLE users ADD COLUMN institutional_id VARCHAR(50)"),
+                    ("phone_number", "ALTER TABLE users ADD COLUMN phone_number VARCHAR(30)"),
+                    ("whatsapp_verified", "ALTER TABLE users ADD COLUMN whatsapp_verified BOOLEAN DEFAULT 0"),
+                    ("date_of_birth", "ALTER TABLE users ADD COLUMN date_of_birth DATE"),
+                    ("profile_photo", "ALTER TABLE users ADD COLUMN profile_photo TEXT"),
+                    ("department_id", "ALTER TABLE users ADD COLUMN department_id INTEGER"),
+                    ("section_id", "ALTER TABLE users ADD COLUMN section_id INTEGER"),
+                    ("academic_year", "ALTER TABLE users ADD COLUMN academic_year VARCHAR(20)"),
+                    ("mentoring_role", "ALTER TABLE users ADD COLUMN mentoring_role VARCHAR(50)"),
+                    ("require_password_change", "ALTER TABLE users ADD COLUMN require_password_change BOOLEAN DEFAULT 0"),
+                    ("is_active", "ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1"),
+                    ("last_login", "ALTER TABLE users ADD COLUMN last_login DATETIME"),
+                    ("last_login_ip", "ALTER TABLE users ADD COLUMN last_login_ip VARCHAR(50)"),
+                    ("last_login_device", "ALTER TABLE users ADD COLUMN last_login_device VARCHAR(255)"),
+                    ("last_activity", "ALTER TABLE users ADD COLUMN last_activity DATETIME"),
+                    ("totp_secret", "ALTER TABLE users ADD COLUMN totp_secret VARCHAR(100)"),
+                    ("is_2fa_enabled", "ALTER TABLE users ADD COLUMN is_2fa_enabled BOOLEAN DEFAULT 0"),
+                    ("created_at", "ALTER TABLE users ADD COLUMN created_at DATETIME"),
+                    ("reporting_manager_id", "ALTER TABLE users ADD COLUMN reporting_manager_id INTEGER"),
+                ]
+                for cname, csql in user_migrations_sqlite:
+                    if cname not in user_cols:
+                        try:
+                            cursor.execute(csql)
+                            conn.commit()
+                            print(f"[DB Migration] Added column {cname} to users table in SQLite ({db_path}).")
+                        except Exception as _uerr:
+                            print(f"[DB Migration] users column {cname} note: {_uerr}")
+        except Exception as _user_col_err:
+            print(f"[DB Migration] users table migration note: {_user_col_err}")
 
         # Migrate official_weekly_snapshots if unique constraint exists
         try:

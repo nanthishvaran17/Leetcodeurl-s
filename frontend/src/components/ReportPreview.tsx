@@ -1009,7 +1009,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10">
                         <tr>
                           <th className="px-3 py-3 text-center align-middle w-10" rowSpan={2}>S.No</th>
-                          <th className="px-3 py-3 text-center align-middle sticky left-0 bg-[#16324F] z-20" rowSpan={2}>Register No</th>
+                          <th className="px-3 py-3 text-center align-middle" rowSpan={2}>Register No</th>
                           <th className="px-3 py-3 text-left align-middle" rowSpan={2}>Student Name</th>
                           <th className="px-3 py-3 text-center align-middle" rowSpan={2}>Dept</th>
                           <th className="px-3 py-3 text-center align-middle" rowSpan={2}>Yr</th>
@@ -1031,7 +1031,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         {(report.rows || []).map((r: any, idx: number) => (
                           <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
                             <td className="px-3 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{r.s_no}</td>
-                            <td className="px-3 py-2.5 text-center font-black font-mono text-slate-950 dark:text-white sticky left-0 bg-white dark:bg-navy-950">{r.reg_no}</td>
+                            <td className="px-3 py-2.5 text-center font-black font-mono text-slate-950 dark:text-white">{r.reg_no}</td>
                             <td className="px-3 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{r.name}</td>
                             <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{r.dept}</td>
                             <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{r.year}</td>
@@ -1113,7 +1113,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10">
                         <tr>
                           <th className="px-3 py-3 text-center align-middle w-10">S.No</th>
-                          <th className="px-3 py-3 text-center align-middle sticky left-0 bg-[#16324F] z-20">Register No</th>
+                          <th className="px-3 py-3 text-center align-middle">Register No</th>
                           <th className="px-3 py-3 text-left align-middle">Student Name</th>
                           <th className="px-3 py-3 text-center align-middle">Dept</th>
                           <th className="px-3 py-3 text-center align-middle">Yr</th>
@@ -1129,7 +1129,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         {(report.rows || []).map((r: any, idx: number) => (
                           <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
                             <td className="px-3 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{r.s_no}</td>
-                            <td className="px-3 py-2.5 text-center font-black font-mono text-slate-950 dark:text-white sticky left-0 bg-white dark:bg-navy-950">{r.reg_no}</td>
+                            <td className="px-3 py-2.5 text-center font-black font-mono text-slate-950 dark:text-white">{r.reg_no}</td>
                             <td className="px-3 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{r.name}</td>
                             <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{r.dept}</td>
                             <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{r.year}</td>
@@ -1227,7 +1227,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       {isFridayOfficial ? (
                         <tr>
                           <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
-                          <th className="px-3.5 py-3 text-center sticky left-0 bg-[#16324F] print:bg-slate-200 print:border-b print:border-black z-20">Register No</th>
+                          <th className="px-3.5 py-3 text-center print:border-b print:border-black">Register No</th>
                           <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Department</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
@@ -1245,7 +1245,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       ) : isSundayLive ? (
                         <tr>
                           <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
-                          <th className="px-3.5 py-3 text-center sticky left-0 bg-[#16324F] print:bg-slate-200 print:border-b print:border-black z-20">Register No</th>
+                          <th className="px-3.5 py-3 text-center print:border-b print:border-black">Register No</th>
                           <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
                           <th className="px-4 py-3 text-center print:border-b print:border-black">Attendance</th>
                           <th className="px-3 py-3 text-center print:border-b print:border-black">Q1</th>
@@ -1258,7 +1258,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       ) : (
                         <tr>
                           <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
-                          <th className="px-3.5 py-3 text-center sticky left-0 bg-[#16324F] print:bg-slate-200 print:border-b print:border-black z-20">Register No</th>
+                          <th className="px-3.5 py-3 text-center print:border-b print:border-black">Register No</th>
                           <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
@@ -1295,7 +1295,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           return (
                             <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
                               <td className="px-3.5 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black">{idx + 1}</td>
-                              <td className="px-3.5 py-2.5 text-center font-black text-slate-950 dark:text-white font-mono sticky left-0 bg-white dark:bg-navy-950 group-hover:bg-slate-100 dark:group-hover:bg-navy-800 print:bg-transparent print:text-black z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none">{s.reg_no}</td>
+                              <td className="px-3.5 py-2.5 text-center font-black text-slate-950 dark:text-white font-mono print:text-black">{s.reg_no}</td>
                               <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
                               <td className="px-3.5 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
                               <td className="px-3.5 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
@@ -1341,7 +1341,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           return (
                             <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
                               <td className="px-3.5 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black">{idx + 1}</td>
-                              <td className="px-3.5 py-2.5 font-black text-slate-950 dark:text-white font-mono sticky left-0 bg-white dark:bg-navy-950 group-hover:bg-slate-100 dark:group-hover:bg-navy-800 print:bg-transparent print:text-black z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none">{s.reg_no}</td>
+                              <td className="px-3.5 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black">{s.reg_no}</td>
                               <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
                               <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
                                 {getStatusBadge(s.status)}
@@ -1381,7 +1381,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         return (
                           <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
                             <td className="px-3.5 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black">{idx + 1}</td>
-                            <td className="px-3.5 py-2.5 font-black text-slate-950 dark:text-white font-mono sticky left-0 bg-white dark:bg-navy-950 group-hover:bg-slate-100 dark:group-hover:bg-navy-800 print:bg-transparent print:text-black z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none">{s.reg_no}</td>
+                            <td className="px-3.5 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black">{s.reg_no}</td>
                             <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
                             <td className="px-3.5 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
                             <td className="px-3.5 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
@@ -1701,7 +1701,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10">
                               <tr>
                                 <th className="px-3 py-3 text-center w-10">S.No</th>
-                                <th className="px-3 py-3 sticky left-0 bg-[#16324F] z-20">Reg No</th>
+                                <th className="px-3 py-3 text-center">Reg No</th>
                                 <th className="px-3 py-3">Name</th>
                                 <th className="px-3 py-3 text-center">Dept</th>
                                 <th className="px-3 py-3 text-center">Yr</th>
@@ -1736,7 +1736,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                 return (
                                   <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
                                     <td className="px-3 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{s.s_no || (idx + 1)}</td>
-                                    <td className="px-3 py-2.5 font-black font-mono text-slate-950 dark:text-white sticky left-0 bg-white dark:bg-navy-950">{s.reg_no}</td>
+                                    <td className="px-3 py-2.5 font-black font-mono text-slate-950 dark:text-white text-center">{s.reg_no}</td>
                                     <td className="px-3 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{formatStudentName(s.name || s.student_name)}</td>
                                     <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
                                     <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
@@ -2185,8 +2185,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10 table-header-group print:table-header-group print:bg-slate-200 print:text-black">
                         <tr>
                           <th className="px-4 py-3 text-center print:border-b print:border-black">S.No</th>
-                          <th className="px-4 py-3 sticky left-0 bg-[#16324F] print:bg-slate-200 print:border-b print:border-black z-20">Reg No</th>
-                          <th className="px-4 py-3 print:border-b print:border-black">Student Name</th>
+                          <th className="px-4 py-3 text-center print:border-b print:border-black">Reg No</th>
+                          <th className="px-4 py-3 text-left print:border-b print:border-black">Student Name</th>
                           <th className="px-4 py-3 text-center print:border-b print:border-black">Dept</th>
                           <th className="px-4 py-3 text-center print:border-b print:border-black">Year</th>
                           <th className="px-4 py-3 text-right print:border-b print:border-black">Easy</th>
@@ -2200,7 +2200,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         {allRows.map((s: any, idx: number) => (
                           <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
                             <td className="px-4 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black">{idx + 1}</td>
-                            <td className="px-4 py-2.5 font-black text-slate-950 dark:text-white sticky left-0 bg-white dark:bg-navy-950 group-hover:bg-slate-100 dark:group-hover:bg-navy-800 print:bg-transparent print:text-black z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none">{s.reg_no}</td>
+                            <td className="px-4 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black">{s.reg_no}</td>
                             <td className="px-4 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
                             <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
                             <td className="px-4 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>

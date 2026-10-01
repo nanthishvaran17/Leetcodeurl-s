@@ -65,6 +65,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       institutional_id: newUser.institutional_id || null,
       designation: newUser.designation || null,
       staff_verification_status: newUser.staff_verification_status || 'NOT_SUBMITTED',
+      profile_photo: newUser.profile_photo || null,
+      photoURL: newUser.photoURL || null,
       // HOD multi-department scope — populated from backend on every login/session
       authorized_department_ids: Array.isArray(newUser.authorized_department_ids)
         ? newUser.authorized_department_ids
@@ -118,13 +120,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthState('AUTH_UNAUTHENTICATED');
   }, [clearAuthError]);
 
-  // Handle global auth_logout event triggered by api.ts on expired refresh
+  // Handle global events: auth_logout and profile updates
   useEffect(() => {
     const handleGlobalLogout = () => {
       logout();
     };
+    
+    const handleProfileUpdate = (e: any) => {
+      if (e.detail) {
+        setUser((prev) => {
+          if (!prev) return prev;
+          const updated = { ...prev, ...e.detail };
+          localStorage.setItem('user', JSON.stringify(updated));
+          return updated;
+        });
+      }
+    };
+
     window.addEventListener('auth_logout', handleGlobalLogout);
-    return () => window.removeEventListener('auth_logout', handleGlobalLogout);
+    window.addEventListener('nec_user_profile_updated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('auth_logout', handleGlobalLogout);
+      window.removeEventListener('nec_user_profile_updated', handleProfileUpdate);
+    };
   }, [logout]);
 
   // Centralized Firebase User Resolution Helper (Checks getRedirectResult, currentUser, onAuthStateChanged, and bounded polling)

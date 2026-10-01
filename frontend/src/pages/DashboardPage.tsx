@@ -475,12 +475,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-2 pb-2 animate-page-enter w-full">
       
       {/* 1. INSTITUTIONAL PERFORMANCE OVERVIEW */}
-      <div className="stagger-1 relative overflow-hidden rounded-3xl bg-slate-900/95 dark:bg-navy-950/95 text-white p-4 sm:p-6 lg:p-8 shadow-2xl border border-slate-700/80 dark:border-brand-500/30">
+      <div className="stagger-1 relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900/95 to-indigo-950/90 text-white p-5 sm:p-7 lg:p-8 shadow-2xl border border-slate-700/80 dark:border-brand-500/30">
         
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8">
-          {/* Left: Title & Description */}
-          <div className="space-y-3.5 min-w-0 flex-1 max-w-full">
+        {/* Subtle decorative background glow */}
+        <div className="absolute -top-24 -left-24 w-72 h-72 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8">
+          {/* Left: Title, Avatar & Description */}
+          <div className="space-y-4 min-w-0 flex-1 max-w-full">
 
             <AnimatedWelcomeHeading
               className="font-display font-black tracking-tight text-white uppercase drop-shadow-sm max-w-full"
@@ -488,7 +491,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             />
 
             {!(['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())) && (
-              <p className="text-slate-300 text-xs sm:text-sm font-semibold mt-1">Manage your institutional intelligence workspace.</p>
+              <p className="text-slate-300 text-xs sm:text-sm font-semibold">Manage your institutional intelligence workspace.</p>
             )}
 
             <p className="text-xs sm:text-sm text-slate-300/90 font-medium tracking-wide leading-relaxed max-w-2xl">
@@ -502,7 +505,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </p>
 
             {/* Embedded Live Metric Pills */}
-            <div className="pt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+            <div className="pt-1 flex flex-wrap items-center gap-2 text-xs font-bold">
               <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">
                 <Users className="w-3.5 h-3.5 text-brand-400" />
                 <span className="text-slate-300">Enrolled:</span>

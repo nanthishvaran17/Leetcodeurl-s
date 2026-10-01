@@ -54,349 +54,15 @@ async def _deferred_startup_tasks():
     """Executes background DB migrations, admin reconcile, and scheduler asynchronously after port binding."""
     logger.info("[STARTUP] Running background post-bind initialization...")
 
-    def _run_safety_schema_migration():
-        """
-        Idempotent safety migration: adds any missing columns directly via raw SQL.
-        This runs EVERY startup and is a guaranteed no-op if columns already exist.
-        It runs BEFORE Alembic so that even if Alembic has issues, the schema is correct.
-        """
-        try:
-            db_url_str = str(engine.url)
-            is_sqlite = "sqlite" in db_url_str
-            should_create_all = True
-            if is_sqlite:
-                try:
-                    with engine.connect() as _c_check:
-                        _tbl_count = _c_check.execute(text("SELECT count(*) FROM sqlite_master WHERE type='table'")).scalar()
-                    if _tbl_count and _tbl_count >= 5:
-                        should_create_all = False
-                except Exception:
-                    should_create_all = True
-            if should_create_all:
-                from backend.models import Base as ModelsBase
-                ModelsBase.metadata.create_all(bind=engine)
-        except Exception as _c_err:
-            logger.warning(f"[STARTUP] Base.metadata.create_all note: {_c_err}")
-
-        try:
-            db_url_str = str(engine.url)
-            is_pg = "postgresql" in db_url_str or "postgres" in db_url_str
-
-            if is_pg:
-                pg_statements = [
-                    """
-                    ALTER TABLE users
-                        ADD COLUMN IF NOT EXISTS full_name VARCHAR(150),
-                        ADD COLUMN IF NOT EXISTS designation VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS institutional_id VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30),
-                        ADD COLUMN IF NOT EXISTS whatsapp_verified BOOLEAN DEFAULT FALSE,
-                        ADD COLUMN IF NOT EXISTS date_of_birth DATE,
-                        ADD COLUMN IF NOT EXISTS profile_photo TEXT,
-                        ADD COLUMN IF NOT EXISTS department_id INTEGER,
-                        ADD COLUMN IF NOT EXISTS section_id INTEGER,
-                        ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20),
-                        ADD COLUMN IF NOT EXISTS mentoring_role VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS require_password_change BOOLEAN DEFAULT FALSE,
-                        ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
-                        ADD COLUMN IF NOT EXISTS last_login TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS last_activity TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS is_2fa_enabled BOOLEAN DEFAULT FALSE,
-                        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        ADD COLUMN IF NOT EXISTS reporting_manager_id INTEGER;
-                    """,
-                    """
-                    ALTER TABLE students
-                        ADD COLUMN IF NOT EXISTS people_id VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none',
-                        ADD COLUMN IF NOT EXISTS accommodation VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS twelfth_cutoff DOUBLE PRECISION,
-                        ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30),
-                        ADD COLUMN IF NOT EXISTS whatsapp_verified BOOLEAN DEFAULT FALSE,
-                        ADD COLUMN IF NOT EXISTS date_of_birth DATE,
-                        ADD COLUMN IF NOT EXISTS batch VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS institutional_email VARCHAR(150),
-                        ADD COLUMN IF NOT EXISTS email_status VARCHAR(50) DEFAULT 'pending',
-                        ADD COLUMN IF NOT EXISTS allocation VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS codeforces_username VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS hackerrank_username VARCHAR(100);
-                    """,
-                    """
-                    ALTER TABLE student_contest_participations
-                        ADD COLUMN IF NOT EXISTS official_attendance_state VARCHAR(30),
-                        ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE,
-                        ADD COLUMN IF NOT EXISTS frozen_at TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS post_contest_solves_count INTEGER DEFAULT 0,
-                        ADD COLUMN IF NOT EXISTS live_solves_count INTEGER DEFAULT 0,
-                        ADD COLUMN IF NOT EXISTS solved_problems TEXT,
-                        ADD COLUMN IF NOT EXISTS classification_signal VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS solve_timeline JSONB,
-                        ADD COLUMN IF NOT EXISTS confidence VARCHAR(50) DEFAULT 'HIGH',
-                        ADD COLUMN IF NOT EXISTS verification_level VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS verification_evidence TEXT;
-                    """,
-                    """
-                    ALTER TABLE weekly_session_snapshots
-                        ADD COLUMN IF NOT EXISTS is_sequence_broken BOOLEAN DEFAULT FALSE;
-                    """,
-                    """
-                    ALTER TABLE admin_audit_logs
-                        ADD COLUMN IF NOT EXISTS audit_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS event_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        ADD COLUMN IF NOT EXISTS admin_user_id INTEGER,
-                        ADD COLUMN IF NOT EXISTS admin_name VARCHAR(150),
-                        ADD COLUMN IF NOT EXISTS admin_email VARCHAR(150),
-                        ADD COLUMN IF NOT EXISTS admin_role VARCHAR(50) DEFAULT 'ADMIN',
-                        ADD COLUMN IF NOT EXISTS access_level VARCHAR(50) DEFAULT 'LEVEL_1',
-                        ADD COLUMN IF NOT EXISTS action VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS action_type VARCHAR(50) DEFAULT 'GENERAL',
-                        ADD COLUMN IF NOT EXISTS action_classification VARCHAR(50) DEFAULT 'SECURITY_ACCESS',
-                        ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'SUCCESS',
-                        ADD COLUMN IF NOT EXISTS severity VARCHAR(30) DEFAULT 'INFO',
-                        ADD COLUMN IF NOT EXISTS target_type VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS target_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS resource_name VARCHAR(150),
-                        ADD COLUMN IF NOT EXISTS route VARCHAR(255),
-                        ADD COLUMN IF NOT EXISTS http_method VARCHAR(10),
-                        ADD COLUMN IF NOT EXISTS ip_address VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS client_ip VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS ip_version VARCHAR(10) DEFAULT 'IPv4',
-                        ADD COLUMN IF NOT EXISTS session_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS request_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS correlation_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS browser VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS browser_version VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS operating_system VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS device_type VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS user_agent_category VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS user_agent VARCHAR(500),
-                        ADD COLUMN IF NOT EXISTS authentication_status VARCHAR(50) DEFAULT 'AUTHENTICATED',
-                        ADD COLUMN IF NOT EXISTS authorization_result VARCHAR(50) DEFAULT 'ALLOWED',
-                        ADD COLUMN IF NOT EXISTS permission_checked VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS risk_level VARCHAR(30) DEFAULT 'LOW',
-                        ADD COLUMN IF NOT EXISTS denial_reason TEXT,
-                        ADD COLUMN IF NOT EXISTS request_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        ADD COLUMN IF NOT EXISTS response_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        ADD COLUMN IF NOT EXISTS response_status INTEGER DEFAULT 200,
-                        ADD COLUMN IF NOT EXISTS response_time_ms DOUBLE PRECISION DEFAULT 0.0,
-                        ADD COLUMN IF NOT EXISTS trace_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS event_hash VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS previous_event_hash VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS integrity_status VARCHAR(30) DEFAULT 'VERIFIED',
-                        ADD COLUMN IF NOT EXISTS institution_id VARCHAR(50) DEFAULT 'NEC',
-                        ADD COLUMN IF NOT EXISTS institution_branding_version VARCHAR(50) DEFAULT 'v1.0',
-                        ADD COLUMN IF NOT EXISTS institution_logo_reference VARCHAR(100) DEFAULT 'nandha_emblem.png',
-                        ADD COLUMN IF NOT EXISTS description TEXT,
-                        ADD COLUMN IF NOT EXISTS metadata_json JSONB,
-                        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
-                    """,
-                    """
-                    ALTER TABLE weekly_sessions
-                        ADD COLUMN IF NOT EXISTS manual_review_required_at TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS manual_review_reason TEXT,
-                        ADD COLUMN IF NOT EXISTS last_successful_source_fetch TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS last_reconciliation_attempt TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS reconciliation_failure_count INTEGER DEFAULT 0,
-                        ADD COLUMN IF NOT EXISTS last_error_code VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS last_error_message_safe TEXT,
-                        ADD COLUMN IF NOT EXISTS finalization_method VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS finalized_by VARCHAR(150),
-                        ADD COLUMN IF NOT EXISTS scheduled_start TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS actual_start TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS scheduled_end TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS actual_end TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS baseline_status VARCHAR(30) DEFAULT 'PENDING',
-                        ADD COLUMN IF NOT EXISTS last_fetch_at TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS last_event_id INTEGER DEFAULT 0,
-                        ADD COLUMN IF NOT EXISTS worker_heartbeat TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS worker_status VARCHAR(30) DEFAULT 'IDLE',
-                        ADD COLUMN IF NOT EXISTS worker_instance_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS retry_count INTEGER DEFAULT 0,
-                        ADD COLUMN IF NOT EXISTS last_error TEXT,
-                        ADD COLUMN IF NOT EXISTS finalized BOOLEAN DEFAULT FALSE,
-                        ADD COLUMN IF NOT EXISTS report_generation_status VARCHAR(30) DEFAULT 'PENDING',
-                        ADD COLUMN IF NOT EXISTS email_dispatch_status VARCHAR(30) DEFAULT 'PENDING';
-                    """,
-                    """
-                    ALTER TABLE weekly_public_results
-                        ADD COLUMN IF NOT EXISTS participant_entry_time TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS participant_entry_time_source VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS participant_entry_time_confidence VARCHAR(20),
-                        ADD COLUMN IF NOT EXISTS participant_entry_time_method VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS participant_entry_time_observed_at TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS q1_observed_seconds INTEGER,
-                        ADD COLUMN IF NOT EXISTS q2_observed_seconds INTEGER,
-                        ADD COLUMN IF NOT EXISTS q3_observed_seconds INTEGER,
-                        ADD COLUMN IF NOT EXISTS q4_observed_seconds INTEGER,
-                        ADD COLUMN IF NOT EXISTS q1_estimated_seconds INTEGER,
-                        ADD COLUMN IF NOT EXISTS q2_estimated_seconds INTEGER,
-                        ADD COLUMN IF NOT EXISTS q3_estimated_seconds INTEGER,
-                        ADD COLUMN IF NOT EXISTS q4_estimated_seconds INTEGER,
-                        ADD COLUMN IF NOT EXISTS q1_time_source VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS q2_time_source VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS q3_time_source VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS q4_time_source VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS timing_calculation_version VARCHAR(20),
-                        ADD COLUMN IF NOT EXISTS timing_calculated_at TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS timing_confidence VARCHAR(20),
-                        ADD COLUMN IF NOT EXISTS classification_signal VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS solve_timeline JSONB;
-                    """,
-                    """
-                    ALTER TABLE weekly_virtual_results
-                        ADD COLUMN IF NOT EXISTS participant_entry_time TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS participant_entry_time_source VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS participant_entry_time_confidence VARCHAR(20),
-                        ADD COLUMN IF NOT EXISTS participant_entry_time_method VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS participant_entry_time_observed_at TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS classification_signal VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS solve_timeline JSONB;
-                    """
-                ]
-                for stmt in pg_statements:
-                    try:
-                        with engine.begin() as atomic_conn:
-                            atomic_conn.execute(text("SET lock_timeout = '2s';"))
-                            atomic_conn.execute(text(stmt))
-                    except Exception as _st_err:
-                        logger.warning(f"[STARTUP] Atomic migration stmt note: {_st_err}")
-
-                try:
-                    with engine.begin() as conn:
-                        conn.execute(text("SET lock_timeout = '2s';"))
-                        conn.execute(text("""
-                            UPDATE students
-                            SET primary_leetcode_id = username
-                            WHERE primary_leetcode_id IS NULL AND username IS NOT NULL
-                        """))
-                        conn.execute(text("""
-                            CREATE INDEX IF NOT EXISTS ix_students_primary_leetcode_id
-                            ON students (primary_leetcode_id)
-                        """))
-                        conn.execute(text("""
-                            CREATE INDEX IF NOT EXISTS ix_students_secondary_leetcode_id
-                            ON students (secondary_leetcode_id)
-                        """))
-                except Exception as _pg_stu_err:
-                    logger.warning(f"[STARTUP] PostgreSQL student update note: {_pg_stu_err}")
-                    conn.execute(text("""
-                        CREATE TABLE IF NOT EXISTS weekly_verification_records (
-                            id SERIAL PRIMARY KEY,
-                            student_id INTEGER NOT NULL REFERENCES students(id),
-                            verification_week INTEGER NOT NULL,
-                            notification_type VARCHAR(50) NOT NULL,
-                            primary_solved INTEGER,
-                            secondary_solved INTEGER,
-                            status VARCHAR(30),
-                            email_dispatched BOOLEAN,
-                            timestamp TIMESTAMP,
-                            CONSTRAINT uq_weekly_verification_record
-                                UNIQUE (student_id, verification_week, notification_type)
-                        )
-                    """))
-            else:
-                with engine.begin() as conn:
-                    try:
-                        res = conn.execute(text("PRAGMA table_info(student_contest_participations)")).fetchall()
-                        scp_cols = {r[1] for r in res}
-                        if scp_cols:
-                            sqlite_additions = [
-                                ("official_attendance_state", "ALTER TABLE student_contest_participations ADD COLUMN official_attendance_state VARCHAR(30)"),
-                                ("is_frozen", "ALTER TABLE student_contest_participations ADD COLUMN is_frozen BOOLEAN DEFAULT 0"),
-                                ("frozen_at", "ALTER TABLE student_contest_participations ADD COLUMN frozen_at DATETIME"),
-                                ("post_contest_solves_count", "ALTER TABLE student_contest_participations ADD COLUMN post_contest_solves_count INTEGER DEFAULT 0"),
-                                ("solved_problems", "ALTER TABLE student_contest_participations ADD COLUMN solved_problems TEXT"),
-                                ("confidence", "ALTER TABLE student_contest_participations ADD COLUMN confidence VARCHAR(50) DEFAULT 'HIGH'")
-                            ]
-                            for col_name, sql_stmt in sqlite_additions:
-                                if col_name not in scp_cols:
-                                    conn.execute(text(sql_stmt))
-
-                        res_ws = conn.execute(text("PRAGMA table_info(weekly_sessions)")).fetchall()
-                        ws_cols = {r[1] for r in res_ws}
-                        if ws_cols:
-                            ws_sqlite_additions = [
-                                ("scheduled_start", "ALTER TABLE weekly_sessions ADD COLUMN scheduled_start DATETIME"),
-                                ("actual_start", "ALTER TABLE weekly_sessions ADD COLUMN actual_start DATETIME"),
-                                ("scheduled_end", "ALTER TABLE weekly_sessions ADD COLUMN scheduled_end DATETIME"),
-                                ("actual_end", "ALTER TABLE weekly_sessions ADD COLUMN actual_end DATETIME"),
-                                ("baseline_status", "ALTER TABLE weekly_sessions ADD COLUMN baseline_status VARCHAR(30) DEFAULT 'PENDING'"),
-                                ("last_fetch_at", "ALTER TABLE weekly_sessions ADD COLUMN last_fetch_at DATETIME"),
-                                ("last_event_id", "ALTER TABLE weekly_sessions ADD COLUMN last_event_id INTEGER DEFAULT 0"),
-                                ("worker_heartbeat", "ALTER TABLE weekly_sessions ADD COLUMN worker_heartbeat DATETIME"),
-                                ("worker_status", "ALTER TABLE weekly_sessions ADD COLUMN worker_status VARCHAR(30) DEFAULT 'IDLE'"),
-                                ("worker_instance_id", "ALTER TABLE weekly_sessions ADD COLUMN worker_instance_id VARCHAR(100)"),
-                                ("retry_count", "ALTER TABLE weekly_sessions ADD COLUMN retry_count INTEGER DEFAULT 0"),
-                                ("last_error", "ALTER TABLE weekly_sessions ADD COLUMN last_error TEXT"),
-                                ("finalized", "ALTER TABLE weekly_sessions ADD COLUMN finalized BOOLEAN DEFAULT 0"),
-                                ("report_generation_status", "ALTER TABLE weekly_sessions ADD COLUMN report_generation_status VARCHAR(30) DEFAULT 'PENDING'"),
-                                ("email_dispatch_status", "ALTER TABLE weekly_sessions ADD COLUMN email_dispatch_status VARCHAR(30) DEFAULT 'PENDING'")
-                            ]
-                            for col_name, sql_stmt in ws_sqlite_additions:
-                                if col_name not in ws_cols:
-                                    try:
-                                        conn.execute(text(sql_stmt))
-                                    except Exception as _ws_col_err:
-                                        logger.warning(f"[STARTUP] SQLite column addition note for {col_name}: {_ws_col_err}")
-                    except Exception as _sq_err:
-                        logger.warning(f"[STARTUP] SQLite safety column addition note: {_sq_err}")
-
-                    try:
-                        conn.execute(text("""
-                            UPDATE students
-                            SET primary_leetcode_id = username
-                            WHERE primary_leetcode_id IS NULL AND username IS NOT NULL
-                        """))
-                        conn.execute(text("""
-                            CREATE INDEX IF NOT EXISTS ix_students_primary_leetcode_id
-                            ON students (primary_leetcode_id)
-                        """))
-                        conn.execute(text("""
-                            CREATE INDEX IF NOT EXISTS ix_students_secondary_leetcode_id
-                            ON students (secondary_leetcode_id)
-                        """))
-                    except Exception as _stu_upd_err:
-                        logger.warning(f"[STARTUP] SQLite student index/update note: {_stu_upd_err}")
-                    is_pg_driver = "postgresql" in str(engine.url) or "postgres" in str(engine.url)
-                    id_col_type = "SERIAL PRIMARY KEY" if is_pg_driver else "INTEGER PRIMARY KEY AUTOINCREMENT"
-                    try:
-                        conn.execute(text(f"""
-                            CREATE TABLE IF NOT EXISTS weekly_verification_records (
-                                id {id_col_type},
-                                student_id INTEGER NOT NULL REFERENCES students(id),
-                                verification_week INTEGER NOT NULL,
-                                notification_type VARCHAR(50) NOT NULL,
-                                primary_solved INTEGER,
-                                secondary_solved INTEGER,
-                                status VARCHAR(30),
-                                email_dispatched BOOLEAN,
-                                timestamp TIMESTAMP,
-                                CONSTRAINT uq_weekly_verification_record
-                                    UNIQUE (student_id, verification_week, notification_type)
-                            )
-                        """))
-                    except Exception as _wvr_err:
-                        logger.warning(f"[STARTUP] weekly_verification_records table creation note: {_wvr_err}")
-            logger.info("[STARTUP] Safety schema migration: all required columns verified/added OK.")
-        except Exception as _schema_err:
-            logger.error(f"[STARTUP] Safety schema migration failed: {_schema_err}")
-
     def _run_blocking_migrations():
-        # Run safety migration FIRST (idempotent raw SQL - fast < 0.5s)
-        _run_safety_schema_migration()
+        try:
+            from backend.migrate_db import run_db_migrations
+            run_db_migrations()
+            logger.info("[STARTUP] Database schema migrations and columns verified successfully.")
+        except Exception as _mig_err1:
+            logger.warning(f"[STARTUP] Database migrate_db note: {_mig_err1}")
 
-        # Run heavy legacy migration scripts only if requested via env (prevents 40s DB locks on every startup)
         if os.environ.get("RUN_FULL_MIGRATIONS") == "true":
-            try:
-                from backend.migrate_db import run_db_migrations
-                run_db_migrations()
-            except Exception as _mig_err1:
-                logger.warning(f"[STARTUP] Database migrate_db note: {_mig_err1}")
-                
             try:
                 from backend.database import run_migrations
                 run_migrations()
@@ -413,13 +79,14 @@ async def _deferred_startup_tasks():
         from backend.models import User, SyncJob
         from backend.routes.auth import get_password_hash, verify_password
 
-        with SessionLocal() as db_init:
-            try:
+        # 1. Admin user reconcile
+        try:
+            with SessionLocal() as db_admin:
                 admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
                 admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
                 admin_pass = getattr(settings, "ADMIN_PASSWORD", "").strip()
 
-                admin_user = db_init.query(User).filter(
+                admin_user = db_admin.query(User).filter(
                     (User.username.ilike(admin_username)) | (User.email.ilike(admin_email))
                 ).first()
 
@@ -431,26 +98,28 @@ async def _deferred_startup_tasks():
                         role="Admin",
                         is_active=True
                     )
-                    db_init.add(admin_user)
-                    db_init.commit()
+                    db_admin.add(admin_user)
+                    db_admin.commit()
                     logger.info(f"[STARTUP] Reconciled initial admin user: {admin_username}")
                 else:
                     admin_user.role = "Admin"  # type: ignore
                     admin_user.is_active = True  # type: ignore
                     if not admin_user.hashed_password or not verify_password(admin_pass, str(admin_user.hashed_password)):
                         admin_user.hashed_password = get_password_hash(admin_pass)  # type: ignore
-                        db_init.commit()
-            except Exception as _adm_err:
-                logger.warning(f"[STARTUP] Admin reconcile note: {_adm_err}")
+                        db_admin.commit()
+        except Exception as _adm_err:
+            logger.warning(f"[STARTUP] Admin reconcile note: {_adm_err}")
 
-            try:
-                stale_jobs = db_init.query(SyncJob).filter(SyncJob.status == "RUNNING").all()
+        # 2. Stale jobs cleanup
+        try:
+            with SessionLocal() as db_jobs:
+                stale_jobs = db_jobs.query(SyncJob).filter(SyncJob.status == "RUNNING").all()
                 if stale_jobs:
                     for sj in stale_jobs:
                         sj.status = "INTERRUPTED"  # type: ignore
-                    db_init.commit()
-            except Exception as _sj_err:
-                logger.warning(f"[STARTUP] Sync job recovery note: {_sj_err}")
+                    db_jobs.commit()
+        except Exception as _sj_err:
+            logger.warning(f"[STARTUP] Sync job recovery note: {_sj_err}")
 
     try:
         await asyncio.to_thread(_run_blocking_db_init)

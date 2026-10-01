@@ -15,8 +15,8 @@ _HOD_ROLES = frozenset({"hod", "department hod", "department_hod"})
 
 @router.get("", response_model=List[DepartmentOut])
 def get_departments(
+    request: Request,
     all_depts: bool = False,
-    request: Request = None,
     db: Session = Depends(get_db)
 ):
     """
@@ -26,11 +26,11 @@ def get_departments(
     """
     all_d = db.query(Department).order_by(Department.id).all()
     if not all_depts:
-        all_d = [d for d in all_d if is_production_department(d.code, d.name)]
+        all_d = [d for d in all_d if is_production_department(str(d.code or ""), str(d.name or ""))]
 
     for d in all_d:
-        if d.code and d.code.upper() == "IT" and d.name != "Information Technology":
-            d.name = "Information Technology"
+        if d.code and str(d.code).upper() == "IT" and d.name != "Information Technology":
+            d.name = "Information Technology"  # type: ignore[assignment]
             db.add(d)
             try:
                 db.commit()
@@ -43,6 +43,10 @@ def get_departments(
         try:
             current_user = get_current_user_optional(request, db)
         except Exception:
+            try:
+                db.rollback()
+            except Exception:
+                pass
             current_user = None
 
     # Scope restrictions by role (HOD & Staff/Faculty Mentors):
@@ -59,7 +63,7 @@ def get_departments(
                 all_d = []
         elif role in _STAFF_ROLES:
             from backend.services.faculty_assignment_service import FacultyAssignmentService
-            assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, current_user.id)
+            assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(current_user.id))
             if assigned_ids:
                 dept_ids = [s[0] for s in db.query(Student.department_id).filter(Student.id.in_(assigned_ids)).distinct().all() if s[0]]
                 if dept_ids:
@@ -93,7 +97,7 @@ def create_department(
     return dept
 
 @router.get("/{dept_id}/sections", response_model=List[SectionOut])
-def get_department_sections(dept_id: int, year_level: str = None, db: Session = Depends(get_db)):
+def get_department_sections(dept_id: int, year_level: Optional[str] = None, db: Session = Depends(get_db)):
     query = db.query(Section).filter(Section.department_id == dept_id)
     if year_level:
         query = query.filter(Section.year_level == year_level)

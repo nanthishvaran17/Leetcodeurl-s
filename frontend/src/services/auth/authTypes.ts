@@ -17,6 +17,7 @@ export interface AuthUser {
   name: string;
   email: string;
   photoURL?: string;
+  profile_photo?: string | null;
   role: 'student' | 'staff' | 'admin' | 'Super Admin' | 'hod' | 'faculty' | string;
   registerNo?: string | null;
   department?: string | null;

@@ -311,8 +311,7 @@ async def get_students(
     role_clean = (current_user.role or "").strip().lower() if current_user else ""
 
     cache_key = f"students_list:{user_id}:{role_clean}:{dept_id}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}:{paginated}"
-    def _compute():
-        db = request_db
+    def _execute_query(db):
         query = db.query(Student).outerjoin(Student.stats).options(
             joinedload(Student.department),
             joinedload(Student.section),
@@ -684,6 +683,13 @@ async def get_students(
             )
         return results
 
+    def _compute():
+        from backend.database import SessionLocal
+        db = SessionLocal()
+        try:
+            return _execute_query(db)
+        finally:
+            db.close()
 
     if not current_user or role_clean in ("admin", "super admin", "super_admin", "hod"):
         return await cache.async_get_or_compute(cache_key, _compute, ttl_seconds=60, stale_ttl_seconds=300)

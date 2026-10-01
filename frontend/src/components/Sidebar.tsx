@@ -29,11 +29,13 @@ import {
   X,
   MessageSquare,
   Brain,
-  Briefcase
+  Briefcase,
+  User
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { CollegeLogo } from './CollegeLogo';
+import { SignOutConfirmModal } from './SignOutConfirmModal';
 import { getApiUrl } from '../services/api';
 
 interface SidebarProps {
@@ -60,6 +62,7 @@ interface NavSection {
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, onClose }) => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
   const roleClean = (user?.role || '').trim().toLowerCase();
   const isFaculty = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(roleClean);
   const isHOD = ['hod', 'department hod', 'department_hod'].includes(roleClean);
@@ -100,10 +103,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       ]
     },
     {
-      title: 'REPORTS & EXPORT',
+      title: 'REPORTS & PREFERENCES',
       items: [
         { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
         { id: 'public', label: 'Public Shareable View', icon: Globe },
+        { id: 'account-settings', label: 'Account Settings', icon: User },
       ]
     }
   ];
@@ -134,10 +138,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       ]
     },
     {
-      title: 'REPORTS',
+      title: 'REPORTS & PREFERENCES',
       items: [
         { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
         { id: 'public', label: 'Public Shareable View', icon: Globe },
+        { id: 'account-settings', label: 'Account Settings', icon: User },
       ]
     }
   ];
@@ -172,6 +177,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'system-health', label: 'Institutional Operations', icon: Activity, badge: 'PROD', badgeColor: 'emerald' },
         { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
         { id: 'public', label: 'Public Shareable View', icon: Globe },
+        { id: 'account-settings', label: 'Account Settings', icon: User },
         { id: 'settings', label: 'Admin Settings', icon: Settings },
         { id: 'audit', label: 'Audit Log', icon: ShieldAlert },
       ]
@@ -186,6 +192,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard },
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
         { id: 'public', label: 'Public Leaderboard', icon: Globe },
+        { id: 'account-settings', label: 'Account Settings', icon: User },
       ]
     }
   ];
@@ -363,7 +370,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               {user && (
                 <button
                   type="button"
-                  onClick={logout}
+                  onClick={() => setShowLogoutConfirm(true)}
                   className="h-[42px] min-h-[42px] sm:h-[46px] sm:min-h-[46px] px-2.5 rounded-xl text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/40 transition-colors flex items-center justify-center flex-1 font-bold text-xs shadow-xs cursor-pointer active:scale-95"
                 >
                   <LogOut className="w-3.5 h-3.5 mr-1.5 shrink-0" />
@@ -392,6 +399,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               </div>
             </div>
           </motion.div>
+
+          {/* Sign Out Confirmation Modal */}
+          <SignOutConfirmModal
+            isOpen={showLogoutConfirm}
+            onClose={() => setShowLogoutConfirm(false)}
+            onConfirm={() => {
+              if (onClose) onClose();
+              logout();
+            }}
+            user={user}
+          />
         </div>
       )}
     </AnimatePresence>,

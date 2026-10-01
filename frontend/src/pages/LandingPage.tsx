@@ -430,7 +430,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     try {
       if (isFacultyRole) {
         try {
-          const res = await api.get('/faculty-assignments/my-students?_t=' + Date.now());
+          const res = await api.get('/faculty-assignments/my-students');
           if (res.data && Array.isArray(res.data.students) && res.data.students.length > 0) {
             const facultyStudents = res.data.students.map((st: any) => ({
               ...st,
@@ -457,14 +457,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       // Backend /students/leaderboard-fast already enforces RBAC scoping server-side.
       // For faculty mentors, backend returns ONLY assigned students — no frontend filter needed.
-      const res = await api.get('/students/leaderboard-fast?_t=' + Date.now());
+      const res = await api.get('/students/leaderboard-fast');
       if (res.data && Array.isArray(res.data)) {
         setStudents(res.data);
         saveCachedStudents(res.data, isFacultyRole ? (user?.id || loggedInUser?.id) : undefined);
         return;
       }
       // Fallback to /students if leaderboard-fast fails
-      const res2 = await api.get('/students?_t=' + Date.now());
+      const res2 = await api.get('/students');
       if (res2.data && Array.isArray(res2.data)) {
         setStudents(res2.data);
         saveCachedStudents(res2.data, isFacultyRole ? (user?.id || loggedInUser?.id) : undefined);

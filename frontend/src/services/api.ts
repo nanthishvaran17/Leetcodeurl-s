@@ -408,8 +408,20 @@ export const getDataFreshness = async () => {
   return res.data;
 };
 
+let lastLoggedNav = '';
+let lastLoggedNavTime = 0;
+
 export const logActivity = async (action: string, description?: string, details?: any) => {
   try {
+    if (action === 'PAGE_NAVIGATE') {
+      const navKey = `${description || ''}:${JSON.stringify(details || {})}`;
+      const now = Date.now();
+      if (lastLoggedNav === navKey && now - lastLoggedNavTime < 3000) {
+        return; // Deduplicate rapid identical page navigation logs
+      }
+      lastLoggedNav = navKey;
+      lastLoggedNavTime = now;
+    }
     await api.post('/admin/log-activity', {
       action,
       description: description || action,

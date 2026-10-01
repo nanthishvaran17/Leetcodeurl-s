@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Trash2, AlertTriangle, X, Loader2 } from 'lucide-react';
 
 export interface DeleteItemInfo {
@@ -54,11 +55,11 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
     }
   }, [isOpen, isDeleting, onCancel]);
 
-  if (!isOpen || !item) return null;
+  if (!isOpen || !item || typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <div
-      className="modal-overlay-responsive animate-modal-backdrop"
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-slate-950/65 dark:bg-navy-950/80 backdrop-blur-md animate-modal-backdrop select-none"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isDeleting) {
           onCancel();
@@ -69,7 +70,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
       aria-labelledby="confirm-delete-title"
     >
       <div
-        className="modal-container-responsive max-w-[500px] bg-slate-900 border border-slate-700/80 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] border-t-[3.5px] border-t-rose-500 animate-modal-content text-white p-1"
+        className="relative w-full max-w-[500px] bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl border-t-[3.5px] border-t-rose-500 animate-modal-content text-white p-1"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Close Button */}
@@ -94,39 +95,39 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
             <span className="text-[9px] font-black uppercase tracking-widest text-rose-400 inline-block px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20">
               DESTRUCTIVE ACTION • ADMIN CONTROL
             </span>
-            <h3 id="confirm-delete-title" className="text-lg sm:text-xl font-black text-white tracking-tight">
-              Delete HOD Snapshot?
+            <h3 id="confirm-delete-title" className="text-base sm:text-xl font-black text-white tracking-tight">
+              {item.type ? `Delete ${item.type}?` : (item.title?.includes('Snapshot') ? 'Delete Snapshot?' : 'Confirm Deletion?')}
             </h3>
             <p className="text-[11px] text-slate-400 max-w-xs mx-auto leading-relaxed">
-              You are about to permanently remove this HOD snapshot from the Admin Control Center registry.
+              {item.subtitle || `You are about to permanently remove ${item.title || 'this item'} from the system.`}
             </p>
           </div>
 
-          {/* Snapshot Information Card */}
+          {/* Snapshot / Item Information Card */}
           <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-left space-y-2 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Snapshot ID</span>
-              <span className="text-[11px] font-mono font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 shrink-0">Item ID</span>
+              <span className="text-[11px] font-mono font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20 truncate max-w-[200px]">
                 {item.id}
               </span>
             </div>
 
-            <div className="flex items-center justify-between">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Title / Type</span>
-              <span className="font-bold text-slate-200 text-[11px] truncate max-w-[240px]" title={item.title}>{item.title}</span>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 shrink-0">Title / Target</span>
+              <span className="font-bold text-slate-200 text-[11px] truncate max-w-[220px] text-right" title={item.title}>{item.title}</span>
             </div>
 
             {item.metrics && (
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Verified Metrics</span>
-                <span className="font-bold text-emerald-400 text-[11px]">{item.metrics}</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 shrink-0">Metrics / Scope</span>
+                <span className="font-bold text-emerald-400 text-[11px] truncate max-w-[200px] text-right">{item.metrics}</span>
               </div>
             )}
 
             {item.created_at && (
-              <div className="flex items-center justify-between border-t border-slate-800/80 pt-1.5">
-                <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">Captured At</span>
-                <span className="text-slate-400 font-medium text-[10px]">{item.created_at}</span>
+              <div className="flex items-center justify-between border-t border-slate-800/80 pt-1.5 gap-2">
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 shrink-0">Timestamp</span>
+                <span className="text-slate-400 font-medium text-[10px] truncate">{item.created_at}</span>
               </div>
             )}
           </div>
@@ -142,7 +143,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
           {/* Error Message if API fails */}
           {errorMessage && (
             <div className="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-bold text-left space-y-1">
-              <p>Unable to delete HOD snapshot. {errorMessage}</p>
+              <p>Unable to complete deletion. {errorMessage}</p>
               {onRetry && (
                 <button
                   onClick={onRetry}
@@ -154,14 +155,14 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3 pt-1">
+          {/* Action Buttons with 44px+ mobile touch targets */}
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 pt-1">
             <button
               ref={cancelBtnRef}
               type="button"
               onClick={onCancel}
               disabled={isDeleting}
-              className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs border border-slate-700 transition-all cursor-pointer disabled:opacity-50"
+              className="w-full min-h-[44px] py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs border border-slate-700 active:scale-95 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center"
             >
               Cancel
             </button>
@@ -170,7 +171,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
               type="button"
               onClick={onConfirm}
               disabled={isDeleting}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white font-black text-xs shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-50 transform hover:scale-[1.02]"
+              className="w-full min-h-[44px] py-2.5 px-3 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 active:scale-95 text-white font-black text-xs shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-50"
             >
               {isDeleting ? (
                 <>
@@ -180,7 +181,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
               ) : (
                 <>
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Delete Snapshot</span>
+                  <span>Delete</span>
                 </>
               )}
             </button>
@@ -188,6 +189,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
 
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

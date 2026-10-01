@@ -107,11 +107,12 @@ def generate_professional_template(title: str, content: str, action_button: Opti
             border-bottom: 4px solid #3b82f6;
         }}
         .header-logo {{
-            width: 140px;
-            max-width: 140px;
+            width: 110px;
+            max-width: 110px;
             height: auto;
-            margin: 0 auto 15px auto;
+            margin: 0 auto 12px auto;
             display: block;
+            border-radius: 50%;
         }}
         .header h1 {{
             color: #ffffff !important;
@@ -140,8 +141,8 @@ def generate_professional_template(title: str, content: str, action_button: Opti
         .email-content h2 {{
             color: #0f172a;
             margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 22px;
+            margin-bottom: 16px;
+            font-size: 20px;
             line-height: 1.3;
             word-break: break-word;
             overflow-wrap: anywhere;
@@ -151,7 +152,7 @@ def generate_professional_template(title: str, content: str, action_button: Opti
             padding: 24px 20px;
             text-align: center;
             font-size: 13px;
-            color: #334155;
+            color: #0f172a;
             border-top: 1px solid #e2e8f0;
             line-height: 1.5;
             word-break: break-word;
@@ -160,7 +161,7 @@ def generate_professional_template(title: str, content: str, action_button: Opti
         .footer p {{
             margin: 0;
             line-height: 1.5;
-            color: #334155;
+            color: #0f172a;
         }}
         .btn {{
             display: inline-block;
@@ -179,30 +180,37 @@ def generate_professional_template(title: str, content: str, action_button: Opti
         .data-table {{
             width: 100% !important;
             border: 1px solid #e2e8f0;
-            border-radius: 6px;
+            border-radius: 8px;
             border-collapse: separate;
             border-spacing: 0;
-            margin: 24px 0;
+            margin: 20px 0;
             overflow: hidden;
-            table-layout: auto;
+            table-layout: fixed;
         }}
         .data-table th, .data-table td {{
-            padding: 12px 16px;
+            padding: 10px 13px;
             border-bottom: 1px solid #e2e8f0;
             word-break: break-word;
             overflow-wrap: anywhere;
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1.5;
+            vertical-align: top;
+            box-sizing: border-box;
         }}
         .data-table tr:last-child td {{
             border-bottom: none;
         }}
-        .data-table td:first-child {{
+        .data-table td:first-child, .data-table th:first-child {{
             font-weight: 600;
-            color: #475569;
-            width: 35%;
+            color: #1e293b;
+            width: 38% !important;
             background-color: #f8fafc;
             border-right: 1px solid #e2e8f0;
+        }}
+        .data-table td:nth-child(2), .data-table th:nth-child(2) {{
+            color: #0f172a;
+            font-weight: 500;
+            width: 62% !important;
         }}
         .security-notice {{
             background-color: #fffbeb;
@@ -218,61 +226,72 @@ def generate_professional_template(title: str, content: str, action_button: Opti
         /* Responsive styles for mobile devices */
         @media only screen and (max-width: 600px) {{
             .email-wrapper {{ padding: 0 !important; }}
-            .email-container {{ width: 100% !important; max-width: 100% !important; border-radius: 0 !important; }}
-            .email-content {{ padding: 20px 16px !important; font-size: 14px !important; }}
-            .header {{ padding: 20px 16px !important; }}
-            .header h1 {{ font-size: 16px !important; }}
-            .email-content h2 {{ font-size: 18px !important; }}
-            .footer {{ padding: 24px 18px !important; font-size: 13px !important; }}
-            .btn {{ display: block !important; width: 100% !important; padding: 14px 12px !important; box-sizing: border-box !important; }}
-            
-            /* Enforcing responsive stacking layout on mobile */
-            .data-table th, .data-table td, .stack-column {{
-                display: block !important;
+            .email-container {{ width: 100% !important; max-width: 100% !important; border-radius: 0 !important; box-shadow: none !important; }}
+            .email-content {{ padding: 16px 12px !important; font-size: 13px !important; }}
+            .email-content h2 {{ font-size: 16px !important; margin-bottom: 12px !important; }}
+            .header {{ padding: 16px 12px !important; }}
+            .header h1 {{ font-size: 14px !important; letter-spacing: 0.2px !important; }}
+            .header .sub-header {{ font-size: 12px !important; }}
+            .header-logo {{ width: 90px !important; max-width: 90px !important; margin-bottom: 10px !important; }}
+            .footer {{ padding: 14px 12px !important; font-size: 11px !important; }}
+            .footer p {{ font-size: 11px !important; margin-bottom: 4px !important; }}
+            .btn {{ display: block !important; width: 100% !important; padding: 12px 10px !important; box-sizing: border-box !important; font-size: 14px !important; }}
+
+            /* Keep side-by-side 2-column layout on mobile — no stacking */
+            .data-table {{
+                table-layout: fixed !important;
                 width: 100% !important;
+            }}
+            .data-table td, .data-table th {{
+                padding: 9px 11px !important;
+                font-size: 12px !important;
+                line-height: 1.45 !important;
+                word-break: break-word !important;
+                overflow-wrap: anywhere !important;
+                display: table-cell !important;
                 box-sizing: border-box !important;
-                padding: 10px 16px !important;
             }}
-            .data-table td:first-child, .stack-label {{
-                border-right: none !important;
-                border-bottom: none !important;
-                padding-bottom: 4px !important;
-                width: 100% !important;
+            .data-table td:first-child, .data-table th:first-child, .stack-label {{
+                width: 38% !important;
+                font-size: 11px !important;
+                font-weight: 700 !important;
+                border-right: 1px solid #e2e8f0 !important;
             }}
-            .data-table td:nth-child(2), .stack-value {{
-                padding-top: 0 !important;
-                width: 100% !important;
+            .data-table td:nth-child(2), .data-table th:nth-child(2), .stack-value {{
+                width: 62% !important;
+                font-size: 12px !important;
             }}
             .safe-wrap {{
                 word-break: break-word !important;
                 overflow-wrap: anywhere !important;
                 max-width: 100% !important;
-                display: inline-block;
             }}
         }}
 
         /* Dark mode overrides */
         @media (prefers-color-scheme: dark) {{
-            body, .email-wrapper {{ background-color: #0f172a !important; color: #e2e8f0 !important; }}
-            .email-container {{ background-color: #1e293b !important; color: #e2e8f0 !important; }}
-            .email-content {{ color: #e2e8f0 !important; }}
+            body, .email-wrapper {{ background-color: #0f172a !important; color: #f8fafc !important; }}
+            .email-container {{ background-color: #1e293b !important; color: #f8fafc !important; }}
+            .email-content {{ color: #f8fafc !important; }}
             .email-content h2 {{ color: #ffffff !important; }}
-            .footer {{ background-color: #0f172a !important; color: #cbd5e1 !important; border-top-color: #334155 !important; }}
-            .footer p {{ color: #cbd5e1 !important; }}
+            .footer {{ background-color: #0f172a !important; color: #f8fafc !important; border-top-color: #1e293b !important; }}
+            .footer p {{ color: #f8fafc !important; }}
             .data-table {{ border-color: #334155 !important; }}
             .data-table td, .data-table th {{ border-bottom-color: #334155 !important; }}
-            .data-table td:first-child {{ background-color: #0f172a !important; color: #cbd5e1 !important; border-right-color: #334155 !important; }}
+            .data-table td:first-child, .data-table th:first-child {{ background-color: #0f172a !important; color: #f8fafc !important; border-right-color: #334155 !important; }}
+            .data-table td:nth-child(2), .data-table th:nth-child(2) {{ color: #ffffff !important; }}
             .security-notice {{ background-color: #451a03 !important; color: #fef3c7 !important; border-left-color: #f59e0b !important; }}
         }}
 
         /* Outlook OGSC Dark Mode targeting */
         [data-ogsc] .email-wrapper {{ background-color: #0f172a !important; }}
         [data-ogsc] .email-container {{ background-color: #1e293b !important; }}
-        [data-ogsc] .email-content {{ color: #e2e8f0 !important; }}
+        [data-ogsc] .email-content {{ color: #f8fafc !important; }}
         [data-ogsc] .email-content h2 {{ color: #ffffff !important; }}
-        [data-ogsc] .footer {{ background-color: #0f172a !important; color: #cbd5e1 !important; }}
-        [data-ogsc] .footer p {{ color: #cbd5e1 !important; }}
-        [data-ogsc] .data-table td:first-child {{ background-color: #0f172a !important; color: #cbd5e1 !important; }}
+        [data-ogsc] .footer {{ background-color: #0f172a !important; color: #f8fafc !important; }}
+        [data-ogsc] .footer p {{ color: #f8fafc !important; }}
+        [data-ogsc] .data-table td:first-child, [data-ogsc] .data-table th:first-child {{ background-color: #0f172a !important; color: #f8fafc !important; }}
+        [data-ogsc] .data-table td:nth-child(2), [data-ogsc] .data-table th:nth-child(2) {{ color: #ffffff !important; }}
     </style>
 </head>
 <body style="background-color: #f4f7f6; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif;">
@@ -287,24 +306,24 @@ def generate_professional_template(title: str, content: str, action_button: Opti
                 <table role="presentation" class="email-container" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; width: 100%; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
                     <tr>
                         <td class="header" style="background-color: #0f172a; padding: 24px; text-align: center; border-bottom: 4px solid #3b82f6;">
-                            <img src="{logo_url}" alt="{settings.COLLEGE_NAME} Logo" class="header-logo" width="140" height="auto" style="width:140px; max-width:140px; height:auto; margin:0 auto 15px auto; display:block; border:0; outline:none; text-decoration:none;" />
+                            <img src="{logo_url}" alt="{settings.COLLEGE_NAME} Logo" class="header-logo" width="110" height="auto" style="width:110px; max-width:110px; height:auto; margin:0 auto 12px auto; display:block; border:0; outline:none; text-decoration:none; border-radius:50%;" />
                             <h1 style="color: #ffffff; margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.5px; line-height: 1.4; word-break: break-word; overflow-wrap: anywhere;">{settings.COLLEGE_NAME}</h1>
                             <div class="sub-header" style="color: #38bdf8; margin: 4px 0 0 0; font-size: 14px; font-weight: 500;">LeetCode Intelligence System</div>
                         </td>
                     </tr>
                     <tr>
-                        <td class="email-content" style="padding: 32px 24px; line-height: 1.6; font-size: 15px; color: #1e293b; word-break: break-word; overflow-wrap: anywhere;">
-                            <h2 style="color: #0f172a; margin-top: 0; margin-bottom: 20px; font-size: 22px; line-height: 1.3; word-break: break-word; overflow-wrap: anywhere;">{title}</h2>
+                        <td class="email-content" style="padding: 28px 20px; line-height: 1.6; font-size: 15px; color: #1e293b; word-break: break-word; overflow-wrap: anywhere;">
+                            <h2 style="color: #0f172a; margin-top: 0; margin-bottom: 16px; font-size: 20px; line-height: 1.3; word-break: break-word; overflow-wrap: anywhere;">{title}</h2>
                             {content}
                             {button_html}
                         </td>
                     </tr>
                     <tr>
-                        <td class="footer" style="background-color: #f8fafc; padding: 24px 20px; text-align: center; font-size: 13px; color: #334155; border-top: 1px solid #e2e8f0; line-height: 1.5; word-break: break-word; overflow-wrap: anywhere;">
-                            <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #1e293b; line-height: 1.5;">{settings.COLLEGE_NAME} &bull; LeetCode Intelligence System</p>
-                            <p style="margin: 0 0 16px 0; font-size: 13px; font-weight: 600; color: #475569; line-height: 1.5;">Student Performance &bull; Contest Intelligence &bull; Analytics &bull; Reports</p>
-                            <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: 500; color: #334155; line-height: 1.5;">This is an automated system-generated email.<br/>Please do not reply to this message.</p>
-                            <p style="margin: 12px 0 0 0; font-size: 13px; font-weight: 500; color: #334155; line-height: 1.5;">&copy; 2026 {settings.COLLEGE_NAME}. All rights reserved.</p>
+                        <td class="footer" style="background-color: #f8fafc; padding: 20px 16px; text-align: center; font-size: 13px; color: #334155; border-top: 1px solid #e2e8f0; line-height: 1.5; word-break: break-word; overflow-wrap: anywhere;">
+                            <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: 700; color: #1e293b; line-height: 1.5;">{settings.COLLEGE_NAME} &bull; LeetCode Intelligence System</p>
+                            <p style="margin: 0 0 12px 0; font-size: 12px; font-weight: 600; color: #475569; line-height: 1.5;">Student Performance &bull; Contest Intelligence &bull; Analytics &bull; Reports</p>
+                            <p style="margin: 0 0 4px 0; font-size: 12px; font-weight: 500; color: #334155; line-height: 1.5;">This is an automated system-generated email.<br/>Please do not reply to this message.</p>
+                            <p style="margin: 10px 0 0 0; font-size: 12px; font-weight: 500; color: #334155; line-height: 1.5;">&copy; 2026 {settings.COLLEGE_NAME}. All rights reserved.</p>
                         </td>
                     </tr>
                 </table>

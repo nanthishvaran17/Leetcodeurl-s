@@ -37,6 +37,7 @@ export const StaffManagement: React.FC = () => {
   const { notify } = useNotification();
   const { user: currentUser } = useAuth();
   const isSuperAdmin = currentUser?.role?.toLowerCase() === 'super admin';
+  const [previewingPhoto, setPreviewingPhoto] = useState<{ url: string; name: string; role?: string; id?: string } | null>(null);
 
   const handleOpenEditModal = (staff: any) => {
     if (staff) {
@@ -516,7 +517,19 @@ export const StaffManagement: React.FC = () => {
                         {/* Top Header: Avatar, Name, Status */}
                         <div className="flex items-center justify-between gap-2.5 min-w-0">
                           <div className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden">
-                            <div className="relative shrink-0">
+                            <div 
+                              className={`relative shrink-0 ${staff.profile_photo ? 'cursor-pointer active:scale-95 transition-transform' : ''}`}
+                              onClick={() => {
+                                if (staff.profile_photo) {
+                                  setPreviewingPhoto({
+                                    url: staff.profile_photo,
+                                    name: staff.full_name || staff.username,
+                                    role: staff.role,
+                                    id: staff.institutional_id || `NEC-STAFF-${staff.id}`
+                                  });
+                                }
+                              }}
+                            >
                               {staff.profile_photo ? (
                                 <img
                                   src={staff.profile_photo}
@@ -709,7 +722,7 @@ export const StaffManagement: React.FC = () => {
                 {/* DESKTOP TABLE VIEW (>= 768px) */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left text-sm whitespace-nowrap">
-                    <thead className="bg-slate-50 dark:bg-navy-950/80 text-slate-800 dark:text-slate-200 font-black uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-navy-600 shadow-sm">
+                    <thead className="bg-slate-100/90 dark:bg-navy-950 text-slate-800 dark:text-slate-200 font-black uppercase text-xs tracking-wider border-b border-slate-200 dark:border-navy-600">
                       <tr>
                         <th className="px-6 py-4">Institutional ID</th>
                         <th className="px-6 py-4">Username / Email</th>
@@ -720,59 +733,103 @@ export const StaffManagement: React.FC = () => {
                         <th className="px-6 py-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-navy-700">
+                    <tbody className="divide-y divide-slate-200 dark:divide-navy-700">
                       {filteredStaff.map((staff) => (
-                        <tr key={staff.id} className="hover:bg-slate-50/80 dark:hover:bg-navy-750/50 transition-colors">
-                          <td className="px-6 py-4 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                            {staff.institutional_id || `NEC-STAFF-${staff.id}`}
+                        <tr key={staff.id} className="hover:bg-slate-50/90 dark:hover:bg-navy-750/50 transition-colors">
+                          <td className="px-6 py-4">
+                            <span className="font-mono text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800 inline-block shadow-2xs">
+                              {staff.institutional_id || `NEC-STAFF-${staff.id}`}
+                            </span>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                              <span>{staff.full_name || staff.username}</span>
-                              {staff.role === 'Super Admin' && (
-                                <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                                  ROOT
-                                </span>
-                              )}
+                            <div className="flex items-center gap-3">
+                              <div 
+                                className={`relative shrink-0 ${staff.profile_photo ? 'cursor-pointer hover:scale-105 active:scale-95 transition-transform' : ''}`}
+                                onClick={() => {
+                                  if (staff.profile_photo) {
+                                    setPreviewingPhoto({
+                                      url: staff.profile_photo,
+                                      name: staff.full_name || staff.username,
+                                      role: staff.role,
+                                      id: staff.institutional_id || `NEC-STAFF-${staff.id}`
+                                    });
+                                  }
+                                }}
+                                title={staff.profile_photo ? "Click to view enlarged photo" : ""}
+                              >
+                                {staff.profile_photo ? (
+                                  <img
+                                    src={staff.profile_photo}
+                                    alt={staff.full_name || staff.username}
+                                    className="w-10 h-10 rounded-xl object-cover border-2 border-indigo-500/40 shadow-xs bg-white dark:bg-navy-950"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-xs flex items-center justify-center shadow-xs uppercase tracking-wider border border-white/20">
+                                    {(staff.full_name || staff.username || 'S')
+                                      .split(' ')
+                                      .filter(Boolean)
+                                      .map((n: string) => n[0])
+                                      .join('')
+                                      .toUpperCase()
+                                      .slice(0, 2) || 'S'}
+                                  </div>
+                                )}
+                                <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-navy-900 ${
+                                  staff.is_active ? 'bg-emerald-500' : 'bg-rose-500'
+                                }`} />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 text-sm">
+                                  <span className="truncate">{staff.full_name || staff.username}</span>
+                                  {staff.role === 'Super Admin' && (
+                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30">
+                                      ROOT
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5 flex items-center gap-1">
+                                  <span className="truncate">{staff.email || `@${staff.username}`}</span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-xs text-slate-500">{staff.email}</div>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                            <span className="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider border bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 shadow-2xs inline-block">
                               {staff.department || 'INSTITUTIONAL'}
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${staff.role === 'Faculty'
-                              ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
-                              : (staff.role === 'HOD'
-                                ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
-                                : (staff.role?.includes('Admin')
-                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                                  : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20'))
-                              }`}>
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-black border shadow-2xs inline-block ${
+                              staff.role === 'Faculty'
+                                ? 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950/70 dark:text-indigo-300 dark:border-indigo-800'
+                                : (staff.role === 'HOD'
+                                  ? 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950/70 dark:text-purple-300 dark:border-purple-800'
+                                  : (staff.role?.includes('Admin')
+                                    ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-800'
+                                    : 'bg-brand-100 text-brand-800 border-brand-300 dark:bg-brand-950/70 dark:text-brand-300 dark:border-brand-800'))
+                            }`}>
                               {staff.role || 'Staff'}
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                            <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
                               {staff.assigned_count || 0} / {staff.max_capacity || 30}
                             </div>
-                            <div className="w-20 h-1.5 bg-slate-100 dark:bg-navy-950 rounded-full overflow-hidden mt-1">
+                            <div className="w-24 h-2 bg-slate-200 dark:bg-navy-950 rounded-full overflow-hidden mt-1.5 border border-slate-300 dark:border-navy-700">
                               <div
-                                className="h-full bg-brand-500 rounded-full"
+                                className="h-full bg-brand-500 rounded-full transition-all duration-300"
                                 style={{ width: `${Math.min(100, ((staff.assigned_count || 0) / (staff.max_capacity || 30)) * 100)}%` }}
                               />
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             {staff.is_active ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                <CheckCircle className="w-3 h-3" /> Active
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 shadow-2xs">
+                                <CheckCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Active
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20">
-                                <Ban className="w-3 h-3" /> Suspended
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 shadow-2xs">
+                                <Ban className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" /> Suspended
                               </span>
                             )}
                           </td>
@@ -780,7 +837,7 @@ export const StaffManagement: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => handleOpenEditModal(staff)}
-                              className="p-2 rounded-xl text-slate-400 hover:bg-brand-100 hover:text-brand-600 dark:hover:bg-brand-500/20 dark:hover:text-brand-400 transition-colors cursor-pointer"
+                              className="p-2 rounded-xl text-brand-700 hover:bg-brand-100 hover:text-brand-800 bg-brand-50 border border-brand-200 dark:bg-brand-500/10 dark:text-brand-300 dark:hover:bg-brand-500/20 dark:border-brand-500/30 transition-all cursor-pointer shadow-2xs inline-flex items-center justify-center"
                               title="Edit Staff Account & Role"
                             >
                               <Edit2 className="w-4 h-4" />
@@ -788,7 +845,10 @@ export const StaffManagement: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => handleToggleStatus(staff.id, staff.is_active)}
-                              className={`p-2 rounded-xl transition-colors cursor-pointer ${staff.is_active ? 'hover:bg-amber-100 hover:text-amber-600 dark:hover:bg-amber-500/20 text-slate-400' : 'hover:bg-emerald-100 hover:text-emerald-600 dark:hover:bg-emerald-500/20 text-slate-400'}`}
+                              className={`p-2 rounded-xl transition-all cursor-pointer shadow-2xs inline-flex items-center justify-center ${staff.is_active
+                                ? 'text-amber-700 hover:bg-amber-100 hover:text-amber-800 bg-amber-50 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20 dark:border-amber-500/30'
+                                : 'text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 bg-emerald-50 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/20 dark:border-emerald-500/30'
+                              }`}
                               title={staff.is_active ? "Suspend Account" : "Activate Account"}
                             >
                               {staff.is_active ? <UserX className="w-4 h-4" /> : <RefreshCcw className="w-4 h-4" />}
@@ -796,7 +856,7 @@ export const StaffManagement: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => setDeletingStaff(staff)}
-                              className="p-2 rounded-xl text-slate-400 hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                              className="p-2 rounded-xl text-rose-700 hover:bg-rose-100 hover:text-rose-800 bg-rose-50 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20 dark:border-rose-500/30 transition-all cursor-pointer shadow-2xs inline-flex items-center justify-center"
                               title="Permanently Delete Staff Account"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1022,6 +1082,39 @@ export const StaffManagement: React.FC = () => {
                       </>
                     )}
                   </button>
+                </div>
+              </div>
+            </GlobalModalBackdrop>
+          )}
+
+          {/* Full Screen Photo Lightbox for Mobile APK & Desktop */}
+          {previewingPhoto && (
+            <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4 z-[999999]" onClose={() => setPreviewingPhoto(null)}>
+              <div 
+                className="bg-slate-950/95 dark:bg-black/95 p-4 sm:p-5 rounded-3xl border border-slate-700/80 shadow-2xl max-w-sm w-full flex flex-col items-center space-y-4 relative animate-modal-content"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="w-full flex items-center justify-between pb-2 border-b border-slate-800">
+                  <div className="min-w-0 flex-1 pr-2">
+                    <h4 className="text-sm font-black text-white truncate">{previewingPhoto.name}</h4>
+                    <p className="text-[10px] text-slate-400 font-mono">{previewingPhoto.id} • {previewingPhoto.role}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewingPhoto(null)}
+                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
+                    title="Close preview"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="w-full max-h-[60vh] flex items-center justify-center overflow-hidden rounded-2xl bg-slate-900 border border-slate-800/80 p-1">
+                  <img
+                    src={previewingPhoto.url}
+                    alt={previewingPhoto.name}
+                    className="max-h-[55vh] w-auto max-w-full object-contain rounded-xl shadow-2xl"
+                  />
                 </div>
               </div>
             </GlobalModalBackdrop>

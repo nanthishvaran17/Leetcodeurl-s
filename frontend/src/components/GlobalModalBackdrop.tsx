@@ -7,7 +7,7 @@ interface GlobalModalBackdropProps {
   isOpen: boolean;
   onClose?: () => void;
   className?: string; // Additional classes for the backdrop itself (e.g. flex alignments, padding)
-  zIndex?: number; // Override z-index if needed (default 9999)
+  zIndex?: number; // Override z-index if needed (default 100000)
 }
 
 export const GlobalModalBackdrop: React.FC<GlobalModalBackdropProps> = ({ 
@@ -15,7 +15,7 @@ export const GlobalModalBackdrop: React.FC<GlobalModalBackdropProps> = ({
   isOpen, 
   onClose,
   className,
-  zIndex = 9999 
+  zIndex = 100000 
 }) => {
   const scrollPositionRef = useRef(0);
 
@@ -44,7 +44,7 @@ export const GlobalModalBackdrop: React.FC<GlobalModalBackdropProps> = ({
   return createPortal(
     <div 
       className={twMerge(
-        "fixed inset-0 bg-slate-900/40 dark:bg-navy-950/70 backdrop-blur-[12px] transition-all",
+        "fixed inset-0 bg-slate-950/65 dark:bg-navy-950/80 backdrop-blur-md transition-all select-none",
         className
       )}
       style={{ zIndex }}

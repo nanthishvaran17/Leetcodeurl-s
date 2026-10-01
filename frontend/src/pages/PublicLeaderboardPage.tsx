@@ -173,42 +173,42 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
             <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 fill-amber-500 shrink-0" />
           </h2>
 
-          <div className="grid grid-cols-3 items-end justify-items-center max-w-2xl mx-auto gap-3 sm:gap-6">
+          <div className="grid grid-cols-3 items-end justify-items-center max-w-2xl mx-auto gap-1.5 sm:gap-6">
             {MEDAL_CONFIGS.map(cfg => {
               const s = top3[cfg.rank - 1];
               if (!s) return null;
               return (
                 <div
                   key={s.id}
-                  className={`${cfg.order} w-full flex flex-col items-center space-y-3 cursor-pointer group bg-white/70 dark:bg-navy-900/70 backdrop-blur-md p-3.5 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-navy-700/80 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-200`}
+                  className={`${cfg.order} w-full flex flex-col items-center space-y-2 sm:space-y-3 cursor-pointer group bg-white/70 dark:bg-navy-900/70 backdrop-blur-md p-1.5 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-navy-700/80 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-200`}
                   onClick={() => onSelectStudent?.(s)}
                 >
                   {/* Medal Crown */}
-                  <div className={`text-2xl sm:text-3xl ${cfg.rank === 1 ? 'animate-bounce' : ''}`}>{cfg.emoji}</div>
+                  <div className={`text-xl sm:text-3xl ${cfg.rank === 1 ? 'animate-bounce' : ''}`}>{cfg.emoji}</div>
 
                   {/* Avatar */}
-                  <div className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br ${cfg.color} flex items-center justify-center text-white font-black text-lg sm:text-2xl shadow-xl border-2 ${cfg.borderColor} group-hover:scale-105 transition-transform`}>
+                  <div className={`w-12 h-12 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br ${cfg.color} flex items-center justify-center text-white font-black text-lg sm:text-2xl shadow-xl border-2 ${cfg.borderColor} group-hover:scale-105 transition-transform`}>
                     {s.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                   </div>
 
                   {/* Info */}
-                  <div className="text-center space-y-1 w-full px-1">
-                    <div className={`text-[10px] sm:text-xs font-black inline-block tracking-wider uppercase ${cfg.textColor}`}>{cfg.label}</div>
-                    <div className="text-xs sm:text-base font-black text-slate-900 dark:text-white truncate max-w-[95px] sm:max-w-[150px] mx-auto pt-0.5" title={s.name}>{s.name}</div>
-                    <div className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 font-mono font-bold truncate">{s.reg_no}</div>
-                    <div className="pt-1 flex justify-center w-full">
+                  <div className="text-center space-y-0.5 sm:space-y-1 w-full px-0.5">
+                    <div className={`text-[9px] sm:text-xs font-black inline-block tracking-wider uppercase ${cfg.textColor}`}>{cfg.label}</div>
+                    <div className="text-[10px] sm:text-base font-black text-slate-900 dark:text-white truncate w-full mx-auto" title={s.name}>{s.name}</div>
+                    <div className="text-[9px] sm:text-xs text-slate-600 dark:text-slate-300 font-mono font-bold truncate">{s.reg_no}</div>
+                    <div className="pt-0.5 sm:pt-1 flex justify-center w-full">
                       {(() => {
                         const derivedYear = deriveYearLevelFromRegNo(s.reg_no, s.year_level);
                         const deptCode = s.department?.code || s.department?.name || 'DEPT';
                         return (
-                          <span className={`inline-flex justify-center items-center px-1.5 sm:px-2.5 py-0.5 rounded-lg text-[9px] sm:text-xs font-black border max-w-full truncate ${getDeptBadgeStyle(deptCode)}`}>
+                          <span className={`inline-flex justify-center items-center px-1 sm:px-2.5 py-0.5 rounded-lg text-[8px] sm:text-xs font-black border max-w-full truncate ${getDeptBadgeStyle(deptCode)}`}>
                             {deptCode} • {derivedYear} Yr
                           </span>
                         );
                       })()}
                     </div>
-                    <div className="pt-1 flex justify-center w-full">
-                      <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-black text-[9px] sm:text-xs border border-emerald-500/20 inline-block whitespace-nowrap shadow-2xs max-w-full">
+                    <div className="pt-0.5 sm:pt-1 flex justify-center w-full">
+                      <span className="px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-black text-[9px] sm:text-xs border border-emerald-500/20 inline-block whitespace-nowrap shadow-2xs max-w-full">
                         {s.stats?.total_solved || 0}
                       </span>
                     </div>
