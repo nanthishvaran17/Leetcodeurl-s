@@ -3235,7 +3235,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
       {/* Photo Cropper Modal */}
       {imageToCrop && (
-        <GlobalModalBackdrop isOpen={true} onClose={() => setImageToCrop(null)}>
+        <GlobalModalBackdrop isOpen={true} onClose={() => setImageToCrop(null)} className="flex flex-col items-center justify-center p-4 z-[99999]">
           <div className="relative max-w-lg w-full bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-brand-500/50 shadow-2xl space-y-5 animate-scale-up text-slate-900 dark:text-slate-100 flex flex-col h-[500px]">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-navy-800 shrink-0">
               <h3 className="text-xs font-black uppercase tracking-wider text-slate-950 dark:text-white flex items-center gap-2">
