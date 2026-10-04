@@ -1,7 +1,7 @@
 import os
 import io
 import datetime
-from typing import Dict, List
+from typing import Dict, List, Any
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
