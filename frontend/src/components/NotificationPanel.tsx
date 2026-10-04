@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { resolveNotificationDestination } from '../utils/notificationNavigation';
-import { Bell, Check, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, Sparkles } from 'lucide-react';
+import { Bell, Check, Archive, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, Sparkles } from 'lucide-react';
 import { useGlobalNotifications, normalizeCategory, type Notification } from '../context/GlobalNotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { requestPushPermissionAndGetToken } from '../services/firebasePush';
@@ -57,60 +57,77 @@ const CATEGORIES = [
   { id: 'announcements', label: 'Announcements' },
 ];
 
-const NotificationItem = ({ n, handleNotificationClick, deleteNotification, setActiveFileModal, getIcon }: any) => {
-  const [isSwiped, setIsSwiped] = useState(false);
+const NotificationItem = ({ n, handleNotificationClick, deleteNotification, markAsRead, setActiveFileModal, getIcon }: any) => {
+  const [swipeX, setSwipeX] = useState(0);
+  const THRESHOLD = 70;
+
+  const handleDragEnd = (_e: any, info: any) => {
+    const offset = info.offset.x;
+    const velocity = info.velocity.x;
+
+    if (offset < -THRESHOLD || velocity < -400) {
+      // Swiped LEFT → Delete
+      setSwipeX(-120);
+      setTimeout(() => deleteNotification(n.id), 280);
+    } else if (offset > THRESHOLD || velocity > 400) {
+      // Swiped RIGHT → Archive (hide)
+      setSwipeX(120);
+      setTimeout(() => deleteNotification(n.id), 280);
+    } else {
+      setSwipeX(0);
+    }
+  };
 
   return (
-    <div className="relative overflow-hidden group border-b border-slate-100 dark:border-navy-800/60 last:border-0">
-      {/* Background action (Delete) */}
-      <div className="absolute inset-y-0 right-0 w-full flex items-center justify-end bg-rose-500 z-0">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            deleteNotification(n.id);
-          }}
-          className="text-white flex items-center justify-center gap-2 font-bold text-sm h-full w-20 cursor-pointer"
-        >
-          <Trash2 size={18} />
-        </button>
+    <div className="relative overflow-hidden border-b border-slate-100 dark:border-navy-800/60 last:border-0">
+      {/* RIGHT bg: Delete (revealed on left-swipe - dragging right to left) */}
+      <div className="absolute inset-y-0 right-0 w-1/2 flex items-center justify-end bg-rose-500 z-0 px-5">
+        <div className="flex flex-col items-center gap-1 text-white">
+          <Trash2 size={20} />
+          <span className="text-[10px] font-black">Delete</span>
+        </div>
+      </div>
+
+      {/* LEFT bg: Archive (revealed on right-swipe - dragging left to right) */}
+      <div className="absolute inset-y-0 left-0 w-1/2 flex items-center justify-start bg-blue-500 z-0 px-5">
+        <div className="flex flex-col items-center gap-1 text-white">
+          <Archive size={20} />
+          <span className="text-[10px] font-black">Archive</span>
+        </div>
       </div>
 
       <motion.div
         drag="x"
-        dragConstraints={{ left: -80, right: 0 }}
-        dragElastic={0.1}
-        onDragEnd={(e, info) => {
-          if (info.offset.x < -40 || info.velocity.x < -200) {
-            setIsSwiped(true);
-          } else {
-            setIsSwiped(false);
-          }
-        }}
-        animate={{ x: isSwiped ? -80 : 0 }}
-        className={`relative z-10 flex items-start gap-3 p-3.5 sm:p-4 transition-all duration-200 cursor-pointer min-h-[64px] min-w-[44px] bg-white dark:bg-navy-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 ${!n.isRead ? 'bg-brand-500/5 dark:bg-brand-500/10 font-medium' : ''}`}
+        dragConstraints={{ left: -120, right: 120 }}
+        dragElastic={0.08}
+        onDragEnd={handleDragEnd}
+        animate={{ x: swipeX }}
+        transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+        className={`relative z-10 flex items-start gap-3 p-3.5 sm:p-4 cursor-pointer min-h-[64px] select-none
+          ${!n.isRead
+            ? 'bg-brand-50 dark:bg-brand-500/10'
+            : 'bg-white dark:bg-navy-950'
+          }`}
         onClick={() => {
-          if (isSwiped) {
-            setIsSwiped(false);
-            return;
-          }
+          if (Math.abs(swipeX) > 5) { setSwipeX(0); return; }
           handleNotificationClick(n);
         }}
       >
+        {/* Unread indicator */}
         {!n.isRead && (
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 bg-brand-500 rounded-r-full" />
         )}
 
-        <div className={`mt-0.5 shrink-0 p-2 rounded-xl bg-slate-100 dark:bg-navy-800 group-hover:shadow-sm transition-shadow ${n.isRead ? 'opacity-70' : ''}`}>
+        <div className={`mt-0.5 shrink-0 p-2 rounded-xl bg-slate-100 dark:bg-navy-800 transition-shadow ${n.isRead ? 'opacity-60' : ''}`}>
           {getIcon(n.type, n.priority)}
         </div>
 
-        <div className={`flex-1 min-w-0 pr-4 ${n.isRead ? 'opacity-80' : ''}`}>
+        <div className={`flex-1 min-w-0 pr-2 ${n.isRead ? 'opacity-75' : ''}`}>
           <div className="flex items-center justify-between gap-2 mb-0.5">
-            <h4 className={`text-xs sm:text-sm font-bold truncate ${!n.isRead ? 'text-slate-900 dark:text-white font-extrabold' : 'text-slate-700 dark:text-slate-300'}`}>
+            <h4 className={`text-xs sm:text-sm truncate ${!n.isRead ? 'text-slate-900 dark:text-white font-extrabold' : 'text-slate-600 dark:text-slate-300 font-bold'}`}>
               {n.title}
             </h4>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 font-semibold transition-colors">
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 font-semibold">
               {timeAgo(n.createdAt)}
             </span>
           </div>
@@ -548,6 +565,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                       n={n}
                       handleNotificationClick={handleNotificationClick}
                       deleteNotification={deleteNotification}
+                      markAsRead={markAsRead}
                       setActiveFileModal={setActiveFileModal}
                       getIcon={getIcon}
                     />

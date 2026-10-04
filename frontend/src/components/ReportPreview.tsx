@@ -13,6 +13,7 @@ interface ReportPreviewProps {
 import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
+import { deriveYearLevelFromRegNo } from '../utils/filterUtils';
 
 const formatStudentName = (name: string) => {
   if (!name) return "—";
@@ -1924,7 +1925,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                 <div className="space-y-3">
                   <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
                     <Target className="w-4 h-4 text-rose-500" />
-                    <span>12th Cutoff Band Intelligence</span>
+                    <span>12TH TNEA CUTOFF</span>
                   </h3>
                   {/* Mobile Card View */}
                   <div className="block sm:hidden print:hidden space-y-2.5">
@@ -1935,23 +1936,25 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">{b.attendance_pct}% Active</span>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div><span className="text-slate-500">Students:</span> <span className="font-bold text-slate-900 dark:text-white">{b.total}</span></div>
-                          <div><span className="text-slate-500">Active Solvers:</span> <span className="font-bold text-slate-900 dark:text-white">{b.active_solvers}</span></div>
+                          <div><span className="text-slate-500">Total Students:</span> <span className="font-bold text-slate-900 dark:text-white">{b.total}</span></div>
+                          <div><span className="text-slate-500">Attended:</span> <span className="font-bold text-emerald-700 dark:text-emerald-400">{b.active_solvers}</span></div>
+                          <div><span className="text-slate-500">Not Attended:</span> <span className="font-bold text-rose-600 dark:text-rose-400">{b.not_active}</span></div>
                           <div><span className="text-slate-500">Total Solved:</span> <span className="font-bold text-slate-900 dark:text-white">{b.total_solved?.toLocaleString()}</span></div>
-                          <div><span className="text-slate-500">Avg Solved:</span> <span className="font-mono font-bold text-slate-900 dark:text-white">{b.avg_solved}</span></div>
+                          <div className="col-span-2"><span className="text-slate-500">Avg Solved:</span> <span className="font-mono font-bold text-slate-900 dark:text-white">{b.avg_solved}</span></div>
                         </div>
                       </div>
                     ))}
                   </div>
                   {/* Desktop Table View */}
                   <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
-                    <table className="w-full text-left text-xs min-w-[520px]">
-                      <thead className="bg-[#8A4054] text-white font-black uppercase">
+                    <table className="w-full text-left text-xs min-w-[650px]">
+                      <thead className="bg-[#8A4054] text-white font-black uppercase tracking-wider text-[10px]">
                         <tr>
                           <th className="px-4 py-3 text-center">S.No</th>
                           <th className="px-4 py-3">12th Cutoff Band</th>
                           <th className="px-4 py-3 text-center">Total Students</th>
-                          <th className="px-4 py-3 text-center">Active Solvers</th>
+                          <th className="px-4 py-3 text-center">Attended (Active)</th>
+                          <th className="px-4 py-3 text-center">Not Attended</th>
                           <th className="px-4 py-3 text-center">Participation %</th>
                           <th className="px-4 py-3 text-right">Total Solved</th>
                           <th className="px-4 py-3 text-right">Avg Solved</th>
@@ -1960,15 +1963,16 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       </thead>
                       <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                         {report.cutoffBandSummary.map((b: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
+                          <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800 transition-colors">
                             <td className="px-4 py-2.5 text-center font-mono text-[11px] font-black text-slate-900 dark:text-slate-100">{idx + 1}</td>
                             <td className="px-4 py-2.5 font-black text-rose-700 dark:text-rose-300">{b.band}</td>
                             <td className="px-4 py-2.5 text-center font-black">{b.total}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{b.active_solvers}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{b.attendance_pct}%</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-400">{b.active_solvers}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-rose-600 dark:text-rose-400">{b.not_active}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-400">{b.attendance_pct}%</td>
                             <td className="px-4 py-2.5 text-right font-black text-slate-950 dark:text-white">{b.total_solved?.toLocaleString()}</td>
                             <td className="px-4 py-2.5 text-right font-mono font-black">{b.avg_solved}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{b.solvers_4}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-400">{b.solvers_4}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -2174,7 +2178,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                   {formatStudentName(s.name || s.student_name)}
                                 </h4>
                                 <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                                  {s.reg_no} • {s.dept} ({s.year})
+                                  {s.reg_no} • {s.dept} ({deriveYearLevelFromRegNo(s.reg_no, s.year)})
                                 </p>
                               </div>
                             </div>
@@ -2226,7 +2230,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <td className="px-4 py-2.5 text-center font-black text-slate-950 dark:text-white font-mono">{s.reg_no}</td>
                             <td className="px-4 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{formatStudentName(s.name || s.student_name)}</td>
                             <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{deriveYearLevelFromRegNo(s.reg_no, s.year)}</td>
                             <td className="px-4 py-2.5 text-right font-black text-emerald-700 dark:text-emerald-300">{s.easy ?? "—"}</td>
                             <td className="px-4 py-2.5 text-right font-black text-amber-700 dark:text-amber-300">{s.medium ?? "—"}</td>
                             <td className="px-4 py-2.5 text-right font-black text-rose-700 dark:text-rose-300">{s.hard ?? "—"}</td>
@@ -2267,7 +2271,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                 {formatStudentName(s.name || s.student_name)}
                               </h4>
                               <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                                {s.reg_no} • {s.dept} ({s.year})
+                                {s.reg_no} • {s.dept} ({deriveYearLevelFromRegNo(s.reg_no, s.year)})
                               </p>
                             </div>
                           </div>
@@ -2320,7 +2324,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <td className="px-4 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black">{s.reg_no}</td>
                             <td className="px-4 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
                             <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{deriveYearLevelFromRegNo(s.reg_no, s.year)}</td>
                             <td className="px-4 py-2.5 text-right text-emerald-700 dark:text-emerald-300 font-black">{s.easy ?? "—"}</td>
                             <td className="px-4 py-2.5 text-right text-amber-700 dark:text-amber-300 font-black">{s.medium ?? "—"}</td>
                             <td className="px-4 py-2.5 text-right text-rose-700 dark:text-rose-300 font-black">{s.hard ?? "—"}</td>

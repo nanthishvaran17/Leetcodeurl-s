@@ -75,20 +75,19 @@
        Sets background color immediately to clean white. -->
   <style>
     *,*::before,*::after{box-sizing:border-box}
-    html,body,#root{margin:0;padding:0;width:100%;min-height:100vh;background:#ffffff}
+    html,body,#root{margin:0;padding:0;width:100%;min-height:100vh;overflow-x:hidden}
     #root{display:flex;flex-direction:column}
-    @media(prefers-color-scheme:light){html,body,#root{background:#ffffff}}
   </style>
 </head>
 
 <body
   class="bg-white text-slate-900 dark:bg-navy-950 dark:text-slate-100 transition-colors duration-200 antialiased font-sans">
   <div id="root">
-    <div style="min-height:100vh; background:#ffffff; display:flex; flex-direction:column;">
-      <header style="height:64px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between; padding:0 24px;">
+    <div style="min-height:100vh; display:flex; flex-direction:column;" class="bg-white dark:bg-navy-950">
+      <header style="height:64px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between; padding:0 24px;" class="dark:border-navy-800">
         <div style="display:flex; align-items:center; gap:12px;">
           <img src="/nec_25_logo.webp" alt="Nandha Intelligence Logo" width="36" height="36" style="width:36px; height:36px; border-radius:50%; object-fit:cover;" fetchpriority="high">
-          <span style="font-family:Inter,system-ui,sans-serif; font-weight:800; font-size:17px; color:#0f172a; letter-spacing:-0.02em;">Nandha Intelligence</span>
+          <span style="font-family:Inter,system-ui,sans-serif; font-weight:800; font-size:17px; letter-spacing:-0.02em;" class="text-slate-900 dark:text-white">Nandha Intelligence</span>
         </div>
       </header>
     </div>

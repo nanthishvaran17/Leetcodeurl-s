@@ -612,6 +612,7 @@ def download_pdf_report(
     current_user = Depends(get_current_user_optional)
 ):
     from backend.pdf_generator import generate_pdf_report
+    from backend.time_utils import get_ist_date
 
     try:
         eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
@@ -629,24 +630,47 @@ def download_pdf_report(
             current_user=current_user
         )
 
+        # Dynamic filename: pull latest contest number from DB
+        today_str = get_ist_date().strftime("%d-%m-%Y")
+        try:
+            from backend.models import Contest
+            latest_contest = db.query(Contest).order_by(Contest.id.desc()).first()
+            contest_num = latest_contest.contest_number if latest_contest and hasattr(latest_contest, 'contest_number') and latest_contest.contest_number else \
+                          (latest_contest.id if latest_contest else "")
+            # Try to extract number from contest_name if contest_number not available
+            if not contest_num and latest_contest and latest_contest.contest_name:
+                import re as _re
+                m = _re.search(r'\d+', str(latest_contest.contest_name))
+                contest_num = m.group(0) if m else ""
+        except Exception:
+            contest_num = ""
+
         user_role = (getattr(current_user, "role", "") or "").lower()
+        contest_suffix = f"_WC{contest_num}" if contest_num else ""
         if eff_dept and eff_dept != "ALL":
-            fn = f"Weekly_LeetCode_HOD_{eff_dept}_Contest_518.pdf"
+            fn = f"Nandha_LeetCode_Intelligence_{eff_dept}{contest_suffix}_{today_str}.pdf"
         elif user_role in ("staff", "mentor") and current_user and getattr(current_user, "name", None):
-            fn = f"Weekly_LeetCode_Staff_{str(current_user.name).replace(' ', '_')}_Contest_518.pdf"
+            fn = f"Nandha_LeetCode_Intelligence_Staff{contest_suffix}_{today_str}.pdf"
         else:
-            fn = "Weekly_LeetCode_Principal_Contest_518.pdf"
+            fn = f"Nandha_LeetCode_Intelligence_Report{contest_suffix}_{today_str}.pdf"
 
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="{fn}"'}
+            headers={
+                "Content-Disposition": f'attachment; filename="{fn}"',
+                "Cache-Control": "no-store, no-cache, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            }
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"[EXPORT ERROR] export-pdf failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Unable to generate report. Please try again.")
+
+
 
 @router.get("/export-word")
 def download_word_report(

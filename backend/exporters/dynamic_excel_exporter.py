@@ -411,7 +411,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                     elif score_val >= 3:
                         c_sol = 1
 
-                is_solved = (val_str in ("1", "1.0", "True") or val_str.startswith("1 (") or (is_p and c_sol >= q_idx))
+                is_solved = (val_str in ("1", "1.0", "True") or val_str.startswith("1 ("))
 
                 if is_solved:
                     if q_t and str(q_t) != "—":
@@ -485,6 +485,15 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                     num = round(_safe_float(val))
                     val = f"{num:,}" if num > 0 and num != 1500 else "—"
 
+            elif title == "Solved":
+                strict_solved = 0
+                for i in range(1, 5):
+                    v1 = str(r.get(f"q{i}") or "").strip()
+                    v2 = str(r.get(f"q{i}_display") or "").strip()
+                    if v1 in ("1", "1.0", "True") or v1.startswith("1 (") or v2 in ("1", "1.0", "True") or v2.startswith("1 ("):
+                        strict_solved += 1
+                val = strict_solved
+
             title_lower = title.lower().strip()
 
             if val is None or str(val).strip() in ("None", "null", "nan", "NaN"):
@@ -519,7 +528,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 cell.fill = ALT_ROW_FILL
 
             if title_lower in LEFT_ALIGN_TITLES or ("url" in title_lower and title_lower not in ("data source", "error reason")):
-                cell.alignment = Alignment(horizontal="left", vertical="center")
+                cell.alignment = Alignment(horizontal="center", vertical="center")
             else:
                 cell.alignment = Alignment(horizontal="center", vertical="center")
 
@@ -602,10 +611,9 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     # Add AutoFilter so users can filter by Department, Year, Status, etc. on Row 6
     ws.auto_filter.ref = f"A{header_row_idx}:{last_col}{len(rows) + header_row_idx}"
 
-    # Generate Extra Sheet: 12th Cutoff Band Intelligence
-    # First, try to use pre-calculated summary from dataset if available
+    # Generate Extra Sheet: 12th Cutoff Band Intelligence (ONLY for TNEA report)
     cutoff_summary = dataset.get("cutoffBandSummary") or dataset.get("cutoff_band_summary")
-    if not cutoff_summary and rows:
+    if not cutoff_summary and rows and report_type == "12TH_TNEA_CUTOFF_ANALYSIS":
         # Compute it on the fly from rows
         from typing import List, Dict, Any
         CUTOFF_BANDS = [
@@ -660,8 +668,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 })
         cutoff_summary = computed_summary
 
-    if cutoff_summary:
-        ws_cutoff = wb.create_sheet(title="12th Cutoff Band Intelligence")
+    if cutoff_summary and report_type == "12TH_TNEA_CUTOFF_ANALYSIS":
+        ws_cutoff = wb.create_sheet(title="12TH TNEA CUTOFF")
         ws_cutoff.sheet_view.showGridLines = True
         
         _apply_thin_border = lambda cell: setattr(cell, 'border', openpyxl.styles.Border(
@@ -672,18 +680,18 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         ))
 
         # Title
-        ws_cutoff.merge_cells("A1:H1")
+        ws_cutoff.merge_cells("A1:I1")
         title_cell = ws_cutoff["A1"]
-        title_cell.value = "12TH CUTOFF BAND INTELLIGENCE"
-        title_cell.font = openpyxl.styles.Font(name="Arial", size=14, bold=True, color="1E293B")
+        title_cell.value = "12TH TNEA CUTOFF"
+        title_cell.font = openpyxl.styles.Font(name="Times New Roman", size=14, bold=True, color="1E293B")
         title_cell.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
         ws_cutoff.row_dimensions[1].height = 30
         
         # Headers
-        c_headers = ["S.No", "12th Cutoff Band", "Total Students", "Active Solvers", "Participation %", "Total Solved", "Avg Solved", "4/4 Solvers"]
+        c_headers = ["S.No", "12th Cutoff Band", "Total Students", "Attended", "Not Attended", "Participation %", "Total Solved", "Avg Solved", "4/4 Solvers"]
         for c_i, h in enumerate(c_headers, 1):
             c = ws_cutoff.cell(row=3, column=c_i, value=h)
-            c.font = openpyxl.styles.Font(name="Arial", size=10, bold=True, color="FFFFFF")
+            c.font = openpyxl.styles.Font(name="Times New Roman", size=10, bold=True, color="FFFFFF")
             c.fill = openpyxl.styles.PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
             c.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
             _apply_thin_border(c)
@@ -696,16 +704,17 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             band = str(row_data.get("band") or row_data.get("band_name") or "Unknown")
             tot = int(row_data.get("total", row_data.get("total_students", 0)))
             act = int(row_data.get("active_solvers", row_data.get("attended", 0)))
+            not_act = int(row_data.get("not_active", tot - act))
             pct_val = row_data.get("attendance_pct", row_data.get("participation_pct", 0.0))
             p_pct = f"{pct_val:.2f}%" if isinstance(pct_val, float) else pct_val
             tot_sol = int(row_data.get("total_solved", row_data.get("total_solves", 0)))
             avg_sol = float(row_data.get("avg_solved", row_data.get("avg_solves", 0.0)))
             p4 = int(row_data.get("solvers_4", row_data.get("perfect_solvers", 0)))
             
-            vals = [idx, band, tot, act, p_pct, tot_sol, avg_sol, p4]
+            vals = [idx, band, tot, act, not_act, p_pct, tot_sol, avg_sol, p4]
             for c_i, v in enumerate(vals, 1):
                 c = ws_cutoff.cell(row=r_idx, column=c_i, value=v)
-                c.font = openpyxl.styles.Font(name="Arial", size=10)
+                c.font = openpyxl.styles.Font(name="Times New Roman", size=10)
                 c.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
                 _apply_thin_border(c)
             ws_cutoff.row_dimensions[r_idx].height = 22
@@ -715,10 +724,79 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         ws_cutoff.column_dimensions["B"].width = 25
         ws_cutoff.column_dimensions["C"].width = 16
         ws_cutoff.column_dimensions["D"].width = 16
-        ws_cutoff.column_dimensions["E"].width = 18
-        ws_cutoff.column_dimensions["F"].width = 16
+        ws_cutoff.column_dimensions["E"].width = 16
+        ws_cutoff.column_dimensions["F"].width = 18
         ws_cutoff.column_dimensions["G"].width = 16
         ws_cutoff.column_dimensions["H"].width = 16
+        ws_cutoff.column_dimensions["I"].width = 16
+
+    # Generate Extra Sheet: Top Performers Leaderboard
+    top_students = dataset.get("topStudents", [])
+    if top_students:
+        ws_top = wb.create_sheet(title="Top Performers Leaderboard")
+        ws_top.sheet_view.showGridLines = True
+
+        _apply_thin_border_top = lambda cell: setattr(cell, 'border', openpyxl.styles.Border(
+            left=openpyxl.styles.Side(style='thin', color='000000'),
+            right=openpyxl.styles.Side(style='thin', color='000000'),
+            top=openpyxl.styles.Side(style='thin', color='000000'),
+            bottom=openpyxl.styles.Side(style='thin', color='000000')
+        ))
+
+        ws_top.merge_cells("A1:E1")
+        title_cell = ws_top["A1"]
+        title_cell.value = "TOP PERFORMERS LEADERBOARD"
+        title_cell.font = openpyxl.styles.Font(name="Times New Roman", size=14, bold=True, color="1B365D")
+        title_cell.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+        
+        # Apply border to the merged title cell
+        for c_idx in range(1, 6):
+            _apply_thin_border_top(ws_top.cell(row=1, column=c_idx))
+            
+        ws_top.row_dimensions[1].height = 30
+
+        t_headers = ["Rank", "Register No", "Name", "Department", "Total Solved"]
+        for c_i, h in enumerate(t_headers, 1):
+            c = ws_top.cell(row=2, column=c_i, value=h)
+            c.font = openpyxl.styles.Font(name="Times New Roman", size=11, bold=True, color="FFFFFF")
+            c.fill = openpyxl.styles.PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
+            c.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+            _apply_thin_border_top(c)
+        ws_top.row_dimensions[2].height = 25
+
+        r_start = 3
+        for idx, row_data in enumerate(top_students, 1):
+            r_idx = r_start + idx - 1
+            rank = idx
+            reg_no = str(row_data.get("reg_no") or row_data.get("register_no") or "")
+            name = str(row_data.get("name") or row_data.get("student_name") or "")
+            dept = str(row_data.get("dept") or row_data.get("department") or "")
+            if isinstance(row_data.get("department"), dict):
+                dept = str(row_data["department"].get("code", dept))
+            tot_sol = int(row_data.get("total_solved") or 0)
+            
+            vals = [rank, reg_no, name, dept, tot_sol]
+            for c_i, v in enumerate(vals, 1):
+                c = ws_top.cell(row=r_idx, column=c_i, value=v)
+                c.font = openpyxl.styles.Font(name="Times New Roman", size=11)
+                if c_i in (1, 2, 4, 5):
+                    c.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+                else:
+                    c.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+                _apply_thin_border_top(c)
+            ws_top.row_dimensions[r_idx].height = 22
+
+        ws_top.column_dimensions["A"].width = 8
+        ws_top.column_dimensions["B"].width = 20
+        ws_top.column_dimensions["C"].width = 35
+        ws_top.column_dimensions["D"].width = 15
+        ws_top.column_dimensions["E"].width = 15
+
+    if report_type == "12TH_TNEA_CUTOFF_ANALYSIS":
+        if "Student Performance Report" in wb.sheetnames and len(wb.sheetnames) > 1:
+            del wb["Student Performance Report"]
+        if "Top Performers Leaderboard" in wb.sheetnames:
+            del wb["Top Performers Leaderboard"]
 
     output = io.BytesIO()
     wb.save(output)

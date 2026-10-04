@@ -287,6 +287,7 @@ class UserCreate(BaseModel):
     role: str = "Faculty"
     designation: Optional[str] = None
     department_id: Optional[int] = None
+    hod_department_ids: Optional[List[int]] = None
     section_id: Optional[int] = None
     academic_year: Optional[str] = None
     reporting_manager_id: Optional[int] = None
@@ -300,6 +301,7 @@ class UserUpdate(BaseModel):
     designation: Optional[str] = None
     role: Optional[str] = None
     department_id: Optional[int] = None
+    hod_department_ids: Optional[List[int]] = None
     reporting_manager_id: Optional[int] = None
     is_active: Optional[bool] = None
 

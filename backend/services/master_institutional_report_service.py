@@ -23,39 +23,39 @@ from backend.logger import logger
 # ==========================================
 # 1. COLOR SYSTEM (EXACT HEX PALETTE)
 # ==========================================
-PRIMARY_FONT = "Segoe UI"
+PRIMARY_FONT = "Times New Roman"
 
 COLOR_PALETTE = {
-    "01 Principal Executive": {"primary": "16324F", "light": "EEF3F7"},
-    "01 Official Leaderboard": {"primary": "16324F", "light": "EEF3F7"},
-    "02 Question Analysis": {"primary": "16324F", "light": "EEF3F7"},
-    "03 Dept Summary": {"primary": "16324F", "light": "EEF3F7"},
-    "02 Complete Student Roster": {"primary": "2F5D8A", "light": "EEF4FA"},
-    "03 Contest Attendance": {"primary": "2E7D62", "light": "EAF5F0"},
-    "04 Contest Performance": {"primary": "317B78", "light": "EAF5F4"},
-    "05 Top Performers": {"primary": "7057A8", "light": "F2EFF8"},
-    "06 4-4 Perfect Solvers": {"primary": "2E7D62", "light": "EAF5F0"},
-    "07 3-4 Solvers": {"primary": "4C8DBB", "light": "EDF5FA"},
-    "08 2-4 Solvers": {"primary": "526777", "light": "EEF2F5"},
-    "09 1-4 Solvers": {"primary": "D27A35", "light": "FCF1E8"},
-    "10 Department Intelligence": {"primary": "8A4054", "light": "F7EEF1"},
-    "Contest Attendance Matrix": {"primary": "2E7D62", "light": "EAF5F0"},
-    "Contest Performance Ranking": {"primary": "7057A8", "light": "F2EFF8"},
-    "Student Performance Roster": {"primary": "2F5D8A", "light": "EEF4FA"},
-    "5-Week Performance Matrix": {"primary": "4C8DBB", "light": "EDF5FA"},
-    "Difficulty Intelligence Summary": {"primary": "526777", "light": "EEF2F5"},
-    "Student Difficulty Roster": {"primary": "526777", "light": "EEF2F5"},
-    "Faculty Summary": {"primary": "D27A35", "light": "FCF1E8"},
-    "Coordinator Faculty Overview": {"primary": "D27A35", "light": "FCF1E8"},
-    "Assigned Student Detail Roster": {"primary": "D27A35", "light": "FCF1E8"},
-    "Management Executive Summary": {"primary": "16324F", "light": "EEF3F7"},
-    "Department Rank Comparison": {"primary": "16324F", "light": "EEF3F7"},
+    "01 Principal Executive": {"primary": "1B365D", "light": "EEF3F7"},
+    "01 Official Leaderboard": {"primary": "1B365D", "light": "EEF3F7"},
+    "02 Question Analysis": {"primary": "1B365D", "light": "EEF3F7"},
+    "03 Dept Summary": {"primary": "1B365D", "light": "EEF3F7"},
+    "02 Complete Student Roster": {"primary": "1B365D", "light": "EEF4FA"},
+    "03 Contest Attendance": {"primary": "1B365D", "light": "EAF5F0"},
+    "04 Contest Performance": {"primary": "1B365D", "light": "EAF5F4"},
+    "05 Top Performers": {"primary": "1B365D", "light": "F2EFF8"},
+    "06 4-4 Perfect Solvers": {"primary": "1B365D", "light": "EAF5F0"},
+    "07 3-4 Solvers": {"primary": "1B365D", "light": "EDF5FA"},
+    "08 2-4 Solvers": {"primary": "1B365D", "light": "EEF2F5"},
+    "09 1-4 Solvers": {"primary": "1B365D", "light": "FCF1E8"},
+    "10 Department Intelligence": {"primary": "1B365D", "light": "F7EEF1"},
+    "Contest Attendance Matrix": {"primary": "1B365D", "light": "EAF5F0"},
+    "Contest Performance Ranking": {"primary": "1B365D", "light": "F2EFF8"},
+    "Student Performance Roster": {"primary": "1B365D", "light": "EEF4FA"},
+    "5-Week Performance Matrix": {"primary": "1B365D", "light": "EDF5FA"},
+    "Difficulty Intelligence Summary": {"primary": "1B365D", "light": "EEF2F5"},
+    "Student Difficulty Roster": {"primary": "1B365D", "light": "EEF2F5"},
+    "Faculty Summary": {"primary": "1B365D", "light": "FCF1E8"},
+    "Coordinator Faculty Overview": {"primary": "1B365D", "light": "FCF1E8"},
+    "Assigned Student Detail Roster": {"primary": "1B365D", "light": "FCF1E8"},
+    "Management Executive Summary": {"primary": "1B365D", "light": "EEF3F7"},
+    "Department Rank Comparison": {"primary": "1B365D", "light": "EEF3F7"},
 }
 
 SUPPORTING_COLORS = {
     "white": "FFFFFF",
     "background": "F8FAFC",
-    "border": "D7E0E8",
+    "border": "000000",
     "secondary_text": "657786",
     "positive": "2E7D62",
     "attention": "C58A22",
@@ -68,7 +68,7 @@ GRID_BORDER = Border(left=THIN_SIDE, right=THIN_SIDE, top=THIN_SIDE, bottom=THIN
 
 # Alignments
 ALIGN_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
-ALIGN_LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
+ALIGN_LEFT = Alignment(horizontal="center", vertical="center", wrap_text=True)
 ALIGN_RIGHT = Alignment(horizontal="right", vertical="center")
 
 # Pre-created Reusable Fonts
@@ -210,7 +210,7 @@ def write_sheet_header(
     cols: int = 8
 ):
     """Writes standardized header, logo, and metadata block (Rows 1-6)."""
-    pal = COLOR_PALETTE.get(sheet_title, {"primary": "16324F", "light": "EEF3F7"})
+    pal = COLOR_PALETTE.get(sheet_title, {"primary": "1B365D", "light": "EEF3F7"})
     primary_hex = pal["primary"]
     light_hex = pal["light"]
 
@@ -691,7 +691,18 @@ def generate_master_10_sheet_workbook(
     if active_sheet is not None:
         wb.remove(active_sheet)  # Remove default blank sheet
 
-    contest_title = f"Weekly Contest {contest_id or 518}"
+    contest_title = "Weekly Contest"
+    from backend.models import Contest
+    if contest_id:
+        c_rec = db.query(Contest).filter(Contest.contest_slug.like(f"%{contest_id}%")).first()
+        if c_rec and c_rec.contest_title:
+            contest_title = c_rec.contest_title
+        else:
+            contest_title = f"Weekly Contest {contest_id}"
+    else:
+        c_rec = db.query(Contest).filter(Contest.platform == "leetcode").order_by(Contest.id.desc()).first()
+        if c_rec and c_rec.contest_title:
+            contest_title = c_rec.contest_title
     from backend.time_utils import get_ist_date
     session_date = get_ist_date().strftime("%d-%m-%Y")
     roster_scope = f"{len(normalized_students)} Authorized Students"
@@ -769,7 +780,7 @@ def generate_master_10_sheet_workbook(
 
     for s_name in sheet_names:
         ws = wb.create_sheet(title=s_name)
-        pal = COLOR_PALETTE.get(s_name, {"primary": "16324F", "light": "EEF3F7"})
+        pal = COLOR_PALETTE.get(s_name, {"primary": "1B365D", "light": "EEF3F7"})
 
         if s_name == "01 Principal Executive":
             write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)

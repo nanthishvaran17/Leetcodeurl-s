@@ -694,6 +694,8 @@ I can show specific student progress assigned to any faculty member."""
                 st_obj = g.get("student")
                 if st_obj is not None:
                     dept_str = st_obj.department.code if getattr(st_obj, "department", None) else "N/A"
+                    if "(" in dept_str and dept_str.endswith(")"):
+                        dept_str = dept_str.split("(")[-1].replace(")", "")
                     st_name = getattr(st_obj, "name", "") or ""
                     st_reg = getattr(st_obj, "reg_no", "") or ""
                     gainer_rows_list.append(
@@ -1220,16 +1222,14 @@ I am equipped with comprehensive AI assistant capabilities for **Nandha Engineer
             latest_session = db.query(WeeklySession).order_by(desc(WeeklySession.id)).first()
             if latest_session:
                 res = db.query(WeeklyPublicResult).filter_by(session_id=latest_session.id, student_id=student.id).first()
-                if not res or not getattr(res, 'attended', False):
+                has_participated = res and res.outcome in ("SOLVED_LIVE", "SOLVED_VIRTUAL", "PARTICIPATED")
+                if not res or not has_participated:
                     reasons.append(f"Did not participate in Weekly Session #{latest_session.week_number or latest_session.id}")
                 else:
                     reasons.append(f"Attended Weekly Session #{latest_session.week_number or latest_session.id} ({getattr(res, 'verification_status', 'VERIFIED')})")
 
             if not any("Zero verified" in r or "Did not participate" in r for r in reasons):
                 reasons.append("Your account is in good standing with active submissions and contest participation!")
-
-            reasons.append(f"Verified LeetCode Profile: Total {tot} solved (Easy: {easy}, Medium: {med}, Hard: {hrd})")
-            reasons.append(f"Contest Rating: {c_rating} (Global Rank: {g_rank})")
 
             is_good = not any("Zero verified" in r or "Did not participate" in r for r in reasons)
             status_code = "IN_GOOD_STANDING" if is_good else "ATTENTION_SUGGESTED"

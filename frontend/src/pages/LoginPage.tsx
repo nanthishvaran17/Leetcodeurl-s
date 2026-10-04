@@ -126,8 +126,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     }
   };
 
-  // Auth Mode: 'password' | 'otp'
-  const [authMode, setAuthMode] = useState<'password' | 'otp'>('password');
+  // Auth Mode: 'password' | 'otp' | 'passkey'
+  const [authMode, setAuthMode] = useState<'password' | 'otp' | 'passkey'>('password');
 
   // Views: 'login' | 'forgot_password' | 'help'
   const [currentView, setCurrentView] = useState<'login' | 'forgot_password' | 'help'>('login');
@@ -1077,7 +1077,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                           />
                         </div>
                       </div>
-                      <div className="row-between" style={{ marginTop: '8px', marginBottom: '16px' }}>
+                      <div className="row-between" style={{ marginTop: '-8px', marginBottom: '16px' }}>
                         <button
                           type="button"
                           onClick={() => { setCurrentView('login'); setAuthMode('password'); setError(''); setSuccessMsg(''); }}
@@ -1119,7 +1119,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                           autoFocus
                         />
                       </div>
-                      <div className="row-between" style={{ marginTop: '8px', marginBottom: '16px' }}>
+                      <div className="row-between" style={{ marginTop: '-8px', marginBottom: '16px' }}>
                         <button
                           type="button"
                           onClick={() => { setForgotStep('dob'); setForgotResetToken(''); setError(''); setSuccessMsg(''); }}

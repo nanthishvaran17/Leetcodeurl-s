@@ -93,7 +93,14 @@ const connect = (wsUrl?: string) => {
         pingInterval = null;
       }
       
-      self.postMessage({ type: 'WS_STATUS', connected: false });
+      self.postMessage({ type: 'WS_STATUS', connected: false, code: event.code, reason: event.reason });
+      
+      // Stop auto-reconnecting if auth failed (1008) so we don't spam the server with an expired token.
+      // The main thread will provide a new token and trigger a new CONNECT when it refreshes.
+      if (event.code === 1008) {
+        console.warn('Worker WS auth failed (1008). Stopping reconnect attempts.');
+        return;
+      }
       
       // Only schedule auto-reconnect if connection was not intentionally closed on logout
       if (!isIntentionallyClosed && currentWsUrl) {

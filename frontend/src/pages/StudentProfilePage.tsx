@@ -25,6 +25,7 @@ interface StudentProfilePageProps {
 }
 
 import { useNotification } from '../context/NotificationContext';
+import { useAuth } from '../context/AuthContext';
 // triggerDownload used by downloadManager internally
 import { downloadManager } from '../services/download/downloadManager';
 
@@ -32,6 +33,8 @@ type TabId = 'overview' | 'analytics' | 'contests' | 'activity' | 'reports';
 
 export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student, onBack }) => {
   const { notify, confirmAction } = useNotification();
+  const { user, isAuthenticated } = useAuth();
+  const isSuperAdmin = user?.role?.toLowerCase() === 'super admin' || user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'administrator';
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [detail, setDetail] = useState<any>(student);
   const [insights, setInsights] = useState<any>(null);
@@ -177,6 +180,31 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
 
   // 1. LEETCODE — resolved URL for <a> tag (native navigation, no popup blocker)
   const leetCodeUrl = resolveLeetCodeUrl();
+
+  // 2. EDIT BUTTON HANDLER
+  const handleDeleteStudent = async () => {
+    const targetId = resolveTargetId();
+    if (!targetId) return;
+    
+    confirmAction({
+      title: 'Delete Student',
+      message: `Are you sure you want to permanently delete this student record? This action cannot be undone.`,
+      type: 'danger',
+      confirmText: 'Delete Student',
+      onConfirm: async () => {
+        setIsDeleting(true);
+        try {
+          await api.post('/students/bulk-delete', { student_ids: [targetId], soft_delete: false });
+          notify.success('Student Deleted', 'Student record has been permanently deleted from the database.', { category: 'STUDENT PROFILE' });
+          onBack(); // Close modal
+        } catch (err: any) {
+          notify.error('Delete Failed', err.response?.data?.detail || 'Failed to delete student.', { category: 'STUDENT PROFILE' });
+        } finally {
+          setIsDeleting(false);
+        }
+      }
+    });
+  };
 
   // 2. EDIT BUTTON HANDLER
   const handleOpenEditModal = () => {
@@ -342,10 +370,10 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   ];
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-white dark:bg-navy-950 rounded-3xl">
+    <div className="h-full flex flex-col overflow-hidden bg-white dark:bg-navy-950 rounded-3xl isolate">
       
       {/* Header Bar with Close Button & Actions — restored from reference commit structure */}
-      <div className="p-3 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4 border-b border-slate-800 shrink-0 relative z-50 shadow-xl">
+      <div className="p-3 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4 border-b border-slate-800 shrink-0 shadow-xl rounded-t-2xl sm:rounded-t-3xl">
         <div className="flex items-center space-x-3 sm:space-x-4 w-full md:w-auto justify-between md:justify-start">
           <div className="flex items-center space-x-2.5 sm:space-x-4 min-w-0">
             <button
@@ -358,9 +386,9 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               <span className="font-bold text-white">Back</span>
             </button>
             <div className="flex-1 min-w-0">
-              <h2 className="text-base sm:text-xl font-black text-white truncate">{detail?.name || student?.name}</h2>
-              <p className="text-[10px] sm:text-xs text-brand-300 font-mono font-bold mt-0.5 truncate max-w-sm">
-                {detail?.reg_no || student?.reg_no} • {detail?.department?.name || detail?.department?.code || student?.department?.code} • {deriveYearLevelFromRegNo(detail?.reg_no || student?.reg_no, detail?.year_level || student?.year_level)} Year
+              <h2 className="text-base sm:text-xl font-black text-white truncate">{detail?.name || student?.name || student?.student_name || "Unknown Student"}</h2>
+              <p className="text-[10px] sm:text-xs text-brand-300 font-mono font-bold mt-0.5 truncate">
+                {detail?.reg_no || student?.reg_no} • {detail?.department?.name || detail?.department?.code || student?.department?.code || student?.dept} • {deriveYearLevelFromRegNo(detail?.reg_no || student?.reg_no, detail?.year_level || student?.year_level || student?.year)} Year
               </p>
             </div>
           </div>
@@ -431,6 +459,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               <FileText className="w-3.5 h-3.5 text-white shrink-0" />
               <span className="truncate">Audit</span>
             </button>
+            
         </div>
       </div>
       

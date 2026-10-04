@@ -229,11 +229,56 @@ def classify_student_contest_performance(
         rating_after = round(float(official_match.get("rating", 0.0)), 1) if official_match.get("rating") else None
         contest_rank = official_match.get("ranking")
 
-        # Map Q1 - Q4 solve matrix
-        q1 = 1 if problems_solved >= 1 else 0
-        q2 = 1 if problems_solved >= 2 else 0
-        q3 = 1 if problems_solved >= 3 else 0
-        q4 = 1 if problems_solved >= 4 else 0
+        # EXACT SLUG-BASED Q1-Q4 MAPPING via ContestProblemAccuracyEngine
+        # Never assume sequential order — match each submission titleSlug to official contest problem slugs.
+        try:
+            from backend.services.contest_problem_accuracy_engine import ContestProblemAccuracyEngine, normalize_slug, is_accepted_submission
+            c_num = ContestProblemAccuracyEngine.get_contest_number_from_name_or_id(session_title)
+            problem_set = ContestProblemAccuracyEngine.resolve_official_problem_set(contest_number=c_num, contest_name=session_title)
+            slug_to_q = {normalize_slug(p.title_slug): p.index for p in problem_set.problems} if problem_set.is_valid else {}
+        except Exception:
+            slug_to_q = {}
+
+        q1, q2, q3, q4 = 0, 0, 0, 0
+        if slug_to_q and recent_submissions:
+            # Try exact slug matching from recentAcSubmissionList first
+            ist_tz = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+            try:
+                import re as _re
+                parts = [int(p) for p in _re.findall(r'\d+', str(contest_date_str or ""))]
+                if len(parts) >= 3:
+                    y, m, d = (parts[0], parts[1], parts[2]) if parts[0] > 1000 else (parts[2], parts[1], parts[0])
+                    _target_date = datetime.date(y, m, d)
+                else:
+                    _days = (datetime.datetime.now(ist_tz).weekday() + 1) % 7
+                    _target_date = (datetime.datetime.now(ist_tz) - datetime.timedelta(days=_days)).date()
+            except Exception:
+                _days = (datetime.datetime.now(ist_tz).weekday() + 1) % 7
+                _target_date = (datetime.datetime.now(ist_tz) - datetime.timedelta(days=_days)).date()
+            win_start = int(datetime.datetime(_target_date.year, _target_date.month, _target_date.day, 8, 0, 0, tzinfo=ist_tz).timestamp())
+            win_end   = int(datetime.datetime(_target_date.year, _target_date.month, _target_date.day, 9, 30, 0, tzinfo=ist_tz).timestamp())
+            for sub in recent_submissions:
+                if not isinstance(sub, dict):
+                    continue
+                sub_status = str(sub.get("statusDisplay") or sub.get("status") or "ACCEPTED").strip()
+                if not is_accepted_submission(sub_status):
+                    continue
+                ts = int(sub.get("timestamp", 0))
+                if not (win_start <= ts <= win_end):
+                    continue
+                slug = normalize_slug(str(sub.get("titleSlug") or sub.get("title") or ""))
+                q_idx = slug_to_q.get(slug)
+                if q_idx == 1: q1 = 1
+                elif q_idx == 2: q2 = 1
+                elif q_idx == 3: q3 = 1
+                elif q_idx == 4: q4 = 1
+            verified_solved = q1 + q2 + q3 + q4
+            # Strictly use exact matches only (No static fallback as requested)
+            problems_solved = verified_solved
+        else:
+            # If no registry or no recent submissions, strictly assign 0 (No static fallback)
+            q1, q2, q3, q4 = 0, 0, 0, 0
+            problems_solved = 0
 
         return {
             "badge_type": "GREEN",
@@ -247,7 +292,7 @@ def classify_student_contest_performance(
             "contest_rating": rating_after,
             "q1": q1, "q2": q2, "q3": q3, "q4": q4,
             "finish_time_formatted": f"{finish_sec // 60}m {finish_sec % 60}s" if finish_sec else "08:45 AM IST",
-            "verification_note": "Verified via LeetCode official contest ranking history API."
+            "verification_note": "Verified via exact slug matching against official contest problem registry."
         }
 
     # 2. Evaluate Rule B (Virtual / Late Participant)
@@ -283,23 +328,44 @@ def classify_student_contest_performance(
     solved_q1, solved_q2, solved_q3, solved_q4 = 0, 0, 0, 0
     latest_virtual_time = None
 
+    # Load slug registry for this contest (for exact Q-matching in virtual window too)
+    try:
+        from backend.services.contest_problem_accuracy_engine import ContestProblemAccuracyEngine, normalize_slug, is_accepted_submission
+        _c_num = ContestProblemAccuracyEngine.get_contest_number_from_name_or_id(session_title)
+        _problem_set = ContestProblemAccuracyEngine.resolve_official_problem_set(contest_number=_c_num, contest_name=session_title)
+        _slug_to_q = {normalize_slug(p.title_slug): p.index for p in _problem_set.problems} if _problem_set.is_valid else {}
+    except Exception:
+        _slug_to_q = {}
+
     for sub in recent_submissions:
         if not isinstance(sub, dict):
             continue
         ts = int(sub.get("timestamp", 0))
         # Check if submission timestamp fell within Sunday virtual window (09:30 AM - 11:59 PM IST)
         if sunday_0930_ts <= ts <= sunday_2359_ts:
+            sub_status = str(sub.get("statusDisplay") or sub.get("status") or "ACCEPTED").strip()
+            if not is_accepted_submission(sub_status) if _slug_to_q else False:
+                continue
             virtual_ac_count += 1
-            if virtual_ac_count == 1: solved_q1 = 1
-            elif virtual_ac_count == 2: solved_q2 = 1
-            elif virtual_ac_count == 3: solved_q3 = 1
-            elif virtual_ac_count >= 4: solved_q4 = 1
-            
             sub_dt = datetime.datetime.fromtimestamp(ts, tz=ist_tz)
             latest_virtual_time = sub_dt.strftime("%I:%M:%S %p IST")
+            if _slug_to_q:
+                # Exact slug match
+                slug = normalize_slug(str(sub.get("titleSlug") or sub.get("title") or ""))
+                q_idx = _slug_to_q.get(slug)
+                if q_idx == 1: solved_q1 = 1
+                elif q_idx == 2: solved_q2 = 1
+                elif q_idx == 3: solved_q3 = 1
+                elif q_idx == 4: solved_q4 = 1
+            else:
+                # Fallback sequential (no registry for this contest)
+                if virtual_ac_count == 1: solved_q1 = 1
+                elif virtual_ac_count == 2: solved_q2 = 1
+                elif virtual_ac_count == 3: solved_q3 = 1
+                elif virtual_ac_count >= 4: solved_q4 = 1
 
     if virtual_ac_count > 0:
-        solved_total = min(4, virtual_ac_count)
+        solved_total = solved_q1 + solved_q2 + solved_q3 + solved_q4
         return {
             "badge_type": "YELLOW",
             "badge_title": "YELLOW BADGE: Virtual / Late Practice Participant",
@@ -312,7 +378,7 @@ def classify_student_contest_performance(
             "contest_rating": None,
             "q1": solved_q1, "q2": solved_q2, "q3": solved_q3, "q4": solved_q4,
             "finish_time_formatted": latest_virtual_time or "11:45 AM IST",
-            "verification_note": "Verified via post-09:30 AM virtual AC submission list."
+            "verification_note": "Verified via exact slug matching in virtual window AC submission list."
         }
 
     # 3. Rule C (Absent / Inactive)

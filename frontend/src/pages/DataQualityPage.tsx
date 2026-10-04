@@ -398,15 +398,15 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
             </div>
 
             {/* Pagination Controls */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 text-xs text-slate-700 dark:text-slate-200 font-bold border-t border-slate-200 dark:border-slate-800">
-              <div className="text-slate-700 dark:text-slate-200 font-bold">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 text-xs text-slate-700 dark:text-slate-200 font-bold border-t border-slate-200 dark:border-slate-800">
+              <div className="text-slate-700 dark:text-slate-200 font-bold text-center sm:text-left">
                 Showing <strong className="text-slate-900 dark:text-white font-extrabold">{Math.min((page - 1) * pageSize + 1, filteredIssues.length)}</strong> to{' '}
                 <strong className="text-slate-900 dark:text-white font-extrabold">{Math.min(page * pageSize, filteredIssues.length)}</strong> of{' '}
                 <strong className="text-slate-900 dark:text-white font-extrabold">{filteredIssues.length}</strong> items
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-navy-900 p-1 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold">
+              <div className="flex items-center gap-3 flex-wrap justify-center">
+                <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-navy-900 p-1 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold shrink-0">
                   <span className="text-xs text-slate-700 dark:text-slate-200 px-1 font-mono font-bold">Show:</span>
                   {[10, 25, 50, 100].map((sz) => (
                     <button

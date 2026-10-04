@@ -50,11 +50,44 @@ YEAR_ROMAN_MAP = {
     "4": "IV", "4TH": "IV", "4-TH": "IV", "FOURTH": "IV", "IV": "IV",
 }
 
-def normalize_year_roman(year_level: Optional[str]) -> str:
-    if not year_level:
-        return "III"
-    cleaned = year_level.upper().replace("YEAR", "").strip()
-    return YEAR_ROMAN_MAP.get(cleaned, "III")
+def normalize_year_roman(year_level: Optional[str] = None, reg_no: Optional[str] = None) -> str:
+    """
+    Derives and normalizes academic year strictly to canonical Roman numerals: 'I', 'II', 'III', 'IV'.
+    Rules:
+    - 23 / 732223... -> 'IV'
+    - 24 / 732224... -> 'III'
+    - 25 / 732225... -> 'II'
+    - 26 / 732226... -> 'I'
+    - '4', '4th', 'IV' -> 'IV'
+    - '3', '3rd', 'III' -> 'III'
+    - '2', '2nd', 'II' -> 'II'
+    - '1', '1st', 'I' -> 'I'
+    """
+    reg_clean = (str(reg_no or "")).upper().strip()
+    if reg_clean:
+        if "732223" in reg_clean or "23CC" in reg_clean or "23CI" in reg_clean or "23CS" in reg_clean or "23IT" in reg_clean or "23AI" in reg_clean or "23EC" in reg_clean or "23EE" in reg_clean or "23ME" in reg_clean or reg_clean.startswith("23"):
+            return "IV"
+        if "732224" in reg_clean or "24CC" in reg_clean or "24CI" in reg_clean or "24CS" in reg_clean or "24IT" in reg_clean or "24AI" in reg_clean or "24EC" in reg_clean or "24EE" in reg_clean or "24ME" in reg_clean or reg_clean.startswith("24"):
+            return "III"
+        if "732225" in reg_clean or "73225" in reg_clean or "25CC" in reg_clean or "25CI" in reg_clean or "25CS" in reg_clean or "25IT" in reg_clean or "25AI" in reg_clean or "25EC" in reg_clean or "25EE" in reg_clean or "25ME" in reg_clean or reg_clean.startswith("25"):
+            return "II"
+        if "732226" in reg_clean or "26CC" in reg_clean or "26CI" in reg_clean or "26CS" in reg_clean or "26IT" in reg_clean or "26AI" in reg_clean or "26EC" in reg_clean or "26EE" in reg_clean or "26ME" in reg_clean or reg_clean.startswith("26"):
+            return "I"
+
+    if year_level:
+        cleaned = str(year_level).upper().replace("YEAR", "").replace("YR", "").strip()
+        if cleaned in YEAR_ROMAN_MAP:
+            return YEAR_ROMAN_MAP[cleaned]
+        if "2027" in cleaned or "2023-2027" in cleaned:
+            return "IV"
+        if "2028" in cleaned or "2024-2028" in cleaned:
+            return "III"
+        if "2029" in cleaned or "2025-2029" in cleaned:
+            return "II"
+        if "2030" in cleaned or "2026-2030" in cleaned:
+            return "I"
+
+    return "III"
 
 def derive_student_batch(year_level: Optional[str]) -> str:
     """Derives standard academic batch from year level for AY 2026-27."""

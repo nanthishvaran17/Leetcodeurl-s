@@ -28,6 +28,7 @@ REPORT_COLORS = {
     "HOD_DEPARTMENT_INTELLIGENCE": {"primary": "8A4054", "light": "F7EEF1"},
     "WEEK_ON_WEEK_INTELLIGENCE": {"primary": "317B78", "light": "EAF5F4"},
     "HISTORICAL_CONTEST_INTELLIGENCE": {"primary": "4C8DBB", "light": "EDF5FA"},
+    "12TH_TNEA_CUTOFF_ANALYSIS": {"primary": "16324F", "light": "EEF3F7"},
 }
 
 # ==========================================
@@ -213,6 +214,18 @@ REPORT_REGISTRY: Dict[str, Dict[str, Any]] = {
         "resolver": "build_universal_report",
         "has_historical_requirement": False,
         "empty_state_msg": "No management summary data available."
+    },
+    "12TH_TNEA_CUTOFF_ANALYSIS": {
+        "code": "12TH_TNEA_CUTOFF_ANALYSIS",
+        "category": "D. Executive Reports",
+        "name": "12th TNEA Cutoff Intelligence Report",
+        "description": "Analysis of 12th standard TNEA cutoff bands (200-190, 190-180... 70-80) mapped to department distribution and academic performance.",
+        "allowed_roles": ["PRINCIPAL", "MANAGEMENT", "ADMINISTRATOR", "HOD"],
+        "primary_color": "16324F",
+        "light_color": "EEF3F7",
+        "resolver": "build_universal_report",
+        "has_historical_requirement": False,
+        "empty_state_msg": "No TNEA cutoff data available."
     }
 }
 

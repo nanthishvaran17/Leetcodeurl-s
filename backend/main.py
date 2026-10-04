@@ -1718,6 +1718,141 @@ def root_landing_page(request: Request, format: Optional[str] = None):
     return HTMLResponse(content=html_content)
 
 
+import webauthn
+from webauthn import generate_registration_options, verify_registration_response, options_to_json, generate_authentication_options, verify_authentication_response
+from webauthn.helpers.structs import RegistrationCredential, AuthenticationCredential, AuthenticatorSelectionCriteria, AuthenticatorAttachment, UserVerificationRequirement, ResidentKeyRequirement
+from pydantic import BaseModel
+import json
+
+RP_ID = "localhost" # Adjust for production
+RP_NAME = "Nandha Engineering College"
+ORIGIN = "http://localhost:5173" # Adjust for production
+
+class WebauthnRegisterResponse(BaseModel):
+    response: dict
+
+@app.get("/auth/passkey/register-options")
+def passkey_register_options(request: Request, db: Session = Depends(get_db)):
+    from backend.routes.auth import get_current_user
+    current_user = get_current_user(request, db)
+    if not current_user:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=401, detail="Unauthenticated")
+    # Create challenge
+    options = generate_registration_options(
+        rp_id=RP_ID,
+        rp_name=RP_NAME,
+        user_id=str(current_user.id).encode("utf-8"),
+        user_name=current_user.username,
+        user_display_name=current_user.full_name or current_user.username,
+        authenticator_selection=AuthenticatorSelectionCriteria(
+            user_verification=UserVerificationRequirement.PREFERRED,
+            resident_key=ResidentKeyRequirement.PREFERRED
+        )
+    )
+    # Save challenge to user
+    challenge_b64 = options.challenge.decode('utf-8') if isinstance(options.challenge, bytes) else str(options.challenge)
+    current_user.webauthn_challenge = challenge_b64
+    db.commit()
+    
+    return json.loads(options_to_json(options))
+
+@app.post("/auth/passkey/register-verify")
+def passkey_register_verify(body: WebauthnRegisterResponse, request: Request, db: Session = Depends(get_db)):
+    from backend.routes.auth import get_current_user
+    current_user = get_current_user(request, db)
+    if not current_user:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=401, detail="Unauthenticated")
+    try:
+        verification = verify_registration_response(
+            credential=body.response,
+            expected_challenge=current_user.webauthn_challenge.encode('utf-8') if current_user.webauthn_challenge else b"",
+            expected_origin=ORIGIN,
+            expected_rp_id=RP_ID,
+            require_user_verification=False,
+        )
+        
+        # Save to database
+        from backend.models import UserPasskey
+        new_passkey = UserPasskey(
+            user_id=current_user.id,
+            credential_id=verification.credential_id.decode('utf-8') if isinstance(verification.credential_id, bytes) else str(verification.credential_id),
+            public_key=verification.credential_public_key.decode('utf-8') if isinstance(verification.credential_public_key, bytes) else str(verification.credential_public_key),
+            sign_count=verification.sign_count
+        )
+        db.add(new_passkey)
+        current_user.webauthn_challenge = None
+        db.commit()
+        return {"success": True, "message": "Passkey registered successfully"}
+    except Exception as e:
+        logger.error(f"Passkey registration failed: {e}")
+        return {"success": False, "message": str(e)}
+
+class WebauthnLoginRequest(BaseModel):
+    username: str
+
+class WebauthnLoginResponse(BaseModel):
+    username: str
+    response: dict
+
+@app.post("/auth/passkey/login-options")
+def passkey_login_options(body: WebauthnLoginRequest, db: Session = Depends(get_db)):
+    from backend.models import User
+    user = db.query(User).filter(User.username == body.username).first()
+    if not user:
+        # Don't reveal user doesn't exist, just return generic options (or error to be safe)
+        return JSONResponse(status_code=400, content={"message": "User not found"})
+        
+    options = generate_authentication_options(
+        rp_id=RP_ID,
+        allow_credentials=[] # Let the authenticator discover the credentials
+    )
+    
+    challenge_b64 = options.challenge.decode('utf-8') if isinstance(options.challenge, bytes) else str(options.challenge)
+    user.webauthn_challenge = challenge_b64
+    db.commit()
+    
+    return json.loads(options_to_json(options))
+
+@app.post("/auth/passkey/login-verify")
+def passkey_login_verify(body: WebauthnLoginResponse, db: Session = Depends(get_db)):
+    from backend.models import User, UserPasskey
+    from backend.security import create_access_token
+    
+    user = db.query(User).filter(User.username == body.username).first()
+    if not user:
+        return JSONResponse(status_code=400, content={"success": False, "message": "User not found"})
+        
+    passkey = db.query(UserPasskey).filter(UserPasskey.user_id == user.id, UserPasskey.credential_id == body.response['id']).first()
+    if not passkey:
+        return JSONResponse(status_code=400, content={"success": False, "message": "Passkey not found for this user"})
+
+    try:
+        verification = verify_authentication_response(
+            credential=body.response,
+            expected_challenge=user.webauthn_challenge.encode('utf-8') if user.webauthn_challenge else b"",
+            expected_origin=ORIGIN,
+            expected_rp_id=RP_ID,
+            credential_public_key=passkey.public_key.encode('utf-8') if isinstance(passkey.public_key, str) else passkey.public_key,
+            credential_current_sign_count=passkey.sign_count
+        )
+        
+        # Update sign count
+        passkey.sign_count = verification.new_sign_count
+        user.webauthn_challenge = None
+        db.commit()
+        
+        # Issue token (similar to normal login)
+        access_token_expires = datetime.timedelta(days=7)
+        access_token = create_access_token(
+            data={"sub": str(user.id)}, expires_delta=access_token_expires
+        )
+        return {"success": True, "token": access_token}
+    except Exception as e:
+        logger.error(f"Passkey login failed: {e}")
+        return JSONResponse(status_code=400, content={"success": False, "message": str(e)})
+
 # Production Static Build Mount (Serves Frontend SPA bundle on single port)
 FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
 if os.path.exists(FRONTEND_DIST):

@@ -1235,11 +1235,11 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
               {/* Dynamic Attachments Bundle */}
               <div className="p-4 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+                <div className="flex items-start sm:items-center justify-between gap-2">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                     Generated Attachments (Dynamic Bundle)
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold">
+                  <span className="inline-flex shrink-0 items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold mt-0.5 sm:mt-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Sync
                   </span>
                 </div>

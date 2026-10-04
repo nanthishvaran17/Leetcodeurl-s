@@ -1,7 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon, Bell, Palette, Check, RefreshCw } from 'lucide-react';
+import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon, Bell, Palette, Check, RefreshCw } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -27,10 +26,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   isSidebarOpen,
   setIsSidebarOpen
 }) => {
-  const { theme, toggleTheme } = useTheme();
   const { user, logout, isAuthenticated } = useAuth();
 
-  const [showThemeMenu, setShowThemeMenu] = useState<boolean>(false);
   const [freshness, setFreshness] = useState<any>(null);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
@@ -165,20 +162,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               )}
 
-
-              {/* Theme Toggle */}
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="hidden sm:flex p-2 flex-shrink-0 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-800 transition-all duration-200 cursor-pointer active:scale-90 min-w-[44px] min-h-[44px] items-center justify-center"
-                title="Toggle Dark / Light Mode"
-              >
-                {theme === 'dark' ? (
-                  <Sun className="w-4 h-4 text-amber-400 transition-transform duration-300 hover:rotate-90" />
-                ) : (
-                  <Moon className="w-4 h-4 text-navy-700 transition-transform duration-300 hover:-rotate-12" />
-                )}
-              </button>
 
               {/* Auth Profile / Login */}
               {isAuthenticated && user ? (

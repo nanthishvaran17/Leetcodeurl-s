@@ -277,9 +277,9 @@ export const StudentAuditModal: React.FC<StudentAuditModalProps> = ({
               <button
                 type="button"
                 onClick={() => onDownloadForensic(sessionId)}
-                className="px-4 py-2 min-h-[40px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 transition-all shadow-sm cursor-pointer"
+                className="px-4 py-2 min-h-[40px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-sm cursor-pointer whitespace-nowrap"
               >
-                <FileText className="w-3.5 h-3.5" />
+                <FileText className="w-3.5 h-3.5 shrink-0" />
                 <span>Export Forensic PDF</span>
               </button>
             )}

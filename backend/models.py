@@ -668,7 +668,11 @@ class User(Base):
     last_activity = Column(DateTime, nullable=True)
     totp_secret = Column(String(100), nullable=True)
     is_2fa_enabled = Column(Boolean, default=False)
+    webauthn_challenge = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+
+    passkeys = relationship("UserPasskey", back_populates="user", cascade="all, delete-orphan")
+
 
     department = relationship("Department", back_populates="users")
     reporting_manager_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
@@ -687,6 +691,16 @@ class User(Base):
         cascade="all, delete-orphan",
         lazy="select"
     )
+
+class UserPasskey(Base):
+    __tablename__ = 'user_passkeys'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    credential_id = Column(String(255), unique=True, index=True, nullable=False)
+    public_key = Column(Text, nullable=False)
+    sign_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    user = relationship('User', back_populates='passkeys')
 
 class PasswordResetOTP(Base):
     __tablename__ = "password_reset_otps"
@@ -3510,5 +3524,7 @@ class CorrectionEvent(Base):
     timestamp = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
 
     student = relationship("Student")
+
+
 
 

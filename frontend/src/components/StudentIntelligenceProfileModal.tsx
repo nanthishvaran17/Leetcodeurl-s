@@ -666,7 +666,11 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
     }));
 
   const handlePrintDossier = () => {
+    document.body.classList.add('printing-dossier');
     window.print();
+    setTimeout(() => {
+      document.body.classList.remove('printing-dossier');
+    }, 1000);
   };
 
   const tabs = [
@@ -685,13 +689,13 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
     ? createPortal(
         <div
           id="modal-scroll-container"
-          className="fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm animate-fade-in text-slate-900 font-sans p-2 sm:p-4 md:p-6 flex flex-col items-center justify-center overflow-y-auto"
+          className="fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm animate-fade-in text-slate-900 font-sans p-2 sm:p-4 md:p-6 flex flex-col items-center justify-center overflow-y-auto print:static print:bg-white print:p-0"
           onClick={(e) => {
             if (e.target === e.currentTarget) onClose();
           }}
         >
           <div
-            className="w-full max-w-4xl lg:max-w-5xl my-auto mx-auto bg-white text-slate-900 shadow-2xl border border-slate-200 rounded-3xl sm:rounded-[32px] overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[90vh] transition-all duration-150 shrink-0"
+            className="w-full max-w-4xl lg:max-w-5xl my-auto mx-auto bg-white text-slate-900 shadow-2xl border border-slate-200 rounded-3xl sm:rounded-[32px] overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[90vh] transition-all duration-150 shrink-0 print:max-h-none print:overflow-visible print:border-none print:shadow-none print:rounded-none"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 1. TOP HERO HEADER & IDENTITY - SLEEK COMPACT HEADER */}
@@ -820,7 +824,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
             {/* 2. MAIN CONTENT BODY (HIGH-CONTRAST LIGHT THEME) */}
             <div
               id="modal-content-body"
-              className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 bg-slate-100/90 text-slate-900 flex flex-col gap-6 pb-24 scroll-smooth custom-scrollbar"
+              className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 bg-slate-100/90 text-slate-900 flex flex-col gap-6 pb-24 scroll-smooth custom-scrollbar print:max-h-none print:overflow-visible print:bg-white print:p-0 print:pb-0"
             >
               {loading ? (
                 <div className="py-24 flex flex-col items-center justify-center gap-3">

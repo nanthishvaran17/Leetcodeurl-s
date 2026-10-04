@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Activity,
   CheckCircle2,
@@ -2236,8 +2237,8 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                     <strong className="text-slate-950 dark:text-white font-black">{rawAudits.length}</strong> Logs
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-navy-800 text-[11px] font-bold shadow-2xs">
+                  <div className="flex items-center gap-3 flex-wrap justify-center">
+                    <div className="flex items-center gap-1 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-navy-800 text-[11px] font-bold shadow-2xs shrink-0">
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 px-1 font-mono font-bold">Show:</span>
                       {[10, 25, 50, 100].map((sz) => (
                         <button
@@ -2282,8 +2283,8 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       )}
 
       {/* FULL 11-SECTION IMMUTABLE AUDIT LOG DETAIL MODAL */}
-      {selectedAuditDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fade-in overflow-y-auto">
+      {selectedAuditDetail && createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in overflow-y-auto">
           <div className="max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-2xl p-6 sm:p-8 space-y-6 text-slate-800 dark:text-slate-100 relative font-sans">
             
             {/* Header */}
@@ -2474,7 +2475,8 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 12. TAB 8: NEC OPERATIONS COPILOT */}

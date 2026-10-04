@@ -156,7 +156,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       // Weekly Contest Attended count for this department:
       const contestAttendedCount = ds && ds.contestAttended > 0 ? ds.contestAttended : (dept.contest_attended ?? dept.post_930_solvers ?? activeStudents);
 
-      // Contest Participation Rate (Weekly Contest Attendance / Post-9:31 AM solvers)
+      // Contest Participation Rate (Weekly Contest Attendance / Post-9:30 AM solvers)
       const partRate = totalStudents > 0 ? Math.round((contestAttendedCount / totalStudents) * 10000) / 100 : (dept.participation_rate || 0);
 
       // Weekly Contest Average Problems Solved per participating/active student in department (0.0 to 4.0 range)
@@ -518,7 +518,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
               <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">
                 <Clock className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-slate-300">Post-9:31 AM Solvers:</span>
+                <span className="text-slate-300">Post-9:30 AM Solvers:</span>
                 <span className="text-amber-400 font-extrabold">{fmtCount(actualContestSolvers)}</span>
               </div>
               <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">

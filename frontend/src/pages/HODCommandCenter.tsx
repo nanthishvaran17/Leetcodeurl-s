@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Building2, RefreshCw, Sparkles, Search, Plus,
   Trash2, UserCheck, X, CheckCircle2, AlertTriangle, Users,
@@ -318,8 +319,8 @@ const StaffAllocationModal: React.FC<{
 
   if (!isOpen) return null;
 
-  return (
-    <div className="modal-overlay-responsive animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+  return createPortal(
+    <div className="modal-overlay-responsive z-[10000] animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-container-responsive bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 w-full max-w-4xl">
         {/* Modal Header */}
         <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
@@ -478,7 +479,8 @@ const StaffAllocationModal: React.FC<{
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -1011,13 +1013,15 @@ export const HODCommandCenter: React.FC = () => {
     }
   }, [studentsPage, studentsSearch, selectedDept, selectedStaff, selectedYear, selectedSection, selectedStatus, isMobile]);
 
+  const isFirstMount = useRef(true);
+
   useEffect(() => {
     getCommandCenterDepartments().then(setDepartments).catch(() => {});
-    loadScopedData(true);
   }, []);
 
   useEffect(() => {
-    loadScopedData(false);
+    loadScopedData(isFirstMount.current);
+    isFirstMount.current = false;
     setStudentsPage(1);
   }, [selectedStaff, selectedDept, selectedYear, selectedSection, selectedStatus, loadScopedData]);
 
@@ -2442,10 +2446,10 @@ export const HODCommandCenter: React.FC = () => {
                       {/* Action Buttons */}
                       <td className="flex items-center justify-between py-2.5 pt-3 md:py-3 md:px-3 text-center md:table-cell" onClick={e => e.stopPropagation()}>
                         <span className="md:hidden text-[10px] font-bold text-slate-500 uppercase tracking-wider">Actions</span>
-                        <div className="flex items-center justify-end md:justify-center gap-1.5">
+                        <div className="flex flex-wrap items-center justify-end md:justify-center gap-2 mt-2 md:mt-0">
                           <button
                             onClick={(e) => { e.stopPropagation(); setSelectedStaffDetail(s); }}
-                            className={`px-3 py-1 rounded-lg text-[10px] font-extrabold transition cursor-pointer shadow-xs ${
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition cursor-pointer shadow-xs whitespace-nowrap ${
                               isSelected 
                                 ? 'bg-brand-600 text-white shadow-brand-600/30' 
                                 : 'bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 dark:bg-brand-950 dark:text-brand-300 dark:hover:bg-brand-600 border border-brand-200 dark:border-brand-800'
@@ -2454,19 +2458,19 @@ export const HODCommandCenter: React.FC = () => {
                             Inspect Details →
                           </button>
                           <button
-                            onClick={() => setShowStaffAllocationModal(true)}
-                            className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-slate-200 text-[10px] font-extrabold transition cursor-pointer border border-slate-200 dark:border-navy-700"
+                            onClick={(e) => { e.stopPropagation(); setShowStaffAllocationModal(true); }}
+                            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-slate-200 text-[10px] font-extrabold transition cursor-pointer border border-slate-200 dark:border-navy-700 whitespace-nowrap"
                             title="Manage Faculty Allocation"
                           >
                             Reassign ⇄
                           </button>
                           {assigned > 0 && (
                             <button
-                              onClick={() => handleUnassignAllForStaff(s.id, s.username)}
-                              className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 text-[10px] font-extrabold transition cursor-pointer border border-rose-200 dark:border-rose-800/80"
+                              onClick={(e) => { e.stopPropagation(); handleUnassignAllForStaff(s.id, s.username); }}
+                              className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 text-[10px] font-extrabold transition cursor-pointer border border-rose-200 dark:border-rose-800/80 whitespace-nowrap"
                               title="Unassign All Mentees from this Staff Mentor"
                             >
-                              Unassign 
+                              Unassign
                             </button>
                           )}
                         </div>

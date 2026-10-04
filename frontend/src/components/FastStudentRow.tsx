@@ -43,7 +43,8 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string) {
 
 // million-ignore
 export const FastStudentRow = memo(({ 
-  studentId, 
+  studentId,
+  initialStudent,
   index, 
   style, 
   isSelected, 
@@ -53,7 +54,8 @@ export const FastStudentRow = memo(({
   onRefresh, 
   onDelete 
 }: any) => {
-  const student = useStudentEntity(studentId);
+  const liveStudent = useStudentEntity(studentId);
+  const student = liveStudent || initialStudent;
 
   const syncState = getSyncState(student?.stats?.sync_status, student?.stats?.last_verified_at);
   const isVerified = syncState === 'verified' || syncState === 'stale';

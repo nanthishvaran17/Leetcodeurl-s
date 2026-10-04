@@ -129,26 +129,30 @@ export function formatDepartmentCode(dept: any): string {
 export function deriveYearLevelFromRegNo(regNoStr?: string, currentYearVal?: any): 'I' | 'II' | 'III' | 'IV' {
   const norm = (regNoStr || '').trim().toUpperCase();
   if (norm) {
-    if (norm.includes('732223') || norm.includes('23CC') || norm.includes('23CI') || norm.includes('23CS') || norm.includes('23IT') || norm.includes('23AI') || norm.includes('23EC') || norm.includes('23EE') || norm.includes('23ME') || norm.includes('23AG')) {
+    if (norm.includes('732223') || norm.startsWith('23') || norm.includes('23CC') || norm.includes('23CI') || norm.includes('23CS') || norm.includes('23IT') || norm.includes('23AI') || norm.includes('23EC') || norm.includes('23EE') || norm.includes('23ME') || norm.includes('23AG')) {
       return 'IV';
     }
-    if (norm.includes('732224') || norm.includes('24CC') || norm.includes('24CI') || norm.includes('24CS') || norm.includes('24IT') || norm.includes('24AI') || norm.includes('24EC') || norm.includes('24EE') || norm.includes('24ME') || norm.includes('24AG')) {
+    if (norm.includes('732224') || norm.startsWith('24') || norm.includes('24CC') || norm.includes('24CI') || norm.includes('24CS') || norm.includes('24IT') || norm.includes('24AI') || norm.includes('24EC') || norm.includes('24EE') || norm.includes('24ME') || norm.includes('24AG')) {
       return 'III';
     }
-    if (norm.includes('732225') || norm.includes('73225') || norm.includes('25CC') || norm.includes('25CI') || norm.includes('25CS') || norm.includes('25IT') || norm.includes('25AI') || norm.includes('25EC') || norm.includes('25EE') || norm.includes('25ME') || norm.includes('25AG')) {
+    if (norm.includes('732225') || norm.includes('73225') || norm.startsWith('25') || norm.includes('25CC') || norm.includes('25CI') || norm.includes('25CS') || norm.includes('25IT') || norm.includes('25AI') || norm.includes('25EC') || norm.includes('25EE') || norm.includes('25ME') || norm.includes('25AG')) {
       return 'II';
     }
-    if (norm.includes('732226') || norm.includes('26CC') || norm.includes('26CI') || norm.includes('26CS') || norm.includes('26IT') || norm.includes('26AI') || norm.includes('26EC') || norm.includes('26EE') || norm.includes('26ME') || norm.includes('26AG')) {
+    if (norm.includes('732226') || norm.startsWith('26') || norm.includes('26CC') || norm.includes('26CI') || norm.includes('26CS') || norm.includes('26IT') || norm.includes('26AI') || norm.includes('26EC') || norm.includes('26EE') || norm.includes('26ME') || norm.includes('26AG')) {
       return 'I';
     }
   }
 
   if (currentYearVal != null && currentYearVal !== '') {
     const valStr = String(currentYearVal).trim().toUpperCase();
-    if (valStr === '1' || valStr === 'I' || valStr === '1ST' || valStr.includes('1ST')) return 'I';
-    if (valStr === '2' || valStr === 'II' || valStr === '2ND' || valStr.includes('2ND')) return 'II';
-    if (valStr === '3' || valStr === 'III' || valStr === '3RD' || valStr.includes('3RD')) return 'III';
-    if (valStr === '4' || valStr === 'IV' || valStr === '4TH' || valStr.includes('4TH') || valStr.includes('FINAL')) return 'IV';
+    if (valStr === '1' || valStr === 'I' || valStr === '1ST' || valStr.includes('1ST') || valStr === '1 YEAR') return 'I';
+    if (valStr === '2' || valStr === 'II' || valStr === '2ND' || valStr.includes('2ND') || valStr === '2 YEAR') return 'II';
+    if (valStr === '3' || valStr === 'III' || valStr === '3RD' || valStr.includes('3RD') || valStr === '3 YEAR') return 'III';
+    if (valStr === '4' || valStr === 'IV' || valStr === '4TH' || valStr.includes('4TH') || valStr.includes('FINAL') || valStr === '4 YEAR') return 'IV';
+    if (valStr.includes('2030') || valStr.includes('2026-2030')) return 'I';
+    if (valStr.includes('2029') || valStr.includes('2025-2029')) return 'II';
+    if (valStr.includes('2028') || valStr.includes('2024-2028')) return 'III';
+    if (valStr.includes('2027') || valStr.includes('2023-2027')) return 'IV';
   }
 
   return 'III';

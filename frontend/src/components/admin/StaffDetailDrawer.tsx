@@ -63,68 +63,87 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   const targetCompletedCount = mentees.filter(m => (m.total_solved || 0) >= 10).length;
 
   return (
-    <div className="fixed inset-0 z-[100050] flex justify-end pt-12 md:pt-0 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-xl h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden flex flex-col rounded-t-3xl md:rounded-tr-none md:rounded-bl-3xl">
-        {/* Header Profile Section */}
-        <div className="bg-gradient-to-r from-brand-900 via-navy-900 to-slate-900 p-6 sm:p-7 text-white border-b border-brand-800/50 relative overflow-hidden rounded-t-3xl md:rounded-tr-none shrink-0">
-          <div className="absolute right-0 top-0 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
-          
-          <div className="flex justify-between items-start mb-4 relative z-10 gap-3">
-            <div className="flex items-center gap-4 min-w-0 flex-1">
-              <div 
-                className={`relative shrink-0 ${staff.profile_photo ? 'cursor-pointer active:scale-95 hover:scale-105 transition-transform' : ''}`}
-                onClick={() => { if (staff.profile_photo) setShowPhotoZoom(true); }}
-                title={staff.profile_photo ? "Tap to view enlarged photo" : ""}
-              >
-                {staff.profile_photo ? (
-                  <img
-                    src={staff.profile_photo}
-                    alt={staff.full_name || staff.username}
-                    className="w-16 h-16 rounded-3xl object-cover border-2 border-brand-400/40 shadow-lg bg-white dark:bg-navy-950"
-                  />
+    <div className="fixed inset-0 z-[100050] flex justify-end bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="w-full max-w-xl h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden flex flex-col">
+
+        {/* Hero Header Profile Section */}
+        <div className="relative bg-gradient-to-br from-[#0a1628] via-[#0f2244] to-[#1a1040] text-white overflow-hidden shrink-0">
+          {/* Decorative blobs */}
+          <div className="absolute -top-10 -right-10 w-56 h-56 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+
+          {/* Close row */}
+          <div className="flex justify-end pt-4 px-5 relative z-10">
+            <button
+              onClick={onClose}
+              className="p-2 bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white rounded-xl backdrop-blur-md transition cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          {/* Avatar + Info */}
+          <div className="flex items-end gap-4 px-6 pb-5 relative z-10">
+            <div
+              className={`relative shrink-0 ${staff.profile_photo ? 'cursor-pointer active:scale-95 hover:scale-105 transition-transform' : ''}`}
+              onClick={() => { if (staff.profile_photo) setShowPhotoZoom(true); }}
+              title={staff.profile_photo ? 'Tap to view enlarged photo' : ''}
+            >
+              {staff.profile_photo ? (
+                <img
+                  src={staff.profile_photo}
+                  alt={staff.full_name || staff.username}
+                  className="w-20 h-20 rounded-xl object-cover border-2 border-white/30 shadow-2xl"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-xl bg-white/15 backdrop-blur-md text-white font-black flex items-center justify-center text-3xl shadow-2xl border border-white/20">
+                  {staff.username ? staff.username.charAt(0).toUpperCase() : 'S'}
+                </div>
+              )}
+              {staff.is_active && (
+                <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-400 border-2 border-[#0a1628] shadow" />
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1 pb-1">
+              {/* Full name (large) */}
+              {staff.full_name && (
+                <div className="text-xl font-black text-white leading-tight truncate" title={staff.full_name}>
+                  {staff.full_name}
+                </div>
+              )}
+              {/* Username */}
+              <div className="text-xs text-slate-300 font-mono truncate mt-0.5" title={staff.username}>
+                @{staff.username}
+              </div>
+              {/* Email */}
+              <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1 mt-1 truncate" title={staff.email}>
+                <Mail size={11} className="text-brand-400 shrink-0" />
+                <span className="truncate">{staff.email}</span>
+              </p>
+              {/* Badges row */}
+              <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-slate-200 text-[10px] font-bold border border-white/15">
+                  {staff.role || 'Staff Mentor'}
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full bg-brand-500/25 text-brand-200 text-[10px] font-bold border border-brand-400/30 uppercase">
+                  {staff.department_code || 'FACULTY'}
+                </span>
+                {staff.is_active ? (
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Active Status
+                  </span>
                 ) : (
-                  <div className="w-16 h-16 rounded-3xl bg-white/10 backdrop-blur-md text-brand-300 font-extrabold flex items-center justify-center text-2xl shadow-lg border border-white/20">
-                    {staff.username ? staff.username.charAt(0).toUpperCase() : 'S'}
-                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-bold">
+                    Inactive
+                  </span>
                 )}
               </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-display text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                  <span className="truncate" title={staff.username}>{staff.username}</span>
-                  <span className="shrink-0 px-3 py-1 rounded-full bg-brand-500/30 text-brand-200 text-[10px] font-extrabold border border-brand-400/30 uppercase hidden sm:inline-block">
-                    {staff.department_code || 'FACULTY'}
-                  </span>
-                </h3>
-                <p className="text-xs text-slate-300 font-medium flex items-center gap-1.5 mt-1" title={staff.email}>
-                  <Mail size={13} className="text-brand-400 shrink-0" /> 
-                  <span className="truncate">{staff.email}</span>
-                </p>
-                <div className="flex items-center gap-2 mt-2.5">
-                  <span className="px-3 py-1 rounded-full bg-white/10 text-slate-200 text-[10px] font-bold border border-white/10">
-                    {staff.role || 'Faculty Mentor'}
-                  </span>
-                  {staff.is_active ? (
-                    <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Active Status
-                    </span>
-                  ) : (
-                    <span className="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-bold">
-                      Inactive
-                    </span>
-                  )}
-                </div>
-              </div>
             </div>
-            <button 
-              onClick={onClose} 
-              className="p-2.5 bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white rounded-2xl backdrop-blur-md transition cursor-pointer"
-            >
-              <X size={18} />
-            </button>
           </div>
         </div>
 
-        <div className="p-6 space-y-6 flex-1 overflow-y-auto bg-slate-50/50 dark:bg-navy-950">
+        <div className="p-5 space-y-5 flex-1 overflow-y-auto bg-slate-50 dark:bg-navy-950">
           {/* Mentorship Workload & Solver Metrics */}
           <div className="space-y-3">
             <h4 className="font-display text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center justify-between">

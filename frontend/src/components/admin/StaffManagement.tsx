@@ -720,22 +720,22 @@ export const StaffManagement: React.FC = () => {
                 </div>
 
                 {/* DESKTOP TABLE VIEW (>= 768px) */}
-                <div className="hidden md:block overflow-x-auto">
-                  <table className="w-full text-left text-sm whitespace-nowrap">
-                    <thead className="bg-slate-100/90 dark:bg-navy-950 text-slate-800 dark:text-slate-200 font-black uppercase text-xs tracking-wider border-b border-slate-200 dark:border-navy-600">
+                <div className="hidden md:block overflow-x-auto p-2">
+                  <table className="w-full text-left text-sm whitespace-nowrap border-separate border-spacing-y-2">
+                    <thead className="bg-gradient-to-r from-slate-100/90 via-slate-100/50 to-slate-100/90 dark:from-navy-900 dark:via-navy-800 dark:to-navy-900 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-widest shadow-sm rounded-xl overflow-hidden backdrop-blur-md">
                       <tr>
-                        <th className="px-6 py-4">Institutional ID</th>
-                        <th className="px-6 py-4">Username / Email</th>
-                        <th className="px-6 py-4">Department / Scope</th>
-                        <th className="px-6 py-4">Role</th>
-                        <th className="px-6 py-4">Workload</th>
+                        <th className="px-6 py-4 rounded-l-xl">Institutional ID</th>
+                        <th className="px-6 py-4">Staff Identity</th>
+                        <th className="px-6 py-4">Department</th>
+                        <th className="px-6 py-4">Role / Scope</th>
+                        <th className="px-6 py-4">Workload Metrics</th>
                         <th className="px-6 py-4">Status</th>
-                        <th className="px-6 py-4 text-right">Actions</th>
+                        <th className="px-6 py-4 text-right rounded-r-xl">Operations</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200 dark:divide-navy-700">
+                    <tbody className="divide-y-0">
                       {filteredStaff.map((staff) => (
-                        <tr key={staff.id} className="hover:bg-slate-50/90 dark:hover:bg-navy-750/50 transition-colors">
+                        <tr key={staff.id} className="bg-white dark:bg-navy-950 hover:bg-brand-50/30 dark:hover:bg-brand-900/10 transition-all duration-300 shadow-sm hover:shadow-md rounded-xl group border border-slate-100 dark:border-navy-800">
                           <td className="px-6 py-4">
                             <span className="font-mono text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800 inline-block shadow-2xs">
                               {staff.institutional_id || `NEC-STAFF-${staff.id}`}
@@ -1090,31 +1090,56 @@ export const StaffManagement: React.FC = () => {
           {/* Full Screen Photo Lightbox for Mobile APK & Desktop */}
           {previewingPhoto && (
             <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4 z-[999999]" onClose={() => setPreviewingPhoto(null)}>
-              <div 
-                className="bg-white dark:bg-navy-900 p-4 sm:p-5 rounded-3xl border-2 border-brand-500/50 shadow-2xl max-w-sm w-full flex flex-col items-center space-y-4 relative animate-modal-content"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="w-full flex items-center justify-between pb-2 border-b border-slate-200 dark:border-navy-800">
-                  <div className="min-w-0 flex-1 pr-2">
-                    <h4 className="text-sm font-black text-slate-900 dark:text-white truncate">{previewingPhoto.name}</h4>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">{previewingPhoto.id} • {previewingPhoto.role}</p>
+              <div className="relative w-full max-w-md bg-white dark:bg-navy-950 rounded-[2rem] overflow-hidden p-1 shadow-2xl shadow-brand-500/20 animate-scale-up border border-slate-200 dark:border-navy-800 flex flex-col group" onClick={(e) => e.stopPropagation()}>
+                {/* Top decorative gradient header */}
+                <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-br from-brand-600 via-indigo-600 to-purple-600 opacity-90 rounded-t-[1.8rem]"></div>
+                
+                {/* Close Button */}
+                <button onClick={() => setPreviewingPhoto(null)} className="absolute top-4 right-4 text-white hover:bg-white/20 p-2 rounded-full backdrop-blur-md cursor-pointer transition-all z-10 shadow-sm">
+                  <X className="w-5 h-5" />
+                </button>
+                
+                <div className="relative z-10 mt-12 flex flex-col items-center pb-6">
+                  {/* Profile Image with Glowing Border */}
+                  <div className="relative p-1 bg-white dark:bg-navy-950 rounded-[2rem] shadow-xl">
+                    <div className="absolute inset-0 bg-gradient-to-tr from-brand-400 to-indigo-400 rounded-[2rem] blur-md opacity-60 animate-pulse"></div>
+                    <div className="w-40 h-40 rounded-3xl overflow-hidden bg-black flex items-center justify-center relative z-10 border-4 border-white dark:border-navy-900 shadow-lg">
+                      <img src={previewingPhoto.url} alt={previewingPhoto.name} className="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewingPhoto(null)}
-                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 transition cursor-pointer"
-                    title="Close preview"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
 
-                <div className="w-full max-h-[60vh] flex items-center justify-center overflow-hidden rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 p-1">
-                  <img
-                    src={previewingPhoto.url}
-                    alt={previewingPhoto.name}
-                    className="max-h-[55vh] w-auto max-w-full object-contain rounded-xl shadow-2xl"
-                  />
+                  {/* Text Information Details */}
+                  <div className="mt-6 text-center space-y-2 px-6">
+                    <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{previewingPhoto.name}</h2>
+                    <div className="inline-flex items-center justify-center px-3 py-1 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-full">
+                      <span className="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                        {previewingPhoto.id} &bull; {previewingPhoto.role}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Badges / Extras */}
+                  <div className="mt-6 w-full px-6">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
+                        <Building2 className="w-5 h-5 text-emerald-500 mb-1.5" />
+                        <span className="text-[10px] uppercase font-black text-slate-400">Institutional</span>
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate w-full text-center">Verified Staff</span>
+                      </div>
+                      <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
+                        <Lock className="w-5 h-5 text-brand-500 mb-1.5" />
+                        <span className="text-[10px] uppercase font-black text-slate-400">Security</span>
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Active Profile</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 border-t border-slate-100 dark:border-navy-800 w-full pt-4 flex justify-center">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <Shield className="w-3.5 h-3.5" />
+                      Official Admin Control Center
+                    </div>
+                  </div>
                 </div>
               </div>
             </GlobalModalBackdrop>

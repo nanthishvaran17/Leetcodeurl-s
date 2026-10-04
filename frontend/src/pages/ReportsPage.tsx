@@ -268,14 +268,43 @@ export const ReportsPage: React.FC = () => {
     downloadReportFile(`/reports/export-master-tracker${q}`, 'Full_8_Sheet_Master_Tracker.xlsx');
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     const q = getActiveFilterQueryParams();
-    downloadReportFile(`/reports/export-pdf${q}`, 'Executive_PDF_Summary.pdf');
+    const today = new Date().toISOString().slice(0, 10);
+    const filename = `Nandha_LeetCode_Intelligence_Report_${today}.pdf`;
+    setReportError(null);
+    notify.dismissCategory('REPORTS');
+    setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
+    const result = await downloadManager.download({
+      endpoint: `/reports/export-pdf${q}`,
+      filename,
+      mimeType: 'application/pdf',
+      onStateChange: (state) => setDownloadState(state),
+    });
+    setDownloadingFiles(prev => ({ ...prev, [filename]: false }));
+    if (!result.success) {
+      const msg = result.error && !result.error.includes('500') ? result.error : 'Please try again.';
+      setReportError(msg);
+    }
   };
 
-  const handleDownloadWord = () => {
+  const handleDownloadWord = async () => {
     const q = getActiveFilterQueryParams();
-    downloadReportFile(`/reports/export-word${q}`, 'Executive_Word_Summary.docx');
+    const filename = 'Executive_Word_Summary.docx';
+    setReportError(null);
+    notify.dismissCategory('REPORTS');
+    setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
+    const result = await downloadManager.download({
+      endpoint: `/reports/export-word${q}`,
+      filename,
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      onStateChange: (state) => setDownloadState(state),
+    });
+    setDownloadingFiles(prev => ({ ...prev, [filename]: false }));
+    if (!result.success) {
+      const msg = result.error && !result.error.includes('500') ? result.error : 'Please try again.';
+      setReportError(msg);
+    }
   };
 
   const [recipientInput, setRecipientInput] = useState<string>("nanthishvaran17@gmail.com");
@@ -476,6 +505,21 @@ export const ReportsPage: React.FC = () => {
       }
     },
     {
+      id: 'tnea-cutoff-analysis',
+      title: '12th TNEA Cutoff Intelligence',
+      badge: 'ADMISSIONS & ACADEMICS',
+      badgeColor: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20',
+      description: 'Analysis of 12th standard TNEA cutoff bands (200-190, 190-180... 70-80) mapped to department distribution and academic performance.',
+      filename: '12th_TNEA_Cutoff_Intelligence.xlsx',
+      icon: FileSpreadsheet,
+      iconBg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
+      btnGradient: 'from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 shadow-sky-600/30',
+      onClick: () => {
+        const q = getActiveFilterQueryParams();
+        downloadReportFile(`/reports/export-excel?report_type=12TH_TNEA_CUTOFF_ANALYSIS${q}`, '12th_TNEA_Cutoff_Intelligence.xlsx');
+      }
+    },
+    {
       id: 'pdf-summary',
       title: 'Executive PDF Summary Report',
       badge: 'PRINTABLE PDF (SEGMENTED TYPOGRAPHY)',
@@ -612,40 +656,41 @@ export const ReportsPage: React.FC = () => {
                         title: 'A. CONTEST REPORTS',
                         titleColor: 'text-brand-600 dark:text-brand-400',
                         options: [
-                          { value: 'FRIDAY_OFFICIAL_CONTEST', label: 'Friday Contest Result', pill: 'OFFICIAL', pillColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-200 border-indigo-300 dark:border-indigo-700' },
-                          { value: 'SUNDAY_LIVE_CONTEST', label: 'Sunday Live Contest Report', pill: 'LIVE', pillColor: 'bg-sky-100 text-sky-800 dark:bg-sky-900/60 dark:text-sky-200 border-sky-300 dark:border-sky-700' },
-                          { value: 'WEEKLY_CONTEST_INTELLIGENCE', label: 'Weekly Contest Intelligence', pill: 'INTELLIGENCE', pillColor: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 border-blue-300 dark:border-blue-700' },
-                          { value: 'CONTEST_ATTENDANCE_PARTICIPATION', label: 'Contest Attendance & Participation', pill: 'ATTENDANCE', pillColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700' },
-                          { value: 'CONTEST_PERFORMANCE_RANKING', label: 'Contest Performance & Ranking', pill: 'RANKING', pillColor: 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 border-amber-300 dark:border-amber-700' },
-                          { value: 'WEEK_ON_WEEK_INTELLIGENCE', label: 'Week-on-Week Intelligence', pill: 'WOW INTEL', pillColor: 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-200 border-teal-300 dark:border-teal-700' },
-                          { value: 'HISTORICAL_CONTEST_INTELLIGENCE', label: 'Historical Contest Intelligence', pill: 'HIST INTEL', pillColor: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-200 border-cyan-300 dark:border-cyan-700' },
+                          { value: 'FRIDAY_OFFICIAL_CONTEST', label: 'Friday Contest Result', dotColor: 'bg-indigo-500' },
+                          { value: 'SUNDAY_LIVE_CONTEST', label: 'Sunday Live Contest', dotColor: 'bg-sky-500' },
+                          { value: 'WEEKLY_CONTEST_INTELLIGENCE', label: 'Weekly Contest Intelligence', dotColor: 'bg-blue-500' },
+                          { value: 'CONTEST_ATTENDANCE_PARTICIPATION', label: 'Contest Attendance & Participation', dotColor: 'bg-emerald-500' },
+                          { value: 'CONTEST_PERFORMANCE_RANKING', label: 'Contest Performance & Ranking', dotColor: 'bg-amber-500' },
+                          { value: 'WEEK_ON_WEEK_INTELLIGENCE', label: 'Week-on-Week Intelligence', dotColor: 'bg-teal-500' },
+                          { value: 'HISTORICAL_CONTEST_INTELLIGENCE', label: 'Historical Contest Intelligence', dotColor: 'bg-cyan-500' },
                         ]
                       },
                       {
                         title: 'B. PERFORMANCE REPORTS',
                         titleColor: 'text-purple-600 dark:text-purple-400',
                         options: [
-                          { value: 'WEEKLY_STUDENT_PERFORMANCE', label: 'Weekly Student Performance', pill: 'STUDENT', pillColor: 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-200 border-purple-300 dark:border-purple-700' },
-                          { value: 'FIVE_WEEK_PERFORMANCE_TREND', label: 'Five-Week Performance Trend', pill: '5-WEEK', pillColor: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-200 border-indigo-300 dark:border-indigo-700' },
-                          { value: 'PROBLEM_DIFFICULTY_INTELLIGENCE', label: 'Problem Difficulty Intelligence', pill: 'DIFFICULTY', pillColor: 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-200 border-teal-300 dark:border-teal-700' },
+                          { value: 'WEEKLY_STUDENT_PERFORMANCE', label: 'Weekly Student Performance', dotColor: 'bg-purple-500' },
+                          { value: 'FIVE_WEEK_PERFORMANCE_TREND', label: 'Five-Week Performance Trend', dotColor: 'bg-indigo-500' },
+                          { value: 'PROBLEM_DIFFICULTY_INTELLIGENCE', label: 'Problem Difficulty Intelligence', dotColor: 'bg-teal-500' },
                         ]
                       },
                       {
                         title: 'C. CONSOLIDATED REPORTS',
                         titleColor: 'text-amber-600 dark:text-amber-400',
                         options: [
-                          { value: 'FACULTY_CONSOLIDATED', label: 'Faculty Consolidated Performance', pill: 'FACULTY', pillColor: 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 border-amber-300 dark:border-amber-700' },
-                          { value: 'FACULTY_COORDINATOR_CONSOLIDATED', label: 'Faculty Coordinator Consolidated', pill: 'COORDINATOR', pillColor: 'bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200 border-orange-300 dark:border-orange-700' },
-                          { value: 'HOD_DEPARTMENT_INTELLIGENCE', label: 'HOD Department Intelligence', pill: 'HOD', pillColor: 'bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200 border-rose-300 dark:border-rose-700' },
-                          { value: 'WEEKLY_PERFORMANCE', label: 'Coordinator Weekly Performance', pill: 'WEEKLY', pillColor: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-200 border-cyan-300 dark:border-cyan-700' },
+                          { value: 'FACULTY_CONSOLIDATED', label: 'Faculty Consolidated Performance', dotColor: 'bg-amber-500' },
+                          { value: 'FACULTY_COORDINATOR_CONSOLIDATED', label: 'Faculty Coordinator Consolidated', dotColor: 'bg-orange-500' },
+                          { value: 'HOD_DEPARTMENT_INTELLIGENCE', label: 'HOD Department Intelligence', dotColor: 'bg-rose-500' },
+                          { value: 'WEEKLY_PERFORMANCE', label: 'Coordinator Weekly Performance', dotColor: 'bg-cyan-500' },
                         ]
                       },
                       {
                         title: 'D. EXECUTIVE REPORTS',
                         titleColor: 'text-indigo-600 dark:text-indigo-400',
                         options: [
-                          { value: 'PRINCIPAL_EXECUTIVE', label: 'Principal Executive Intelligence', pill: 'PRINCIPAL', pillColor: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 border-blue-300 dark:border-blue-700' },
-                          { value: 'MANAGEMENT_EXECUTIVE_SUMMARY', label: 'Management Executive Summary', pill: 'MANAGEMENT', pillColor: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700' },
+                          { value: 'PRINCIPAL_EXECUTIVE', label: 'Principal Executive Intelligence', dotColor: 'bg-blue-500' },
+                          { value: 'MANAGEMENT_EXECUTIVE_SUMMARY', label: 'Management Executive Summary', dotColor: 'bg-slate-500' },
+                          { value: '12TH_TNEA_CUTOFF_ANALYSIS', label: '12th TNEA Cutoff Intelligence', dotColor: 'bg-sky-500' },
                         ]
                       }
                     ];
@@ -704,19 +749,21 @@ export const ReportsPage: React.FC = () => {
                               type="button"
                               onMouseDown={(e) => e.preventDefault()}
                               onClick={() => { setSelectedReportType(opt.value); setRptTypeOpen(false); }}
-                              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-left transition-all duration-150 group cursor-pointer ${
+                              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all duration-150 group cursor-pointer ${
                                 isSelected 
-                                  ? 'bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-brand-500/25 ring-2 ring-brand-500/40' 
-                                  : 'bg-white dark:bg-navy-900/60 hover:bg-slate-100/90 dark:hover:bg-navy-800 border border-slate-200/80 dark:border-slate-800 hover:border-brand-400/40 dark:hover:border-brand-500/40 shadow-2xs hover:shadow-xs hover:translate-x-0.5'
+                                  ? 'bg-brand-500/10 dark:bg-brand-500/20 border border-brand-400/40 dark:border-brand-500/40' 
+                                  : 'hover:bg-slate-100 dark:hover:bg-navy-800/80 border border-transparent hover:border-slate-200 dark:hover:border-navy-700'
                               }`}
                             >
-                              <span className={`w-24 min-w-[6rem] text-[9.5px] font-black uppercase tracking-wider px-2 py-1 rounded-xl text-center shrink-0 border transition-all ${isSelected ? 'bg-white/20 text-white border-white/30 backdrop-blur-xs' : opt.pillColor}`}>
-                                {opt.pill}
-                              </span>
-                              <span className={`text-[11.5px] truncate flex-1 ${isSelected ? 'font-black text-white' : 'font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors'}`}>
+                              <div className={`w-2 h-2 rounded-full shrink-0 ${isSelected ? 'bg-brand-500' : opt.dotColor} opacity-90`} />
+                              <span className={`text-[12px] truncate flex-1 leading-snug ${
+                                isSelected 
+                                  ? 'font-extrabold text-brand-700 dark:text-brand-300' 
+                                  : 'font-semibold text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white'
+                              }`}>
                                 {opt.label}
                               </span>
-                              {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
+                              {isSelected && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" strokeWidth={3} />}
                             </button>
                           );
                         })}
@@ -728,17 +775,15 @@ export const ReportsPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => { setRptTypeOpen(p => !p); setRptYearOpen(false); setRptScopeOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 h-12 min-h-[48px] rounded-2xl bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-navy-950 dark:via-navy-900 dark:to-navy-950 border-2 text-left transition-all focus:outline-none cursor-pointer shadow-sm hover:shadow-md ${rptTypeOpen ? 'border-brand-500 ring-4 ring-brand-500/15' : 'border-slate-200 dark:border-slate-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 h-12 min-h-[48px] rounded-2xl bg-white dark:bg-navy-950 border-2 text-left transition-all focus:outline-none cursor-pointer shadow-sm hover:shadow-md ${rptTypeOpen ? 'border-brand-500 ring-4 ring-brand-500/15' : 'border-slate-200 dark:border-slate-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
                         >
                           <div className="p-1.5 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 shrink-0">
                             <LayoutTemplate className="w-4 h-4" />
                           </div>
                           {currentOpt && (
-                            <span className={`w-24 min-w-[6rem] text-center shrink-0 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border shadow-xs ${currentOpt.pillColor}`}>
-                              {currentOpt.pill}
-                            </span>
+                            <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${currentOpt.dotColor || 'bg-brand-500'}`} />
                           )}
-                          <span className="text-xs font-black text-slate-900 dark:text-white truncate flex-1">
+                          <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
                             {currentOpt ? currentOpt.label : selectedReportType}
                           </span>
                           <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${rptTypeOpen ? 'rotate-180 text-brand-500' : ''}`} />
@@ -748,13 +793,15 @@ export const ReportsPage: React.FC = () => {
                           <div className="absolute z-[200] top-full left-0 right-0 sm:right-auto mt-2.5 bg-white/98 backdrop-blur-2xl dark:bg-navy-950/98 border border-slate-200/90 dark:border-slate-700/80 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.2)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] overflow-y-auto overscroll-contain max-h-[60vh] sm:max-h-[75vh] min-w-[290px] w-full sm:w-[480px] md:w-[700px] grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800 animate-in fade-in slide-in-from-top-2 duration-200">
                             {/* LEFT COLUMN: A. CONTEST REPORTS */}
                             <div className="p-5 sm:p-6 bg-slate-50/70 dark:bg-navy-900/30">
-                              {renderCategory(reportCategories[0])}
+                              {reportCategories.length > 0 && renderCategory(reportCategories[0])}
                             </div>
                             {/* RIGHT COLUMN: B, C, D REPORTS */}
                             <div className="p-5 sm:p-6 flex flex-col gap-y-7 bg-white dark:bg-navy-950">
-                              {renderCategory(reportCategories[1])}
-                              {renderCategory(reportCategories[2])}
-                              {renderCategory(reportCategories[3])}
+                              {reportCategories.slice(1).map(cat => (
+                                <div key={cat.title}>
+                                  {renderCategory(cat)}
+                                </div>
+                              ))}
                             </div>
                           </div>
                         )}

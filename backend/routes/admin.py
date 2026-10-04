@@ -731,6 +731,7 @@ class CreateStaffRequest(BaseModel):
     designation: Optional[str] = None
     role: str = "Faculty"
     department_id: Optional[int] = None
+    hod_department_ids: Optional[List[int]] = None
     section_id: Optional[int] = None
     academic_year: Optional[str] = None
     mentoring_role: Optional[str] = None
@@ -751,6 +752,7 @@ class UpdateStaffRequest(BaseModel):
     designation: Optional[str] = None
     role: Optional[str] = None
     department_id: Optional[int] = None
+    hod_department_ids: Optional[List[int]] = None
     reporting_manager_id: Optional[int] = None
     section_id: Optional[int] = None
     academic_year: Optional[str] = None
@@ -898,6 +900,17 @@ def create_staff_user(
     db.add(staff_user)
     db.commit()
     db.refresh(staff_user)
+
+    if payload.role in ["HOD", "Department HOD"] and payload.hod_department_ids:
+        from backend.models import HODDepartmentAllocation
+        for dept_id in payload.hod_department_ids:
+            alloc = HODDepartmentAllocation(
+                user_id=staff_user.id,
+                department_id=dept_id,
+                created_by=current_user.id
+            )
+            db.add(alloc)
+        db.commit()
 
     log_admin_action(
         db, action="CREATE_STAFF_ACCOUNT", action_type="USER_MANAGEMENT",
@@ -1119,6 +1132,20 @@ def update_staff_user(
 
     db.commit()
     db.refresh(staff_user)
+
+    if payload.hod_department_ids is not None:
+        if payload.role in ["HOD", "Department HOD"] or (not payload.role and staff_user.role in ["HOD", "Department HOD"]):
+            from backend.models import HODDepartmentAllocation
+            db.query(HODDepartmentAllocation).filter(HODDepartmentAllocation.user_id == staff_user.id).delete()
+            for dept_id in payload.hod_department_ids:
+                alloc = HODDepartmentAllocation(
+                    user_id=staff_user.id,
+                    department_id=dept_id,
+                    created_by=current_user.id
+                )
+                db.add(alloc)
+            db.commit()
+
 
     from backend.cache import cache
     cache.clear()
@@ -1433,6 +1460,16 @@ def get_all_staff_users(
     counts_map = {r[0]: r[1] for r in count_rows}
 
     staff_ids = [s.id for s in staff_list]
+    hod_alloc_map = {sid: [] for sid in staff_ids}
+    if staff_ids:
+        try:
+            from backend.models import HODDepartmentAllocation
+            allocs = db.query(HODDepartmentAllocation).filter(HODDepartmentAllocation.user_id.in_(staff_ids)).all()
+            for a in allocs:
+                hod_alloc_map[a.user_id].append(a.department_id)
+        except Exception:
+            pass
+
     ip_map = {}
     if staff_ids:
         try:
@@ -1459,6 +1496,7 @@ def get_all_staff_users(
             "date_of_birth": s.date_of_birth or "",
             "role": s.role,
             "department_id": s.department_id,
+            "hod_department_ids": hod_alloc_map.get(s.id, []),
             "department": s.department.code if s.department else ("CSE(CS)" if s.department_id == 1 else ("CSE(IOT)" if s.department_id == 2 else "INSTITUTIONAL")),
             "academic_year": s.academic_year or "",
             "mentoring_role": s.mentoring_role or "",

@@ -1193,7 +1193,7 @@ async def fetch_recent_submissions(
 
 CONTEST_METADATA_QUERY = """
 query contestMetadata($vContestSlug: String!) {
-  contest(contestSlug: $vContestSlug) {
+  contest(titleSlug: $vContestSlug) {
     id
     title
     titleSlug

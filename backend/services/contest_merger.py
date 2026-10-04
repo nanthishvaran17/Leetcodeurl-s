@@ -34,18 +34,6 @@ def merge_contest_fetch_results(existing: WeeklyPublicResult, new_data: Dict[str
     explicit_new_solved = new_data.get("total_contest_solved") or new_data.get("solved_count") or new_data.get("problems_solved") or 0
     effective_solved = max(sum_q, explicit_new_solved, existing.total_contest_solved or 0)
 
-    # If effective_solved > sum_q, backfill individual q flags so q1..q4 align with total_contest_solved
-    if effective_solved > sum_q:
-        if effective_solved >= 4:
-            existing.q1 = existing.q2 = existing.q3 = existing.q4 = 1
-        elif effective_solved == 3:
-            existing.q1 = existing.q2 = existing.q3 = 1
-        elif effective_solved == 2:
-            existing.q1 = existing.q2 = 1
-        elif effective_solved == 1:
-            existing.q1 = 1
-        updated = True
-
     existing.total_contest_solved = effective_solved
 
     # Merge score, rank, rating if available
@@ -106,10 +94,10 @@ async def retry_failed_student_fetches(db: Session, session_id: int) -> Dict[str
                 "is_ok": True,
                 "data": {
                     "participation_status": "PUBLIC_ATTENDED" if problems_solved > 0 else "PUBLIC_NOT_ATTENDED",
-                    "q1": 1 if problems_solved >= 1 else 0,
-                    "q2": 1 if problems_solved >= 2 else 0,
-                    "q3": 1 if problems_solved >= 3 else 0,
-                    "q4": 1 if problems_solved >= 4 else 0,
+                    # NOTE: Cannot do slug-based match here (no submission list available).
+                    # Leave q1-q4 as 0; the main sync will set them correctly via slug matching.
+                    "q1": 0, "q2": 0, "q3": 0, "q4": 0,
+                    "total_contest_solved": problems_solved,
                     "contest_rank": student.stats.contest_global_ranking,
                     "contest_rating": student.stats.contest_rating,
                     "fetch_status": "SUCCESS"
@@ -136,10 +124,10 @@ async def retry_failed_student_fetches(db: Session, session_id: int) -> Dict[str
                         "is_ok": True,
                         "data": {
                             "participation_status": "PUBLIC_ATTENDED" if c_type == "OFFICIAL" else "PUBLIC_NOT_ATTENDED",
-                            "q1": 1 if problems_solved >= 1 else 0,
-                            "q2": 1 if problems_solved >= 2 else 0,
-                            "q3": 1 if problems_solved >= 3 else 0,
-                            "q4": 1 if problems_solved >= 4 else 0,
+                            # NOTE: Cannot do slug-based match here (no submission list available).
+                            # Leave q1-q4 as 0; the main sync will set them correctly via slug matching.
+                            "q1": 0, "q2": 0, "q3": 0, "q4": 0,
+                            "total_contest_solved": problems_solved,
                             "contest_rank": stats_dict.get("contest_global_ranking"),
                             "contest_rating": stats_dict.get("contest_rating"),
                             "fetch_status": "SUCCESS"

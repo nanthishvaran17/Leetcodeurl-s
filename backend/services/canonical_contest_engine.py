@@ -262,7 +262,10 @@ def _filter_canonical_dataset_in_memory(
         ts = r.get("total_solved") or r.get("problems_solved") or r.get("total_contest_solved") or r.get("score_solved")
         if ts is not None and ts != "" and ts != "—":
             try:
-                v = int(ts)
+                if isinstance(ts, str) and '/' in ts:
+                    v = int(ts.split('/')[0].strip())
+                else:
+                    v = int(ts)
                 if v > q_sum:
                     return v
             except (ValueError, TypeError):

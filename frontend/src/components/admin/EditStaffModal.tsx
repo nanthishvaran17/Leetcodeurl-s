@@ -39,6 +39,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
     phone_number: '',
     role: 'Faculty Mentor',
     department_id: '0',
+    hod_department_ids: [] as string[],
     academic_year: '',
     designation: '',
     date_of_birth: '',
@@ -78,17 +79,22 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
 
   // Role Dropdown Stacking State
   const [roleOpen, setRoleOpen] = useState(false);
+  const [hodDeptOpen, setHodDeptOpen] = useState(false);
   const roleRef = useRef<HTMLDivElement>(null);
+  const hodDeptRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (roleRef.current && !roleRef.current.contains(e.target as Node)) {
         setRoleOpen(false);
       }
+      if (hodDeptRef.current && !hodDeptRef.current.contains(e.target as Node)) {
+        setHodDeptOpen(false);
+      }
     };
-    if (roleOpen) document.addEventListener('mousedown', handler);
+    document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [roleOpen]);
+  }, []);
 
   // Helper to convert any raw DOB string (ISO, YYYY-MM-DD, DD/MM/YYYY) to DD/MM/YYYY
   const parseDOBToDisplay = (rawDob: any): string => {
@@ -141,6 +147,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         phone_number: staffObj.phone_number || '',
         role: (staffObj.role === 'Admin' || staffObj.role === 'ADMIN') ? 'Administrator' : (staffObj.role || 'Faculty Mentor'),
         department_id: staffObj.department_id ? String(staffObj.department_id) : '0',
+        hod_department_ids: (staffObj.hod_department_ids || []).map(String),
         academic_year: (staffObj.academic_year && staffObj.academic_year.trim() && staffObj.academic_year !== 'None' && staffObj.academic_year !== 'null') ? staffObj.academic_year : 'ALL',
         designation: staffObj.designation || '',
         date_of_birth: dobVal,
@@ -239,9 +246,13 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
     ];
     
     departments.forEach(d => {
+      const labelStr = d.code && d.name.endsWith(`(${d.code})`) 
+        ? d.name.slice(0, -(d.code.length + 2)).trim() 
+        : d.name;
+        
       opts.push({
         value: String(d.id),
-        label: d.code ? `${d.name} (${d.code})` : d.name,
+        label: labelStr,
         badge: d.code || 'DEPT',
         badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30'
       });
@@ -253,7 +264,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   const roleOptions: DropdownOption[] = [
     { value: 'Principal', label: 'Principal', badge: 'PRN', sublabel: 'Head of Institution', icon: Building2 },
     { value: 'Management', label: 'Management', badge: 'MGT', sublabel: 'Institution Trust & Management', icon: Briefcase },
-    { value: 'Faculty Mentor', label: 'Faculty Mentor', badge: 'FAC', sublabel: 'Student mentoring & intervention access', icon: GraduationCap },
+    { value: 'Faculty Mentor', label: 'Proctor', badge: 'PRC', sublabel: 'Student mentoring & intervention access', icon: GraduationCap },
     { value: 'Staff Mentor', label: 'Staff Mentor', badge: 'STF', sublabel: 'Student support & academic guidance', icon: User },
     { value: 'Department HOD', label: 'Department HOD', badge: 'HOD', sublabel: 'Department-level academic oversight', icon: Building2 },
     { value: 'Administrator', label: 'Administrator', badge: 'ADM', sublabel: 'Institutional administration & management', icon: Key },
@@ -421,6 +432,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         mentoring_role: formData.mentoring_role ? formData.mentoring_role.trim() : undefined,
         role: formData.role,
         department_id: deptIdToSend,
+        hod_department_ids: formData.role === 'Department HOD' && formData.hod_department_ids.length > 0 ? formData.hod_department_ids.map(id => parseInt(id, 10)) : undefined,
         is_active: isActive,
         date_of_birth: formattedDOB,
         receive_email_reports: automatedReportsEnabled,
@@ -833,12 +845,70 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                         <div className="w-full h-11 px-4 flex items-center rounded-2xl border border-dashed border-brand-400 dark:border-brand-500/40 bg-brand-50/50 dark:bg-brand-500/5 text-xs font-black text-brand-950 dark:text-brand-200">
                           All Departments (Global Scope)
                         </div>
+                      ) : formData.role === 'Department HOD' ? (
+                        <div className="relative" ref={hodDeptRef}>
+                          <button
+                            type="button"
+                            onClick={() => setHodDeptOpen(!hodDeptOpen)}
+                            className={`flex items-center justify-between flex-nowrap space-x-2 transition-all duration-200 text-left cursor-pointer group shadow-sm box-border w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-white dark:bg-slate-800/90 border-slate-300 dark:border-slate-700 hover:border-brand-500/60 ${hodDeptOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10' : ''}`}
+                          >
+                            <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden pr-1.5">
+                              <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-colors ${
+                                hodDeptOpen
+                                  ? 'bg-brand-50 dark:bg-brand-950/80 border-brand-300 text-brand-600 dark:text-brand-400'
+                                  : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 group-hover:text-brand-600 group-hover:border-brand-500/50'
+                              }`}>
+                                <Building2 className="w-3.5 h-3.5 shrink-0" />
+                              </div>
+                              <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden">
+                                {formData.hod_department_ids.length > 0 && (
+                                  <span className="shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border bg-brand-100 dark:bg-brand-900/80 text-brand-900 dark:text-brand-200 border-brand-300 dark:border-brand-800">
+                                    {formData.hod_department_ids.length}
+                                  </span>
+                                )}
+                                <span className={`text-xs font-black truncate block min-w-0 flex-1 ${formData.hod_department_ids.length > 0 ? 'text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'}`}>
+                                  {formData.hod_department_ids.length === 0 ? 'Select Departments...' : `Selected`}
+                                </span>
+                              </div>
+                            </div>
+                            <ChevronDown className={`w-4 h-4 shrink-0 text-slate-700 dark:text-slate-300 transition-transform duration-200 ${hodDeptOpen ? 'rotate-180 text-brand-600 dark:text-brand-400' : 'group-hover:text-slate-900 dark:group-hover:text-white'}`} />
+                          </button>
+                          {hodDeptOpen && (
+                            <div className="absolute left-0 right-0 z-[9999] mt-2 max-h-64 overflow-y-auto rounded-2xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl p-1.5 space-y-0.5">
+                              {departmentOptions.filter(d => d.value !== '0').map(opt => {
+                                const isSel = formData.hod_department_ids.includes(opt.value);
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => {
+                                      const newIds = isSel 
+                                        ? formData.hod_department_ids.filter(id => id !== opt.value)
+                                        : [...formData.hod_department_ids, opt.value];
+                                      setFormData({ ...formData, hod_department_ids: newIds, department_id: newIds.length > 0 ? newIds[0] : '0' });
+                                    }}
+                                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer ${isSel ? `bg-brand-50 dark:bg-brand-500/10` : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                  >
+                                    <div className="flex items-center space-x-2 flex-1 pr-2">
+                                      <span className={`text-[11px] leading-snug font-black whitespace-normal break-words ${isSel ? 'text-brand-700 dark:text-brand-300' : 'text-slate-700 dark:text-slate-300'}`}>
+                                        {opt.label}
+                                      </span>
+                                    </div>
+                                    <div className={`w-4 h-4 shrink-0 rounded flex items-center justify-center border transition-colors ${isSel ? 'bg-brand-500 border-brand-600 text-white' : 'border-slate-300 dark:border-slate-600'}`}>
+                                      {isSel && <Check className="w-3 h-3 stroke-[3]" />}
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <CustomDropdown
                           options={departmentOptions}
                           label=""
                           value={formData.department_id}
-                          onChange={(val) => setFormData({...formData, department_id: val})}
+                          onChange={(val) => setFormData({...formData, department_id: val, hod_department_ids: [val]})}
                           placeholder="Select Department..."
                           icon={Building2}
                         />
@@ -1008,7 +1078,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
 
                     return (
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xs">
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 w-full">
                           <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-1">
                             <History className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Last Login Information
                           </span>
@@ -1018,11 +1088,11 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                                 {lastLoginFormatted}{' '}
                                 <span className="text-indigo-600 dark:text-indigo-400 font-bold">(IP: {lastLoginIp})</span>
                               </div>
-                              {lastLoginDevice && lastLoginDevice !== 'Web Browser' && (
-                                <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-sm mt-0.5" title={lastLoginDevice}>
-                                  {lastLoginDevice}
-                                </p>
-                              )}
+                                {lastLoginDevice && lastLoginDevice !== 'Web Browser' && (
+                                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5" title={lastLoginDevice}>
+                                    {lastLoginDevice}
+                                  </p>
+                                )}
                             </div>
                           ) : (
                             <div className="text-xs font-bold text-slate-600 dark:text-slate-300">

@@ -38,7 +38,9 @@ import {
   Send,
   Link2,
   Trash2,
-  ChevronDown
+  ChevronDown,
+  X,
+  Loader2
 } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
@@ -1391,25 +1393,27 @@ export const StudentDataIssuesPage: React.FC = () => {
 
             <div className="flex items-center gap-3 flex-wrap justify-center">
               {/* Page Size Selector */}
-              <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200 font-mono font-bold">
-                <span className="text-xs text-slate-800 dark:text-slate-200 font-bold">Per page:</span>
-                {[10, 25, 50, 100].map(sz => (
-                  <button
-                    key={sz}
-                    onClick={() => {
-                      setPageSize(sz);
-                      setCurrentPage(1);
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                      pageSize === sz
-                        ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'bg-white dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-navy-700 hover:bg-slate-100 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    {sz}
-                  </button>
-                ))}
-              </div>
+              {students.length > 10 && (
+                <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200 font-mono font-bold">
+                  <span className="text-xs text-slate-800 dark:text-slate-200 font-bold">Per page:</span>
+                  {[10, 25, 50, 100].map(sz => (
+                    <button
+                      key={sz}
+                      onClick={() => {
+                        setPageSize(sz);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                        pageSize === sz
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-white dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-navy-700 hover:bg-slate-100 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {sz}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Page Navigation */}
               <div className="flex items-center gap-2">
@@ -1439,54 +1443,54 @@ export const StudentDataIssuesPage: React.FC = () => {
       {/* 8. REPAIR USERNAME MODAL */}
       <AnimatePresence>
         {repairStudent && (
-          <div className="fixed inset-0 w-screen h-screen z-[1000000] flex items-center justify-center p-4 bg-black/90">
+          <div className="fixed inset-0 w-screen h-screen z-[1000000] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/80 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 15 }}
-              className="max-w-lg w-full p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-lg space-y-4 text-slate-100 my-auto"
+              className="max-w-lg w-full p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl space-y-4 text-slate-900 dark:text-slate-100 my-auto"
             >
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div className="flex items-center space-x-2.5">
-                  <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                  <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30">
                     <Edit3 className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-white">Repair LeetCode Profile</h3>
-                    <p className="text-xs text-slate-400">Live Verification & Audit Trail Update</p>
+                    <h3 className="text-base font-black text-slate-900 dark:text-white">Repair LeetCode Profile</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Live Verification & Audit Trail Update</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setRepairStudent(null)}
-                  className="text-slate-400 hover:text-white font-black text-xs p-1"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
-                 
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Student Metadata */}
-              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1 text-xs">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1 text-xs">
                 <div className="flex justify-between font-bold">
-                  <span className="text-slate-400">Student:</span>
-                  <span className="text-white">{repairStudent.name}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Student:</span>
+                  <span className="text-slate-900 dark:text-white font-extrabold">{repairStudent.name}</span>
                 </div>
                 <div className="flex justify-between font-bold">
-                  <span className="text-slate-400">Register No:</span>
-                  <span className="font-mono text-amber-400">{repairStudent.reg_no}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Register No:</span>
+                  <span className="font-mono text-brand-600 dark:text-amber-400 font-extrabold">{repairStudent.reg_no}</span>
                 </div>
                 <div className="flex justify-between font-bold">
-                  <span className="text-slate-400">Department:</span>
-                  <span className="text-slate-200">{repairStudent.department_name}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Department:</span>
+                  <span className="text-slate-700 dark:text-slate-200">{repairStudent.department_name}</span>
                 </div>
                 <div className="flex justify-between font-bold">
-                  <span className="text-slate-400">Current Username:</span>
-                  <span className="font-mono text-slate-300">{repairStudent.username || 'None'}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Current Username:</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-300">{repairStudent.username || 'None'}</span>
                 </div>
               </div>
 
               {/* Username Input & Test */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-300">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                   New LeetCode Username or Profile URL:
                 </label>
                 <div className="flex items-center space-x-2">
@@ -1495,12 +1499,12 @@ export const StudentDataIssuesPage: React.FC = () => {
                     placeholder="e.g. johndoe or https://leetcode.com/u/johndoe/"
                     value={newUsernameInput}
                     onChange={(e) => { setNewUsernameInput(e.target.value); setVerifyResult(null); }}
-                    className="flex-1 px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-mono placeholder-slate-500 focus:ring-2 focus:ring-amber-500"
+                    className="flex-1 px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-brand-500 outline-none"
                   />
                   <button
                     onClick={handleTestUsernameInModal}
                     disabled={verifyingUser || !newUsernameInput.trim()}
-                    className="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shrink-0 flex items-center space-x-1.5"
+                    className="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shrink-0 flex items-center space-x-1.5 shadow-md shadow-brand-500/20"
                   >
                     <ShieldCheck className={`w-3.5 h-3.5 ${verifyingUser ? 'animate-spin' : ''}`} />
                     <span>{verifyingUser ? 'Checking...' : 'Verify Profile'}</span>
@@ -1509,44 +1513,60 @@ export const StudentDataIssuesPage: React.FC = () => {
               </div>
 
               {/* Live Test Feedback Card */}
-              {verifyResult && (
-                <div className={`p-3.5 rounded-2xl border text-xs space-y-1.5 ${
-                  verifyResult.valid
-                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
-                    : 'bg-rose-500/15 border-rose-500/30 text-rose-300'
-                }`}>
-                  <div className="flex items-center space-x-1.5 font-black text-sm">
-                    {verifyResult.valid ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <XCircle className="w-4 h-4 text-rose-400" />}
-                    <span>{verifyResult.valid ? 'Profile Verified on LeetCode' : 'Verification Failed'}</span>
-                  </div>
-                  {verifyResult.valid ? (
-                    <div className="text-[11.5px] space-y-1 pt-1">
-                      <p>Username: <strong className="font-mono text-white">@{verifyResult.username}</strong></p>
-                      <p>URL: <span className="font-mono text-emerald-200 underline">{verifyResult.canonical_url}</span></p>
-                      <p>Solved Count: <strong className="text-white">{verifyResult.total_solved} problems</strong></p>
-                      {verifyResult.contest_rating && <p>Rating: <strong className="text-white">{verifyResult.contest_rating.toFixed(1)}</strong></p>}
+              <AnimatePresence>
+                {verifyResult && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className={`p-3.5 rounded-2xl border text-xs space-y-1.5 overflow-hidden ${
+                      verifyResult.valid
+                        ? 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                        : 'bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-1.5 font-black text-sm">
+                      {verifyResult.valid ? <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> : <XCircle className="w-4 h-4 text-rose-500 dark:text-rose-400" />}
+                      <span>{verifyResult.valid ? 'Profile Verified on LeetCode' : 'Verification Failed'}</span>
                     </div>
-                  ) : (
-                    <p className="text-[11px] text-rose-200">{verifyResult.message}</p>
-                  )}
-                </div>
-              )}
+                    {verifyResult.valid ? (
+                      <div className="text-[11.5px] space-y-1 pt-1">
+                        <p>Username: <strong className="font-mono text-emerald-900 dark:text-white">@{verifyResult.username}</strong></p>
+                        <p>URL: <span className="font-mono text-emerald-600 dark:text-emerald-200 underline">{verifyResult.canonical_url}</span></p>
+                        <p>Solved Count: <strong className="text-emerald-900 dark:text-white">{verifyResult.total_solved} problems</strong></p>
+                        {verifyResult.contest_rating && <p>Rating: <strong className="text-emerald-900 dark:text-white">{verifyResult.contest_rating.toFixed(1)}</strong></p>}
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-rose-600 dark:text-rose-200 font-medium">{verifyResult.message}</p>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Action Buttons */}
               <div className="flex items-center space-x-3 pt-2">
                 <button
                   onClick={() => setRepairStudent(null)}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-xs cursor-pointer border border-slate-200 dark:border-transparent transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveRepairedProfile}
                   disabled={savingRepair || !verifyResult || !verifyResult.valid}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 disabled:opacity-40 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/25 flex items-center justify-center space-x-1.5 cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-black text-xs shadow-lg shadow-emerald-500/25 flex items-center justify-center space-x-2 cursor-pointer transition-colors"
                 >
-                  <Check className="w-4 h-4" />
-                  <span>{savingRepair ? 'Updating Record...' : 'Confirm & Update Student Record'}</span>
+                  {savingRepair ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                      <span>Confirm & Update</span>
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>

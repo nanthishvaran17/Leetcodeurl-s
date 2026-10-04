@@ -53,7 +53,7 @@ def clean_report_title(t_str: str) -> str:
         return ""
     t = str(t_str).strip()
     # 1. Strip leading standalone numbers e.g. "2 2 ", "2 ", "3 ", "2-", "2 2"
-    t = re.sub(r'^\s*(\d+[\s-]*)+', '', t).strip()
+    t = re.sub(r'^\s*(\d+(?:[\s-]+|$))+', '', t).strip()
     # 2. Strip orphaned standalone numbers before hyphens e.g. " (AUTONOMOUS) 2 - " -> " (AUTONOMOUS) "
     t = re.sub(r'\s+\d+\s*-\s*', ' ', t).strip()
     # 3. Convert (3 Year), (3Yr), (3) to (III Year)
@@ -129,6 +129,7 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         "HOD_DEPARTMENT_INTELLIGENCE": "HOD Department Intelligence Report",
         "PRINCIPAL_EXECUTIVE": "Principal Executive Intelligence Report",
         "MANAGEMENT_EXECUTIVE_SUMMARY": "Management Executive Summary Report",
+        "12TH_TNEA_CUTOFF_ANALYSIS": "12TH TNEA CUTOFF",
     }
 
     rpt_key = rtype_upper or "REPORT"
@@ -338,21 +339,17 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         dept_summary_list.append(d_info)
 
     # ── Year-wise Breakdown (per-year aggregation across all filtered students) ──
-    YEAR_ORDER = ["1", "2", "3", "4", "I", "II", "III", "IV"]
-    YEAR_LABELS = {
-        "1": "I Year", "2": "II Year", "3": "III Year", "4": "IV Year",
-        "I": "I Year", "II": "II Year", "III": "III Year", "IV": "IV Year"
-    }
+    YEAR_ORDER = ["I Year", "II Year", "III Year", "IV Year"]
     year_breakdown: Dict[str, Any] = {}
     for s in students:
-        yr_raw = (s.year or "").strip().upper()
-        yr_label = YEAR_LABELS.get(yr_raw, yr_raw or "Unknown")
+        yr_roman = to_roman_year(s.year) or "III"
+        yr_label = f"{yr_roman} Year" if not yr_roman.endswith("Year") else yr_roman
         yr_key = yr_label
         if yr_key not in year_breakdown:
             year_breakdown[yr_key] = {
                 "year": yr_label,
                 "total": 0, "verified": 0, "active_solvers": 0,
-                "total_solved": 0, "solvers_4": 0, "_sort_key": YEAR_ORDER.index(yr_raw) if yr_raw in YEAR_ORDER else 99
+                "total_solved": 0, "solvers_4": 0, "_sort_key": YEAR_ORDER.index(yr_label) if yr_label in YEAR_ORDER else 99
             }
         year_breakdown[yr_key]["total"] += 1
         if s.status == "VERIFIED" or (s.total_solved or 0) > 0:
@@ -376,12 +373,20 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
 
     # ── Cutoff Band Breakdown (based on 12th std cutoff marks) ──
     CUTOFF_BANDS = [
-        {"label": "180+ Cut-off",  "min": 180.0, "max": 999.0},
+        {"label": "190–200",       "min": 190.0, "max": 200.0},
+        {"label": "180–189",       "min": 180.0, "max": 189.99},
         {"label": "170–179",       "min": 170.0, "max": 179.99},
         {"label": "160–169",       "min": 160.0, "max": 169.99},
         {"label": "150–159",       "min": 150.0, "max": 159.99},
         {"label": "140–149",       "min": 140.0, "max": 149.99},
-        {"label": "Below 140",     "min": 0.0,   "max": 139.99},
+        {"label": "130–139",       "min": 130.0, "max": 139.99},
+        {"label": "120–129",       "min": 120.0, "max": 129.99},
+        {"label": "110–119",       "min": 110.0, "max": 119.99},
+        {"label": "100–109",       "min": 100.0, "max": 109.99},
+        {"label": "90–99",         "min": 90.0,  "max": 99.99},
+        {"label": "80–89",         "min": 80.0,  "max": 89.99},
+        {"label": "70–79",         "min": 70.0,  "max": 79.99},
+        {"label": "Below 70",      "min": 0.0,   "max": 69.99},
         {"label": "Not Recorded",  "min": None,  "max": None},
     ]
     cutoff_band_breakdown: list = []
@@ -395,20 +400,22 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
             else:
                 if co is not None and band["min"] <= co <= band["max"]:
                     band_students.append(s)
-        if not band_students:
-            continue
+        
         b_total = len(band_students)
         b_active = sum(1 for s in band_students if (s.total_solved or 0) > 0)
+        b_not_active = b_total - b_active
         b_solved = sum((s.total_solved or 0) for s in band_students)
         b_4sol  = sum(1 for s in band_students if (s.total_solved or 0) >= 4)
+        
         cutoff_band_breakdown.append({
             "band": band["label"],
             "total": b_total,
             "active_solvers": b_active,
+            "not_active": b_not_active,
             "total_solved": b_solved,
             "solvers_4": b_4sol,
-            "avg_solved": round(b_solved / max(b_active, 1), 2),
-            "attendance_pct": round((b_active / max(b_total, 1)) * 100, 2),
+            "avg_solved": round(b_solved / max(b_active, 1), 2) if b_active > 0 else 0,
+            "attendance_pct": round((b_active / max(b_total, 1)) * 100, 2) if b_total > 0 else 0,
         })
 
 

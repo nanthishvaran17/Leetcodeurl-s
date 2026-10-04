@@ -1475,13 +1475,13 @@ def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_i
                     rating_val = pub.contest_rating if pub.contest_rating else "—"
                     global_rank_val = pub.contest_rank if pub.contest_rank else "—"
                 elif snap:
-                    solved_val = snap.problems_added if snap.problems_added is not None else 0
+                    solved_val = 0  # 100% accurate contest count: if no public result, official contest solved is 0. (Do not use snap.problems_added as it includes practice problems)
                     rating_val = snap.end_rating if snap.end_rating else (st.stats.contest_rating if st.stats else "—")
                     global_rank_val = st.stats.contest_global_ranking if st.stats and st.stats.contest_global_ranking else "—"
             else:
                 # Upcoming / no session — use current live stats
                 if st.stats:
-                    solved_val = st.stats.total_solved or 0
+                    solved_val = 0  # Upcoming session hasn't happened, so solved in it is 0. (Do not use st.stats.total_solved as it is lifetime solves)
                     rating_val = st.stats.contest_rating if st.stats.contest_rating else "—"
                     global_rank_val = st.stats.contest_global_ranking if st.stats.contest_global_ranking else "—"
 
@@ -1910,15 +1910,26 @@ def generate_single_week_matrix_excel(
             rank_val, solved_val, rating_val, global_rank_val = idx, "—", "—", "—"
 
             if target_session:
-                snap = db.query(WeeklySessionSnapshot).filter(
-                    WeeklySessionSnapshot.session_id == target_session.id,
-                    WeeklySessionSnapshot.student_id == st.id
+                pub = db.query(WeeklyPublicResult).filter(
+                    WeeklyPublicResult.session_id == target_session.id,
+                    WeeklyPublicResult.student_id == st.id
                 ).first()
-                if snap:
-                    # problems_added = contest problems solved this session (0-4)
-                    solved_val = snap.problems_added if snap.problems_added is not None else 0
-                    rating_val = snap.end_rating if snap.end_rating else (st.stats.contest_rating if st.stats else "—")
+                if pub:
+                    solved_val = pub.total_contest_solved if pub.total_contest_solved is not None else 0
+                    rating_val = pub.contest_rating if pub.contest_rating else "—"
+                    global_rank_val = pub.contest_rank if pub.contest_rank else "—"
+                else:
+                    snap = db.query(WeeklySessionSnapshot).filter(
+                        WeeklySessionSnapshot.session_id == target_session.id,
+                        WeeklySessionSnapshot.student_id == st.id
+                    ).first()
+                    solved_val = 0  # 100% accurate count: if no public result, they didn't officially solve in contest
+                    if snap:
+                        rating_val = snap.end_rating if snap.end_rating else (st.stats.contest_rating if st.stats else "—")
+                    else:
+                        rating_val = "—"
                     global_rank_val = st.stats.contest_global_ranking if st.stats and st.stats.contest_global_ranking else "—"
+                
                 # Get college rank from latest progress record
                 latest_prog = db.query(WeeklyStudentProgress).filter(
                     WeeklyStudentProgress.student_id == st.id
@@ -1928,7 +1939,7 @@ def generate_single_week_matrix_excel(
             else:
                 # No session yet — show current live stats
                 if st.stats:
-                    solved_val = st.stats.total_solved or 0
+                    solved_val = 0  # 100% accurate count: upcoming contest hasn't happened yet
                     rating_val = st.stats.contest_rating if st.stats.contest_rating else "—"
                     global_rank_val = st.stats.contest_global_ranking if st.stats.contest_global_ranking else "—"
 

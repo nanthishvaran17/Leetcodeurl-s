@@ -1175,6 +1175,9 @@ def sync_single_historical_session(db: Session, session_id: int):
     # Clear existing session results and write verified records
     db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).delete(synchronize_session=False)
     db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session.id).delete(synchronize_session=False)
+    
+    # Detach objects from session so memory access doesn't trigger ObjectDeletedError
+    db.expunge_all()
 
     counts = {
         "PUBLIC_ATTENDED": 0,

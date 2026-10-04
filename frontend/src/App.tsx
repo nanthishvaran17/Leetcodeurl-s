@@ -21,7 +21,7 @@ import { MobileFilterDrawer } from './components/MobileFilterDrawer';
 
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
-
+import { AdminLoginPage } from './pages/AdminLoginPage';
 const CommandPalette = safeLazy(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
 const KeyboardShortcutsModal = safeLazy(() => import('./components/KeyboardShortcutsModal').then(m => ({ default: m.KeyboardShortcutsModal })));
 
@@ -137,6 +137,13 @@ const PageSkeleton = () => (
 export const App: React.FC = () => {
   // Direct Public Route Interceptors
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  if (pathname === '/admin' || pathname === '/admin/') {
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <AdminLoginPage />
+      </Suspense>
+    );
+  }
   if (pathname === '/hall-of-fame' || pathname === '/hall-of-fame/' || pathname === '/kiosk' || pathname === '/tv') {
     return (
       <Suspense fallback={<PageSkeleton />}>
@@ -247,6 +254,35 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('landing');
   const [previousTab, setPreviousTab] = useState<string | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isAppLocked, setIsAppLocked] = useState(false);
+  const [isBiometricError, setIsBiometricError] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      import('@capacitor/core').then(({ Capacitor }) => {
+        if (Capacitor.isNativePlatform()) {
+          import('@capgo/capacitor-native-biometric').then(({ NativeBiometric }) => {
+            NativeBiometric.isAvailable().then(result => {
+              if (result.isAvailable) {
+                setIsAppLocked(true);
+                NativeBiometric.verifyIdentity({
+                  reason: 'Unlock App Session',
+                  title: 'App Locked',
+                  subtitle: 'Use Biometrics to continue'
+                }).then(() => {
+                  setIsAppLocked(false);
+                  setIsBiometricError(false);
+                }).catch(err => {
+                  console.error('Biometric failed:', err);
+                  setIsBiometricError(true);
+                });
+              }
+            }).catch(console.warn);
+          });
+        }
+      });
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     setIsNavigating(true);
@@ -743,6 +779,54 @@ export const App: React.FC = () => {
     </Suspense>
   ), [isFacultyRole, isAuthenticated, handleTabChange]);
 
+  const { logout } = useAuth();
+
+  // Biometric Native Lock Interceptor
+  if (isAppLocked) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-navy-950 flex flex-col items-center justify-center p-4">
+        <div className="bg-white dark:bg-navy-900 rounded-2xl shadow-xl p-8 max-w-sm w-full text-center flex flex-col items-center">
+          <div className="w-16 h-16 bg-brand-50 dark:bg-brand-500/10 rounded-full flex items-center justify-center mb-6">
+            <svg className="w-8 h-8 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">App Locked</h2>
+          <p className="text-slate-500 dark:text-slate-400 mb-8 text-sm">
+            {isBiometricError ? "Authentication failed or was cancelled. Please try again." : "Unlock to continue your session"}
+          </p>
+          <div className="flex flex-col gap-3 w-full">
+            <button
+              onClick={() => {
+                import('@capgo/capacitor-native-biometric').then(({ NativeBiometric }) => {
+                  NativeBiometric.verifyIdentity({
+                    reason: 'Unlock App Session',
+                    title: 'App Locked'
+                  }).then(() => {
+                    setIsAppLocked(false);
+                    setIsBiometricError(false);
+                  }).catch(() => setIsBiometricError(true));
+                });
+              }}
+              className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-medium transition-colors"
+            >
+              Use Biometrics
+            </button>
+            <button
+              onClick={() => {
+                setIsAppLocked(false);
+                logout();
+              }}
+              className="w-full py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-xl font-medium transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Full-screen login for unauthenticated users
   if (!isAuthenticated) {
     return (
@@ -763,10 +847,8 @@ export const App: React.FC = () => {
             // Fallback to context if localStorage not yet written
             if (!localRoleClean) localRoleClean = (user?.role || '').trim().toLowerCase();
 
-            if (localRoleClean === 'faculty' || localRoleClean === 'staff' || localRoleClean === 'professor') {
+            if (['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(localRoleClean)) {
               setActiveTab('faculty-action-center');
-            } else if (localRoleClean === 'hod') {
-              setActiveTab('hod-command-center');
             } else {
               setActiveTab('dashboard');
             }
@@ -1049,7 +1131,7 @@ export const App: React.FC = () => {
             role="dialog"
             aria-modal="true"
             aria-label={`Student profile for ${selectedStudent.name}`}
-            className="w-full max-w-5xl bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-navy-800 flex flex-col overflow-hidden my-0 sm:my-auto max-h-[calc(100vh-5rem)] text-slate-900 dark:text-slate-100 animate-modal-content"
+            className="w-full max-w-5xl rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden my-0 sm:my-auto max-h-[calc(100vh-5rem)] text-slate-900 dark:text-slate-100 animate-modal-content isolate"
           >
             <Suspense fallback={<StudentProfileSkeleton studentName={selectedStudent.name} />}>
               <StudentProfilePage

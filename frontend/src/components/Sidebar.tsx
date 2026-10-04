@@ -119,7 +119,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       items: [
         { id: 'dashboard', label: 'HOD Dashboard', icon: LayoutDashboard },
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
-        { id: 'hod-command-center', label: 'HOD Command Center', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
         { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'FACULTY', badgeColor: 'indigo' },
         { id: 'hr-candidate-finder', label: 'Placement & Hiring Portal', icon: Briefcase, badge: 'PLACEMENTS', badgeColor: 'purple' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },

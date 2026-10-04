@@ -86,6 +86,12 @@ class ContestProblemSet:
 # Stored with exact canonical slugs to prevent fuzzy match errors.
 # The engine dynamically resolves any weekly contest N.
 OFFICIAL_CONTEST_PROBLEM_REGISTRY: Dict[int, List[Dict[str, Any]]] = {
+    522: [
+        {"index": 1, "problem_id": "4404", "title_slug": "minimum-rotations-to-dial-a-number-i", "title": "Minimum Rotations to Dial a Number I", "difficulty": "Easy", "points": 3},
+        {"index": 2, "problem_id": "4405", "title_slug": "minimum-rotations-to-dial-a-number-ii", "title": "Minimum Rotations to Dial a Number II", "difficulty": "Medium", "points": 4},
+        {"index": 3, "problem_id": "4393", "title_slug": "maximum-alternating-subarray-sum-with-one-deletion", "title": "Maximum Alternating Subarray Sum With One Deletion", "difficulty": "Medium", "points": 5},
+        {"index": 4, "problem_id": "4327", "title_slug": "count-good-strings", "title": "Count Good Strings", "difficulty": "Hard", "points": 6},
+    ],
     521: [
         {"index": 1, "problem_id": "Q1", "title_slug": "rearrange-array-by-removing-distinct-values", "title": "Rearrange Array by Removing Distinct Values", "difficulty": "Easy", "points": 3},
         {"index": 2, "problem_id": "Q2", "title_slug": "maximum-equal-adjacent-pairs-after-at-most-one-replacement", "title": "Maximum Equal Adjacent Pairs After at Most One Replacement", "difficulty": "Medium", "points": 5},
@@ -204,6 +210,7 @@ class ContestProblemAccuracyEngine:
 
         # Dynamic fallback for future contests (e.g. Contest 517, 518) when not yet in registry
         if not raw_problems and c_num:
+            print(f"WARNING: Contest {c_num} is not in OFFICIAL_CONTEST_PROBLEM_REGISTRY! Exact problem matching will fail because it will use fake slugs.")
             raw_problems = [
                 {"index": 1, "problem_id": "Q1", "title_slug": f"weekly-contest-{c_num}-q1", "title": f"Contest {c_num} Problem 1", "difficulty": "Easy", "points": 3},
                 {"index": 2, "problem_id": "Q2", "title_slug": f"weekly-contest-{c_num}-q2", "title": f"Contest {c_num} Problem 2", "difficulty": "Medium", "points": 4},

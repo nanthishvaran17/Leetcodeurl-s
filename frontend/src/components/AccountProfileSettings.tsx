@@ -19,6 +19,7 @@ import { GlobalModalBackdrop } from './GlobalModalBackdrop';
 import { DynamicQRCode } from './DynamicQRCode';
 import Cropper from 'react-easy-crop';
 import 'react-easy-crop/react-easy-crop.css';
+import { startRegistration } from '@simplewebauthn/browser';
 
 const getCroppedImg = (imageSrc: string, pixelCrop: any): Promise<string> => {
   const canvas = document.createElement('canvas');
@@ -59,18 +60,6 @@ const PRESET_AVATARS = [
   { id: 'star', icon: Award, label: 'Coordinator', color: 'from-yellow-500 to-amber-600' }
 ];
 
-// Available Academic & Professional Badges with Lucide Icons
-const AVAILABLE_BADGES = [
-  { id: 'leetcode_guardian', label: 'LeetCode Guardian', icon: Trophy, color: 'bg-amber-500/15 text-amber-950 dark:text-amber-200 border-amber-500/30' },
-  { id: 'nptel_elite', label: 'NPTEL Elite Gold', icon: GraduationCap, color: 'bg-yellow-500/15 text-yellow-950 dark:text-yellow-200 border-yellow-500/30' },
-  { id: 'aws_architect', label: 'AWS Solutions Architect', icon: Zap, color: 'bg-orange-500/15 text-orange-950 dark:text-orange-200 border-orange-500/30' },
-  { id: 'gcp_data', label: 'Google Cloud Certified', icon: Sparkles, color: 'bg-blue-500/15 text-blue-950 dark:text-blue-200 border-blue-500/30' },
-  { id: 'ieee_senior', label: 'IEEE Senior Member', icon: BookOpen, color: 'bg-cyan-500/15 text-cyan-950 dark:text-cyan-200 border-cyan-500/30' },
-  { id: 'naac_lead', label: 'NAAC / NBA Criteria Head', icon: Building2, color: 'bg-purple-500/15 text-purple-950 dark:text-purple-200 border-purple-500/30' },
-  { id: 'cyber_security', label: 'Certified Ethical Hacker', icon: ShieldCheck, color: 'bg-emerald-500/15 text-emerald-950 dark:text-emerald-200 border-emerald-500/30' },
-  { id: 'acm_icpc', label: 'ACM ICPC Regional Mentor', icon: Compass, color: 'bg-rose-500/15 text-rose-950 dark:text-rose-200 border-rose-500/30' }
-];
-
 // Languages list
 const AVAILABLE_LANGUAGES = ['English', 'Tamil', 'Hindi', 'Telugu', 'Malayalam', 'German', 'Japanese', 'French'];
 
@@ -103,8 +92,7 @@ const BLOOD_GROUP_OPTIONS: PremiumSelectOption[] = [
 ];
 
 const CONSULTATION_MODE_OPTIONS: PremiumSelectOption[] = [
-  { value: 'Open Door', label: 'Open Door (Walk-in to Cabin)', badge: 'Walk-in', badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' },
-  { value: 'Pre-booked Appointment', label: 'Pre-booked Appointment', badge: 'Appointment', badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800' },
+  { value: 'Pre-booked Appointment', label: 'Pre-booked Appointment' },
   { value: 'Hybrid (In-person & Virtual GMeet)', label: 'Hybrid (In-person & Virtual GMeet)', badge: 'Hybrid / Virtual', badgeColor: 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800' }
 ];
 
@@ -296,6 +284,10 @@ export const AccountProfileSettings: React.FC = () => {
   // Mentee Modal State
   const [selectedMentee, setSelectedMentee] = useState<{name: string, regNo: string, att: string, solved: number, actionType: 'View' | 'Intervene' | 'Warn'} | null>(null);
 
+  // Mentees Data State
+  const [mentees, setMentees] = useState<any[]>([]);
+  const [menteesLoading, setMenteesLoading] = useState(false);
+
   // Photo Crop State
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -310,26 +302,38 @@ export const AccountProfileSettings: React.FC = () => {
   const [profilePhoto, setProfilePhoto] = useState<string | null>((user as any)?.profile_photo || user?.photoURL || null);
   
   // Extended Academic & Professional Fields
-  const [bloodGroup, setBloodGroup] = useState<string>(() => localStorage.getItem('nec_user_blood_group') || 'O+');
+  // One-time cleanup: remove old hardcoded mock defaults from localStorage
+  const OLD_DEFAULTS: Record<string, string> = {
+    'nec_user_blood_group': 'O+',
+    'nec_user_office_loc': 'Main Campus • Academic Block B-204',
+    'nec_user_specialization': 'Data Structures, Algorithms & Cloud Systems',
+    'nec_user_degree': 'M.E. Computer Science & Engineering',
+    'nec_user_exp_years': '8 Years',
+    'nec_user_courses': 'CS8451 Design & Analysis of Algorithms, CS8591 Computer Networks',
+    'nec_user_bio': 'Dedicated educator and coding mentor passionate about algorithmic problem solving and student development.',
+    'nec_user_emergency_phone': '+91 9876543210',
+  };
+  // Run once on mount via useMemo
+  useMemo(() => {
+    if (!localStorage.getItem('nec_mock_data_cleared_v1')) {
+      Object.entries(OLD_DEFAULTS).forEach(([key, val]) => {
+        if (localStorage.getItem(key) === val) localStorage.removeItem(key);
+      });
+      localStorage.setItem('nec_mock_data_cleared_v1', '1');
+    }
+  }, []);
+
+  const [bloodGroup, setBloodGroup] = useState<string>(() => localStorage.getItem('nec_user_blood_group') || '');
   const [emergencyContactName, setEmergencyContactName] = useState<string>(() => localStorage.getItem('nec_user_emergency_name') || '');
   const [emergencyContactPhone, setEmergencyContactPhone] = useState<string>(() => localStorage.getItem('nec_user_emergency_phone') || '');
-  const [officeLocation, setOfficeLocation] = useState<string>(() => localStorage.getItem('nec_user_office_loc') || 'Main Campus • Academic Block B-204');
-  const [specialization, setSpecialization] = useState<string>(() => localStorage.getItem('nec_user_specialization') || 'Data Structures, Algorithms & Cloud Systems');
-  const [highestDegree, setHighestDegree] = useState<string>(() => localStorage.getItem('nec_user_degree') || 'M.E. Computer Science & Engineering');
-  const [experienceYears, setExperienceYears] = useState<string>(() => localStorage.getItem('nec_user_exp_years') || '8 Years');
-  const [coursesTaught, setCoursesTaught] = useState<string>(() => localStorage.getItem('nec_user_courses') || 'CS8451 Design & Analysis of Algorithms, CS8591 Computer Networks');
-  const [facultyBio, setFacultyBio] = useState<string>(() => localStorage.getItem('nec_user_bio') || 'Dedicated educator and coding mentor passionate about algorithmic problem solving and student development.');
+  const [officeLocation, setOfficeLocation] = useState<string>(() => localStorage.getItem('nec_user_office_loc') || '');
+  const [specialization, setSpecialization] = useState<string>(() => localStorage.getItem('nec_user_specialization') || '');
+  const [highestDegree, setHighestDegree] = useState<string>(() => localStorage.getItem('nec_user_degree') || '');
+  const [experienceYears, setExperienceYears] = useState<string>(() => localStorage.getItem('nec_user_exp_years') || '');
+  const [coursesTaught, setCoursesTaught] = useState<string>(() => localStorage.getItem('nec_user_courses') || '');
+  const [facultyBio, setFacultyBio] = useState<string>(() => localStorage.getItem('nec_user_bio') || '');
 
   // Academic Badges & Honors
-  const [selectedBadges, setSelectedBadges] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('nec_user_badges');
-      return saved ? JSON.parse(saved) : ['leetcode_guardian', 'nptel_elite', 'naac_lead'];
-    } catch {
-      return ['leetcode_guardian', 'nptel_elite'];
-    }
-  });
-
   // Languages Spoken
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(() => {
     try {
@@ -341,9 +345,15 @@ export const AccountProfileSettings: React.FC = () => {
   });
 
   // Office Consultation Hours Planner
-  const [consultationDays, setConsultationDays] = useState<string>(() => localStorage.getItem('nec_user_consult_days') || 'Mon, Wed, Fri');
-  const [consultationSlot, setConsultationSlot] = useState<string>(() => localStorage.getItem('nec_user_consult_slot') || '02:00 PM – 04:30 PM');
-  const [consultationMode, setConsultationMode] = useState<string>(() => localStorage.getItem('nec_user_consult_mode') || 'Open Door');
+  const [consultationDays, setConsultationDays] = useState<string>(() => localStorage.getItem('nec_user_consult_days') ?? 'Mon, Wed, Fri');
+  const [consultationSlot, setConsultationSlot] = useState<string>(() => localStorage.getItem('nec_user_consult_slot') ?? '02:00 PM – 04:30 PM');
+  const [consultationMode, setConsultationMode] = useState<string>(() => {
+    const val = localStorage.getItem('nec_user_consult_mode');
+    if (val === 'Open Door' || val === 'Open Door (Walk-in to Cabin)') {
+      return 'Pre-booked Appointment';
+    }
+    return val ?? 'Pre-booked Appointment';
+  });
 
   // Academic Social & Research Links
   const [linkedinUrl, setLinkedinUrl] = useState<string>(() => localStorage.getItem('nec_user_linkedin') || '');
@@ -354,7 +364,7 @@ export const AccountProfileSettings: React.FC = () => {
   const [leetcodeHandle, setLeetcodeHandle] = useState<string>(() => localStorage.getItem('nec_user_leetcode') || '');
 
   // Faculty Scratchpad / Sticky Notes
-  const [facultyNotes, setFacultyNotes] = useState<string>(() => localStorage.getItem('nec_faculty_notes') || '• Review Weekly Contest solving roster\n• Prepare Data Structures lab problem set\n• Follow up on pending mentees submissions');
+  const [facultyNotes, setFacultyNotes] = useState<string>(() => localStorage.getItem('nec_faculty_notes') ?? '• Review Weekly Contest solving roster\n• Prepare Data Structures lab problem set\n• Follow up on pending mentees submissions');
 
   // Notification & Privacy Preferences
   const [emailContestAlerts, setEmailContestAlerts] = useState<boolean>(() => localStorage.getItem('pref_contest_email') !== 'false');
@@ -491,6 +501,26 @@ export const AccountProfileSettings: React.FC = () => {
     fetchMe();
   }, [user]);
 
+  // Fetch Mentees
+  useEffect(() => {
+    const fetchMentees = async () => {
+      setMenteesLoading(true);
+      try {
+        const res = await api.get('/faculty-assignments/my-students');
+        if (res.data?.students) {
+          setMentees(res.data.students);
+        }
+      } catch (err) {
+        console.error('Failed to fetch mentees', err);
+      } finally {
+        setMenteesLoading(false);
+      }
+    };
+    if (user) {
+      fetchMentees();
+    }
+  }, [user]);
+
   // Profile Completeness calculation
   const profileCompleteness = useMemo(() => {
     let score = 10;
@@ -501,9 +531,8 @@ export const AccountProfileSettings: React.FC = () => {
     if (designation && designation.trim().length > 2) score += 15;
     if (facultyBio && facultyBio.trim().length > 10) score += 10;
     if (linkedinUrl || githubUrl || leetcodeHandle) score += 10;
-    if (selectedBadges.length > 0) score += 10;
     return Math.min(100, score);
-  }, [fullName, phoneNumber, profilePhoto, dateOfBirth, designation, facultyBio, linkedinUrl, githubUrl, leetcodeHandle, selectedBadges]);
+  }, [fullName, phoneNumber, profilePhoto, dateOfBirth, designation, facultyBio, linkedinUrl, githubUrl, leetcodeHandle]);
 
   // Security Score calculation
   const securityScore = useMemo(() => {
@@ -573,13 +602,6 @@ export const AccountProfileSettings: React.FC = () => {
     notify.success(`Selected ${avatar.label} icon avatar`, '', { category: 'ADMIN' });
   };
 
-  // Toggle badge selection
-  const handleToggleBadge = (badgeId: string) => {
-    setSelectedBadges(prev => 
-      prev.includes(badgeId) ? prev.filter(id => id !== badgeId) : [...prev, badgeId]
-    );
-  };
-
   // Toggle language selection
   const handleToggleLanguage = (lang: string) => {
     setSelectedLanguages(prev => 
@@ -618,7 +640,6 @@ export const AccountProfileSettings: React.FC = () => {
     localStorage.setItem('nec_user_exp_years', experienceYears);
     localStorage.setItem('nec_user_courses', coursesTaught);
     localStorage.setItem('nec_user_bio', facultyBio);
-    localStorage.setItem('nec_user_badges', JSON.stringify(selectedBadges));
     localStorage.setItem('nec_user_languages', JSON.stringify(selectedLanguages));
     localStorage.setItem('nec_user_consult_days', consultationDays);
     localStorage.setItem('nec_user_consult_slot', consultationSlot);
@@ -642,11 +663,19 @@ export const AccountProfileSettings: React.FC = () => {
 
     setIsSaving(true);
     try {
+      let dobToSend = dateOfBirth || null;
+      if (dobToSend && dobToSend.includes('/')) {
+        const parts = dobToSend.split('/');
+        if (parts.length === 3) {
+          dobToSend = `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
+        }
+      }
+
       const payload: any = {
-        full_name: fullName.trim(),
-        designation: designation.trim(),
-        phone_number: phoneNumber.trim(),
-        date_of_birth: dateOfBirth || null,
+        full_name: (fullName || '').trim(),
+        designation: (designation || '').trim(),
+        phone_number: (phoneNumber || '').trim(),
+        date_of_birth: dobToSend,
         profile_photo: profilePhoto || null,
         is_2fa_enabled: is2FAEnabled
       };
@@ -682,18 +711,17 @@ export const AccountProfileSettings: React.FC = () => {
   };
 
   const handleExportCSV = () => {
-    const csvContent = [
-      ['Student Reg No', 'Name', 'Attendance', 'LeetCode Solved', 'Action Type'],
-      ['="732221104001"', 'Aakash S', '96%', '142', 'View'],
-      ['="732221104042"', 'Bharath K', '68%', '14', 'Intervene'],
-      ['="732221104073"', 'Dharshini M', '91%', '280', 'View'],
-      ['="732221104021"', 'Gokul R', '89%', '105', 'View'],
-      ['="732221104088"', 'Harish V', '74%', '42', 'Warn'],
-      ['="732221104112"', 'Kavya T', '98%', '310', 'View'],
-      ['="732221104144"', 'Manikandan P', '85%', '95', 'View'],
-      ['="732221104165"', 'Nandhini G', '62%', '8', 'Intervene'],
-      ['="732221104189"', 'Praveen J', '94%', '188', 'View'],
-    ].map(e => e.join(",")).join("\n");
+    const rows = [
+      ['Student Reg No', 'Name', 'Attendance', 'LeetCode Solved', 'Action Type']
+    ];
+    
+    mentees.forEach(m => {
+      const att = m.status_code === 'CRITICAL' ? '60%' : m.status_code === 'WARNING' ? '74%' : '90%+';
+      const actionType = m.status_code === 'CRITICAL' ? 'Intervene' : m.status_code === 'WARNING' ? 'Warn' : 'View';
+      rows.push([`="${m.reg_no}"`, m.name || m.username, att, String(m.total_solved || 0), actionType]);
+    });
+    
+    const csvContent = rows.map(e => e.join(",")).join("\n");
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -753,7 +781,6 @@ export const AccountProfileSettings: React.FC = () => {
       courses_taught: coursesTaught,
       office_location: officeLocation,
       specialization: specialization,
-      honors_and_badges: selectedBadges,
       languages: selectedLanguages,
       consultation: {
         days: consultationDays,
@@ -803,7 +830,6 @@ export const AccountProfileSettings: React.FC = () => {
           if (imported.courses_taught) setCoursesTaught(imported.courses_taught);
           if (imported.office_location) setOfficeLocation(imported.office_location);
           if (imported.specialization) setSpecialization(imported.specialization);
-          if (Array.isArray(imported.honors_and_badges)) setSelectedBadges(imported.honors_and_badges);
           if (Array.isArray(imported.languages)) setSelectedLanguages(imported.languages);
           if (imported.consultation) {
             if (imported.consultation.days) setConsultationDays(imported.consultation.days);
@@ -1025,6 +1051,22 @@ export const AccountProfileSettings: React.FC = () => {
                 text-transform: uppercase; letter-spacing: 0.5px; }
     .seal-ok  { font-size: 11px; font-weight: 800; color: #15803d; margin-top: 4px; }
 
+    /* â”€â”€ Mobile Responsive Rules â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    @media (max-width: 768px) {
+      .action-bar { padding: 12px; height: auto; flex-direction: column; align-items: stretch; gap: 12px; }
+      .bar-btns { justify-content: space-between; }
+      .page-wrap { padding: 110px 12px 24px; }
+      .a4-card { padding: 20px 16px; }
+      .hdr { flex-direction: column; align-items: stretch; gap: 16px; }
+      .hdr-left { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .hdr-tag { text-align: left; }
+      .meta-grid { grid-template-columns: 1fr; }
+      .meta-cell { border-right: none; border-bottom: 1px solid #e2e8f0; }
+      .meta-cell:last-child { border-bottom: none; }
+      .footer { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .sec-head { flex-direction: column; align-items: flex-start; gap: 6px; }
+    }
+
     /* â”€â”€ Print: hide bar, collapse padding â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     @media print {
       @page { size: A4 portrait; margin: 12mm; }
@@ -1102,31 +1144,33 @@ export const AccountProfileSettings: React.FC = () => {
       </div>
 
       <!-- Audit Table -->
-      <table>
-        <thead>
-          <tr>
-            <th style="width:10%">Event ID</th>
-            <th style="width:14%">Date</th>
-            <th style="width:12%">Time (IST)</th>
-            <th style="width:17%">IP Address</th>
-            <th style="width:17%">Access Network</th>
-            <th style="width:20%">Auth Method</th>
-            <th style="width:10%;text-align:center">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${loginHistory.map(h => `
-          <tr>
-            <td><span class="tag-id">${h.id}</span></td>
-            <td><strong>${h.date}</strong></td>
-            <td>${h.time}</td>
-            <td><span class="tag-ip">${h.ip}</span></td>
-            <td>${h.network}</td>
-            <td>${h.method}</td>
-            <td style="text-align:center"><span class="tag-ok">${h.status}</span></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
+      <div style="overflow-x: auto; width: 100%; border-radius: 8px;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:10%">Event ID</th>
+              <th style="width:14%">Date</th>
+              <th style="width:12%">Time (IST)</th>
+              <th style="width:17%">IP Address</th>
+              <th style="width:17%">Access Network</th>
+              <th style="width:20%">Auth Method</th>
+              <th style="width:10%;text-align:center">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${loginHistory.map(h => `
+            <tr>
+              <td><span class="tag-id">${h.id}</span></td>
+              <td><strong>${h.date}</strong></td>
+              <td>${h.time}</td>
+              <td><span class="tag-ip">${h.ip}</span></td>
+              <td>${h.network}</td>
+              <td>${h.method}</td>
+              <td style="text-align:center"><span class="tag-ok">${h.status}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
 
       <!-- Footer -->
       <div class="footer">
@@ -1211,28 +1255,29 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               <span className="sm:hidden">Identity Hub</span>
             </div>
 
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={handleExportProfileJson}
-                className="p-1.5 sm:px-3 sm:py-1 rounded-full font-bold text-xs bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all flex items-center justify-center sm:gap-1.5 cursor-pointer"
+                className="h-8 px-3 rounded-full font-bold text-xs bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer box-border"
                 title="Export JSON"
               >
-                <Download className="w-3.5 h-3.5 text-brand-300" />
+                <Download className="w-3.5 h-3.5 text-brand-300 shrink-0" />
                 <span className="hidden sm:inline">Export JSON</span>
               </button>
 
-              <label className="p-1.5 sm:px-3 sm:py-1 rounded-full font-bold text-xs bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all flex items-center justify-center sm:gap-1.5 cursor-pointer">
-                <UploadCloud className="w-3.5 h-3.5 text-indigo-300" />
+              <label className="h-8 px-3 rounded-full font-bold text-xs bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer box-border m-0">
+                <UploadCloud className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
                 <span className="hidden sm:inline">Import JSON</span>
                 <input ref={jsonImportInputRef} type="file" accept=".json" className="hidden" onChange={handleImportProfileJson} />
               </label>
 
-              <span className="hidden md:flex px-3 py-1 rounded-full font-black text-xs border items-center space-x-1.5 bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="hidden md:flex h-8 px-3 rounded-full font-black text-xs border items-center justify-center gap-1.5 bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-xs box-border">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                 <span>ACTIVE</span>
               </span>
-              <span className="px-2 py-1 rounded-full font-mono text-[10px] sm:text-xs font-bold bg-white/15 text-white border border-white/20 whitespace-nowrap">
+              
+              <span className="h-8 px-3 rounded-full font-mono text-xs font-bold bg-white/15 text-white border border-white/20 flex items-center justify-center whitespace-nowrap box-border">
                 IST {clientInfo.timeStr}
               </span>
             </div>
@@ -1290,28 +1335,12 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <span className="text-white truncate">{user?.email}</span>
                 </div>
 
-                {/* Display Top Badges */}
-                {selectedBadges.length > 0 && (
-                  <div className="flex items-center justify-center lg:justify-start gap-1.5 flex-wrap pt-2.5 pb-1 w-full max-w-full">
-                    {selectedBadges.slice(0, 3).map(bId => {
-                      const badge = AVAILABLE_BADGES.find(b => b.id === bId);
-                      if (!badge) return null;
-                      const BadgeIcon = badge.icon;
-                      return (
-                        <span key={bId} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black bg-white/10 hover:bg-white/20 text-white border border-white/20 shadow-xs transition-colors whitespace-nowrap">
-                          <BadgeIcon className="w-3 h-3 text-amber-300 shrink-0" />
-                          <span className="truncate">{badge.label}</span>
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
             </div>
 
             {/* Right Side: Profile Completeness & Security Health */}
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:flex lg:flex-col lg:justify-center shrink-0 w-full lg:w-[240px] mt-2 lg:mt-0">
-              <div className="bg-white/15 backdrop-blur-md rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 border border-white/20 flex flex-col justify-center gap-1 sm:gap-2">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:flex lg:flex-row lg:items-center lg:justify-end shrink-0 w-full lg:w-auto mt-2 lg:mt-0">
+              <div className="bg-white/15 backdrop-blur-md rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 border border-white/20 flex flex-col justify-center gap-1 sm:gap-2 w-full lg:w-[220px]">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[10px] sm:text-xs mb-0.5 sm:mb-0">
                   <span className="font-black text-white flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-300" /> 
@@ -1330,7 +1359,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </p>
               </div>
 
-              <div className="bg-white/15 backdrop-blur-md rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 border border-white/20 flex flex-col justify-center gap-1 sm:gap-2">
+              <div className="bg-white/15 backdrop-blur-md rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 border border-white/20 flex flex-col justify-center gap-1 sm:gap-2 w-full lg:w-[220px]">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[10px] sm:text-xs mb-0.5 sm:mb-0">
                   <span className="font-black text-white flex items-center gap-1">
                     <Lock className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-300" /> 
@@ -1391,8 +1420,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-[9px] sm:text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 truncate">Active Device</div>
-            <div className="text-[10px] sm:text-xs font-black text-slate-950 dark:text-white truncate" title={clientInfo.fullDevice}>{clientInfo.browser}</div>
-            <div className="text-[9px] font-bold text-slate-500 dark:text-slate-400 truncate">{clientInfo.os} / {clientInfo.deviceType}</div>
+            <div className="text-xs sm:text-sm font-black text-slate-950 dark:text-white truncate" title={clientInfo.fullDevice}>
+              {clientInfo.browser} • {clientInfo.os}
+            </div>
           </div>
         </div>
 
@@ -1409,77 +1439,82 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
       </div>
 
-      {/* 3. RESPONSIVE 5-TAB NAVIGATION GRID (100% Full Width, High Contrast) */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5 p-1.5 rounded-2xl bg-slate-200/80 dark:bg-navy-950 border-2 border-slate-300 dark:border-navy-800">
+      {/* 3. RESPONSIVE 5-TAB NAVIGATION — ULTRA PREMIUM DESIGN */}
+      <div className="flex flex-col lg:flex-row gap-2 p-2 rounded-[20px] bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-white/10 shadow-[inset_0_1px_4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_4px_rgba(255,255,255,0.02)] relative overflow-hidden">
         
         {/* Tab 1: Personal & Academic Profile */}
         <button
           type="button"
           onClick={() => setActiveTab('profile')}
-          className={`py-3.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer text-center ${
+          className={`flex-1 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
             activeTab === 'profile'
-              ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/30 scale-[1.01]'
-              : 'bg-white dark:bg-navy-900 text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-navy-800'
+              ? 'text-white bg-gradient-to-r from-brand-600 to-indigo-600 shadow-[0_4px_12px_rgba(79,70,229,0.3)]'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
           }`}
         >
-          <User className="w-4 h-4 shrink-0" />
-          <span className="truncate">Personal & Profile</span>
+          <User className={`w-4 h-4 shrink-0 ${activeTab === 'profile' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
+          <span className="truncate">Personal &amp; Profile</span>
+          {activeTab === 'profile' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />}
         </button>
 
         {/* Tab 2: Security & Password Vault */}
         <button
           type="button"
           onClick={() => setActiveTab('security')}
-          className={`py-3.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer text-center ${
+          className={`flex-1 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
             activeTab === 'security'
-              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-[1.01]'
-              : 'bg-white dark:bg-navy-900 text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-navy-800'
+              ? 'text-white bg-gradient-to-r from-emerald-500 to-teal-600 shadow-[0_4px_12px_rgba(16,185,129,0.3)]'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
           }`}
         >
-          <KeyRound className="w-4 h-4 shrink-0" />
-          <span className="truncate">Security & Password</span>
+          <KeyRound className={`w-4 h-4 shrink-0 ${activeTab === 'security' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
+          <span className="truncate">Security Vault</span>
+          {activeTab === 'security' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />}
         </button>
 
         {/* Tab 3: Notification Preferences */}
         <button
           type="button"
           onClick={() => setActiveTab('preferences')}
-          className={`py-3.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer text-center ${
+          className={`flex-1 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
             activeTab === 'preferences'
-              ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30 scale-[1.01]'
-              : 'bg-white dark:bg-navy-900 text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-navy-800'
+              ? 'text-white bg-gradient-to-r from-purple-500 to-pink-600 shadow-[0_4px_12px_rgba(168,85,247,0.3)]'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
           }`}
         >
-          <Bell className="w-4 h-4 shrink-0" />
-          <span className="truncate">Notifications & Privacy</span>
+          <Bell className={`w-4 h-4 shrink-0 ${activeTab === 'preferences' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
+          <span className="truncate">Privacy &amp; Alerts</span>
+          {activeTab === 'preferences' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />}
         </button>
 
         {/* Tab 4: Digital Identity Card */}
         <button
           type="button"
           onClick={() => setActiveTab('id_card')}
-          className={`py-3.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer text-center ${
+          className={`flex-1 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
             activeTab === 'id_card'
-              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 scale-[1.01]'
-              : 'bg-white dark:bg-navy-900 text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-navy-800'
+              ? 'text-white bg-gradient-to-r from-sky-500 to-blue-600 shadow-[0_4px_12px_rgba(14,165,233,0.3)]'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
           }`}
         >
-          <ShieldCheck className="w-4 h-4 shrink-0" />
-          <span className="truncate">Digital Identity Card</span>
+          <ShieldCheck className={`w-4 h-4 shrink-0 ${activeTab === 'id_card' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
+          <span className="truncate">Identity Card</span>
+          {activeTab === 'id_card' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />}
         </button>
 
         {/* Tab 5: Mentorship & Tracking */}
         <button
           type="button"
           onClick={() => setActiveTab('mentorship')}
-          className={`py-3.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer text-center ${
+          className={`flex-1 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
             activeTab === 'mentorship'
-              ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-[1.01]'
-              : 'bg-white dark:bg-navy-900 text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-navy-800'
+              ? 'text-white bg-gradient-to-r from-amber-500 to-orange-600 shadow-[0_4px_12px_rgba(245,158,11,0.3)]'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
           }`}
         >
-          <GraduationCap className="w-4 h-4 shrink-0" />
-          <span className="truncate">Mentorship & Tracking</span>
+          <GraduationCap className={`w-4 h-4 shrink-0 ${activeTab === 'mentorship' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
+          <span className="truncate">Mentorship</span>
+          {activeTab === 'mentorship' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />}
         </button>
       </div>
 
@@ -1680,7 +1715,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                             if (e.target.value) {
                               const parts = e.target.value.split('-');
                               if (parts.length === 3) {
-                                setDateOfBirth(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                                setDateOfBirth(`${parts[1]}/${parts[2]}/${parts[0]}`);
                               }
                             }
                           }}
@@ -1802,46 +1837,6 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </div>
               </div>
 
-              {/* Academic Badges & Recognitions Picker with Lucide Icons */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 gap-2 sm:gap-0">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2 shrink-0">
-                    <Award className="w-4 h-4 text-amber-500 shrink-0" /> Academic & Professional Badges
-                  </h3>
-                  <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">Displays on ID Card & Profile</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {AVAILABLE_BADGES.map(b => {
-                    const isSelected = selectedBadges.includes(b.id);
-                    const BadgeIcon = b.icon;
-                    return (
-                      <button
-                        key={b.id}
-                        type="button"
-                        onClick={() => handleToggleBadge(b.id)}
-                        className={`p-3 rounded-2xl border-2 text-left flex items-center justify-between transition-all cursor-pointer ${
-                          isSelected 
-                            ? 'bg-amber-500/10 border-amber-500 dark:bg-amber-500/20 shadow-xs' 
-                            : 'bg-slate-50 dark:bg-navy-950 border-slate-200 dark:border-navy-800 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                            <BadgeIcon className="w-4 h-4" />
-                          </div>
-                          <span className="text-xs font-black text-slate-950 dark:text-white truncate">{b.label}</span>
-                        </div>
-                        <div className={`w-5 h-5 rounded-lg border flex items-center justify-center ${
-                          isSelected ? 'bg-amber-500 border-amber-600 text-white' : 'border-slate-300 dark:border-navy-700'
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
 
 
             </div>
@@ -1903,52 +1898,6 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <p className="text-xs text-indigo-950 dark:text-indigo-100 font-bold leading-relaxed">
                     Institutional scope and department allocations are controlled centrally by college administrators.
                   </p>
-                </div>
-              </div>
-
-              {/* Office Consultation & Mentoring Availability */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-emerald-600" /> Student Consultation Hours
-                  </h3>
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Office Availability</span>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Available Days</label>
-                    <input
-                      type="text"
-                      value={consultationDays}
-                      onChange={e => setConsultationDays(e.target.value)}
-                      placeholder="e.g. Mon, Wed, Fri"
-                      className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:border-brand-500"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Time Slot Window</label>
-                    <input
-                      type="text"
-                      value={consultationSlot}
-                      onChange={e => setConsultationSlot(e.target.value)}
-                      placeholder="e.g. 02:00 PM – 04:30 PM"
-                      className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:border-brand-500"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Consultation Mode</label>
-                    <PremiumSelect
-                      value={consultationMode}
-                      onChange={setConsultationMode}
-                      options={CONSULTATION_MODE_OPTIONS}
-                      placeholder="Select Consultation Mode"
-                      leadingIcon={<Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
-                      heightClass="h-10"
-                    />
-                  </div>
                 </div>
               </div>
 
@@ -2185,7 +2134,26 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   </div>
                   <button
                     type="button"
-                    onClick={() => notify.success('Passkey registration initiated. Verified for current device.', '', { category: 'ADMIN' })}
+                    onClick={async () => {
+                      try {
+                        const optionsRes = await api.get('/auth/passkey/register-options');
+                        if (!optionsRes.data?.options) {
+                          notify.error('Failed to get passkey options from server', '', { category: 'ADMIN' });
+                          return;
+                        }
+                        const options = optionsRes.data.options;
+                        const attResp = await startRegistration(options);
+                        const verifyRes = await api.post('/auth/passkey/register-verify', attResp);
+                        if (verifyRes.data?.success) {
+                          notify.success('Passkey registered successfully! You can now use it to sign in.', '', { category: 'ADMIN' });
+                        } else {
+                          notify.error(verifyRes.data?.message || 'Failed to register passkey', '', { category: 'ADMIN' });
+                        }
+                      } catch (err: any) {
+                        console.error('Passkey registration error:', err);
+                        notify.error(err?.message || 'Passkey registration failed.', '', { category: 'ADMIN' });
+                      }
+                    }}
                     className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0"
                   >
                     <Fingerprint className="w-3.5 h-3.5" />
@@ -2623,13 +2591,13 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                   {/* Institution Header */}
                   <div className="flex items-center justify-between border-b border-white/20 pb-4 relative z-10">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/30 flex items-center justify-center font-black text-amber-300 text-lg shadow-inner">
+                    <div className="flex items-center gap-4 sm:gap-5">
+                      <div className="w-12 h-12 shrink-0 rounded-xl bg-white/15 border border-white/30 flex items-center justify-center font-black text-amber-300 text-xl shadow-inner tracking-wide">
                         NEC
                       </div>
-                      <div>
-                        <h4 className="text-xs font-black uppercase tracking-wider text-white">NANDHA ENGINEERING COLLEGE</h4>
-                        <p className="text-[10px] text-slate-300 font-bold">Autonomous • Institutional Portal Identity</p>
+                      <div className="flex flex-col gap-0.5">
+                        <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">NANDHA ENGINEERING COLLEGE</h4>
+                        <p className="text-[9px] sm:text-[10px] text-slate-300 font-bold">Autonomous • Institutional Portal Identity</p>
                       </div>
                     </div>
                     <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/25 border border-emerald-400/40 text-emerald-300">
@@ -2678,23 +2646,6 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <span className="text-white text-xs truncate block">{officeLocation}</span>
                     </div>
                   </div>
-
-                  {/* Selected Badges Row on ID Card with Lucide Icons */}
-                  {selectedBadges.length > 0 && (
-                    <div className="flex items-center gap-1.5 flex-wrap relative z-10">
-                      {selectedBadges.slice(0, 3).map(bId => {
-                        const badge = AVAILABLE_BADGES.find(b => b.id === bId);
-                        if (!badge) return null;
-                        const BadgeIcon = badge.icon;
-                        return (
-                          <span key={bId} className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black bg-white/15 text-white border border-white/20">
-                            <BadgeIcon className="w-3 h-3 text-amber-300" />
-                            <span>{badge.label}</span>
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
 
                   {/* Front Card Footer Barcode & Flip Hint */}
                   <div className="pt-2 border-t border-white/15 flex items-center justify-between text-[10px] font-bold text-slate-300 relative z-10">
@@ -2870,69 +2821,32 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-navy-800 text-slate-800 dark:text-slate-200 font-bold">
-                        <tr className="hover:bg-slate-50 dark:hover:bg-navy-950/50 transition-colors">
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 font-mono">732221104001</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">Aakash S</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3"><span className="text-emerald-600 dark:text-emerald-400">96%</span></td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">142</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-center"><button type="button" onClick={() => setSelectedMentee({ name: 'Aakash S', regNo: '732221104001', att: '96%', solved: 142, actionType: 'View' })} className="p-1.5 sm:p-2 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/10 dark:hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 transition-colors cursor-pointer inline-flex items-center justify-center group" title="View Profile"><Eye className="w-4 h-4 group-hover:scale-110 transition-transform" /></button></td>
-                        </tr>
-                        <tr className="hover:bg-slate-50 dark:hover:bg-navy-950/50 transition-colors bg-rose-50/30 dark:bg-rose-900/10">
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 font-mono">732221104042</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">Bharath K</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3"><span className="text-rose-600 dark:text-rose-400">68%</span></td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">14</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-center"><button type="button" onClick={() => setSelectedMentee({ name: 'Bharath K', regNo: '732221104042', att: '68%', solved: 14, actionType: 'Intervene' })} className="p-1.5 sm:p-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer inline-flex items-center justify-center group" title="Intervene"><AlertTriangle className="w-4 h-4 group-hover:scale-110 transition-transform" /></button></td>
-                        </tr>
-                        <tr className="hover:bg-slate-50 dark:hover:bg-navy-950/50 transition-colors">
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 font-mono">732221104073</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">Dharshini M</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3"><span className="text-emerald-600 dark:text-emerald-400">91%</span></td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">280</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-center"><button type="button" onClick={() => setSelectedMentee({ name: 'Dharshini M', regNo: '732221104073', att: '91%', solved: 280, actionType: 'View' })} className="p-1.5 sm:p-2 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/10 dark:hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 transition-colors cursor-pointer inline-flex items-center justify-center group" title="View Profile"><Eye className="w-4 h-4 group-hover:scale-110 transition-transform" /></button></td>
-                        </tr>
-                        <tr className="hover:bg-slate-50 dark:hover:bg-navy-950/50 transition-colors">
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 font-mono">732221104021</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">Gokul R</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3"><span className="text-emerald-600 dark:text-emerald-400">89%</span></td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">105</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-center"><button type="button" onClick={() => setSelectedMentee({ name: 'Gokul R', regNo: '732221104021', att: '89%', solved: 105, actionType: 'View' })} className="p-1.5 sm:p-2 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/10 dark:hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 transition-colors cursor-pointer inline-flex items-center justify-center group" title="View Profile"><Eye className="w-4 h-4 group-hover:scale-110 transition-transform" /></button></td>
-                        </tr>
-                        <tr className="hover:bg-slate-50 dark:hover:bg-navy-950/50 transition-colors bg-amber-50/30 dark:bg-amber-900/10">
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 font-mono">732221104088</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">Harish V</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3"><span className="text-amber-600 dark:text-amber-400">74%</span></td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">42</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-center"><button type="button" onClick={() => setSelectedMentee({ name: 'Harish V', regNo: '732221104088', att: '74%', solved: 42, actionType: 'Warn' })} className="p-1.5 sm:p-2 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 transition-colors cursor-pointer inline-flex items-center justify-center group" title="Warn"><Bell className="w-4 h-4 group-hover:scale-110 transition-transform" /></button></td>
-                        </tr>
-                        <tr className="hover:bg-slate-50 dark:hover:bg-navy-950/50 transition-colors">
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 font-mono">732221104112</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">Kavya T</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3"><span className="text-emerald-600 dark:text-emerald-400">98%</span></td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">310</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-center"><button type="button" onClick={() => setSelectedMentee({ name: 'Kavya T', regNo: '732221104112', att: '98%', solved: 310, actionType: 'View' })} className="p-1.5 sm:p-2 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/10 dark:hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 transition-colors cursor-pointer inline-flex items-center justify-center group" title="View Profile"><Eye className="w-4 h-4 group-hover:scale-110 transition-transform" /></button></td>
-                        </tr>
-                        <tr className="hover:bg-slate-50 dark:hover:bg-navy-950/50 transition-colors">
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 font-mono">732221104144</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">Manikandan P</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3"><span className="text-emerald-600 dark:text-emerald-400">85%</span></td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">95</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-center"><button type="button" onClick={() => setSelectedMentee({ name: 'Manikandan P', regNo: '732221104144', att: '85%', solved: 95, actionType: 'View' })} className="p-1.5 sm:p-2 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/10 dark:hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 transition-colors cursor-pointer inline-flex items-center justify-center group" title="View Profile"><Eye className="w-4 h-4 group-hover:scale-110 transition-transform" /></button></td>
-                        </tr>
-                        <tr className="hover:bg-slate-50 dark:hover:bg-navy-950/50 transition-colors bg-rose-50/30 dark:bg-rose-900/10">
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 font-mono">732221104165</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">Nandhini G</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3"><span className="text-rose-600 dark:text-rose-400">62%</span></td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">8</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-center"><button type="button" onClick={() => setSelectedMentee({ name: 'Nandhini G', regNo: '732221104165', att: '62%', solved: 8, actionType: 'Intervene' })} className="p-1.5 sm:p-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer inline-flex items-center justify-center group" title="Intervene"><AlertTriangle className="w-4 h-4 group-hover:scale-110 transition-transform" /></button></td>
-                        </tr>
-                        <tr className="hover:bg-slate-50 dark:hover:bg-navy-950/50 transition-colors">
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 font-mono">732221104189</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">Praveen J</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3"><span className="text-emerald-600 dark:text-emerald-400">94%</span></td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3">188</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-center"><button type="button" onClick={() => setSelectedMentee({ name: 'Praveen J', regNo: '732221104189', att: '94%', solved: 188, actionType: 'View' })} className="p-1.5 sm:p-2 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/10 dark:hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 transition-colors cursor-pointer inline-flex items-center justify-center group" title="View Profile"><Eye className="w-4 h-4 group-hover:scale-110 transition-transform" /></button></td>
-                        </tr>
+                        {menteesLoading ? (
+                          <tr><td colSpan={5} className="text-center py-8 text-slate-500">Loading mentees...</td></tr>
+                        ) : mentees.length === 0 ? (
+                          <tr><td colSpan={5} className="text-center py-8 text-slate-500">No mentees assigned yet.</td></tr>
+                        ) : (
+                          mentees.map(m => {
+                            const isCritical = m.status_code === 'CRITICAL';
+                            const isWarning = m.status_code === 'WARNING';
+                            const actionType = isCritical ? 'Intervene' : isWarning ? 'Warn' : 'View';
+                            const att = isCritical ? '60%' : isWarning ? '74%' : '90%+';
+                            
+                            return (
+                              <tr key={m.id} className={`hover:bg-slate-50 dark:hover:bg-navy-950/50 transition-colors ${isCritical ? 'bg-rose-50/30 dark:bg-rose-900/10' : isWarning ? 'bg-amber-50/30 dark:bg-amber-900/10' : ''}`}>
+                                <td className="px-2 sm:px-4 py-2 sm:py-3 font-mono">{m.reg_no}</td>
+                                <td className="px-2 sm:px-4 py-2 sm:py-3">{m.name || m.username}</td>
+                                <td className="px-2 sm:px-4 py-2 sm:py-3"><span className={`${isCritical ? 'text-rose-600 dark:text-rose-400' : isWarning ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{att}</span></td>
+                                <td className="px-2 sm:px-4 py-2 sm:py-3">{m.total_solved || 0}</td>
+                                <td className="px-2 sm:px-4 py-2 sm:py-3 text-center">
+                                  <button type="button" onClick={() => setSelectedMentee({ name: m.name || m.username, regNo: m.reg_no, att, solved: m.total_solved || 0, actionType })} className={`p-1.5 sm:p-2 rounded-xl transition-colors cursor-pointer inline-flex items-center justify-center group ${isCritical ? 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400' : isWarning ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 text-amber-600 dark:text-amber-400' : 'bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/10 dark:hover:bg-brand-500/20 text-brand-600 dark:text-brand-400'}`} title={actionType}>
+                                    {isCritical ? <AlertTriangle className="w-4 h-4 group-hover:scale-110 transition-transform" /> : isWarning ? <Bell className="w-4 h-4 group-hover:scale-110 transition-transform" /> : <Eye className="w-4 h-4 group-hover:scale-110 transition-transform" />}
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -2942,8 +2856,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           </div>
         )}
 
-        {/* 4. MASTER SAVE & ACTIONS BOTTOM BAR */}
-        <div className="p-3 sm:p-5 rounded-3xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-800 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 mt-8 mb-4">
+        {/* 4. MASTER SAVE & ACTIONS — STICKY BOTTOM BAR */}
+        <div className="fixed bottom-0 left-0 right-0 z-[500] bg-white/95 dark:bg-navy-900/95 backdrop-blur-md border-t-2 border-slate-200 dark:border-navy-700 shadow-2xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">
             <Info className="w-4 h-4 text-brand-600 shrink-0" />
             <span>Updates will apply immediately across your college portal session.</span>
@@ -2990,6 +2904,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             </button>
           </div>
         </div>
+        {/* Bottom padding so form content not hidden behind sticky bar */}
+        <div className="h-20" />
 
       </form>
       {/* MODAL: MENTEE PROFILE */}
@@ -3059,16 +2975,57 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
       {/* MODAL: PHOTO ENLARGEMENT ZOOM */}
       {showPhotoZoom && profilePhoto && (
-        <GlobalModalBackdrop isOpen={showPhotoZoom} onClose={() => setShowPhotoZoom(false)} className="flex items-center justify-center p-4">
-          <div className="relative max-w-lg w-full bg-slate-900 rounded-3xl overflow-hidden p-4 border-2 border-brand-500/50 shadow-2xl space-y-4 animate-scale-up">
-            <div className="flex items-center justify-between pb-2 border-b border-white/20">
-              <span className="text-xs font-black text-white uppercase tracking-wider">Official Profile Photo</span>
-              <button onClick={() => setShowPhotoZoom(false)} className="text-white hover:text-slate-300 p-1 cursor-pointer">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="w-full aspect-square rounded-2xl overflow-hidden bg-black flex items-center justify-center">
-              <img src={profilePhoto} alt="Zoomed" className="w-full h-full object-contain" />
+        <GlobalModalBackdrop isOpen={showPhotoZoom} onClose={() => setShowPhotoZoom(false)} className="flex items-center justify-center p-4 z-[9999]">
+          <div className="relative w-full max-w-md bg-white dark:bg-navy-950 rounded-[2rem] overflow-hidden p-1 shadow-2xl shadow-brand-500/20 animate-scale-up border border-slate-200 dark:border-navy-800 flex flex-col group">
+            {/* Top decorative gradient header */}
+            <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-br from-brand-600 via-indigo-600 to-purple-600 opacity-90 rounded-t-[1.8rem]"></div>
+            
+            {/* Close Button */}
+            <button onClick={() => setShowPhotoZoom(false)} className="absolute top-4 right-4 text-white hover:bg-white/20 p-2 rounded-full backdrop-blur-md cursor-pointer transition-all z-10 shadow-sm">
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="relative z-10 mt-12 flex flex-col items-center pb-6">
+              {/* Profile Image with Glowing Border */}
+              <div className="relative p-1 bg-white dark:bg-navy-950 rounded-[2rem] shadow-xl">
+                <div className="absolute inset-0 bg-gradient-to-tr from-brand-400 to-indigo-400 rounded-[2rem] blur-md opacity-60 animate-pulse"></div>
+                <div className="w-40 h-40 rounded-3xl overflow-hidden bg-black flex items-center justify-center relative z-10 border-4 border-white dark:border-navy-900 shadow-lg">
+                  <img src={profilePhoto} alt="Zoomed" className="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
+                </div>
+              </div>
+
+              {/* Text Information Details */}
+              <div className="mt-6 text-center space-y-2 px-6">
+                <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{fullName || user?.username}</h2>
+                <div className="inline-flex items-center justify-center px-3 py-1 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-full">
+                  <span className="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                    {institutionalId} &bull; {designation || roleName}
+                  </span>
+                </div>
+              </div>
+
+              {/* Badges / Extras */}
+              <div className="mt-6 w-full px-6">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
+                    <Building2 className="w-5 h-5 text-emerald-500 mb-1.5" />
+                    <span className="text-[10px] uppercase font-black text-slate-400">Department</span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate w-full text-center">{departmentName || 'Not Assigned'}</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
+                    <Lock className="w-5 h-5 text-brand-500 mb-1.5" />
+                    <span className="text-[10px] uppercase font-black text-slate-400">Security</span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Verified Profile</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 border-t border-slate-100 dark:border-navy-800 w-full pt-4 flex justify-center">
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Official Institutional ID
+                </div>
+              </div>
             </div>
           </div>
         </GlobalModalBackdrop>

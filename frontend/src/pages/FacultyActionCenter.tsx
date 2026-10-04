@@ -341,9 +341,11 @@ const StudentViewModal: React.FC<{
       });
   }, [item.id]);
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-[999999] flex items-center justify-center p-2 sm:p-4 bg-black/80 overflow-y-auto animate-fade-in"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="w-full max-w-4xl max-h-[94vh] sm:max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-xl overflow-hidden my-auto text-slate-900 dark:text-white">
@@ -391,10 +393,10 @@ const StudentViewModal: React.FC<{
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap items-center gap-2 px-4 sm:px-5 py-2.5 bg-slate-50/80 dark:bg-navy-950/40 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
+        <div className="flex overflow-x-auto no-scrollbar items-center gap-2 px-4 sm:px-5 py-2.5 bg-slate-50/80 dark:bg-navy-950/40 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
           <button
             onClick={() => setActiveViewTab('pass')}
-            className={`flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
               activeViewTab === 'pass'
                 ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25'
                 : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800/60 font-bold'
@@ -406,7 +408,7 @@ const StudentViewModal: React.FC<{
 
           <button
             onClick={() => setActiveViewTab('profile')}
-            className={`flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
               activeViewTab === 'profile'
                 ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
                 : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800/60 font-bold'
@@ -418,7 +420,7 @@ const StudentViewModal: React.FC<{
 
           <button
             onClick={() => setActiveViewTab('timeline')}
-            className={`flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
               activeViewTab === 'timeline'
                 ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25'
                 : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800/60 font-bold'
@@ -499,7 +501,8 @@ const StudentViewModal: React.FC<{
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -566,10 +569,10 @@ const UpdateModal: React.FC<{
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6 pt-20 sm:pt-24 pb-6 bg-slate-950/80 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[999999] flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-2xl max-h-[78vh] flex flex-col rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700/80 shadow-2xl shadow-indigo-950/30 overflow-hidden my-auto">
+      <div className="w-full max-w-2xl max-h-[94vh] sm:max-h-[90vh] flex flex-col rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700/80 shadow-2xl shadow-indigo-950/30 overflow-hidden my-auto">
 
         {/* Premium Executive Header */}
         <div className="relative overflow-hidden p-6 bg-gradient-to-r from-slate-950 via-navy-950 to-indigo-950 text-white border-b border-slate-800/80 shrink-0">
@@ -1011,7 +1014,6 @@ export const FacultyActionCenter: React.FC = () => {
             </div>
 
             <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight flex items-center gap-3">
-              <ShieldAlert className="w-7 h-7 sm:w-8 sm:h-8 text-rose-400 stroke-[2.5]" />
               Faculty <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-amber-300 to-brand-300">Action Center</span>
             </h1>
 

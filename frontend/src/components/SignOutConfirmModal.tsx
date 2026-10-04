@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, X } from 'lucide-react';
+import { LogOut, X, AlertTriangle } from 'lucide-react';
 
 interface SignOutConfirmModalProps {
   isOpen: boolean;
@@ -45,80 +45,82 @@ export const SignOutConfirmModal: React.FC<SignOutConfirmModalProps> = ({
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6 select-none">
-          {/* Backdrop with modern deep blur - removes washed-out flat gray look */}
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6 select-none perspective-[1000px]">
+          {/* Enhanced Backdrop with deep blur and overlay */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
+            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-950/65 dark:bg-navy-950/80 backdrop-blur-md cursor-pointer"
+            className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 cursor-pointer"
           />
 
-          {/* Modal Container */}
+          {/* Premium Glassmorphic Modal Container */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.92, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 12 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20, rotateX: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -20, rotateX: -10 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 25 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-[390px] rounded-3xl bg-white dark:bg-navy-950 border border-slate-200/90 dark:border-navy-700/80 shadow-2xl shadow-rose-500/10 dark:shadow-navy-950/80 p-6 sm:p-7 overflow-hidden text-center z-10 space-y-5"
+            className="relative w-full max-w-[420px] rounded-[2rem] bg-white/95 dark:bg-navy-950/95 backdrop-blur-2xl border border-slate-200/80 dark:border-navy-800/80 shadow-2xl p-8 overflow-hidden text-center z-10"
           >
-            {/* Ambient subtle glow background */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-28 bg-rose-500/10 dark:bg-rose-500/15 rounded-full blur-2xl pointer-events-none" />
+            {/* Subtle Ambient Background Light (Clean & Non-distracting) */}
+            <div className="absolute -top-24 -left-24 w-56 h-56 bg-brand-500/10 dark:bg-brand-500/15 rounded-full blur-[70px] pointer-events-none" />
+            <div className="absolute -bottom-24 -right-24 w-56 h-56 bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-[70px] pointer-events-none" />
 
             {/* Top Close Button */}
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer"
-              title="Close modal"
-              aria-label="Close modal"
+              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-navy-900 text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-navy-800 transition-all cursor-pointer shadow-sm z-20 hover:scale-105 active:scale-95"
             >
               <X className="w-4 h-4" />
             </button>
 
-            {/* Sign Out Glowing Icon */}
-            <div className="relative mx-auto w-16 h-16 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-2xl bg-rose-500/20 dark:bg-rose-500/25 animate-pulse" />
-              <div className="relative w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200/80 dark:border-rose-800/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shadow-inner">
-                <LogOut className="w-7 h-7 stroke-[2.2]" />
+            {/* Sign Out Icon Container - Clean & Crisp */}
+            <div className="relative mx-auto w-16 h-16 sm:w-18 sm:h-18 mb-6 flex items-center justify-center">
+              <div className="w-full h-full rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/40 flex items-center justify-center shadow-xs">
+                <LogOut className="w-7 h-7 text-rose-600 dark:text-rose-400" />
               </div>
             </div>
 
             {/* Header & Subtitle */}
-            <div className="space-y-1.5 relative z-10">
-              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                Sign Out Confirmation
+            <div className="space-y-2 mb-8 relative z-10">
+              <h3 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-br from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 tracking-tight">
+                Ready to leave?
               </h3>
-              <p className="text-xs sm:text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                Are you sure you want to sign out of your institutional account?
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium px-4">
+                You're about to sign out of your institutional account.
               </p>
             </div>
 
-            {/* User Profile Card Preview */}
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50/90 dark:bg-navy-900/80 border border-slate-200/80 dark:border-navy-800/80 text-left relative z-10">
-              {photo ? (
-                <img
-                  src={photo}
-                  alt={displayName}
-                  className="w-10 h-10 rounded-full border-2 border-brand-500 object-cover bg-white dark:bg-navy-950 shrink-0"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-sm flex items-center justify-center uppercase shrink-0 shadow-xs">
-                  {displayName[0]}
-                </div>
-              )}
+            {/* Premium User Profile Card */}
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/60 dark:bg-navy-900/60 backdrop-blur-md border border-white dark:border-navy-700/50 shadow-sm text-left relative z-10 mb-8 transform transition-transform duration-300 hover:scale-[1.02]">
+              <div className="relative">
+                {photo ? (
+                  <img
+                    src={photo}
+                    alt={displayName}
+                    className="w-12 h-12 rounded-full object-cover ring-2 ring-white dark:ring-navy-800 shadow-md"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white font-black text-lg flex items-center justify-center uppercase shadow-md ring-2 ring-white dark:ring-navy-800">
+                    {displayName[0]}
+                  </div>
+                )}
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full ring-2 ring-white dark:ring-navy-900 shadow-sm" />
+              </div>
               <div className="flex-1 min-w-0">
-                <div className="text-xs sm:text-[13px] font-extrabold text-slate-900 dark:text-white truncate">
+                <div className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
                   {displayName}
                 </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 truncate">
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400 truncate">
                     @{username || 'user'}
                   </span>
-                  <span className="inline-flex px-1.5 py-0.2 text-[9px] font-black rounded uppercase bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                  <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                  <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
                     {role}
                   </span>
                 </div>
@@ -126,25 +128,28 @@ export const SignOutConfirmModal: React.FC<SignOutConfirmModalProps> = ({
             </div>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-3 pt-1 relative z-10">
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-full min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white hover:bg-slate-100 dark:bg-navy-900 dark:hover:bg-navy-800 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white font-extrabold text-xs sm:text-[13px] transition-all duration-150 cursor-pointer shadow-xs hover:shadow-sm active:scale-95 flex items-center justify-center"
-              >
-                Cancel
-              </button>
-
+            <div className="flex flex-col gap-3 relative z-10">
               <button
                 type="button"
                 onClick={() => {
                   onClose();
                   onConfirm();
                 }}
-                className="w-full min-h-[44px] px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-extrabold text-xs sm:text-[13px] shadow-lg shadow-rose-600/30 hover:shadow-rose-600/45 transition-all duration-150 cursor-pointer active:scale-95 flex items-center justify-center space-x-1.5"
+                className="group relative w-full h-12 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white font-black text-sm shadow-[0_8px_20px_-6px_rgba(225,29,72,0.5)] transition-all duration-300 cursor-pointer overflow-hidden flex items-center justify-center space-x-2"
               >
-                <LogOut className="w-4 h-4 shrink-0" />
-                <span>Yes, Sign Out</span>
+                {/* Shine effect */}
+                <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
+                
+                <span className="relative z-10">Sign Out Now</span>
+                <LogOut className="w-4 h-4 relative z-10 transform group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full h-12 rounded-xl bg-slate-100/80 dark:bg-navy-900/80 hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-extrabold text-sm transition-all duration-200 cursor-pointer backdrop-blur-sm"
+              >
+                Stay Logged In
               </button>
             </div>
           </motion.div>

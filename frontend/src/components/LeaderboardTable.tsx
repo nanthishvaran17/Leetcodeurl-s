@@ -560,7 +560,10 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
           </div>
           <div className="flex-none w-24 px-3 text-left">Rank</div>
           <div className="flex-none w-32 px-3 text-left">Register No</div>
-          <div className="flex-1 min-w-[200px] px-3 pl-5 text-left">Student</div>
+          <div className="flex-1 min-w-[200px] px-3 flex items-center space-x-3 text-left">
+            <div className="w-8 shrink-0"></div>
+            <span>Student</span>
+          </div>
           <div className="flex-none w-36 px-3 text-left">Dept / Year</div>
           <div className="flex-1 min-w-[160px] px-3 text-left">LeetCode Handle</div>
           <div className="flex-none w-24 px-3 text-center">Solved</div>
@@ -599,6 +602,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                     <FastStudentRow
                       key={student.id}
                       studentId={student.id.toString()}
+                      initialStudent={student}
                       index={index + (currentPage - 1) * Number(pageSize)}
                       style={style}
                       isSelected={selectedIds.includes(Number(student.id))}
@@ -617,6 +621,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                   <FastStudentRow
                     key={student.id}
                     studentId={student.id.toString()}
+                    initialStudent={student}
                     index={idx + (currentPage - 1) * Number(pageSize)}
                     style={{}}
                     isSelected={selectedIds.includes(Number(student.id))}
@@ -642,25 +647,27 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
           <div className="flex flex-col lg:flex-row items-center justify-center gap-4 w-full sm:w-auto">
             {/* Rows Per Page Selector */}
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className="text-[11px] font-bold text-slate-400 whitespace-nowrap">Per Page:</span>
-              <div className="flex flex-wrap items-center justify-center gap-1.5">
-                {(['25', '50', '100', '200'] as const).map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => handlePageSizeChange(size)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      pageSize === size
-                        ? 'bg-brand-600 text-white shadow-sm'
-                        : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-700'
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
+            {effectiveStudents.length > 25 && (
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <span className="text-[11px] font-bold text-slate-400 whitespace-nowrap">Per Page:</span>
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
+                  {(['25', '50', '100', '200'] as const).map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => handlePageSizeChange(size)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        pageSize === size
+                          ? 'bg-brand-600 text-white shadow-sm'
+                          : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-700'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Pagination Controls */}
             {totalPages > 1 && (

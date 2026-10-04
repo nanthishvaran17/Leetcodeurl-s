@@ -2,6 +2,8 @@ from typing import List, Any, Optional, Dict
 from sqlalchemy.orm import Session, joinedload
 from backend.models import Student, Department, Section, ContestParticipation
 from backend.services.report_models import StudentRow, ContestRow
+from backend.config.report_config import normalize_year_roman
+
 
 def get_problem_category(total_solved: Optional[int], is_verified: bool = True) -> str:
     """
@@ -296,7 +298,7 @@ def fetch_normalized_students(
             name=s.name,
             dept=dept_obj.code if dept_obj else "",
             department_name=dept_obj.name if dept_obj else "",
-            year=s.year_level,
+            year=normalize_year_roman(s.year_level, s.reg_no),
             batch=s.batch if hasattr(s, 'batch') and s.batch else "",
             section=sec_obj.name if sec_obj else "",
             institutional_email=s.institutional_email if hasattr(s, 'institutional_email') and s.institutional_email else "",

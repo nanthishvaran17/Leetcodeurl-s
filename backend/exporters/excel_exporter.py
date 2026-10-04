@@ -22,10 +22,10 @@ ALT_ROW_FILL = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="
 
 # Section Header Group Fills
 GRP_ID_FILL = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")       # Student Identity: Navy
-GRP_SOLVE_FILL = PatternFill(start_color="1E4620", end_color="1E4620", fill_type="solid")    # Coding/Solving: Forest
-GRP_CONTEST_FILL = PatternFill(start_color="4A154B", end_color="4A154B", fill_type="solid")  # Contest Metrics: Purple
-GRP_SCORE_FILL = PatternFill(start_color="C05621", end_color="C05621", fill_type="solid")    # Scores: Amber
-GRP_RISK_FILL = PatternFill(start_color="9B2C2C", end_color="9B2C2C", fill_type="solid")     # Risk & Placement: Deep Red
+GRP_SOLVE_FILL = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")    # Coding/Solving: Navy
+GRP_CONTEST_FILL = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")  # Contest Metrics: Navy
+GRP_SCORE_FILL = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")    # Scores: Navy
+GRP_RISK_FILL = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")     # Risk & Placement: Navy
 
 # Semantic Status Fills & FONT Colors
 FILL_SUCCESS = PatternFill(start_color="ECFDF5", end_color="ECFDF5", fill_type="solid")
@@ -54,12 +54,12 @@ FONT_NOTE = Font(name=FONT_TNR, size=9, italic=True, color="64748B")
 
 # Alignments
 ALIGN_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
-ALIGN_LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
+ALIGN_LEFT = Alignment(horizontal="center", vertical="center", wrap_text=True)
 ALIGN_RIGHT = Alignment(horizontal="right", vertical="center")
 ALIGN_RIGHT_WRAP = Alignment(horizontal="right", vertical="center", wrap_text=True)
 
 # Grid Borders (Crisp, sharp dark borders around every cell like All Borders in Excel)
-_THIN_SIDE = Side(style='thin', color='334155')
+_THIN_SIDE = Side(style='thin', color='000000')
 _THIN_BORDER = Border(left=_THIN_SIDE, right=_THIN_SIDE, top=_THIN_SIDE, bottom=_THIN_SIDE)
 
 OFFICIAL_DEPTS = [

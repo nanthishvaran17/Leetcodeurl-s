@@ -612,7 +612,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   // Ultra-Fast Virtualized Pagination States
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(15);
+  const [pageSize, setPageSize] = useState<number>(100);
   const [previewPage, setPreviewPage] = useState<number>(1);
   const [previewPageSize, setPreviewPageSize] = useState<number>(50);
 
@@ -1620,55 +1620,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                             (metricQ2 !== undefined && metricQ2 !== null) &&
                             (metricQ1 !== undefined && metricQ1 !== null);
 
-    // Force recalculation whenever matrixRows are present, or metric counts are missing, or metrics do not match participant sum
-    const forceRecalculate = (matrixRows && matrixRows.length > 0) || !hasMetricCounts || (totalParticipantsVal > 0 && metricSum !== totalParticipantsVal);
+    // Only rely on API-provided metrics or fastSummary. Do NOT recalculate using paginated matrixRows!
+    const forceRecalculate = !hasMetricCounts;
 
     if (forceRecalculate) {
-      if (matrixRows && matrixRows.length > 0) {
-        let calcQ4 = 0, calcQ3 = 0, calcQ2 = 0, calcQ1 = 0;
-        let calcV4 = 0, calcV3 = 0, calcV2 = 0, calcV1 = 0;
-
-        for (const r of matrixRows) {
-          const st = (r.participation_status || r.status || '').toString().toUpperCase();
-          if (st === 'PUBLIC' || st === 'PUBLIC_ATTENDED' || st === 'ATTENDED' || st === 'VIRTUAL' || st === 'VIRTUAL_ATTENDED') {
-            const countQ = (qv: any) => (qv === 1 || qv === '1' || qv === true || qv === 'true' || Number(qv) > 0) ? 1 : 0;
-            const qSum = countQ(r.q1) + countQ(r.q2) + countQ(r.q3) + countQ(r.q4);
-
-            let solved = qSum;
-            const rawTS = r.total_solved ?? r.problems_solved ?? r.total_contest_solved ?? r.score_solved;
-            const tsNum = Number(rawTS);
-            if (!isNaN(tsNum) && tsNum > qSum && rawTS !== '—' && rawTS !== '') {
-              solved = tsNum;
-            }
-
-            if (solved >= 4) calcQ4++;
-            else if (solved === 3) calcQ3++;
-            else if (solved === 2) calcQ2++;
-            else if (solved === 1) calcQ1++;
-
-            if (st === 'VIRTUAL' || st === 'VIRTUAL_ATTENDED') {
-              if (solved >= 4) calcV4++;
-              else if (solved === 3) calcV3++;
-              else if (solved === 2) calcV2++;
-              else if (solved === 1) calcV1++;
-            }
-          }
-        }
-        q4Solved = calcQ4;
-        q3Solved = calcQ3;
-        q2Solved = calcQ2;
-        q1Solved = calcQ1;
-        virtual4Solved = calcV4;
-        virtual3Solved = calcV3;
-        virtual2Solved = calcV2;
-        virtual1Solved = calcV1;
-      } else {
-        q4Solved = fastSummary?.solvedDistribution?.q4 ?? 0;
-        q3Solved = fastSummary?.solvedDistribution?.q3 ?? 0;
-        q2Solved = fastSummary?.solvedDistribution?.q2 ?? 0;
-        q1Solved = fastSummary?.solvedDistribution?.q1 ?? 0;
-        virtual4Solved = 0; virtual3Solved = 0; virtual2Solved = 0; virtual1Solved = 0;
-      }
+      q4Solved = fastSummary?.solvedDistribution?.q4 ?? 0;
+      q3Solved = fastSummary?.solvedDistribution?.q3 ?? 0;
+      q2Solved = fastSummary?.solvedDistribution?.q2 ?? 0;
+      q1Solved = fastSummary?.solvedDistribution?.q1 ?? 0;
+      virtual4Solved = 0; virtual3Solved = 0; virtual2Solved = 0; virtual1Solved = 0;
     }
 
     const publicPct = totalRowsVal > 0 ? Math.min(100, Math.max(0, (attendedRows / totalRowsVal) * 100)).toFixed(1) : '0.0';
@@ -1678,6 +1638,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     const totalParticipationPct = totalRowsVal > 0 ? Math.min(100, Math.max(0, ((attendedRows + virtualRows) / totalRowsVal) * 100)).toFixed(1) : '0.0';
 
     const topPerformers = sessionMetrics?.topPerformers ?? [];
+
+    const q0Solved = Math.max(0, (attendedRows + virtualRows) - q4Solved - q3Solved - q2Solved - q1Solved);
 
     return {
       totalRows: totalRowsVal,
@@ -1690,6 +1652,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       q3Solved,
       q2Solved,
       q1Solved,
+      q0Solved,
       virtual4Solved,
       virtual3Solved,
       virtual2Solved,
@@ -2702,7 +2665,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.97 }}
                     transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute z-[9999] left-0 sm:left-auto sm:right-0 mt-2 w-[calc(100vw-32px)] sm:w-[380px] max-w-[380px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] p-3.5 space-y-2 focus:outline-none select-none"
+                    className="absolute z-[9999] right-0 mt-2 w-[calc(100vw-32px)] sm:w-[380px] max-w-[380px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] p-3.5 space-y-2 focus:outline-none select-none"
                     style={{ backgroundColor: '#ffffff' }}
                   >
                     {/* SECTION 1: ACTIONS */}
@@ -3732,7 +3695,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   {selectedDeptFilter === 'ALL' ? 'College-Wide' : selectedDeptFilter} • {selectedYearFilter === 'ALL' ? 'All Years' : `${selectedYearFilter} Year`}
                 </span>
                 <span className="text-xs font-black text-slate-900 dark:text-white">
-                  {stats.attendedRows + stats.virtualRows} Total Solved Participants ({stats.totalRows} Students in Scope)
+                  {stats.attendedRows + stats.virtualRows} Total Participants ({stats.totalRows} Students in Scope)
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
@@ -3741,18 +3704,19 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full sm:w-auto">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 w-full sm:w-auto">
             {[
               { label: '4/4 Solved', count: stats.q4Solved, color: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800' },
               { label: '3/4 Solved', count: stats.q3Solved, color: 'text-purple-700 dark:text-purple-300', bg: 'bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800' },
               { label: '2/4 Solved', count: stats.q2Solved, color: 'text-indigo-700 dark:text-indigo-300', bg: 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800' },
               { label: '1/4 Solved', count: stats.q1Solved, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800' },
+              { label: '0/4 — No Solve', count: stats.q0Solved, color: 'text-rose-700 dark:text-rose-300', bg: 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800' },
             ].map((item, idx) => (
               <div 
                 key={idx} 
                 onClick={handleOpenDetailedRoster}
                 title="Click to view full roster for this category"
-                className={`px-4 py-2.5 rounded-2xl border text-center w-full sm:w-28 h-16 flex flex-col items-center justify-center shadow-sm transition-all hover:scale-105 cursor-pointer ${item.bg}`}
+                className={`px-4 py-2.5 rounded-2xl border text-center w-full sm:w-24 h-16 flex flex-col items-center justify-center shadow-sm transition-all hover:scale-105 cursor-pointer ${item.bg}`}
               >
                 <span className="text-[10px] font-extrabold uppercase tracking-wider block opacity-80 whitespace-nowrap">{item.label}</span>
                 <span className={`text-xl font-black font-mono leading-none mt-1 ${item.color}`}>{item.count}</span>
@@ -3781,7 +3745,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             ) : (
               <>
                 <ChevronDown className="w-4 h-4" />
-                <span>View Full Breakdown & Student Roster ({matrixRows.length || totalRows || globalStudents.length || 0} Students)</span>
+                <span>View Full Breakdown & Student Roster ({totalRows || globalStudents.length || 0} Students)</span>
               </>
             )
             }
@@ -3994,7 +3958,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               )}
 
               {/* MOBILE VIEW: High-density full-width responsive cards (Zero Horizontal Scroll) */}
-              <div className="block md:hidden divide-y divide-slate-100 dark:divide-slate-800 p-3 space-y-3 max-h-[580px] overflow-y-auto">
+              <div className="block md:hidden divide-y divide-slate-100 dark:divide-slate-800 p-3 space-y-3">
                 {paginatedMatrixRows.length === 0 ? (
                   <div className="p-8 text-center text-slate-500 font-bold">
                     No students found
@@ -4029,7 +3993,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
 
               {/* DESKTOP VIEW: Full 12-Column Table */}
-              <div className="hidden md:block table-responsive-container w-full min-w-0 max-w-full max-h-[520px] overflow-y-auto overflow-x-auto">
+              <div className="hidden md:block table-responsive-container w-full min-w-0 max-w-full overflow-x-auto">
                 <table className="w-full min-w-[900px] text-left text-xs border-separate border-spacing-0">
                   <thead className="text-white text-xs font-black uppercase tracking-wider sticky top-0 z-10 shadow-sm">
                     <tr className="[&>th]:bg-slate-950 [&>th]:dark:bg-navy-950 [&>th:first-child]:rounded-l-2xl [&>th:last-child]:rounded-r-2xl border-b border-slate-700 dark:border-slate-600">
@@ -4135,25 +4099,27 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </div>
 
                   {/* Page Size Selector */}
-                  <div className="flex items-center space-x-2">
-                    <span className="text-slate-400 font-medium">Rows per page:</span>
-                    <div className="flex items-center space-x-1 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                      {[10, 15, 25, 50, 100, 250, 1450].map(sz => (
-                        <button
-                          key={sz}
-                          type="button"
-                          onClick={() => { setPageSize(sz); setCurrentPage(1); }}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                            pageSize === sz
-                              ? 'bg-brand-500 text-white shadow-sm'
-                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800'
-                          }`}
-                        >
-                          {sz === 1450 ? 'All' : sz}
-                        </button>
-                      ))}
+                  {totalRows > 10 && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-slate-400 font-medium">Rows per page:</span>
+                      <div className="flex items-center space-x-1 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        {[10, 15, 25, 50, 100, 250, 1450].map(sz => (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => { setPageSize(sz); setCurrentPage(1); }}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                              pageSize === sz
+                                ? 'bg-brand-500 text-white shadow-sm'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800'
+                            }`}
+                          >
+                            {sz === 1450 ? 'All' : sz}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Page Navigation Buttons */}
                   <div className="flex items-center space-x-1.5">
