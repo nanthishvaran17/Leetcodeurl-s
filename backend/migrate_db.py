@@ -782,7 +782,7 @@ def run_db_migrations():
         print("Database migration complete.")
 
     else:
-        print("Database file not found for migration.")
+        print("Using SQLite (or non-Postgres DB). Postgres-specific ALTER TABLE migrations skipped.")
 
 
 if __name__ == "__main__":

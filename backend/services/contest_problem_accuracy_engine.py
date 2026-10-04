@@ -86,6 +86,12 @@ class ContestProblemSet:
 # Stored with exact canonical slugs to prevent fuzzy match errors.
 # The engine dynamically resolves any weekly contest N.
 OFFICIAL_CONTEST_PROBLEM_REGISTRY: Dict[int, List[Dict[str, Any]]] = {
+    523: [
+        {"index": 1, "problem_id": "Q1", "title_slug": "find-the-number-of-copy-arrays", "title": "Find the Number of Copy Arrays", "difficulty": "Medium", "points": 4},
+        {"index": 2, "problem_id": "Q2", "title_slug": "sum-of-good-subsequences", "title": "Sum of Good Subsequences", "difficulty": "Medium", "points": 5},
+        {"index": 3, "problem_id": "Q3", "title_slug": "string-transformations", "title": "String Transformations", "difficulty": "Hard", "points": 6},
+        {"index": 4, "problem_id": "Q4", "title_slug": "count-of-substrings-containing-every-vowel-and-k-consonants-ii", "title": "Count of Substrings Containing Every Vowel and K Consonants II", "difficulty": "Medium", "points": 5},
+    ],
     522: [
         {"index": 1, "problem_id": "4404", "title_slug": "minimum-rotations-to-dial-a-number-i", "title": "Minimum Rotations to Dial a Number I", "difficulty": "Easy", "points": 3},
         {"index": 2, "problem_id": "4405", "title_slug": "minimum-rotations-to-dial-a-number-ii", "title": "Minimum Rotations to Dial a Number II", "difficulty": "Medium", "points": 4},

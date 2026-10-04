@@ -4,6 +4,7 @@ from backend.config import settings
 from backend.database import engine, Base, SessionLocal
 from backend.models import Department, Section, Student, User, AcademicYear, LeetCodeProfileStats, WeeklyStudentProgress
 from backend.leetcode_client import extract_leetcode_username
+import secrets
 
 def get_password_hash(password: str) -> str:
     pwd_bytes = password.encode('utf-8')[:72]
