@@ -186,24 +186,25 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     const targetId = resolveTargetId();
     if (!targetId) return;
     
-    confirmAction({
+    const confirmed = await confirmAction({
       title: 'Delete Student',
       message: `Are you sure you want to permanently delete this student record? This action cannot be undone.`,
-      type: 'danger',
-      confirmText: 'Delete Student',
-      onConfirm: async () => {
-        setIsDeleting(true);
-        try {
-          await api.post('/students/bulk-delete', { student_ids: [targetId], soft_delete: false });
-          notify.success('Student Deleted', 'Student record has been permanently deleted from the database.', { category: 'STUDENT PROFILE' });
-          onBack(); // Close modal
-        } catch (err: any) {
-          notify.error('Delete Failed', err.response?.data?.detail || 'Failed to delete student.', { category: 'STUDENT PROFILE' });
-        } finally {
-          setIsDeleting(false);
-        }
-      }
+      variant: 'danger',
+      confirmLabel: 'Delete Student'
     });
+
+    if (confirmed) {
+      setIsDeleting(true);
+      try {
+        await api.post('/students/bulk-delete', { student_ids: [targetId], soft_delete: false });
+        notify.success('Student Deleted', 'Student record has been permanently deleted from the database.', { category: 'STUDENT PROFILE' });
+        onBack(); // Close modal
+      } catch (err: any) {
+        notify.error('Delete Failed', err.response?.data?.detail || 'Failed to delete student.', { category: 'STUDENT PROFILE' });
+      } finally {
+        setIsDeleting(false);
+      }
+    }
   };
 
   // 2. EDIT BUTTON HANDLER
