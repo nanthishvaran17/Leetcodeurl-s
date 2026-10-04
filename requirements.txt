@@ -29,5 +29,4 @@ brotli-asgi>=1.0.0
 orjson>=3.9.0
 google-genai>=0.1.0
 redis>=5.0.0
-
 webauthn>=2.0.0
