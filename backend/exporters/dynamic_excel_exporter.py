@@ -641,7 +641,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 except ValueError:
                     co = None
 
-                if band["min"] is None:
+                if band["min"] is None or band["max"] is None:
                     if co is None:
                         b_total += 1
                         tot_sol = int(r.get("solved") or r.get("total_solved") or 0)
@@ -649,7 +649,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                         if tot_sol > 0: b_active += 1
                         if tot_sol >= 4: b_4sol += 1
                 else:
-                    if co is not None and band["min"] <= co <= band["max"]:
+                    if co is not None and float(band["min"]) <= float(co) <= float(band["max"]):
                         b_total += 1
                         tot_sol = int(r.get("solved") or r.get("total_solved") or 0)
                         b_solved += tot_sol
@@ -672,28 +672,28 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         ws_cutoff = wb.create_sheet(title="12TH TNEA CUTOFF")
         ws_cutoff.sheet_view.showGridLines = True
         
-        _apply_thin_border = lambda cell: setattr(cell, 'border', openpyxl.styles.Border(
-            left=openpyxl.styles.Side(style='thin', color='E2E8F0'),
-            right=openpyxl.styles.Side(style='thin', color='E2E8F0'),
-            top=openpyxl.styles.Side(style='thin', color='E2E8F0'),
-            bottom=openpyxl.styles.Side(style='thin', color='E2E8F0')
+        _apply_thin_border = lambda cell: setattr(cell, 'border', Border(
+            left=Side(style='thin', color='E2E8F0'),
+            right=Side(style='thin', color='E2E8F0'),
+            top=Side(style='thin', color='E2E8F0'),
+            bottom=Side(style='thin', color='E2E8F0')
         ))
 
         # Title
         ws_cutoff.merge_cells("A1:I1")
         title_cell = ws_cutoff["A1"]
         title_cell.value = "12TH TNEA CUTOFF"
-        title_cell.font = openpyxl.styles.Font(name="Times New Roman", size=14, bold=True, color="1E293B")
-        title_cell.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+        title_cell.font = Font(name="Times New Roman", size=14, bold=True, color="1E293B")
+        title_cell.alignment = Alignment(horizontal="center", vertical="center")
         ws_cutoff.row_dimensions[1].height = 30
         
         # Headers
         c_headers = ["S.No", "12th Cutoff Band", "Total Students", "Attended", "Not Attended", "Participation %", "Total Solved", "Avg Solved", "4/4 Solvers"]
         for c_i, h in enumerate(c_headers, 1):
             c = ws_cutoff.cell(row=3, column=c_i, value=h)
-            c.font = openpyxl.styles.Font(name="Times New Roman", size=10, bold=True, color="FFFFFF")
-            c.fill = openpyxl.styles.PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
-            c.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+            c.font = Font(name="Times New Roman", size=10, bold=True, color="FFFFFF")
+            c.fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
+            c.alignment = Alignment(horizontal="center", vertical="center")
             _apply_thin_border(c)
         ws_cutoff.row_dimensions[3].height = 25
 
@@ -714,8 +714,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             vals = [idx, band, tot, act, not_act, p_pct, tot_sol, avg_sol, p4]
             for c_i, v in enumerate(vals, 1):
                 c = ws_cutoff.cell(row=r_idx, column=c_i, value=v)
-                c.font = openpyxl.styles.Font(name="Times New Roman", size=10)
-                c.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+                c.font = Font(name="Times New Roman", size=10)
+                c.alignment = Alignment(horizontal="center", vertical="center")
                 _apply_thin_border(c)
             ws_cutoff.row_dimensions[r_idx].height = 22
 
@@ -736,18 +736,18 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         ws_top = wb.create_sheet(title="Top Performers Leaderboard")
         ws_top.sheet_view.showGridLines = True
 
-        _apply_thin_border_top = lambda cell: setattr(cell, 'border', openpyxl.styles.Border(
-            left=openpyxl.styles.Side(style='thin', color='000000'),
-            right=openpyxl.styles.Side(style='thin', color='000000'),
-            top=openpyxl.styles.Side(style='thin', color='000000'),
-            bottom=openpyxl.styles.Side(style='thin', color='000000')
+        _apply_thin_border_top = lambda cell: setattr(cell, 'border', Border(
+            left=Side(style='thin', color='000000'),
+            right=Side(style='thin', color='000000'),
+            top=Side(style='thin', color='000000'),
+            bottom=Side(style='thin', color='000000')
         ))
 
         ws_top.merge_cells("A1:E1")
         title_cell = ws_top["A1"]
         title_cell.value = "TOP PERFORMERS LEADERBOARD"
-        title_cell.font = openpyxl.styles.Font(name="Times New Roman", size=14, bold=True, color="1B365D")
-        title_cell.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+        title_cell.font = Font(name="Times New Roman", size=14, bold=True, color="1B365D")
+        title_cell.alignment = Alignment(horizontal="center", vertical="center")
         
         # Apply border to the merged title cell
         for c_idx in range(1, 6):
@@ -758,9 +758,9 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         t_headers = ["Rank", "Register No", "Name", "Department", "Total Solved"]
         for c_i, h in enumerate(t_headers, 1):
             c = ws_top.cell(row=2, column=c_i, value=h)
-            c.font = openpyxl.styles.Font(name="Times New Roman", size=11, bold=True, color="FFFFFF")
-            c.fill = openpyxl.styles.PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
-            c.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+            c.font = Font(name="Times New Roman", size=11, bold=True, color="FFFFFF")
+            c.fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
+            c.alignment = Alignment(horizontal="center", vertical="center")
             _apply_thin_border_top(c)
         ws_top.row_dimensions[2].height = 25
 
@@ -778,11 +778,11 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             vals = [rank, reg_no, name, dept, tot_sol]
             for c_i, v in enumerate(vals, 1):
                 c = ws_top.cell(row=r_idx, column=c_i, value=v)
-                c.font = openpyxl.styles.Font(name="Times New Roman", size=11)
+                c.font = Font(name="Times New Roman", size=11)
                 if c_i in (1, 2, 4, 5):
-                    c.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+                    c.alignment = Alignment(horizontal="center", vertical="center")
                 else:
-                    c.alignment = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+                    c.alignment = Alignment(horizontal="center", vertical="center")
                 _apply_thin_border_top(c)
             ws_top.row_dimensions[r_idx].height = 22
 

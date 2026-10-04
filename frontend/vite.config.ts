@@ -53,6 +53,9 @@ export default defineConfig({
         },
       },
     },
+    watch: {
+      ignored: ['**/android/**']
+    }
   },
   build: {
     target: 'es2022',

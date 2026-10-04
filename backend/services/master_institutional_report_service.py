@@ -483,8 +483,9 @@ def generate_master_10_sheet_workbook(
     cache_key = f"excel:{data_ver}:{u_role}:{u_dept}:{contest_id}:{department}:{year}:{report_type}"
 
     with _EXCEL_CACHE_LOCK:
-        if cache_key in _EXCEL_ARTIFACT_CACHE:
-            return _EXCEL_ARTIFACT_CACHE[cache_key]
+        pass
+        # if cache_key in _EXCEL_ARTIFACT_CACHE:
+        #     return _EXCEL_ARTIFACT_CACHE[cache_key]
 
     from sqlalchemy.orm import joinedload
     base_query = db.query(Student).options(joinedload(Student.department)).filter((Student.is_active == True) | (Student.is_active.is_(None)))
