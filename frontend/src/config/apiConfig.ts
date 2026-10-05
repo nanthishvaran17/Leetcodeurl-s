@@ -8,7 +8,7 @@ const RAW_ENV_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BA
 
 export const PRODUCTION_BACKEND_URL = RAW_ENV_URL 
   ? RAW_ENV_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '')
-  : 'https://leetcodeurl-s-ipfr.onrender.com'; // Primary Render production backend
+  : 'https://leetcodeurl-s.onrender.com'; // Primary Render production backend
 
 
 /**

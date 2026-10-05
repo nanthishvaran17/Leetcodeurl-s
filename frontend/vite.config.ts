@@ -59,7 +59,7 @@ export default defineConfig({
   },
   build: {
     target: 'es2022',
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1000,
     modulePreload: {
       polyfill: false,
       resolveDependencies: () => [],
