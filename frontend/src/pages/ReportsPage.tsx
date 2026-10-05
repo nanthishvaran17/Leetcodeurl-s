@@ -729,79 +729,141 @@ export const ReportsPage: React.FC = () => {
                       (selectedReportType === 'BATCH_PERFORMANCE' && o.value === 'FIVE_WEEK_PERFORMANCE_TREND')
                     ) || allOpts[0];
 
-                    const renderCategory = (cat: any) => (
-                      <div key={cat.title} className="space-y-2 flex flex-col">
-                        <div className="flex items-center gap-2 mb-1 px-1">
-                          <div className={`h-3.5 w-1 rounded-full bg-current ${cat.titleColor}`} />
-                          <div className={`text-[11px] font-black uppercase tracking-widest ${cat.titleColor}`}>
-                            {cat.title}
-                          </div>
-                        </div>
-                        {cat.options.map((opt: any) => {
-                          const isSelected = selectedReportType === opt.value || 
-                            (selectedReportType === 'STUDENT_PERFORMANCE' && opt.value === 'WEEKLY_STUDENT_PERFORMANCE') ||
-                            (selectedReportType === 'COLLEGE_EXECUTIVE' && opt.value === 'PRINCIPAL_EXECUTIVE') ||
-                            (selectedReportType === 'DEPARTMENT_PERFORMANCE' && opt.value === 'HOD_DEPARTMENT_INTELLIGENCE');
+                    const categoryMeta: Record<string, { gradient: string; headerBg: string; iconBg: string; accentBar: string }> = {
+                      'A. CONTEST REPORTS': {
+                        gradient: 'from-brand-500 to-indigo-500',
+                        headerBg: 'bg-gradient-to-r from-brand-500/10 to-indigo-500/5 border border-brand-500/20',
+                        iconBg: 'bg-brand-500/15',
+                        accentBar: 'bg-gradient-to-b from-brand-500 to-indigo-500',
+                      },
+                      'B. PERFORMANCE REPORTS': {
+                        gradient: 'from-purple-500 to-pink-500',
+                        headerBg: 'bg-gradient-to-r from-purple-500/10 to-pink-500/5 border border-purple-500/20',
+                        iconBg: 'bg-purple-500/15',
+                        accentBar: 'bg-gradient-to-b from-purple-500 to-pink-500',
+                      },
+                      'C. CONSOLIDATED REPORTS': {
+                        gradient: 'from-amber-500 to-orange-500',
+                        headerBg: 'bg-gradient-to-r from-amber-500/10 to-orange-500/5 border border-amber-500/20',
+                        iconBg: 'bg-amber-500/15',
+                        accentBar: 'bg-gradient-to-b from-amber-500 to-orange-500',
+                      },
+                      'D. EXECUTIVE REPORTS': {
+                        gradient: 'from-indigo-500 to-sky-500',
+                        headerBg: 'bg-gradient-to-r from-indigo-500/10 to-sky-500/5 border border-indigo-500/20',
+                        iconBg: 'bg-indigo-500/15',
+                        accentBar: 'bg-gradient-to-b from-indigo-500 to-sky-500',
+                      },
+                    };
 
-                          return (
-                            <button
-                              key={opt.value}
-                              type="button"
-                              onMouseDown={(e) => e.preventDefault()}
-                              onClick={() => { setSelectedReportType(opt.value); setRptTypeOpen(false); }}
-                              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all duration-150 group cursor-pointer ${
-                                isSelected 
-                                  ? 'bg-brand-500/10 dark:bg-brand-500/20 border border-brand-400/40 dark:border-brand-500/40' 
-                                  : 'hover:bg-slate-100 dark:hover:bg-navy-800/80 border border-transparent hover:border-slate-200 dark:hover:border-navy-700'
-                              }`}
-                            >
-                              <div className={`w-2 h-2 rounded-full shrink-0 ${isSelected ? 'bg-brand-500' : opt.dotColor} opacity-90`} />
-                              <span className={`text-[12px] truncate flex-1 leading-snug ${
-                                isSelected 
-                                  ? 'font-extrabold text-brand-700 dark:text-brand-300' 
-                                  : 'font-semibold text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white'
-                              }`}>
-                                {opt.label}
-                              </span>
-                              {isSelected && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" strokeWidth={3} />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    );
+                    const renderCategory = (cat: any) => {
+                      const meta = categoryMeta[cat.title] || { gradient: 'from-brand-500 to-indigo-500', headerBg: 'bg-slate-100/80 border border-slate-200', iconBg: 'bg-brand-500/10', accentBar: 'bg-brand-500' };
+                      return (
+                        <div key={cat.title} className="space-y-1.5">
+                          {/* Category Header */}
+                          <div className={`flex items-center gap-2.5 px-3 py-2 rounded-xl mb-2 ${meta.headerBg}`}>
+                            <div className={`h-4 w-1 rounded-full ${meta.accentBar} shrink-0`} />
+                            <span className={`text-[11px] font-black uppercase tracking-widest bg-gradient-to-r ${meta.gradient} bg-clip-text text-transparent`}>
+                              {cat.title}
+                            </span>
+                          </div>
+                          {/* Options */}
+                          {cat.options.map((opt: any) => {
+                            const isSelected = selectedReportType === opt.value ||
+                              (selectedReportType === 'STUDENT_PERFORMANCE' && opt.value === 'WEEKLY_STUDENT_PERFORMANCE') ||
+                              (selectedReportType === 'COLLEGE_EXECUTIVE' && opt.value === 'PRINCIPAL_EXECUTIVE') ||
+                              (selectedReportType === 'DEPARTMENT_PERFORMANCE' && opt.value === 'HOD_DEPARTMENT_INTELLIGENCE');
+
+                            return (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => { setSelectedReportType(opt.value); setRptTypeOpen(false); }}
+                                className={`w-full flex items-center gap-2.5 pl-3 pr-3 py-2.5 rounded-xl text-left transition-all duration-150 group cursor-pointer relative ${
+                                  isSelected
+                                    ? 'bg-gradient-to-r from-brand-500/12 to-transparent border border-brand-400/40 dark:border-brand-500/40 shadow-sm'
+                                    : 'border border-transparent hover:bg-slate-50/80 dark:hover:bg-white/[0.04] hover:border-slate-200/60 dark:hover:border-white/8'
+                                }`}
+                              >
+                                {/* Left accent strip */}
+                                <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-full transition-all duration-200 ${
+                                  isSelected
+                                    ? `h-[70%] bg-brand-500`
+                                    : `h-0 ${opt.dotColor} opacity-0 group-hover:h-[50%] group-hover:opacity-60`
+                                }`} />
+                                <span className={`text-[12.5px] truncate flex-1 leading-snug transition-all duration-150 pl-1 ${
+                                  isSelected
+                                    ? 'font-extrabold text-brand-700 dark:text-brand-300'
+                                    : 'font-semibold text-slate-800 dark:text-slate-100 group-hover:text-slate-900 dark:group-hover:text-white'
+                                }`}>
+                                  {opt.label}
+                                </span>
+                                {isSelected && (
+                                  <div className="shrink-0 w-5 h-5 rounded-full bg-brand-500 flex items-center justify-center shadow-sm shadow-brand-500/30">
+                                    <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    };
 
                     return (
                       <>
+                        {/* Trigger Button */}
                         <button
                           type="button"
                           onClick={() => { setRptTypeOpen(p => !p); setRptYearOpen(false); setRptScopeOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 h-12 min-h-[48px] rounded-2xl bg-white dark:bg-navy-950 border-2 text-left transition-all focus:outline-none cursor-pointer shadow-sm hover:shadow-md ${rptTypeOpen ? 'border-brand-500 ring-4 ring-brand-500/15' : 'border-slate-200 dark:border-slate-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 h-12 min-h-[48px] rounded-2xl bg-white dark:bg-navy-950 border-2 text-left transition-all duration-200 focus:outline-none cursor-pointer ${
+                            rptTypeOpen
+                              ? 'border-brand-500 ring-4 ring-brand-500/15 shadow-lg shadow-brand-500/10'
+                              : 'border-slate-200 dark:border-slate-700 hover:border-brand-400 dark:hover:border-brand-500 shadow-sm hover:shadow-md'
+                          }`}
                         >
-                          <div className="p-1.5 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 shrink-0">
+                          <div className={`p-1.5 rounded-xl transition-all duration-200 shrink-0 ${
+                            rptTypeOpen ? 'bg-brand-500 text-white' : 'bg-brand-500/10 text-brand-600 dark:text-brand-400'
+                          }`}>
                             <LayoutTemplate className="w-4 h-4" />
                           </div>
-                          {currentOpt && (
-                            <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${currentOpt.dotColor || 'bg-brand-500'}`} />
-                          )}
+
                           <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
                             {currentOpt ? currentOpt.label : selectedReportType}
                           </span>
-                          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${rptTypeOpen ? 'rotate-180 text-brand-500' : ''}`} />
+                          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0 ${rptTypeOpen ? 'rotate-180 text-brand-500' : ''}`} />
                         </button>
 
+                        {/* Dropdown Panel */}
                         {rptTypeOpen && (
-                          <div className="absolute z-[200] top-full left-0 right-0 sm:right-auto mt-2.5 bg-white/98 backdrop-blur-2xl dark:bg-navy-950/98 border border-slate-200/90 dark:border-slate-700/80 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.2)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] overflow-y-auto overscroll-contain max-h-[60vh] sm:max-h-[75vh] min-w-[290px] w-full sm:w-[480px] md:w-[700px] grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800 animate-in fade-in slide-in-from-top-2 duration-200">
-                            {/* LEFT COLUMN: A. CONTEST REPORTS */}
-                            <div className="p-5 sm:p-6 bg-slate-50/70 dark:bg-navy-900/30">
-                              {reportCategories.length > 0 && renderCategory(reportCategories[0])}
-                            </div>
-                            {/* RIGHT COLUMN: B, C, D REPORTS */}
-                            <div className="p-5 sm:p-6 flex flex-col gap-y-7 bg-white dark:bg-navy-950">
-                              {reportCategories.slice(1).map(cat => (
-                                <div key={cat.title}>
-                                  {renderCategory(cat)}
+                          <div className="absolute z-[200] top-full left-0 right-0 sm:right-auto mt-2 w-full sm:w-[500px] md:w-[740px] min-w-[290px] rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-700/60 shadow-[0_30px_80px_-10px_rgba(0,0,0,0.25)] dark:shadow-[0_30px_80px_-10px_rgba(0,0,0,0.75)] animate-in fade-in slide-in-from-top-3 duration-200">
+                            {/* Dropdown header bar */}
+                            <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-[#1e2233] via-[#1a1f35] to-[#1e2233] border-b-2 border-brand-500/40" style={{background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'}}>
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-7 h-7 rounded-xl bg-brand-500/25 border border-brand-400/30 flex items-center justify-center">
+                                  <LayoutTemplate className="w-4 h-4 text-brand-300" />
                                 </div>
-                              ))}
+                                <span className="text-sm font-black text-white tracking-wide">Select Report Type</span>
+                              </div>
+                              <span className="text-[11px] font-bold text-white bg-brand-500/30 border border-brand-400/40 px-2.5 py-0.5 rounded-full">
+                                {allOpts.length} Reports Available
+                              </span>
+                            </div>
+                            {/* Two-column body */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 max-h-[65vh] overflow-y-auto overscroll-contain">
+                              {/* LEFT: Contest Reports */}
+                              <div className="p-4 sm:p-5 bg-slate-50/90 dark:bg-navy-900/60 backdrop-blur-xl border-r-0 md:border-r border-slate-200/60 dark:border-slate-700/40">
+                                {reportCategories.length > 0 && renderCategory(reportCategories[0])}
+                              </div>
+                              {/* RIGHT: Performance, Consolidated, Executive */}
+                              <div className="p-4 sm:p-5 bg-white/95 dark:bg-navy-950/90 backdrop-blur-xl flex flex-col gap-y-5">
+                                {reportCategories.slice(1).map(cat => (
+                                  <div key={cat.title}>
+                                    {renderCategory(cat)}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           </div>
                         )}
