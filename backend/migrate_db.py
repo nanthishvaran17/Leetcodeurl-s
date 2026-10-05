@@ -394,6 +394,73 @@ def run_db_migrations():
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
+        # Ensure all admin_audit_logs columns exist in SQLite
+        try:
+            cursor.execute("PRAGMA table_info(admin_audit_logs)")
+            aal_cols = {info[1] for info in cursor.fetchall()}
+            if aal_cols:
+                aal_migrations = [
+                    ("audit_id", "ALTER TABLE admin_audit_logs ADD COLUMN audit_id VARCHAR(100)"),
+                    ("event_timestamp", "ALTER TABLE admin_audit_logs ADD COLUMN event_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP"),
+                    ("admin_user_id", "ALTER TABLE admin_audit_logs ADD COLUMN admin_user_id INTEGER"),
+                    ("admin_name", "ALTER TABLE admin_audit_logs ADD COLUMN admin_name VARCHAR(150)"),
+                    ("admin_email", "ALTER TABLE admin_audit_logs ADD COLUMN admin_email VARCHAR(150)"),
+                    ("admin_role", "ALTER TABLE admin_audit_logs ADD COLUMN admin_role VARCHAR(50) DEFAULT 'ADMIN'"),
+                    ("access_level", "ALTER TABLE admin_audit_logs ADD COLUMN access_level VARCHAR(50) DEFAULT 'LEVEL_1'"),
+                    ("action", "ALTER TABLE admin_audit_logs ADD COLUMN action VARCHAR(100)"),
+                    ("action_type", "ALTER TABLE admin_audit_logs ADD COLUMN action_type VARCHAR(50) DEFAULT 'GENERAL'"),
+                    ("action_classification", "ALTER TABLE admin_audit_logs ADD COLUMN action_classification VARCHAR(50) DEFAULT 'SECURITY_ACCESS'"),
+                    ("status", "ALTER TABLE admin_audit_logs ADD COLUMN status VARCHAR(30) DEFAULT 'SUCCESS'"),
+                    ("severity", "ALTER TABLE admin_audit_logs ADD COLUMN severity VARCHAR(30) DEFAULT 'INFO'"),
+                    ("target_type", "ALTER TABLE admin_audit_logs ADD COLUMN target_type VARCHAR(50)"),
+                    ("target_id", "ALTER TABLE admin_audit_logs ADD COLUMN target_id VARCHAR(100)"),
+                    ("resource_name", "ALTER TABLE admin_audit_logs ADD COLUMN resource_name VARCHAR(150)"),
+                    ("route", "ALTER TABLE admin_audit_logs ADD COLUMN route VARCHAR(255)"),
+                    ("http_method", "ALTER TABLE admin_audit_logs ADD COLUMN http_method VARCHAR(10)"),
+                    ("ip_address", "ALTER TABLE admin_audit_logs ADD COLUMN ip_address VARCHAR(50)"),
+                    ("client_ip", "ALTER TABLE admin_audit_logs ADD COLUMN client_ip VARCHAR(50)"),
+                    ("ip_version", "ALTER TABLE admin_audit_logs ADD COLUMN ip_version VARCHAR(10) DEFAULT 'IPv4'"),
+                    ("session_id", "ALTER TABLE admin_audit_logs ADD COLUMN session_id VARCHAR(100)"),
+                    ("request_id", "ALTER TABLE admin_audit_logs ADD COLUMN request_id VARCHAR(100)"),
+                    ("correlation_id", "ALTER TABLE admin_audit_logs ADD COLUMN correlation_id VARCHAR(100)"),
+                    ("browser", "ALTER TABLE admin_audit_logs ADD COLUMN browser VARCHAR(100)"),
+                    ("browser_version", "ALTER TABLE admin_audit_logs ADD COLUMN browser_version VARCHAR(50)"),
+                    ("operating_system", "ALTER TABLE admin_audit_logs ADD COLUMN operating_system VARCHAR(100)"),
+                    ("device_type", "ALTER TABLE admin_audit_logs ADD COLUMN device_type VARCHAR(50)"),
+                    ("user_agent_category", "ALTER TABLE admin_audit_logs ADD COLUMN user_agent_category VARCHAR(100)"),
+                    ("user_agent", "ALTER TABLE admin_audit_logs ADD COLUMN user_agent VARCHAR(500)"),
+                    ("authentication_status", "ALTER TABLE admin_audit_logs ADD COLUMN authentication_status VARCHAR(50) DEFAULT 'AUTHENTICATED'"),
+                    ("authorization_result", "ALTER TABLE admin_audit_logs ADD COLUMN authorization_result VARCHAR(50) DEFAULT 'ALLOWED'"),
+                    ("permission_checked", "ALTER TABLE admin_audit_logs ADD COLUMN permission_checked VARCHAR(100)"),
+                    ("risk_level", "ALTER TABLE admin_audit_logs ADD COLUMN risk_level VARCHAR(30) DEFAULT 'LOW'"),
+                    ("denial_reason", "ALTER TABLE admin_audit_logs ADD COLUMN denial_reason TEXT"),
+                    ("request_timestamp", "ALTER TABLE admin_audit_logs ADD COLUMN request_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP"),
+                    ("response_timestamp", "ALTER TABLE admin_audit_logs ADD COLUMN response_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP"),
+                    ("response_status", "ALTER TABLE admin_audit_logs ADD COLUMN response_status INTEGER DEFAULT 200"),
+                    ("response_time_ms", "ALTER TABLE admin_audit_logs ADD COLUMN response_time_ms REAL DEFAULT 0.0"),
+                    ("trace_id", "ALTER TABLE admin_audit_logs ADD COLUMN trace_id VARCHAR(100)"),
+                    ("event_hash", "ALTER TABLE admin_audit_logs ADD COLUMN event_hash VARCHAR(100)"),
+                    ("previous_event_hash", "ALTER TABLE admin_audit_logs ADD COLUMN previous_event_hash VARCHAR(100)"),
+                    ("integrity_status", "ALTER TABLE admin_audit_logs ADD COLUMN integrity_status VARCHAR(30) DEFAULT 'VERIFIED'"),
+                    ("institution_id", "ALTER TABLE admin_audit_logs ADD COLUMN institution_id VARCHAR(50) DEFAULT 'NEC'"),
+                    ("institution_branding_version", "ALTER TABLE admin_audit_logs ADD COLUMN institution_branding_version VARCHAR(50) DEFAULT 'v1.0'"),
+                    ("institution_logo_reference", "ALTER TABLE admin_audit_logs ADD COLUMN institution_logo_reference VARCHAR(100) DEFAULT 'nandha_emblem.png'"),
+                    ("description", "ALTER TABLE admin_audit_logs ADD COLUMN description TEXT"),
+                    ("metadata_json", "ALTER TABLE admin_audit_logs ADD COLUMN metadata_json JSON"),
+                    ("created_at", "ALTER TABLE admin_audit_logs ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP"),
+                    ("updated_at", "ALTER TABLE admin_audit_logs ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"),
+                ]
+                for cname, csql in aal_migrations:
+                    if cname not in aal_cols:
+                        try:
+                            cursor.execute(csql)
+                            conn.commit()
+                            print(f"[DB Migration] Added column {cname} to admin_audit_logs table in SQLite.")
+                        except Exception as e:
+                            print(f"[DB Migration] admin_audit_logs column {cname} note: {e}")
+        except Exception as e:
+            print(f"[DB Migration] admin_audit_logs table migration note: {e}")
+
         # Ensure all users columns exist in SQLite
         try:
             cursor.execute("PRAGMA table_info(users)")
