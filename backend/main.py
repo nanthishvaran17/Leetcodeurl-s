@@ -39,7 +39,7 @@ from backend.routes import (
     deep_tech_intelligence, url_import, contest_integrity, notifications, messaging, downloads, report_jobs
 )
 from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence, nlci, hr_candidate_finder
-from backend.routes import command_center, scheduler, student_reports
+from backend.routes import command_center, scheduler, student_reports, staff_tools
 from backend import leetcode_tracker
 from backend.services.heartbeat_service import get_deep_health_telemetry
 from backend.websocket_manager import manager
@@ -607,6 +607,7 @@ app.include_router(messaging.router)
 app.include_router(admin.router)
 # students: prefix="/api/students" (self-prefixed) — mount once
 app.include_router(students.router)
+app.include_router(staff_tools.router)
 app.include_router(hr_candidate_finder.router)
 # sync: typically short prefix — keep both mounts
 app.include_router(sync.router, prefix="/api")
