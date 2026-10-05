@@ -12,7 +12,8 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session, joinedload, defer
-from backend.time_utils import now_ist
+from sqlalchemy import func
+from backend.time_utils import now_ist, get_ist_date
 
 from backend.models import (
     Student, Department, LeetCodeProfileStats, LeetCodeAccount, WeeklyStudentProgress,
@@ -2012,7 +2013,7 @@ def generate_single_week_matrix_excel(
                 c_brk = compute_contest_difficulty_breakdown(q1=sq1, q2=sq2, q3=sq3, q4=sq4, contest_solved=stot)
 
             accom_val = getattr(st, "accommodation", "") or "—"
-            cut_val = float(st.twelfth_cutoff) if (hasattr(st, "twelfth_cutoff") and st.twelfth_cutoff is not None) else "—"
+            cut_val = float(str(st.twelfth_cutoff)) if (hasattr(st, "twelfth_cutoff") and st.twelfth_cutoff is not None) else "—"
 
             c_accom  = ws.cell(row=current_row, column=10, value=accom_val)
             c_cut    = ws.cell(row=current_row, column=11, value=cut_val)

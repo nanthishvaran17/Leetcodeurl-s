@@ -115,7 +115,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     ws.page_setup.paperSize = ws.PAPERSIZE_A4
     ws.page_setup.fitToWidth = 1
     ws.page_setup.fitToHeight = 0
-    ws.sheet_properties.pageSetUpPr.fitToPage = True
+    if ws.sheet_properties.pageSetUpPr is not None:
+        ws.sheet_properties.pageSetUpPr.fitToPage = True
 
     # Set compact page margins so all columns fit cleanly on A4 print
     ws.page_margins.left = 0.25
@@ -928,7 +929,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             # Contest Rating: integer number format
             elif title_lower == "contest rating":
                 if isinstance(val, (int, float)) and float(val) > 0 and round(float(val)) != 1500:
-                    cell.value = int(round(float(val)))
+                    cell.value = round(float(val))
                     cell.number_format = '#,##0'
                 else:
                     cell.value = None
