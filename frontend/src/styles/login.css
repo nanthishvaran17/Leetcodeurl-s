@@ -605,7 +605,7 @@
 .field input[type="password"] {
   width: 100%;
   height: 52px;
-  padding: 0 1rem 0 2.85rem;
+  padding: 0 3rem 0 2.85rem;
   background: var(--field-bg);
   border: 1.5px solid var(--field-border);
   border-radius: 12px;
@@ -644,6 +644,7 @@
   cursor: pointer;
   border-radius: 8px;
   transition: color 0.18s ease;
+  z-index: 10;
 }
 
 .toggle-visibility:hover {
