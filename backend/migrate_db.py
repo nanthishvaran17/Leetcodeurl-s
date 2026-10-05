@@ -311,6 +311,7 @@ def run_db_migrations():
             ("admin_audit_logs", "metadata_json", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS metadata_json JSONB"),
             ("admin_audit_logs", "created_at", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"),
             ("admin_audit_logs", "updated_at", "ALTER TABLE admin_audit_logs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"),
+            ("student_risk_profiles", "calculation_version", "ALTER TABLE student_risk_profiles ADD COLUMN IF NOT EXISTS calculation_version INTEGER DEFAULT 1"),
         ]
 
         for t_name, c_name, migration_sql in pg_migrations:
