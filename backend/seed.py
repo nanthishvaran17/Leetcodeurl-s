@@ -232,7 +232,7 @@ II_YEAR_CSE_IOT = [
     ("732225CI046", "SANTHOSH KUMAR S", "CSE(IOT)", "II", "A", "", "https://leetcode.com/u/Santhosh_Mahi/"),
     ("732225CI047", "SATHISH M", "CSE(IOT)", "II", "A", "", "https://leetcode.com/u/Sathish_chml"),
     ("732225CI048", "SHARMATHA K", "CSE(IOT)", "II", "A", "", "https://leetcode.com/u/Sharmatha_K"),
-    ("732225CI049", "SHIVAN SUNDAR V", "CSE(IOT)", "II", "A", "", "https://leetcode.com/u/GAgrm4ykwn/"),
+    ("732225CI049", "SHIVAN SUNDAR V", "CSE(IOT)", "II", "A", "", ""),
     ("732225CI050", "SHREEDHARSHAN S", "CSE(IOT)", "II", "A", "", "https://leetcode.com/u/Shreedharshan_s/"),
     ("732225CI051", "SMITHA M", "CSE(IOT)", "II", "A", "", ""),
     ("732225CI052", "SORNA RIYAS J", "CSE(IOT)", "II", "A", "", "https://leetcode.com/u/RIYAS18/"),
