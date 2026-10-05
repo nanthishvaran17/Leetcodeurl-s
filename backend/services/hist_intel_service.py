@@ -122,21 +122,10 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
         ).all()
         pub_map: Dict[tuple, WeeklyPublicResult] = {(pr.student_id, pr.session_id): pr for pr in pub_results}
 
-        # Filter out contests with absolutely 0 valid attendances
-        valid_contest_sessions = []
-        for c_num, sess in contest_sessions:
-            att_cnt = sum(
-                1 for s in roster
-                if pub_map.get((s.id, sess.id)) is not None
-                and (
-                    _is_attended(pub_map[(s.id, sess.id)].participation_status or "")
-                    or (pub_map[(s.id, sess.id)].total_contest_solved or 0) > 0
-                    or pub_map[(s.id, sess.id)].contest_rank is not None
-                )
-            )
-            if att_cnt > 0:
-                valid_contest_sessions.append((c_num, sess))
-        contest_sessions = valid_contest_sessions
+        # Do not filter out contests with 0 valid attendances to avoid gaps
+        # (user explicitly requested 516 to 521 to be shown even if no data)
+        # We just keep all contest_sessions intact.
+        pass
 
         # 4. Build session headers list
         session_headers = []
