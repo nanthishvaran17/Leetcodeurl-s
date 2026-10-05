@@ -54,7 +54,7 @@ FONT_NOTE = Font(name=FONT_TNR, size=9, italic=True, color="64748B")
 
 # Alignments
 ALIGN_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
-ALIGN_LEFT = Alignment(horizontal="center", vertical="center", wrap_text=True)
+ALIGN_LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
 ALIGN_RIGHT = Alignment(horizontal="right", vertical="center")
 ALIGN_RIGHT_WRAP = Alignment(horizontal="right", vertical="center", wrap_text=True)
 

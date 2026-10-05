@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from backend.models import (
     Student, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult, 
-    ContestParticipation, ReportHistory
+    ContestParticipation, ReportHistory, Department
 )
 from backend.services.report_models import ReportConfig
 from backend.services.weekly_session_resolver import resolve_weekly_sessions

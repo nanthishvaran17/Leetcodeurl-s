@@ -1465,7 +1465,7 @@ def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_i
 
         col_pos = 6
         for sess_obj, date_str in date_list:
-            rank_val, solved_val, rating_val, global_rank_val = idx, "—", "—", "—"
+            rank_val, solved_val, rating_val, global_rank_val = "—", "—", "—", "—"
             
             if sess_obj:
                 snap = snap_map.get((st.id, sess_obj.id))
@@ -1473,18 +1473,20 @@ def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_i
                 if pub:
                     solved_val = pub.total_contest_solved if pub.total_contest_solved is not None else 0
                     rating_val = pub.contest_rating if pub.contest_rating else "—"
-                    global_rank_val = pub.contest_rank if pub.contest_rank else "—"
+                    rank_val = pub.contest_rank if pub.contest_rank else "—"
+                    global_rank_val = st.stats.contest_global_ranking if st.stats and st.stats.contest_global_ranking else "—"
                 elif snap:
                     solved_val = 0  # 100% accurate contest count: if no public result, official contest solved is 0. (Do not use snap.problems_added as it includes practice problems)
                     rating_val = snap.end_rating if snap.end_rating else (st.stats.contest_rating if st.stats else "—")
+                    rank_val = "—"
                     global_rank_val = st.stats.contest_global_ranking if st.stats and st.stats.contest_global_ranking else "—"
             else:
                 # Upcoming / no session — use current live stats
                 if st.stats:
                     solved_val = 0  # Upcoming session hasn't happened, so solved in it is 0. (Do not use st.stats.total_solved as it is lifetime solves)
                     rating_val = st.stats.contest_rating if st.stats.contest_rating else "—"
+                    rank_val = "—"
                     global_rank_val = st.stats.contest_global_ranking if st.stats.contest_global_ranking else "—"
-
 
             warning_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
             warning_font = Font(name="Times New Roman", size=10, bold=True, color="9C0006")
