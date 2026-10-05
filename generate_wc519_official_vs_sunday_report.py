@@ -256,7 +256,7 @@ def build_wc519_report():
             cell.font = font_tbl_header
             cell.fill = header_fill
             cell.border = grid_border
-            cell.alignment = align_center if c > 1 else align_left
+            cell.alignment = align_left if c in (1, 3, 4, 6, 7, 17, 21) else align_center
         ws_summary.row_dimensions[7].height = 24
         
         r_idx = 8
@@ -424,7 +424,7 @@ def build_wc519_report():
                 cell = ws_reconcil.cell(row=r_num, column=c_idx, value=val)
                 cell.font = font_regular
                 # CENTER ALIGNMENT FOR USERNAME (column 7) AS REQUESTED BY USER!
-                cell.alignment = align_center if c_idx not in (3, 4) else align_left
+                cell.alignment = align_left if c_idx in (3, 4, 6, 7, 16, 17, 21) else align_center
                 cell.border = grid_border
                 if r_fill.fill_type:
                     cell.fill = r_fill
@@ -520,7 +520,7 @@ def build_wc519_report():
                 cell = ws_roster.cell(row=r_num, column=c_idx, value=val)
                 cell.font = font_regular
                 # CENTER ALIGNMENT FOR USERNAME (column 7)!
-                cell.alignment = align_center if c_idx not in (3, 4) else align_left
+                cell.alignment = align_left if c_idx in (3, 4, 6, 7, 16, 17, 21) else align_center
                 cell.border = grid_border
                 if r_fill.fill_type:
                     cell.fill = r_fill

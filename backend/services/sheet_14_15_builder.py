@@ -226,7 +226,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             cell = ws14.cell(row=row_idx, column=c, value=v)
             cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
-            cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
+            cell.alignment = ALIGN_LEFT if c in (1, 2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
         row_idx += 1
 
     row_idx += 2
@@ -302,7 +302,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             cell = ws14.cell(row=row_idx, column=c, value=v)
             cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
-            cell.alignment = ALIGN_CENTER if c not in (2, 3, 6) else ALIGN_LEFT
+            cell.alignment = ALIGN_LEFT if c in (2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
         row_idx += 1
 
     row_idx += 2
@@ -338,7 +338,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             cell = ws14.cell(row=row_idx, column=c, value=v)
             cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
-            cell.alignment = ALIGN_CENTER if c not in (2, 3) else ALIGN_LEFT
+            cell.alignment = ALIGN_LEFT if c in (2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
         row_idx += 1
 
     row_idx += 2
@@ -418,7 +418,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             cell = ws14.cell(row=row_idx, column=c, value=v)
             cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
-            cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
+            cell.alignment = ALIGN_LEFT if c in (1, 2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
         row_idx += 1
 
     row_idx += 2
@@ -466,7 +466,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             cell = ws14.cell(row=row_idx, column=c, value=v)
             cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
-            cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
+            cell.alignment = ALIGN_LEFT if c in (1, 2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
         row_idx += 1
 
     row_idx += 2
@@ -495,7 +495,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             cell = ws14.cell(row=row_idx, column=c, value=v)
             cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
-            cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
+            cell.alignment = ALIGN_LEFT if c in (1, 2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
         row_idx += 1
 
     row_idx += 2
@@ -525,7 +525,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             cell = ws14.cell(row=row_idx, column=c, value=v)
             cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
-            cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
+            cell.alignment = ALIGN_LEFT if c in (1, 2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
         row_idx += 1
 
     # Auto column widths for Sheet 14
@@ -629,7 +629,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             cell = ws15.cell(row=row_idx, column=c, value=v)
             cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
-            cell.alignment = ALIGN_CENTER if c not in (2, 3) else ALIGN_LEFT
+            cell.alignment = ALIGN_LEFT if c in (2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
         row_idx += 1
 
     row_idx += 2
@@ -760,7 +760,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             cell = ws15.cell(row=row_idx, column=c, value=v)
             cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
-            cell.alignment = ALIGN_CENTER if c not in (2, 3) else ALIGN_LEFT
+            cell.alignment = ALIGN_LEFT if c in (2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
         row_idx += 1
 
     row_idx += 2
@@ -794,7 +794,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             cell = ws15.cell(row=row_idx, column=c, value=v)
             cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
-            cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
+            cell.alignment = ALIGN_LEFT if c in (1, 2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
         row_idx += 1
 
     row_idx += 2
@@ -834,7 +834,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             cell = ws15.cell(row=row_idx, column=c, value=v)
             cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
-            cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
+            cell.alignment = ALIGN_LEFT if c in (1, 2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
         row_idx += 1
 
     row_idx += 2
@@ -874,7 +874,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             cell = ws15.cell(row=row_idx, column=c, value=v)
             cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
-            cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
+            cell.alignment = ALIGN_LEFT if c in (1, 2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
         row_idx += 1
 
     row_idx += 2
@@ -901,7 +901,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
                     cell = ws15.cell(row=row_idx, column=c, value=v)
                     cell.font = FONT_CELL_NORMAL
                     cell.border = GRID_BORDER
-                    cell.alignment = ALIGN_CENTER if c not in (2, 3) else ALIGN_LEFT
+                    cell.alignment = ALIGN_LEFT if c in (2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
                 row_idx += 1
                 st_rank_idx += 1
 
@@ -927,7 +927,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             cell = ws15.cell(row=row_idx, column=c, value=v)
             cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
-            cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
+            cell.alignment = ALIGN_LEFT if c in (1, 2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
         row_idx += 1
 
     row_idx += 2
@@ -1000,7 +1000,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             cell = ws15.cell(row=row_idx, column=c, value=v)
             cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
-            cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
+            cell.alignment = ALIGN_LEFT if c in (1, 2, 3, 4, 6, 7, 17, 21) else ALIGN_CENTER
         row_idx += 1
 
     # Auto column widths for Sheet 15
