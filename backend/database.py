@@ -78,10 +78,10 @@ if "postgresql" in db_url or "postgres" in db_url:
     }
 
     is_render = bool(os.environ.get("RENDER") or os.environ.get("RENDER_SERVICE_ID"))
-    raw_pool_size = int(os.environ.get("DB_POOL_SIZE", 5 if is_render else 10))
-    raw_max_overflow = int(os.environ.get("DB_MAX_OVERFLOW", 5 if is_render else 10))
-    is_low_pool = is_render or os.environ.get("FORCE_LOW_POOL") == "true"
-    pool_size = raw_pool_size if is_low_pool else max(raw_pool_size, 8)
+    raw_pool_size = int(os.environ.get("DB_POOL_SIZE", 15 if is_render else 10))
+    raw_max_overflow = int(os.environ.get("DB_MAX_OVERFLOW", 20 if is_render else 10))
+    is_low_pool = os.environ.get("FORCE_LOW_POOL") == "true"
+    pool_size = raw_pool_size if is_low_pool else max(raw_pool_size, 10)
     max_overflow = raw_max_overflow if is_low_pool else max(raw_max_overflow, 10)
 
 
@@ -90,7 +90,7 @@ if "postgresql" in db_url or "postgres" in db_url:
     engine_kwargs.update({
         "pool_size": pool_size,
         "max_overflow": max_overflow,
-        "pool_timeout": int(os.environ.get("DB_POOL_TIMEOUT", 10)),
+        "pool_timeout": int(os.environ.get("DB_POOL_TIMEOUT", 30)),
         "pool_pre_ping": True,
         "pool_recycle": int(os.environ.get("DB_POOL_RECYCLE", 60)), # Aggressive recycle to avoid idle drops
         "connect_args": pg_connect_args
