@@ -604,11 +604,33 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     if (viewingProfileStudent) {
       const origOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setViewingProfileStudent(null);
+      };
+      window.addEventListener('keydown', handleEsc);
       return () => {
         document.body.style.overflow = origOverflow;
+        window.removeEventListener('keydown', handleEsc);
       };
     }
   }, [viewingProfileStudent]);
+
+  // Global ESC handler for panels, dropdowns and non-locked modals
+  useEffect(() => {
+    const handleGlobalEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setDeptOpen(false);
+        setYearOpen(false);
+        setAttOpen(false);
+        setShowDetailedView(false);
+        setShowAdminMonitor(false);
+        setShowAuthRequiredModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalEsc);
+    return () => window.removeEventListener('keydown', handleGlobalEsc);
+  }, []);
+
 
   // Ultra-Fast Virtualized Pagination States
   const [currentPage, setCurrentPage] = useState<number>(1);

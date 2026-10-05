@@ -172,6 +172,39 @@ def fetch_leetcode_live_contest_info(target_contest_num: int = None) -> Dict[str
             return c
     return {}
 
+def fetch_leetcode_contest_questions(title_slug: str) -> list:
+    """
+    Fetches real problem titles and scores for a specific contest from Leetcode GraphQL.
+    """
+    query = """
+    query getContest($titleSlug: String!) {
+      contest(titleSlug: $titleSlug) {
+        questions {
+          credit
+          title
+          titleSlug
+        }
+      }
+    }
+    """
+    try:
+        req = urllib.request.Request(
+            "https://leetcode.com/graphql",
+            data=json.dumps({"query": query, "variables": {"titleSlug": title_slug}}).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                "Accept": "*/*"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=4) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+            return data.get("data", {}).get("contest", {}).get("questions", [])
+    except Exception as e:
+        logger.warning(f"[CONTEST_DISCOVERY] Live LeetCode questions fetch failed for {title_slug}: {e}")
+        return []
+
 def discover_contest_metadata(target_date: datetime.date = None, override_contest_num: int = None) -> Dict[str, Any]:
     """
     Dynamic LeetCode Weekly Contest Discovery Engine.
@@ -206,12 +239,23 @@ def discover_contest_metadata(target_date: datetime.date = None, override_contes
     contest_name = f"Weekly Contest {contest_num}"
     status = calculate_contest_status(target_date)
 
-    problems = [
-        {"problem_index": 1, "title": "Q1 (Easy)", "difficulty": "Easy", "max_score": 3},
-        {"problem_index": 2, "title": "Q2 (Medium)", "difficulty": "Medium", "max_score": 4},
-        {"problem_index": 3, "title": "Q3 (Medium/Hard)", "difficulty": "Medium", "max_score": 5},
-        {"problem_index": 4, "title": "Q4 (Hard)", "difficulty": "Hard", "max_score": 6}
-    ]
+    raw_questions = fetch_leetcode_contest_questions(contest_id)
+    if raw_questions and len(raw_questions) >= 4:
+        problems = [
+            {"problem_index": 1, "title": raw_questions[0].get("title", "Q1 (Easy)"), "difficulty": "Easy", "max_score": raw_questions[0].get("credit", 3)},
+            {"problem_index": 2, "title": raw_questions[1].get("title", "Q2 (Medium)"), "difficulty": "Medium", "max_score": raw_questions[1].get("credit", 4)},
+            {"problem_index": 3, "title": raw_questions[2].get("title", "Q3 (Medium/Hard)"), "difficulty": "Medium", "max_score": raw_questions[2].get("credit", 5)},
+            {"problem_index": 4, "title": raw_questions[3].get("title", "Q4 (Hard)"), "difficulty": "Hard", "max_score": raw_questions[3].get("credit", 6)}
+        ]
+        if discovery_source == "CALCULATED_DATE_ARITHMETIC":
+            discovery_source = "CALCULATED_DATE_ARITHMETIC_WITH_LIVE_QUESTIONS"
+    else:
+        problems = [
+            {"problem_index": 1, "title": "Q1 (Easy)", "difficulty": "Easy", "max_score": 3},
+            {"problem_index": 2, "title": "Q2 (Medium)", "difficulty": "Medium", "max_score": 4},
+            {"problem_index": 3, "title": "Q3 (Medium/Hard)", "difficulty": "Medium", "max_score": 5},
+            {"problem_index": 4, "title": "Q4 (Hard)", "difficulty": "Hard", "max_score": 6}
+        ]
 
     return {
         "session_code": session_code,
