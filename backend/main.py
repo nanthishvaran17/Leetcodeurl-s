@@ -403,8 +403,8 @@ from backend.middleware.idempotency import IdempotencyMiddleware
 # Add idempotency protection for mutation retries
 app.add_middleware(IdempotencyMiddleware)
 
-# Enable max GZip compression on responses > 500 bytes for minimal network payload
-app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=9)
+# Enable fast, lightweight GZip compression on responses > 200 bytes across all environments
+app.add_middleware(GZipMiddleware, minimum_size=200, compresslevel=9)
 
 app.add_middleware(
     CORSMiddleware,
