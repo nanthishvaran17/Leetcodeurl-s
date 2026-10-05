@@ -596,11 +596,9 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
                     total = latest.get("totalProblems", 4)
                     recent_contest_score = f"{solved} / {total}"
                     recent_contest_type = "OFFICIAL" if latest.get("attended") else "VIRTUAL"
-                    if latest.get("ranking") and latest.get("attended"):
-                        contest_global_ranking = latest.get("ranking")
-                    # FIX: Do NOT overwrite contest_rating from a history entry.
-                    # userContestRanking.rating (set above ~line 581) = current live rating (e.g. 1780).
-                    # History entry "rating" = post-contest rating for that specific past contest (e.g. 1700.2) — STALE.
+                    # FIX: Do NOT overwrite contest_global_ranking or contest_rating from a history entry.
+                    # userContestRanking.globalRanking (set above ~line 582) = overall global rating rank (e.g. 44158).
+                    # History entry "ranking" = finish rank in that single specific contest (e.g. 982) — NOT overall global rank.
 
                 for item in contest_history:
                     if not isinstance(item, dict):

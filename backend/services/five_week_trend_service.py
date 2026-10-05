@@ -39,7 +39,7 @@ def build_five_week_trend_report(
     usable_sessions = []
     for s in all_sessions:
         c_name = str(s.contest_name or "")
-        if re.search(r'\b(test|mock)\b', c_name, re.IGNORECASE) or s.session_date == "2026-08-30":
+        if re.search(r'\b(test|mock)\b', c_name, re.IGNORECASE):
             continue
         cnt = db.query(WeeklyPublicResult).filter(
             WeeklyPublicResult.session_id == s.id,

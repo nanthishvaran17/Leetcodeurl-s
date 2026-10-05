@@ -2446,15 +2446,15 @@ export const HRCandidateFinderPage: React.FC = () => {
                           <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-mono font-black text-xs border border-blue-200/60 dark:border-blue-900/50">
                             {(() => {
                               const gr: any = c.global_rank;
-                              if (gr === null || gr === undefined || gr === "" || gr === "N/A" || gr === "—") return "—";
+                              if (gr === null || gr === undefined || gr === "" || gr === "N/A" || gr === "—") return "0";
                               if (typeof gr === "string") {
                                 const s = gr.trim();
                                 if (s.startsWith("#")) return s;
                                 const num = parseInt(s.replace(/\D/g, ""), 10);
-                                return !isNaN(num) && num > 0 ? `#${num.toLocaleString()}` : s;
+                                return !isNaN(num) && num > 0 ? `${num.toLocaleString()}` : (s === "—" ? "0" : s);
                               }
-                              if (typeof gr === "number" && gr > 0) return `#${gr.toLocaleString()}`;
-                              return "—";
+                              if (typeof gr === "number" && gr > 0) return `${gr.toLocaleString()}`;
+                              return "0";
                             })()}
                           </span>
                         </td>
@@ -2463,7 +2463,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                         <td className="py-3.5 px-2 text-center font-bold text-amber-600 dark:text-amber-400 text-xs font-mono w-[5%]">{c.medium_solved}</td>
                         <td className="py-3.5 px-2 text-center font-bold text-rose-600 dark:text-rose-400 text-xs font-mono w-[5%]">{c.hard_solved}</td>
                         <td className="py-3.5 px-2 text-center font-extrabold text-purple-600 dark:text-purple-400 text-xs font-mono w-[8%]">
-                          {c.contest_rating > 0 ? c.contest_rating.toLocaleString() : "—"}
+                          {c.contest_rating > 0 ? c.contest_rating.toLocaleString() : "0"}
                         </td>
                         <td className="py-3.5 px-3 text-center w-[17%]">
                           <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -2567,15 +2567,15 @@ export const HRCandidateFinderPage: React.FC = () => {
                         <span className="font-mono font-black text-xs text-blue-700 dark:text-blue-300 mt-0.5 block">
                           {(() => {
                             const gr: any = c.global_rank;
-                            if (gr === null || gr === undefined || gr === "" || gr === "N/A" || gr === "—") return "—";
+                            if (gr === null || gr === undefined || gr === "" || gr === "N/A" || gr === "—") return "0";
                             if (typeof gr === "string") {
                               const s = gr.trim();
                               if (s.startsWith("#")) return s;
                               const num = parseInt(s.replace(/\D/g, ""), 10);
-                              return !isNaN(num) && num > 0 ? `#${num.toLocaleString()}` : s;
+                              return !isNaN(num) && num > 0 ? `${num.toLocaleString()}` : (s === "—" ? "0" : s);
                             }
-                            if (typeof gr === "number" && gr > 0) return `#${gr.toLocaleString()}`;
-                            return "—";
+                            if (typeof gr === "number" && gr > 0) return `${gr.toLocaleString()}`;
+                            return "0";
                           })()}
                         </span>
                       </div>

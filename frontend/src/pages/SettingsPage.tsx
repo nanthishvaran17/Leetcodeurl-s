@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { 
   ShieldCheck, Lock, Activity, Clock, RefreshCw, Mail, Database, 
@@ -156,6 +157,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ initialSection }) =>
       fetchAuditLogs();
     }
   }, [currentUser, isAuthenticated]);
+
+  // Lock body scroll when modals are active
+  useEffect(() => {
+    if (confirmModal.open || selectedIntegrityRule) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+  }, [confirmModal.open, selectedIntegrityRule]);
 
   // Compute unsaved changes count
   useEffect(() => {
@@ -2423,20 +2434,20 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
       )}
 
       {/* Confirmation Modal */}
-      {confirmModal.open && (
+      {confirmModal.open && typeof document !== 'undefined' && createPortal(
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl p-6 space-y-4 shadow-lg animate-modal-content">
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
-              <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-              <span>{confirmModal.title}</span>
+          <div className="modal-container-responsive max-w-md w-full bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl p-6 space-y-4 shadow-2xl animate-modal-content overflow-hidden">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-start space-x-3 min-w-0">
+              <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <span className="min-w-0 flex-1 break-all [overflow-wrap:anywhere] leading-snug">{confirmModal.title}</span>
             </h3>
 
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed break-words [overflow-wrap:anywhere]">
               {confirmModal.description}
             </p>
 
             {confirmModal.impact && (
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-[11px] font-semibold">
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-[11px] font-semibold break-words [overflow-wrap:anywhere]">
                 <span className="font-bold">Operational Impact:</span> {confirmModal.impact}
               </div>
             )}
@@ -2445,26 +2456,27 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
               <button
                 type="button"
                 onClick={() => setConfirmModal({ open: false, title: '', description: '', impact: '', actionType: '' })}
-                className="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 font-bold text-xs cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 font-bold text-xs cursor-pointer transition-all active:scale-95"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={executeConfirmedAction}
-                className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-600/30 cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-600/30 cursor-pointer transition-all active:scale-95"
               >
                 Confirm & Proceed
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Rule Inspection Modal & Audit Diagnostics Command Center */}
-      {selectedIntegrityRule && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="glass-card max-w-2xl w-full p-6 sm:p-7 rounded-3xl border border-emerald-500/30 bg-white dark:bg-navy-950 shadow-2xl space-y-5 animate-scale-up max-h-[90vh] overflow-y-auto">
+      {selectedIntegrityRule && typeof document !== 'undefined' && createPortal(
+        <div className="modal-overlay-responsive animate-modal-backdrop">
+          <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-950 border border-emerald-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 animate-modal-content">
             
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-4 border-b border-slate-200 dark:border-navy-800 pb-4">
@@ -2735,7 +2747,8 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

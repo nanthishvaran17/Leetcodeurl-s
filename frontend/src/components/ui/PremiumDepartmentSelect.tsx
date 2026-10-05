@@ -24,13 +24,19 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
 }) => {
   const { departments, isLoading } = useDepartments();
 
+  // Only show the 3 active institutional departments
+  const ACTIVE_DEPT_CODES = ['CSE(CS)', 'CSE(IOT)', 'IT'];
+
   const options = [
     { value: 'ALL', label: 'All Departments', pillText: 'ALL' },
-    ...departments.map(d => ({
-      value: useIdAsValue ? String(d.id || '') : d.code,
-      label: d.name,
-      pillText: d.code
-    }))
+    ...departments
+      .filter(d => ACTIVE_DEPT_CODES.includes((d.code || '').toUpperCase().trim()) ||
+                   ACTIVE_DEPT_CODES.map(c => c.toUpperCase()).includes((d.code || '').toUpperCase().trim()))
+      .map(d => ({
+        value: useIdAsValue ? String(d.id || '') : d.code,
+        label: d.name,
+        pillText: d.code
+      }))
   ];
 
   return (

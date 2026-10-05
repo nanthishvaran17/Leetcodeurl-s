@@ -396,10 +396,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               ))}
             </div>
 
-            {displayCount < totalStudents && (
+            {displayCount < totalStudents ? (
               <div className="flex flex-col items-center justify-center pt-4 space-y-2">
-                <p className="text-xs text-slate-500 font-semibold">
-                  Showing <span className="font-extrabold text-brand-600 dark:text-brand-400">{Math.min(displayCount, totalStudents)}</span> of <span className="font-extrabold text-slate-900 dark:text-white">{totalStudents}</span> Students
+                <p className="text-xs text-slate-800 dark:text-slate-200 font-extrabold">
+                  Showing <span className="font-black text-brand-600 dark:text-brand-400">{Math.min(displayCount, totalStudents)}</span> of <span className="font-black text-slate-900 dark:text-white">{totalStudents}</span> Students
                 </p>
                 <div className="flex items-center space-x-3">
                   <button
@@ -408,9 +408,28 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   >
                     <span>Load More (+32)</span>
                   </button>
+                  <button
+                    onClick={() => setDisplayCount(totalStudents)}
+                    className="px-5 py-3 rounded-2xl glass-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all hover:scale-105 cursor-pointer"
+                  >
+                    <span>Show All {totalStudents} Students</span>
+                  </button>
                 </div>
               </div>
-            )}
+            ) : totalStudents > 32 ? (
+              <div className="flex flex-col items-center justify-center pt-6 space-y-3">
+                <p className="text-xs text-slate-600 dark:text-slate-400 font-extrabold">
+                  Showing all <span className="font-black text-brand-600 dark:text-brand-400">{totalStudents}</span> students
+                </p>
+                <button
+                  onClick={() => setDisplayCount(32)}
+                  className="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all hover:scale-105 cursor-pointer inline-flex items-center space-x-2 shadow-sm"
+                >
+                  <ChevronDown className="w-4 h-4 rotate-180" />
+                  <span>Collapse to Top 32</span>
+                </button>
+              </div>
+            ) : null}
           </div>
         )}
       </div>

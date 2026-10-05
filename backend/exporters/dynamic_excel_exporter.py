@@ -62,11 +62,66 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         wb.save(output)
         return output.getvalue()
 
-    # Enable grid lines & landscape setup
+    first_row = rows[0] if rows else {}
+    report_type = str(dataset.get("reportType") or dataset.get("report_type") or "").upper().strip()
+    
+    all_keys = set()
+    for r in rows[:100]:
+        if isinstance(r, dict):
+            all_keys.update(r.keys())
+
+    is_wow = (
+        report_type in ("WEEK_ON_WEEK_INTELLIGENCE", "WOW_INTEL", "WEEK_ON_WEEK")
+        or any(k in first_row for k in ("prev_status", "curr_status", "solved_delta", "trend"))
+        or "wowSummary" in dataset
+    )
+
+    def _row_rank_sort_key(r):
+        p_easy = _safe_int(r.get("easy") if r.get("easy") is not None else r.get("easy_solved"))
+        p_med = _safe_int(r.get("medium") if r.get("medium") is not None else r.get("medium_solved"))
+        p_hard = _safe_int(r.get("hard") if r.get("hard") is not None else r.get("hard_solved"))
+        p_sum = p_easy + p_med + p_hard
+        
+        t_sol = _safe_int(r.get("total_solved") if r.get("total_solved") is not None else (r.get("total") if r.get("total") is not None else (r.get("overall_total_solved") or r.get("lifetime_solved"))))
+        sol = max(t_sol, p_sum) if (t_sol > 0 or p_sum > 0) else _safe_int(r.get("contest_solved") or r.get("solved") or r.get("total_contest_solved"))
+        
+        g_rnk = _safe_int(r.get("global_rank") or r.get("contest_global_ranking") or r.get("profile_rank") or r.get("public_profile_ranking"))
+        c_rat = _safe_float(r.get("contest_rating") or r.get("rating"))
+        
+        has_sol = (sol > 0)
+        has_rank = (g_rnk > 0)
+        has_rat = (c_rat > 0 and c_rat != 1500.0)
+        
+        return (
+            0 if has_sol else 1,            # Solvers first, 0-solved at the bottom
+            -sol,                           # Higher solved first
+            0 if has_rank else 1,           # Ranked first, unranked at the bottom
+            g_rnk if has_rank else 99999999, # Rank #1 best (ascending)
+            -c_rat if has_rat else 99999,   # Higher rating first
+            str(r.get("name") or r.get("student_name") or "")
+        )
+
+    if is_wow:
+        def _wow_sort_key(r):
+            sno_val = _safe_int(r.get("s_no"))
+            return (sno_val if sno_val > 0 else 99999, str(r.get("reg_no") or ""))
+        rows = sorted(rows, key=_wow_sort_key)
+    else:
+        rows = sorted(rows, key=_row_rank_sort_key)
+
+    # Enable grid lines & A4 Landscape fit-to-1-page-wide setup
     ws.sheet_view.showGridLines = True
     ws.page_setup.orientation = ws.ORIENTATION_LANDSCAPE
+    ws.page_setup.paperSize = ws.PAPERSIZE_A4
     ws.page_setup.fitToWidth = 1
     ws.page_setup.fitToHeight = 0
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+
+    # Set compact page margins so all columns fit cleanly on A4 print
+    ws.page_margins.left = 0.25
+    ws.page_margins.right = 0.25
+    ws.page_margins.top = 0.4
+    ws.page_margins.bottom = 0.4
 
     # Extract metadata context
     contest_name = str(dataset.get("contestName") or (dataset.get("current_session") or {}).get("contest_name") or dataset.get("title") or "WEEKLY CONTEST").split("\n")[0].strip()
@@ -74,8 +129,43 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     dept = str(dataset.get("deptFilter") or dataset.get("department") or "ALL").upper().strip()
     year = str(dataset.get("yearFilter") or dataset.get("year") or "ALL").upper().strip()
 
-    report_type = str(dataset.get("reportType") or dataset.get("report_type") or "").upper().strip()
-    if report_type == "HISTORICAL_CONTEST_INTELLIGENCE":
+    # Format department name cleanly
+    if (dept.isdigit() or dept in ("ALL", "NONE", "")) and rows:
+        unique_depts = list({str(r.get("dept") or r.get("department") or "").strip().upper() for r in rows if r.get("dept") or r.get("department")})
+        if len(unique_depts) == 1 and unique_depts[0]:
+            dept = unique_depts[0]
+        elif len(unique_depts) > 1:
+            dept = "ALL DEPARTMENTS"
+
+    # Format year cohort cleanly
+    if year in ("1", "I", "1ST"):
+        year = "I YEAR"
+    elif year in ("2", "II", "2ND"):
+        year = "II YEAR"
+    elif year in ("3", "III", "3RD"):
+        year = "III YEAR"
+    elif year in ("4", "IV", "4TH"):
+        year = "IV YEAR"
+    elif (year.isdigit() or year in ("ALL", "NONE", "")) and rows:
+        unique_years = list({str(r.get("year") or r.get("year_level") or "").strip().upper() for r in rows if r.get("year") or r.get("year_level")})
+        if len(unique_years) == 1 and unique_years[0]:
+            y_u = unique_years[0]
+            year = f"{y_u} YEAR" if not y_u.endswith("YEAR") else y_u
+        elif len(unique_years) > 1:
+            year = "ALL YEARS"
+
+    prev_c_lbl = str(dataset.get("prevContest") or (dataset.get("wowSummary") or {}).get("prevContest") or "Last Week").strip()
+    curr_c_lbl = str(dataset.get("currContest") or (dataset.get("wowSummary") or {}).get("currContest") or contest_name or "This Week").strip()
+
+    is_historical = (report_type == "HISTORICAL_CONTEST_INTELLIGENCE") or ("weeklyData" in first_row)
+    is_single_contest = (
+        any(k in report_type for k in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "SUNDAY_LIVE", "SUNDAY_CONTEST", "WEEKLY_CONTEST"))
+        or any(k in first_row for k in ("q1_display", "q1_time"))
+    ) and not is_historical and not is_wow and "COORDINATOR" not in report_type and "WEEKLY_PERFORMANCE" not in report_type and "WEEKLY_STUDENT_PERFORMANCE" not in report_type
+
+    if is_wow:
+        report_title = f"WEEK-ON-WEEK INTELLIGENCE — {prev_c_lbl.upper()} VS {curr_c_lbl.upper()}"
+    elif is_historical:
         session_headers = dataset.get("sessionHeaders", [])
         if session_headers and len(session_headers) >= 1:
             first_c = session_headers[0].get("contestNum")
@@ -88,137 +178,182 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 report_title = "HISTORICAL INTELLIGENCE REPORT"
         else:
             report_title = "HISTORICAL INTELLIGENCE REPORT"
-    else:
+    elif is_single_contest:
         report_title = f"{contest_name} — STUDENT PERFORMANCE REPORT"
-
-    # ----------------------------------------------------
-    # DEDUPLICATED CANONICAL COLUMN MAPPING
-    # ----------------------------------------------------
-    first_row = rows[0]
-    all_keys = set()
-    for r in rows[:20]:
-        all_keys.update(r.keys())
-
-    # ----------------------------------------------------
-    # DEDUPLICATED CANONICAL COLUMN DEFINITIONS
-    # ----------------------------------------------------
-    CANONICAL_COLUMNS = [
-        ("S.No", ["s_no", "sno", "s_number", "serial_no", "index", "__sno__", "s_no."]),
-        ("Register No", ["reg_no", "register_no", "regno", "reg_number", "registration_no", "register_number"]),
-        ("Student Name", ["name", "student_name", "student", "full_name"]),
-        ("Department", ["dept", "department", "dept_name", "department_code", "department_name"]),
-        ("Year Level", ["year", "year_level", "academic_year", "yr"]),
-        ("Section", ["section", "sec"]),
-        ("LeetCode Username", ["username", "leetcode_username", "leetcode_handle", "handle", "primary_leetcode_id", "primary_leetcode_username"]),
-        ("Attendance Status", ["status", "participation_status", "attendance_status", "attendance"]),
-        ("Q1", ["q1_display", "q1", "q1_time"]),
-        ("Q2", ["q2_display", "q2", "q2_time"]),
-        ("Q3", ["q3_display", "q3", "q3_time"]),
-        ("Q4", ["q4_display", "q4", "q4_time"]),
-        ("Solved", ["contest_solved", "solved", "total_solved", "solved_str", "problems_solved"]),
-        ("Score", ["score", "performance_score", "total_score", "contest_score"]),
-        ("Global Rank", ["global_rank", "rank", "contest_ranking", "profile_rank", "profile_ranking", "rank_val"]),
-        ("Contest Rating", ["rating", "contest_rating", "rating_val", "contest_rating_after"]),
-        ("Total Time", ["total_time_display", "total_time", "total_time_min", "finish_time"]),
-        ("Weekly Contest", ["contest_name", "session_name", "weekly_contest"]),
-        ("Session Date", ["session_date", "contest_date", "report_date"]),
-        ("Batch Cohort", ["batch", "batch_cohort", "batch_year"]),
-        ("Easy", ["easy", "easy_solved", "easy_count"]),
-        ("Medium", ["medium", "medium_solved", "medium_count"]),
-        ("Hard", ["hard", "hard_solved", "hard_count"]),
-        ("College Rank", ["college_rank", "inst_rank", "institution_rank"]),
-        ("Institutional Email", ["institutional_email", "college_email", "email", "student_email"]),
-        ("Total Attended", ["totalattended", "total_attended", "total_attendance"]),
-        ("Total Solved", ["totalsolved", "total_solved"]),
-        ("Consistency Pct", ["consistencypct", "consistency_pct", "consistency", "consistency_percentage"])
-    ]
+    else:
+        d_title = dataset.get("title") or dataset.get("reportTitle")
+        if d_title and not d_title.startswith("Weekly Contest"):
+            report_title = d_title.upper()
+        elif "FACULTY" in report_type:
+            report_title = "FACULTY COORDINATOR CONSOLIDATED PERFORMANCE REPORT"
+        elif "LEADERBOARD" in report_type:
+            report_title = "INSTITUTIONAL LEADERBOARD REPORT"
+        elif "HOD" in report_type:
+            report_title = "HOD DEPARTMENT INTELLIGENCE REPORT"
+        else:
+            report_title = f"{report_type.replace('_', ' ')} REPORT"
 
     selected_cols = []
     used_titles = set()
     used_raw_keys = set()
 
-    # 1. S.No MUST ALWAYS BE COLUMN 1 (Column A)
-    selected_cols.append(("S.No", "__SNO__"))
-    used_titles.add("s.no")
-    for alias in ["s_no", "sno", "s_number", "serial_no", "index", "__sno__", "s_no."]:
-        used_raw_keys.add(alias.lower())
+    if is_wow:
+        selected_cols = [
+            ("S.No", "__SNO__"),
+            ("Register No", "reg_no"),
+            ("Student Name", "name"),
+            ("Dept", "dept"),
+            ("Yr", "year"),
+            (f"{prev_c_lbl} Status", "prev_status"),
+            (f"{prev_c_lbl} Solved", "prev_solved"),
+            (f"{prev_c_lbl} Score", "prev_score"),
+            (f"{curr_c_lbl} Status", "curr_status"),
+            (f"{curr_c_lbl} Solved", "curr_solved"),
+            (f"{curr_c_lbl} Score", "curr_score"),
+            ("Δ Solved", "solved_delta"),
+            ("Trend", "trend"),
+        ]
+    else:
+        # 1. Base Demographic Columns (Always first)
+        BASE_DEMOGRAPHIC = [
+            ("S.No", "__SNO__"),
+            ("Register No", ["reg_no", "register_no", "regno", "reg_number", "registration_no", "register_number"]),
+            ("Student Name", ["name", "student_name", "student", "full_name"]),
+            ("Department", ["dept", "department", "dept_name", "department_code", "department_name"]),
+            ("Year", ["year", "year_level", "academic_year", "yr"]),
+            ("Accommodation", ["accommodation", "accomodation", "hostel_dayscholar", "residence"]),
+            ("12th Cutoff", ["twelfth_cutoff", "cutoff", "cutoff_mark", "12th_cutoff", "twelfth_cutoff_mark"]),
+        ]
 
-    # 2. Map other canonical columns in exact prescribed order
-    for title, key_candidates in CANONICAL_COLUMNS:
-        if title == "S.No":
-            continue
+        selected_cols.append(("S.No", "__SNO__"))
+        used_titles.add("s.no")
+        for alias in ["s_no", "sno", "s_number", "serial_no", "index", "__sno__", "s_no."]:
+            used_raw_keys.add(alias.lower())
 
-        matched_key = None
-        for k in key_candidates:
-            if k.lower() in [ak.lower() for ak in all_keys] and k.lower() not in used_raw_keys:
-                for ak in all_keys:
-                    if ak.lower() == k.lower():
-                        matched_key = ak
+        for title, candidates in BASE_DEMOGRAPHIC[1:]:
+            matched_k = None
+            for k in candidates:
+                if k.lower() in [ak.lower() for ak in all_keys] and k.lower() not in used_raw_keys:
+                    for ak in all_keys:
+                        if ak.lower() == k.lower():
+                            matched_k = ak
+                            break
+                    if matched_k:
                         break
-                if matched_key:
-                    break
-        
-        if matched_key:
-            selected_cols.append((title, matched_key))
-            used_titles.add(title.lower())
+            if matched_k:
+                selected_cols.append((title, matched_k))
+                used_titles.add(title.lower())
+            for k in candidates:
+                used_raw_keys.add(k.lower())
 
-        # Blacklist ALL candidates for this canonical metric so duplicate columns NEVER get created!
-        for k in key_candidates:
-            used_raw_keys.add(k.lower())
+        if is_historical:
+            # 2. Historical: Add Weekly Contest Columns (C510..C522) immediately after 12th Cutoff
+            if "weeklyData" in first_row and isinstance(first_row["weeklyData"], list):
+                for w in first_row["weeklyData"]:
+                    c_num = w.get("contestNum")
+                    if c_num:
+                        c_title = f"C{c_num}"
+                        if c_title.lower() not in used_titles:
+                            selected_cols.append((c_title, f"__weekly__{c_num}"))
+                            used_titles.add(c_title.lower())
 
-    # 3. Exclude internal/redundant keys from leaking into extra unmapped columns
-    EXCLUDE_KEYS = {
-        "id", "student_id", "people_id", "department_id", "dept_id", "institution_id",
-        "secondary_leetcode_id", "secondary_leetcode_url", "primary_leetcode_id", "primary_leetcode_url",
-        "leetcode_url", "fetch_status", "public_result", "virtual_result", 
-        "last_public_result", "last_virtual_result", "verification_status",
-        "category", "is_att", "is_virtual", "rating_raw", "rank_raw", "all_rows",
-        "password_hash", "is_active", "created_at", "updated_at", "token", "auth_token", "hash",
-        "session_id", "snapshot_id", "final_snapshot_id", "batch_year",
-        "s_no", "sno", "s_number", "serial_no", "index", "__sno__", "s_no.",
-        "reg_no", "register_no", "regno", "reg_number", "registration_no",
-        "name", "student_name", "student", "full_name",
-        "dept", "department", "dept_name", "department_code", "department_name",
-        "year", "year_level", "academic_year", "yr",
-        "section", "sec",
-        "username", "leetcode_username", "leetcode_handle", "handle",
-        "status", "participation_status", "attendance_status", "attendance",
-        "q1", "q2", "q3", "q4", "q1_display", "q2_display", "q3_display", "q4_display",
-        "q1_time", "q2_time", "q3_time", "q4_time", "total_time", "total_time_display",
-        "total_time_min", "finish_time",
-        "rank", "global_rank", "contest_ranking", "profile_rank", "profile_ranking", "rank_val",
-        "rating", "contest_rating", "rating_val", "contest_rating_after",
-        "solved", "total_solved", "solved_str", "contest_solved", "problems_solved",
-        "score", "performance_score", "total_score", "contest_score",
-        "contest_name", "session_name", "weekly_contest", "session_date", "contest_date", "report_date",
-        "batch", "batch_cohort", "easy", "easy_solved", "medium", "medium_solved", "hard", "hard_solved",
-        "college_rank", "institutional_email", "college_email", "email", "student_email"
-    }
+            # 3. Historical: Add Center Summary Metrics (between weekly contests and Global Rank)
+            HIST_CENTER_METRICS = [
+                ("Contests Attended", ["contests_attended", "total_attended", "totalattended", "total_attendance", "attended_contests", "contests_att"]),
+                ("Total Solved", ["contest_solved", "solved", "solved_str", "problems_solved", "overall_total_solved", "totalsolved", "total_solved"]),
+                ("Contest Easy", ["contest_easy", "contest_easy_solved", "c_easy"]),
+                ("Contest Medium", ["contest_medium", "contest_medium_solved", "c_medium"]),
+                ("Contest Hard", ["contest_hard", "contest_hard_solved", "c_hard"]),
+            ]
+            for title, candidates in HIST_CENTER_METRICS:
+                matched_k = None
+                for k in candidates:
+                    if k.lower() in [ak.lower() for ak in all_keys] and k.lower() not in used_raw_keys:
+                        for ak in all_keys:
+                            if ak.lower() == k.lower():
+                                matched_k = ak
+                                break
+                        if matched_k:
+                            break
+                if matched_k:
+                    selected_cols.append((title, matched_k))
+                    used_titles.add(title.lower())
+                for k in candidates:
+                    used_raw_keys.add(k.lower())
+        elif is_single_contest:
+            # 2. Single Contest / Standard: Contests Attended, Q1-Q4, Total Solved, Contest Easy, Medium, Hard, Score
+            SINGLE_METRICS = [
+                ("Contests Attended", ["contests_attended", "total_attended", "totalattended", "total_attendance", "attended_contests", "contests_att"]),
+                ("Q1", ["q1_display", "q1", "q1_time"]),
+                ("Q2", ["q2_display", "q2", "q2_time"]),
+                ("Q3", ["q3_display", "q3", "q3_time"]),
+                ("Q4", ["q4_display", "q4", "q4_time"]),
+                ("Total Solved", ["contest_solved", "solved", "solved_str", "problems_solved", "overall_total_solved", "totalsolved", "total_solved"]),
+                ("Contest Easy", ["contest_easy", "contest_easy_solved", "c_easy"]),
+                ("Contest Medium", ["contest_medium", "contest_medium_solved", "c_medium"]),
+                ("Contest Hard", ["contest_hard", "contest_hard_solved", "c_hard"]),
+                ("Score", ["score", "performance_score", "total_score", "contest_score"]),
+            ]
+            for title, candidates in SINGLE_METRICS:
+                matched_k = None
+                for k in candidates:
+                    if k.lower() in [ak.lower() for ak in all_keys] and k.lower() not in used_raw_keys:
+                        for ak in all_keys:
+                            if ak.lower() == k.lower():
+                                matched_k = ak
+                                break
+                        if matched_k:
+                            break
+                if matched_k:
+                    selected_cols.append((title, matched_k))
+                    used_titles.add(title.lower())
+                for k in candidates:
+                    used_raw_keys.add(k.lower())
+        else:
+            # 2. General / Faculty / Institutional Profile Reports: Easy, Medium, Hard, Total Solved, Contests Attended
+            GENERAL_METRICS = [
+                ("Easy", ["easy", "easy_solved", "easySolved", "profile_easy"]),
+                ("Medium", ["medium", "medium_solved", "mediumSolved", "profile_medium"]),
+                ("Hard", ["hard", "hard_solved", "hardSolved", "profile_hard"]),
+                ("Total Solved", ["total_solved", "total", "totalSolved", "overall_total_solved", "lifetime_solved"]),
+                ("Contests Attended", ["contests_attended", "total_attended", "totalattended", "total_attendance", "attended_contests", "contests_att"]),
+            ]
+            for title, candidates in GENERAL_METRICS:
+                matched_k = None
+                for k in candidates:
+                    if k.lower() in [ak.lower() for ak in all_keys] and k.lower() not in used_raw_keys:
+                        for ak in all_keys:
+                            if ak.lower() == k.lower():
+                                matched_k = ak
+                                break
+                        if matched_k:
+                            break
+                if matched_k:
+                    selected_cols.append((title, matched_k))
+                    used_titles.add(title.lower())
+                for k in candidates:
+                    used_raw_keys.add(k.lower())
 
-    for k in list(first_row.keys()):
-        k_norm = k.lower().replace(" ", "_").strip()
-        if k_norm in used_raw_keys or k.startswith("_") or k_norm in EXCLUDE_KEYS:
-            continue
-        val = first_row[k]
-
-        # Expand Historical weeklyData dynamically
-        if k == "weeklyData" and isinstance(val, list):
-            for w in val:
-                c_num = w.get("contestNum")
-                if c_num:
-                    c_title = f"C{c_num}"
-                    if c_title.lower() not in used_titles:
-                        selected_cols.append((c_title, f"__weekly__{c_num}"))
-                        used_titles.add(c_title.lower())
-            continue
-
-        if isinstance(val, (dict, list)):
-            continue
-        title = k.replace("_", " ").title()
-        if title.lower() not in used_titles:
-            selected_cols.append((title, k))
-            used_titles.add(title.lower())
-            used_raw_keys.add(k_norm)
+        # 4. Global Rank & Contest Rating ALWAYS AT THE VERY END
+        FINAL_METRICS = [
+            ("Global Rank", ["global_rank", "contest_global_ranking", "profile_rank", "rank", "rank_val"]),
+            ("Contest Rating", ["contest_rating", "rating", "rating_val", "contest_rating_after"])
+        ]
+        for title, candidates in FINAL_METRICS:
+            matched_k = None
+            for k in candidates:
+                if k.lower() in [ak.lower() for ak in all_keys] and k.lower() not in used_raw_keys:
+                    for ak in all_keys:
+                        if ak.lower() == k.lower():
+                            matched_k = ak
+                            break
+                    if matched_k:
+                        break
+            if matched_k:
+                selected_cols.append((title, matched_k))
+                used_titles.add(title.lower())
+            for k in candidates:
+                used_raw_keys.add(k.lower())
 
     clean_headers = [col[0] for col in selected_cols]
     cols = len(clean_headers)
@@ -302,32 +437,133 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     ws["A5"].alignment = Alignment(horizontal="center", vertical="center")
     ws.row_dimensions[5].height = 20
 
-    # Add College Emblem Logo (Placed cleanly on top-left B1 to avoid hugging edge)
+    # Add College Emblem Logo — top-left corner, clean margin
     logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nandha_emblem.png")
     if os.path.exists(logo_path):
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
+            from openpyxl.drawing.spreadsheet_drawing import AbsoluteAnchor
+            from openpyxl.drawing.xdr import XDRPoint2D, XDRPositiveSize2D
+            from openpyxl.utils.units import pixels_to_EMU
+
+            MARGIN_LEFT_EMU = pixels_to_EMU(10)
+            MARGIN_TOP_EMU  = pixels_to_EMU(8)
+            IMG_W_EMU  = pixels_to_EMU(92)
+            IMG_H_EMU  = pixels_to_EMU(58)
+
             img_left = OpenPyxlImage(logo_path)
+            img_left.width  = 92
             img_left.height = 58
-            img_left.width = 90
-            ws.add_image(img_left, "B1")
+            img_left.anchor = AbsoluteAnchor(
+                pos=XDRPoint2D(MARGIN_LEFT_EMU, MARGIN_TOP_EMU),
+                ext=XDRPositiveSize2D(IMG_W_EMU, IMG_H_EMU)
+            )
+            ws.add_image(img_left)
         except Exception:
             pass
 
-    # Add 25 Years Anniversary Logo (Placed cleanly on top-right last_col 1)
-    logo_25_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nec_25_years_logo.png")
+    # Add 25 Years Anniversary Logo — top-right corner pinned to last column row 1
+    logo_25_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nec_25_years_logo_transparent.png")
+    if not os.path.exists(logo_25_path):
+        logo_25_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nec_25_years_logo.png")
     if os.path.exists(logo_25_path):
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
+            from openpyxl.drawing.spreadsheet_drawing import OneCellAnchor
+            from openpyxl.drawing.xdr import XDRPoint2D, XDRPositiveSize2D
+            from openpyxl.utils.units import pixels_to_EMU
+            from openpyxl.utils import column_index_from_string
+
+            LOGO2_W = 56
+            LOGO2_H = 56
+
+            # Place at last column, row 1 — offset by 6px margin inside the cell
             img_right = OpenPyxlImage(logo_25_path)
-            img_right.height = 58
-            img_right.width = 58
-            ws.add_image(img_right, f"{last_col}1")
+            img_right.width  = LOGO2_W
+            img_right.height = LOGO2_H
+
+            col_idx_r = column_index_from_string(last_col)
+            anchor_r = OneCellAnchor()
+            anchor_r._from.col   = col_idx_r - 1   # 0-indexed
+            anchor_r._from.row   = 0                # Row 1 (0-indexed)
+            anchor_r._from.colOff = pixels_to_EMU(6)
+            anchor_r._from.rowOff = pixels_to_EMU(6)
+            anchor_r.ext = XDRPositiveSize2D(pixels_to_EMU(LOGO2_W), pixels_to_EMU(LOGO2_H))
+            img_right.anchor = anchor_r
+            ws.add_image(img_right)
         except Exception:
             pass
 
-    # Row 6: Table Headers (No empty spacing row)
-    r_hdr = 6
+    # Executive KPI Summary Block for Week-on-Week Intelligence
+    if is_wow:
+        wow_sum = dataset.get("wowSummary", {})
+        total_std = wow_sum.get("totalStudents", len(rows))
+        curr_att = wow_sum.get("currAttendance", sum(1 for r in rows if str(r.get("curr_status") or "").upper() == "ATTENDED"))
+        prev_att = wow_sum.get("prevAttendance", sum(1 for r in rows if str(r.get("prev_status") or "").upper() == "ATTENDED"))
+        att_delta = curr_att - prev_att
+        att_delta_str = f"+{att_delta}" if att_delta > 0 else str(att_delta)
+        imp = wow_sum.get("improved", sum(1 for r in rows if _safe_int(r.get("solved_delta")) > 0))
+        dec = wow_sum.get("declined", sum(1 for r in rows if _safe_int(r.get("solved_delta")) < 0))
+        stb = wow_sum.get("stable", max(0, len(rows) - imp - dec))
+
+        # Row 6: Section Banner
+        ws.merge_cells(f"A6:{last_col}6")
+        for c in range(1, cols + 1):
+            cell = ws.cell(row=6, column=c)
+            cell.fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+            cell.border = _THIN_BORDER
+        ws["A6"] = "EXECUTIVE WEEK-ON-WEEK INTELLIGENCE SUMMARY"
+        ws["A6"].font = Font(name=FONT_TNR, size=10.5, bold=True, color="FFFFFF")
+        ws["A6"].alignment = Alignment(horizontal="center", vertical="center")
+        ws.row_dimensions[6].height = 20
+
+        # Row 7: KPI Headers
+        kpi_headers = [
+            ("A7:B7", 1, 2, "TOTAL ROSTER"),
+            ("C7:E7", 3, 5, f"THIS WEEK ({curr_c_lbl.upper()})"),
+            ("F7:H7", 6, 8, f"LAST WEEK ({prev_c_lbl.upper()})"),
+            ("I7:J7", 9, 10, "ATTENDANCE CHANGE"),
+            ("K7:M7", 11, 13, "TRAJECTORY DISTRIBUTION"),
+        ]
+        ws.row_dimensions[7].height = 18
+        for cell_range, c_start, c_end, lbl in kpi_headers:
+            ws.merge_cells(cell_range)
+            for c in range(c_start, min(c_end + 1, cols + 1)):
+                cell = ws.cell(row=7, column=c)
+                cell.fill = PatternFill(start_color="334155", end_color="334155", fill_type="solid")
+                cell.border = _THIN_BORDER
+            ws.cell(row=7, column=c_start, value=lbl).font = Font(name=FONT_TNR, size=9.5, bold=True, color="FFFFFF")
+            ws.cell(row=7, column=c_start).alignment = Alignment(horizontal="center", vertical="center")
+
+        # Row 8: KPI Values
+        kpi_values = [
+            ("A8:B8", 1, 2, f"{total_std} Students", Font(name=FONT_TNR, size=11, bold=True, color="1B365D")),
+            ("C8:E8", 3, 5, f"{curr_att} Attended", Font(name=FONT_TNR, size=11, bold=True, color="047857")),
+            ("F8:H8", 6, 8, f"{prev_att} Attended", Font(name=FONT_TNR, size=11, bold=True, color="1B365D")),
+            ("I8:J8", 9, 10, f"{att_delta_str} Students", Font(name=FONT_TNR, size=11, bold=True, color="047857" if att_delta >= 0 else "B91C1C")),
+            ("K8:M8", 11, 13, f"↑ {imp} Improved   ·   ↓ {dec} Declined   ·   → {stb} Stable", Font(name=FONT_TNR, size=10, bold=True, color="1E293B")),
+        ]
+        ws.row_dimensions[8].height = 24
+        for cell_range, c_start, c_end, val_str, font_style in kpi_values:
+            ws.merge_cells(cell_range)
+            for c in range(c_start, min(c_end + 1, cols + 1)):
+                cell = ws.cell(row=8, column=c)
+                cell.fill = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+                cell.border = _THIN_BORDER
+            ws.cell(row=8, column=c_start, value=val_str).font = font_style
+            ws.cell(row=8, column=c_start).alignment = Alignment(horizontal="center", vertical="center")
+
+        # Row 9: Empty Separator
+        ws.row_dimensions[9].height = 8
+
+        # Row 10: Table Headers
+        r_hdr = 10
+        start_row = 11
+    else:
+        # Row 6: Table Headers (No empty spacing row)
+        r_hdr = 6
+        start_row = 7
+
     ws.row_dimensions[r_hdr].height = 26
     for col_idx, h_text in enumerate(clean_headers, 1):
         cell = ws.cell(row=r_hdr, column=col_idx, value=h_text)
@@ -359,7 +595,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     }
 
     CENTER_TITLES = {
-        "s.no", "register no", "reg no", "department", "dept", "year level", "year", "section", "sec",
+        "s.no", "register no", "reg no", "department", "dept", "year level", "year", "section", "sec", "yr",
         "attendance status", "data source", "error reason", 
         "prev status", "curr status", "status",
         "q1", "q2", "q3", "q4", "solved", "score", "contest rating", 
@@ -368,11 +604,10 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         "total attended", "total solved", "consistency pct",
         "prev q1", "prev q2", "prev q3", "prev q4", "prev solved", "prev score",
         "curr q1", "curr q2", "curr q3", "curr q4", "curr solved", "curr score",
-        "solved delta", "trend", "delta"
+        "solved delta", "trend", "delta", "δ solved"
     }
 
-    # Data Rows (Row 7 onwards)
-    start_row = 7
+    # Data Rows
     for r_idx, r in enumerate(rows, start_row):
         row_num = r_idx - start_row + 1
         is_alt = (row_num % 2 == 0)
@@ -391,7 +626,36 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             else:
                 val = r.get(raw_key)
 
-            if title in ("Q1", "Q2", "Q3", "Q4"):
+            if is_wow:
+                title_lower = title.lower().strip()
+                if raw_key in ("prev_status", "curr_status") or title_lower.endswith("status"):
+                    st_raw = str(val or "").upper().strip()
+                    if st_raw in ("ATTENDED", "PUBLIC", "VIRTUAL", "LIVE", "VERIFIED", "COMPLETED"):
+                        val = "ATTENDED"
+                    else:
+                        val = "ABSENT"
+                elif raw_key in ("prev_solved", "prev_score", "curr_solved", "curr_score") or (("solved" in title_lower or "score" in title_lower) and "delta" not in title_lower):
+                    st_check = str(r.get("prev_status" if "prev" in raw_key else "curr_status") or "").upper().strip()
+                    if val is None or str(val).strip() in ("—", "None", "", "nan", "NaN"):
+                        val = "—"
+                    else:
+                        val = _safe_int(val)
+                elif raw_key == "solved_delta" or "delta" in title_lower or "δ" in title_lower:
+                    d_val = _safe_int(val)
+                    if d_val > 0:
+                        val = f"+{d_val}"
+                    elif d_val < 0:
+                        val = str(d_val)
+                    else:
+                        val = 0
+                elif raw_key == "trend" or "trend" in title_lower:
+                    t_raw = str(val or "").strip()
+                    if not t_raw or t_raw in ("—", "None", "nan"):
+                        val = "Stable →"
+                    else:
+                        val = t_raw
+
+            elif title in ("Q1", "Q2", "Q3", "Q4"):
                 val_str = str(val or "").strip()
                 q_idx = int(title[1])
                 q_num = title.lower()
@@ -476,32 +740,115 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                         val = "—"
             elif title in ("Contest Rating", "Global Rank"):
                 val_str = str(val or "").strip()
-                if val in (1500, 1500.0, 1500.7, "1500", "1500.0", 5000001, "5,000,001") or val_str in ("—", "None", "nan", "NaN", "null", ""):
-                    val = "—"
+                if val in (1500, 1500.0, 1500.7, "1500", "1500.0", 5000001, "5,000,001") or val_str in ("—", "None", "nan", "NaN", "null", "", "0"):
+                    val = 0  # use 0 so cell is numeric blank, styled separately
                 elif title == "Global Rank":
                     num = _safe_int(val)
-                    val = f"{num:,}" if num > 0 else "—"
+                    val = num if num > 0 else 0
                 elif title == "Contest Rating":
                     num = round(_safe_float(val))
-                    val = f"{num:,}" if num > 0 and num != 1500 else "—"
+                    val = num if num > 0 and num != 1500 else 0
 
-            elif title == "Solved":
-                strict_solved = 0
-                for i in range(1, 5):
-                    v1 = str(r.get(f"q{i}") or "").strip()
-                    v2 = str(r.get(f"q{i}_display") or "").strip()
-                    if v1 in ("1", "1.0", "True") or v1.startswith("1 (") or v2 in ("1", "1.0", "True") or v2.startswith("1 ("):
-                        strict_solved += 1
-                val = strict_solved
+            elif title in ("Total Solved", "Solved", "Contest Solved"):
+                if is_single_contest:
+                    has_q = any(f"q{i}" in r for i in range(1, 5)) or any(f"q{i}_display" in r for i in range(1, 5))
+                    if has_q and (r.get("q1") is not None or r.get("q1_display") is not None):
+                        strict_solved = 0
+                        for i in range(1, 5):
+                            v1 = str(r.get(f"q{i}") or "").strip()
+                            v2 = str(r.get(f"q{i}_display") or "").strip()
+                            if v1 in ("1", "1.0", "True") or v1.startswith("1 (") or v2 in ("1", "1.0", "True") or v2.startswith("1 ("):
+                                strict_solved += 1
+                        val = strict_solved
+                    else:
+                        val = _safe_int(r.get("contest_solved") or r.get("solved") or r.get("total_solved"))
+                elif is_historical:
+                    weekly_sum = 0
+                    if isinstance(r.get("weeklyData"), list):
+                        for w in r.get("weeklyData", []):
+                            if w.get("att"):
+                                weekly_sum += _safe_int(w.get("solved"))
+                    if weekly_sum > 0:
+                        val = weekly_sum
+                    else:
+                        c_easy = _safe_int(r.get("contest_easy") if r.get("contest_easy") is not None else r.get("contest_easy_solved"))
+                        c_med = _safe_int(r.get("contest_medium") if r.get("contest_medium") is not None else r.get("contest_medium_solved"))
+                        c_hard = _safe_int(r.get("contest_hard") if r.get("contest_hard") is not None else r.get("contest_hard_solved"))
+                        val = c_easy + c_med + c_hard if (c_easy + c_med + c_hard) > 0 else _safe_int(r.get("contest_solved") or r.get("solved") or r.get("total_solved"))
+                else:
+                    # General / Profile / Coordinator / Student Performance Report:
+                    # Total Solved represents overall lifetime problems solved (Easy + Medium + Hard)
+                    p_easy = _safe_int(r.get("easy") if r.get("easy") is not None else r.get("easy_solved"))
+                    p_med = _safe_int(r.get("medium") if r.get("medium") is not None else r.get("medium_solved"))
+                    p_hard = _safe_int(r.get("hard") if r.get("hard") is not None else r.get("hard_solved"))
+                    p_sum = p_easy + p_med + p_hard
+                    
+                    t_val = _safe_int(r.get("total_solved") if r.get("total_solved") is not None else (r.get("total") if r.get("total") is not None else (r.get("overall_total_solved") or r.get("lifetime_solved"))))
+                    if t_val > 0:
+                        val = max(t_val, p_sum)
+                    elif p_sum > 0:
+                        val = p_sum
+                    else:
+                        val = t_val
+
+            elif title == "Contest Easy":
+                val = _safe_int(r.get("contest_easy") if r.get("contest_easy") is not None else r.get("contest_easy_solved"))
+                if val == 0:
+                    v1 = str(r.get("q1") or r.get("q1_display") or "").strip()
+                    if v1 in ("1", "1.0", "True") or v1.startswith("1 ("):
+                        val = 1
+            elif title == "Contest Medium":
+                val = _safe_int(r.get("contest_medium") if r.get("contest_medium") is not None else r.get("contest_medium_solved"))
+                if val == 0:
+                    med = 0
+                    for qk in ("q2", "q3"):
+                        v = str(r.get(qk) or r.get(f"{qk}_display") or "").strip()
+                        if v in ("1", "1.0", "True") or v.startswith("1 ("):
+                            med += 1
+                    if med > 0:
+                        val = med
+            elif title == "Contest Hard":
+                val = _safe_int(r.get("contest_hard") if r.get("contest_hard") is not None else r.get("contest_hard_solved"))
+                if val == 0:
+                    v4 = str(r.get("q4") or r.get("q4_display") or "").strip()
+                    if v4 in ("1", "1.0", "True") or v4.startswith("1 ("):
+                        val = 1
+            elif title == "Contests Attended":
+                if isinstance(r.get("weeklyData"), list) and len(r.get("weeklyData")) > 0:
+                    val = sum(1 for w in r.get("weeklyData", []) if w.get("att"))
+                else:
+                    val = _safe_int(r.get("contests_attended") if r.get("contests_attended") is not None else r.get("total_attended"))
+            elif title == "12th Cutoff":
+                c_val = r.get("twelfth_cutoff") if r.get("twelfth_cutoff") is not None else r.get("cutoff")
+                if c_val is not None and str(c_val).strip() not in ("—", "None", "", "nan", "NaN"):
+                    val = round(_safe_float(c_val), 1)
+                else:
+                    val = "—"
+            elif title == "Accommodation":
+                raw_acc = str(r.get("accommodation") or r.get("accomodation") or "").strip()
+                if not raw_acc or raw_acc in ("—", "None", "nan", "NaN", "null", ""):
+                    val = "—"
+                elif "DAY" in raw_acc.upper():
+                    val = "D"
+                elif "HOSTEL" in raw_acc.upper():
+                    val = "H"
+                else:
+                    val = raw_acc[:1].upper() if raw_acc else "—"
 
             title_lower = title.lower().strip()
 
             if val is None or str(val).strip() in ("None", "null", "nan", "NaN"):
-                val = "—" if title_lower in ("batch cohort", "total time", "global rank", "contest rating", "score") else ""
+                if title_lower in ("global rank", "contest rating", "score", "12th cutoff", "cutoff", "12th cut-off"):
+                    val = None
+                elif title_lower in ("total time",):
+                    val = "—"
+                else:
+                    val = ""
             elif title_lower == "consistency pct":
-                v_float = _safe_float(val, default=-1.0)
+                v_clean = str(val or "").replace("%", "").strip()
+                v_float = _safe_float(v_clean, default=-1.0)
                 if v_float >= 0:
-                    val = f"{int(v_float)}%" if v_float.is_integer() else f"{v_float:.1f}%"
+                    val = (v_float / 100.0) if v_float > 1.0 else v_float
                 else:
                     val = "—"
             elif isinstance(val, (int, float)):
@@ -528,12 +875,12 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 cell.fill = ALT_ROW_FILL
 
             if title_lower in LEFT_ALIGN_TITLES or ("url" in title_lower and title_lower not in ("data source", "error reason")):
-                cell.alignment = Alignment(horizontal="center", vertical="center")
+                cell.alignment = Alignment(horizontal="left", vertical="center")
             else:
                 cell.alignment = Alignment(horizontal="center", vertical="center")
 
             # Status pill colors
-            if title_lower in ("attendance status", "curr status", "prev status", "status"):
+            if title_lower in ("attendance status", "curr status", "prev status", "status") or title_lower.endswith("status"):
                 st_u = str(val or "").upper().strip()
                 if st_u in ("PUBLIC", "PUBLIC_ATTENDED", "PUBLIC_LIVE", "ATTENDED", "VERIFIED"):
                     cell.fill = FILL_SUCCESS
@@ -555,10 +902,54 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 else:
                     cell.font = FONT_NEUTRAL
 
+            # Solved delta styling
+            elif title_lower in ("solved delta", "δ solved", "delta"):
+                v_str = str(val or "").strip()
+                if v_str.startswith("+"):
+                    cell.font = FONT_SUCCESS
+                elif v_str.startswith("-"):
+                    cell.font = FONT_RISK
+                else:
+                    cell.font = FONT_NEUTRAL
+
+            # Consistency Pct: native percentage number format
+            if title_lower == "consistency pct":
+                if isinstance(val, (int, float)) and val >= 0:
+                    cell.number_format = '0.0%' if (val * 100) % 1 != 0 else '0%'
+                else:
+                    cell.value = "—"
+            # Global Rank: number format with thousand separator, no decimals
+            elif title_lower == "global rank":
+                if isinstance(val, (int, float)) and int(val) > 0 and int(val) != 5000001:
+                    cell.value = int(val)
+                    cell.number_format = '#,##0'
+                else:
+                    cell.value = None
+            # Contest Rating: integer number format
+            elif title_lower == "contest rating":
+                if isinstance(val, (int, float)) and float(val) > 0 and round(float(val)) != 1500:
+                    cell.value = int(round(float(val)))
+                    cell.number_format = '#,##0'
+                else:
+                    cell.value = None
+            # 12th Cutoff: 1 decimal place numeric
+            elif title_lower in ("12th cutoff", "cutoff", "12th cut-off"):
+                if isinstance(val, (int, float)) and float(val) > 0:
+                    cell.value = round(float(val), 1)
+                    cell.number_format = '0.0'
+                else:
+                    cell.value = None
+            # Standard integer metrics
+            elif title_lower in ("easy", "medium", "hard", "total solved", "contest easy", "contest medium", "contest hard", "contests attended", "score"):
+                if isinstance(val, (int, float)):
+                    cell.value = int(val)
+                    cell.number_format = '#,##0'
+
         ws.row_dimensions[r_idx].height = 22
 
     # Auto-adjust column widths cleanly with generous padding for filter buttons & long text
-    header_row_idx = 6
+    header_row_idx = r_hdr
+    ws.row_dimensions[header_row_idx].height = 45
     for col_idx, col in enumerate(ws.columns, 1):
         col_letter = get_column_letter(col_idx)
         header_name = str(ws.cell(row=header_row_idx, column=col_idx).value or "").strip()
@@ -574,42 +965,66 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         
         # Header length with extra padding for Excel's auto-filter dropdown icon (requires ~4-5 chars)
         hdr_len = len(header_name) + 5
-        content_len = max(hdr_len, max_data_len + 4)
+        content_len = max(hdr_len, max_data_len + 3)
         
         # Determine optimal column width based on field type
         if h_lower == "s.no":
-            final_width = max(content_len, 8)
+            final_width = 6
         elif h_lower in ("register no", "reg no"):
-            final_width = max(content_len, 16)
+            final_width = 14
         elif h_lower in ("student name", "name"):
-            final_width = min(max(content_len, 24), 38)
+            final_width = min(max(content_len, 20), 28)
         elif h_lower in ("department", "dept"):
-            final_width = max(content_len, 14)
+            final_width = 11
         elif h_lower == "department name":
-            final_width = min(max(content_len, 32), 52)
-        elif h_lower in ("year level", "year", "section", "sec"):
-            final_width = max(content_len, 12)
+            final_width = min(max(content_len, 20), 36)
+        elif h_lower in ("year level", "year", "section", "sec", "yr"):
+            final_width = 6
+        elif h_lower == "accommodation":
+            final_width = 9
+        elif h_lower in ("12th cutoff", "twelfth cutoff", "cutoff"):
+            final_width = 9.5
+        elif h_lower in ("contests attended", "total attended", "attended contests"):
+            final_width = 11.5
         elif h_lower in ("leetcode username", "username"):
-            final_width = min(max(content_len, 20), 30)
-        elif h_lower in ("attendance status", "status"):
-            final_width = max(content_len, 20)
-        elif h_lower in ("q1", "q2", "q3", "q4", "solved", "score", "easy", "medium", "hard"):
-            final_width = max(content_len, 10)
-        elif h_lower in ("global rank", "college rank", "rank"):
+            final_width = min(max(content_len, 14), 22)
+        elif h_lower in ("attendance status", "status") or h_lower.endswith("status"):
             final_width = max(content_len, 14)
-        elif h_lower in ("contest rating", "rating", "total time", "batch cohort"):
-            final_width = max(content_len, 15)
+        elif h_lower.startswith("c5") or h_lower.startswith("c6") or h_lower.startswith("c7") or h_lower.startswith("c8") or h_lower.startswith("c9"):
+            final_width = 5.5
+        elif h_lower in ("q1", "q2", "q3", "q4"):
+            final_width = 6 if max_data_len <= 2 else min(max_data_len + 3, 11)
+        elif h_lower in ("total solved", "solved", "contest solved") or (h_lower.endswith("solved") and "delta" not in h_lower):
+            final_width = 11
+        elif h_lower in ("contest easy", "easy"):
+            final_width = 9.5
+        elif h_lower in ("contest medium", "medium", "contest med"):
+            final_width = 10.5
+        elif h_lower in ("contest hard", "hard"):
+            final_width = 9.5
+        elif h_lower in ("score",) or h_lower.endswith("score"):
+            final_width = 9.5
+        elif h_lower in ("solved delta", "δ solved", "delta"):
+            final_width = 11
+        elif h_lower in ("trend", "trajectory"):
+            final_width = 12
+        elif h_lower in ("global rank", "college rank", "rank"):
+            final_width = 11.5
+        elif h_lower in ("contest rating", "rating"):
+            final_width = 10.5
+        elif h_lower in ("total time", "finish time"):
+            final_width = 10
         elif "email" in h_lower:
-            final_width = min(max(content_len, 26), 40)
+            final_width = min(max(content_len, 20), 30)
         elif any(w in h_lower for w in ["url", "link", "description", "action", "reason"]):
-            final_width = min(max(content_len, 30), 65)
+            final_width = min(max(content_len, 20), 40)
         else:
-            final_width = min(max(content_len, 14), 45)
+            final_width = min(max(content_len, 8), 30)
 
         ws.column_dimensions[col_letter].width = final_width
 
-    # Add AutoFilter so users can filter by Department, Year, Status, etc. on Row 6
-    ws.auto_filter.ref = f"A{header_row_idx}:{last_col}{len(rows) + header_row_idx}"
+    # Add AutoFilter so users can filter by Department, Year, Status, etc. on Table Header
+    ws.auto_filter.ref = f"A{header_row_idx}:{last_col}{len(rows) + start_row - 1}"
 
     # Generate Extra Sheet: 12th Cutoff Band Intelligence (ONLY for TNEA report)
     cutoff_summary = dataset.get("cutoffBandSummary") or dataset.get("cutoff_band_summary")
@@ -782,7 +1197,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 if c_i in (1, 2, 4, 5):
                     c.alignment = Alignment(horizontal="center", vertical="center")
                 else:
-                    c.alignment = Alignment(horizontal="center", vertical="center")
+                    c.alignment = Alignment(horizontal="left", vertical="center")
                 _apply_thin_border_top(c)
             ws_top.row_dimensions[r_idx].height = 22
 

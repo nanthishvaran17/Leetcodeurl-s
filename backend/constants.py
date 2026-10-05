@@ -1,7 +1,10 @@
 """
 Centralized Production Department Constants and Helpers.
-Only real academic departments belonging to Nandha Engineering College are allowed in production.
+Only the 3 active institutional departments are shown across all pages and filters.
 """
+
+# Exclusive whitelist — only these 3 department codes are active institution-wide.
+ACTIVE_DEPARTMENT_CODES = frozenset({"CSE(CS)", "CSE(IOT)", "IT"})
 
 EXCLUDED_DEPT_KEYWORDS = ["TEST", "DEMO", "DEV", "TEMP", "CSE-EDIT-TEST", "CSE_TEST"]
 
@@ -10,12 +13,12 @@ def is_production_department(code: str, name: str = "") -> bool:
         return False
     code_upper = (code or "").upper().strip()
     name_upper = (name or "").upper().strip()
-    
+
     for kw in EXCLUDED_DEPT_KEYWORDS:
         if kw in code_upper or kw in name_upper:
             return False
 
-    # All real academic departments (CSE, CSE(CS), CSE(IOT), AIDS, ECE, EEE, IT, AGRI, MECH, CIVIL, BME, etc.) are valid
-    return True
+    # Only allow the 3 officially active departments
+    return code_upper in {c.upper() for c in ACTIVE_DEPARTMENT_CODES}
 
 

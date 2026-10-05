@@ -611,7 +611,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999999] flex items-start justify-center p-4 pt-6 sm:pt-7 overflow-y-auto bg-slate-950/85 backdrop-blur-md modal-overlay-responsive"
+      className="fixed inset-0 z-[9999999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto bg-slate-950/85 backdrop-blur-md modal-overlay-responsive"
       style={{ zIndex: 99999999 }}
       onClick={(e) => {
         e.stopPropagation();
@@ -622,7 +622,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-student-dialog-title"
-        className="w-full h-full sm:h-auto max-h-[100dvh] sm:max-h-[88vh] max-w-xl bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden mobile-responsive-modal animate-modal-content"
+        className="w-full h-full sm:h-auto max-h-[100dvh] sm:max-h-[88vh] max-w-xl my-auto bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden mobile-responsive-modal animate-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Fixed Header */}

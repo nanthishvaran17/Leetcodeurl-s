@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Users, Trash2, Edit2, ShieldAlert, BadgeInfo, CheckCircle, 
   X, Check, AlertCircle, Sparkles, Building2, LayoutList, Calendar,
@@ -646,54 +647,48 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       ))}
 
       {/* Add Student Modal */}
-      {showAddModal && (
+      {showAddModal && typeof document !== 'undefined' && createPortal(
         <div 
-          className="modal-overlay-responsive animate-modal-backdrop"
+          className="modal-overlay-responsive animate-modal-backdrop select-none"
           onClick={(e) => { if (e.target === e.currentTarget) handleCloseAddModal(); }}
         >
-          <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden animate-modal-content">
+          <div className="modal-container-responsive max-w-lg max-h-[85vh] sm:max-h-[88vh] my-auto bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden animate-modal-content flex flex-col text-white">
             
             {/* Header */}
-            <div className="relative p-6 border-b border-slate-100 dark:border-slate-800/80 bg-gradient-to-r from-navy-900 via-indigo-950 to-navy-900 text-white overflow-hidden">
-              {/* Glowing ambient light effect */}
-              <div className="absolute -top-12 -right-12 w-32 h-32 bg-brand-500/20 rounded-full blur-2xl pointer-events-none" />
-              <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none" />
-
-              <div className="relative flex items-center justify-between z-10">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2.5 rounded-2xl bg-white/10 dark:bg-white/10 backdrop-blur-md border border-white/15 text-brand-400 shadow-inner">
-                    <UserPlus className="w-5 h-5 text-brand-300" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-black text-white tracking-tight">Add New Student Record</h3>
-                    <p className="text-xs text-slate-300 font-medium mt-0.5">
-                      Enroll student into institutional intelligence directory
-                    </p>
-                  </div>
+            <div className="px-6 py-5 border-b border-slate-800 bg-slate-900 shrink-0 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 rounded-2xl bg-brand-500/10 border border-brand-500/25 text-brand-400 shadow-inner">
+                  <UserPlus className="w-5 h-5 text-brand-400" />
                 </div>
-                <button 
-                  type="button"
-                  onClick={handleCloseAddModal} 
-                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-                  title="Close modal"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div>
+                  <h3 className="text-base font-black text-white tracking-tight">Add New Student Record</h3>
+                  <p className="text-xs text-slate-400 font-medium mt-0.5">
+                    Enroll student into institutional intelligence directory
+                  </p>
+                </div>
               </div>
+              <button 
+                type="button"
+                onClick={handleCloseAddModal} 
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
+                title="Close modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <form onSubmit={handleCreateStudent} className="p-6 flex-1 min-h-0 overflow-y-auto space-y-4 text-xs custom-scrollbar">
+            <form onSubmit={handleCreateStudent} className="p-6 flex-1 min-h-0 overflow-y-auto space-y-4 text-xs custom-scrollbar bg-slate-900">
               
               {/* Section 1: Primary Identification */}
               <div className="space-y-3">
-                <span className="text-[10px] font-black uppercase text-brand-600 dark:text-brand-400 tracking-wider">
+                <span className="text-[10px] font-black uppercase text-brand-400 tracking-wider flex items-center gap-1.5">
                   1. Identity & Roster Info
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">
-                      Register Number <span className="text-rose-500">*</span>
+                    <label className="block font-bold text-slate-300 mb-1">
+                      Register Number <span className="text-rose-400 font-bold">*</span>
                     </label>
                     <input
                       type="text"
@@ -701,13 +696,13 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                       onChange={(e) => setRegNo(e.target.value)}
                       placeholder="e.g. 732224CC001"
                       required
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-navy-900/60 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-inner"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 font-medium text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-inner"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">
-                      Student Name <span className="text-rose-500">*</span>
+                    <label className="block font-bold text-slate-300 mb-1">
+                      Student Name <span className="text-rose-400 font-bold">*</span>
                     </label>
                     <input
                       type="text"
@@ -715,7 +710,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. AJAY A"
                       required
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-navy-900/60 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-inner"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 font-medium text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-inner"
                     />
                   </div>
                 </div>
@@ -723,25 +718,25 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
               {/* Section 2: Department & Academic Year */}
               <div className="space-y-3 pt-1">
-                <span className="text-[10px] font-black uppercase text-brand-600 dark:text-brand-400 tracking-wider">
+                <span className="text-[10px] font-black uppercase text-brand-400 tracking-wider flex items-center gap-1.5">
                   2. Academic Placement
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">Department</label>
+                    <label className="block font-bold text-slate-300 mb-1">Department</label>
                     <GlobalFilter
                       value={deptId?.toString() || ""}
                       onChange={(val) => setDeptId(Number(val))}
                       dropdownWidth="w-full"
                       options={departments.map((d: any) => ({ value: String(d.id), label: d.name, pillText: d.code }))}
-                      icon={<Building2 className="w-4 h-4 text-brand-500" />}
+                      icon={<Building2 className="w-4 h-4 text-brand-400" />}
                       placeholder="Select Department"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">Year Level</label>
+                    <label className="block font-bold text-slate-300 mb-1">Year Level</label>
                     <GlobalFilter
                       value={yearLevel}
                       onChange={(val) => setYearLevel(val)}
@@ -752,7 +747,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                         { value: "3", label: "III Year", pillText: "3RD" },
                         { value: "4", label: "IV Year", pillText: "4TH" }
                       ]}
-                      icon={<Calendar className="w-4 h-4 text-amber-500" />}
+                      icon={<Calendar className="w-4 h-4 text-amber-400" />}
                       placeholder="Select Academic Year"
                     />
                   </div>
@@ -761,48 +756,48 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
               {/* Section 3: Contact & Accommodation */}
               <div className="space-y-3 pt-1">
-                <span className="text-[10px] font-black uppercase text-brand-600 dark:text-brand-400 tracking-wider">
+                <span className="text-[10px] font-black uppercase text-brand-400 tracking-wider flex items-center gap-1.5">
                   3. Contact & Accommodation
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">Personal Email</label>
+                    <label className="block font-bold text-slate-300 mb-1">Personal Email</label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="e.g. ajay@gmail.com"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-navy-900/60 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-inner"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 font-medium text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-inner"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">Institutional Email</label>
+                    <label className="block font-bold text-slate-300 mb-1">Institutional Email</label>
                     <input
                       type="email"
                       value={institutionalEmail}
                       onChange={(e) => setInstitutionalEmail(e.target.value)}
                       placeholder="e.g. 732224CC001@nandhaengg.org"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-navy-900/60 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-inner"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 font-medium text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-inner"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">12th Cut-off Score</label>
+                    <label className="block font-bold text-slate-300 mb-1">12th Cut-off Score</label>
                     <input
                       type="number"
                       step="0.01"
                       value={cutOffScore}
                       onChange={(e) => setCutOffScore(e.target.value)}
                       placeholder="e.g. 185.50"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-navy-900/60 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-inner"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 font-medium text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-inner"
                     />
                   </div>
                   <div>
-                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">Accommodation</label>
+                    <label className="block font-bold text-slate-300 mb-1">Accommodation</label>
                     <GlobalFilter
                       value={accommodationType}
                       onChange={(val) => setAccommodationType(val)}
@@ -811,7 +806,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                         { value: "DAY SCHOLAR", label: "Day Scholar", pillText: "DAY" },
                         { value: "HOSTEL", label: "Hosteler", pillText: "HOSTEL" }
                       ]}
-                      icon={<Building2 className="w-4 h-4 text-emerald-500" />}
+                      icon={<Building2 className="w-4 h-4 text-emerald-400" />}
                       placeholder="Select Type"
                     />
                   </div>
@@ -819,9 +814,9 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               </div>
 
               {/* Section 4: LeetCode Verification Link */}
-              <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+              <div className="space-y-2 pt-2 border-t border-slate-800">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase text-brand-600 dark:text-brand-400 tracking-wider">
+                  <span className="text-[10px] font-black uppercase text-brand-400 tracking-wider">
                     4. LeetCode Live Sync Integration
                   </span>
                   <span className="text-[10px] font-bold text-slate-400">AUTOMATIC VERIFICATION</span>
@@ -834,23 +829,23 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                     value={leetcodeUrl}
                     onChange={(e) => handleLcUrlChange(e.target.value)}
                     placeholder="e.g. https://leetcode.com/u/ajay_a/"
-                    className={`w-full px-3.5 py-2.5 pr-10 rounded-xl border bg-slate-50/70 dark:bg-navy-900/60 font-medium text-slate-900 dark:text-white transition-all shadow-inner ${
+                    className={`w-full px-3.5 py-2.5 pr-10 rounded-xl border bg-slate-950/80 font-medium text-white placeholder-slate-500 transition-all shadow-inner ${
                       lcValidation.status === 'valid'
                         ? 'border-emerald-500 focus:ring-2 focus:ring-emerald-500/30'
                         : lcValidation.status === 'not_found' || lcValidation.status === 'identity_mismatch' || lcValidation.status === 'invalid_format'
                         ? 'border-rose-500 focus:ring-2 focus:ring-rose-500/30'
-                        : 'border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500/50'
+                        : 'border-slate-800 focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500'
                     } focus:outline-none`}
                   />
                   {/* Inline status icon */}
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     {lcValidation.status === 'validating' && <Loader2 className="w-4 h-4 text-brand-400 animate-spin" />}
-                    {lcValidation.status === 'valid' && <CheckCircle className="w-4 h-4 text-emerald-500" />}
+                    {lcValidation.status === 'valid' && <CheckCircle className="w-4 h-4 text-emerald-400" />}
                     {(lcValidation.status === 'not_found' || lcValidation.status === 'identity_mismatch' || lcValidation.status === 'invalid_format') && (
-                      <XCircle className="w-4 h-4 text-rose-500" />
+                      <XCircle className="w-4 h-4 text-rose-400" />
                     )}
                     {(lcValidation.status === 'rate_limited' || lcValidation.status === 'network_error' || lcValidation.status === 'fetch_failed') && (
-                      <AlertTriangle className="w-4 h-4 text-amber-500" />
+                      <AlertTriangle className="w-4 h-4 text-amber-400" />
                     )}
                   </div>
                 </div>
@@ -859,18 +854,18 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                 <LcValidationChip state={lcValidation} />
 
                 {!saveAllowed && (
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 italic">
+                  <p className="text-[11px] text-slate-400 italic">
                     Tip: Fix the LeetCode URL above, or clear it to save record without profile sync.
                   </p>
                 )}
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+              <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={handleCloseAddModal}
-                  className="px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 font-extrabold hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 font-extrabold transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -878,10 +873,10 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                   type="submit"
                   disabled={loading || !saveAllowed}
                   title={!saveAllowed ? 'Fix the LeetCode URL to continue' : undefined}
-                  className={`px-5 py-2.5 rounded-xl font-black text-xs shadow-lg transition-all cursor-pointer flex items-center gap-2 ${
+                  className={`px-5 py-2.5 rounded-xl font-black text-xs shadow-lg transition-all cursor-pointer flex items-center gap-2 active:scale-95 ${
                     loading || !saveAllowed
-                      ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed shadow-none'
-                      : 'bg-gradient-to-r from-brand-600 via-indigo-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white shadow-brand-500/25 hover:scale-[1.02]'
+                      ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed shadow-none'
+                      : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-500/25'
                   }`}
                 >
                   {loading ? (
@@ -905,7 +900,8 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

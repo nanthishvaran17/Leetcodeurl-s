@@ -3292,10 +3292,19 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
                 const participationPct = total > 0 ? Math.min(100, Math.round((attended / total) * 100)) : 0;
 
+                const isSelected = selectedDeptFilter === dept.code || normalizeDepartment(selectedDeptFilter) === deptNorm;
+
                 return (
                   <div
                     key={dept.code}
-                    className="relative group p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between min-w-0 overflow-hidden"
+                    onClick={() => setSelectedDeptFilter(isSelected ? 'ALL' : dept.code)}
+                    role="button"
+                    title={`Click to filter by ${dept.name}`}
+                    className={`relative group p-4 rounded-2xl bg-white dark:bg-navy-950 border shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between min-w-0 overflow-hidden cursor-pointer active:scale-[0.98] ${
+                      isSelected 
+                        ? 'border-indigo-500 dark:border-indigo-400 ring-2 ring-indigo-500/20 shadow-md' 
+                        : 'border-slate-200 dark:border-navy-800 hover:border-slate-300 dark:hover:border-navy-700'
+                    }`}
                   >
                     {/* Top gradient decorative line */}
                     <div className={`absolute top-0 left-0 w-full h-1 ${color.bar}`} />
@@ -4707,12 +4716,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                                 {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : r.status === 'USERNAME_NOT_FOUND' ? (r.username ? 'INVALID HANDLE' : 'UNLINKED') : 'NOT ATTENDED'}
                               </span>
                             </td>
-                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q1 === 1 || r.q1 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-300 font-normal">—</span>}</td>
-                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q2 === 1 || r.q2 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-300 font-normal">—</span>}</td>
-                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q3 === 1 || r.q3 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-300 font-normal">—</span>}</td>
-                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q4 === 1 || r.q4 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-300 font-normal">—</span>}</td>
-                            <td className="px-3 py-1.5 text-right font-black text-emerald-600 dark:text-emerald-400">{isAttended ? (r.total_solved ?? '—') : '—'}</td>
-                            <td className="px-3 py-1.5 text-right font-bold text-slate-600 dark:text-slate-400">{isAttended ? (r.rank || r.contest_rank || '—') : '—'}</td>
+                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q1 === 1 || r.q1 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
+                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q2 === 1 || r.q2 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
+                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q3 === 1 || r.q3 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
+                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q4 === 1 || r.q4 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
+                            <td className="px-3 py-1.5 text-right font-black text-emerald-600 dark:text-emerald-400">{isAttended ? (r.total_solved ?? 0) : 0}</td>
+                            <td className="px-3 py-1.5 text-right font-bold text-slate-600 dark:text-slate-400">{isAttended ? (r.rank || r.contest_rank || 0) : 0}</td>
                           </tr>
                         );
                       })
@@ -5111,7 +5120,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
                   <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Rank</p>
-                  <p className="text-2xl font-black font-mono mt-1 text-slate-900 dark:text-white">{viewingProfileStudent.rank || viewingProfileStudent.contest_rank || '—'}</p>
+                  <p className="text-2xl font-black font-mono mt-1 text-slate-900 dark:text-white">{viewingProfileStudent.rank || viewingProfileStudent.contest_rank || '0'}</p>
                 </div>
               </div>
 

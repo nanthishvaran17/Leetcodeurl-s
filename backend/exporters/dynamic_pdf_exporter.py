@@ -42,25 +42,55 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
     
     rows = dataset.get("rows") or dataset.get("allStudents") or dataset.get("all_students_current") or []
     
+    contest_name = str(dataset.get("contestName") or dataset.get("sessionName") or "WEEKLY CONTEST").split("\n")[0].strip()
+    report_type = str(dataset.get("reportType") or dataset.get("report_type") or "").upper().strip()
+    raw_title = dataset.get("reportTitle") or dataset.get("title") or ""
+
+    is_wow = (
+        report_type in ("WEEK_ON_WEEK_INTELLIGENCE", "WOW_INTEL", "WEEK_ON_WEEK")
+        or (rows and any(k in rows[0] for k in ("prev_status", "curr_status", "solved_delta", "trend")))
+        or "wowSummary" in dataset
+    )
+
+    prev_c_lbl = str(dataset.get("prevContest") or (dataset.get("wowSummary") or {}).get("prevContest") or "Last Week").strip()
+    curr_c_lbl = str(dataset.get("currContest") or (dataset.get("wowSummary") or {}).get("currContest") or contest_name or "This Week").strip()
+
     # Pre-calculate headers to determine dynamic page width
     clean_headers = []
     first_row = {}
     weekly_data_keys = []
     if rows:
         first_row = rows[0]
-        weekly_data_keys = []
-        if "weeklyData" in first_row:
-            for wd in first_row.get("weeklyData", []):
-                weekly_data_keys.append(wd.get("contestNum"))
+        if is_wow:
+            clean_headers = [
+                "S.No",
+                "Register No",
+                "Student Name",
+                "Dept",
+                "Yr",
+                f"{prev_c_lbl} Status",
+                f"{prev_c_lbl} Solved",
+                f"{prev_c_lbl} Score",
+                f"{curr_c_lbl} Status",
+                f"{curr_c_lbl} Solved",
+                f"{curr_c_lbl} Score",
+                "Δ Solved",
+                "Trend",
+            ]
+        else:
+            weekly_data_keys = []
+            if "weeklyData" in first_row:
+                for wd in first_row.get("weeklyData", []):
+                    weekly_data_keys.append(wd.get("contestNum"))
 
-        for h in first_row.keys():
-            if h == "weeklyData":
-                for c_num in weekly_data_keys:
-                    clean_headers.append(f"C{c_num}")
-            else:
-                formatted_h = re.sub(r'([a-z])([A-Z])', r'\1 \2', h).replace("_", " ").title().replace('Pct', '%')
-                clean_headers.append(formatted_h)
-                
+            for h in first_row.keys():
+                if h == "weeklyData":
+                    for c_num in weekly_data_keys:
+                        clean_headers.append(f"C{c_num}")
+                else:
+                    formatted_h = re.sub(r'([a-z])([A-Z])', r'\1 \2', h).replace("_", " ").title().replace('Pct', '%')
+                    clean_headers.append(formatted_h)
+                    
     num_cols = len(clean_headers)
     
     # Strict A4 dimensions as baseline
@@ -113,13 +143,11 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
         spaceAfter=15
     )
     
-    # Metadata Context Extraction
-    contest_name = str(dataset.get("contestName") or dataset.get("sessionName") or "WEEKLY CONTEST").split("\n")[0].strip()
-    report_type = str(dataset.get("reportType") or dataset.get("report_type") or "").upper().strip()
-    raw_title = dataset.get("reportTitle") or dataset.get("title") or ""
     
     # Robust Title Logic
-    if report_type == "HISTORICAL_CONTEST_INTELLIGENCE":
+    if is_wow:
+        report_title = f"WEEK-ON-WEEK INTELLIGENCE — {prev_c_lbl.upper()} VS {curr_c_lbl.upper()}"
+    elif report_type == "HISTORICAL_CONTEST_INTELLIGENCE":
         session_headers = dataset.get("sessionHeaders", [])
         if session_headers and len(session_headers) >= 1:
             first_c = session_headers[0].get("contestNum")
@@ -205,31 +233,78 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
     left_cell_style = ParagraphStyle('LeftCellStyle', parent=styles['Normal'], fontSize=fs, alignment=0, textColor=colors.black, leading=fs+2, wordWrap='CJK')
     header_style = ParagraphStyle('HeaderStyle', parent=styles['Normal'], fontSize=hs, alignment=1, textColor=colors.white, fontName='Helvetica-Bold', leading=hs+2, wordWrap='CJK')
     
+    success_cell_style = ParagraphStyle('SuccessCellStyle', parent=styles['Normal'], fontSize=fs, alignment=1, textColor=colors.HexColor("#047857"), fontName='Helvetica-Bold', leading=fs+2, wordWrap='CJK')
+    risk_cell_style = ParagraphStyle('RiskCellStyle', parent=styles['Normal'], fontSize=fs, alignment=1, textColor=colors.HexColor("#B91C1C"), fontName='Helvetica-Bold', leading=fs+2, wordWrap='CJK')
+    neutral_cell_style = ParagraphStyle('NeutralCellStyle', parent=styles['Normal'], fontSize=fs, alignment=1, textColor=colors.HexColor("#475569"), leading=fs+2, wordWrap='CJK')
+
     table_data = []
     table_data.append([Paragraph(h, header_style) for h in clean_headers])
     
-    for r in rows:
-        row_vals = []
-        c_idx = 0
-        for h in first_row.keys():
-            if h == "weeklyData":
-                wd_list = r.get("weeklyData") or []
-                wd_map = {wd.get("contestNum"): wd for wd in wd_list}
-                for c_num in weekly_data_keys:
-                    wd_val = wd_map.get(c_num)
-                    if wd_val and wd_val.get("att"):
-                        solved = wd_val.get("solved", 0)
-                        row_vals.append(Paragraph(str(solved), cell_style))
-                    else:
-                        row_vals.append(Paragraph("-", cell_style))
+    if is_wow:
+        for idx, r in enumerate(rows, 1):
+            sno_val = str(r.get("s_no") or idx)
+            reg_val = str(r.get("reg_no") or "")
+            name_val = str(r.get("name") or "")
+            dept_val = str(r.get("dept") or "")
+            yr_val = str(r.get("year") or "")
+
+            p_st_raw = str(r.get("prev_status") or "").upper().strip()
+            p_st = "ATTENDED" if p_st_raw in ("ATTENDED", "PUBLIC", "VIRTUAL") else "ABSENT"
+            p_sol = "—" if p_st == "ABSENT" and (r.get("prev_solved") is None or r.get("prev_solved") == 0) else str(r.get("prev_solved", "0"))
+            p_sc = "—" if p_st == "ABSENT" and (r.get("prev_score") is None or r.get("prev_score") == 0) else str(r.get("prev_score", "0"))
+
+            c_st_raw = str(r.get("curr_status") or "").upper().strip()
+            c_st = "ATTENDED" if c_st_raw in ("ATTENDED", "PUBLIC", "VIRTUAL") else "ABSENT"
+            c_sol = str(r.get("curr_solved", "0"))
+            c_sc = str(r.get("curr_score", "0"))
+
+            diff = r.get("solved_delta", 0)
+            diff_str = f"+{diff}" if isinstance(diff, int) and diff > 0 else str(diff)
+            trend_str = str(r.get("trend") or "Stable →")
+
+            p_st_p = Paragraph(p_st, success_cell_style if p_st == "ATTENDED" else risk_cell_style)
+            c_st_p = Paragraph(c_st, success_cell_style if c_st == "ATTENDED" else risk_cell_style)
+            diff_p = Paragraph(diff_str, success_cell_style if str(diff_str).startswith("+") else (risk_cell_style if str(diff_str).startswith("-") else neutral_cell_style))
+            trend_p = Paragraph(trend_str, success_cell_style if ("Improving" in trend_str or "↑" in trend_str) else (risk_cell_style if ("Declining" in trend_str or "↓" in trend_str) else neutral_cell_style))
+
+            table_data.append([
+                Paragraph(sno_val, cell_style),
+                Paragraph(reg_val, cell_style),
+                Paragraph(name_val, left_cell_style),
+                Paragraph(dept_val, cell_style),
+                Paragraph(yr_val, cell_style),
+                p_st_p,
+                Paragraph(p_sol, cell_style),
+                Paragraph(p_sc, cell_style),
+                c_st_p,
+                Paragraph(c_sol, cell_style),
+                Paragraph(c_sc, cell_style),
+                diff_p,
+                trend_p
+            ])
+    else:
+        for r in rows:
+            row_vals = []
+            c_idx = 0
+            for h in first_row.keys():
+                if h == "weeklyData":
+                    wd_list = r.get("weeklyData") or []
+                    wd_map = {wd.get("contestNum"): wd for wd in wd_list}
+                    for c_num in weekly_data_keys:
+                        wd_val = wd_map.get(c_num)
+                        if wd_val and wd_val.get("att"):
+                            solved = wd_val.get("solved", 0)
+                            row_vals.append(Paragraph(str(solved), cell_style))
+                        else:
+                            row_vals.append(Paragraph("-", cell_style))
+                        c_idx += 1
+                else:
+                    val = str(r.get(h) if r.get(h) is not None else "")
+                    h_name = clean_headers[c_idx].lower()
+                    c_style = left_cell_style if ("name" in h_name or "url" in h_name) else cell_style
+                    row_vals.append(Paragraph(val, c_style))
                     c_idx += 1
-            else:
-                val = str(r.get(h) if r.get(h) is not None else "")
-                h_name = clean_headers[c_idx].lower()
-                c_style = left_cell_style if ("name" in h_name or "url" in h_name) else cell_style
-                row_vals.append(Paragraph(val, c_style))
-                c_idx += 1
-        table_data.append(row_vals)
+            table_data.append(row_vals)
         
     # Calculate balanced relative weights for columns
     min_widths = []

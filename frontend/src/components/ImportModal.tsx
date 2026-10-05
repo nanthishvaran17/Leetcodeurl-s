@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, UploadCloud, CheckCircle2, AlertTriangle, FileSpreadsheet, Loader2, 
   RefreshCw, Zap, ShieldCheck, Terminal, ArrowRight, Check, ChevronRight, ChevronLeft, 
@@ -210,6 +211,17 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
 
   if (!isOpen) return null;
 
+  const formatApiError = (err: any, fallback: string): string => {
+    const detail = err?.response?.data?.detail;
+    if (!detail) return err?.message || fallback;
+    if (typeof detail === 'string') return detail;
+    if (Array.isArray(detail)) {
+      return detail.map((d: any) => (typeof d === 'string' ? d : d.msg || JSON.stringify(d))).join(', ');
+    }
+    if (typeof detail === 'object') return detail.message || JSON.stringify(detail);
+    return fallback;
+  };
+
   // Step 1 -> Step 2: File Select & Analyze
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -221,9 +233,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
       formData.append('file', selected);
 
       try {
-        const res = await api.post('/students/analyze-import', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        const res = await api.post('/students/analyze-import', formData);
 
         if (res.data && res.data.success) {
           setAnalysisData(res.data);
@@ -234,7 +244,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
           notify.error('Analysis Failed', res.data?.error || 'Unable to parse Excel headers.', { category: 'EXCEL IMPORT' });
         }
       } catch (err: any) {
-        notify.error('Analysis Error', err.response?.data?.detail || 'Failed to analyze uploaded file.', { category: 'EXCEL IMPORT' });
+        notify.error('Analysis Error', formatApiError(err, 'Failed to analyze uploaded file.'), { category: 'EXCEL IMPORT' });
       } finally {
         setLoading(false);
       }
@@ -251,9 +261,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
     formData.append('custom_mapping', JSON.stringify(customMapping));
 
     try {
-      const res = await api.post('/students/analyze-import', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await api.post('/students/analyze-import', formData);
 
       if (res.data && res.data.success) {
         setAnalysisData(res.data);
@@ -263,7 +271,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
         notify.error('Analysis Error', res.data?.error || 'Validation failed for selected mapping.', { category: 'EXCEL IMPORT' });
       }
     } catch (err: any) {
-      notify.error('Mapping Error', err.response?.data?.detail || 'Could not verify custom mappings.', { category: 'EXCEL IMPORT' });
+      notify.error('Mapping Error', formatApiError(err, 'Could not verify custom mappings.'), { category: 'EXCEL IMPORT' });
     } finally {
       setLoading(false);
     }
@@ -282,9 +290,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
     formData.append('confirmed_new_departments', JSON.stringify(confirmedNewDepts));
 
     try {
-      const res = await api.post('/students/commit-import', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await api.post('/students/commit-import', formData);
 
       if (res.data && res.data.success) {
         setCommitSummary(res.data.summary);
@@ -296,7 +302,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
         notify.error('Import Failed', res.data?.error || 'Database commit encountered an error.', { category: 'EXCEL IMPORT' });
       }
     } catch (err: any) {
-      notify.error('Commit Error', err.response?.data?.detail || 'Failed to complete student import commit.', { category: 'EXCEL IMPORT' });
+      notify.error('Commit Error', formatApiError(err, 'Failed to complete student import commit.'), { category: 'EXCEL IMPORT' });
     } finally {
       setLoading(false);
     }
@@ -322,7 +328,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
 
   const isImporting = loading && step === 4;
 
-  return (
+  if (!isOpen || typeof document === 'undefined') return null;
+
+  return createPortal(
     <div 
       className="modal-overlay-responsive animate-modal-backdrop"
       onClick={(e) => {
@@ -819,6 +827,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
 
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

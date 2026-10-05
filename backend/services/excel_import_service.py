@@ -141,16 +141,14 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
     import pandas as pd  # type: ignore
     from backend.models import Student, Department
     from backend.services.excel_intelligence_engine import (
-        detect_column_headers, normalize_year_value, normalize_batch_value,
+        detect_column_headers, find_best_header_row_and_dataframe,
+        normalize_year_value, normalize_batch_value,
         normalize_department_value, normalize_leetcode_url, CANONICAL_FIELDS
     )
 
     db = SessionLocal()
     try:
-        try:
-            df = pd.read_excel(io.BytesIO(file_bytes))
-        except Exception:
-            df = pd.read_csv(io.BytesIO(file_bytes))
+        df, raw_headers = find_best_header_row_and_dataframe(file_bytes)
 
         if df.empty:
             return {
@@ -159,19 +157,23 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
                 "total_rows": 0
             }
 
-        raw_headers = [c.strip() for c in df.columns]
         auto_mappings, confidence_map, unmapped = detect_column_headers(raw_headers)
 
         effective_mapping = {**auto_mappings, **(custom_mapping or {})}
 
-        # Reverse map: canonical_field -> raw_header
-        canonical_to_raw = {v: k for k, v in effective_mapping.items()}
+        # Reverse map: canonical_field -> raw_header (ignoring excluded/blank targets)
+        canonical_to_raw = {}
+        for raw_col, target_field in effective_mapping.items():
+            if target_field and str(target_field).strip() and str(target_field).strip() not in ("exclude", "-- Unmapped / Exclude --"):
+                canonical_to_raw[target_field] = raw_col
 
-        # Load existing reference data
-        dept_master = {d.code.upper(): d for d in db.query(Department).all()}
+        # Load existing reference data safely
+        dept_master = {}
         for d in db.query(Department).all():
+            if d.code:
+                dept_master[d.code.strip().upper()] = d
             if d.name:
-                dept_master[d.name.upper()] = d
+                dept_master[d.name.strip().upper()] = d
 
         existing_students_reg = {s.reg_no.strip().upper(): s for s in db.query(Student).all() if s.reg_no}
         existing_depts_set = set(dept_master.keys())
@@ -500,7 +502,8 @@ def commit_smart_excel_import(
     import pandas as pd  # type: ignore
     from backend.models import Student, Department
     from backend.services.excel_intelligence_engine import (
-        detect_column_headers, normalize_year_value, normalize_batch_value,
+        detect_column_headers, find_best_header_row_and_dataframe,
+        normalize_year_value, normalize_batch_value,
         normalize_department_value, normalize_leetcode_url, CANONICAL_FIELDS
     )
     from backend.services.audit_service import log_admin_action
@@ -508,24 +511,24 @@ def commit_smart_excel_import(
 
     db = SessionLocal()
     try:
-        try:
-            df = pd.read_excel(io.BytesIO(file_bytes))
-        except Exception:
-            df = pd.read_csv(io.BytesIO(file_bytes))
+        df, raw_headers = find_best_header_row_and_dataframe(file_bytes)
 
         if df.empty:
             return {"success": False, "error": "Uploaded Excel file is empty."}
 
-        raw_headers = [c.strip() for c in df.columns]
         auto_mappings, _, _ = detect_column_headers(raw_headers)
         effective_mapping = {**auto_mappings, **(custom_mapping or {})}
-        canonical_to_raw = {v: k for k, v in effective_mapping.items()}
+
+        canonical_to_raw = {}
+        for raw_col, target_field in effective_mapping.items():
+            if target_field and str(target_field).strip() and str(target_field).strip() not in ("exclude", "-- Unmapped / Exclude --"):
+                canonical_to_raw[target_field] = raw_col
 
         # 1. Register confirmed/detected new departments
         new_dept_codes = confirmed_new_departments or []
         created_depts_list = []
 
-        existing_depts_db = {d.code.upper(): d for d in db.query(Department).all()}
+        existing_depts_db = {d.code.upper(): d for d in db.query(Department).all() if d.code}
         for code in new_dept_codes:
             code_upper = code.strip().upper()
             if code_upper and code_upper not in existing_depts_db:

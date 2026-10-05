@@ -14,9 +14,10 @@ import pyotp
 from typing import Optional, List, Any
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, BackgroundTasks
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 
 from backend.database import get_db
 from backend.config import settings
@@ -2281,3 +2282,283 @@ def admin_verify_otp(data: AdminVerifyOTPRequest, request: Request, response: Re
             **dept_scope
         }
     }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# WEBAUTHN / PASSKEY AUTHENTICATION ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _get_webauthn_config(request: Request):
+    """
+    Dynamically resolves rp_id and list of allowed origins based on incoming request.
+    WebAuthn specification strictly requires rp_id to be a valid domain or 'localhost'.
+    IP addresses (such as 127.0.0.1 or local network IPs) are forbidden by the W3C spec.
+    """
+    origin = request.headers.get("origin")
+    host = request.url.hostname or "localhost"
+
+    origin_host = None
+    if origin:
+        try:
+            parsed = urllib.parse.urlparse(origin)
+            origin_host = parsed.hostname
+        except Exception:
+            pass
+
+    target_host = origin_host or host or "localhost"
+
+    # Any IP address (127.0.0.1, 192.168.x.x) or localhost/local domain resolves to "localhost"
+    is_ip = bool(re.match(r"^(\d{1,3}\.){3}\d{1,3}$", target_host) or ":" in target_host)
+    if is_ip or target_host.lower() in ("localhost", "127.0.0.1") or target_host.endswith(".local"):
+        rp_id = "localhost"
+    else:
+        rp_id = target_host
+
+    origins = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:8000",
+        "https://leetcodeurl-s.onrender.com",
+        f"http://{target_host}:5173",
+        f"http://{target_host}:3000",
+        f"http://{target_host}:8000",
+        f"https://{target_host}",
+        f"http://{target_host}",
+    ]
+    if origin:
+        origins.append(origin)
+
+    cleaned_origins = list(set([o.rstrip('/') for o in origins if o]))
+    return rp_id, cleaned_origins
+
+
+@router.get("/passkey/register-options")
+def passkey_register_options(request: Request, db: Session = Depends(get_db)):
+    """
+    Generates WebAuthn registration options for current authenticated user.
+    """
+    from webauthn import generate_registration_options, options_to_json
+    from webauthn.helpers.structs import AuthenticatorSelectionCriteria, UserVerificationRequirement, ResidentKeyRequirement
+    from webauthn.helpers import bytes_to_base64url
+
+    current_user = get_current_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required to register a passkey.")
+
+    rp_id, _ = _get_webauthn_config(request)
+    rp_name = "Nandha Engineering College"
+
+    options = generate_registration_options(
+        rp_id=rp_id,
+        rp_name=rp_name,
+        user_id=str(current_user.id).encode("utf-8"),
+        user_name=current_user.username,
+        user_display_name=getattr(current_user, "full_name", None) or current_user.username,
+        authenticator_selection=AuthenticatorSelectionCriteria(
+            user_verification=UserVerificationRequirement.PREFERRED,
+            resident_key=ResidentKeyRequirement.PREFERRED
+        )
+    )
+
+    current_user.webauthn_challenge = bytes_to_base64url(options.challenge)
+    db.commit()
+
+    options_dict = json.loads(options_to_json(options))
+    return {
+        "success": True,
+        "options": options_dict,
+        **options_dict
+    }
+
+
+@router.post("/passkey/register-verify")
+async def passkey_register_verify(request: Request, db: Session = Depends(get_db)):
+    """
+    Verifies passkey attestation response from browser and saves public credential.
+    """
+    from webauthn import verify_registration_response
+    from webauthn.helpers import base64url_to_bytes, bytes_to_base64url
+    from backend.models import UserPasskey
+
+    current_user = get_current_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required to register a passkey.")
+
+    if not current_user.webauthn_challenge:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No active passkey registration challenge found. Please try again.")
+
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON payload.")
+
+    credential_data = body.get("response") if (isinstance(body, dict) and "response" in body and isinstance(body["response"], dict) and "clientDataJSON" in body["response"].get("response", {})) else body
+    if isinstance(credential_data, dict) and "response" in credential_data and "clientDataJSON" not in credential_data.get("response", {}):
+        if "id" not in credential_data and isinstance(credential_data.get("response"), dict):
+            credential_data = credential_data["response"]
+
+    rp_id, allowed_origins = _get_webauthn_config(request)
+
+    try:
+        challenge_bytes = base64url_to_bytes(current_user.webauthn_challenge)
+        verification = verify_registration_response(
+            credential=credential_data,
+            expected_challenge=challenge_bytes,
+            expected_origin=allowed_origins,
+            expected_rp_id=rp_id,
+            require_user_verification=False,
+        )
+
+        cred_id_str = bytes_to_base64url(verification.credential_id)
+        pub_key_str = bytes_to_base64url(verification.credential_public_key)
+
+        existing = db.query(UserPasskey).filter(UserPasskey.credential_id == cred_id_str).first()
+        if existing:
+            existing.user_id = current_user.id
+            existing.public_key = pub_key_str
+            existing.sign_count = verification.sign_count
+        else:
+            new_passkey = UserPasskey(
+                user_id=current_user.id,
+                credential_id=cred_id_str,
+                public_key=pub_key_str,
+                sign_count=verification.sign_count
+            )
+            db.add(new_passkey)
+
+        current_user.webauthn_challenge = None
+        db.commit()
+
+        logger.info(f"[PASSKEY] Successfully registered passkey credential for user {current_user.username} (ID: {current_user.id})")
+        return {"success": True, "message": "Passkey registered successfully! You can now use it to sign in."}
+    except Exception as e:
+        logger.error(f"[PASSKEY] Registration verification failed: {e}")
+        return {"success": False, "message": f"Passkey verification failed: {str(e)}"}
+
+
+@router.post("/passkey/login-options")
+def passkey_login_options(request: Request, body: dict, db: Session = Depends(get_db)):
+    """
+    Generates WebAuthn authentication options for passkey login.
+    """
+    from webauthn import generate_authentication_options, options_to_json
+    from webauthn.helpers import bytes_to_base64url
+
+    username = (body.get("username") or "").strip().lower()
+    user = None
+    if username:
+        user = db.query(User).filter(
+            or_(func.lower(User.username) == username, func.lower(User.email) == username)
+        ).first()
+
+    rp_id, _ = _get_webauthn_config(request)
+    options = generate_authentication_options(
+        rp_id=rp_id,
+        allow_credentials=[]
+    )
+
+    challenge_b64 = bytes_to_base64url(options.challenge)
+    if user:
+        user.webauthn_challenge = challenge_b64
+        db.commit()
+
+    options_dict = json.loads(options_to_json(options))
+    return {
+        "success": True,
+        "options": options_dict,
+        **options_dict
+    }
+
+
+@router.post("/passkey/login-verify")
+async def passkey_login_verify(request: Request, response: Response, db: Session = Depends(get_db)):
+    """
+    Verifies passkey authentication response and issues JWT access tokens.
+    """
+    from webauthn import verify_authentication_response
+    from webauthn.helpers import base64url_to_bytes
+    from backend.models import UserPasskey
+
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON payload.")
+
+    credential_data = body.get("response") if (isinstance(body, dict) and "response" in body and isinstance(body["response"], dict) and "clientDataJSON" in body["response"].get("response", {})) else body
+    if isinstance(credential_data, dict) and "response" in credential_data and "clientDataJSON" not in credential_data.get("response", {}):
+        if "id" not in credential_data and isinstance(credential_data.get("response"), dict):
+            credential_data = credential_data["response"]
+
+    credential_id_input = credential_data.get("id") if isinstance(credential_data, dict) else None
+    if not credential_id_input:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing credential ID.")
+
+    passkey = db.query(UserPasskey).filter(UserPasskey.credential_id == credential_id_input).first()
+    if not passkey:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Passkey not recognized. Please sign in with password or register this passkey.")
+
+    user = db.query(User).filter(User.id == passkey.user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User associated with passkey not found.")
+
+    if not user.webauthn_challenge:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No active authentication challenge. Please request login options first.")
+
+    rp_id, allowed_origins = _get_webauthn_config(request)
+
+    try:
+        pub_key_bytes = base64url_to_bytes(passkey.public_key)
+        challenge_bytes = base64url_to_bytes(user.webauthn_challenge)
+
+        verification = verify_authentication_response(
+            credential=credential_data,
+            expected_challenge=challenge_bytes,
+            expected_origin=allowed_origins,
+            expected_rp_id=rp_id,
+            credential_public_key=pub_key_bytes,
+            credential_current_sign_count=passkey.sign_count,
+            require_user_verification=False,
+        )
+
+        passkey.sign_count = verification.new_sign_count
+        user.webauthn_challenge = None
+        db.commit()
+
+        _record_user_login(db, user, request)
+
+        session_id, refresh_token_value = None, None
+        try:
+            refresh_token_value, session_id = create_server_admin_session(db, user, request, response)
+        except Exception:
+            db.rollback()
+
+        access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
+        dept_scope = _get_user_dept_scope(db, user)
+
+        logger.info(f"[PASSKEY] Login successful for user {user.username} via credential {credential_id_input}")
+        return {
+            "success": True,
+            "access_token": access_token,
+            "token": access_token,
+            "refresh_token": refresh_token_value,
+            "token_type": "bearer",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "full_name": getattr(user, "full_name", None) or user.username,
+                "email": user.email,
+                "role": user.role,
+                "department_id": user.department_id,
+                "section_id": user.section_id,
+                "require_password_change": getattr(user, "require_password_change", False),
+                "profile_photo": getattr(user, "profile_photo", None) or "",
+                **dept_scope
+            }
+        }
+    except Exception as e:
+        logger.error(f"[PASSKEY] Login verification error: {e}")
+        return JSONResponse(status_code=400, content={"success": False, "message": f"Authentication failed: {str(e)}"})
+

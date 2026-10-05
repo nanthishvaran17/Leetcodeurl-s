@@ -87,6 +87,8 @@ def normalize_dept_val(code_raw: Optional[str], name_raw: Optional[str] = "") ->
         return "CSE(IoT)"
     if "CYBER" in c or "CYBER" in n or "CC" in c or "CSE(CS)" in c or "CSE (CS)" in c or "(CS)" in c or c == "CS":
         return "CSE(CS)"
+    if c == "IT" or "IT" in c or "INFORMATION TECH" in n or "INFORMATION TECHNOLOGY" in n:
+        return "IT"
     if c in ("CSE", "COMPUTER SCIENCE") or "COMPUTER SCIENCE &" in n or "COMPUTER SCIENCE AND" in n:
         return "CSE"
     return code_raw or "CSE"
@@ -102,7 +104,7 @@ def matches_dept(r_dept_code: str, r_dept_name: str, target_dept: Optional[str],
         if dept_id is not None and dept_id == target_id:
             return True
         id_code_map = {
-            1: "CSE(CS)", 2: "CSE(IOT)", 7: "IT", 8: "CSE", 
+            1: "CSE(CS)", 2: "CSE(IOT)", 4: "IT", 7: "IT", 8: "CSE", 
             9: "AGRI", 10: "AIDS", 11: "EEE", 12: "ECE"
         }
         if target_id in id_code_map:
@@ -574,7 +576,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 return "—"
             try:
                 num = float(v_str)
-                if math.isnan(num) or num <= 0:
+                if math.isnan(num) or num <= 0 or num >= 5000000:
                     return "—"
                 return f"{int(num):,}"
             except (ValueError, TypeError):
@@ -608,6 +610,15 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
 
         is_virt = status in (ContestStatus.VIRTUAL_PRACTICE.value, ContestStatus.VIRTUAL_ATTENDED.value, "VIRTUAL")
         is_live = is_att and not is_virt
+
+        from backend.routes.reports import compute_contest_difficulty_breakdown
+        c_brk = compute_contest_difficulty_breakdown(
+            q1=q1_val if is_att else None,
+            q2=q2_val if is_att else None,
+            q3=q3_val if is_att else None,
+            q4=q4_val if is_att else None,
+            contest_solved=solved_val
+        )
 
         student_rows.append({
             "student_id": s_id,
@@ -643,6 +654,19 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             "total_time_display": tot_time_disp,
             "contest_solved": solved_val,
             "total_solved": solved_val,
+            "contest_easy": c_brk["contest_easy"],
+            "contest_medium": c_brk["contest_medium"],
+            "contest_hard": c_brk["contest_hard"],
+            "contest_easy_solved": c_brk["contest_easy"],
+            "contest_medium_solved": c_brk["contest_medium"],
+            "contest_hard_solved": c_brk["contest_hard"],
+            "overall_total_solved": getattr(st_profile, "total_solved", 0) if st_profile else 0,
+            "easy_solved": getattr(st_profile, "easy_solved", 0) if st_profile else 0,
+            "medium_solved": getattr(st_profile, "medium_solved", 0) if st_profile else 0,
+            "hard_solved": getattr(st_profile, "hard_solved", 0) if st_profile else 0,
+            "accommodation": getattr(s, "accommodation", "") or "—",
+            "twelfth_cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
+            "cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
             "score": (solved_val * 3) if (is_att and solved_val is not None) else "—",
             "rank": disp_rank,
             "global_rank": disp_rank,
@@ -897,7 +921,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         "verifiedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "dataStatus": "READY" if (total_students > 0 and is_valid_data) else ("BLOCKED" if not is_valid_data else "PARTIAL"),
         "data_status": "READY" if (total_students > 0 and is_valid_data) else ("BLOCKED" if not is_valid_data else "PARTIAL"),
-        "config": config.model_dump(),
+        "config": config.model_dump() if hasattr(config, "model_dump") else (config if isinstance(config, dict) else vars(config)),
         "contestSummary": {
             "latestContest": contest_name,
             "contestDate": contest_date,
@@ -979,12 +1003,15 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         "topStudents": top_performers
     }
 
+    from backend.routes.reports import _enrich_dataset_ranks_and_ratings
+    dataset = _enrich_dataset_ranks_and_ratings(dataset, db)
+
     # Persist in ReportHistory for auditability and fast exports
     history_entry = ReportHistory(
         report_id=report_id,
         report_type="CONTEST_PERFORMANCE",
         title=title,
-        filters=config.model_dump(),
+        filters=config.model_dump() if hasattr(config, "model_dump") else (config if isinstance(config, dict) else vars(config)),
         dataset=dataset,
         status="GENERATED"
     )

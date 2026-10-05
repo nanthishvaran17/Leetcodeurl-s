@@ -22,7 +22,21 @@ def generate_roster():
         joinedload(Student.stats)
     ).all()
 
-    print(f"Total students in DB: {len(students)}")
+    # Exclude synthetic/test/hardening accounts
+    students = [
+        st for st in students
+        if st.reg_no and not (
+            st.reg_no.startswith("7322STU") or
+            st.reg_no.startswith("TEST") or
+            st.reg_no.startswith("7322P930") or
+            st.reg_no.startswith("CONCUR") or
+            st.reg_no.startswith("HARDENING") or
+            "Beta" in (st.name or "") or
+            "Mock" in (st.name or "")
+        )
+    ]
+
+    print(f"Total real students in DB: {len(students)}")
 
     # Sort students by total_solved desc
     students = sorted(

@@ -261,23 +261,6 @@ async def backfill_historical(
                 session = session_map[cn]
                 entry = history_map.get(cn)
 
-                if entry:
-                    status = _classify_entry(entry)
-                    solved = entry.get("problemsSolved", 0)
-                    entry.get("finishTimeInSeconds", 0)
-                    rating = entry.get("rating")
-                    rank = entry.get("ranking")
-                    q1, q2, q3, q4 = _q_matrix(solved)
-                    score = q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6
-                else:
-                    status = "ABSENT"
-                    solved = 0
-                    rating = None
-                    rank = None
-                    q1 = q2 = q3 = q4 = 0
-                    score = 0
-
-                # Upsert WeeklyPublicResult
                 rec = (
                     db.query(WeeklyPublicResult)
                     .filter(
@@ -286,6 +269,32 @@ async def backfill_historical(
                     )
                     .first()
                 )
+
+                if entry:
+                    status = _classify_entry(entry)
+                    solved = entry.get("problemsSolved", 0)
+                    rating = entry.get("rating")
+                    rank = entry.get("ranking")
+                    q1, q2, q3, q4 = _q_matrix(solved)
+                    score = q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6
+                elif rec and ((rec.total_contest_solved or 0) > 0 or (rec.participation_status or "").upper() in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE")):
+                    status = rec.participation_status or "PUBLIC_ATTENDED"
+                    solved = rec.total_contest_solved or 0
+                    q1 = rec.q1 or 0
+                    q2 = rec.q2 or 0
+                    q3 = rec.q3 or 0
+                    q4 = rec.q4 or 0
+                    score = rec.contest_score or (q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6)
+                    rating = rec.contest_rating
+                    rank = rec.contest_rank
+                else:
+                    status = "ABSENT"
+                    solved = 0
+                    rating = None
+                    rank = None
+                    q1 = q2 = q3 = q4 = 0
+                    score = 0
+
                 if not rec:
                     rec = WeeklyPublicResult(
                         session_id=session.id,
@@ -308,10 +317,10 @@ async def backfill_historical(
                 rec.q4 = q4
                 rec.contest_rating = float(rating) if rating else None
                 rec.contest_rank = rank
-                rec.fetch_status = "SUCCESS" if entry else "SUCCESS"
+                rec.fetch_status = "SUCCESS"
                 rec.last_fetched_at = datetime.datetime.now(datetime.timezone.utc)
 
-                if status == "PUBLIC_ATTENDED":
+                if status in ("PUBLIC_ATTENDED", "PUBLIC", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE"):
                     counters[cn]["official"] += 1
                 else:
                     counters[cn]["absent"] += 1

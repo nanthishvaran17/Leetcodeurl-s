@@ -61,8 +61,6 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
             name = (s.contest_name or "").strip()
             if re.search(r"\b(test|mock)\b", name, re.IGNORECASE) or name.upper().startswith("TEST_"):
                 continue
-            if s.session_date == "2026-08-30":
-                continue
             try:
                 if "." in s.session_date:
                     d_obj = datetime.datetime.strptime(s.session_date, "%d.%m.%Y").date()
@@ -180,9 +178,15 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
                 "name": s.name or "",
                 "dept": dept_code,
                 "year": year_disp,
+                "accommodation": getattr(s, "accommodation", None) or "Day Scholar",
+                "twelfth_cutoff": getattr(s, "twelfth_cutoff", None),
                 "username": s.username or "Unlinked",
                 "totalAttended": total_attended,
+                "total_attended": total_attended,
+                "contests_attended": total_attended,
                 "totalSolved": total_solved_all,
+                "total_solved": total_solved_all,
+                "contest_solved": total_solved_all,
                 "consistencyPct": consistency_pct,
                 "weeklyData": weekly_data,
             })
@@ -215,7 +219,7 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
         latest_name = getattr(contest_sessions[-1][1], "contest_name", "Historical Contests") if contest_sessions else "Historical Contests"
         report_id = f"RPT-HIST-{datetime.datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
 
-        return {
+        dataset = {
             "reportId": report_id,
             "reportType": "HISTORICAL_CONTEST_INTELLIGENCE",
             "report_type": "HISTORICAL_CONTEST_INTELLIGENCE",
@@ -225,6 +229,8 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
             "sessionDate": latest_date,
             "session_date": latest_date,
             "contestName": latest_name,
+            "deptFilter": dept_filter,
+            "yearFilter": year_filter,
             "filters": {"department": dept_filter, "year": year_filter},
             "sessionHeaders": session_headers,
             "histSummary": {
@@ -235,6 +241,10 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
             "allStudents": rows,
             "rows": rows,
         }
+
+        from backend.routes.reports import _enrich_dataset_ranks_and_ratings
+        dataset = _enrich_dataset_ranks_and_ratings(dataset, db)
+        return dataset
 
     except Exception as e:
         logger.error(f"[HIST_INTEL] Build failed: {e}", exc_info=True)

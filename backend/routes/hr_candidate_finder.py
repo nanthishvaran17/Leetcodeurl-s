@@ -777,7 +777,7 @@ def get_student_intelligence(
         "submissions": recent_submissions,
         "problems": recent_submissions,  # type: ignore
         "contests": {
-            "contest_rating": round(c_rating, 1) if c_rating is not None else "N/A",  # type: ignore
+            "contest_rating": int(round(c_rating)) if c_rating is not None else "N/A",  # type: ignore
             "global_rank": f"#{c_rank:,}" if c_rank is not None else "N/A",
             "contests_attended": c_attended if c_attended is not None else "N/A",
             "top_percentage": f"{c_top_pct:.1f}%" if c_top_pct is not None else "N/A",
@@ -850,7 +850,7 @@ def get_student_intelligence(
             "current_streak": current_streak
         },  # type: ignore
         "contest_metrics": {
-            "contest_rating": round(c_rating, 1) if c_rating is not None else "N/A",  # type: ignore
+            "contest_rating": int(round(c_rating)) if c_rating is not None else "N/A",  # type: ignore
             "global_rank": f"#{c_rank:,}" if c_rank is not None else "N/A",
             "contests_attended": c_attended if c_attended is not None else "N/A",
             "top_percentage": f"{c_top_pct:.1f}%" if c_top_pct is not None else "N/A"
@@ -1189,7 +1189,7 @@ def search_candidates(
             "total_submissions": tot_subs,
             "active_days": active_days,  # type: ignore
             "current_streak": streak,
-            "contest_rating": round(c_rating, 1) if c_rating > 0 else 0.0,  # type: ignore
+            "contest_rating": int(round(c_rating)) if c_rating > 0 else 0,  # type: ignore
             "global_rank": f"#{c_rank:,}" if c_rank is not None else "N/A",
             "contests_attended": c_attended if c_attended is not None else "N/A",
             "contest_top_pct": c_top_pct,

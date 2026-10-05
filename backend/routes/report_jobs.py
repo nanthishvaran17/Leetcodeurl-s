@@ -385,7 +385,13 @@ def download_report_job_file(
     if not job.file_path or not os.path.exists(job.file_path):
         raise HTTPException(status_code=404, detail="Report file missing from disk")
         
-    filename = os.path.basename(job.file_path)
+    from backend.models import ReportCache
+    cache_rec = db.query(ReportCache).filter(ReportCache.storage_path == job.file_path).first()
+    if cache_rec and cache_rec.filename:
+        filename = cache_rec.filename
+    else:
+        filename = os.path.basename(job.file_path)
+        
     ext = filename.split(".")[-1].lower()
     
     ext_media_types = {

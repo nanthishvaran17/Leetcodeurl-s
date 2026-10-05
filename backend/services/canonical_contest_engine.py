@@ -229,7 +229,7 @@ def _filter_canonical_dataset_in_memory(
         elif att_upper in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "NOT_PARTICIPATED", "UNATTENDED"):
             rows = [r for r in rows if r.get("status") in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT") and r.get("username") and r.get("username") not in ("USERNAME_NOT_FOUND", "UNLINKED", "NO_HANDLE", "")]
         elif att_upper in ("ERRORS", "DATA_ERRORS", "DATA_ERROR", "FAILED", "MISSING_LEETCODE_USERNAME", "MISSING_USERNAME", "USERNAME_NOT_FOUND"):
-            rows = [r for r in rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "FETCH_FAILED", "DATA_MISMATCH", "CONFLICT") or not r.get("username") or r.get("username") in ("USERNAME_NOT_FOUND", "UNLINKED", "NO_HANDLE", "")]
+            rows = [r for r in rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "FETCH_FAILED", "DATA_MISMATCH", "CONFLICT", "DATA_ERROR", "SOURCE_ERROR") or not r.get("username") or r.get("username") in ("USERNAME_NOT_FOUND", "UNLINKED", "NO_HANDLE", "")]
         elif att_upper in ("NOT_VERIFIED", "PENDING", "UNVERIFIED"):
             rows = [r for r in rows if r.get("status") in ("PENDING", "NOT_VERIFIED", "UNVERIFIED")]
         elif att_upper in ("ALL_ATTENDED", "PARTICIPATED"):
@@ -246,7 +246,7 @@ def _filter_canonical_dataset_in_memory(
     virt = sum(1 for r in scope_rows if r.get("status") in ("VIRTUAL", "VIRTUAL_ATTENDED"))
     not_att = sum(1 for r in scope_rows if r.get("status") == "NOT_ATTENDED")
     not_verified = sum(1 for r in scope_rows if r.get("status") in ("NOT_VERIFIED", "PENDING", "UNVERIFIED"))
-    errors = sum(1 for r in scope_rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "FETCH_FAILED", "DATA_MISMATCH", "CONFLICT"))
+    errors = sum(1 for r in scope_rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "FETCH_FAILED", "DATA_MISMATCH", "CONFLICT", "DATA_ERROR", "SOURCE_ERROR") or not r.get("username") or r.get("username") in ("USERNAME_NOT_FOUND", "UNLINKED", "NO_HANDLE", ""))
     pending = sum(1 for r in scope_rows if r.get("status") == "PENDING")
 
     def _get_solved(r):
@@ -429,6 +429,8 @@ def _build_canonical_contest_dataset_internal(
             dept_raw = "CSE(CS)"
         elif "CI" in reg_upper or "CIR" in reg_upper:
             dept_raw = "CSE(IOT)"
+        elif "IT" in reg_upper or "ITL" in reg_upper:
+            dept_raw = "IT"
 
         dept_code = str(dept_raw).strip().upper()
         if dept_code in ("CSE(IOT)", "IOT", "CSE_IOT", "CSE (IOT)"):
@@ -651,8 +653,10 @@ def _build_canonical_contest_dataset_internal(
             "score": score_val,
             "contest_rank": rank_val,
             "rank": rank_val,
-            "contest_rating": rating_val,
-            "rating": rating_val,
+            "global_rank": (stat.contest_global_ranking if stat else None) or (stat.public_profile_ranking if stat else None) or rank_val,
+            "profile_rank": stat.contest_global_ranking if stat else None,
+            "contest_rating": (stat.contest_rating if stat else None) or rating_val,
+            "rating": (stat.contest_rating if stat else None) or rating_val,
             "data_source": "LeetCode GraphQL (userContestRankingHistory)",
             "verification_status": "VERIFIED" if is_participant or canon_status == "NOT_ATTENDED" else "UNVERIFIED",
             "error_reason": error_reason,

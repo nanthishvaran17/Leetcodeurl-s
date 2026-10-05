@@ -154,13 +154,15 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
             pass
 
     # 25 Years Anniversary Logo (Placed cleanly on top-right last_col 1)
-    logo_25_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nec_25_years_logo.png")
+    logo_25_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nec_25_years_logo_transparent.png")
+    if not os.path.exists(logo_25_path):
+        logo_25_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nec_25_years_logo.png")
     if os.path.exists(logo_25_path):
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
             img_25 = OpenPyxlImage(logo_25_path)
-            img_25.height = 58
-            img_25.width = 58
+            img_25.height = 56
+            img_25.width = 56
             ws.add_image(img_25, f"{last_col}1")
         except Exception:
             pass
@@ -237,8 +239,8 @@ def normalize_row_data(r: dict) -> dict:
         "solved": solved,
         "solved_str": f"{solved}/4",
         "score": score,
-        "rating": f"{rating_val:.2f}" if rating_val is not None else "—",
-        "rating_raw": rating_val,
+        "rating": f"{int(round(rating_val)):,}" if rating_val is not None else "—",
+        "rating_raw": int(round(rating_val)) if rating_val is not None else None,
         "rank": f"#{rank_val:,}" if rank_val is not None else "—",
         "rank_raw": rank_val,
         "perf_score": perf_score,
@@ -508,6 +510,10 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     Constructs a 16-sheet Principal-ready intelligence report using strictly Times New Roman.
     """
     rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
+    if any(k in rpt_t for k in ("WEEK_ON_WEEK", "WOW")) or dataset.get("wowSummary"):
+        from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
+        return export_dynamic_excel(dataset)
+
     if rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR") or dataset.get("college_summary"):
         return export_weekly_performance_excel(dataset)
 

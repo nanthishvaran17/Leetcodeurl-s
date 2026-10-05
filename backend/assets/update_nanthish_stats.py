@@ -20,22 +20,22 @@ def update_nanthish():
         if not stud.stats:
             stats = LeetCodeProfileStats(
                 student_id=stud.id,
-                total_solved=645,
-                easy_solved=213,
-                medium_solved=323,
-                hard_solved=109,
-                contest_rating=1845.5,
-                contest_global_ranking=14200,
+                total_solved=895,
+                easy_solved=399,
+                medium_solved=372,
+                hard_solved=124,
+                contest_rating=1820.0,
+                contest_global_ranking=65461,
                 status="OK"
             )
             db.add(stats)
         else:
-            stud.stats.total_solved = 645
-            stud.stats.easy_solved = 213
-            stud.stats.medium_solved = 323
-            stud.stats.hard_solved = 109
-            stud.stats.contest_rating = 1845.5
-            stud.stats.contest_global_ranking = 14200
+            stud.stats.total_solved = 895
+            stud.stats.easy_solved = 399
+            stud.stats.medium_solved = 372
+            stud.stats.hard_solved = 124
+            stud.stats.contest_rating = 1820.0
+            stud.stats.contest_global_ranking = 65461
             stud.stats.status = "OK"
 
         prog = db.query(WeeklyStudentProgress).filter(

@@ -1320,7 +1320,7 @@ def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_i
         if not s or not s.session_date:
             continue
         c_name = str(s.contest_name or "")
-        if re.search(r'\b(test|mock)\b', c_name, re.IGNORECASE) or s.session_date == "2026-08-30":
+        if re.search(r'\b(test|mock)\b', c_name, re.IGNORECASE):
             continue
         valid_sessions.append(s)
 
@@ -1536,7 +1536,7 @@ def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_i
 
     for c in range(6, total_cols + 1):
         col_let = get_column_letter(c)
-        ws.column_dimensions[col_let].width = 14
+        ws.column_dimensions[col_let].width = 5
 
 
 def create_batch_performance_matrix_sheet(ws, db: Session, dept_id: Optional[int] = None, current_user: Optional[User] = None):
@@ -1800,10 +1800,17 @@ def generate_single_week_matrix_excel(
             target_session = sessions[0]
             week_label = "Latest Week"
 
-    try:
-        date_display = datetime.datetime.strptime(target_session.session_date, "%Y-%m-%d").strftime("%d.%m.%Y") if target_session else get_ist_date().strftime("%d.%m.%Y")  # type: ignore
-    except Exception:
-        date_display = get_ist_date().strftime("%d.%m.%Y")
+    from backend.time_utils import get_ist_date
+    date_display = get_ist_date().strftime("%d.%m.%Y")
+    if target_session and target_session.session_date:
+        s_date_str = str(target_session.session_date).strip()
+        if "." in s_date_str:
+            date_display = s_date_str
+        else:
+            try:
+                date_display = datetime.datetime.strptime(s_date_str, "%Y-%m-%d").strftime("%d.%m.%Y")
+            except Exception:
+                date_display = s_date_str
 
     wb = openpyxl.Workbook()
     wb.remove(wb.active)  # type: ignore
@@ -1831,33 +1838,33 @@ def generate_single_week_matrix_excel(
         sheet_name = f"{dept.code[:12]}-{week_label[:8]}"[:31]
         ws = wb.create_sheet(title=sheet_name)
 
-        total_cols = 9  # 5 fixed + 4 date cols
+        total_cols = 14  # 5 fixed + 4 contest cols + 5 summary cols (Accom, Cutoff, Easy, Med, Hard)
 
         # College header
-        ws.merge_cells("C1:I1")
+        ws.merge_cells("C1:N1")
         ws["C1"] = "NANDHA ENGINEERING COLLEGE, ERODE – 638 052."
         ws["C1"].font = Font(name=TNR, size=13, bold=True)
         ws["C1"].alignment = center_align
 
-        ws.merge_cells("C2:I2")
+        ws.merge_cells("C2:N2")
         ws["C2"] = f"Department of {dept.name}"
         ws["C2"].font = Font(name=TNR, size=11, bold=True)
         ws["C2"].alignment = left_align
 
-        ws.merge_cells("C3:I3")
+        ws.merge_cells("C3:N3")
         ws["C3"] = f"Date: {date_display}  |  Report: {week_label}"
         ws["C3"].font = Font(name=TNR, size=11, bold=True)
         ws["C3"].alignment = left_align
 
         # Title banner
-        ws.merge_cells("A5:I5")
+        ws.merge_cells("A5:N5")
         ws["A5"] = f"BATCH {batch_label} LEETCODE – CONTEST & PROBLEM SOLVING COUNT ({week_label.upper()}: {date_display})"
         ws["A5"].font = Font(name=TNR, size=12, bold=True, color="FFFFFF")
         ws["A5"].fill = title_fill
         ws["A5"].alignment = center_align
         ws.row_dimensions[5].height = 28
 
-        ws.merge_cells("C6:I6")
+        ws.merge_cells("C6:N6")
         ws["C6"] = "Name & Designation of the Academic Coordinator:"
         ws["C6"].font = Font(name=TNR, size=11, bold=True)
         ws["C6"].alignment = left_align
@@ -1888,10 +1895,21 @@ def generate_single_week_matrix_excel(
             cell.alignment = center_align
             cell.border = thin_border
 
+        # Post-Contest Summary Headers (Columns 10..14)
+        post_hdrs = ["ACCOMMODATION", "12TH CUTOFF", "CONTEST EASY", "CONTEST MEDIUM", "CONTEST HARD"]
+        for ci, h in enumerate(post_hdrs, 10):
+            col_let = get_column_letter(ci)
+            cell = ws.cell(row=8, column=ci, value=h)
+            cell.font = Font(name=TNR, size=10, bold=True, color="FFFFFF")
+            cell.fill = date_fill
+            cell.alignment = center_align
+            cell.border = thin_border
+            ws.merge_cells(f"{col_let}8:{col_let}9")
+
         ws.row_dimensions[8].height = 24
         ws.row_dimensions[9].height = 28
         for r in range(8, 10):
-            for c in range(1, 10):
+            for c in range(1, 15):
                 ws.cell(row=r, column=c).border = thin_border
 
         # Student data
@@ -1900,6 +1918,8 @@ def generate_single_week_matrix_excel(
             Student.year_level == target_year,
             Student.is_active == True
         ).order_by(Student.reg_no.asc()).all()
+
+        from backend.routes.reports import compute_contest_difficulty_breakdown
 
         current_row = 10
         for idx, st in enumerate(students_q, 1):
@@ -1910,6 +1930,7 @@ def generate_single_week_matrix_excel(
             ws.cell(row=current_row, column=5, value=st.leetcode_url or "").alignment = left_align
 
             rank_val, solved_val, rating_val, global_rank_val = idx, "—", "—", "—"
+            pub = None
 
             if target_session:
                 pub = db.query(WeeklyPublicResult).filter(
@@ -1945,7 +1966,6 @@ def generate_single_week_matrix_excel(
                     rating_val = st.stats.contest_rating if st.stats.contest_rating else "—"
                     global_rank_val = st.stats.contest_global_ranking if st.stats.contest_global_ranking else "—"
 
-
             # If session data exists: solved_val is problems_added (0-4), show as ratio
             # If no session: solved_val is total cumulative, show as total
             if target_session:
@@ -1977,7 +1997,33 @@ def generate_single_week_matrix_excel(
                 c_rating.font = Font(name=TNR, size=10, bold=True, color="9C0006")
                 c_rating.value = " Unrated"
 
-            for c in range(1, 10):
+            # Populate Post-Contest Summary Columns (10..14)
+            if pub:
+                c_brk = compute_contest_difficulty_breakdown(q1=pub.q1, q2=pub.q2, q3=pub.q3, q4=pub.q4, contest_solved=pub.total_contest_solved)
+            else:
+                pub_sums = db.query(
+                    func.sum(WeeklyPublicResult.q1),
+                    func.sum(WeeklyPublicResult.q2),
+                    func.sum(WeeklyPublicResult.q3),
+                    func.sum(WeeklyPublicResult.q4),
+                    func.sum(WeeklyPublicResult.total_contest_solved)
+                ).filter(WeeklyPublicResult.student_id == st.id).first()
+                sq1, sq2, sq3, sq4, stot = pub_sums if pub_sums else (0,0,0,0,0)
+                c_brk = compute_contest_difficulty_breakdown(q1=sq1, q2=sq2, q3=sq3, q4=sq4, contest_solved=stot)
+
+            accom_val = getattr(st, "accommodation", "") or "—"
+            cut_val = float(st.twelfth_cutoff) if (hasattr(st, "twelfth_cutoff") and st.twelfth_cutoff is not None) else "—"
+
+            c_accom  = ws.cell(row=current_row, column=10, value=accom_val)
+            c_cut    = ws.cell(row=current_row, column=11, value=cut_val)
+            c_ceasy  = ws.cell(row=current_row, column=12, value=c_brk["contest_easy"])
+            c_cmed   = ws.cell(row=current_row, column=13, value=c_brk["contest_medium"])
+            c_chard  = ws.cell(row=current_row, column=14, value=c_brk["contest_hard"])
+
+            for cell in [c_accom, c_cut, c_ceasy, c_cmed, c_chard]:
+                cell.alignment = center_align
+
+            for c in range(1, 15):
                 cell = ws.cell(row=current_row, column=c)
                 cell.font = Font(name=TNR, size=10)
                 cell.border = thin_border
@@ -1991,7 +2037,9 @@ def generate_single_week_matrix_excel(
         ws.column_dimensions['D'].width = 12
         ws.column_dimensions['E'].width = 40
         for col in ['F', 'G', 'H', 'I']:
-            ws.column_dimensions[col].width = 18
+            ws.column_dimensions[col].width = 5
+        for col in ['J', 'K', 'L', 'M', 'N']:
+            ws.column_dimensions[col].width = 8
 
         # Logo
         logo_path = os.path.join(os.path.dirname(__file__), "assets", "nandha_emblem.png")

@@ -11,7 +11,7 @@ from backend.database import get_db
 logger = logging.getLogger(__name__)
 from backend.models import (
     WeeklySession, WeeklyPublicResult, WeeklyVirtualResult, 
-    WeeklyContestErrorLog, OfficialWeeklySnapshot, Student, User
+    WeeklyContestErrorLog, OfficialWeeklySnapshot, Student, User, Department
 )
 from backend.services.weekly_session_manager import (
     get_or_create_current_weekly_session,
@@ -213,7 +213,7 @@ def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user:
     
     sess_id = session.id
     user_key = f"{current_user.id}:{current_user.role}" if current_user else "public"
-    cache_key = f"contest_summary_v5_{sess_id}_{user_key}"
+    cache_key = f"contest_summary_v6_{sess_id}_{user_key}"
     
     now_ts = datetime.datetime.now(datetime.timezone.utc).timestamp()
     if session.status == "FINALIZED" and cache_key in _CONTEST_RAM_CACHE:
@@ -300,10 +300,23 @@ def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user:
     missing_username_count = len([r for r in results if r.participation_status in ("UNKNOWN", "USERNAME_NOT_FOUND", "DATA_ERROR", "SOURCE_ERROR")])
     public_count = len([r for r in results if r.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")])
 
+    all_depts_db = db.query(Department).all()
     dept_stats: Dict[str, Dict[str, Any]] = {
         "CSE(CS)": {"name": "Computer Science and Engineering (Cyber Security)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "errors": 0},
-        "CSE(IOT)": {"name": "Computer Science and Engineering (Internet of Things)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "errors": 0},
+        "CSE(IOT)": {"name": "Computer Science and Engineering (IoT)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "errors": 0},
+        "IT": {"name": "Information Technology", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "errors": 0},
     }
+    for d_obj in all_depts_db:
+        if d_obj.code and d_obj.code not in dept_stats:
+            dept_stats[d_obj.code] = {
+                "name": d_obj.name or d_obj.code,
+                "total": 0,
+                "public": 0,
+                "virtual": 0,
+                "not_attended": 0,
+                "errors": 0
+            }
+
     for r in results:
         reg = (getattr(r, "reg_no", "") or "").upper()
         d = (getattr(r, "dept", "") or "").upper()
@@ -311,20 +324,25 @@ def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user:
             d_key = "CSE(IOT)"
         elif "CC" in reg or "CYBER" in d or "(CS)" in d or "CSE(CS)" in d:
             d_key = "CSE(CS)"
+        elif "IT" in reg or "INFORMATION" in d or d == "IT":
+            d_key = "IT"
+        elif d in dept_stats:
+            d_key = d
         else:
             d_key = "CSE(CS)"
         
         st = (getattr(r, "participation_status", "") or "").upper()
-        if d_key in dept_stats:
-            dept_stats[d_key]["total"] += 1
-            if st in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
-                dept_stats[d_key]["public"] += 1
-            elif st in ("VIRTUAL", "VIRTUAL_ATTENDED"):
-                dept_stats[d_key]["virtual"] += 1
-            elif st in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT"):
-                dept_stats[d_key]["not_attended"] += 1
-            else:
-                dept_stats[d_key]["errors"] += 1
+        if d_key not in dept_stats:
+            dept_stats[d_key] = {"name": d_key, "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "errors": 0}
+        dept_stats[d_key]["total"] += 1
+        if st in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+            dept_stats[d_key]["public"] += 1
+        elif st in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+            dept_stats[d_key]["virtual"] += 1
+        elif st in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT"):
+            dept_stats[d_key]["not_attended"] += 1
+        else:
+            dept_stats[d_key]["errors"] += 1
 
     summary_data = {
         "sessionId": sess_id,

@@ -55,8 +55,6 @@ def build_wow_intel_report(db, config, current_user=None) -> Dict[str, Any]:
             name = (s.contest_name or "").strip()
             if re.search(r"\b(test|mock)\b", name, re.IGNORECASE) or name.upper().startswith("TEST_"):
                 continue
-            if s.session_date == "2026-08-30":
-                continue
             try:
                 if "." in s.session_date:
                     d_obj = datetime.datetime.strptime(s.session_date, "%d.%m.%Y").date()

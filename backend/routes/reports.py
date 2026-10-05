@@ -267,6 +267,7 @@ def download_student_performance_detail_excel(
     attendance: Optional[str] = Query("ALL"),
     status: Optional[str] = Query("ALL"),
     search: Optional[str] = Query(""),
+    session_id: Optional[str] = Query("latest"),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Student Performance Detail Excel", dept_scoped=True))
 ):
@@ -290,7 +291,7 @@ def download_student_performance_detail_excel(
             db=db,
             report_type="STUDENT_PERFORMANCE",
             format="xlsx",
-            filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search},
+            filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search, "session_id": session_id},
             current_user=current_user
         )
 
@@ -321,6 +322,7 @@ def download_official_college_summary_excel(
     attendance: Optional[str] = Query("ALL"),
     status: Optional[str] = Query("ALL"),
     search: Optional[str] = Query(""),
+    session_id: Optional[str] = Query("latest"),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Excel Summary Report", dept_scoped=True))
 ):
@@ -345,7 +347,7 @@ def download_official_college_summary_excel(
             db=db,
             report_type=eff_report_type,
             format="xlsx",
-            filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search, "output_scope": output_scope},
+            filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search, "output_scope": output_scope, "session_id": session_id},
             current_user=current_user
         )
 
@@ -369,6 +371,7 @@ def download_master_10_sheet_excel(
     year_level: Optional[str] = Query("ALL"),
     batch: Optional[str] = Query("ALL"),
     output_scope: Optional[str] = Query("ALL"),
+    session_id: Optional[str] = Query("latest"),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Download Master 10-Sheet Excel", dept_scoped=True))
 ):
@@ -380,7 +383,7 @@ def download_master_10_sheet_excel(
         db=db,
         report_type="MASTER_10_SHEET",
         format="xlsx",
-        filters={"department": eff_dept, "year": eff_year, "batch": batch, "output_scope": output_scope},
+        filters={"department": eff_dept, "year": eff_year, "batch": batch, "output_scope": output_scope, "session_id": session_id},
         current_user=current_user
     )
     return _serve_cached_report(
@@ -398,6 +401,7 @@ def download_hod_department_intelligence_excel(
     year_level: Optional[str] = Query("ALL"),
     batch: Optional[str] = Query("ALL"),
     output_scope: Optional[str] = Query("ALL"),
+    session_id: Optional[str] = Query("latest"),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Download HOD Intelligence Report", dept_scoped=True))
 ):
@@ -409,7 +413,7 @@ def download_hod_department_intelligence_excel(
         db=db,
         report_type="HOD_DEPARTMENT_INTELLIGENCE",
         format="xlsx",
-        filters={"department": eff_dept, "year": eff_year, "batch": batch, "output_scope": output_scope},
+        filters={"department": eff_dept, "year": eff_year, "batch": batch, "output_scope": output_scope, "session_id": session_id},
         current_user=current_user
     )
     return _serve_cached_report(
@@ -427,6 +431,7 @@ def download_faculty_consolidated_excel(
     year_level: Optional[str] = Query("ALL"),
     batch: Optional[str] = Query("ALL"),
     output_scope: Optional[str] = Query("ALL"),
+    session_id: Optional[str] = Query("latest"),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Download Faculty Consolidated Report", dept_scoped=True))
 ):
@@ -438,7 +443,7 @@ def download_faculty_consolidated_excel(
         db=db,
         report_type="FACULTY_CONSOLIDATED",
         format="xlsx",
-        filters={"department": eff_dept, "year": eff_year, "batch": batch, "output_scope": output_scope},
+        filters={"department": eff_dept, "year": eff_year, "batch": batch, "output_scope": output_scope, "session_id": session_id},
         current_user=current_user
     )
     return _serve_cached_report(
@@ -456,6 +461,7 @@ def download_principal_executive_excel(
     year_level: Optional[str] = Query("ALL"),
     batch: Optional[str] = Query("ALL"),
     output_scope: Optional[str] = Query("ALL"),
+    session_id: Optional[str] = Query("latest"),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Download Principal Executive Report", dept_scoped=True))
 ):
@@ -467,7 +473,7 @@ def download_principal_executive_excel(
         db=db,
         report_type="PRINCIPAL_EXECUTIVE",
         format="xlsx",
-        filters={"department": eff_dept, "year": eff_year, "batch": batch, "output_scope": output_scope},
+        filters={"department": eff_dept, "year": eff_year, "batch": batch, "output_scope": output_scope, "session_id": session_id},
         current_user=current_user
     )
     return _serve_cached_report(
@@ -488,6 +494,7 @@ def download_master_tracker_excel(
     attendance: Optional[str] = Query("ALL"),
     status: Optional[str] = Query("ALL"),
     search: Optional[str] = Query(""),
+    session_id: Optional[str] = Query("latest"),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Master Tracker Excel", dept_scoped=True))
 ):
@@ -505,7 +512,7 @@ def download_master_tracker_excel(
             db=db,
             report_type="MASTER_TRACKER",
             format="xlsx",
-            filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search},
+            filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search, "session_id": session_id},
             current_user=current_user
         )
 
@@ -528,6 +535,7 @@ def download_weekly_contest_matrix_excel(
     dept: Optional[str] = Query("ALL"),
     department: Optional[str] = Query("ALL"),
     year: Optional[str] = Query("ALL"),
+    session_id: Optional[str] = Query("latest"),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Contest Matrix Excel", dept_scoped=True))
 ):
@@ -539,7 +547,7 @@ def download_weekly_contest_matrix_excel(
             db=db,
             report_type="WEEKLY_CONTEST_MATRIX",
             format="xlsx",
-            filters={"batch": batch, "dept_id": dept_id, "department": department or dept, "year": year},
+            filters={"batch": batch, "dept_id": dept_id, "department": department or dept, "year": year, "session_id": session_id},
             current_user=current_user
         )
         return _serve_cached_report(
@@ -608,6 +616,7 @@ def download_pdf_report(
     attendance: Optional[str] = Query("ALL"),
     status: Optional[str] = Query("ALL"),
     search: Optional[str] = Query(""),
+    session_id: Optional[str] = Query("latest"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user_optional)
 ):
@@ -670,8 +679,6 @@ def download_pdf_report(
         logger.error(f"[EXPORT ERROR] export-pdf failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Unable to generate report. Please try again.")
 
-
-
 @router.get("/export-word")
 def download_word_report(
     dept_id: Optional[int] = None, 
@@ -683,6 +690,7 @@ def download_word_report(
     attendance: Optional[str] = Query("ALL"),
     status: Optional[str] = Query("ALL"),
     search: Optional[str] = Query(""),
+    session_id: Optional[str] = Query("latest"),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Word Report", dept_scoped=True))
 ):
@@ -705,7 +713,7 @@ def download_word_report(
             db=db,
             report_type="STUDENT_PERFORMANCE",
             format="docx",
-            filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search},
+            filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search, "session_id": session_id},
             current_user=current_user
         )
 
@@ -732,6 +740,7 @@ def download_csv_report(
     attendance: Optional[str] = Query("ALL"),
     status: Optional[str] = Query("ALL"),
     search: Optional[str] = Query(""),
+    session_id: Optional[str] = Query("latest"),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export CSV Report", dept_scoped=True))
 ):
@@ -754,7 +763,7 @@ def download_csv_report(
             db=db,
             report_type="STUDENT_PERFORMANCE",
             format="csv",
-            filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search},
+            filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search, "session_id": session_id},
             current_user=current_user
         )
 
@@ -998,7 +1007,8 @@ def generate_universal_report(
         except Exception:
             canon_code = (payload.report_type or "").upper()
 
-        etag = f'W/"{data_ver}-{canon_code}-{dept}-{yr}-{scope}"'
+        sess_id = str(filters.get("session_id") or "latest")
+        etag = f'W/"{data_ver}-{canon_code}-{dept}-{yr}-{scope}-{sess_id}"'
 
         if_none_match = request.headers.get("if-none-match")
         if if_none_match and if_none_match.strip() == etag:
@@ -1212,12 +1222,26 @@ def get_contest_filename_base(
         date_seg = today_date_seg
 
     # --- 3. Department Slug ---
+    DEPT_ID_MAP = {
+        "1": "CSE-CS",
+        "2": "CSE-IOT",
+        "3": "IT",
+        "4": "IT",
+        "7": "IT",
+        "8": "CSE",
+        "9": "AGRI",
+        "10": "AIDS",
+        "11": "EEE",
+        "12": "ECE",
+    }
     DEPT_SLUG = {
         "CSE":      "CSE",
         "IT":       "IT",
         "AIDS":     "AIDS",
         "CSE(CS)":  "CSE-CS",
         "CSE(IOT)": "CSE-IOT",
+        "CSE(CYBER)":"CSE-CYBER",
+        "CYBER":    "CYBER",
         "ECE":      "ECE",
         "EEE":      "EEE",
         "MECH":     "MECH",
@@ -1226,7 +1250,28 @@ def get_contest_filename_base(
         "BME":      "BME",
     }
     d = (dept or "ALL").upper().strip()
-    dept_seg = "All-Depts" if d in ("ALL", "", "ALL DEPARTMENTS", "NONE") else DEPT_SLUG.get(d, d.replace(" ", "-"))
+    
+    # Try resolving from DB if numeric ID
+    if d.isdigit() and db is not None:
+        try:
+            from backend.models import Department
+            d_obj = db.query(Department).filter(Department.id == int(d)).first()
+            if d_obj and d_obj.code:
+                d = str(d_obj.code).upper().strip()
+        except Exception:
+            pass
+
+    if d in ("ALL", "", "ALL DEPARTMENTS", "NONE"):
+        dept_seg = "All-Depts"
+    elif d in DEPT_ID_MAP:
+        dept_seg = DEPT_ID_MAP[d]
+    elif d in DEPT_SLUG:
+        dept_seg = DEPT_SLUG[d]
+    else:
+        # Clean special chars and format
+        clean_d = d.replace("(", "-").replace(")", "").replace(" ", "-")
+        clean_d = re.sub(r"-+", "-", clean_d).strip("-")
+        dept_seg = clean_d or "All-Depts"
 
     # --- 4. Year Slug ---
     y = (year or "ALL").upper().strip()
@@ -1240,6 +1285,253 @@ def get_contest_filename_base(
     year_seg = YEAR_SLUG.get(y, f"{y}-Yr" if y and not y.endswith("-YR") else "All-Yrs")
 
     return f"NEC_{type_slug}_{dept_seg}_{year_seg}_{date_seg}"
+
+def compute_contest_difficulty_breakdown(q1: Optional[Any] = None, q2: Optional[Any] = None, q3: Optional[Any] = None, q4: Optional[Any] = None, contest_solved: Optional[Any] = None) -> dict:
+    """
+    Computes Contest Easy, Contest Medium, Contest Hard based on contest problems solved.
+    Supports both single-contest boolean solve flags ("1"/True) and multi-contest cumulative integer counts.
+    In LeetCode Contests:
+      - Q1 = Easy (1 problem per contest)
+      - Q2 & Q3 = Medium (2 problems per contest)
+      - Q4 = Hard (1 problem per contest)
+    """
+    def _parse_val(v: Any) -> int:
+        if v is None:
+            return 0
+        if isinstance(v, (int, float)):
+            return int(v)
+        sv = str(v).strip()
+        if sv.isdigit():
+            return int(sv)
+        if sv.lower() in ("1", "true", "yes"):
+            return 1
+        return 0
+
+    c_easy = _parse_val(q1)
+    c_med = _parse_val(q2) + _parse_val(q3)
+    c_hard = _parse_val(q4)
+    
+    known_sum = c_easy + c_med + c_hard
+    tot = 0
+    if contest_solved is not None and str(contest_solved).strip().isdigit():
+        tot = int(contest_solved)
+    elif known_sum > 0:
+        tot = known_sum
+
+    if tot > known_sum:
+        rem = tot - known_sum
+        full_blocks = rem // 4
+        leftover = rem % 4
+        
+        c_easy += full_blocks + (1 if leftover >= 1 else 0)
+        c_med += (full_blocks * 2) + (1 if leftover >= 2 else 0) + (1 if leftover >= 3 else 0)
+        c_hard += full_blocks + (1 if leftover >= 4 else 0)
+
+    return {
+        "contest_easy": c_easy,
+        "contest_medium": c_med,
+        "contest_hard": c_hard
+    }
+
+
+def _enrich_dataset_ranks_and_ratings(dataset: dict, db: Session) -> dict:
+    if not dataset or not isinstance(dataset, dict):
+        return dataset
+    
+    rtype_u = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
+    if any(k in rtype_u for k in ("WEEK_ON_WEEK", "WOW")):
+        return dataset
+
+    rows = (
+        dataset.get("rows") or 
+        dataset.get("allStudents") or 
+        dataset.get("all_rows") or 
+        dataset.get("all_students_current") or 
+        dataset.get("all_students") or 
+        dataset.get("students") or 
+        []
+    )
+    if not rows:
+        return dataset
+
+    # Check if this is a week-on-week row schema
+    first_r = rows[0] if isinstance(rows[0], dict) else {}
+    if "prev_status" in first_r or "curr_status" in first_r or "solved_delta" in first_r:
+        return dataset
+
+    all_reg_nos = {str(r.get("reg_no") or r.get("register_no") or "").strip() for r in rows if isinstance(r, dict) and (r.get("reg_no") or r.get("register_no"))}
+    all_reg_nos.discard("")
+
+    if all_reg_nos:
+        from backend.models import LeetCodeProfileStats, WeeklyPublicResult, WeeklyVirtualResult
+        from sqlalchemy import func
+
+        st_details = db.query(
+            Student.reg_no,
+            Student.accommodation,
+            Student.twelfth_cutoff,
+            LeetCodeProfileStats.contest_global_ranking,
+            LeetCodeProfileStats.public_profile_ranking,
+            LeetCodeProfileStats.contest_rating
+        ).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
+         .filter(Student.reg_no.in_(all_reg_nos)).all()
+        
+        detail_map = {
+            reg: {
+                "accom": accom or "",
+                "cutoff": float(cut) if cut is not None else None,
+                "rank": grank or prank,
+                "rating": crat
+            }
+            for reg, accom, cut, grank, prank, crat in st_details
+        }
+
+        # Query aggregate contest solves across all public and virtual contest sessions
+        c_stats_map = {}
+        ATTENDED_STATUSES = (
+            'ATTENDED', 'PUBLIC_ATTENDED', 'VIRTUAL_ATTENDED', 'PUBLIC', 'VIRTUAL',
+            'PUBLIC_LIVE', 'LIVE', 'VERIFIED', 'COMPLETED', 'ATTENDED_SOLVED', 'ATTENDED_ZERO'
+        )
+
+        from sqlalchemy import case, or_
+        is_pub_att = or_(
+            WeeklyPublicResult.participation_status.in_(ATTENDED_STATUSES),
+            WeeklyPublicResult.total_contest_solved > 0,
+            WeeklyPublicResult.contest_rank != None
+        )
+
+        pub_rows = db.query(
+            WeeklyPublicResult.reg_no,
+            func.sum(WeeklyPublicResult.q1),
+            func.sum(WeeklyPublicResult.q2),
+            func.sum(WeeklyPublicResult.q3),
+            func.sum(WeeklyPublicResult.q4),
+            func.sum(WeeklyPublicResult.total_contest_solved),
+            func.sum(case((is_pub_att, 1), else_=0))
+        ).filter(WeeklyPublicResult.reg_no.in_(all_reg_nos))\
+         .group_by(WeeklyPublicResult.reg_no).all()
+
+        for reg_val, sq1, sq2, sq3, sq4, stot, scnt in pub_rows:
+            rkey = str(reg_val).strip()
+            if rkey not in c_stats_map:
+                c_stats_map[rkey] = {"q1": 0, "q2": 0, "q3": 0, "q4": 0, "tot": 0, "attended": 0}
+            c_stats_map[rkey]["q1"] += int(sq1 or 0)
+            c_stats_map[rkey]["q2"] += int(sq2 or 0)
+            c_stats_map[rkey]["q3"] += int(sq3 or 0)
+            c_stats_map[rkey]["q4"] += int(sq4 or 0)
+            c_stats_map[rkey]["tot"] += int(stot or 0)
+            c_stats_map[rkey]["attended"] += int(scnt or 0)
+
+        is_virt_att = or_(
+            WeeklyVirtualResult.participation_status.in_(ATTENDED_STATUSES),
+            WeeklyVirtualResult.total_contest_solved > 0
+        )
+
+        virt_rows = db.query(
+            WeeklyVirtualResult.reg_no,
+            func.sum(WeeklyVirtualResult.q1),
+            func.sum(WeeklyVirtualResult.q2),
+            func.sum(WeeklyVirtualResult.q3),
+            func.sum(WeeklyVirtualResult.q4),
+            func.sum(WeeklyVirtualResult.total_contest_solved),
+            func.sum(case((is_virt_att, 1), else_=0))
+        ).filter(WeeklyVirtualResult.reg_no.in_(all_reg_nos))\
+         .group_by(WeeklyVirtualResult.reg_no).all()
+
+        for reg_val, sq1, sq2, sq3, sq4, stot, scnt in virt_rows:
+            rkey = str(reg_val).strip()
+            if rkey not in c_stats_map:
+                c_stats_map[rkey] = {"q1": 0, "q2": 0, "q3": 0, "q4": 0, "tot": 0, "attended": 0}
+            c_stats_map[rkey]["q1"] += int(sq1 or 0)
+            c_stats_map[rkey]["q2"] += int(sq2 or 0)
+            c_stats_map[rkey]["q3"] += int(sq3 or 0)
+            c_stats_map[rkey]["q4"] += int(sq4 or 0)
+            c_stats_map[rkey]["tot"] += int(stot or 0)
+            c_stats_map[rkey]["attended"] += int(scnt or 0)
+        
+        for r in rows:
+            if isinstance(r, dict):
+                reg = str(r.get("reg_no") or r.get("register_no") or "").strip()
+
+                db_c = c_stats_map.get(reg, {})
+                q1_val = r.get("q1") if r.get("q1") is not None else db_c.get("q1")
+                q2_val = r.get("q2") if r.get("q2") is not None else db_c.get("q2")
+                q3_val = r.get("q3") if r.get("q3") is not None else db_c.get("q3")
+                q4_val = r.get("q4") if r.get("q4") is not None else db_c.get("q4")
+
+                c_sol = r.get("contest_solved")
+                if c_sol is None or (isinstance(c_sol, (int, float)) and c_sol == 0 and db_c.get("tot", 0) > 0):
+                    c_sol = r.get("total_contest_solved")
+                if c_sol is None or (isinstance(c_sol, (int, float)) and c_sol == 0 and db_c.get("tot", 0) > 0):
+                    c_sol = db_c.get("tot")
+
+                breakdown = compute_contest_difficulty_breakdown(
+                    q1=q1_val,
+                    q2=q2_val,
+                    q3=q3_val,
+                    q4=q4_val,
+                    contest_solved=c_sol
+                )
+
+                r["contest_easy"] = breakdown["contest_easy"]
+                r["contest_medium"] = breakdown["contest_medium"]
+                r["contest_hard"] = breakdown["contest_hard"]
+                r["contest_easy_solved"] = breakdown["contest_easy"]
+                r["contest_medium_solved"] = breakdown["contest_medium"]
+                r["contest_hard_solved"] = breakdown["contest_hard"]
+                
+                # Check if weeklyData is present or if contests_attended is already accurately calculated
+                if isinstance(r.get("weeklyData"), list) and len(r.get("weeklyData")) > 0:
+                    att_count = sum(1 for w in r.get("weeklyData", []) if w.get("att"))
+                    r["contests_attended"] = att_count
+                    r["total_attended"] = att_count
+                    r["totalAttended"] = att_count
+                elif not r.get("contests_attended") or r.get("contests_attended") == 0:
+                    r["contests_attended"] = db_c.get("attended", 0)
+                    r["total_attended"] = db_c.get("attended", 0)
+                elif not r.get("total_attended"):
+                    r["total_attended"] = r.get("contests_attended")
+
+                if reg in detail_map:
+                    info = detail_map[reg]
+                    if not r.get("accommodation") or r.get("accommodation") == "—":
+                        r["accommodation"] = info["accom"]
+                    if r.get("twelfth_cutoff") is None:
+                        r["twelfth_cutoff"] = info["cutoff"]
+                    if r.get("cutoff") is None:
+                        r["cutoff"] = info["cutoff"]
+
+                    gr = r.get("global_rank") or r.get("contest_global_ranking") or r.get("profile_rank")
+                    if gr is None or str(gr).strip() in ("—", "None", "nan", "NaN", "null", "", "0"):
+                        matched_rank, matched_rat = info["rank"], info["rating"]
+                        if matched_rank and str(matched_rank).strip() not in ("—", "None", "0"):
+                            r["global_rank"] = matched_rank
+                            r["contest_global_ranking"] = matched_rank
+                            r["profile_rank"] = matched_rank
+                        if matched_rat and str(matched_rat).strip() not in ("—", "None", "0", "1500", "1500.0"):
+                            r["contest_rating"] = matched_rat
+                            r["rating"] = matched_rat
+
+    rtype_u = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
+    is_contest_only = any(k in rtype_u for k in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "WEEKLY_CONTEST", "SUNDAY_LIVE"))
+    if not is_contest_only and rows:
+        tot_ez = sum(int(r.get("easy") if r.get("easy") is not None else (r.get("easy_solved") or 0)) for r in rows)
+        tot_med = sum(int(r.get("medium") if r.get("medium") is not None else (r.get("medium_solved") or 0)) for r in rows)
+        tot_hard = sum(int(r.get("hard") if r.get("hard") is not None else (r.get("hard_solved") or 0)) for r in rows)
+        tot_solved = sum(int(r.get("total_solved") if r.get("total_solved") is not None else (r.get("totalSolved") or 0)) for r in rows)
+        if tot_ez > 0:
+            if "metrics" not in dataset or not isinstance(dataset["metrics"], dict):
+                dataset["metrics"] = {}
+            dataset["metrics"]["easySolved"] = tot_ez
+            dataset["metrics"]["mediumSolved"] = tot_med
+            dataset["metrics"]["hardSolved"] = tot_hard
+            if tot_solved >= (tot_ez + tot_med + tot_hard):
+                dataset["metrics"]["totalSolved"] = tot_solved
+            else:
+                dataset["metrics"]["totalSolved"] = tot_ez + tot_med + tot_hard
+
+    return dataset
+
 
 def _get_dataset_for_id(
     report_id: str, 
@@ -1271,6 +1563,14 @@ def _get_dataset_for_id(
     report = db.query(ReportHistory).filter(ReportHistory.report_id == report_id).first()
     if report:
         dataset = dict(getattr(report, "dataset", {}) or {})
+        flts = getattr(report, "filters", {}) or {}
+
+        # Resolve department & year from filters or dataset
+        if dept in ("ALL", "", None):
+            dept = dataset.get("deptFilter") or dataset.get("department") or flts.get("department") or flts.get("dept") or "ALL"
+        if year in ("ALL", "", None):
+            year = dataset.get("yearFilter") or dataset.get("year") or flts.get("year") or "ALL"
+
         contest_name = (
             dataset.get("contestName") or 
             (dataset.get("current_session") or {}).get("contest_name") or 
@@ -1284,7 +1584,6 @@ def _get_dataset_for_id(
             dataset.get("report_date")
         )
         report_type = dataset.get("report_type") or dataset.get("reportType") or getattr(report, "report_type", None)
-        r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=effective_att, db=db, report_type=report_type)
         
         rows = (
             dataset.get("allStudents") or 
@@ -1295,6 +1594,16 @@ def _get_dataset_for_id(
             dataset.get("students") or 
             []
         )
+
+        if (dept in ("ALL", "", None) or year in ("ALL", "", None)) and rows:
+            u_depts = list({str(r.get("dept") or r.get("department") or "").strip().upper() for r in rows if r.get("dept") or r.get("department")})
+            if len(u_depts) == 1 and u_depts[0] and dept in ("ALL", "", None):
+                dept = u_depts[0]
+            u_years = list({str(r.get("year") or r.get("year_level") or "").strip().upper() for r in rows if r.get("year") or r.get("year_level")})
+            if len(u_years) == 1 and u_years[0] and year in ("ALL", "", None):
+                year = u_years[0]
+
+        r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=effective_att, db=db, report_type=report_type)
         if has_active_filters:
             from backend.services.contest_performance_service import matches_dept, matches_year
             
@@ -1397,7 +1706,7 @@ def _get_dataset_for_id(
             dataset["department"] = dept
             dataset["yearFilter"] = year
             dataset["year"] = year
-        return dataset, r_filename
+        return _enrich_dataset_ranks_and_ratings(dataset, db), r_filename
     else:
         dataset = None
 
@@ -1642,6 +1951,10 @@ def _get_dataset_for_id(
                     "easy": v_q1 if (v_q1 is not None) else 0,
                     "medium": v_q2 if (v_q2 is not None) else 0,
                     "hard": v_q3 if (v_q3 is not None) else 0,
+                    "easy_solved": r.get("easy_solved", 0),
+                    "medium_solved": r.get("medium_solved", 0),
+                    "hard_solved": r.get("hard_solved", 0),
+                    "overall_total_solved": r.get("overall_total_solved", 0),
                     "total_solved": solved_val if (attended and solved_val is not None) else (0 if attended else None),
                     "status": status_str,
                     "rank": rank_val if attended else "—",
@@ -1732,7 +2045,7 @@ def _get_dataset_for_id(
             detail="Contest data is unavailable for the selected Weekly Contest."
         )
 
-    return dataset, r_filename
+    return _enrich_dataset_ranks_and_ratings(dataset, db), r_filename
 
 
 @router.get("/{report_id}/excel")

@@ -58,10 +58,10 @@ def normalize_dept_code(d_code: Optional[str], d_name: Optional[str] = "") -> st
         return "CSE(IoT)"
     if "CYBER" in c or "CYBER" in n or "CC" in c or "CSE(CS)" in c or "CSE (CS)" in c or "(CS)" in c or c == "CS":
         return "CSE(CS)"
+    if "IT" in c or "INFORMATION TECH" in n or "INFORMATION TECHNOLOGY" in n:
+        return "IT"
     if c in ("CSE", "COMPUTER SCIENCE") or "COMPUTER SCIENCE &" in n or "COMPUTER SCIENCE AND" in n:
         return "CSE"
-    if "IT" in c or "INFORMATION TECH" in n:
-        return "IT"
     if "AIDS" in c or "ARTIFICIAL" in n:
         return "AIDS"
     if "ECE" in c or "ELECTRONICS & COMM" in n or "ELECTRONICS AND COMM" in n:

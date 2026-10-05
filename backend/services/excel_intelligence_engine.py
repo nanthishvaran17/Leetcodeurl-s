@@ -223,3 +223,73 @@ def detect_column_headers(raw_headers: List[str]) -> Tuple[Dict[str, str], Dict[
             confidence_map[h] = "LOW"
 
     return (mapped_columns, confidence_map, unmapped_headers)
+
+
+def find_best_header_row_and_dataframe(file_bytes: bytes) -> Tuple[pd.DataFrame, List[str]]:
+    """
+    Intelligently inspects uploaded Excel/CSV file bytes to locate the actual header row.
+    Skips institutional title banners, dates, empty header lines, or metadata rows.
+    Returns (cleaned_dataframe, raw_headers_list).
+    """
+    import io
+
+    df_raw = None
+    try:
+        df_raw = pd.read_excel(io.BytesIO(file_bytes), header=None)
+    except Exception:
+        try:
+            df_raw = pd.read_csv(io.BytesIO(file_bytes), header=None)
+        except Exception:
+            pass
+
+    if df_raw is None or df_raw.empty:
+        try:
+            df_std = pd.read_excel(io.BytesIO(file_bytes))
+        except Exception:
+            df_std = pd.read_csv(io.BytesIO(file_bytes))
+        return df_std, [str(c).strip() for c in df_std.columns]
+
+    header_keywords = {
+        "reg", "roll", "register", "reg_no", "regno", "roll_no", "rollno",
+        "name", "student", "candidate", "full_name",
+        "dept", "department", "branch", "stream",
+        "year", "academic_year", "class", "yr",
+        "email", "mail", "leetcode", "link", "handle", "profile",
+        "section", "sec", "batch", "s_no", "sl_no", "rank", "solved", "score"
+    }
+
+    best_row_idx = 0
+    max_score = 0
+
+    max_search_rows = min(15, len(df_raw))
+    for r_idx in range(max_search_rows):
+        row_vals = [str(x).strip().lower() for x in df_raw.iloc[r_idx].values if pd.notna(x)]
+        if not row_vals:
+            continue
+        
+        score = 0
+        for val in row_vals:
+            clean_v = re.sub(r'[\s_\-\.]+', '_', val)
+            for kw in header_keywords:
+                if kw in clean_v or clean_v in kw:
+                    score += 1
+                    break
+        
+        if score > max_score:
+            max_score = score
+            best_row_idx = r_idx
+
+    if max_score > 0 and best_row_idx > 0:
+        headers = [str(x).strip() if pd.notna(x) else f"Unnamed: {i}" for i, x in enumerate(df_raw.iloc[best_row_idx].values)]
+        data_df = df_raw.iloc[best_row_idx + 1:].copy().reset_index(drop=True)
+        data_df.columns = headers
+        data_df = data_df.dropna(how="all")
+        return data_df, headers
+
+    try:
+        df_std = pd.read_excel(io.BytesIO(file_bytes))
+    except Exception:
+        df_std = pd.read_csv(io.BytesIO(file_bytes))
+    
+    return df_std, [str(c).strip() for c in df_std.columns]
+

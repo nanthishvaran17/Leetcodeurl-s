@@ -679,47 +679,49 @@ async def run_full_pipeline(
                     fresh_student_ids: Set[int] = set()
 
                     if not is_explicit_targeted:
+                        _db_stale = SessionLocal()
                         try:
-                            _db_stale = SessionLocal()
-                            try:
-                                student_ids_in_chunk = [s.id for s in chunk]
-                                stale_cutoff = start_time - datetime.timedelta(hours=PROFILE_FRESH_HOURS)
-                                fresh_stats = _db_stale.query(LeetCodeProfileStats).filter(
-                                    LeetCodeProfileStats.student_id.in_(student_ids_in_chunk),
-                                    LeetCodeProfileStats.last_updated >= stale_cutoff,
-                                    LeetCodeProfileStats.total_solved.isnot(None),
-                                    LeetCodeProfileStats.sync_status == "success"
-                                ).all()
-                                fresh_student_ids = {fs.student_id for fs in fresh_stats}
-                                for fs in fresh_stats:
-                                    uname_raw = next(
-                                        (s.username or s.leetcode_url for s in chunk if s.id == fs.student_id),
-                                        None
-                                    )
-                                    if not uname_raw:
-                                        continue
-                                    uname, _, u_ok = extract_leetcode_username(str(uname_raw))
-                                    if u_ok != "OK" or not uname:
-                                        continue
-                                    cached_profile_a[uname] = {
-                                        "status": "ok",
-                                        "source": "db_cache",
-                                        "data": {
-                                            "username": uname,
-                                            "total_solved": fs.total_solved,
-                                            "easy_solved": fs.easy_solved,
-                                            "medium_solved": fs.medium_solved,
-                                            "hard_solved": fs.hard_solved,
-                                            "profile_global_ranking": fs.public_profile_ranking,
-                                            "contest_rating": fs.contest_rating,
-                                            "contest_global_ranking": fs.contest_global_ranking,
-                                        }
+                            student_ids_in_chunk = [s.id for s in chunk]
+                            stale_cutoff = start_time - datetime.timedelta(hours=PROFILE_FRESH_HOURS)
+                            fresh_stats = _db_stale.query(LeetCodeProfileStats).filter(
+                                LeetCodeProfileStats.student_id.in_(student_ids_in_chunk),
+                                LeetCodeProfileStats.last_updated >= stale_cutoff,
+                                LeetCodeProfileStats.total_solved.isnot(None),
+                                LeetCodeProfileStats.sync_status == "success"
+                            ).all()
+                            fresh_student_ids = {fs.student_id for fs in fresh_stats}
+                            for fs in fresh_stats:
+                                uname_raw = next(
+                                    (s.username or s.leetcode_url for s in chunk if s.id == fs.student_id),
+                                    None
+                                )
+                                if not uname_raw:
+                                    continue
+                                uname, _, u_ok = extract_leetcode_username(str(uname_raw))
+                                if u_ok != "OK" or not uname:
+                                    continue
+                                fs.last_verified_at = now_dt
+                                fs.last_successful_sync = now_dt
+                                cached_profile_a[uname] = {
+                                    "status": "ok",
+                                    "source": "db_cache",
+                                    "data": {
+                                        "username": uname,
+                                        "total_solved": fs.total_solved,
+                                        "easy_solved": fs.easy_solved,
+                                        "medium_solved": fs.medium_solved,
+                                        "hard_solved": fs.hard_solved,
+                                        "profile_global_ranking": fs.public_profile_ranking,
+                                        "contest_rating": fs.contest_rating,
+                                        "contest_global_ranking": fs.contest_global_ranking,
                                     }
-                            finally:
-                                _db_stale.close()
+                                }
+                            _db_stale.commit()
                         except Exception as _stale_err:
                             logger.warning(f"[CANONICAL_PIPELINE] Staleness check failed (will refetch all): {_stale_err}")
                             fresh_student_ids = set()
+                        finally:
+                            _db_stale.close()
 
                     # Build the usernames that actually need a live Phase-A fetch
                     valid_usernames = []

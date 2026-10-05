@@ -223,16 +223,16 @@ def parse_user_agent_details(user_agent_str: Optional[str]) -> dict:
         device_type = "Desktop"
         
     # OS
-    if "windows nt 10.0" in ua_low or "windows 11" in ua_low:
+    if "iphone" in ua_low or "ipad" in ua_low:
+        os_str = "iOS"
+    elif "android" in ua_low:
+        os_str = "Android"
+    elif "windows nt 10.0" in ua_low or "windows 11" in ua_low:
         os_str = "Windows 11"
     elif "windows" in ua_low:
         os_str = "Windows"
     elif "macintosh" in ua_low or "mac os" in ua_low:
         os_str = "macOS"
-    elif "android" in ua_low:
-        os_str = "Android"
-    elif "iphone" in ua_low or "ipad" in ua_low:
-        os_str = "iOS"
     elif "linux" in ua_low:
         os_str = "Linux"
     else:
@@ -263,11 +263,41 @@ def parse_user_agent_details(user_agent_str: Optional[str]) -> dict:
         browser = "Automated API Client"
         category = "Automated API / Tool"
         
+    # Device Model Extraction
+    device_name = ""
+    if "iphone" in ua_low:
+        device_name = "Apple iPhone"
+    elif "ipad" in ua_low:
+        device_name = "Apple iPad"
+    elif "android" in ua_low:
+        m_model = re.search(r'android[^;]+;\s*([^;)]+?)\s*(?:build|[;)])', ua_low)
+        if m_model:
+            raw_m = m_model.group(1).strip()
+            if raw_m.startswith("sm-s928"): device_name = "Samsung Galaxy S24 Ultra"
+            elif raw_m.startswith("sm-s921"): device_name = "Samsung Galaxy S24"
+            elif raw_m.startswith("sm-s918"): device_name = "Samsung Galaxy S23 Ultra"
+            elif raw_m.startswith("sm-s911"): device_name = "Samsung Galaxy S23"
+            elif raw_m.startswith("sm-"): device_name = f"Samsung Galaxy ({raw_m.upper()})"
+            elif "pixel" in raw_m: device_name = raw_m.title()
+            elif raw_m.startswith("cph") or raw_m.startswith("pht"): device_name = f"OPPO ({raw_m.upper()})"
+            elif raw_m.startswith("v2") or raw_m.startswith("i2"): device_name = f"Vivo ({raw_m.upper()})"
+            elif raw_m.startswith("rmx"): device_name = f"Realme ({raw_m.upper()})"
+            elif "redmi" in raw_m or "poco" in raw_m: device_name = raw_m.upper()
+            elif "oneplus" in raw_m: device_name = raw_m.title()
+            else: device_name = raw_m.upper()
+        else:
+            device_name = "Android Mobile"
+    elif "macintosh" in ua_low:
+        device_name = "Apple Mac"
+    elif "windows" in ua_low:
+        device_name = "Windows PC"
+
     return {
         "browser": browser,
         "browser_version": version,
         "operating_system": os_str,
         "device_type": device_type,
+        "device_name": device_name,
         "category": category,
         "raw": ua[:500]
     }

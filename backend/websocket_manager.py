@@ -453,7 +453,7 @@ class ConnectionManager:
         for ws, ctx in list(self._ws_user.items()):
             ws_uid = ctx.get("user_id" or "").strip().lower()        # sub / username  # type: ignore
             ws_email = ctx.get("email" or "").strip().lower()         # email claim  # type: ignore
-            ws_num_id = ctx.get("numeric_id" or "").strip().lower()   # DB integer id  # type: ignore
+            ws_num_id = str(ctx.get("numeric_id", "")).strip().lower()   # DB integer id  # type: ignore
 
             # Match against: username/sub, email, numeric DB id, STAFF_{id} synthetic key
             is_match = (
@@ -637,8 +637,16 @@ class ConnectionManager:
             db = SessionLocal()
             try:
                 session_obj = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
-                if session_obj and session_obj.start_date:
-                    contest_end_dt = session_obj.start_date + datetime.timedelta(minutes=90)
+                if session_obj and session_obj.session_date and session_obj.start_time:
+                    dt_str = f"{session_obj.session_date} {session_obj.start_time}"
+                    # Typically IST, convert to UTC for comparison
+                    try:
+                        # Try YYYY-MM-DD format
+                        contest_start_dt = datetime.datetime.strptime(dt_str, "%Y-%m-%d %H:%M").replace(tzinfo=datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
+                    except ValueError:
+                        # Try DD.MM.YYYY format
+                        contest_start_dt = datetime.datetime.strptime(dt_str, "%d.%m.%Y %H:%M").replace(tzinfo=datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
+                    contest_end_dt = contest_start_dt + datetime.timedelta(minutes=90)
                     if datetime.datetime.now(datetime.timezone.utc).timestamp() < (contest_end_dt.timestamp() + 24 * 3600):
                         logger.info(f"WebSocket Broadcast Rule: Suppressed virtual broadcast as the 24-hour verification window for session {session_id} is still active.")
                         return
@@ -661,12 +669,8 @@ class ConnectionManager:
             disconnected = []
             for ws in list(subscribers):
                 try:
-                    # Schedule delivery without blocking the caller
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        asyncio.create_task(ws.send_text(payload_str))
-                    else:
-                        loop.run_until_complete(ws.send_text(payload_str))
+                    # Schedule delivery without blocking the caller using safe method
+                    self._run_async_safely(ws.send_text(payload_str))
                 except Exception as _e:
                     logger.warning(f"[WS_VIRT] Failed to send to subscriber: {_e}")
                     disconnected.append(ws)

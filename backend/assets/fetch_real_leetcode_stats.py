@@ -61,13 +61,16 @@ async def fetch_real_all_students():
                 s.stats = LeetCodeProfileStats(student_id=s.id)
                 db.add(s.stats)
 
-            if status == "success" or real_data.get("total_solved", 0) > 0:
-                tot = real_data.get("total_solved", 0)
-                ez = real_data.get("easy_solved", 0)
-                med = real_data.get("medium_solved", 0)
-                hd = real_data.get("hard_solved", 0)
+            tot = real_data.get("total_solved") or 0
+            ez = real_data.get("easy_solved") or 0
+            med = real_data.get("medium_solved") or 0
+            hd = real_data.get("hard_solved") or 0
+
+            if status == "success" or tot > 0:
                 c_rating = real_data.get("contest_rating")
                 c_rank = real_data.get("contest_global_rank") or real_data.get("contest_global_ranking")
+
+                old_total = s.stats.total_solved or 0
 
                 s.stats.total_solved = tot
                 s.stats.easy_solved = ez
@@ -85,7 +88,7 @@ async def fetch_real_all_students():
                     db.add(prog)
                 
                 # Active coding calculations
-                prog.weekly_progress = max(0, tot - (s.stats.total_solved or tot))
+                prog.weekly_progress = max(0, tot - old_total)
                 prog.streak_count = 1 if tot > 0 else 0
                 prog.consistency_score = round((tot / max(1, tot)) * 100, 1) if tot > 0 else 0.0
 

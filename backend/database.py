@@ -901,6 +901,26 @@ def run_migrations():
                         except Exception as col_err:
                             print(f"[DB Migration Warning] Could not add column {col_name} to users: {col_err}")
 
+            # Check scheduled_job_executions table columns
+            result_job_exec = conn.execute(
+                sqlalchemy.text("PRAGMA table_info(scheduled_job_executions)")
+            )
+            job_exec_cols = {row[1] for row in result_job_exec}
+            if job_exec_cols:
+                job_exec_migrations = [
+                    ("error_message", "ALTER TABLE scheduled_job_executions ADD COLUMN error_message TEXT"),
+                    ("last_error", "ALTER TABLE scheduled_job_executions ADD COLUMN last_error TEXT"),
+                    ("next_run", "ALTER TABLE scheduled_job_executions ADD COLUMN next_run DATETIME"),
+                ]
+                for col_name, sql in job_exec_migrations:
+                    if col_name not in job_exec_cols:
+                        try:
+                            conn.execute(sqlalchemy.text(sql))
+                            conn.commit()
+                            print(f"[DB Migration] Added scheduled_job_executions column: {col_name}")
+                        except Exception as col_err:
+                            print(f"[DB Migration Warning] Could not add column {col_name} to scheduled_job_executions: {col_err}")
+
             # Check students table columns for WhatsApp integration
             result_students = conn.execute(
                 sqlalchemy.text("PRAGMA table_info(students)")
@@ -1363,6 +1383,50 @@ def run_migrations():
                     pass
             conn.commit()
             print("[DB Migration] Performance indexes verified/created successfully.")
+
+            # Dynamic ORM Schema Auto-Sync: Ensure all model table columns exist in DB
+            try:
+                from backend.models import Base
+                from sqlalchemy import inspect, text, String, Text, VARCHAR, Enum, Integer, BigInteger, SmallInteger, Boolean, Float, Numeric, DateTime, Date, Time, JSON
+
+                inspector = inspect(conn)
+                is_pg = "postgresql" in engine.dialect.name.lower() or "postgres" in engine.dialect.name.lower()
+
+                def _get_sql_type(col):
+                    c_type = type(col.type)
+                    if issubclass(c_type, (String, Text, VARCHAR, Enum)):
+                        return "VARCHAR(255)" if is_pg else "TEXT"
+                    elif issubclass(c_type, (Integer, BigInteger, SmallInteger)):
+                        return "INTEGER"
+                    elif issubclass(c_type, (Boolean,)):
+                        return "BOOLEAN DEFAULT FALSE" if is_pg else "BOOLEAN DEFAULT 0"
+                    elif issubclass(c_type, (Float, Numeric)):
+                        return "FLOAT"
+                    elif issubclass(c_type, (DateTime, Date, Time)):
+                        return "TIMESTAMP WITH TIME ZONE" if is_pg else "DATETIME"
+                    elif issubclass(c_type, (JSON,)):
+                        return "JSONB" if is_pg else "TEXT"
+                    return "TEXT"
+
+                for table_name, table in Base.metadata.tables.items():
+                    if not inspector.has_table(table_name):
+                        continue
+                    existing_cols = {c["name"] for c in inspector.get_columns(table_name)}
+                    for col in table.columns:
+                        if col.name not in existing_cols:
+                            sql_type = _get_sql_type(col)
+                            if is_pg:
+                                sql = f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {col.name} {sql_type}"
+                            else:
+                                sql = f"ALTER TABLE {table_name} ADD COLUMN {col.name} {sql_type}"
+                            try:
+                                conn.execute(text(sql))
+                                conn.commit()
+                                print(f"[DB Auto-Sync] Added missing column '{col.name}' ({sql_type}) to table '{table_name}'.")
+                            except Exception as _sync_err:
+                                print(f"[DB Auto-Sync Note] Could not add '{col.name}' to '{table_name}': {_sync_err}")
+            except Exception as _e_sync:
+                print(f"[DB Auto-Sync Error] {_e_sync}")
     except Exception as e:
         print(f"[DB Migration] Warning: {e}")
 

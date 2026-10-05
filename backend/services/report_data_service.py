@@ -149,6 +149,20 @@ def fetch_normalized_students(
             query = apply_role_based_student_filter(query, current_user, db)
 
         raw_students = query.all()
+        # Exclude synthetic/test/hardening accounts from all reports
+        def _get_reg(st_obj):
+            return getattr(st_obj, "reg_no", None) or getattr(st_obj, "register_number", None) or ""
+
+        raw_students = [
+            s for s in raw_students
+            if _get_reg(s) and not (
+                _get_reg(s).startswith("7322STU") or
+                _get_reg(s).startswith("TEST") or
+                _get_reg(s).startswith("7322P930") or
+                _get_reg(s).startswith("CONCUR") or
+                _get_reg(s).startswith("HARDENING")
+            )
+        ]
         # with _ROSTER_CACHE_LOCK:
         #     _ROSTER_CACHE[cache_key] = raw_students
     
@@ -160,39 +174,40 @@ def fetch_normalized_students(
     canon_search = (search_query or "").strip().lower()
     canon_range = (performance_range or "ALL").lower().strip()
 
-    snapshot_map = {}
-    session_pub_map = {}
-    session_virt_map = {}
-    is_historical = False
-    if session_id:
-        import re
-        from backend.models import WeeklySession, WeeklySessionSnapshot, WeeklyPublicResult, WeeklyVirtualResult
-        target_session = None
-        s_str = str(session_id).strip()
-        if s_str.isdigit():
-            target_session = db.query(WeeklySession).filter(WeeklySession.id == int(s_str)).first()
-        if not target_session:
-            target_session = db.query(WeeklySession).filter(WeeklySession.session_date == s_str).first()
-        if not target_session:
-            m = re.search(r'\d+', s_str)
-            if m:
-                c_num = int(m.group(0))
-                if c_num < 10000:
-                    target_session = db.query(WeeklySession).filter(
-                        (WeeklySession.id == c_num) | (WeeklySession.contest_name.ilike(f"%{c_num}%"))
-                    ).first()
+    # Precompute student attendance counts from WeeklyPublicResult
+    pub_att_map = {}
+    try:
+        from sqlalchemy import func, case
+        from backend.models import WeeklyPublicResult
+        is_pub_att = (
+            (WeeklyPublicResult.participation_status.in_(["PUBLIC_ATTENDED", "ATTENDED", "SOLVED", "PARTICIPATED"])) |
+            (WeeklyPublicResult.total_contest_solved > 0) |
+            (WeeklyPublicResult.q1 == 1) | (WeeklyPublicResult.q2 == 1) | (WeeklyPublicResult.q3 == 1) | (WeeklyPublicResult.q4 == 1)
+        )
+        att_recs = db.query(
+            WeeklyPublicResult.student_id,
+            func.sum(case((is_pub_att, 1), else_=0))
+        ).group_by(WeeklyPublicResult.student_id).all()
+        for s_id, cnt in att_recs:
+            pub_att_map[s_id] = int(cnt or 0)
+    except Exception as ex:
+        logger.warning(f"[PUB_ATT_NOTE] {ex}")
 
-        if target_session:
-            is_historical = True
-            snaps = db.query(WeeklySessionSnapshot).filter(WeeklySessionSnapshot.session_id == target_session.id).all()
-            for snp in snaps:
-                snapshot_map[snp.student_id] = snp
-            pubs = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == target_session.id).all()
-            for p in pubs:
-                session_pub_map[p.student_id] = p
-            virts = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == target_session.id).all()
-            for v in virts:
-                session_virt_map[v.student_id] = v
+    # Precompute session-specific results if a historical session_id is provided
+    session_result_map = {}
+    if session_id and str(session_id).lower() not in ("all", "none", "latest"):
+        try:
+            sess_id_int = int(session_id)
+            from backend.models import WeeklyPublicResult, WeeklyVirtualResult
+            pub_recs = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == sess_id_int).all()
+            for pr in pub_recs:
+                session_result_map[pr.student_id] = pr
+            virt_recs = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == sess_id_int).all()
+            for vr in virt_recs:
+                if vr.student_id not in session_result_map:
+                    session_result_map[vr.student_id] = vr
+        except Exception as ex:
+            logger.warning(f"[SESSION_RESULT_MAP_ERR] {ex}")
 
     filtered_students = []
     for s in raw_students:
@@ -235,32 +250,36 @@ def fetch_normalized_students(
                 canon_search not in email_str):
                 continue
 
-        p_res = session_pub_map.get(s.id) or session_virt_map.get(s.id)
         is_verified = bool(
             (st and (st.sync_status in ("success", "OK", "verified", "stale") or st.status == "verified" or st.total_solved is not None))
-            or p_res is not None
             or bool(s.username and str(s.username).strip())
         )
         
-        # Calculate solved
-        easy = st.easy_solved if st and st.easy_solved is not None else (0 if is_verified else None)
-        medium = st.medium_solved if st and st.medium_solved is not None else (0 if is_verified else None)
-        hard = st.hard_solved if st and st.hard_solved is not None else (0 if is_verified else None)
-        current_total = st.total_solved if st and st.total_solved is not None else (0 if is_verified else None)
-        if current_total is None and easy is not None and medium is not None and hard is not None:
-            current_total = easy + medium + hard
+        # Calculate cumulative profile solved counts
+        easy = st.easy_solved if (st and st.easy_solved is not None) else (0 if is_verified else 0)
+        medium = st.medium_solved if (st and st.medium_solved is not None) else (0 if is_verified else 0)
+        hard = st.hard_solved if (st and st.hard_solved is not None) else (0 if is_verified else 0)
+        total_solved = (easy or 0) + (medium or 0) + (hard or 0)
+        if st and st.total_solved is not None and st.total_solved > total_solved:
+            total_solved = st.total_solved
 
-        if is_historical:
-            snap = snapshot_map.get(s.id)
-            if snap and snap.end_solved_count is not None:
-                total_solved = snap.end_solved_count
-            elif p_res and getattr(p_res, "total_contest_solved", None) is not None:
-                # If historical contest result exists, use its solved count if current_total is not available
-                total_solved = current_total if (current_total is not None and current_total > 0) else p_res.total_contest_solved
-            else:
-                total_solved = current_total if current_total is not None else 0
+        # Session-specific historical contest rating & rank resolution
+        sess_rec = session_result_map.get(s.id) if session_result_map else None
+        if sess_rec and getattr(sess_rec, "contest_rating", None) is not None and float(getattr(sess_rec, "contest_rating", 0) or 0) > 0:
+            effective_rating = float(sess_rec.contest_rating)
+        elif st and st.contest_rating is not None and st.contest_rating != 1500:
+            effective_rating = st.contest_rating
         else:
-            total_solved = current_total if current_total is not None else 0
+            effective_rating = None
+
+        if sess_rec and getattr(sess_rec, "contest_rank", None) is not None and int(getattr(sess_rec, "contest_rank", 0) or 0) > 0:
+            g_rank = int(sess_rec.contest_rank)
+        elif is_verified and st and st.contest_global_ranking and st.contest_global_ranking != 5000001:
+            g_rank = st.contest_global_ranking
+        else:
+            g_rank = None
+
+        att_count = pub_att_map.get(s.id) or (getattr(st, 'attended_contests_count', None) if st else 0) or getattr(s, 'contests_attended', 0) or 0
 
         # 6. Status Filter
         if canon_status != "ALL":
@@ -282,15 +301,18 @@ def fetch_normalized_students(
             elif canon_range == "1_100" and not (1 <= tot <= 100): continue
             elif canon_range == "not_started" and tot != 0: continue
 
-        filtered_students.append((s, st, dept_obj, sec_obj, is_verified, easy, medium, hard, total_solved))
+        filtered_students.append((s, st, dept_obj, sec_obj, is_verified, easy, medium, hard, total_solved, effective_rating, g_rank, att_count))
 
     rows: List[StudentRow] = []
-    for idx, (s, st, dept_obj, sec_obj, is_verified, easy, medium, hard, total_solved) in enumerate(filtered_students, start=1):
+    for idx, (s, st, dept_obj, sec_obj, is_verified, easy, medium, hard, total_solved, effective_rating, g_rank, att_count) in enumerate(filtered_students, start=1):
         category = get_problem_category(total_solved, is_verified)
 
         sec_id = str(getattr(s, "secondary_leetcode_id", "") or "").strip()
         sec_url = f"https://leetcode.com/u/{sec_id}/" if sec_id else ""
         prim_id = str(getattr(s, "primary_leetcode_id", "") or s.username or "").strip()
+
+        from backend.routes.reports import compute_contest_difficulty_breakdown
+        c_brk = compute_contest_difficulty_breakdown(contest_solved=total_solved)
 
         rows.append(StudentRow(
             s_no=idx,
@@ -311,12 +333,19 @@ def fetch_normalized_students(
             medium=medium,
             hard=hard,
             total_solved=total_solved,
-            contest_rating=round(st.contest_rating, 1) if (is_verified and st and st.contest_rating) else None,
-            rating=round(st.contest_rating, 1) if (is_verified and st and st.contest_rating) else None,
-            global_rank=st.contest_global_ranking if (is_verified and st and st.contest_global_ranking) else None,
+            contest_easy=c_brk["contest_easy"],
+            contest_medium=c_brk["contest_medium"],
+            contest_hard=c_brk["contest_hard"],
+            contest_rating=round(effective_rating, 1) if (is_verified and effective_rating is not None) else None,
+            rating=round(effective_rating, 1) if (is_verified and effective_rating is not None) else None,
+            global_rank=g_rank,
             category=category,
             status="VERIFIED" if is_verified else "UNVERIFIED",
-            twelfth_cutoff=float(s.twelfth_cutoff) if (hasattr(s, 'twelfth_cutoff') and s.twelfth_cutoff is not None) else None
+            accommodation=getattr(s, 'accommodation', '') or '',
+            twelfth_cutoff=float(s.twelfth_cutoff) if (hasattr(s, 'twelfth_cutoff') and s.twelfth_cutoff is not None) else None,
+            cutoff=float(s.twelfth_cutoff) if (hasattr(s, 'twelfth_cutoff') and s.twelfth_cutoff is not None) else None,
+            contests_attended=att_count,
+            total_attended=att_count
         ))
 
     # Centralized Sorting Logic: Total Solved (DESC) -> Rating (DESC) -> Name (ASC)

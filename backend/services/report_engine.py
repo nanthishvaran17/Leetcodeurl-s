@@ -256,7 +256,8 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         # We need to find the reg_no for this student_id first to filter the normalized StudentRow objects
         student_obj = db.query(Student).filter(Student.id == target_id).first()
         if student_obj:
-            students = [s for s in students if getattr(s, "reg_no", None) == student_obj.register_number]
+            st_reg = getattr(student_obj, "reg_no", None) or getattr(student_obj, "register_number", None)
+            students = [s for s in students if getattr(s, "reg_no", None) == st_reg]
 
     if config.report_type == "LEADERBOARD":
         students = sorted(
@@ -271,10 +272,19 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
     verified_students = sum(1 for s in students if s.status == "VERIFIED")
     unverified_students = total_students - verified_students
 
-    total_solved = sum((s.total_solved or 0) for s in students if s.status == "VERIFIED")
-    easy_solved = sum((s.easy or 0) for s in students if s.status == "VERIFIED")
-    medium_solved = sum((s.medium or 0) for s in students if s.status == "VERIFIED")
-    hard_solved = sum((s.hard or 0) for s in students if s.status == "VERIFIED")
+    if cfg_filters.get("session_id") and str(cfg_filters.get("session_id")).lower() != "latest":
+        total_solved = sum((s.total_solved or 0) for s in students if s.status == "VERIFIED")
+        easy_solved = sum(1 for s in students if s.status == "VERIFIED" and (s.total_solved or 0) >= 1)
+        medium_solved = sum(
+            (1 if (s.total_solved or 0) >= 2 else 0) + (1 if (s.total_solved or 0) >= 3 else 0)
+            for s in students if s.status == "VERIFIED"
+        )
+        hard_solved = sum(1 for s in students if s.status == "VERIFIED" and (s.total_solved or 0) >= 4)
+    else:
+        total_solved = sum((s.total_solved or 0) for s in students if s.status == "VERIFIED")
+        easy_solved = sum((s.easy or 0) for s in students if s.status == "VERIFIED")
+        medium_solved = sum((s.medium or 0) for s in students if s.status == "VERIFIED")
+        hard_solved = sum((s.hard or 0) for s in students if s.status == "VERIFIED")
 
     active_solvers = sum(1 for s in students if (s.total_solved or 0) > 0)
     average_solved = round(total_solved / max(verified_students, 1), 2)

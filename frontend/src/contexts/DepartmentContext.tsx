@@ -21,15 +21,13 @@ interface DepartmentContextType {
 
 const DepartmentContext = createContext<DepartmentContextType | undefined>(undefined);
 
+// Only these 3 departments are active institution-wide
+const ACTIVE_DEPT_CODES = new Set(['CSE(CS)', 'CSE(IOT)', 'IT']);
+
 const ALL_DEPARTMENTS_FALLBACK: Department[] = [
-  { id: 1, code: 'CSE', name: 'Computer Science and Engineering', pillText: 'CSE' },
-  { id: 2, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
-  { id: 3, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' },
-  { id: 4, code: 'AIDS', name: 'Artificial Intelligence and Data Science', pillText: 'AIDS' },
-  { id: 5, code: 'ECE', name: 'Electronics and Communication Engineering', pillText: 'ECE' },
-  { id: 6, code: 'EEE', name: 'Electrical and Electronics Engineering', pillText: 'EEE' },
-  { id: 7, code: 'IT', name: 'Information Technology', pillText: 'IT' },
-  { id: 8, code: 'AGRI', name: 'Agricultural Engineering', pillText: 'AGRI' }
+  { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
+  { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' },
+  { id: 4, code: 'IT', name: 'Information Technology', pillText: 'IT' },
 ];
 
 export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -104,7 +102,9 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           }
         });
 
-        const mappedDepts = Array.from(uniqueMap.values());
+        // Filter to only the 3 active institutional departments
+        const mappedDepts = Array.from(uniqueMap.values())
+          .filter(d => ACTIVE_DEPT_CODES.has(d.code));
 
         setDepartments(mappedDepts.length > 0 ? mappedDepts : ALL_DEPARTMENTS_FALLBACK);
       } else {
@@ -121,7 +121,7 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch (err: any) {
       console.error('[DepartmentContext] Failed to fetch departments:', err);
       setError(err.message || 'Failed to fetch departments');
-      // On error, fallback to full institutional departments
+      // On error, fallback to 3-department list
       setDepartments(ALL_DEPARTMENTS_FALLBACK);
     } finally {
       setIsLoading(false);

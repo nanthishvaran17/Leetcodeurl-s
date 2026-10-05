@@ -266,6 +266,15 @@ class DownloadManager {
         headers: { ...authHeaders }
       });
 
+      let effectiveFilename = filename;
+      const contentDisposition = response.headers?.['content-disposition'] || response.headers?.['Content-Disposition'];
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename=["']?([^"';]+)["']?/i);
+        if (match && match[1]) {
+          effectiveFilename = sanitizeFilename(match[1]);
+        }
+      }
+
       const blob = normalizeBlob(response.data, mimeType);
       const validation = await validateFileBlob(blob, mimeType);
       if (!validation.valid) {
@@ -278,7 +287,7 @@ class DownloadManager {
         const base64Data = await blobToBase64(blob);
 
         const writeResult = await Filesystem.writeFile({
-          path: filename,
+          path: effectiveFilename,
           data: base64Data,
           directory: Directory.Cache,
           recursive: true,
@@ -286,10 +295,11 @@ class DownloadManager {
 
         state.status = 'COMPLETED';
         state.localPath = writeResult.uri;
+        state.filename = effectiveFilename;
         this.updateState(state, options.onStateChange);
 
         await downloadNotification.notifySuccess({
-          filename,
+          filename: effectiveFilename,
           localFileUri: writeResult.uri,
           mimeType,
           fileSizeBytes: blob.size,
@@ -298,7 +308,7 @@ class DownloadManager {
 
         setTimeout(() => {
           if (writeResult.uri) {
-            shareOrOpenFile(writeResult.uri, filename, mimeType);
+            shareOrOpenFile(writeResult.uri, effectiveFilename, mimeType);
           }
         }, 250);
 
@@ -306,11 +316,12 @@ class DownloadManager {
       }
 
       state.status = 'STARTED';
+      state.filename = effectiveFilename;
       this.updateState(state, options.onStateChange);
 
       const typedBlob = blob instanceof Blob && blob.type ? blob : new Blob([blob], { type: mimeType });
       const blobUrl = URL.createObjectURL(typedBlob);
-      await triggerBrowserAnchorDownload(blobUrl, filename, mimeType);
+      await triggerBrowserAnchorDownload(blobUrl, effectiveFilename, mimeType);
 
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
 
@@ -318,7 +329,7 @@ class DownloadManager {
       this.updateState(state, options.onStateChange);
 
       await downloadNotification.notifySuccess({
-        filename,
+        filename: effectiveFilename,
         localFileUri: blobUrl,
         mimeType,
         fileSizeBytes: blob.size,

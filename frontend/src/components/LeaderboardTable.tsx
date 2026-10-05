@@ -884,25 +884,25 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-center flex flex-col justify-center">
                   <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Total Solved</span>
                   <span className="text-3xl font-black text-slate-900 dark:text-white mt-1">
-                    {viewingStudent.stats?.total_solved ?? (viewingStudent.total_solved ?? '—')}
+                    {viewingStudent.stats?.total_solved ?? (viewingStudent.total_solved ?? 0)}
                   </span>
                 </div>
                 <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 text-center">
                   <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">Easy</span>
                   <span className="text-2xl font-black text-emerald-700 dark:text-emerald-300 block mt-1">
-                    {viewingStudent.stats?.easy_solved ?? (viewingStudent.easy_solved ?? '—')}
+                    {viewingStudent.stats?.easy_solved ?? (viewingStudent.easy_solved ?? 0)}
                   </span>
                 </div>
                 <div className="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-center">
                   <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400">Medium</span>
                   <span className="text-2xl font-black text-amber-700 dark:text-amber-300 block mt-1">
-                    {viewingStudent.stats?.medium_solved ?? (viewingStudent.medium_solved ?? '—')}
+                    {viewingStudent.stats?.medium_solved ?? (viewingStudent.medium_solved ?? 0)}
                   </span>
                 </div>
                 <div className="p-4 rounded-2xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/60 dark:border-rose-800/40 text-center">
                   <span className="text-[10px] uppercase font-bold text-rose-600 dark:text-rose-400">Hard</span>
                   <span className="text-2xl font-black text-rose-700 dark:text-rose-300 block mt-1">
-                    {viewingStudent.stats?.hard_solved ?? (viewingStudent.hard_solved ?? '—')}
+                    {viewingStudent.stats?.hard_solved ?? (viewingStudent.hard_solved ?? 0)}
                   </span>
                 </div>
               </div>
@@ -931,7 +931,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                   <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-slate-800 text-center">
                     <span className="text-[10px] font-bold text-slate-500 block">Contest Score</span>
                     <p className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
-                      {viewingStudent.public_contest_result?.score_display || viewingStudent.stats?.recent_contest_score || '—'}
+                      {viewingStudent.public_contest_result?.score_display || viewingStudent.stats?.recent_contest_score || '0'}
                     </p>
                   </div>
                   <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-slate-800 text-center">
@@ -939,7 +939,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                     <p className="text-sm sm:text-base font-black text-amber-500 mt-0.5">
                       {(() => {
                         const r = viewingStudent.public_contest_result?.contest_rating || viewingStudent.stats?.contest_rating;
-                        if (!r || r === 1500 || r === 1500.0) return '—';
+                        if (!r || r === 1500 || r === 1500.0) return '0';
                         return r.toLocaleString('en-US', { minimumFractionDigits: 1 });
                       })()}
                     </p>
@@ -949,7 +949,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                     <p className="text-sm sm:text-base font-black text-indigo-600 dark:text-indigo-400 mt-0.5">
                       {viewingStudent.public_contest_result?.contest_rank
                         ? `#${viewingStudent.public_contest_result.contest_rank.toLocaleString('en-US')}`
-                        : '—'}
+                        : '0'}
                     </p>
                   </div>
                   <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-slate-800 text-center">
@@ -957,7 +957,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                     <p className="text-sm sm:text-base font-black text-slate-700 dark:text-slate-300 mt-0.5">
                       {viewingStudent.stats?.public_profile_ranking
                         ? `#${viewingStudent.stats.public_profile_ranking.toLocaleString('en-US')}`
-                        : '—'}
+                        : '0'}
                     </p>
                   </div>
                 </div>

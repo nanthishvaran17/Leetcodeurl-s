@@ -32,6 +32,7 @@ async def get_leaderboard_fast(
     dept_id: Optional[int] = None,
     year_level: Optional[str] = None,
     limit: Optional[int] = None,
+    refresh: Optional[bool] = False,
     request_db: Session = Depends(get_db)
 ):
     """
@@ -41,6 +42,11 @@ async def get_leaderboard_fast(
     current_user = get_current_user_optional(request, request_db) if request else None
     user_scope = f"{current_user.id}:{current_user.role}" if current_user else "public"
     cache_key = f"leaderboard_fast_v4:{user_scope}:{dept_id}:{year_level}:{limit}"
+
+    if refresh:
+        cache.delete(cache_key)
+        cache.invalidate_tag("students")
+        cache.invalidate_tag("leaderboard")
 
     def _compute():
         from backend.database import SessionLocal
@@ -107,8 +113,13 @@ async def get_leaderboard_fast(
             if dept_id:
                 query = query.filter(Student.department_id == dept_id)
             if year_level and year_level.strip().upper() not in ('ALL', 'ALL YEARS', ''):
-                clean_yr = year_level.strip().upper().replace('YEAR', '').strip()
-                query = query.filter(func.upper(Student.year_level) == clean_yr)
+                raw_yr = year_level.strip().upper().replace('YEAR', '').strip()
+                roman_map = {'1': 'I', '2': 'II', '3': 'III', '4': 'IV', 'I': '1', 'II': '2', 'III': '3', 'IV': '4'}
+                alt_yr = roman_map.get(raw_yr, raw_yr)
+                query = query.filter(
+                    func.upper(Student.year_level).like(f"%{raw_yr}%") |
+                    func.upper(Student.year_level).like(f"%{alt_yr}%")
+                )
 
             # Sort by solved desc for leaderboard with limit
             query = query.order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc())
@@ -161,6 +172,33 @@ async def get_leaderboard_fast(
                     sec_accounts_map[acc.student_id] = []
                 sec_accounts_map[acc.student_id].append(acc)
 
+            # --- Step 3.5: Precalculate fail-safe dynamic ranks for all active students ---
+            all_active_rows = db.query(Student.id, Student.department_id, LeetCodeProfileStats.total_solved)\
+                .outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
+                .filter((Student.is_active == True) | (Student.is_active.is_(None)))\
+                .order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc()).all()
+
+            dynamic_college_ranks: dict = {}
+            dynamic_dept_ranks: dict = {}
+            dept_counters: dict = {}
+
+            curr_c_rank = 1
+            for idx_s, (s_id, d_id, t_solved) in enumerate(all_active_rows):
+                val_solved = t_solved or 0
+                if val_solved <= 0:
+                    continue
+                if idx_s > 0:
+                    prev_solved = all_active_rows[idx_s - 1][2] or 0
+                    if val_solved < prev_solved:
+                        curr_c_rank = idx_s + 1
+                else:
+                    curr_c_rank = 1
+                dynamic_college_ranks[s_id] = curr_c_rank
+
+                if d_id:
+                    dept_counters[d_id] = dept_counters.get(d_id, 0) + 1
+                    dynamic_dept_ranks[s_id] = dept_counters[d_id]
+
             # --- Step 4: Build slim response dicts (no Pydantic overhead) ---
             results = []
             for st in students:
@@ -177,7 +215,7 @@ async def get_leaderboard_fast(
                 easy_solved = s.easy_solved if has_stats else 0
                 medium_solved = s.medium_solved if has_stats else 0
                 hard_solved = s.hard_solved if has_stats else 0
-                contest_rating = round(s.contest_rating, 1) if (s and s.contest_rating is not None) else None
+                contest_rating = int(round(s.contest_rating)) if (s and s.contest_rating is not None) else None
 
                 streak = 0
                 if st.lc_activity and st.lc_activity.current_streak is not None:
@@ -186,8 +224,8 @@ async def get_leaderboard_fast(
                     streak = s.max_streak
 
                 prog = prog_map.get(st.id)
-                college_rank = prog.college_rank if prog else None
-                dept_rank = prog.dept_rank if prog else None
+                college_rank = (prog.college_rank if (prog and prog.college_rank) else dynamic_college_ranks.get(st.id)) if is_verified else None
+                dept_rank = (prog.dept_rank if (prog and prog.dept_rank) else dynamic_dept_ranks.get(st.id)) if is_verified else None
                 weekly_progress = prog.weekly_progress if prog else 0
 
                 if streak == 0 and prog and is_verified:
@@ -223,6 +261,9 @@ async def get_leaderboard_fast(
                 sec_id = getattr(st, "secondary_leetcode_id", None)
                 sec_url = f"https://leetcode.com/u/{sec_id}/" if sec_id else None
 
+                # Clean public_profile_ranking if it has artificial > 5M value
+                clean_pub_rank = s.public_profile_ranking if (s and s.public_profile_ranking and s.public_profile_ranking < 5000000) else None
+
                 results.append({
                     "id": st.id,
                     "name": st.name,
@@ -252,7 +293,7 @@ async def get_leaderboard_fast(
                         "recent_contest_score": contest_score_display,
                         "recent_contest_name": target_contest_name,
                         "contest_global_ranking": s.contest_global_ranking if s else None,
-                        "public_profile_ranking": s.public_profile_ranking if s else None,
+                        "public_profile_ranking": clean_pub_rank,
                     } if s else None,
                     "streak_count": streak,
                     "college_rank": college_rank,
@@ -548,10 +589,37 @@ async def get_students(
                 st_out.longest_streak = st.stats.max_streak
                 st_out.total_active_days = st.stats.active_days or 0
 
+            # Fail-safe dynamic ranks for all active students
+            all_active_rows_main = db.query(Student.id, Student.department_id, LeetCodeProfileStats.total_solved)\
+                .outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
+                .filter((Student.is_active == True) | (Student.is_active.is_(None)))\
+                .order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc()).all()
+
+            dyn_college_ranks: dict = {}
+            dyn_dept_ranks: dict = {}
+            d_counters: dict = {}
+
+            c_rank_cursor = 1
+            for idx_s, (s_id, d_id, t_solved) in enumerate(all_active_rows_main):
+                val_solved = t_solved or 0
+                if val_solved <= 0:
+                    continue
+                if idx_s > 0:
+                    prev_solved = all_active_rows_main[idx_s - 1][2] or 0
+                    if val_solved < prev_solved:
+                        c_rank_cursor = idx_s + 1
+                else:
+                    c_rank_cursor = 1
+                dyn_college_ranks[s_id] = c_rank_cursor
+
+                if d_id:
+                    d_counters[d_id] = d_counters.get(d_id, 0) + 1
+                    dyn_dept_ranks[s_id] = d_counters[d_id]
+
             latest_prog = prog_map.get(st.id)
             if latest_prog:
-                st_out.college_rank = latest_prog.college_rank if (latest_prog.college_rank and is_verified) else rank_map.get(st.id)
-                st_out.dept_rank = latest_prog.dept_rank if is_verified else None
+                st_out.college_rank = (latest_prog.college_rank if latest_prog.college_rank else dyn_college_ranks.get(st.id)) if is_verified else None
+                st_out.dept_rank = (latest_prog.dept_rank if latest_prog.dept_rank else dyn_dept_ranks.get(st.id)) if is_verified else None
                 st_out.year_rank = latest_prog.year_rank if is_verified else None
                 st_out.section_rank = latest_prog.section_rank if is_verified else None
                 st_out.weekly_progress = latest_prog.weekly_progress if is_verified else 0
@@ -560,7 +628,8 @@ async def get_students(
                 st_out.consistency_score = latest_prog.consistency_score if is_verified else 0.0
                 st_out.badge_list = parse_badge_list(latest_prog.badge_list)
             else:
-                st_out.college_rank = rank_map.get(st.id) if is_verified else None
+                st_out.college_rank = dyn_college_ranks.get(st.id) if is_verified else None
+                st_out.dept_rank = dyn_dept_ranks.get(st.id) if is_verified else None
 
             pub_res = pub_map.get(st.id)
             vir_res = vir_map.get(st.id)
@@ -581,7 +650,7 @@ async def get_students(
                     questions_total=4,
                     score_display=f"{tot_solved} / 4",
                     contest_rank=h_res.contest_rank,
-                    contest_rating=round(h_res.rating_after, 1) if h_res.rating_after else None,
+                    contest_rating=int(round(h_res.rating_after)) if h_res.rating_after else None,
                     top_percentage=None,
                     status="PUBLIC_ATTENDED",
                     fetched_at=datetime.datetime.now(datetime.timezone.utc).isoformat()

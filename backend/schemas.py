@@ -75,7 +75,7 @@ class LeetCodeStatsOut(BaseModel):
     public_profile_ranking: Optional[int] = None
     recent_contest_name: Optional[str] = None
     recent_contest_score: Optional[str] = None
-    status: str = "pending"
+    status: Optional[str] = "pending"
     sync_status: Optional[str] = "not_started"
     validation_status: Optional[str] = None
     source: Optional[str] = None
@@ -93,13 +93,13 @@ class ContestResultOut(BaseModel):
     contest_name: Optional[str] = "Weekly Contest"
     contest_number: Optional[int] = None
     contest_date: Optional[str] = None
-    questions_solved: int = 0
-    questions_total: int = 4
-    score_display: str = "Not Attended"
+    questions_solved: Optional[int] = 0
+    questions_total: Optional[int] = 4
+    score_display: Optional[str] = "Not Attended"
     contest_rank: Optional[int] = None
     contest_rating: Optional[float] = None
     top_percentage: Optional[float] = None
-    status: str = "NOT_ATTENDED"
+    status: Optional[str] = "NOT_ATTENDED"
     fetched_at: Optional[str] = None
 
 class CanonicalProfileOut(BaseModel):
@@ -112,8 +112,8 @@ class CanonicalProfileOut(BaseModel):
     company: Optional[str] = None
     country: Optional[str] = None
     reputation: Optional[int] = None
-    verification_status: str = "PENDING_USERNAME"
-    sync_state: str = "PENDING_USERNAME"
+    verification_status: Optional[str] = "PENDING_USERNAME"
+    sync_state: Optional[str] = "PENDING_USERNAME"
     error_code: Optional[str] = None
     error_message: Optional[str] = None
     last_verified_at: Optional[datetime.datetime] = None

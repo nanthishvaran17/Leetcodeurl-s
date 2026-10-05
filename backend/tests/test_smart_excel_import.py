@@ -5,6 +5,7 @@ from backend.database import SessionLocal
 from backend.models import Student, Department, User
 from backend.services.excel_intelligence_engine import (
     detect_column_headers,
+    find_best_header_row_and_dataframe,
     normalize_year_value,
     normalize_batch_value,
     normalize_department_value,
@@ -14,6 +15,33 @@ from backend.services.excel_import_service import (
     analyze_excel_import,
     commit_smart_excel_import
 )
+
+def test_smart_header_row_detection():
+    """Verify smart header row auto-detection skips title banner rows (e.g., date, college name)."""
+    raw_rows = [
+        ["NANDHA INTELLIGENCE", "302 STUDENTS", "27-09-2026", None, None],
+        ["Register No", "Student Name", "Department", "Academic Year", "LeetCode Profile"],
+        ["732225IT046", "John Doe", "IT", "III Yr", "https://leetcode.com/u/johndoe/"]
+    ]
+    df_raw = pd.DataFrame(raw_rows)
+    buf = io.BytesIO()
+    df_raw.to_excel(buf, index=False, header=False)
+    file_bytes = buf.getvalue()
+
+    df_clean, detected_headers = find_best_header_row_and_dataframe(file_bytes)
+
+    assert "Register No" in detected_headers
+    assert "Student Name" in detected_headers
+    assert "Department" in detected_headers
+    assert len(df_clean) == 1
+    assert df_clean.iloc[0]["Register No"] == "732225IT046"
+
+    mapped, conf, unmapped = detect_column_headers(detected_headers)
+    assert mapped["Register No"] == "reg_no"
+    assert mapped["Student Name"] == "name"
+    assert mapped["Department"] == "department"
+    assert mapped["Academic Year"] == "year_level"
+    assert mapped["LeetCode Profile"] == "leetcode_url"
 
 def test_header_detection_variations():
     """Verify intelligent column header detection across different column names."""

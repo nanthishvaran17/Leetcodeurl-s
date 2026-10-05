@@ -28,13 +28,20 @@ class StudentRow(BaseModel):
     medium: Optional[int] = 0
     hard: Optional[int] = 0
     total_solved: Optional[int] = 0
+    contest_easy: Optional[int] = 0
+    contest_medium: Optional[int] = 0
+    contest_hard: Optional[int] = 0
     contest_rating: Optional[float] = None
     rating: Optional[float] = None
     global_rank: Optional[int] = None
     college_rank: Optional[int] = None
     category: str = "0 Solved"
     status: str = "UNVERIFIED"
+    accommodation: Optional[str] = ""
     twelfth_cutoff: Optional[float] = None
+    cutoff: Optional[float] = None
+    contests_attended: Optional[int] = 0
+    total_attended: Optional[int] = 0
 
 class ContestRow(BaseModel):
     s_no: int

@@ -416,8 +416,8 @@ export const AccountProfileSettings: React.FC = () => {
   // Security Login History Audit
   const [loginHistory] = useState<any[]>([]);
 
-  // Client telemetry info
-  const clientInfo = useMemo(() => {
+  // Advanced Mobile & Desktop Device Detection
+  const [clientInfo, setClientInfo] = useState(() => {
     const ua = navigator.userAgent;
 
     // Browser detection with version
@@ -441,37 +441,140 @@ export const AccountProfileSettings: React.FC = () => {
     }
     const browserLabel = browserVersion ? `${browser} ${browserVersion}` : browser;
 
-    // OS detection with type
-    let os = 'Windows';
+    // Mobile Brand / Model Parsing from User-Agent
+    let os = 'Windows 11';
     let deviceType = 'Desktop';
-    if (ua.includes('Android')) {
-      os = 'Android';
-      deviceType = 'Mobile';
-    } else if (ua.includes('iPhone')) {
-      os = 'iOS';
+    let deviceName = '';
+
+    // iOS Detection
+    if (/iPhone/i.test(ua)) {
       deviceType = 'iPhone';
-    } else if (ua.includes('iPad')) {
-      os = 'iPadOS';
+      const iosMatch = ua.match(/OS ([\d_]+) like Mac OS X/i);
+      const iosVersion = iosMatch ? iosMatch[1].replace(/_/g, '.') : '';
+      os = iosVersion ? `iOS ${iosVersion}` : 'iOS';
+      
+      // Screen Dimension & Ratio Mapping for iPhone Models
+      const w = typeof window !== 'undefined' ? window.screen.width : 0;
+      const h = typeof window !== 'undefined' ? window.screen.height : 0;
+      const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+      const maxDim = Math.max(w, h);
+      const minDim = Math.min(w, h);
+
+      if (maxDim === 932 && minDim === 430) {
+        deviceName = 'iPhone 15 / 16 Pro Max';
+      } else if (maxDim === 874 && minDim === 402) {
+        deviceName = 'iPhone 16 Pro';
+      } else if (maxDim === 852 && minDim === 393) {
+        deviceName = 'iPhone 15 / 15 Pro / 14 Pro';
+      } else if (maxDim === 926 && minDim === 428) {
+        deviceName = 'iPhone 14 Plus / 13 Pro Max';
+      } else if (maxDim === 844 && minDim === 390) {
+        deviceName = 'iPhone 14 / 13 / 12';
+      } else if (maxDim === 896 && minDim === 414) {
+        deviceName = dpr === 3 ? 'iPhone 11 Pro Max' : 'iPhone 11 / XR';
+      } else if (maxDim === 812 && minDim === 375) {
+        deviceName = 'iPhone 13 mini / 12 mini / 11 Pro / X';
+      } else if (maxDim === 667 && minDim === 375) {
+        deviceName = 'iPhone SE / 8';
+      } else {
+        deviceName = 'Apple iPhone';
+      }
+    } else if (/iPad/i.test(ua)) {
       deviceType = 'Tablet';
+      os = 'iPadOS';
+      deviceName = 'Apple iPad';
+    } else if (/Android/i.test(ua)) {
+      deviceType = 'Mobile';
+      const androidMatch = ua.match(/Android\s*([\d.]+)/i);
+      os = androidMatch ? `Android ${androidMatch[1]}` : 'Android';
+
+      // Extract raw model name from Android UA: e.g. "Android 14; SM-S928B Build/..." or "Android 13; Pixel 8 Pro"
+      const modelMatch = ua.match(/Android[^;]+;\s*([^;)]+?)\s*(?:Build|[;)])/i);
+      let rawModel = modelMatch ? modelMatch[1].trim() : '';
+
+      if (rawModel) {
+        // Map common Android model codes to user-friendly names
+        if (/^SM-S928/i.test(rawModel)) deviceName = 'Samsung Galaxy S24 Ultra';
+        else if (/^SM-S921/i.test(rawModel)) deviceName = 'Samsung Galaxy S24';
+        else if (/^SM-S918/i.test(rawModel)) deviceName = 'Samsung Galaxy S23 Ultra';
+        else if (/^SM-S911/i.test(rawModel)) deviceName = 'Samsung Galaxy S23';
+        else if (/^SM-S908/i.test(rawModel)) deviceName = 'Samsung Galaxy S22 Ultra';
+        else if (/^SM-S901/i.test(rawModel)) deviceName = 'Samsung Galaxy S22';
+        else if (/^SM-[A-Z]\d+/i.test(rawModel)) deviceName = `Samsung Galaxy (${rawModel})`;
+        else if (/Pixel\s*\d+/i.test(rawModel)) deviceName = rawModel;
+        else if (/^CPH\d+/i.test(rawModel) || /^PHT\d+/i.test(rawModel)) deviceName = `OPPO (${rawModel})`;
+        else if (/^V2\d+/i.test(rawModel) || /^I2\d+/i.test(rawModel)) deviceName = `Vivo (${rawModel})`;
+        else if (/^RMX\d+/i.test(rawModel)) deviceName = `Realme (${rawModel})`;
+        else if (/^2\d{6}/i.test(rawModel) || /^Redmi/i.test(rawModel) || /^POCO/i.test(rawModel)) deviceName = `Xiaomi / Redmi (${rawModel})`;
+        else if (/^OnePlus/i.test(rawModel) || /^NE\d+/i.test(rawModel)) deviceName = `OnePlus (${rawModel})`;
+        else if (/^Moto/i.test(rawModel) || /^XT\d+/i.test(rawModel)) deviceName = `Motorola (${rawModel})`;
+        else deviceName = rawModel;
+      } else {
+        deviceName = 'Android Device';
+      }
     } else if (ua.includes('Macintosh')) {
       os = 'macOS';
       deviceType = 'Mac';
+      deviceName = 'Apple Mac';
     } else if (ua.includes('Linux')) {
       os = 'Linux';
       deviceType = 'Desktop';
-    } else if (ua.includes('Windows NT 11') || ua.includes('Windows NT 10')) {
-      os = ua.includes('Windows NT 11') ? 'Windows 11' : 'Windows 10';
+      deviceName = 'Linux PC';
+    } else if (ua.includes('Windows')) {
+      os = 'Windows 11';
       deviceType = 'Desktop';
+      deviceName = 'Windows PC';
     }
+
+    const displayTitle = deviceType === 'Mobile' || deviceType === 'iPhone' || deviceType === 'Tablet'
+      ? `${deviceName || 'Mobile'} • ${os}`
+      : `${browserLabel} • ${os}`;
 
     return {
       browser: browserLabel,
       os,
       deviceType,
-      fullDevice: `${browserLabel} · ${os} / ${deviceType}`,
+      deviceName,
+      displayTitle,
+      fullDevice: `${deviceName ? deviceName + ' · ' : ''}${browserLabel} · ${os} / ${deviceType}`,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata',
       timeStr: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     };
+  });
+
+  // Client Hints async check for precise Windows 11 & Mobile Model extraction
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && (navigator as any).userAgentData?.getHighEntropyValues) {
+      (navigator as any).userAgentData
+        .getHighEntropyValues(['platformVersion', 'platform', 'model', 'architecture'])
+        .then((uaData: any) => {
+          if (uaData?.platform === 'Windows') {
+            const majorVersion = parseInt(uaData.platformVersion?.split('.')[0] || '0', 10);
+            const detectedOS = majorVersion >= 13 ? 'Windows 11' : (majorVersion > 0 ? 'Windows 10' : 'Windows 11');
+            setClientInfo((prev: any) => ({
+              ...prev,
+              os: detectedOS,
+              displayTitle: `${prev.browser} • ${detectedOS}`,
+              fullDevice: `${prev.browser} · ${detectedOS} / ${prev.deviceType}`
+            }));
+          } else if (uaData?.model) {
+            // Android mobile model from Client Hints API (e.g., "Pixel 8", "SM-S928B", "OnePlus 12")
+            let modelName = uaData.model.trim();
+            if (/^SM-S928/i.test(modelName)) modelName = 'Samsung Galaxy S24 Ultra';
+            else if (/^SM-S918/i.test(modelName)) modelName = 'Samsung Galaxy S23 Ultra';
+            else if (/^SM-S911/i.test(modelName)) modelName = 'Samsung Galaxy S23';
+            else if (/^SM-[A-Z]\d+/i.test(modelName)) modelName = `Samsung Galaxy (${modelName})`;
+
+            setClientInfo((prev: any) => ({
+              ...prev,
+              deviceName: modelName,
+              displayTitle: `${modelName} • ${prev.os}`,
+              fullDevice: `${modelName} · ${prev.browser} · ${prev.os} / ${prev.deviceType}`
+            }));
+          }
+        })
+        .catch(() => {});
+    }
   }, []);
 
   // Fetch updated profile info on mount
@@ -1421,7 +1524,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           <div className="min-w-0 flex-1">
             <div className="text-[9px] sm:text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 truncate">Active Device</div>
             <div className="text-xs sm:text-sm font-black text-slate-950 dark:text-white truncate" title={clientInfo.fullDevice}>
-              {clientInfo.browser} • {clientInfo.os}
+              {clientInfo.displayTitle || `${clientInfo.browser} • ${clientInfo.os}`}
             </div>
           </div>
         </div>
@@ -2137,11 +2240,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     onClick={async () => {
                       try {
                         const optionsRes = await api.get('/auth/passkey/register-options');
-                        if (!optionsRes.data?.options) {
+                        const options = optionsRes.data?.options || optionsRes.data;
+                        if (!options || (!options.challenge && !options.rp)) {
                           notify.error('Failed to get passkey options from server', '', { category: 'ADMIN' });
                           return;
                         }
-                        const options = optionsRes.data.options;
                         const attResp = await startRegistration(options);
                         const verifyRes = await api.post('/auth/passkey/register-verify', attResp);
                         if (verifyRes.data?.success) {

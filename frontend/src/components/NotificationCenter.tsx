@@ -211,7 +211,8 @@ export const NotificationCenter: React.FC = () => {
     <>
       {/* Toast Notification Stack Container */}
       <div
-        className="fixed top-[calc(env(safe-area-inset-top,0px)+4rem)] sm:top-20 right-3 sm:right-6 z-[99999999] flex flex-col space-y-3 w-[calc(100vw-24px)] sm:w-[420px] pointer-events-none"
+        id="nec-toast-container"
+        className="fixed top-[calc(env(safe-area-inset-top,0px)+4rem)] sm:top-20 right-3 sm:right-6 z-[99999999] flex flex-col space-y-3 w-[calc(100vw-24px)] sm:w-[420px] pointer-events-none print:hidden no-print"
         aria-live="polite"
         aria-atomic="true"
       >
@@ -223,7 +224,7 @@ export const NotificationCenter: React.FC = () => {
       {/* Confirmation Dialog Centered Modal Overlay */}
       {confirmDialogState.isOpen && confirmOptions && (
         <div
-          className="modal-overlay-responsive animate-modal-backdrop z-[99999999]"
+          className="modal-overlay-responsive animate-modal-backdrop z-[99999999] print:hidden no-print"
           onClick={(e) => {
             if (e.target === e.currentTarget) dismissConfirm(false);
           }}

@@ -504,14 +504,29 @@ def generate_master_10_sheet_workbook(
     # Resolve target contest session if available
     from backend.models import WeeklySession, WeeklyPublicResult, WeeklyVirtualResult
     target_session = None
-    if contest_id is not None:
-        c_id_int = int(contest_id) if (isinstance(contest_id, (int, str)) and str(contest_id).isdigit()) else None
+    if contest_id is not None and str(contest_id).strip() != "" and str(contest_id).strip().lower() != "latest":
+        c_str = str(contest_id).strip()
+        c_id_int = int(c_str) if c_str.isdigit() else None
         if c_id_int is not None:
             target_session = db.query(WeeklySession).filter(WeeklySession.id == c_id_int).first()
-        else:
-            target_session = db.query(WeeklySession).filter(WeeklySession.contest_id == str(contest_id)).first()
+        if not target_session:
+            target_session = db.query(WeeklySession).filter(WeeklySession.session_date == c_str).first()
+        if not target_session and ("." in c_str or "-" in c_str):
+            if "." in c_str:
+                parts = c_str.split(".")
+                if len(parts) == 3:
+                    alt_date = f"{parts[2]}-{parts[1]}-{parts[0]}"
+                    target_session = db.query(WeeklySession).filter(WeeklySession.session_date == alt_date).first()
+            elif "-" in c_str:
+                parts = c_str.split("-")
+                if len(parts) == 3:
+                    alt_date = f"{parts[2]}.{parts[1]}.{parts[0]}"
+                    target_session = db.query(WeeklySession).filter(WeeklySession.session_date == alt_date).first()
+        if not target_session:
+            target_session = db.query(WeeklySession).filter(WeeklySession.contest_id == c_str).first()
     if not target_session:
-        target_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+        from backend.routes.reports import _get_latest_completed_session
+        target_session = _get_latest_completed_session(db) or db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
 
     public_map = {}
     virtual_map = {}
@@ -633,14 +648,16 @@ def generate_master_10_sheet_workbook(
                        (getattr(p_res, "contest_rating", None) if p_res else None) or \
                        (getattr(v_res, "contest_rating", None) if v_res else None)
             g_rank = (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
+                     (st_stats.public_profile_ranking if st_stats and getattr(st_stats, "public_profile_ranking", None) else None) or \
                      (getattr(p_res, "contest_rank", None) if p_res else None) or \
                      getattr(s, "global_rank", None)
         else:
             c_rating = (getattr(p_res, "contest_rating", None) if p_res else None) or \
                        (getattr(v_res, "contest_rating", None) if v_res else None) or \
                        (st_stats.contest_rating if st_stats and getattr(st_stats, "contest_rating", None) else None)
-            g_rank = (getattr(p_res, "contest_rank", None) if p_res else None) or \
-                     (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
+            g_rank = (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
+                     (st_stats.public_profile_ranking if st_stats and getattr(st_stats, "public_profile_ranking", None) else None) or \
+                     (getattr(p_res, "contest_rank", None) if p_res else None) or \
                      getattr(s, "global_rank", None)
         easy_s = st_stats.easy_solved if (st_stats and st_stats.easy_solved is not None) else 0
         med_s = st_stats.medium_solved if (st_stats and st_stats.medium_solved is not None) else 0

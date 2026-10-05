@@ -8002,7 +8002,7 @@ export const CANONICAL_ROSTER: any[] = [
       "easy_solved": 49,
       "medium_solved": 83,
       "hard_solved": 27,
-      "contest_rating": 1588.3,
+      "contest_rating": 1623,
       "contest_global_ranking": 225221,
       "public_profile_ranking": 1073837,
       "recent_contest_name": "Weekly Contest 515",
@@ -8046,7 +8046,7 @@ export const CANONICAL_ROSTER: any[] = [
       "profile_global_ranking": 1073837
     },
     "lc_contest_standing": {
-      "contest_rating": 1588.3,
+      "contest_rating": 1623,
       "contest_global_ranking": 225221,
       "attended_count": 3,
       "top_percentage": 25.96,

@@ -1,6 +1,16 @@
 import csv
 import io
 
+def _fmt_acc(val):
+    if not val or str(val).strip() in ("—", "None", "nan", "NaN", "null", ""):
+        return "—"
+    s = str(val).strip().upper()
+    if "DAY" in s:
+        return "D"
+    if "HOSTEL" in s:
+        return "H"
+    return s[:1]
+
 def export_csv_from_dataset(dataset: dict) -> bytes:
     """
     CSV EXPORTER
@@ -16,8 +26,8 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
 
     if contest_rows:
         writer.writerow([
-            "S.No", "Register No", "Student Name", "Dept", "Year",
-            "Status", "Contest Name", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Rank"
+            "S.No", "Register No", "Student Name", "Dept", "Year", "Accommodation", "12th Cutoff", "Contests Attended",
+            "Status", "Contest Name", "Q1", "Q2", "Q3", "Q4", "Total Solved", "Contest Easy", "Contest Medium", "Contest Hard", "Global Rank", "Contest Rating"
         ])
         for idx, r in enumerate(contest_rows, start=1):
             writer.writerow([
@@ -26,14 +36,21 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
                 r.get("name", ""),
                 r.get("dept", ""),
                 r.get("year", ""),
+                _fmt_acc(r.get("accommodation")),
+                r.get("twelfth_cutoff") if r.get("twelfth_cutoff") is not None else (r.get("cutoff") if r.get("cutoff") is not None else "—"),
+                r.get("contests_attended", r.get("total_attended", 0)),
                 r.get("status", "NOT ATTENDED"),
                 r.get("contest_name", dataset.get("contestName", "")),
                 r.get("q1", "—"),
                 r.get("q2", "—"),
                 r.get("q3", "—"),
                 r.get("q4", "—"),
-                r.get("total_solved", "—"),
-                r.get("rank", "—")
+                r.get("total_solved") if r.get("total_solved") is not None else (r.get("contest_solved", "—")),
+                r.get("contest_easy", 0),
+                r.get("contest_medium", 0),
+                r.get("contest_hard", 0),
+                r.get("global_rank") or r.get("rank") or "—",
+                r.get("contest_rating") or r.get("rating") or "—"
             ])
     elif participations and not all_students:
         writer.writerow([
@@ -55,9 +72,9 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
             ])
     else:
         writer.writerow([
-            "S.No", "Register No", "Student Name", "Department", "Batch", "Year",
-            "Institutional Email", "LeetCode Profile Link", "Username", "Easy Solved", "Medium Solved",
-            "Hard Solved", "Total Solved", "Contest Rating", "Global Rank", "Status"
+            "S.No", "Register No", "Student Name", "Department", "Year", "Accommodation", "12th Cutoff", "Contests Attended",
+            "Total Solved", "Contest Easy", "Contest Medium", "Contest Hard",
+            "Easy Solved", "Medium Solved", "Hard Solved", "Global Rank", "Contest Rating", "Status"
         ])
         for idx, s in enumerate(all_students, start=1):
             writer.writerow([
@@ -65,17 +82,19 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
                 s.get("reg_no", ""),
                 s.get("name", ""),
                 s.get("dept", ""),
-                s.get("batch", ""),
                 s.get("year", ""),
-                s.get("institutional_email", ""),
-                s.get("leetcode_url") or s.get("url") or "",
-                s.get("username", ""),
+                _fmt_acc(s.get("accommodation")),
+                s.get("twelfth_cutoff") if s.get("twelfth_cutoff") is not None else (s.get("cutoff") if s.get("cutoff") is not None else "—"),
+                s.get("contests_attended", s.get("total_attended", 0)),
+                s.get("total_solved") if s.get("total_solved") is not None else "",
+                s.get("contest_easy", 0),
+                s.get("contest_medium", 0),
+                s.get("contest_hard", 0),
                 s.get("easy") if s.get("easy") is not None else "",
                 s.get("medium") if s.get("medium") is not None else "",
                 s.get("hard") if s.get("hard") is not None else "",
-                s.get("total_solved") if s.get("total_solved") is not None else "",
-                s.get("rating") if s.get("rating") is not None else "",
                 s.get("global_rank") if s.get("global_rank") is not None else "",
+                s.get("contest_rating") or s.get("rating") or "",
                 s.get("status", "UNVERIFIED")
             ])
 

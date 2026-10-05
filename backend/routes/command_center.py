@@ -914,7 +914,7 @@ def get_department_details(dept_id: int, db: Session = Depends(get_db), current_
             "rank": rank + 1,
             "student_id": s.id,
             "name": s.name,
-            "register_number": s.register_number,
+            "register_number": getattr(s, "reg_no", None) or getattr(s, "register_number", None),
             "total_solved": stats.total_solved if stats else 0,
             "last_active": stats.last_updated.isoformat() if stats and stats.last_updated else None
         })
@@ -934,7 +934,7 @@ def get_department_details(dept_id: int, db: Session = Depends(get_db), current_
         at_risk.append({
             "student_id": s.id,
             "name": s.name,
-            "register_number": s.register_number,
+            "register_number": getattr(s, "reg_no", None) or getattr(s, "register_number", None),
             "risk_level": risk.risk_level,
             "risk_score": risk.risk_score,
             "explanation": risk.explanation,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Trophy, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Flame, Filter, Building2, GraduationCap, Target } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Trophy, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Flame, Filter, Building2, GraduationCap, Target, Printer, ShieldCheck } from 'lucide-react';
 import api from '../services/api';
 import { FullScreenLoadingOverlay } from './ui/FullScreenLoadingOverlay';
 
@@ -22,6 +22,51 @@ const formatStudentName = (name: string) => {
       part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
     ).join('.');
   }).join(' ');
+};
+
+const getContestDifficultyBreakdown = (s: any) => {
+  if (s.contest_easy !== undefined && s.contest_medium !== undefined && s.contest_hard !== undefined && s.contest_easy !== null) {
+    return {
+      easy: Number(s.contest_easy || 0),
+      medium: Number(s.contest_medium || 0),
+      hard: Number(s.contest_hard || 0),
+    };
+  }
+  if (s.contest_easy_solved !== undefined && s.contest_medium_solved !== undefined && s.contest_hard_solved !== undefined && s.contest_easy_solved !== null) {
+    return {
+      easy: Number(s.contest_easy_solved || 0),
+      medium: Number(s.contest_medium_solved || 0),
+      hard: Number(s.contest_hard_solved || 0),
+    };
+  }
+
+  let q1 = s.q1 !== undefined && s.q1 !== null ? (s.q1 === 1 || s.q1 === true || s.q1 === '1' ? 1 : 0) : null;
+  let q2 = s.q2 !== undefined && s.q2 !== null ? (s.q2 === 1 || s.q2 === true || s.q2 === '1' ? 1 : 0) : null;
+  let q3 = s.q3 !== undefined && s.q3 !== null ? (s.q3 === 1 || s.q3 === true || s.q3 === '1' ? 1 : 0) : null;
+  let q4 = s.q4 !== undefined && s.q4 !== null ? (s.q4 === 1 || s.q4 === true || s.q4 === '1' ? 1 : 0) : null;
+
+  let cEasy = q1 !== null ? q1 : 0;
+  let cMed = (q2 !== null ? q2 : 0) + (q3 !== null ? q3 : 0);
+  let cHard = q4 !== null ? q4 : 0;
+
+  const knownSum = cEasy + cMed + cHard;
+  const totSolved = s.contest_solved !== undefined && s.contest_solved !== null 
+    ? Number(s.contest_solved) 
+    : (s.total_contest_solved !== undefined && s.total_contest_solved !== null 
+      ? Number(s.total_contest_solved) 
+      : (s.solved !== undefined && s.solved !== null ? Number(s.solved) : (s.total_solved !== undefined ? Number(s.total_solved) : knownSum)));
+
+  if (totSolved > knownSum) {
+    const rem = totSolved - knownSum;
+    const fullBlocks = Math.floor(rem / 4);
+    const leftover = rem % 4;
+
+    cEasy += fullBlocks + (leftover >= 1 ? 1 : 0);
+    cMed += (fullBlocks * 2) + (leftover >= 2 ? 1 : 0) + (leftover >= 3 ? 1 : 0);
+    cHard += fullBlocks + (leftover >= 4 ? 1 : 0);
+  }
+
+  return { easy: cEasy, medium: cMed, hard: cHard };
 };
 
 export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialData, onClose }) => {
@@ -189,15 +234,23 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     if (val === null || val === undefined || val === '' || val === '—' || val === 'None' || val === 'NaN' || val === 'nan') return '—';
     const cleanStr = String(val).replace(/[^0-9]/g, '');
     const num = Number(cleanStr);
-    if (isNaN(num) || num <= 0) return '—';
+    if (isNaN(num) || num <= 0 || num >= 5000000) return '—';
     return `#${num.toLocaleString()}`;
+  };
+
+  const formatAccommodation = (val: any) => {
+    if (val === null || val === undefined || val === '' || val === '—' || val === 'None' || val === 'NaN' || val === 'nan') return '—';
+    const s = String(val).trim().toUpperCase();
+    if (s.includes('DAY')) return 'D';
+    if (s.includes('HOSTEL')) return 'H';
+    return s.charAt(0) || '—';
   };
 
   const formatRating = (val: any) => {
     if (val === null || val === undefined || val === '' || val === '—' || val === 'None' || val === 'NaN' || val === 'nan') return '—';
     const cleanStr = String(val).replace(/[^0-9.]/g, '');
     const num = Number(cleanStr);
-    if (isNaN(num) || num <= 0 || num === 1500 || Math.floor(num) === 1500) return '—';
+    if (isNaN(num) || num <= 0) return '—';
     return Math.round(num).toLocaleString();
   };
 
@@ -272,22 +325,30 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     return report?.allStudents || report?.rows || report?.all_students_current || report?.rosters?.all_current || [];
   }, [report]);
 
-  // Filter student rows based on active filter
+  // Filter student rows based on active filter (for both Contest and Profile/General reports)
   const displayedStudents = useMemo(() => {
-    if (!isContestReport || !activeFilter) return allRows;
+    if (!activeFilter) return allRows;
 
     return allRows.filter((r: any) => {
       const rawSt = (r.status || r.attendance_status || r.attendance || '').toString().trim().toUpperCase();
       const st = rawSt.replace(/\s+/g, '_');
       const isPart = st === 'PUBLIC_ATTENDED' || st === 'VIRTUAL_ATTENDED' || st === 'PUBLIC' || st === 'VIRTUAL' || st === 'PUBLIC_LIVE' || st === 'VIRTUAL_PRACTICE' || st === 'ATTENDED';
-      const solved = r.contest_solved !== undefined && r.contest_solved !== null 
-        ? Number(r.contest_solved) 
-        : (r.total_solved !== undefined && r.total_solved !== null 
-          ? Number(r.total_solved) 
+      
+      const cSolved = r.contest_solved !== undefined && r.contest_solved !== null ? Number(r.contest_solved) : null;
+      const tSolved = r.total_solved !== undefined && r.total_solved !== null 
+        ? Number(r.total_solved) 
+        : (r.total !== undefined && r.total !== null 
+          ? Number(r.total) 
           : (r.solved !== undefined && r.solved !== null 
             ? Number(r.solved) 
             : null));
+      const solved = cSolved !== null ? cSolved : (tSolved !== null ? tSolved : 0);
+      const easySolved = Number(r.easy || r.easy_solved || 0);
+      const medSolved = Number(r.medium || r.medium_solved || 0);
+      const hardSolved = Number(r.hard || r.hard_solved || 0);
+      const overallSolved = tSolved !== null ? tSolved : (easySolved + medSolved + hardSolved);
 
+      // Contest specific filters
       if (activeFilter === 'SOLVED_4') return isPart && solved === 4;
       if (activeFilter === 'SOLVED_3') return isPart && solved === 3;
       if (activeFilter === 'SOLVED_2') return isPart && solved === 2;
@@ -301,9 +362,59 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       if (activeFilter === 'INVALID_USERNAME') return st === 'INVALID_USERNAME' || st === 'USERNAME_NOT_FOUND' || st === 'INVALID';
       if (activeFilter === 'DATA_ERROR') return st === 'DATA_ERROR';
       if (activeFilter === 'UNKNOWN') return st === 'UNKNOWN';
+
+      // General / Cumulative Metric Filters
+      if (activeFilter === 'METRIC_ACTIVE_SOLVERS' || activeFilter === 'activeSolvers' || activeFilter === 'active_solvers') {
+        return overallSolved > 0 || isPart || Boolean(r.is_active_solver);
+      }
+      if (activeFilter === 'METRIC_VERIFIED_SOLVERS' || activeFilter === 'verifiedSolvers' || activeFilter === 'verified_solvers') {
+        return r.is_unverified !== true && st !== 'UNVERIFIED' && st !== 'INVALID_USERNAME' && st !== 'PENDING_USERNAME';
+      }
+      if (activeFilter === 'METRIC_UNVERIFIED_PROFILES' || activeFilter === 'unverifiedProfiles' || activeFilter === 'unverified_profiles') {
+        return r.is_unverified === true || st === 'UNVERIFIED' || st === 'INVALID_USERNAME' || st === 'PENDING_USERNAME';
+      }
+      if (activeFilter === 'METRIC_EASY_SOLVED' || activeFilter === 'easySolved' || activeFilter === 'easy_solved') {
+        return easySolved > 0;
+      }
+      if (activeFilter === 'METRIC_MEDIUM_SOLVED' || activeFilter === 'mediumSolved' || activeFilter === 'medium_solved') {
+        return medSolved > 0;
+      }
+      if (activeFilter === 'METRIC_HARD_SOLVED' || activeFilter === 'hardSolved' || activeFilter === 'hard_solved') {
+        return hardSolved > 0;
+      }
+      if (activeFilter === 'METRIC_ZERO_SOLVED' || activeFilter === 'zeroSolved' || activeFilter === 'notYetStarted') {
+        return overallSolved === 0;
+      }
+
+      // Problem Solving Category Distribution Filters
+      if (activeFilter === 'Above 500' || activeFilter === 'Above_500' || activeFilter === '>500') {
+        return overallSolved >= 500;
+      }
+      if (activeFilter === '250-500' || activeFilter === '250_500' || activeFilter === '250-499') {
+        return overallSolved >= 250 && overallSolved < 500;
+      }
+      if (activeFilter === '100-249' || activeFilter === '100_249' || activeFilter === '100-250') {
+        return overallSolved >= 100 && overallSolved < 250;
+      }
+      if (activeFilter === '50-99' || activeFilter === '50_99') {
+        return overallSolved >= 50 && overallSolved < 100;
+      }
+      if (activeFilter === '25-49' || activeFilter === '25_49') {
+        return overallSolved >= 25 && overallSolved < 50;
+      }
+      if (activeFilter === '1-24' || activeFilter === '1_24') {
+        return overallSolved >= 1 && overallSolved < 25;
+      }
+      if (activeFilter === '0 Solved' || activeFilter === '0_Solved' || activeFilter === 'Not Yet Started' || activeFilter === 'Not_Yet_Started') {
+        return overallSolved === 0;
+      }
+      if (activeFilter === 'Less than 100' || activeFilter === 'Less_than_100' || activeFilter === '<100') {
+        return overallSolved < 100 && overallSolved > 0;
+      }
+
       return true;
     });
-  }, [allRows, isContestReport, activeFilter]);
+  }, [allRows, activeFilter]);
 
   const toggleFilter = (filterKey: string) => {
     setActiveFilter(prev => prev === filterKey ? null : filterKey);
@@ -315,8 +426,13 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     if (isDownloading) return;
     setIsDownloading(true);
     try {
-      const activeParam = activeFilter ? `?attendance=${encodeURIComponent(activeFilter)}` : '';
-      const url = `/reports/${reportId}/${format}${activeParam}`;
+      const queryParams = new URLSearchParams();
+      if (activeFilter) queryParams.append('attendance', activeFilter);
+      if (report?.department && report.department !== 'ALL') queryParams.append('department', report.department);
+      if (report?.year && report.year !== 'ALL') queryParams.append('year', report.year);
+      
+      const qString = queryParams.toString();
+      const url = `/reports/${reportId}/${format}${qString ? '?' + qString : ''}`;
       const ext = format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : format === 'zip' ? 'zip' : format;
 
       // Extract exact descriptive report title
@@ -390,13 +506,51 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       }
 
       let filterTag = '';
-      if (report?.department && report.department !== 'ALL') {
-        filterTag += `_${report.department}`;
+      const DEPT_NAME_MAP: Record<string, string> = {
+        '1': 'CSE-CS',
+        '2': 'CSE-IOT',
+        '3': 'IT',
+        '4': 'IT',
+        '7': 'IT',
+        '8': 'CSE',
+        '9': 'AGRI',
+        '10': 'AIDS',
+        '11': 'EEE',
+        '12': 'ECE',
+        'CSE(CS)': 'CSE-CS',
+        'CSE(IOT)': 'CSE-IOT',
+        'CSE(IoT)': 'CSE-IOT',
+        'CSE': 'CSE',
+        'IT': 'IT',
+        'AIDS': 'AIDS',
+        'ECE': 'ECE',
+        'EEE': 'EEE',
+        'MECH': 'MECH',
+        'CIVIL': 'CIVIL',
+        'AGRI': 'AGRI',
+        'BME': 'BME',
+      };
+      const deptRaw = (report?.department || report?.deptFilter || '').toString().trim();
+      if (deptRaw && deptRaw.toUpperCase() !== 'ALL') {
+        const dUpper = deptRaw.toUpperCase();
+        const dClean = DEPT_NAME_MAP[deptRaw] || DEPT_NAME_MAP[dUpper] || deptRaw.replace(/[\(\)\s]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+        filterTag += `_${dClean}`;
       }
-      if (report?.year && report.year !== 'ALL') {
-        filterTag += `_Yr${report.year}`;
+
+      const YEAR_NAME_MAP: Record<string, string> = {
+        '1': 'I-Yr', 'I': 'I-Yr', '1ST': 'I-Yr',
+        '2': 'II-Yr', 'II': 'II-Yr', '2ND': 'II-Yr',
+        '3': 'III-Yr', 'III': 'III-Yr', '3RD': 'III-Yr',
+        '4': 'IV-Yr', 'IV': 'IV-Yr', '4TH': 'IV-Yr',
+      };
+      const yrRaw = (report?.year || report?.yearFilter || '').toString().trim();
+      if (yrRaw && yrRaw.toUpperCase() !== 'ALL') {
+        const yUpper = yrRaw.toUpperCase();
+        const yClean = YEAR_NAME_MAP[yrRaw] || YEAR_NAME_MAP[yUpper] || `${yrRaw.replace(/YEAR|YR/gi, '').trim()}-Yr`;
+        filterTag += `_${yClean}`;
       }
-      if (activeFilter) {
+
+      if (activeFilter && activeFilter !== 'ALL') {
         filterTag += `_Filter_${activeFilter}`;
       }
 
@@ -463,10 +617,10 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
   return createPortal(
     <div
-      className="modal-overlay-responsive animate-modal-backdrop print:bg-white print:p-0 print:absolute print:inset-0 print:z-auto"
+      className="modal-overlay-responsive animate-modal-backdrop print:bg-white print:p-0 print:static print:w-full print:h-auto print:overflow-visible"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content print:rounded-none print:shadow-none print:border-none print:max-w-full print:w-full">
+      <div className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content print:static print:rounded-none print:shadow-none print:border-none print:max-w-full print:w-full print:h-auto print:overflow-visible print:p-0">
         
         {/* 1. HEADER BANNER */}
         <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-brand-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0 print:bg-white print:text-black print:border-b-2 print:border-black">
@@ -512,7 +666,13 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
             </span>
             {isContestReport && (
               <span className="px-2 py-0.5 rounded-md bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 font-mono text-[11px] font-black">
-                Participants: {(contestSummary.publicAttended || 0) + (contestSummary.virtualAttended || 0)}
+                Participants: {
+                  (contestSummary.publicAttended !== undefined || contestSummary.virtualAttended !== undefined)
+                    ? (contestSummary.publicAttended || 0) + (contestSummary.virtualAttended || 0)
+                    : (report.histSummary?.sessionParticipation?.length > 0
+                        ? report.histSummary.sessionParticipation[report.histSummary.sessionParticipation.length - 1].attended
+                        : allRows.filter((r: any) => (r.totalAttended || 0) > 0 || (r.weeklyData || []).some((w: any) => w.att)).length)
+                }
               </span>
             )}
             {activeFilter && (
@@ -563,7 +723,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === 'PUBLIC_ATTENDED' ? 'bg-emerald-500/20 border-emerald-500 ring-2 ring-emerald-500/30' : 'bg-emerald-500/10 border-emerald-500/30 hover:border-emerald-400'}`}
                   >
                     <p className="text-xs text-emerald-950 dark:text-emerald-300 uppercase font-black">Public Attended</p>
-                    <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 mt-1">{contestSummary.publicAttended ?? "—"}</p>
+                    <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 mt-1">{contestSummary.publicAttended ?? 0}</p>
                     <p className="text-xs text-emerald-950 dark:text-emerald-300 font-black mt-0.5">
                       {contestSummary.publicAttendanceRate 
                         ? (String(contestSummary.publicAttendanceRate).endsWith('%') ? contestSummary.publicAttendanceRate : `${contestSummary.publicAttendanceRate}%`)
@@ -577,7 +737,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === 'VIRTUAL_ATTENDED' ? 'bg-purple-500/20 border-purple-500 ring-2 ring-purple-500/30' : 'bg-purple-500/10 border-purple-500/30 hover:border-purple-400'}`}
                   >
                     <p className="text-xs text-purple-950 dark:text-purple-300 uppercase font-black">Virtual Attended</p>
-                    <p className="text-2xl font-black text-purple-800 dark:text-purple-300 mt-1">{contestSummary.virtualAttended ?? "—"}</p>
+                    <p className="text-2xl font-black text-purple-800 dark:text-purple-300 mt-1">{contestSummary.virtualAttended ?? 0}</p>
                     <p className="text-xs text-purple-950 dark:text-purple-300 font-black mt-0.5">
                       {contestSummary.virtualAttendanceRate 
                         ? (String(contestSummary.virtualAttendanceRate).endsWith('%') ? contestSummary.virtualAttendanceRate : `${contestSummary.virtualAttendanceRate}%`)
@@ -591,7 +751,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === 'NOT_ATTENDED' ? 'bg-rose-500/20 border-rose-500 ring-2 ring-rose-500/30' : 'bg-rose-500/10 border-rose-500/30 hover:border-rose-400'}`}
                   >
                     <p className="text-xs text-rose-950 dark:text-rose-300 uppercase font-black">Not Attended</p>
-                    <p className="text-2xl font-black text-rose-800 dark:text-rose-300 mt-1">{contestSummary.notAttended ?? "—"}</p>
+                    <p className="text-2xl font-black text-rose-800 dark:text-rose-300 mt-1">{contestSummary.notAttended ?? 0}</p>
                     <p className="text-xs text-rose-950 dark:text-rose-300 font-black mt-0.5">Absent</p>
                   </div>
 
@@ -829,7 +989,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           </div>
                           <div className="text-right shrink-0">
                             <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 block">{lb.solved} Solved</span>
-                            <span className="text-[10px] font-mono font-black text-indigo-700 dark:text-indigo-300 block">Score: {lb.score ?? "—"}</span>
+                            <span className="text-[10px] font-mono font-black text-indigo-700 dark:text-indigo-300 block">Score: {lb.score ?? 0}</span>
                           </div>
                         </div>
                         <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 text-xs pt-0.5">
@@ -1044,12 +1204,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <td className="px-3 py-2.5 text-center bg-emerald-50/70 dark:bg-emerald-950/40">
                               {r.curr_status === 'ATTENDED' ? <span className="px-2.5 py-1 rounded text-[11px] font-black bg-emerald-200 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-100">ATTENDED</span> : <span className="px-2 py-0.5 rounded text-[10px] font-black bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">ABSENT</span>}
                             </td>
-                            <td className="px-3 py-2.5 text-center font-black bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 text-sm">{r.curr_status === 'ATTENDED' ? r.curr_solved : '—'}</td>
-                            <td className="px-3 py-2.5 text-center bg-emerald-50/70 dark:bg-emerald-950/40 font-mono font-black text-slate-900 dark:text-slate-100">{r.curr_status === 'ATTENDED' ? r.curr_score : '—'}</td>
+                            <td className="px-3 py-2.5 text-center font-black bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 text-sm">{r.curr_status === 'ATTENDED' ? r.curr_solved : 0}</td>
+                            <td className="px-3 py-2.5 text-center bg-emerald-50/70 dark:bg-emerald-950/40 font-mono font-black text-slate-900 dark:text-slate-100">{r.curr_status === 'ATTENDED' ? r.curr_score : 0}</td>
                             <td className={`px-3 py-2.5 text-center font-black text-sm ${(r.solved_delta || 0) > 0 ? 'text-teal-800 dark:text-teal-300' : (r.solved_delta || 0) < 0 ? 'text-rose-800 dark:text-rose-300' : 'text-slate-800 dark:text-slate-200'}`}>
-                              {(r.solved_delta || 0) > 0 ? `+${r.solved_delta}` : r.solved_delta === 0 ? '—' : r.solved_delta}
+                              {(r.solved_delta || 0) > 0 ? `+${r.solved_delta}` : r.solved_delta === 0 ? '0' : r.solved_delta}
                             </td>
-                            <td className={`px-3 py-2.5 text-center font-black ${r.trend?.includes('↑') ? 'text-teal-700 dark:text-teal-300' : r.trend?.includes('↓') ? 'text-rose-700 dark:text-rose-300' : 'text-slate-800 dark:text-slate-200'}`}>{r.trend || '—'}</td>
+                            <td className={`px-3 py-2.5 text-center font-black ${r.trend?.includes('↑') ? 'text-teal-700 dark:text-teal-300' : r.trend?.includes('↓') ? 'text-rose-700 dark:text-rose-300' : 'text-slate-800 dark:text-slate-200'}`}>{r.trend || 0}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1118,34 +1278,51 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           <th className="px-3 py-3 text-left align-middle">Student Name</th>
                           <th className="px-3 py-3 text-center align-middle">Dept</th>
                           <th className="px-3 py-3 text-center align-middle">Yr</th>
+                          <th className="px-3 py-3 text-center align-middle">Accommodation</th>
+                          <th className="px-3 py-3 text-center align-middle">12th Cutoff</th>
                           {(report.sessionHeaders || []).map((sh: any) => (
                             <th key={sh.contestNum} className="px-3 py-3 text-center align-middle whitespace-nowrap">C{sh.contestNum}<br/><span className="text-[10px] font-extrabold opacity-90">{sh.date}</span></th>
                           ))}
-                          <th className="px-3 py-3 text-center align-middle">Attended</th>
-                          <th className="px-3 py-3 text-center align-middle">Total Solved</th>
-                          <th className="px-3 py-3 text-center align-middle">Consistency</th>
+                          <th className="px-3 py-3 text-center align-middle">Contests Attended</th>
+                          <th className="px-3 py-3 text-center align-middle font-extrabold">Total Solved</th>
+                          <th className="px-3 py-3 text-center align-middle bg-emerald-900/40 text-emerald-200">Contest Easy</th>
+                          <th className="px-3 py-3 text-center align-middle bg-teal-900/40 text-teal-200">Contest Med</th>
+                          <th className="px-3 py-3 text-center align-middle bg-purple-900/40 text-purple-200">Contest Hard</th>
+                          <th className="px-3.5 py-3 text-center align-middle">Global Rank</th>
+                          <th className="px-3.5 py-3 text-right align-middle">Contest Rating</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
-                        {(report.rows || []).map((r: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
-                            <td className="px-3 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{r.s_no}</td>
-                            <td className="px-3 py-2.5 text-center font-black font-mono text-slate-950 dark:text-white">{r.reg_no}</td>
-                            <td className="px-3 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{r.name}</td>
-                            <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{r.dept}</td>
-                            <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{r.year}</td>
-                            {(r.weeklyData || []).map((wd: any, widx: number) => (
-                              <td key={widx} className={`px-3 py-2.5 text-center font-black text-sm ${wd.att ? (wd.solved >= 3 ? 'text-emerald-700 dark:text-emerald-300' : wd.solved >= 1 ? 'text-brand-700 dark:text-brand-300' : 'text-amber-700 dark:text-amber-300') : 'text-slate-500 dark:text-slate-400 font-bold'}`}>
-                                {wd.att ? wd.solved : '—'}
+                        {(report.rows || []).map((r: any, idx: number) => {
+                          const cDiff = getContestDifficultyBreakdown(r);
+                          return (
+                            <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
+                              <td className="px-3 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{r.s_no || idx + 1}</td>
+                              <td className="px-3 py-2.5 text-center font-black font-mono text-slate-950 dark:text-white">{r.reg_no}</td>
+                              <td className="px-3 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{r.name}</td>
+                              <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{r.dept}</td>
+                              <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{r.year}</td>
+                              <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(r.accommodation)}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{r.twelfth_cutoff !== undefined && r.twelfth_cutoff !== null ? Number(r.twelfth_cutoff).toFixed(1) : (r.cutoff !== undefined && r.cutoff !== null ? Number(r.cutoff).toFixed(1) : "—")}</td>
+                              {(r.weeklyData || []).map((wd: any, widx: number) => (
+                                <td key={widx} className={`px-3 py-2.5 text-center font-black text-sm ${wd.att ? (wd.solved >= 3 ? 'text-emerald-700 dark:text-emerald-300' : wd.solved >= 1 ? 'text-brand-700 dark:text-brand-300' : 'text-amber-700 dark:text-amber-300') : 'text-slate-500 dark:text-slate-400 font-bold'}`}>
+                                  {wd.att ? wd.solved : '—'}
+                                </td>
+                              ))}
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-950 dark:text-white text-sm">{r.contests_attended ?? r.total_attended ?? r.totalAttended ?? 0}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-brand-700 dark:text-brand-300 text-sm">{r.total_solved ?? r.totalSolved ?? (cDiff.easy + cDiff.medium + cDiff.hard)}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{r.contest_easy ?? cDiff.easy}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{r.contest_medium ?? cDiff.medium}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{r.contest_hard ?? cDiff.hard}</td>
+                              <td className="px-3.5 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-300">
+                                {formatRank(r.global_rank || r.rank || r.profile_rank || r.contest_global_ranking)}
                               </td>
-                            ))}
-                            <td className="px-3 py-2.5 text-center font-black text-slate-950 dark:text-white text-sm">{r.totalAttended}</td>
-                            <td className="px-3 py-2.5 text-center font-black text-brand-700 dark:text-brand-300 text-sm">{r.totalSolved}</td>
-                            <td className={`px-3 py-2.5 text-center font-black text-sm ${r.consistencyPct >= 75 ? 'text-emerald-700 dark:text-emerald-300' : r.consistencyPct >= 40 ? 'text-amber-700 dark:text-amber-300' : 'text-rose-700 dark:text-rose-400'}`}>
-                              {r.consistencyPct}%
-                            </td>
-                          </tr>
-                        ))}
+                              <td className="px-3.5 py-2.5 text-right font-mono font-black text-slate-950 dark:text-white">
+                                {formatRating(r.rating || r.contest_rating || r.stats?.contest_rating)}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1205,14 +1382,24 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                 <span className={`px-1.5 py-0.5 rounded border shrink-0 ${s.q4 === 1 ? "text-emerald-800 dark:text-emerald-300 font-black bg-emerald-100 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-700" : "text-rose-800 dark:text-rose-300 font-black bg-rose-100 dark:bg-rose-950/80 border-rose-300 dark:border-rose-700"}`}>Q4:{s.q4 ?? 0}</span>
                               </div>
                             )}
+                            {(() => {
+                              const cDiff = getContestDifficultyBreakdown(s);
+                              return (
+                                <div className="flex flex-wrap items-center gap-1 mt-1 font-mono text-[10px] font-black">
+                                  <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">Contest Easy: {cDiff.easy}</span>
+                                  <span className="px-1.5 py-0.5 rounded bg-teal-100 text-teal-900 dark:bg-teal-950 dark:text-teal-200">Med: {cDiff.medium}</span>
+                                  <span className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-200">Hard: {cDiff.hard}</span>
+                                </div>
+                              );
+                            })()}
                           </div>
                           <div className="bg-slate-100 dark:bg-navy-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-left xs:text-right min-w-0">
                             <span className="text-slate-900 dark:text-slate-100 text-[10px] uppercase font-black tracking-wider block mb-1">Rank & Rating</span>
                             <span className="font-black text-amber-700 dark:text-amber-400 text-xs block">
-                              Rank: {isPart ? formatRank(s.global_rank || s.rank || s.profile_rank) : "—"}
+                              Rank: {formatRank(s.global_rank || s.rank || s.profile_rank || s.contest_global_ranking)}
                             </span>
                             <span className="font-mono text-slate-950 dark:text-white font-black text-[11px] block mt-0.5">
-                              Rating: {isPart ? formatRating(s.rating || s.contest_rating) : "—"}
+                              Rating: {formatRating(s.rating || s.contest_rating || s.stats?.contest_rating)}
                             </span>
                           </div>
                         </div>
@@ -1232,13 +1419,19 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Department</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
                           <th className="px-3.5 py-3 text-left print:border-b print:border-black">LeetCode Handle</th>
                           <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
                           <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q1</th>
                           <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q2</th>
                           <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q3</th>
                           <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q4</th>
-                          <th className="px-4 py-3 text-center print:border-b print:border-black">Contest Solved</th>
+                          <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Score</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Global Rank</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Rating</th>
@@ -1248,12 +1441,18 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Register No</th>
                           <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
                           <th className="px-4 py-3 text-center print:border-b print:border-black">Attendance</th>
                           <th className="px-3 py-3 text-center print:border-b print:border-black">Q1</th>
                           <th className="px-3 py-3 text-center print:border-b print:border-black">Q2</th>
                           <th className="px-3 py-3 text-center print:border-b print:border-black">Q3</th>
                           <th className="px-3 py-3 text-center print:border-b print:border-black">Q4</th>
-                          <th className="px-4 py-3 text-center print:border-b print:border-black">Contest Solved</th>
+                          <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
                           <th className="px-4 py-3 text-center print:border-b print:border-black">Total Time</th>
                         </tr>
                       ) : (
@@ -1263,6 +1462,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
                           <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
                           {displayedStudents.some((s: any) => s.q1 !== undefined || s.q2 !== undefined) ? (
                             <>
@@ -1270,14 +1472,20 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q2</th>
                               <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q3</th>
                               <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q4</th>
-                              <th className="px-4 py-3 text-center print:border-b print:border-black">Contest Solved</th>
+                              <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
                             </>
                           ) : (
                             <>
-                              <th className="px-3 py-3 text-center print:border-b print:border-black">Easy</th>
-                              <th className="px-3 py-3 text-center print:border-b print:border-black">Medium</th>
-                              <th className="px-3 py-3 text-center print:border-b print:border-black">Hard</th>
-                              <th className="px-4 py-3 text-center print:border-b print:border-black">Total Solved</th>
+                              <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Total Solved</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Easy</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Medium</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Hard</th>
                             </>
                           )}
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Rank</th>
@@ -1291,6 +1499,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         const isPart = ['PUBLIC_ATTENDED', 'VIRTUAL_ATTENDED', 'PUBLIC', 'VIRTUAL', 'PUBLIC_LIVE', 'VIRTUAL_PRACTICE', 'ATTENDED', 'VERIFIED', 'COMPLETED', 'ATTENDED_SOLVED', 'ATTENDED_ZERO'].includes(st) || (s.total_solved !== undefined && s.total_solved !== null);
                         const cSolved = s.contest_solved !== undefined && s.contest_solved !== null ? s.contest_solved : (s.total_solved !== undefined && s.total_solved !== null ? s.total_solved : (s.solved !== undefined && s.solved !== null ? s.solved : null));
                         const isContestView = s.q1 !== undefined || s.q2 !== undefined;
+                        const cDiff = getContestDifficultyBreakdown(s);
 
                         if (isFridayOfficial) {
                           return (
@@ -1300,21 +1509,24 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
                               <td className="px-3.5 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
                               <td className="px-3.5 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
+                              <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(s.accommodation || s.accomodation)}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.contests_attended ?? s.total_attended ?? 0}</td>
                               <td className="px-3.5 py-2.5 text-left font-mono font-bold text-slate-900 dark:text-slate-100">{s.leetcode_handle || s.username || "—"}</td>
                               <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
                                 {getStatusBadge(s.status)}
                               </td>
                               <td className="px-3 py-2.5 text-center font-black">
-                                {isPart ? (getQVal(s.q1, 1, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">—</span>}
+                                {isPart ? (getQVal(s.q1, 1, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
                               </td>
                               <td className="px-3 py-2.5 text-center font-black">
-                                {isPart ? (getQVal(s.q2, 2, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">—</span>}
+                                {isPart ? (getQVal(s.q2, 2, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
                               </td>
                               <td className="px-3 py-2.5 text-center font-black">
-                                {isPart ? (getQVal(s.q3, 3, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">—</span>}
+                                {isPart ? (getQVal(s.q3, 3, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
                               </td>
                               <td className="px-3 py-2.5 text-center font-black">
-                                {isPart ? (getQVal(s.q4, 4, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">—</span>}
+                                {isPart ? (getQVal(s.q4, 4, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
                               </td>
                               <td className="px-4 py-2.5 text-center font-black text-sm">
                                 {isPart && cSolved !== null ? (
@@ -1322,17 +1534,20 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                     {cSolved}
                                   </span>
                                 ) : (
-                                  <span className="text-slate-700 dark:text-slate-300 font-bold">—</span>
+                                  <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>
                                 )}
                               </td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{cDiff.easy}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{cDiff.medium}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{cDiff.hard}</td>
                               <td className="px-3.5 py-2.5 text-center font-mono font-black text-indigo-700 dark:text-indigo-300">
-                                {isPart && s.score !== undefined && s.score !== null ? s.score : "—"}
+                                {isPart && s.score !== undefined && s.score !== null ? s.score : "0"}
                               </td>
                               <td className="px-3.5 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-300">
-                                {isPart ? formatRank(s.global_rank || s.rank) : "—"}
+                                {formatRank(s.global_rank || s.rank || s.profile_rank || s.contest_global_ranking)}
                               </td>
                               <td className="px-3.5 py-2.5 text-right font-mono font-black text-slate-950 dark:text-white">
-                                {isPart ? formatRating(s.rating || s.contest_rating) : "—"}
+                                {formatRating(s.rating || s.contest_rating || s.stats?.contest_rating)}
                               </td>
                             </tr>
                           );
@@ -1344,6 +1559,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               <td className="px-3.5 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black">{idx + 1}</td>
                               <td className="px-3.5 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black">{s.reg_no}</td>
                               <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
+                              <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(s.accommodation || s.accomodation)}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.contests_attended ?? s.total_attended ?? 0}</td>
                               <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
                                 {getStatusBadge(s.status)}
                               </td>
@@ -1368,6 +1586,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                   <span className="text-slate-700 dark:text-slate-300 font-bold">—</span>
                                 )}
                               </td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{cDiff.easy}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{cDiff.medium}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{cDiff.hard}</td>
                               <td className="px-4 py-2.5 text-center font-mono font-black text-xs text-slate-950 dark:text-white">
                                 {(s.total_time_display && s.total_time_display !== '—' && !s.total_time_display.includes('—'))
                                   ? s.total_time_display
@@ -1386,22 +1607,25 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
                             <td className="px-3.5 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
                             <td className="px-3.5 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
+                            <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(s.accommodation || s.accomodation)}</td>
+                            <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}</td>
+                            <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.contests_attended ?? s.total_attended ?? 0}</td>
                             <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
                               {getStatusBadge(s.status)}
                             </td>
                             {isContestView ? (
                               <>
                                 <td className="px-3 py-2.5 text-center font-black">
-                                  {isPart ? (s.q1 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">—</span>}
+                                  {isPart ? (s.q1 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
                                 </td>
                                 <td className="px-3 py-2.5 text-center font-black">
-                                  {isPart ? (s.q2 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">—</span>}
+                                  {isPart ? (s.q2 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
                                 </td>
                                 <td className="px-3 py-2.5 text-center font-black">
-                                  {isPart ? (s.q3 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">—</span>}
+                                  {isPart ? (s.q3 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
                                 </td>
                                 <td className="px-3 py-2.5 text-center font-black">
-                                  {isPart ? (s.q4 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">—</span>}
+                                  {isPart ? (s.q4 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
                                 </td>
                                 <td className="px-4 py-2.5 text-center font-black text-sm">
                                   {isPart && cSolved !== null ? (
@@ -1409,23 +1633,29 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                       {cSolved}
                                     </span>
                                   ) : (
-                                    <span className="text-slate-700 dark:text-slate-300 font-bold">—</span>
+                                    <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>
                                   )}
                                 </td>
+                                <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{cDiff.easy}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{cDiff.medium}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{cDiff.hard}</td>
                               </>
                             ) : (
                               <>
+                                <td className="px-4 py-2.5 text-center font-black text-sm text-brand-700 dark:text-brand-300">{s.total_solved ?? ((s.easy || 0) + (s.medium || 0) + (s.hard || 0))}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{cDiff.easy}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{cDiff.medium}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{cDiff.hard}</td>
                                 <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.easy ?? 0}</td>
                                 <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.medium ?? 0}</td>
                                 <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.hard ?? 0}</td>
-                                <td className="px-4 py-2.5 text-center font-black text-sm text-brand-700 dark:text-brand-300">{s.total_solved ?? ((s.easy || 0) + (s.medium || 0) + (s.hard || 0))}</td>
                               </>
                             )}
                             <td className="px-3.5 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-300">
-                              {isPart ? formatRank(s.global_rank || s.rank || s.profile_rank) : "—"}
+                              {formatRank(s.global_rank || s.rank || s.profile_rank || s.contest_global_ranking)}
                             </td>
                             <td className="px-3.5 py-2.5 text-right font-mono font-black text-slate-950 dark:text-white">
-                              {isPart ? formatRating(s.rating || s.contest_rating) : "—"}
+                              {formatRating(s.rating || s.contest_rating || s.stats?.contest_rating)}
                             </td>
                           </tr>
                         );
@@ -1566,10 +1796,10 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                 <td className="px-3 py-2.5 text-center font-black">{d.metrics?.total_solved?.toLocaleString()}</td>
                                 <td className="px-3 py-2.5 text-center font-black text-purple-700 dark:text-purple-300">{d.metrics?.above_500}</td>
                                 <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{d.metrics?.['250_500']}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{d.metrics?.current_week?.q4 ?? '—'}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-cyan-700 dark:text-cyan-300">{d.metrics?.current_week?.q3 ?? '—'}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-blue-700 dark:text-blue-300">{d.metrics?.current_week?.q2 ?? '—'}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-amber-700 dark:text-amber-300">{d.metrics?.current_week?.q1 ?? '—'}</td>
+                                <td className="px-3 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{d.metrics?.current_week?.q4 ?? 0}</td>
+                                <td className="px-3 py-2.5 text-center font-black text-cyan-700 dark:text-cyan-300">{d.metrics?.current_week?.q3 ?? 0}</td>
+                                <td className="px-3 py-2.5 text-center font-black text-blue-700 dark:text-blue-300">{d.metrics?.current_week?.q2 ?? 0}</td>
+                                <td className="px-3 py-2.5 text-center font-black text-amber-700 dark:text-amber-300">{d.metrics?.current_week?.q1 ?? 0}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -1763,37 +1993,113 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               {/* ====== GENERIC REPORTS BELOW (hidden for weekly perf) ====== */}
               {/* Metrics Overview Cards */}
               {!isWeeklyPerformance && report.metrics && (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">Executive Summary Metrics</h3>
+                <div className="space-y-3 print:break-inside-avoid">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider print:text-black flex items-center space-x-1.5">
+                      <span>Executive Summary Metrics</span>
+                    </h3>
+                    <span className="text-[10px] font-bold text-slate-400 print:hidden">Click any card to filter student table</span>
+                  </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {Object.entries(report.metrics).map(([key, value]) => (
-                      <div key={key} className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-950 text-center shadow-sm">
-                        <p className="text-xs text-slate-900 dark:text-slate-100 uppercase font-black tracking-wider mb-1">
-                          {formatMetricTitle(key)}
-                        </p>
-                        <p className="text-xl font-black text-slate-950 dark:text-white">
-                          {value !== null && value !== undefined ? (typeof value === 'number' && value > 999 ? value.toLocaleString() : String(value)) : "—"}
-                        </p>
-                      </div>
-                    ))}
+                    {Object.entries(report.metrics).map(([key, value]) => {
+                      const k = key.toLowerCase();
+                      let fKey: string | null = null;
+                      if (k.includes('active_solver') || k.includes('activesolver') || k === 'active') fKey = 'METRIC_ACTIVE_SOLVERS';
+                      else if (k.includes('verified_solver') || k.includes('verifiedsolver')) fKey = 'METRIC_VERIFIED_SOLVERS';
+                      else if (k.includes('unverified')) fKey = 'METRIC_UNVERIFIED_PROFILES';
+                      else if (k.includes('easy')) fKey = 'METRIC_EASY_SOLVED';
+                      else if (k.includes('medium')) fKey = 'METRIC_MEDIUM_SOLVED';
+                      else if (k.includes('hard')) fKey = 'METRIC_HARD_SOLVED';
+                      else if (k.includes('not_yet_started') || k.includes('zero_solved') || k.includes('unlinked')) fKey = 'METRIC_ZERO_SOLVED';
+                      else if (k.includes('total_student') || k.includes('totalstudent') || k === 'total') fKey = 'TOTAL_STUDENTS';
+
+                      const isSelected = fKey ? (fKey === 'TOTAL_STUDENTS' ? activeFilter === null : activeFilter === fKey) : false;
+
+                      return (
+                        <div
+                          key={key}
+                          onClick={() => {
+                            if (fKey === 'TOTAL_STUDENTS') {
+                              setActiveFilter(null);
+                            } else if (fKey) {
+                              toggleFilter(fKey);
+                            }
+                          }}
+                          role={fKey ? "button" : undefined}
+                          title={fKey ? `Click to filter by ${formatMetricTitle(key)}` : undefined}
+                          className={`p-4 rounded-2xl border text-center transition-all duration-200 print:bg-white print:border-slate-300 print:shadow-none print:break-inside-avoid ${
+                            fKey ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]' : ''
+                          } ${
+                            isSelected
+                              ? 'bg-brand-50/90 dark:bg-brand-950/60 border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/30 shadow-md'
+                              : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-950 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm'
+                          }`}
+                        >
+                          <p className={`text-xs uppercase font-black tracking-wider mb-1 print:text-slate-700 ${
+                            isSelected ? 'text-brand-700 dark:text-brand-300' : 'text-slate-900 dark:text-slate-100'
+                          }`}>
+                            {formatMetricTitle(key)}
+                          </p>
+                          <p className={`text-xl font-black print:text-black ${
+                            isSelected ? 'text-brand-900 dark:text-brand-100' : 'text-slate-950 dark:text-white'
+                          }`}>
+                            {value !== null && value !== undefined ? (typeof value === 'number' && value > 999 ? value.toLocaleString() : String(value)) : "—"}
+                          </p>
+                          {isSelected && (
+                            <span className="inline-block mt-1 text-[9px] font-black uppercase text-brand-600 dark:text-brand-300 tracking-wider">
+                              ● Filter Active
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
               {/* Category Distribution Grid */}
               {!isWeeklyPerformance && report.distribution && (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
-                    <Layers className="w-4 h-4 text-purple-500" />
-                    <span>Problem Solving Category Distribution</span>
-                  </h3>
+                <div className="space-y-3 print:break-inside-avoid">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5 print:text-black">
+                      <Layers className="w-4 h-4 text-purple-500 print:text-black" />
+                      <span>Problem Solving Category Distribution</span>
+                    </h3>
+                    <span className="text-[10px] font-bold text-purple-400 print:hidden">Click category to filter</span>
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                    {Object.entries(report.distribution).map(([cat, count]: [string, any]) => (
-                      <div key={cat} className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-center">
-                        <div className="text-xs font-black text-slate-900 dark:text-slate-100 mb-1">{cat}</div>
-                        <div className="text-xl font-black text-purple-800 dark:text-purple-300">{count}</div>
-                      </div>
-                    ))}
+                    {Object.entries(report.distribution).map(([cat, count]: [string, any]) => {
+                      const isCatSelected = activeFilter === cat;
+                      return (
+                        <div
+                          key={cat}
+                          onClick={() => toggleFilter(cat)}
+                          role="button"
+                          title={`Click to filter students with ${cat} solved`}
+                          className={`p-3.5 rounded-2xl border text-center transition-all duration-200 cursor-pointer hover:scale-[1.03] active:scale-[0.97] print:bg-white print:border-purple-300 print:break-inside-avoid ${
+                            isCatSelected
+                              ? 'bg-purple-100 dark:bg-purple-950/80 border-purple-600 dark:border-purple-400 ring-2 ring-purple-500/40 shadow-md'
+                              : 'bg-purple-500/10 border-purple-500/30 hover:border-purple-500/60 shadow-xs'
+                          }`}
+                        >
+                          <div className={`text-xs font-black mb-1 print:text-slate-700 ${
+                            isCatSelected ? 'text-purple-950 dark:text-purple-100' : 'text-slate-900 dark:text-slate-100'
+                          }`}>
+                            {cat}
+                          </div>
+                          <div className={`text-xl font-black print:text-purple-900 ${
+                            isCatSelected ? 'text-purple-900 dark:text-purple-100' : 'text-purple-800 dark:text-purple-300'
+                          }`}>
+                            {count}
+                          </div>
+                          {isCatSelected && (
+                            <span className="inline-block mt-0.5 text-[9px] font-black uppercase text-purple-700 dark:text-purple-300 tracking-wider">
+                              ● Filter Active
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -2216,11 +2522,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           <th className="px-4 py-3 text-left">Name</th>
                           <th className="px-4 py-3 text-center">Dept</th>
                           <th className="px-4 py-3 text-center">Year</th>
-                          <th className="px-4 py-3 text-right">Easy</th>
-                          <th className="px-4 py-3 text-right">Medium</th>
-                          <th className="px-4 py-3 text-right">Hard</th>
-                          <th className="px-4 py-3 text-right">Total Solved</th>
-                          <th className="px-4 py-3 text-right">Rating</th>
+                          <th className="px-4 py-3 text-center">Easy</th>
+                          <th className="px-4 py-3 text-center">Medium</th>
+                          <th className="px-4 py-3 text-center">Hard</th>
+                          <th className="px-4 py-3 text-center">Total Solved</th>
+                          <th className="px-4 py-3 text-center">Rating</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
@@ -2231,11 +2537,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <td className="px-4 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{formatStudentName(s.name || s.student_name)}</td>
                             <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
                             <td className="px-4 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{deriveYearLevelFromRegNo(s.reg_no, s.year)}</td>
-                            <td className="px-4 py-2.5 text-right font-black text-emerald-700 dark:text-emerald-300">{s.easy ?? "—"}</td>
-                            <td className="px-4 py-2.5 text-right font-black text-amber-700 dark:text-amber-300">{s.medium ?? "—"}</td>
-                            <td className="px-4 py-2.5 text-right font-black text-rose-700 dark:text-rose-300">{s.hard ?? "—"}</td>
-                            <td className="px-4 py-2.5 text-right font-black text-brand-700 dark:text-brand-300 text-sm">{s.total_solved ?? "—"}</td>
-                            <td className="px-4 py-2.5 text-right font-mono font-black text-slate-950 dark:text-white">
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{s.easy ?? "—"}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-amber-700 dark:text-amber-300">{s.medium ?? "—"}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-rose-700 dark:text-rose-300">{s.hard ?? "—"}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-brand-700 dark:text-brand-300 text-sm">{s.total_solved ?? "—"}</td>
+                            <td className="px-4 py-2.5 text-center font-mono font-black text-slate-950 dark:text-white">
                               {(() => {
                                 const r = s.rating ?? s.contest_rating ?? s.contestRating ?? s.stats?.contest_rating;
                                 return (r !== null && r !== undefined && r !== '' && r !== '—' && !isNaN(Number(r)) && Number(r) > 0)
@@ -2254,91 +2560,149 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               {/* Full Student Roster Table (Only shown for general cumulative reports) */}
               {!isFiveWeekTrend && !isHistIntel && !isWowIntel && !isWeeklyPerformance && allRows.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
-                    Full Student Performance Roster ({allRows.length} Students)
-                  </h3>
-                  {/* Mobile Card View (< sm) */}
-                  <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
-                    {allRows.map((s: any, idx: number) => (
-                      <div key={idx} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-xs space-y-2">
-                        <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                          <div className="flex items-center space-x-2 min-w-0">
-                            <span className="px-2 py-0.5 rounded-lg text-xs font-mono font-black bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 shrink-0">
-                              #{idx + 1}
-                            </span>
-                            <div className="min-w-0">
-                              <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                                {formatStudentName(s.name || s.student_name)}
-                              </h4>
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                                {s.reg_no} • {s.dept} ({deriveYearLevelFromRegNo(s.reg_no, s.year)})
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <span className={`px-2 py-0.5 text-[10px] font-black rounded-full block text-center mb-1 ${s.status === 'VERIFIED' ? 'bg-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-200 text-rose-900 dark:bg-rose-950 dark:text-rose-300'}`}>
-                              {s.status}
-                            </span>
-                            <span className="text-xs font-black text-brand-600 dark:text-brand-400 block">{s.total_solved !== null ? s.total_solved : "—"} Solved</span>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-1.5 pt-0.5 text-center text-[11px]">
-                          <div className="p-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                            <div className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">Easy</div>
-                            <div className="font-black text-emerald-700 dark:text-emerald-300">{s.easy ?? "—"}</div>
-                          </div>
-                          <div className="p-1 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                            <div className="text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase">Medium</div>
-                            <div className="font-black text-amber-700 dark:text-amber-300">{s.medium ?? "—"}</div>
-                          </div>
-                          <div className="p-1 rounded-xl bg-rose-500/10 border border-rose-500/20">
-                            <div className="text-[9px] font-bold text-rose-700 dark:text-rose-400 uppercase">Hard</div>
-                            <div className="font-black text-rose-700 dark:text-rose-300">{s.hard ?? "—"}</div>
-                          </div>
-                        </div>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-2">
+                      <Users className="w-4 h-4 text-brand-500" />
+                      <span>
+                        Full Student Performance Roster ({displayedStudents.length} {displayedStudents.length === allRows.length ? 'Students' : `of ${allRows.length} Students`})
+                      </span>
+                    </h3>
+                    {activeFilter && (
+                      <div className="flex items-center space-x-2 text-xs">
+                        <span className="font-extrabold text-indigo-700 dark:text-indigo-300">
+                          Active: <span className="underline font-black">{activeFilter.replace('METRIC_', '').replace('CAT_', '').replace(/_/g, ' ')}</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setActiveFilter(null)}
+                          className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 font-black text-[10px] transition-all cursor-pointer flex items-center space-x-1"
+                        >
+                          <X className="w-3 h-3" />
+                          <span>Clear</span>
+                        </button>
                       </div>
-                    ))}
+                    )}
                   </div>
 
-                  {/* Desktop Table View (>= sm) */}
-                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[450px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
-                    <table className="w-full text-left text-xs mobile-card-table min-w-[550px] sm:min-w-[800px] print:min-w-0 print:w-full">
-                      <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10 table-header-group print:table-header-group print:bg-slate-200 print:text-black">
-                        <tr>
-                          <th className="px-4 py-3 text-center print:border-b print:border-black">S.No</th>
-                          <th className="px-4 py-3 text-center print:border-b print:border-black">Reg No</th>
-                          <th className="px-4 py-3 text-left print:border-b print:border-black">Student Name</th>
-                          <th className="px-4 py-3 text-center print:border-b print:border-black">Dept</th>
-                          <th className="px-4 py-3 text-center print:border-b print:border-black">Year</th>
-                          <th className="px-4 py-3 text-right print:border-b print:border-black">Easy</th>
-                          <th className="px-4 py-3 text-right print:border-b print:border-black">Medium</th>
-                          <th className="px-4 py-3 text-right print:border-b print:border-black">Hard</th>
-                          <th className="px-4 py-3 text-right print:border-b print:border-black">Total Solved</th>
-                          <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans print:divide-black">
-                        {allRows.map((s: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
-                            <td className="px-4 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black">{idx + 1}</td>
-                            <td className="px-4 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black">{s.reg_no}</td>
-                            <td className="px-4 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{deriveYearLevelFromRegNo(s.reg_no, s.year)}</td>
-                            <td className="px-4 py-2.5 text-right text-emerald-700 dark:text-emerald-300 font-black">{s.easy ?? "—"}</td>
-                            <td className="px-4 py-2.5 text-right text-amber-700 dark:text-amber-300 font-black">{s.medium ?? "—"}</td>
-                            <td className="px-4 py-2.5 text-right text-rose-700 dark:text-rose-300 font-black">{s.hard ?? "—"}</td>
-                            <td className="px-4 py-2.5 text-right font-black text-brand-700 dark:text-brand-300">{s.total_solved !== null ? s.total_solved : "—"}</td>
-                            <td className="px-4 py-2.5 text-center">
-                              <span className={`px-2 py-0.5 text-[10px] font-black rounded-full ${s.status === 'VERIFIED' ? 'bg-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-200 text-rose-900 dark:bg-rose-950 dark:text-rose-300'}`}>
-                                {s.status}
-                              </span>
-                            </td>
-                          </tr>
+                  {activeFilter && (
+                    <div className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs shadow-2xs animate-fade-in print:hidden">
+                      <div className="flex items-center space-x-2">
+                        <Filter className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                        <span className="font-bold text-indigo-950 dark:text-indigo-200">
+                          Filtering students for: <span className="font-black text-indigo-700 dark:text-indigo-300">{activeFilter.replace('METRIC_', '').replace('CAT_', '').replace(/_/g, ' ')}</span>
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full font-black bg-indigo-200 text-indigo-900 dark:bg-indigo-900 dark:text-indigo-200 text-[10px]">
+                          {displayedStudents.length} Solvers Found
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveFilter(null)}
+                        className="px-2.5 py-1 rounded-xl bg-white dark:bg-navy-900 border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 font-black text-[11px] hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-all cursor-pointer flex items-center space-x-1 shadow-2xs"
+                      >
+                        <X className="w-3 h-3" />
+                        <span>Reset Table</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {displayedStudents.length === 0 ? (
+                    <div className="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-navy-950 text-center space-y-2">
+                      <p className="text-xs font-bold text-slate-500 dark:text-slate-400">No students match the selected filter category ({activeFilter}).</p>
+                      <button
+                        type="button"
+                        onClick={() => setActiveFilter(null)}
+                        className="px-3 py-1.5 rounded-xl bg-brand-600 text-white text-xs font-black shadow-xs hover:bg-brand-700 transition-all cursor-pointer"
+                      >
+                        Show All Students
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Mobile Card View (< sm) */}
+                      <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                        {displayedStudents.map((s: any, idx: number) => (
+                          <div key={idx} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-xs space-y-2">
+                            <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                              <div className="flex items-center space-x-2 min-w-0">
+                                <span className="px-2 py-0.5 rounded-lg text-xs font-mono font-black bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 shrink-0">
+                                  #{idx + 1}
+                                </span>
+                                <div className="min-w-0">
+                                  <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                                    {formatStudentName(s.name || s.student_name)}
+                                  </h4>
+                                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                                    {s.reg_no} • {s.dept} ({deriveYearLevelFromRegNo(s.reg_no, s.year)})
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <span className={`px-2 py-0.5 text-[10px] font-black rounded-full block text-center mb-1 ${s.status === 'VERIFIED' ? 'bg-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-200 text-rose-900 dark:bg-rose-950 dark:text-rose-300'}`}>
+                                  {s.status}
+                                </span>
+                                <span className="text-xs font-black text-brand-600 dark:text-brand-400 block">{s.total_solved !== null ? s.total_solved : "—"} Solved</span>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-1.5 pt-0.5 text-center text-[11px]">
+                              <div className="p-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                                <div className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">Easy</div>
+                                <div className="font-black text-emerald-700 dark:text-emerald-300">{s.easy ?? "—"}</div>
+                              </div>
+                              <div className="p-1 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                                <div className="text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase">Medium</div>
+                                <div className="font-black text-amber-700 dark:text-amber-300">{s.medium ?? "—"}</div>
+                              </div>
+                              <div className="p-1 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                                <div className="text-[9px] font-bold text-rose-700 dark:text-rose-400 uppercase">Hard</div>
+                                <div className="font-black text-rose-700 dark:text-rose-300">{s.hard ?? "—"}</div>
+                              </div>
+                            </div>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      </div>
+
+                      {/* Desktop Table View (>= sm) */}
+                      <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[450px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
+                        <table className="w-full text-left text-xs mobile-card-table min-w-[550px] sm:min-w-[800px] print:min-w-0 print:w-full">
+                          <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10 table-header-group print:table-header-group print:bg-slate-200 print:text-black">
+                            <tr>
+                              <th className="px-4 py-3 text-center print:border-b print:border-black">S.No</th>
+                              <th className="px-4 py-3 text-center print:border-b print:border-black">Reg No</th>
+                              <th className="px-4 py-3 text-left print:border-b print:border-black">Student Name</th>
+                              <th className="px-4 py-3 text-center print:border-b print:border-black">Dept</th>
+                              <th className="px-4 py-3 text-center print:border-b print:border-black">Year</th>
+                              <th className="px-4 py-3 text-right print:border-b print:border-black">Easy</th>
+                              <th className="px-4 py-3 text-right print:border-b print:border-black">Medium</th>
+                              <th className="px-4 py-3 text-right print:border-b print:border-black">Hard</th>
+                              <th className="px-4 py-3 text-right print:border-b print:border-black">Total Solved</th>
+                              <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans print:divide-black">
+                            {displayedStudents.map((s: any, idx: number) => (
+                              <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
+                                <td className="px-4 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black">{idx + 1}</td>
+                                <td className="px-4 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black">{s.reg_no}</td>
+                                <td className="px-4 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
+                                <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
+                                <td className="px-4 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{deriveYearLevelFromRegNo(s.reg_no, s.year)}</td>
+                                <td className="px-4 py-2.5 text-right text-emerald-700 dark:text-emerald-300 font-black">{s.easy ?? "—"}</td>
+                                <td className="px-4 py-2.5 text-right text-amber-700 dark:text-amber-300 font-black">{s.medium ?? "—"}</td>
+                                <td className="px-4 py-2.5 text-right text-rose-700 dark:text-rose-300 font-black">{s.hard ?? "—"}</td>
+                                <td className="px-4 py-2.5 text-right font-black text-brand-700 dark:text-brand-300">{s.total_solved !== null ? s.total_solved : "—"}</td>
+                                <td className="px-4 py-2.5 text-center">
+                                  <span className={`px-2 py-0.5 text-[10px] font-black rounded-full ${s.status === 'VERIFIED' ? 'bg-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-200 text-rose-900 dark:bg-rose-950 dark:text-rose-300'}`}>
+                                    {s.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -2348,31 +2712,51 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
         </div>
 
         {/* 4. FOOTER / EXPORT ACTIONS */}
-        <div className="p-3.5 sm:p-5 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 print:hidden">
-          <div className="text-xs text-slate-500 font-semibold flex items-center justify-center sm:justify-start space-x-2">
-            <span>Official Institutional Report Dataset</span>
+        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0 print:hidden">
+          <div className="flex items-center space-x-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="font-extrabold tracking-wide">Official Institutional Report Dataset</span>
+            <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-700 dark:bg-navy-800 dark:text-slate-300">
+              {allRows.length} Records
+            </span>
           </div>
-          <div className="grid grid-cols-3 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-2">
+
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+            <button
+              onClick={() => window.print()}
+              type="button"
+              className="flex items-center justify-center space-x-1.5 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105"
+              title="Print / Save as PDF from browser"
+            >
+              <Printer className="w-3.5 h-3.5 shrink-0" />
+              <span>Print View</span>
+            </button>
             <button
               onClick={() => downloadFile('excel')}
-              className="flex items-center justify-center space-x-1 sm:space-x-1.5 px-1.5 sm:px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] sm:text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 w-full sm:w-auto text-center truncate"
+              type="button"
+              disabled={isDownloading}
+              className="flex items-center justify-center space-x-1.5 px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 disabled:opacity-50"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span className="truncate">Excel (.xlsx)</span>
+              <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
+              <span>Excel (.xlsx)</span>
             </button>
             <button
               onClick={() => downloadFile('pdf')}
-              className="flex items-center justify-center space-x-1 sm:space-x-1.5 px-1.5 sm:px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[10px] sm:text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 w-full sm:w-auto text-center truncate"
+              type="button"
+              disabled={isDownloading}
+              className="flex items-center justify-center space-x-1.5 px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 disabled:opacity-50"
             >
-              <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span className="truncate">PDF (.pdf)</span>
+              <FileText className="w-3.5 h-3.5 shrink-0" />
+              <span>PDF (.pdf)</span>
             </button>
             <button
               onClick={() => downloadFile('word')}
-              className="flex items-center justify-center space-x-1 sm:space-x-1.5 px-1.5 sm:px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-[10px] sm:text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 w-full sm:w-auto text-center truncate"
+              type="button"
+              disabled={isDownloading}
+              className="flex items-center justify-center space-x-1.5 px-3.5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 disabled:opacity-50"
             >
-              <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span className="truncate">Word (.docx)</span>
+              <FileText className="w-3.5 h-3.5 shrink-0" />
+              <span>Word (.docx)</span>
             </button>
           </div>
         </div>

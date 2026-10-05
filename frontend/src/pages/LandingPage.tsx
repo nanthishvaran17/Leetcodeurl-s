@@ -125,15 +125,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
     if (data.type === 'sync_progress') {
       const tot = data.total || summaryData?.total_students || students.length || 0;
-      setSyncProgress({
-        total: tot,
-        processed: data.processed,
-        successful: data.successful ?? (data.processed - (data.failed || 0) - (data.pending || 0)),
-        failed: data.failed || 0,
-        pending_usernames: data.pending || 0,
-        current_student: data.current_student,
-        current_username: data.current_username,
-        is_running: true
+      setSyncProgress(prev => {
+        const nextProcessed = Math.max(prev?.processed ?? 0, data.processed ?? 0);
+        return {
+          total: tot,
+          processed: nextProcessed,
+          successful: data.successful ?? (nextProcessed - (data.failed || 0) - (data.pending || 0)),
+          failed: data.failed || 0,
+          pending_usernames: data.pending || 0,
+          current_student: data.current_student || prev?.current_student,
+          current_username: data.current_username || prev?.current_username,
+          is_running: true
+        };
       });
 
       // Update student card progressively in React state without full page reload
@@ -302,23 +305,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         const rawComp = statusData.students_processed ?? statusData.completed ?? statusData.processed ?? 0;
         const totalCount = statusData.total_students || statusData.total || students.length || 0;
-        const currentProcessed = Math.min(totalCount, Math.max(0, rawComp));
 
-        setSyncProgress({
-          total: totalCount,
-          processed: currentProcessed,
-          successful: statusData.successful ?? statusData.success ?? 0,
-          failed: statusData.failed ?? 0,
-          pending_usernames: statusData.pending_usernames ?? 0,
-          current_student: statusData.current_student,
-          current_username: statusData.current_username,
-          is_running: statusData.is_running || (pollCount <= 2),
-          last_sync_time: statusData.last_sync_timestamp,
-          triggered_by: statusData.triggered_by || statusData.last_triggered_by
+        setSyncProgress(prev => {
+          const currentProcessed = Math.min(totalCount, Math.max(prev?.processed ?? 0, rawComp));
+          return {
+            total: totalCount,
+            processed: currentProcessed,
+            successful: statusData.successful ?? statusData.success ?? 0,
+            failed: statusData.failed ?? 0,
+            pending_usernames: statusData.pending_usernames ?? 0,
+            current_student: statusData.current_student || prev?.current_student,
+            current_username: statusData.current_username || prev?.current_username,
+            is_running: statusData.is_running || (pollCount <= 2),
+            last_sync_time: statusData.last_sync_timestamp,
+            triggered_by: statusData.triggered_by || statusData.last_triggered_by
+          };
         });
 
         // Stop polling ONLY when sync is no longer running (after warm up) OR when all records are processed
-        if ((pollCount > 2 && !statusData.is_running) || (currentProcessed >= totalCount && totalCount > 0)) {
+        if ((pollCount > 2 && !statusData.is_running) || (rawComp >= totalCount && totalCount > 0)) {
           if (pollTimerRef.current) clearInterval(pollTimerRef.current);
           pollTimerRef.current = null;
           setRefreshing(false);
@@ -346,7 +351,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           setRefreshing(false);
         }
       }
-    }, 1000);
+    }, 500);
   };
 
   const startSyncPolling = startPollingProgress;
@@ -414,11 +419,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
   }, [fetchFilteredStudents]);
 
+  const ACTIVE_DEPT_CODES = ['CSE(CS)', 'CSE(IOT)', 'IT'];
+
   const fetchDepartments = async () => {
     try {
       const res = await api.get('/departments');
       if (res.data && Array.isArray(res.data) && res.data.length >= 1) {
-        setDepartments(res.data);
+        // Only allow the 3 active institutional departments
+        const filtered = res.data.filter((d: any) =>
+          ACTIVE_DEPT_CODES.includes((d.code || '').trim().toUpperCase()) ||
+          ACTIVE_DEPT_CODES.map(c => c.toUpperCase()).includes((d.code || '').trim().toUpperCase())
+        );
+        setDepartments(filtered.length > 0 ? filtered : res.data);
       }
     } catch (err) {
       console.warn("Failed to fetch departments:", err);
@@ -457,7 +469,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       // Backend /students/leaderboard-fast already enforces RBAC scoping server-side.
       // For faculty mentors, backend returns ONLY assigned students — no frontend filter needed.
-      const res = await api.get('/students/leaderboard-fast');
+      const res = await api.get(`/students/leaderboard-fast?refresh=true&_t=${Date.now()}`);
       if (res.data && Array.isArray(res.data)) {
         setStudents(res.data);
         saveCachedStudents(res.data, isFacultyRole ? (user?.id || loggedInUser?.id) : undefined);
@@ -1075,7 +1087,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex items-center justify-between flex-wrap gap-3.5 pb-1">
             <h3 className="font-black text-lg text-slate-900 dark:text-white">
               <div className="flex flex-col">
-                <span>Showing {Math.min(displayCount, sortedList.length)} of {sortedList.length} Students</span>
+                <span>Showing {viewMode === 'cards' ? Math.min(displayCount, sortedList.length) : sortedList.length} of {sortedList.length} Students</span>
                 {(selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all') && (
                   <span className="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1">
                     Filtered by: {[
@@ -1122,14 +1134,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <RefreshCw className={`w-3.5 h-3.5 ${syncProgress.is_running ? 'animate-spin' : ''}`} />
                     <span>
                       {syncProgress.is_running 
-                        ? (isFiltered ? `Syncing Filtered Students (${syncProgress.processed}/${syncProgress.total})` : 'Sync Engine Running') 
+                        ? `Syncing ${isFiltered ? 'Filtered ' : ''}Students (${syncProgress.processed} / ${syncProgress.total})` 
                         : 'Sync Process Complete'
                       }
                     </span>
                   </span>
                   <p className="text-xs font-extrabold text-slate-700 dark:text-slate-200">
                     {syncProgress.is_running
-                      ? `Processing Profile: ${syncProgress.current_student || 'Initializing...'}`
+                      ? `Processing Profile (${syncProgress.processed} / ${syncProgress.total}): ${syncProgress.current_student || syncProgress.current_username || 'Initializing...'}`
                       : `Student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
                     }
                   </p>
@@ -1239,31 +1251,46 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </AnimatePresence>
               </motion.div>
 
-              {displayCount < sortedList.length && (
+              {displayCount < sortedList.length ? (
                 <div className="flex flex-col items-center justify-center pt-4 space-y-2">
                   <p className="text-xs text-slate-800 dark:text-slate-200 font-extrabold">
                     Showing <span className="font-black text-brand-600 dark:text-brand-400">{Math.min(displayCount, sortedList.length)}</span> of <span className="font-black text-slate-900 dark:text-white">{sortedList.length}</span> Students
                   </p>
-                <div className="flex items-center space-x-3">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setDisplayCount(prev => prev + 32)}
-                    className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-600/30 transition-all cursor-pointer"
-                  >
-                    <span>Load More Students (+32)</span>
-                  </motion.button>
+                  <div className="flex items-center space-x-3">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setDisplayCount(prev => prev + 32)}
+                      className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-600/30 transition-all cursor-pointer"
+                    >
+                      <span>Load More Students (+32)</span>
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => setDisplayCount(sortedList.length)}
+                      className="px-5 py-3 rounded-2xl glass-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+                    >
+                      Show All {sortedList.length} Students
+                    </motion.button>
+                  </div>
+                </div>
+              ) : sortedList.length > 32 ? (
+                <div className="flex flex-col items-center justify-center pt-6 space-y-3">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 font-extrabold">
+                    Showing all <span className="font-black text-brand-600 dark:text-brand-400">{sortedList.length}</span> students
+                  </p>
                   <motion.button
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.96 }}
-                    onClick={() => setDisplayCount(sortedList.length)}
-                    className="px-5 py-3 rounded-2xl glass-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+                    onClick={() => setDisplayCount(32)}
+                    className="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all cursor-pointer inline-flex items-center space-x-2 shadow-sm"
                   >
-                    Show All {sortedList.length} Students
+                    <ChevronDown className="w-4 h-4 rotate-180" />
+                    <span>Collapse to Top 32</span>
                   </motion.button>
                 </div>
-              </div>
-            )}
+              ) : null}
           </div>
         ) : (
           <LeaderboardTable
