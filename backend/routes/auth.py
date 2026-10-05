@@ -240,7 +240,8 @@ def validate_csrf_origin(request: Request):
         "http://localhost",
         "https://localhost",
         "http://127.0.0.1",
-        "https://127.0.0.1"
+        "https://127.0.0.1",
+        "https://leetcodeurl-s.onrender.com"
     ]
 
     env_origin = getattr(settings, "FRONTEND_ORIGIN", None)

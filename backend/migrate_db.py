@@ -782,7 +782,39 @@ def run_db_migrations():
         print("Database migration complete.")
 
     else:
-        print("Using SQLite (or non-Postgres DB). Postgres-specific ALTER TABLE migrations skipped.")
+        print("Using SQLite (or non-Postgres DB). Applying SQLite-compatible migrations...")
+        try:
+            conn = sqlite3.connect("./data/leetcode_tracker.db")
+            cursor = conn.cursor()
+            
+            # Users table new columns
+            user_cols = [
+                ("institutional_id", "VARCHAR(50)"),
+                ("designation", "VARCHAR(100)"),
+                ("full_name", "VARCHAR(150)"),
+                ("profile_photo", "TEXT"),
+                ("require_password_change", "BOOLEAN DEFAULT 0"),
+                ("last_login", "DATETIME"),
+                ("last_login_ip", "VARCHAR(50)"),
+                ("last_login_device", "VARCHAR(255)"),
+                ("last_activity", "DATETIME"),
+                ("totp_secret", "VARCHAR(100)"),
+                ("is_2fa_enabled", "BOOLEAN DEFAULT 0"),
+                ("webauthn_challenge", "VARCHAR(255)")
+            ]
+            
+            for col_name, col_type in user_cols:
+                try:
+                    cursor.execute(f"ALTER TABLE users ADD COLUMN {col_name} {col_type};")
+                    print(f"Added '{col_name}' to users in SQLite.")
+                except Exception:
+                    pass
+            
+            conn.commit()
+            conn.close()
+            print("SQLite migrations complete.")
+        except Exception as e:
+            print(f"SQLite migration failed: {e}")
 
 
 if __name__ == "__main__":
