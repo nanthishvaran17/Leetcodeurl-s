@@ -65,6 +65,7 @@ def run_db_migrations():
             ("users", "last_activity", "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_activity TIMESTAMP"),
             ("users", "totp_secret", "ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(64)"),
             ("users", "is_2fa_enabled", "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_2fa_enabled BOOLEAN DEFAULT FALSE"),
+            ("users", "webauthn_challenge", "ALTER TABLE users ADD COLUMN IF NOT EXISTS webauthn_challenge VARCHAR(255)"),
             ("users", "created_at", "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP"),
             ("users", "reporting_manager_id", "ALTER TABLE users ADD COLUMN IF NOT EXISTS reporting_manager_id INTEGER"),
             # report_jobs table
