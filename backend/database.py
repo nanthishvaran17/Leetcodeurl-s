@@ -85,20 +85,16 @@ if "postgresql" in db_url or "postgres" in db_url:
     max_overflow = raw_max_overflow if is_low_pool else max(raw_max_overflow, 10)
 
 
-    if is_render or os.environ.get("FORCE_NULL_POOL") == "true":
-        engine_kwargs.update({
-            "poolclass": NullPool,
-            "connect_args": pg_connect_args
-        })
-    else:
-        engine_kwargs.update({
-            "pool_size": pool_size,
-            "max_overflow": max_overflow,
-            "pool_timeout": int(os.environ.get("DB_POOL_TIMEOUT", 30)),
-            "pool_pre_ping": True,
-            "pool_recycle": int(os.environ.get("DB_POOL_RECYCLE", 300)),
-            "connect_args": pg_connect_args
-        })
+    # Always use QueuePool for better performance and to avoid SSL connection drops from connection storms,
+    # but configure it to be resilient against idle timeouts on cloud environments.
+    engine_kwargs.update({
+        "pool_size": pool_size,
+        "max_overflow": max_overflow,
+        "pool_timeout": int(os.environ.get("DB_POOL_TIMEOUT", 10)),
+        "pool_pre_ping": True,
+        "pool_recycle": int(os.environ.get("DB_POOL_RECYCLE", 60)), # Aggressive recycle to avoid idle drops
+        "connect_args": pg_connect_args
+    })
 else:
     engine_kwargs.update({
         "poolclass": NullPool,
