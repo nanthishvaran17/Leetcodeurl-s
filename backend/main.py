@@ -261,10 +261,8 @@ app = FastAPI(
 # 2. LIGHTWEIGHT PRODUCTION HEALTH & READINESS PROBES
 # =====================================================================
 
-@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 @app.api_route("/health", methods=["GET", "HEAD"], operation_id="health_check")
 @app.api_route("/api/health", methods=["GET", "HEAD"], include_in_schema=False)
-@app.api_route("/api", methods=["GET", "HEAD"], include_in_schema=False)
 async def health_check():
     """
     Ultra-lightweight Liveness Probe for Render & UptimeRobot (< 1ms).
@@ -276,6 +274,56 @@ async def health_check():
         "service": "College LeetCode Weekly Tracker API",
         "version": "2.2.0"
     }
+
+@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
+@app.api_route("/api", methods=["GET", "HEAD"], include_in_schema=False)
+async def root_page():
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>College LeetCode Weekly Tracker API</title>
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+            .container { text-align: center; padding: 3rem; background: #1e293b; border-radius: 1rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); max-width: 600px; width: 90%; border: 1px solid #334155; }
+            .logo { font-size: 3.5rem; margin-bottom: 1rem; color: #fbbf24; text-shadow: 0 0 20px rgba(251,191,36,0.3); }
+            h1 { margin: 0 0 0.5rem; font-size: 1.8rem; font-weight: 700; color: #f8fafc; }
+            p { color: #94a3b8; font-size: 1.1rem; margin-bottom: 2rem; line-height: 1.6; }
+            .badge { display: inline-block; padding: 0.35rem 1rem; border-radius: 9999px; background: rgba(16, 185, 129, 0.1); color: #34d399; font-weight: 600; font-size: 0.875rem; margin-bottom: 1.5rem; border: 1px solid rgba(52, 211, 153, 0.2); }
+            .links { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+            a { text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s; font-size: 0.95rem; }
+            .primary { background: #3b82f6; color: white; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3); }
+            .primary:hover { background: #2563eb; transform: translateY(-1px); }
+            .secondary { background: #334155; color: #f1f5f9; border: 1px solid #475569; }
+            .secondary:hover { background: #475569; }
+            .footer { margin-top: 3rem; font-size: 0.85rem; color: #64748b; }
+            .pulse { display: inline-block; width: 8px; height: 8px; background: #34d399; border-radius: 50%; margin-right: 6px; box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); animation: pulse 2s infinite; }
+            @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); } }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="logo">⚡</div>
+            <div class="badge"><span class="pulse"></span> API Status: Online & Healthy</div>
+            <h1>College LeetCode Tracker API</h1>
+            <p>The backend services are running perfectly. Welcome to the core API server powered by high-performance asynchronous Python.</p>
+            
+            <div class="links">
+                <a href="/docs" class="primary">Swagger API Docs</a>
+                <a href="/redoc" class="secondary">ReDoc Spec</a>
+                <a href="/api/health" class="secondary">System Health</a>
+            </div>
+            
+            <div class="footer">
+                Version 2.2.0 • FastAPI Enterprise Architecture
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
 
 @app.api_route("/ready", methods=["GET"], operation_id="readiness_check")
 @app.api_route("/api/ready", methods=["GET"], include_in_schema=False)
