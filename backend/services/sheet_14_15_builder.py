@@ -69,13 +69,12 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
                 pass
 
     from sqlalchemy.orm import joinedload
+    from backend.services.contest_performance_service import is_official_student
     all_stus = db_session.query(Student).options(joinedload(Student.department)).all()
     master_students = [
         s for s in all_stus
         if (s.is_active is True or s.is_active is None)
-        and s.reg_no
-        and not s.reg_no.startswith("CONCUR_")
-        and not s.reg_no.startswith("732224TEST")
+        and is_official_student(s.reg_no)
     ]
     master_students.sort(key=lambda s: s.reg_no)
 

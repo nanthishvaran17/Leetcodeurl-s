@@ -550,14 +550,20 @@ const ReportHubModal: React.FC<{
  const handleDownloadExcel = async () => {
  setDownloadingExcel(true);
  try {
- const qParam = getFilterQueryParams();
+ const qsParams = new URLSearchParams();
+      qsParams.append("report_type", selectedReportType);
+      if (selectedDeptId) qsParams.append("dept_id", String(selectedDeptId));
+      if (selectedYear !== "ALL") qsParams.append("year_level", selectedYear);
+      if (selectedSection !== "ALL") qsParams.append("section", selectedSection);
+      if (selectedStatus !== "ALL") qsParams.append("status_filter", selectedStatus);
+      const qParam = getFilterQueryParams();
  const deptSlug = reportScope.departmentCode !== 'ALL' ? `_${reportScope.departmentCode}` : '_ALL';
  const yearSlug = selectedYear !== 'ALL' ? `_Yr${selectedYear}` : '';
  const secSlug = selectedSection !== 'ALL' ? `_Sec${selectedSection}` : '';
  const filename = `NEC_${selectedReportType}_Report${deptSlug}${yearSlug}${secSlug}_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
  const res = await downloadManager.download({
- endpoint: `/reports/export-official-college-summary${qParam}`,
+ endpoint: `/command-center/reports/export-excel?${qsParams.toString()}`,
  filename,
  mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
  });
@@ -610,8 +616,8 @@ const ReportHubModal: React.FC<{
  if (!isOpen) return null;
 
  return (
- <div className="fixed inset-0 z-[100050] flex items-center justify-center p-3 sm:p-4 lg:p-6 overflow-hidden bg-slate-950/90 dark:bg-black/90 backdrop-blur-xl animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
- <div className="w-full max-w-4xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2rem)] lg:max-h-[calc(100dvh-3rem)] my-auto bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white antialiased">
+ <div className="fixed inset-0 z-[100050] flex flex-col bg-slate-50 dark:bg-navy-950 animate-fade-in overflow-hidden" onClick={e => e.target === e.currentTarget && onClose()}>
+ <div className="w-full h-full flex flex-col text-slate-900 dark:text-white antialiased bg-white dark:bg-navy-950">
  {/* Header */}
  <div className="px-6 py-4 bg-slate-50 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0">
  <div className="flex items-center gap-3">
@@ -1228,7 +1234,7 @@ export const HODCommandCenter: React.FC = () => {
  ];
 
  return (
- <div className="max-w-full pt-6 w-full box-border space-y-5 pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
+ <div className="max-w-full pt-6 w-full box-border space-y-8 sm:space-y-10 md:space-y-12 pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
 
 
 
@@ -1307,52 +1313,68 @@ export const HODCommandCenter: React.FC = () => {
 
 
  {/* 3. STUDENT COHORT SUMMARY BANNER */}
- <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-3 px-5 py-4 sm:py-3 rounded-2xl bg-white dark:bg-navy-950 border-2 border-slate-200/80 dark:border-navy-700 shadow-sm">
- <div className="flex items-center gap-3">
- <div className="p-2 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 font-bold font-mono text-sm">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 px-5 sm:px-6 py-4 sm:py-5 rounded-2xl bg-white dark:bg-navy-950 border-2 border-slate-200/80 dark:border-navy-700 shadow-sm">
+ {/* Left: Cohort Identity */}
+ <div className="flex items-center gap-3.5 min-w-0">
+ <div className="shrink-0 w-12 h-12 flex items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 font-black font-mono text-base">
  {totalInScope}
  </div>
- <div>
- <div className="font-display text-sm font-bold text-slate-900 dark:text-white">
+ <div className="min-w-0">
+ <div className="font-display text-sm font-bold text-slate-900 dark:text-white truncate">
  Your Student Cohort ({scopeStaffName} • {scopeDeptCode})
  </div>
- <div className="text-xs text-slate-700 dark:text-slate-400 font-mono mt-0.5">
- <span className="text-emerald-600 font-bold">{activeInScope} Active</span> • <span className="text-rose-600 font-bold">{inactiveInScope} Inactive</span> • <span className="text-brand-600 font-bold">{improvingInScope} Improving</span>
+ <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-mono mt-0.5">
+ <span className="text-emerald-600 font-bold">{activeInScope} Active</span>
+ <span className="text-slate-300 dark:text-slate-600">•</span>
+ <span className="text-rose-600 font-bold">{inactiveInScope} Inactive</span>
+ <span className="text-slate-300 dark:text-slate-600">•</span>
+ <span className="text-brand-600 font-bold">{improvingInScope} Improving</span>
  </div>
  </div>
  </div>
- <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-xs font-mono w-full sm:w-auto border-t sm:border-0 border-slate-100 dark:border-navy-800 pt-3 sm:pt-0">
- <span className="text-slate-700 dark:text-slate-400">Last Activity: {lastLiveTimestamp}</span>
+
+ {/* Right: Meta + Action */}
+ <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 sm:gap-1.5 border-t sm:border-0 border-slate-100 dark:border-navy-800 pt-3 sm:pt-0 shrink-0">
+ <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+ Last Activity: <span className="font-semibold text-slate-700 dark:text-slate-300">{lastLiveTimestamp}</span>
+ </span>
  {summary?.unassigned_student_count ? (
- <button onClick={() => setShowStaffAllocationModal(true)} className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-amber-50 text-amber-800 font-bold border border-amber-200 hover:bg-amber-100 shadow-sm">
+ <button
+ onClick={() => setShowStaffAllocationModal(true)}
+ className="px-4 py-1.5 rounded-lg bg-amber-50 text-amber-700 font-bold text-xs border border-amber-200 hover:bg-amber-100 transition whitespace-nowrap shadow-xs"
+ >
  {summary.unassigned_student_count} Unassigned Students
  </button>
- ) : null}
+ ) : (
+ <span className="px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200">
+ All Assigned ✓
+ </span>
+ )}
  </div>
  </div>
 
  {/* 4. SIX AUTHORITATIVE HOD KPI CARDS */}
- <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+ <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 sm:gap-6 lg:gap-6 mb-8 sm:mb-10">
  <Card 
- className="p-4 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer"
+ className="p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer"
  onClick={() => {
  setShowStaffAllocationModal(true);
  }}
  >
  <div className="flex items-center justify-between text-slate-700 dark:text-slate-400">
  <span className="text-xs font-bold uppercase tracking-wider font-mono">TOTAL STAFF</span>
- <Users size={15} className="text-indigo-500" />
+ <Users size={17} className="text-indigo-500" />
  </div>
- <div className="mt-2">
+ <div className="mt-3">
  <div className="font-display text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
  {summary?.kpi_summary?.total_staff ?? staffList.length}
  </div>
- <div className="text-xs text-slate-700 dark:text-slate-400 mt-0.5">Faculty Mentors</div>
+ <div className="text-xs text-slate-700 dark:text-slate-400 mt-1">Faculty Mentors</div>
  </div>
  </Card>
 
  <Card 
- className={`p-4 flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md ${selectedStatus === 'ALL' ? 'ring-2 ring-slate-400 bg-slate-50 dark:bg-navy-800' : ''}`}
+ className={`p-6 flex flex-col justify-between min-h-[145px] cursor-pointer transition-all hover:-translate-y-1 hover:shadow-xl ${selectedStatus === 'ALL' ? 'ring-2 ring-slate-400 bg-slate-50 dark:bg-navy-800' : ''}`}
  onClick={() => {
  setSelectedStatus('ALL');
  document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -1360,36 +1382,36 @@ export const HODCommandCenter: React.FC = () => {
  >
  <div className="flex items-center justify-between text-slate-700 dark:text-slate-400">
  <span className="text-xs font-bold uppercase tracking-wider font-mono">TOTAL STUDENTS</span>
- <BookOpen size={15} className="text-slate-600" />
+ <BookOpen size={17} className="text-slate-600" />
  </div>
- <div className="mt-2">
+ <div className="mt-3">
  <div className="font-display text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
  {summary?.kpi_summary?.total_students ?? totalInScope}
  </div>
- <div className="text-xs text-slate-700 dark:text-slate-400 mt-0.5">Enrolled Scope</div>
+ <div className="text-xs text-slate-700 dark:text-slate-400 mt-1">Enrolled Scope</div>
  </div>
  </Card>
 
  <Card 
- className="p-4 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer"
+ className="p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer"
  onClick={() => {
  document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
  }}
  >
  <div className="flex items-center justify-between text-brand-600">
  <span className="text-xs font-bold uppercase tracking-wider font-mono">ALLOCATED</span>
- <UserCheck size={15} />
+ <UserCheck size={17} />
  </div>
- <div className="mt-2">
+ <div className="mt-3">
  <div className="font-display text-2xl lg:text-3xl font-extrabold text-brand-600 font-mono">
  {summary?.kpi_summary?.total_allocated ?? activeInScope}
  </div>
- <div className="text-xs text-slate-700 dark:text-slate-400 mt-0.5">{summary?.kpi_summary?.unassigned ?? 0} Unassigned</div>
+ <div className="text-xs text-slate-700 dark:text-slate-400 mt-1">{summary?.kpi_summary?.unassigned ?? 0} Unassigned</div>
  </div>
  </Card>
 
  <Card 
- className="p-4 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer"
+ className="p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer"
  onClick={() => {
  setSelectedStatus('ACTIVE');
  document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -1397,18 +1419,18 @@ export const HODCommandCenter: React.FC = () => {
  >
  <div className="flex items-center justify-between text-emerald-600">
  <span className="text-xs font-bold uppercase tracking-wider font-mono">COMPLETED</span>
- <CheckCircle2 size={15} />
+ <CheckCircle2 size={17} />
  </div>
- <div className="mt-2">
+ <div className="mt-3">
  <div className="font-display text-2xl lg:text-3xl font-extrabold text-emerald-600 font-mono">
  {summary?.kpi_summary?.completed ?? 0}
  </div>
- <div className="text-xs text-emerald-600 dark:text-emerald-500 font-semibold mt-0.5">Target Achieved</div>
+ <div className="text-xs text-emerald-600 dark:text-emerald-500 font-semibold mt-1">Target Achieved</div>
  </div>
  </Card>
 
  <Card 
- className="p-4 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer"
+ className="p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer"
  onClick={() => {
  setSelectedStatus('INACTIVE');
  document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -1416,28 +1438,28 @@ export const HODCommandCenter: React.FC = () => {
  >
  <div className="flex items-center justify-between text-amber-600">
  <span className="text-xs font-bold uppercase tracking-wider font-mono">PENDING</span>
- <Clock size={15} />
+ <Clock size={17} />
  </div>
- <div className="mt-2">
+ <div className="mt-3">
  <div className="font-display text-2xl lg:text-3xl font-extrabold text-amber-600 font-mono">
  {summary?.kpi_summary?.pending ?? 0}
  </div>
- <div className="text-xs text-amber-600 dark:text-amber-500 font-semibold mt-0.5">In Progress</div>
+ <div className="text-xs text-amber-600 dark:text-amber-500 font-semibold mt-1">In Progress</div>
  </div>
  </Card>
 
  <Card 
- className="p-4 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer !bg-slate-900 text-white border-slate-800"
+ className="p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer !bg-slate-900 text-white border-slate-800"
  >
  <div className="flex items-center justify-between text-brand-300">
  <span className="text-xs font-bold uppercase tracking-wider font-mono text-slate-300">OVERALL PROGRESS</span>
- <Zap size={15} className="text-amber-400" />
+ <Zap size={17} className="text-amber-400" />
  </div>
- <div className="mt-2">
+ <div className="mt-3">
  <div className="font-display text-2xl lg:text-3xl font-extrabold text-amber-400 font-mono drop-shadow-sm">
  {summary?.kpi_summary?.overall_progress ?? 0}%
  </div>
- <div className="flex items-center gap-1.5 mt-1">
+ <div className="flex items-center gap-1.5 mt-1.5">
  <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
  (summary?.kpi_summary?.overall_progress ?? 0) >= 80 ? 'bg-emerald-500 text-white' :
  (summary?.kpi_summary?.overall_progress ?? 0) >= 60 ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white'
@@ -1451,41 +1473,42 @@ export const HODCommandCenter: React.FC = () => {
  </div>
 
  {/* 5. TODAY'S ACTION REQUIRED */}
- <Card className="p-5 space-y-4">
- <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
- <div className="flex items-center gap-2">
+ <Card className="p-6 sm:p-7 my-8 sm:my-10 shadow-md">
+ <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-navy-800">
+ <div className="flex items-center gap-2.5">
  <AlertTriangle className="w-5 h-5 text-amber-500" />
- <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white">
+ <h3 className="font-display text-sm sm:text-base font-bold text-slate-900 dark:text-white">
  TODAY'S ACTION REQUIRED
  </h3>
  </div>
- <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">
+ <span className="text-xs font-bold font-mono px-3 py-1 rounded-md bg-rose-50 text-rose-700 border border-rose-200">
  REAL-TIME INTELLIGENCE
  </span>
  </div>
 
+ <div className="mt-6">
  {summary?.action_items && summary.action_items.length > 0 ? (
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
  {summary.action_items.map((action) => (
  <div
  key={action.id}
- className={`p-4 rounded-xl border flex flex-col justify-between space-y-3 ${
+ className={`p-6 rounded-2xl border flex flex-col justify-between min-h-[160px] space-y-5 shadow-sm transition-all hover:shadow-md ${
  action.severity === 'URGENT'
  ? 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/50'
  : 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50'
  }`}
  >
- <div className="space-y-1">
+ <div className="space-y-2.5">
  <div className="flex items-center justify-between">
- <span className={`text-xs font-bold font-mono px-2 py-0.5 rounded ${
+ <span className={`text-xs font-bold font-mono px-2.5 py-0.5 rounded ${
  action.severity === 'URGENT' ? 'bg-rose-600 text-white' : 'bg-amber-600 text-white'
  }`}>
  {action.severity}
  </span>
  <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-400">Count: {action.count}</span>
  </div>
- <h4 className="font-bold text-xs text-slate-900 dark:text-white pt-1">{action.title}</h4>
- <p className="text-xs text-slate-600 dark:text-slate-300 leading-snug">{action.reason}</p>
+ <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white pt-1">{action.title}</h4>
+ <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{action.reason}</p>
  </div>
  <button
  onClick={() => {
@@ -1497,7 +1520,7 @@ export const HODCommandCenter: React.FC = () => {
  document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
  }
  }}
- className={`w-full py-1.5 rounded-lg text-xs font-bold transition shadow-xs ${
+ className={`w-full py-2.5 rounded-xl text-xs font-bold transition shadow-xs ${
  action.severity === 'URGENT'
  ? 'bg-rose-600 hover:bg-rose-700 text-white'
  : 'bg-amber-600 hover:bg-amber-700 text-white'
@@ -1513,34 +1536,36 @@ export const HODCommandCenter: React.FC = () => {
   Everything is on track. No critical departmental actions pending today.
  </div>
  )}
+ </div>
  </Card>
 
  {/* 6. YEAR / SECTION PERFORMANCE HEATMAP */}
  {summary?.heatmap_matrix && summary.heatmap_matrix.length > 0 && (
- <Card className="p-5 space-y-4">
- <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
+ <Card className="p-6 sm:p-7 my-8 sm:my-10 shadow-md">
+ <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-navy-800">
  <div>
- <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
- <Layers size={16} className="text-brand-500" />
+ <h3 className="font-display text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+ <Layers size={18} className="text-brand-500" />
  <span>Year / Section Performance Matrix (Heatmap)</span>
  </h3>
- <p className="text-xs text-slate-700 dark:text-slate-400">Progress distribution across academic years and sections</p>
+ <p className="text-xs text-slate-700 dark:text-slate-400 mt-0.5">Progress distribution across academic years and sections</p>
  </div>
- <div className="flex items-center gap-2 text-xs font-mono">
- <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-emerald-500" /> GOOD (≥80%)</span>
- <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-amber-500" /> WATCH (60-79%)</span>
- <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-rose-500" /> ACTION (&lt;60%)</span>
+ <div className="flex items-center gap-3 text-xs font-mono">
+ <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> GOOD (≥80%)</span>
+ <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> WATCH (60-79%)</span>
+ <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-500" /> ACTION (&lt;60%)</span>
  </div>
  </div>
 
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 font-mono text-xs">
+ <div className="mt-6">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7 font-mono text-xs">
  {summary.heatmap_matrix.map((row) => (
- <div key={row.year_level} className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-2.5">
- <div className="font-bold text-slate-900 dark:text-white text-xs font-display flex justify-between items-center">
+ <div key={row.year_level} className="p-5 sm:p-6 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200/80 dark:border-navy-800 space-y-4 shadow-xs">
+ <div className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm font-display flex justify-between items-center">
  <span>{row.year}</span>
  <span className="text-xs text-slate-600 dark:text-slate-400 font-normal">Level {row.year_level}</span>
  </div>
- <div className="grid grid-cols-3 gap-2">
+ <div className="grid grid-cols-3 gap-3">
  {row.sections.map((sec) => {
  const isSelectedSec = selectedYear === row.year_level && selectedSection === sec.section;
  return (
@@ -1551,8 +1576,8 @@ export const HODCommandCenter: React.FC = () => {
  setSelectedSection(sec.section);
  document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
  }}
- className={`p-2 rounded-lg border text-center cursor-pointer transition ${
- isSelectedSec ? 'ring-2 ring-brand-500 font-extrabold' : ''
+ className={`p-3.5 rounded-xl border text-center cursor-pointer transition flex flex-col justify-between min-h-[98px] ${
+ isSelectedSec ? 'ring-2 ring-brand-500 font-extrabold shadow-sm' : ''
  } ${
  sec.status === 'GREEN' ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300' :
  sec.status === 'AMBER' ? 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300' :
@@ -1561,7 +1586,7 @@ export const HODCommandCenter: React.FC = () => {
  }`}
  >
  <div className="text-xs font-bold">Sec {sec.section}</div>
- <div className="font-mono font-extrabold text-sm mt-0.5">
+ <div className="font-mono font-extrabold text-sm my-0.5">
  {sec.progress_pct !== null ? `${sec.progress_pct}%` : '—'}
  </div>
  <div className="text-xs opacity-75">{sec.student_count} std</div>
@@ -1572,13 +1597,14 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  ))}
  </div>
+ </div>
  </Card>
  )}
 
  {/* 7. DEPARTMENT PERFORMANCE & NEEDS ATTENTION */}
- <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+ <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
  {/* Left: Department Performance (Compact) */}
- <Card className="lg:col-span-6 p-5 space-y-4">
+ <Card className="lg:col-span-6 p-6 space-y-5">
  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
  <div>
  <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white">
@@ -1631,7 +1657,7 @@ export const HODCommandCenter: React.FC = () => {
  </Card>
 
  {/* Right: Operational Needs Attention Queue */}
- <Card className="lg:col-span-6 p-5 space-y-3.5">
+ <Card className="lg:col-span-6 p-6 space-y-4">
  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
  <div>
  <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white">
@@ -1639,12 +1665,12 @@ export const HODCommandCenter: React.FC = () => {
  </h3>
  <p className="text-xs text-slate-700 dark:text-slate-400">Actionable student cohort alerts</p>
  </div>
- <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+ <span className="text-xs font-bold font-mono px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
  ACTION QUEUE
  </span>
  </div>
 
- <div className="space-y-2.5">
+ <div className="space-y-4">
  {[
  {
  color: 'text-rose-600 bg-rose-50 border-rose-200',
@@ -1671,7 +1697,7 @@ export const HODCommandCenter: React.FC = () => {
  onClick: () => setSelectedStatus('IMPROVING')
  }
  ].map((item, idx) => (
- <div key={idx} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-800/40">
+ <div key={idx} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-800/40 min-h-[76px]">
  <div className="space-y-0.5">
  <div className="flex items-center gap-2">
  <h4 className="font-bold text-xs text-slate-900 dark:text-white">{item.title}</h4>
@@ -1762,7 +1788,7 @@ export const HODCommandCenter: React.FC = () => {
  )}
 
  {/* Mobile Student Cards (Compact, structured, no horizontal clipping) */}
- <div className="block md:hidden space-y-2.5">
+ <div className="block md:hidden space-y-4">
  {studentsLoading ? (
  <div className="py-8 text-center text-slate-600 dark:text-slate-400 text-xs font-medium">Loading live student roster...</div>
  ) : students.length === 0 ? (
@@ -2697,3 +2723,7 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  );
 };
+
+
+
+

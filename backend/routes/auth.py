@@ -1396,15 +1396,15 @@ def update_user_profile(
         raise HTTPException(status_code=401, detail="Unauthenticated")
 
     if payload.full_name is not None:
-        user.full_name = payload.full_name.strip()
+        user.full_name = payload.full_name.strip()  # type: ignore
     if payload.phone_number is not None:
-        user.phone_number = payload.phone_number.strip()
+        user.phone_number = payload.phone_number.strip()  # type: ignore
     if payload.profile_photo is not None:
-        user.profile_photo = payload.profile_photo
+        user.profile_photo = payload.profile_photo  # type: ignore
     if payload.designation is not None:
-        user.designation = payload.designation.strip()
+        user.designation = payload.designation.strip()  # type: ignore
     if payload.is_2fa_enabled is not None:
-        setattr(user, "is_2fa_enabled", bool(payload.is_2fa_enabled))
+        setattr(user, "is_2fa_enabled", bool(payload.is_2fa_enabled))  # type: ignore
     if payload.date_of_birth is not None:
         dob_str = payload.date_of_birth.strip()
         if dob_str:
@@ -1428,21 +1428,21 @@ def update_user_profile(
                     except Exception:
                         pass
             if parsed_date:
-                user.date_of_birth = parsed_date
+                user.date_of_birth = parsed_date  # type: ignore
             elif not dob_str:
-                user.date_of_birth = None
+                user.date_of_birth = None  # type: ignore
         else:
-            user.date_of_birth = None
+            user.date_of_birth = None  # type: ignore
 
     if payload.new_password:
         if not payload.current_password:
             raise HTTPException(status_code=400, detail="Current password is required to change password.")
-        if not verify_password(payload.current_password, user.hashed_password):
+        if not verify_password(payload.current_password, user.hashed_password):  # type: ignore
             raise HTTPException(status_code=400, detail="Current password entered is incorrect.")
         if len(payload.new_password) < 6:
             raise HTTPException(status_code=400, detail="New password must be at least 6 characters long.")
-        user.hashed_password = get_password_hash(payload.new_password)
-        user.require_password_change = False
+        user.hashed_password = get_password_hash(payload.new_password)  # type: ignore
+        user.require_password_change = False  # type: ignore
 
     db.commit()
     db.refresh(user)
@@ -1950,12 +1950,12 @@ def generate_2fa_secret(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Unauthenticated")
     
     secret = pyotp.random_base32()
-    user.totp_secret = secret
+    user.totp_secret = secret  # type: ignore
     db.commit()
     
     # Generate provision URI
     username = getattr(user, 'email', user.username)
-    uri = pyotp.TOTP(secret).provisioning_uri(name=username, issuer_name="College Portal")
+    uri = pyotp.TOTP(secret).provisioning_uri(name=username, issuer_name="College Portal")  # type: ignore
     
     return {"secret": secret, "uri": uri}
 
@@ -1973,9 +1973,9 @@ def verify_2fa_code(payload: Verify2FARequest, request: Request, db: Session = D
     if not getattr(user, 'totp_secret', None):
         raise HTTPException(status_code=400, detail="2FA secret not found. Please generate one first.")
         
-    totp = pyotp.TOTP(user.totp_secret)
-    if totp.verify(payload.code, valid_window=1):
-        user.is_2fa_enabled = True
+    totp = pyotp.TOTP(user.totp_secret)  # type: ignore
+    if totp.verify(payload.code, valid_window=2):
+        user.is_2fa_enabled = True  # type: ignore
         db.commit()
         return {"success": True, "message": "2FA successfully enabled."}
     else:
@@ -2070,7 +2070,7 @@ def revoke_session(session_id: str, request: Request, db: Session = Depends(get_
     if not session_to_revoke:
         raise HTTPException(status_code=404, detail="Session not found or already revoked.")
         
-    session_to_revoke.revoked_at = _utcnow()
+    session_to_revoke.revoked_at = _utcnow()  # type: ignore
     db.commit()
     
     return {"success": True, "message": "Session revoked successfully."}
@@ -2099,7 +2099,7 @@ def revoke_all_other_sessions(request: Request, db: Session = Depends(get_db)):
     
     revoked_count = 0
     for s in other_sessions:
-        s.revoked_at = now
+        s.revoked_at = now  # type: ignore
         revoked_count += 1
         
     if revoked_count > 0:
@@ -2118,13 +2118,16 @@ def get_login_history(request: Request, db: Session = Depends(get_db)):
     
     logs = db.query(AdminAuditLog).filter(
         AdminAuditLog.admin_user_id == user.id,
-        AdminAuditLog.action.ilike("%LOGIN%")
+        or_(
+            AdminAuditLog.action.ilike("%LOGIN%"),
+            AdminAuditLog.action.ilike("%LOGOUT%")
+        )
     ).order_by(AdminAuditLog.event_timestamp.desc()).limit(20).all()
     
     history = []
     for log in logs:
         # Date and time formatting
-        dt = log.event_timestamp
+        dt = log.event_timestamp or _utcnow()
         
         # User agent / OS parsing (basic)
         method = "Password Authentication"
@@ -2222,7 +2225,7 @@ def admin_login_init(login_data: UserLogin, request: Request, db: Session = Depe
     # Send OTP
     try:
         from backend.services.email_service import send_fast_otp_email
-        send_fast_otp_email(user.email or "nanthishvaran17@gmail.com", otp)
+        send_fast_otp_email(user.email or "nanthishvaran17@gmail.com", otp)  # type: ignore
     except Exception as e:
         logger.error(f"[ADMIN_OTP] Could not send OTP to {user.email}: {e}")
         print(f"!!! ADMIN OTP FOR {user.username} IS: {otp} !!!")
@@ -2431,7 +2434,7 @@ async def passkey_register_verify(request: Request, db: Session = Depends(get_db
             )
             db.add(new_passkey)
 
-        current_user.webauthn_challenge = None
+        current_user.webauthn_challenge = None  # type: ignore
         db.commit()
 
         logger.info(f"[PASSKEY] Successfully registered passkey credential for user {current_user.username} (ID: {current_user.id})")
@@ -2526,7 +2529,7 @@ async def passkey_login_verify(request: Request, response: Response, db: Session
         )
 
         passkey.sign_count = verification.new_sign_count
-        user.webauthn_challenge = None
+        user.webauthn_challenge = None  # type: ignore
         db.commit()
 
         _record_user_login(db, user, request)
@@ -2584,7 +2587,7 @@ def get_user_sessions(request: Request, db: Session = Depends(get_db), current_u
     
     for cookie_name in ["admin_session_token", "session_token", "access_token", "token"]:
         if request.cookies.get(cookie_name):
-            candidate_tokens.append(request.cookies.get(cookie_name).strip())
+            candidate_tokens.append(request.cookies.get(cookie_name).strip())  # type: ignore
             
     current_hashes = [hashlib.sha256(t.encode('utf-8')).hexdigest() for t in candidate_tokens if t]
 
@@ -2633,7 +2636,7 @@ def revoke_session(session_id: str, db: Session = Depends(get_db), current_user:
     if not session_rec:
         raise HTTPException(status_code=404, detail="Session not found.")
         
-    session_rec.revoked_at = _utcnow()
+    session_rec.revoked_at = _utcnow()  # type: ignore
     db.commit()
     
     return {"success": True, "message": "Session revoked successfully."}

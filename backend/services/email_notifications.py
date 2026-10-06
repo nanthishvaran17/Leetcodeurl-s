@@ -300,8 +300,8 @@ def notify_admin_staff_created(admin_email: str, staff_data: dict, admin_data: d
     else:
         created_at_ist = ensure_ist(now_utc())
 
-    created_date = created_at_ist.strftime("%d %B %Y")
-    created_time = created_at_ist.strftime("%I:%M %p IST")
+    created_date = created_at_ist.strftime("%d %B %Y") if created_at_ist else "Unknown Date"
+    created_time = created_at_ist.strftime("%I:%M %p IST") if created_at_ist else "Unknown Time"
     event_timestamp_str = f"{created_date}, {created_time}"
     
     account_id = staff_data.get('account_id')

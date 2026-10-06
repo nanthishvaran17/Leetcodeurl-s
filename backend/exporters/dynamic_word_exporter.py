@@ -22,9 +22,9 @@ def export_dynamic_word(dataset: dict) -> bytes:
     
     # Metadata & WoW detection
     report_type = str(dataset.get("reportType") or dataset.get("report_type") or "").upper().strip()
+    rows = dataset.get("rows") or dataset.get("allStudents") or dataset.get("all_students_current") or []
     is_wow = (
         report_type in ("WEEK_ON_WEEK_INTELLIGENCE", "WOW_INTEL", "WEEK_ON_WEEK")
-    rows = []
         or (rows and any(k in rows[0] for k in ("prev_status", "curr_status", "solved_delta", "trend")))
         or "wowSummary" in dataset
     )
@@ -45,7 +45,6 @@ def export_dynamic_word(dataset: dict) -> bytes:
         
     doc.add_paragraph() # Spacer
     
-    rows = dataset.get("rows") or dataset.get("allStudents") or dataset.get("all_students_current") or []
     if not rows:
         doc.add_paragraph("No data available for this report.")
         output = io.BytesIO()
@@ -158,8 +157,18 @@ def export_dynamic_word(dataset: dict) -> bytes:
                             run.font.size = Pt(7)
                         c_idx += 1
                 else:
-                    val = r.get(h)
-                    row_cells[c_idx].text = str(val) if val is not None else ""
+                    raw_val = r.get(h)
+                    if h.lower() in ("accommodation", "accomodation", "residence"):
+                        s_val = str(raw_val).strip().upper()
+                        if "DAY" in s_val:
+                            val = "D"
+                        elif "HOSTEL" in s_val:
+                            val = "H"
+                        else:
+                            val = str(raw_val) if raw_val is not None else ""
+                    else:
+                        val = str(raw_val) if raw_val is not None else ""
+                    row_cells[c_idx].text = val
                     for run in row_cells[c_idx].paragraphs[0].runs:
                         run.font.size = Pt(7)
                     c_idx += 1

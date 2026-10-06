@@ -442,20 +442,21 @@ def _build_canonical_contest_dataset_internal(
     for sn in all_time_window_snapshots:
         snaps_by_student[sn.student_id].append(sn)
 
+    from collections import Counter, defaultdict
+    username_counts = Counter(
+        s.username.strip().lower() for s in all_master_students
+        if s.username and str(s.username).strip() and str(s.username).strip().upper() not in ("USERNAME_NOT_FOUND", "UNLINKED", "NO_HANDLE")
+    )
+
     canonical_rows: List[Dict[str, Any]] = []
     data_quality_issues: List[Dict[str, Any]] = []
 
-    # Category counts
+    # Category counts - strictly 4 mutually exclusive categories
     status_counts = {
         "PUBLIC": 0,
         "VIRTUAL": 0,
         "NOT_ATTENDED": 0,
-        "PENDING": 0,
-        "SOURCE_UNAVAILABLE": 0,
-        "AUTH_REQUIRED": 0,
-        "USERNAME_NOT_FOUND": 0,
-        "FETCH_ERROR": 0,
-        "DATA_MISMATCH": 0
+        "DATA_ERROR": 0
     }
 
     # Department and Year aggregators for active production departments
@@ -529,26 +530,26 @@ def _build_canonical_contest_dataset_internal(
             year_level = "III"
         elif reg_upper.startswith("23") or reg_upper.startswith("732223") or "23CC" in reg_upper or "23CI" in reg_upper:
             year_level = "IV"
+
         username = student.username or ""
-        profile_url = student.leetcode_url or (f"https://leetcode.com/u/{username}" if username else "")
+        clean_username = username.strip()
+        profile_url = student.leetcode_url or (f"https://leetcode.com/u/{clean_username}" if clean_username else "")
         stat_obj = stats_map.get(s_id)
 
-        # Determine baseline solved count at 09:30 AM IST for post-9:30 practice delta
+        # 09:30 AM IST Baseline Snapshot Determination
         locked_sol = locked_snapshot_map.get(reg_upper)
         student_snaps = snaps_by_student.get(s_id, [])
 
         if locked_sol is not None:
             baseline_solves = locked_sol
         else:
-            # Find latest snapshot at or before 09:30 AM IST
             pre_930_snaps = [sn for sn in student_snaps if sn.captured_at <= lock_0930_utc]
             if pre_930_snaps:
                 baseline_solves = pre_930_snaps[-1].total_solved
             else:
-                # If no baseline snapshot was recorded at/before 09:30 AM IST, default baseline to current total_solved (0 diff)
                 baseline_solves = stat_obj.total_solved if stat_obj else None
 
-        # Determine latest valid snapshot before or at 10:00 PM IST (cutoff_1000pm_utc)
+        # 10:00 PM IST Practice Window Cutoff Snapshot
         if student_snaps:
             latest_snap_10pm = student_snaps[-1]
             latest_solves_10pm = latest_snap_10pm.total_solved
@@ -558,7 +559,6 @@ def _build_canonical_contest_dataset_internal(
             latest_solves_10pm = stat_obj.total_solved if stat_obj else None
             latest_snap_time_10pm = None
 
-        # Calculate post_930_diff purely within 09:31 AM - 10:00 PM window (snapshots after 10 PM ignored)
         if latest_solves_10pm is not None and baseline_solves is not None and latest_solves_10pm > baseline_solves:
             post_930_diff = latest_solves_10pm - baseline_solves
         else:
@@ -572,7 +572,11 @@ def _build_canonical_contest_dataset_internal(
         p_status = normalize_participation_status(p_raw_st, p_fetch_st)
         p_sol_cnt = (p_res.total_contest_solved or 0) if p_res else 0
 
-        is_public = (p_res is not None and p_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL") and (p_sol_cnt > 0 or p_res.contest_rank is not None))
+        is_public = (
+            p_res is not None and 
+            p_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL") and 
+            (p_sol_cnt > 0 or (p_res.contest_rank is not None and p_res.contest_rank > 0))
+        )
 
         # Check Virtual Practice Evidence (09:31 AM - 10:00 PM IST)
         v_sol_cnt = (v_res.total_contest_solved or 0) if v_res else 0
@@ -580,13 +584,12 @@ def _build_canonical_contest_dataset_internal(
         v_status = normalize_participation_status(v_raw_st) if v_res else None
         post_ev = post_practice_map.get(s_id)
 
-        # Profile snapshot delta verification: Did the student actually solve any problem on LeetCode today?
         v_has_real_delta = (latest_solves_10pm is not None and baseline_solves is not None and latest_solves_10pm > baseline_solves)
 
         v_evidence_source = None
         v_evidence_timestamp = None
 
-        # Accept virtual evidence ONLY if backed by actual submission timestamps, telemetry, or verified profile total_solved increase
+        # GOLDEN ANTI-FRAUD RULE: NO EVIDENCE = NO ATTRIBUTION
         if v_res is not None and (v_sol_cnt > 0 or v_status == "VIRTUAL") and (v_has_real_delta or post_ev is not None or getattr(v_res, "source_type", None) == "TELEMETRY_VERIFIED"):
             has_virtual_evidence = True
             v_attributed = v_sol_cnt if v_sol_cnt > 0 else virtual_attributed_solves
@@ -609,24 +612,44 @@ def _build_canonical_contest_dataset_internal(
             has_virtual_evidence = False
             v_attributed = 0
 
-        # MUTUALLY EXCLUSIVE CLASSIFICATION RULE
+        # DETERMINISTIC DECISION TREE (SECTION 10 & MASTER RULE)
+        # Check Identity Validity FIRST (Section 9)
+        is_duplicate_username = (
+            bool(clean_username) and 
+            clean_username.lower() in username_counts and 
+            username_counts[clean_username.lower()] > 1
+        )
+        is_identity_invalid = (
+            not clean_username or 
+            len(clean_username) < 2 or 
+            clean_username.upper() in ("USERNAME_NOT_FOUND", "UNLINKED", "NO_HANDLE", "NONE", "NULL") or
+            is_duplicate_username or
+            p_status in ("USERNAME_NOT_FOUND", "INVALID_USERNAME", "AUTH_REQUIRED", "BLOCKED", "FETCH_FAILED", "FETCH_ERROR", "SOURCE_UNAVAILABLE", "DATA_MISMATCH", "CONFLICT")
+        )
+
         error_reason = str(p_res.error_reason) if (p_res and p_res.error_reason) else (str(getattr(v_res, "error_reason", "")) if (v_res and getattr(v_res, "error_reason", None)) else None)
 
-        if not username or len(username.strip()) < 2:
-            canon_status = "USERNAME_NOT_FOUND"
-            error_reason = "LeetCode username unlinked or missing in Student Master"
+        if is_identity_invalid:
+            canon_status = "DATA_ERROR"
+            if is_duplicate_username:
+                error_reason = f"Duplicate conflicting LeetCode identity: '{clean_username}' assigned to multiple master student records"
+            elif not clean_username or len(clean_username) < 2 or clean_username.upper() in ("USERNAME_NOT_FOUND", "UNLINKED", "NO_HANDLE"):
+                error_reason = "LeetCode username unlinked or missing in Student Master"
+            else:
+                error_reason = error_reason or f"LeetCode identity / fetch validation failure ({p_status})"
         elif is_public:
             canon_status = "PUBLIC"
+            error_reason = None
         elif has_virtual_evidence:
             canon_status = "VIRTUAL"
-        elif p_status in ("FETCH_ERROR", "FETCH_FAILED", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "DATA_MISMATCH"):
-            canon_status = p_status
+            error_reason = None
         else:
             canon_status = "NOT_ATTENDED"
+            error_reason = None
 
         is_participant = canon_status in ("PUBLIC", "VIRTUAL")
 
-        # Questions & Solved Count
+        # Questions & Solved Count Population
         if canon_status == "PUBLIC" and p_res:
             q1_val = 1 if (p_res.q1 and p_res.q1 >= 1) else 0
             q2_val = 1 if (p_res.q2 and p_res.q2 >= 1) else 0
@@ -641,6 +664,7 @@ def _build_canonical_contest_dataset_internal(
             evidence_source_str = "LeetCode Official Public Contest (08:00–09:30 AM IST)"
             p_fetched_dt = getattr(p_res, "last_fetched_at", None) or lock_0930_ist
             evidence_timestamp_str = p_fetched_dt.isoformat() if hasattr(p_fetched_dt, "isoformat") else str(p_fetched_dt)
+            classification_reason_str = "Verified Official LeetCode Contest Participation (08:00-09:30 AM IST)"
         elif canon_status == "VIRTUAL":
             if v_res is not None and (v_res.total_contest_solved or 0) > 0:
                 q1_v_raw = getattr(v_res, "q1", 0) or 0
@@ -673,9 +697,23 @@ def _build_canonical_contest_dataset_internal(
 
             rank_val = None
             rating_val = None
-            evidence_source_str = v_evidence_source or "Post-Contest Virtual Practice Window"
+            evidence_source_str = v_evidence_source or "Post-Contest Virtual Practice Window (09:31 AM - 10:00 PM IST)"
             evidence_timestamp_str = v_evidence_timestamp or lock_0930_ist.isoformat()
+            classification_reason_str = f"Verified Post-Contest Practice Submissions ({solved_val} solves in 09:31 AM - 10:00 PM IST window)"
+        elif canon_status == "NOT_ATTENDED":
+            q1_val = None
+            q2_val = None
+            q3_val = None
+            q4_val = None
+            solved_val = 0
+            score_val = None
+            rank_val = None
+            rating_val = None
+            evidence_source_str = None
+            evidence_timestamp_str = None
+            classification_reason_str = "No Official Contest or Verified Practice Evidence Recorded"
         else:
+            # DATA_ERROR
             q1_val = None
             q2_val = None
             q3_val = None
@@ -686,6 +724,7 @@ def _build_canonical_contest_dataset_internal(
             rating_val = None
             evidence_source_str = None
             evidence_timestamp_str = None
+            classification_reason_str = error_reason or "LeetCode identity / fetch validation failure"
 
         # Confidence tier based on evidence path
         if canon_status == "PUBLIC" and rank_val is not None:
@@ -694,20 +733,16 @@ def _build_canonical_contest_dataset_internal(
             confidence_val = "HIGH"
         elif canon_status == "NOT_ATTENDED":
             confidence_val = "HIGH"
-        elif canon_status in ("NOT_VERIFIED", "PENDING"):
-            confidence_val = "MEDIUM"
-        elif canon_status == "NOT_VERIFIED_FINAL":
-            confidence_val = "LOW"
         else:
             confidence_val = "LOW"
 
         # Track quality issues for non-standard statuses
-        if canon_status in ("SOURCE_ERROR", "CONFLICT", "SOURCE_UNAVAILABLE", "AUTH_REQUIRED", "USERNAME_NOT_FOUND", "FETCH_ERROR", "DATA_MISMATCH"):
+        if canon_status == "DATA_ERROR":
             data_quality_issues.append({
                 "reg_no": reg_no,
                 "name": name,
-                "type": canon_status,
-                "reason": error_reason or f"Verification status: {canon_status}",
+                "type": "DATA_ERROR",
+                "reason": error_reason or "LeetCode identity or fetch error",
                 "source": "LeetCode GraphQL",
                 "timestamp": p_res.last_fetched_at.isoformat() if (p_res and p_res.last_fetched_at) else None
             })
@@ -721,13 +756,11 @@ def _build_canonical_contest_dataset_internal(
             dept_stats_map[dept_norm] = {"name": dept_norm, "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0}
 
         dept_stats_map[dept_norm]["total"] += 1
-        if canon_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+        if canon_status == "PUBLIC":
             dept_stats_map[dept_norm]["public"] += 1
-        elif canon_status in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+        elif canon_status == "VIRTUAL":
             dept_stats_map[dept_norm]["virtual"] += 1
-        elif canon_status in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "FETCH_FAILED", "DATA_MISMATCH", "CONFLICT", "SOURCE_ERROR"):
-            dept_stats_map[dept_norm]["errors"] += 1
-        elif canon_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "PENDING", "NOT_VERIFIED", "UNVERIFIED"):
+        elif canon_status == "NOT_ATTENDED":
             dept_stats_map[dept_norm]["not_attended"] += 1
         else:
             dept_stats_map[dept_norm]["errors"] += 1
@@ -744,13 +777,11 @@ def _build_canonical_contest_dataset_internal(
 
         if yr_norm in year_stats_map:
             year_stats_map[yr_norm]["total"] += 1
-            if canon_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+            if canon_status == "PUBLIC":
                 year_stats_map[yr_norm]["public"] += 1
-            elif canon_status in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+            elif canon_status == "VIRTUAL":
                 year_stats_map[yr_norm]["virtual"] += 1
-            elif canon_status in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "FETCH_FAILED", "DATA_MISMATCH", "CONFLICT", "SOURCE_ERROR"):
-                year_stats_map[yr_norm]["errors"] += 1
-            elif canon_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "PENDING", "NOT_VERIFIED", "UNVERIFIED"):
+            elif canon_status == "NOT_ATTENDED":
                 year_stats_map[yr_norm]["not_attended"] += 1
             else:
                 year_stats_map[yr_norm]["errors"] += 1
@@ -778,15 +809,21 @@ def _build_canonical_contest_dataset_internal(
             "dept": dept_norm,
             "year": yr_norm,
             "username": username,
+            "leetcode_username": username,
+            "accommodation": getattr(student, "accommodation", "") or "—",
+            "twelfth_cutoff": float(student.twelfth_cutoff) if (hasattr(student, "twelfth_cutoff") and student.twelfth_cutoff is not None) else None,  # type: ignore
+            "cutoff": float(student.twelfth_cutoff) if (hasattr(student, "twelfth_cutoff") and student.twelfth_cutoff is not None) else None,  # type: ignore
             "profile_url": profile_url,
             "profile_rank": stat.contest_global_ranking if stat else None,
             "profile_total_solved": stat.total_solved if stat else 0,
             "easy_solved": stat.easy_solved if stat else None,
             "medium_solved": stat.medium_solved if stat else None,
             "hard_solved": stat.hard_solved if stat else None,
+            "category": canon_status,
             "status": canon_status,
             "participation_status": canon_status,
             "confidence": confidence_val,
+            "contest": session_obj.contest_name,
             "contest_id": session_obj.contest_id,
             "contest_name": session_obj.contest_name,
             "session_date": session_obj.session_date,
@@ -794,8 +831,9 @@ def _build_canonical_contest_dataset_internal(
             "q2": q2_val,
             "q3": q3_val,
             "q4": q4_val,
-            "q_timing": __import__("backend.routes.weekly_contests", fromlist=["_build_q_timing"])._build_q_timing(p_res) if p_res else None,
+            "q_timing": __import__("backend.routes.weekly_contests", fromlist=["_build_q_timing"])._build_q_timing(p_res) if (p_res and canon_status == "PUBLIC") else None,
             "total_solved": solved_val,
+            "solved": f"{solved_val}/4" if (is_participant and solved_val is not None) else ("0/4" if canon_status == "NOT_ATTENDED" else "—"),
             "total_contest_solved": solved_val,
             "contest_score": score_val,
             "score": score_val,
@@ -806,12 +844,18 @@ def _build_canonical_contest_dataset_internal(
             "contest_rating": (stat.contest_rating if stat else None) or rating_val,
             "rating": (stat.contest_rating if stat else None) or rating_val,
             "data_source": "LeetCode GraphQL (userContestRankingHistory)",
-            "verification_status": "VERIFIED" if is_participant or canon_status == "NOT_ATTENDED" else "UNVERIFIED",
+            "verification_status": "VERIFIED" if is_participant or canon_status == "NOT_ATTENDED" else "DATA_ERROR",
+            "evidence_status": "VERIFIED" if is_participant or canon_status == "NOT_ATTENDED" else "DATA_ERROR",
             "evidence_source": evidence_source_str,
             "evidence_timestamp": evidence_timestamp_str,
+            "practice_delta": post_930_diff,
             "post_930_diff": post_930_diff,
+            "baseline_solved": baseline_solves,
             "baseline_solves_0930": baseline_solves,
+            "latest_solved": latest_solves_10pm,
             "latest_solves_10pm": latest_solves_10pm,
+            "verified_practice_solves": v_attributed if canon_status == "VIRTUAL" else 0,
+            "classification_reason": classification_reason_str,
             "error_reason": error_reason,
             "last_synced_at": utc_sync_dt.isoformat() if utc_sync_dt else None
         }
@@ -842,43 +886,60 @@ def _build_canonical_contest_dataset_internal(
             filtered_rows = [r for r in filtered_rows if str(r.get("year","")).upper() == y_upper]
 
     if attendance and attendance != "ALL":
-        if attendance in ("ALL_ATTENDED", "TOTAL_ATTENDED", "PARTICIPATED"):
-            filtered_rows = [r for r in filtered_rows if r["status"] in ("PUBLIC", "VIRTUAL")]
-        elif attendance in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+        att_u = attendance.upper().strip()
+        if att_u in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL"):
             filtered_rows = [r for r in filtered_rows if r["status"] == "PUBLIC"]
-        elif attendance in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+        elif att_u in ("VIRTUAL", "VIRTUAL_ATTENDED"):
             filtered_rows = [r for r in filtered_rows if r["status"] == "VIRTUAL"]
-        elif attendance in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED"):
+        elif att_u in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT"):
             filtered_rows = [r for r in filtered_rows if r["status"] == "NOT_ATTENDED"]
-        elif attendance in ("NOT_VERIFIED", "PENDING"):
-            filtered_rows = [r for r in filtered_rows if r["status"] in ("NOT_VERIFIED", "PENDING")]
-        elif attendance in ("NOT_VERIFIED_FINAL", "FINAL_UNVERIFIED"):
-            filtered_rows = [r for r in filtered_rows if r["status"] == "NOT_VERIFIED_FINAL"]
-        elif attendance in ("UNKNOWN", "DATA_ERROR", "ERROR"):
-            filtered_rows = [r for r in filtered_rows if r["status"] not in ("PUBLIC", "VIRTUAL", "NOT_ATTENDED", "NOT_VERIFIED", "NOT_VERIFIED_FINAL")]
+        elif att_u in ("DATA_ERROR", "ERRORS", "DATA_ERRORS", "FETCH_ERROR", "FAILED"):
+            filtered_rows = [r for r in filtered_rows if r["status"] == "DATA_ERROR"]
+        elif att_u in ("ALL_ATTENDED", "PARTICIPATED"):
+            filtered_rows = [r for r in filtered_rows if r["status"] in ("PUBLIC", "VIRTUAL")]
         else:
-            filtered_rows = [r for r in filtered_rows if r["status"] == attendance]
+            filtered_rows = [r for r in filtered_rows if r["status"] == att_u]
 
     # Re-index s_no for filtered rows
     for i, r in enumerate(filtered_rows, start=1):
         r["s_no"] = i
 
-    # 4. Reconciliation Validation Gatekeeper
+    # 4. SECTION 14 AUTOMATED RECONCILIATION & VALIDATION GATEKEEPER
     sum_dept_totals = sum(d["total"] for d in dept_stats_map.values())
     sum_year_totals = sum(y["total"] for y in year_stats_map.values())
     sum_status_totals = sum(status_counts.values())
+
+    # Set Intersection & Disjointness Check (Section 14)
+    cat_public = set(r["student_id"] for r in canonical_rows if r["status"] == "PUBLIC")
+    cat_virtual = set(r["student_id"] for r in canonical_rows if r["status"] == "VIRTUAL")
+    cat_not_att = set(r["student_id"] for r in canonical_rows if r["status"] == "NOT_ATTENDED")
+    cat_error = set(r["student_id"] for r in canonical_rows if r["status"] == "DATA_ERROR")
+
+    disjoint_passed = (
+        cat_public.isdisjoint(cat_virtual) and
+        cat_public.isdisjoint(cat_not_att) and
+        cat_public.isdisjoint(cat_error) and
+        cat_virtual.isdisjoint(cat_not_att) and
+        cat_virtual.isdisjoint(cat_error) and
+        cat_not_att.isdisjoint(cat_error)
+    )
 
     reconciliation_passed = (
         sum_dept_totals == total_master_count and
         sum_year_totals == total_master_count and
         sum_status_totals == total_master_count and
-        len(canonical_rows) == total_master_count
+        len(canonical_rows) == total_master_count and
+        disjoint_passed
     )
 
     if not reconciliation_passed:
         logger.error(
             f"[RECONCILIATION FAILURE] Master: {total_master_count} | DeptSum: {sum_dept_totals} | "
-            f"YearSum: {sum_year_totals} | StatusSum: {sum_status_totals}"
+            f"YearSum: {sum_year_totals} | StatusSum: {sum_status_totals} | Disjoint: {disjoint_passed}"
+        )
+        raise ValueError(
+            f"CANONICAL CONTEST ENGINE INTEGRITY ASSERTION FAILED: "
+            f"Master Count ({total_master_count}) != Status Sum ({sum_status_totals}) or Category Overlap Detected."
         )
 
     # 5. Global & Filtered Scope Metrics
@@ -889,11 +950,7 @@ def _build_canonical_contest_dataset_internal(
         scope_public = sum(1 for r in filtered_rows if r.get("status") == "PUBLIC")
         scope_virtual = sum(1 for r in filtered_rows if r.get("status") == "VIRTUAL")
         scope_not_att = sum(1 for r in filtered_rows if r.get("status") == "NOT_ATTENDED")
-        scope_not_ver = sum(1 for r in filtered_rows if r.get("status") in ("NOT_VERIFIED", "PENDING"))
-        scope_not_ver_final = sum(1 for r in filtered_rows if r.get("status") == "NOT_VERIFIED_FINAL")
-        scope_conflict = sum(1 for r in filtered_rows if r.get("status") == "CONFLICT")
-        scope_source_err = sum(1 for r in filtered_rows if r.get("status") in ("SOURCE_ERROR", "SOURCE_UNAVAILABLE", "AUTH_REQUIRED", "USERNAME_NOT_FOUND", "FETCH_ERROR", "DATA_MISMATCH"))
-        scope_errors = scope_conflict + scope_source_err
+        scope_errors = sum(1 for r in filtered_rows if r.get("status") == "DATA_ERROR")
         scope_part_pct = round(((scope_public + scope_virtual) / scope_total * 100), 2) if scope_total > 0 else 0.0
 
         scope_q4 = sum(1 for r in filtered_rows if (r.get("total_solved") or 0) >= 4 and r.get("status") in ("PUBLIC", "VIRTUAL"))
@@ -934,11 +991,7 @@ def _build_canonical_contest_dataset_internal(
             "virtualAttended": scope_virtual,
             "virtual": scope_virtual,
             "notAttended": scope_not_att,
-            "notVerified": scope_not_ver,
-            "notVerifiedFinal": scope_not_ver_final,
-            "conflict": scope_conflict,
-            "sourceError": scope_source_err,
-            "pending": scope_not_ver,
+            "pending": 0,
             "errors": scope_errors,
             "totalErrors": scope_errors,
             "dataErrors": scope_errors,
@@ -967,28 +1020,13 @@ def _build_canonical_contest_dataset_internal(
             "last_synced": format_ist(session_obj.last_synced, "%d %b %Y, %I:%M %p IST") if getattr(session_obj, "last_synced", None) else None  # type: ignore
         }
     else:
-        public_cnt = status_counts.get("PUBLIC", 0)
-        virtual_cnt = status_counts.get("VIRTUAL", 0)
-        not_att_cnt = status_counts.get("NOT_ATTENDED", 0)
-        not_verified_cnt = status_counts.get("NOT_VERIFIED", 0) + status_counts.get("PENDING", 0)
-        not_verified_final_cnt = status_counts.get("NOT_VERIFIED_FINAL", 0)
-        conflict_cnt = status_counts.get("CONFLICT", 0)
-        source_error_cnt = (
-            status_counts.get("SOURCE_ERROR", 0) +
-            status_counts.get("SOURCE_UNAVAILABLE", 0) + 
-            status_counts.get("AUTH_REQUIRED", 0) + 
-            status_counts.get("USERNAME_NOT_FOUND", 0) + 
-            status_counts.get("FETCH_ERROR", 0) + 
-            status_counts.get("DATA_MISMATCH", 0)
-        )
+        public_cnt = status_counts["PUBLIC"]
+        virtual_cnt = status_counts["VIRTUAL"]
+        not_att_cnt = status_counts["NOT_ATTENDED"]
+        data_error_cnt = status_counts["DATA_ERROR"]
 
-        # STRICT ADDENDUM CONTRACT: Data Errors (dashboard) = count(CONFLICT) + count(SOURCE_ERROR)
-        total_errors_cnt = conflict_cnt + source_error_cnt
-
-        # EXACT MANDATORY PARTICIPATION FORMULA: ((PUBLIC + VIRTUAL) / TOTAL) * 100
         part_pct = round(((public_cnt + virtual_cnt) / total_master_count * 100), 2) if total_master_count > 0 else 0.0
 
-        # Question-specific aggregate solve counts (e.g. Q1: 72, Q2: 51, Q3: 23, Q4: 8)
         q1_total_solved = sum(1 for r in canonical_rows if r.get("q1") == 1)
         q2_total_solved = sum(1 for r in canonical_rows if r.get("q2") == 1)
         q3_total_solved = sum(1 for r in canonical_rows if r.get("q3") == 1)
@@ -1022,14 +1060,10 @@ def _build_canonical_contest_dataset_internal(
             "virtualAttended": virtual_cnt,
             "virtual": virtual_cnt,
             "notAttended": not_att_cnt,
-            "notVerified": not_verified_cnt,
-            "notVerifiedFinal": not_verified_final_cnt,
-            "conflict": conflict_cnt,
-            "sourceError": source_error_cnt,
-            "pending": not_verified_cnt,
-            "errors": total_errors_cnt,
-            "totalErrors": total_errors_cnt,
-            "dataErrors": total_errors_cnt,
+            "pending": 0,
+            "errors": data_error_cnt,
+            "totalErrors": data_error_cnt,
+            "dataErrors": data_error_cnt,
             "participationPercentage": part_pct,
             "participation_pct": part_pct,
             "isProvisional": is_provisional,
@@ -1088,3 +1122,4 @@ def _build_canonical_contest_dataset_internal(
     }
 
     return result_payload
+

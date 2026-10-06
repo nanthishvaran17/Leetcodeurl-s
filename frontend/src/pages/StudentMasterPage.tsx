@@ -520,8 +520,8 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
       {/* Search Bar - Redesigned */}
       <div className="bg-white dark:bg-navy-950 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-navy-700 space-y-4">
-        <div className="relative">
-          <Search className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" />
+        <div className="relative flex items-center">
+          <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={localSearch}
@@ -531,8 +531,12 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           />
           {localSearch && (
             <button
-              onClick={() => setLocalSearch('')}
-              className="absolute right-3 top-3 p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              type="button"
+              onClick={() => {
+                setLocalSearch('');
+                filters.setSearchQuery('');
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex items-center justify-center cursor-pointer"
               title="Clear search"
             >
               <XCircle className="w-5 h-5" />

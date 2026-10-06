@@ -28,6 +28,8 @@
     "axios": "^1.6.8",
     "clsx": "^2.1.1",
     "emoji-picker-react": "^4.19.4",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
     "firebase": "^12.17.1",
     "framer-motion": "^13.1.1",
     "lucide-react": "^0.378.0",

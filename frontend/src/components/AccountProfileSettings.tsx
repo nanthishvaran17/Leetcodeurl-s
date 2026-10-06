@@ -386,6 +386,7 @@ export const AccountProfileSettings: React.FC = () => {
   const [totpCodeInput, setTotpCodeInput] = useState<string>('');
   const [totpSecret, setTotpSecret] = useState<string>('');
   const [totpUri, setTotpUri] = useState<string>('');
+  const [isGenerating2FA, setIsGenerating2FA] = useState<boolean>(false);
   const [backupCodes] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('nec_backup_codes');
@@ -412,7 +413,7 @@ export const AccountProfileSettings: React.FC = () => {
   const [sessionsLoading, setSessionsLoading] = useState<boolean>(true);
 
   // Security Login History Audit
-  const [loginHistory] = useState<any[]>([]);
+  const [loginHistory, setLoginHistory] = useState<any[]>([]);
 
   // Advanced Mobile & Desktop Device Detection
   const [clientInfo, setClientInfo] = useState(() => {
@@ -636,9 +637,21 @@ export const AccountProfileSettings: React.FC = () => {
     }
   };
 
+  const fetchLoginHistory = async () => {
+    try {
+      const res = await api.get('/auth/audit');
+      if (res.data?.success && res.data.history) {
+        setLoginHistory(res.data.history);
+      }
+    } catch (err) {
+      console.error('Failed to fetch login history', err);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchSessions();
+      fetchLoginHistory();
     }
   }, [user]);
 
@@ -880,6 +893,8 @@ export const AccountProfileSettings: React.FC = () => {
   };
 
   const handleOpen2FASetup = async () => {
+    if (isGenerating2FA) return;
+    setIsGenerating2FA(true);
     try {
       const res = await api.post('/auth/2fa/generate');
       if (res.data?.secret && res.data?.uri) {
@@ -890,6 +905,8 @@ export const AccountProfileSettings: React.FC = () => {
       }
     } catch (err) {
       notify.error('Failed to generate 2FA secret', '', { category: 'ADMIN' });
+    } finally {
+      setIsGenerating2FA(false);
     }
   };
 
@@ -1026,37 +1043,155 @@ export const AccountProfileSettings: React.FC = () => {
     notify.success('vCard Contact downloaded! Open with Phonebook/Contacts.', '', { category: 'ADMIN' });
   };
 
-  // Export Security Audit Log CSV with strict RFC-4180 Excel column alignment and institutional headers
-  const handleExportSecurityAuditCsv = () => {
-    const escapeCsv = (val: any) => `"${String(val ?? '').replace(/"/g, '""')}"`;
-    
-    const rows = [
-      ['NANDHA ENGINEERING COLLEGE (AUTONOMOUS) - ERODE', '', '', '', '', '', ''],
-      ['OFFICIAL FACULTY SECURITY ACCESS & AUDIT LOG REPORT', '', '', '', '', '', ''],
-      [`Institutional ID: ${institutionalId}`, `Faculty Name: ${fullName || user?.username}`, `Department: ${departmentName}`, `Status: ACTIVE & VERIFIED`, '', '', ''],
-      [`Export Date: ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })} (IST)`, 'Accreditation: NAAC A+ & NBA Accredited', 'Engine: Nandha Intelligence Security Engine', '', '', '', ''],
-      ['', '', '', '', '', '', ''],
-      ['Event ID', 'Date', 'Time (IST)', 'IP Address', 'Access Network', 'Authentication Method', 'Security Status'],
-      ...loginHistory.map(h => [
-        h.id,
-        h.date,
-        h.time,
-        h.ip,
-        h.network,
-        h.method,
-        h.status
-      ])
-    ];
+  // Export Security Audit Log Excel with perfect alignment, styles, and logo using exceljs
+  const handleExportSecurityAuditExcel = async () => {
+    try {
+      const notifyToast = notify.loading('Generating perfect Excel report...', '', { duration: 10000, category: 'ADMIN' });
+      // Import browser-bundled version to avoid Vite Node.js polyfill missing errors (like stream/events)
+      const excelMod = await import('exceljs/dist/exceljs.min.js');
+      const ExcelJS = excelMod.default ? excelMod.default : (excelMod.Workbook ? excelMod : (window as any).ExcelJS);
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Security Audit Log', {
+        views: [{ showGridLines: false }]
+      });
 
-    const csvContent = '\uFEFF' + rows.map(r => r.map(escapeCsv).join(',')).join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `NEC_Security_Audit_${institutionalId}_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    notify.success('Security audit log exported with perfect Excel alignment', '', { category: 'ADMIN' });
+      // 1. Fetch and add both logos
+      let logoLeftId, logoRightId;
+      try {
+        const fetchBase64 = async (url: string) => {
+          const res = await fetch(url);
+          if (!res.ok) return null;
+          const blob = await res.blob();
+          const reader = new FileReader();
+          return new Promise<string>((resolve) => {
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => resolve(reader.result as string);
+          });
+        };
+
+        const leftBase64 = await fetchBase64(`${window.location.origin}/nandha_emblem.png`);
+        const rightBase64 = await fetchBase64(`${window.location.origin}/nec_25_years_logo.png`);
+
+        if (leftBase64) {
+          logoLeftId = workbook.addImage({ base64: leftBase64, extension: 'png' });
+        }
+        if (rightBase64) {
+          logoRightId = workbook.addImage({ base64: rightBase64, extension: 'png' });
+        }
+      } catch (err) {
+        console.warn('Could not load logos for Excel', err);
+      }
+
+      if (logoLeftId !== undefined) {
+        // Anchor to A1
+        worksheet.addImage(logoLeftId, {
+          tl: { col: 0, row: 0 },
+          ext: { width: 90, height: 80 }
+        });
+      }
+      
+      if (logoRightId !== undefined) {
+        // Anchor to G1 (which is column index 6)
+        worksheet.addImage(logoRightId, {
+          tl: { col: 6, row: 0 },
+          ext: { width: 120, height: 80 }
+        });
+      }
+
+      const colSpan = 7;
+      
+      // Setup Title Headers - Extra height so images look proportional
+      worksheet.getRow(1).height = 80;
+      worksheet.getRow(2).height = 70;
+      worksheet.getRow(3).height = 25;
+      worksheet.getRow(4).height = 20;
+
+      // 2. Main Title (Row 2)
+      worksheet.mergeCells('A2:G2');
+      const titleCell = worksheet.getCell('A2');
+      titleCell.value = 'OFFICIAL FACULTY SECURITY ACCESS & AUDIT LOG REPORT';
+      titleCell.font = { name: 'Times New Roman', size: 18, bold: true, color: { argb: 'FF000080' } };
+      titleCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+
+      // 3. Subtitle (Row 3)
+      worksheet.mergeCells('A3:G3');
+      const subCell = worksheet.getCell('A3');
+      subCell.value = `Faculty: ${fullName || user?.username} | Dept: ${departmentName}`;
+      subCell.font = { name: 'Times New Roman', size: 14, bold: true, color: { argb: 'FF333333' } };
+      subCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+
+      // 4. Generated At (Row 4)
+      worksheet.mergeCells('A4:G4');
+      const genCell = worksheet.getCell('A4');
+      genCell.value = `Generated At: ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata', dateStyle: 'long', timeStyle: 'short' })} IST`;
+      genCell.font = { name: 'Times New Roman', size: 11, color: { argb: 'FF000000' } };
+      genCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+
+      worksheet.addRow([]); // Row 5 Blank
+
+      // 5. Headers (Row 6)
+      const headerRow = worksheet.addRow(['Event ID', 'Date', 'Time (IST)', 'IP Address', 'Access Network', 'Authentication Method', 'Security Status']);
+      headerRow.font = { name: 'Times New Roman', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.alignment = { horizontal: 'center', vertical: 'center' };
+      headerRow.height = 25;
+      headerRow.eachCell(cell => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E78' } };
+        cell.border = { top: {style:'thin', color: {argb:'FF000000'}}, left: {style:'thin', color: {argb:'FF000000'}}, bottom: {style:'thin', color: {argb:'FF000000'}}, right: {style:'thin', color: {argb:'FF000000'}} };
+      });
+
+      // 6. Data Rows
+      loginHistory.forEach(h => {
+        const row = worksheet.addRow([h.id, h.date, h.time, h.ip, h.network, h.method, h.status]);
+        row.eachCell(cell => {
+          cell.font = { name: 'Times New Roman', size: 11 };
+          cell.border = { top: {style:'thin', color:{argb:'FF000000'}}, left: {style:'thin', color:{argb:'FF000000'}}, bottom: {style:'thin', color:{argb:'FF000000'}}, right: {style:'thin', color:{argb:'FF000000'}} };
+          cell.alignment = { vertical: 'center', wrapText: true };
+        });
+        
+        // Custom styling for specific columns
+        row.getCell(1).font = { name: 'Times New Roman', size: 11, bold: true }; 
+        row.getCell(4).font = { name: 'Times New Roman', size: 11, color: { argb: 'FF0369A1' } };
+        
+        // Color status
+        const statusCell = row.getCell(7);
+        statusCell.font = { name: 'Times New Roman', size: 11, bold: true, color: { argb: h.status === 'SUCCESS' ? 'FF15803D' : 'FFE11D48' } };
+        statusCell.alignment = { horizontal: 'center', vertical: 'center' };
+      });
+
+      // 7. Column widths
+      worksheet.getColumn(1).width = 40; // Event ID
+      worksheet.getColumn(2).width = 20; // Date
+      worksheet.getColumn(3).width = 20; // Time
+      worksheet.getColumn(4).width = 25; // IP
+      worksheet.getColumn(5).width = 45; // Network
+      worksheet.getColumn(6).width = 35; // Method
+      worksheet.getColumn(7).width = 25; // Status
+
+      // Alternating row colors
+      for(let i = 7; i <= worksheet.rowCount; i++) {
+        if(i % 2 !== 0) {
+          worksheet.getRow(i).eachCell(cell => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
+          });
+        }
+      }
+
+      // Export
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `NEC_Security_Audit_${institutionalId}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      notify.dismiss(notifyToast);
+      notify.success('Security audit report downloaded with perfect alignment!', '', { category: 'ADMIN' });
+    } catch (err: any) {
+      console.error('Failed to generate Excel report', err);
+      notify.error(`Failed to generate Excel report: ${err?.message || err}`, '', { category: 'ADMIN' });
+    }
   };
 
   // Print Formatted Security Audit Report â€” Full Page Preview (no auto-print)
@@ -2336,10 +2471,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <button
                       type="button"
                       onClick={handleOpen2FASetup}
-                      className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-2"
+                      disabled={isGenerating2FA}
+                      className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <QrCode className="w-4 h-4" />
-                      <span>Enable 2FA Protection</span>
+                      {isGenerating2FA ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4" />}
+                      <span>{isGenerating2FA ? 'Generating...' : 'Enable 2FA Protection'}</span>
                     </button>
                   ) : (
                     <>
@@ -2449,12 +2585,12 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     </button>
                     <button
                       type="button"
-                      onClick={handleExportSecurityAuditCsv}
+                      onClick={handleExportSecurityAuditExcel}
                       className="px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 transition-colors border border-emerald-300 dark:border-emerald-800 cursor-pointer flex items-center gap-1.5"
-                      title="Export perfectly formatted CSV for Microsoft Excel"
+                      title="Export beautifully formatted Excel report with logos"
                     >
                       <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>Excel CSV</span>
+                      <span>Excel Report</span>
                     </button>
                   </div>
                 </div>

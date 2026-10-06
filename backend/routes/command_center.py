@@ -584,6 +584,226 @@ def get_faculty_workload(
 
 # 4. DEDICATED REPORT DATA ENGINE 
 
+@router.get("/reports/export-excel")
+def export_command_center_report_excel(
+    report_type: str = Query(..., description="EXECUTIVE, FACULTY_ALLOCATION, INACTIVE_AT_RISK, CONTEST, SKILL_GAP"),
+    dept_id: Optional[int] = Query(None),
+    year_level: Optional[str] = Query(None),
+    section: Optional[str] = Query(None),
+    staff_id: Optional[int] = Query(None),
+    status_filter: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
+):
+    import io
+    import os
+    import openpyxl
+    import openpyxl.utils
+    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    from openpyxl.drawing.image import Image as ExcelImage
+    from fastapi.responses import Response
+
+    data = get_report_data(report_type, dept_id, year_level, section, staff_id, status_filter, db, current_user)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active # type: ignore
+    assert ws is not None
+    ws.title = str(report_type)[:31]
+
+    # STYLES
+    title_font = Font(name="Times New Roman", size=18, bold=True, color="000080")
+    subtitle_font = Font(name="Times New Roman", size=14, bold=True, color="333333")
+    header_font = Font(name="Times New Roman", size=12, bold=True, color="FFFFFF")
+    cell_font = Font(name="Times New Roman", size=11)
+    bold_cell_font = Font(name="Times New Roman", size=11, bold=True)
+    
+    header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+    alt_row_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+    
+    center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left_align = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    
+    thin_border = Border(left=Side(style="thin"), right=Side(style="thin"), top=Side(style="thin"), bottom=Side(style="thin"))
+
+    col_span = 5
+    if report_type == "INACTIVE_AT_RISK":
+        col_span = 5
+    elif report_type == "FACULTY_ALLOCATION":
+        col_span = 5
+    elif report_type == "EXECUTIVE":
+        col_span = 5
+
+    # Setup Title Headers - Extra height so images look proportional
+    ws.row_dimensions[1].height = 80
+    ws.row_dimensions[2].height = 70
+    ws.row_dimensions[3].height = 25
+    ws.row_dimensions[4].height = 20
+
+    title = data.get("report_title", "Nandha Executive Institutional Coding Health Report")
+    
+    # Merge across all columns for title. Row 1 is reserved for logos to prevent overlapping.
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=col_span) # Hide gridlines
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=col_span)
+    cell = ws.cell(row=2, column=1, value=title)
+    cell.font = title_font
+    cell.alignment = center_align
+
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=col_span)
+    cell = ws.cell(row=3, column=1, value=data.get("department_scope", "All Departments"))
+    cell.font = subtitle_font
+    cell.alignment = center_align
+
+    ws.merge_cells(start_row=4, start_column=1, end_row=4, end_column=col_span)
+    cell = ws.cell(row=4, column=1, value=f"Generated At: {data.get('generated_at', '')}")
+    cell.font = cell_font
+    cell.alignment = center_align
+
+    # IMAGES
+    try:
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        logo1_path = os.path.join(base_dir, "assets", "nandha_emblem.png")
+        logo2_path = os.path.join(base_dir, "assets", "nec_25_years_logo.png")
+        
+        if os.path.exists(logo1_path):
+            img1 = ExcelImage(logo1_path)
+            # Resize appropriately
+            img1.width = 90
+            img1.height = 80
+            # Anchor to A1
+            ws.add_image(img1, "A1")
+            
+        if os.path.exists(logo2_path):
+            img2 = ExcelImage(logo2_path)
+            img2.width = 120
+            img2.height = 80
+            last_col_letter = openpyxl.utils.get_column_letter(col_span)
+            ws.add_image(img2, f"{last_col_letter}1")
+    except Exception as e:
+        print("Image error:", e)
+        pass
+
+    ws.append([]) # Empty row
+
+    # DATA POPULATION
+    if report_type == "EXECUTIVE":
+        metrics = data.get("summary_metrics", {})
+        for k, v in metrics.items():
+            ws.append([k, "", "", "", v])
+            ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=4)
+            ws.cell(row=ws.max_row, column=1).font = bold_cell_font
+            ws.cell(row=ws.max_row, column=5).font = cell_font
+            ws.cell(row=ws.max_row, column=5).alignment = center_align
+            
+            # Apply borders
+            for c in range(1, 6):
+                ws.cell(row=ws.max_row, column=c).border = thin_border
+                if ws.max_row % 2 == 0:
+                    ws.cell(row=ws.max_row, column=c).fill = alt_row_fill
+
+        ws.append([])
+        
+        headers = ["Dimension", "", "", "", "Score"]
+        ws.append(headers)
+        ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=4)
+        for col_idx in range(1, 6):
+            cell = ws.cell(row=ws.max_row, column=col_idx)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = center_align
+            cell.border = thin_border
+            
+        for row in data.get("dimension_breakdown", []):
+            ws.append([row.get("dimension"), "", "", "", row.get("score")])
+            ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=4)
+            for col_idx in range(1, 6):
+                cell = ws.cell(row=ws.max_row, column=col_idx)
+                cell.font = cell_font
+                cell.border = thin_border
+                if ws.max_row % 2 == 0:
+                    cell.fill = alt_row_fill
+                if col_idx == 5:
+                    cell.alignment = center_align
+
+    elif report_type == "FACULTY_ALLOCATION":
+        headers = ["Faculty Mentor", "Dept", "Assigned", "Active Solvers", "Ratio Status"]
+        ws.append(headers)
+        for col_idx, h in enumerate(headers, 1):
+            cell = ws.cell(row=ws.max_row, column=col_idx)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = center_align
+            cell.border = thin_border
+            
+        for fac in data.get("faculty_records", []):
+            ws.append([fac.get("faculty_name"), fac.get("department_code"), fac.get("assigned_students"), fac.get("active_students"), fac.get("workload_status")])
+            for col_idx in range(1, 6):
+                cell = ws.cell(row=ws.max_row, column=col_idx)
+                cell.font = cell_font
+                cell.border = thin_border
+                if ws.max_row % 2 == 0:
+                    cell.fill = alt_row_fill
+                if col_idx > 2:
+                    cell.alignment = center_align
+
+    elif report_type == "INACTIVE_AT_RISK":
+        ws.append([f"Total Inactive Solvers: {data.get('total_inactive', 0)}"])
+        ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=5)
+        ws.cell(row=ws.max_row, column=1).font = bold_cell_font
+        ws.cell(row=ws.max_row, column=1).alignment = center_align
+        ws.append([])
+        
+        headers = ["Reg No", "Student Name", "Dept", "Assigned Faculty Mentor", "Status"]
+        ws.append(headers)
+        for col_idx, h in enumerate(headers, 1):
+            cell = ws.cell(row=ws.max_row, column=col_idx)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = center_align
+            cell.border = thin_border
+            
+        for st in data.get("students", []):
+            ws.append([st.get("reg_no"), st.get("name"), st.get("department"), st.get("assigned_mentor"), "INACTIVE"])
+            for col_idx in range(1, 6):
+                cell = ws.cell(row=ws.max_row, column=col_idx)
+                cell.font = cell_font
+                cell.border = thin_border
+                if ws.max_row % 2 == 0:
+                    cell.fill = alt_row_fill
+                if col_idx in [1, 3, 5]:
+                    cell.alignment = center_align
+
+    # Format Column Widths Automatically based on content length
+    for col_idx_num, col in enumerate(ws.columns, 1):
+        max_length = 0
+        column = openpyxl.utils.get_column_letter(col_idx_num)
+        for cell in col:
+            try:
+                # Don't let the title row dictate the entire column width excessively
+                if cell.row > 4 and cell.value:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+            except:
+                pass
+        
+        # Enforce minimums so logos fit
+        if column == "A":
+            max_length = max(max_length, 35)
+        elif column == openpyxl.utils.get_column_letter(col_span):
+            max_length = max(max_length, 25)
+            
+        adjusted_width = (max_length + 4)
+        ws.column_dimensions[column].width = adjusted_width
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return Response(
+        content=output.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="CommandCenter_{report_type}.xlsx"'}
+    )
+
 @router.get("/reports/data")
 def get_report_data(
     report_type: str = Query(..., description="EXECUTIVE, FACULTY_ALLOCATION, INACTIVE_AT_RISK, CONTEST, SKILL_GAP"),
@@ -946,3 +1166,4 @@ def get_department_details(dept_id: int, db: Session = Depends(get_db), current_
         "top_performers": performers,
         "at_risk_students": at_risk
     }
+

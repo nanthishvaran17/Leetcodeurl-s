@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { FileCode, Save, RefreshCw, Folder, File, ChevronRight, ChevronDown, Terminal, AlertTriangle, X } from 'lucide-react';
+import { 
+  FileCode, Save, RefreshCw, Folder, File, ChevronRight, ChevronDown, 
+  Terminal, AlertTriangle, X, ArrowLeft
+} from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
-
 import { createPortal } from 'react-dom';
 
 export const DeveloperStudio: React.FC = () => {
@@ -16,6 +18,7 @@ export const DeveloperStudio: React.FC = () => {
   const [isBinary, setIsBinary] = useState(false);
   const [saving, setSaving] = useState(false);
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set(['']));
+  const [showMobileSidebar, setShowMobileSidebar] = useState(true);
   
   const { notify } = useNotification();
   const { user } = useAuth();
@@ -130,20 +133,24 @@ export const DeveloperStudio: React.FC = () => {
       return f.path.startsWith(parentPath + '/');
     });
 
-    return children.map((item, idx) => {
+    return children.map((item) => {
       const isExpanded = expandedDirs.has(item.path);
       const isSelected = selectedFile === item.path;
 
       return (
         <div key={item.path} className="w-full">
           <div 
-            className={`flex items-center gap-2 py-1.5 px-2 rounded cursor-pointer text-sm select-none transition-colors ${
-              isSelected ? 'bg-brand-500/20 text-brand-300' : 'hover:bg-slate-800 text-slate-300'
+            className={`flex items-center gap-2 py-1.5 px-2 rounded cursor-pointer text-xs sm:text-sm select-none transition-colors ${
+              isSelected ? 'bg-brand-500/20 text-brand-300 font-bold' : 'hover:bg-slate-800 text-slate-300'
             }`}
-            style={{ paddingLeft: `${depth * 1.5 + 0.5}rem` }}
+            style={{ paddingLeft: `${depth * 1.25 + 0.5}rem` }}
             onClick={() => {
-              if (item.is_dir) toggleDir(item.path);
-              else loadFile(item.path);
+              if (item.is_dir) {
+                toggleDir(item.path);
+              } else {
+                loadFile(item.path);
+                setShowMobileSidebar(false); // Hide sidebar on mobile when a file is selected
+              }
             }}
           >
             {item.is_dir ? (
@@ -170,19 +177,50 @@ export const DeveloperStudio: React.FC = () => {
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[999999] flex flex-col bg-slate-950 overflow-hidden text-slate-200">
+    <div className="fixed inset-0 z-[999999] flex flex-col bg-slate-950 overflow-hidden text-slate-200 w-full h-full">
       
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800 bg-slate-900 shrink-0">
-        <div className="flex items-center gap-3">
-          <Terminal className="w-5 h-5 text-brand-400" />
-          <h2 className="text-lg font-bold text-white tracking-wide">Developer Studio</h2>
-          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase tracking-widest">
-            Live Production Edit
+      <div className="flex items-center justify-between px-3 sm:px-4 py-2 border-b border-slate-800 bg-slate-900 shrink-0 gap-2 overflow-x-auto custom-scrollbar">
+        {/* Left Section: Back Button + Terminal Icon + Title + Badge */}
+        <div className="flex items-center gap-2 min-w-0 shrink-0">
+          <button
+            onClick={() => window.location.reload()}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors shrink-0 cursor-pointer border border-slate-700 active:scale-95"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="w-4 h-4 text-brand-400 shrink-0" />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+
+          <div className="h-4 w-[1px] bg-slate-800 mx-0.5 shrink-0 hidden sm:block" />
+
+          <Terminal className="w-4 h-4 sm:w-5 sm:h-5 text-brand-400 shrink-0 hidden sm:block" />
+          
+          <h2 className="text-xs sm:text-base font-bold text-white tracking-wide truncate max-w-[110px] xs:max-w-[150px] sm:max-w-none">
+            Developer Studio
+          </h2>
+          
+          <span className="px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-extrabold bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase tracking-wider shrink-0">
+            <span className="sm:hidden">LIVE</span>
+            <span className="hidden sm:inline">LIVE PRODUCTION EDIT</span>
           </span>
         </div>
-        
-        <div className="flex items-center gap-3">
+
+        {/* Right Section: Mobile Explorer Toggle + Audit Report + Save File + Exit */}
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {/* Mobile Explorer Toggle */}
+          <button
+            onClick={() => setShowMobileSidebar(!showMobileSidebar)}
+            className={`md:hidden flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-bold transition-colors cursor-pointer ${
+              showMobileSidebar
+                ? 'bg-brand-500/20 text-brand-300 border-brand-500/40'
+                : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white'
+            }`}
+          >
+            <Folder className="w-3.5 h-3.5 text-blue-400" />
+            <span>{showMobileSidebar ? 'Editor' : 'Files'}</span>
+          </button>
+
           <button
             onClick={() => {
               const link = document.createElement('a');
@@ -193,42 +231,61 @@ export const DeveloperStudio: React.FC = () => {
               document.body.removeChild(link);
               notify.info('Audit Report', 'Downloading the Developer Studio edit audit report...');
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 rounded font-bold text-xs transition-colors"
+            className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 rounded-lg font-bold text-xs transition-colors shrink-0 cursor-pointer"
+            title="Download Audit Report"
           >
-            <AlertTriangle className="w-3.5 h-3.5" />
-            Audit Report
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline">Audit Report</span>
+            <span className="sm:hidden text-[10px]">Audit</span>
           </button>
-          
+
           {selectedFile && (
             <button
               onClick={saveFile}
               disabled={saving || isBinary}
-              className="flex items-center gap-2 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-sm transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 px-2.5 sm:px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-xs sm:text-sm transition-all disabled:opacity-50 shrink-0 cursor-pointer"
             >
-              {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Save File
+              {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              <span>Save</span>
             </button>
           )}
+
           <button 
             onClick={() => window.location.reload()} 
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors"
+            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer shrink-0"
             title="Exit Developer Studio"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
       </div>
 
       {/* Main Area */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative w-full">
         
         {/* Sidebar (File Tree) */}
-        <div className="w-64 flex flex-col bg-slate-900 border-r border-slate-700 overflow-hidden">
-          <div className="p-3 border-b border-slate-800 flex justify-between items-center">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Project Files</span>
-            <button onClick={() => fetchFiles('')} className="p-1 hover:bg-slate-800 rounded text-slate-400">
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            </button>
+        <div className={`
+          ${showMobileSidebar ? 'flex' : 'hidden'} md:flex
+          w-full md:w-64 flex-col bg-slate-900 border-r border-slate-800 overflow-hidden
+          absolute md:relative inset-0 md:inset-auto z-20 md:z-auto
+        `}>
+          <div className="p-3 border-b border-slate-800 flex justify-between items-center bg-slate-900">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Folder className="w-3.5 h-3.5 text-blue-400" />
+              Project Files
+            </span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => fetchFiles('')} className="p-1 hover:bg-slate-800 rounded text-slate-400" title="Refresh files">
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+              <button 
+                onClick={() => setShowMobileSidebar(false)} 
+                className="md:hidden p-1 hover:bg-slate-800 rounded text-slate-400"
+                title="Hide files"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-slate-700">
             {renderTree('')}
@@ -236,18 +293,30 @@ export const DeveloperStudio: React.FC = () => {
         </div>
 
         {/* Editor Area */}
-        <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden relative">
+        <div className={`
+          ${!showMobileSidebar ? 'flex' : 'hidden'} md:flex
+          flex-1 flex-col bg-slate-950 overflow-hidden relative w-full
+        `}>
           {selectedFile ? (
             <>
-              <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex items-center gap-2">
-                <FileCode className="w-4 h-4 text-brand-400" />
-                <span className="text-sm font-mono text-slate-300">{selectedFile}</span>
+              <div className="px-3 sm:px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex items-center justify-between gap-2 overflow-x-auto">
+                <div className="flex items-center gap-2 min-w-0">
+                  <button
+                    onClick={() => setShowMobileSidebar(true)}
+                    className="md:hidden flex items-center gap-1 px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold shrink-0 cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Files</span>
+                  </button>
+                  <FileCode className="w-4 h-4 text-brand-400 shrink-0" />
+                  <span className="text-xs sm:text-sm font-mono text-slate-300 truncate">{selectedFile}</span>
+                </div>
               </div>
               <textarea
                 value={fileContent}
                 onChange={(e) => setFileContent(e.target.value)}
                 readOnly={isBinary}
-                className={`flex-1 w-full p-4 bg-transparent text-slate-200 font-mono text-sm leading-relaxed resize-none focus:outline-none scrollbar-thin scrollbar-thumb-slate-700 ${isBinary ? 'opacity-50 italic' : ''}`}
+                className={`flex-1 w-full p-3 sm:p-4 bg-transparent text-slate-200 font-mono text-xs sm:text-sm leading-relaxed resize-none focus:outline-none scrollbar-thin scrollbar-thumb-slate-700 ${isBinary ? 'opacity-50 italic' : ''}`}
                 spellCheck="false"
                 style={{ tabSize: 2 }}
                 onKeyDown={(e) => {
@@ -270,10 +339,17 @@ export const DeveloperStudio: React.FC = () => {
               />
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
-              <FileCode className="w-16 h-16 mb-4 opacity-20" />
-              <p className="text-lg">Select a file from the explorer to edit</p>
-              <p className="text-sm mt-2 opacity-70">Changes made here will be reflected live (HMR enabled)</p>
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-500">
+              <FileCode className="w-12 h-12 sm:w-16 sm:h-16 mb-4 opacity-20" />
+              <p className="text-sm sm:text-lg font-semibold text-slate-400">Select a file from the explorer to edit</p>
+              <p className="text-xs sm:text-sm mt-2 opacity-70 max-w-sm">Changes made here will be reflected live in production (HMR enabled)</p>
+              <button
+                onClick={() => setShowMobileSidebar(true)}
+                className="md:hidden mt-4 px-4 py-2 rounded-xl bg-brand-500/20 text-brand-300 border border-brand-500/30 text-xs font-bold flex items-center gap-2 cursor-pointer"
+              >
+                <Folder className="w-4 h-4 text-blue-400" />
+                <span>Open File Explorer</span>
+              </button>
             </div>
           )}
         </div>

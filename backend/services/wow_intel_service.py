@@ -97,16 +97,13 @@ def build_wow_intel_report(db, config, current_user=None) -> Dict[str, Any]:
             prev_num, prev_sess = contest_sessions[-2]
             curr_num, curr_sess = contest_sessions[-1]
 
-        # 2. Load roster (all active students)
+        from backend.services.contest_performance_service import matches_dept, matches_year, is_official_student
         all_stus = db.query(Student).options(joinedload(Student.department)).all()
         roster = [
             s for s in all_stus
             if (s.is_active is True or s.is_active is None)
-            and s.reg_no
-            and not s.reg_no.startswith("CONCUR_")
-            and not s.reg_no.startswith("732224TEST")
+            and is_official_student(s.reg_no)
         ]
-        from backend.services.contest_performance_service import matches_dept, matches_year
         if dept_filter != "ALL":
             roster = [
                 s for s in roster
@@ -180,6 +177,9 @@ def build_wow_intel_report(db, config, current_user=None) -> Dict[str, Any]:
                 "dept": dept_code,
                 "year": year_disp,
                 "username": s.username or "Unlinked",
+                "accommodation": getattr(s, "accommodation", "") or "—",
+                "twelfth_cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
+                "cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
                 # Previous week
                 "prev_status": prev_status,
                 "prev_q1": prev_d["q1"],

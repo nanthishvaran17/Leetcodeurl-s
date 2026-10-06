@@ -834,7 +834,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 elif "HOSTEL" in raw_acc.upper():
                     val = "H"
                 else:
-                    val = raw_acc[:1].upper() if raw_acc else "—"
+                    val = raw_acc
 
             title_lower = title.lower().strip()
 

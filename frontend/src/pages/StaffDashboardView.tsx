@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search,
+  Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle,
   ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell,
   FileText, Clock, AlertCircle, ArrowRight, Download, Zap, Sparkles,
   ChevronDown, Check, Filter
@@ -760,8 +760,8 @@ export const StaffDashboardView: React.FC = () => {
                   {isStudentSelectOpen && (
                     <div className="absolute z-50 top-full left-0 mt-2 w-full sm:w-80 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-2 animate-in fade-in zoom-in-95">
                       {/* Search Bar inside Dropdown */}
-                      <div className="relative">
-                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                      <div className="relative flex items-center">
+                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
                           type="text"
                           autoFocus
@@ -775,9 +775,10 @@ export const StaffDashboardView: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setStudentSelectSearch('')}
-                            className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-0.5"
+                            title="Clear search"
                           >
-                            
+                            <XCircle className="w-4 h-4" />
                           </button>
                         )}
                       </div>
@@ -939,8 +940,8 @@ export const StaffDashboardView: React.FC = () => {
             })()}
 
             {/* Search inside assigned set strictly */}
-            <div className="relative w-full sm:w-64 shrink-0">
-              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+            <div className="relative w-full sm:w-64 shrink-0 flex items-center">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 value={search}
@@ -955,9 +956,10 @@ export const StaffDashboardView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setSearch('')}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-0.5"
+                  title="Clear search"
                 >
-                  
+                  <XCircle className="w-4 h-4" />
                 </button>
               )}
             </div>

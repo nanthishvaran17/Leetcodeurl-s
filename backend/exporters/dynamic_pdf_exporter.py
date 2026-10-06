@@ -299,7 +299,17 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
                             row_vals.append(Paragraph("-", cell_style))
                         c_idx += 1
                 else:
-                    val = str(r.get(h) if r.get(h) is not None else "")
+                    raw_val = r.get(h) if r.get(h) is not None else ""
+                    if h.lower() in ("accommodation", "accomodation", "residence"):
+                        s_val = str(raw_val).strip().upper()
+                        if "DAY" in s_val:
+                            val = "D"
+                        elif "HOSTEL" in s_val:
+                            val = "H"
+                        else:
+                            val = str(raw_val)
+                    else:
+                        val = str(raw_val)
                     h_name = clean_headers[c_idx].lower()
                     c_style = left_cell_style if ("name" in h_name or "url" in h_name) else cell_style
                     row_vals.append(Paragraph(val, c_style))

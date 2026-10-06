@@ -12,6 +12,7 @@ from backend.database import get_db
 from backend.models import AdminSettingsModel, AuditLog, AdminAuditLog, WeeklySession, SyncJob, Student
 from backend.routes.auth import get_current_user
 from backend.security import require_security_access
+from backend.time_utils import format_ist
 from backend.backup_manager import (
     BACKUP_DIR,
     create_db_backup,
@@ -856,7 +857,7 @@ def get_operations_center_overview(db: Session = Depends(get_db)):
         audit_list.append({
             "id": a.id,
             "audit_id": a.audit_id,
-            "timestamp": a.created_at.strftime("%H:%M:%S") if a.created_at else "Just now",
+            "timestamp": format_ist(a.created_at, "%I:%M:%S %p") if a.created_at else "Just now",  # type: ignore
             "action": a.action,
             "user": a.admin_name or "System Administrator",
             "status": a.status,

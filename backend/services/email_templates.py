@@ -28,11 +28,12 @@ def generate_professional_template(title: str, content: str, action_button: Opti
             </table>
             """
         if fallback_url:
+            display_url = fallback_url.split('?')[0] if '?' in fallback_url else fallback_url
             button_html += f"""
             <div style="margin-top: 20px; text-align: center; font-size: 13px; color: #475569;">
                 <p style="margin: 0 0 6px 0; font-weight: 600; color: #334155;">Or copy and paste this link into your browser:</p>
-                <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; word-break: break-all; font-family: monospace; font-size: 12px; color: #2563eb; text-align: left; margin: 0 auto; max-width: 520px; line-height: 1.5;">
-                    <a href="{fallback_url}" style="color: #2563eb; text-decoration: underline; word-break: break-all; font-family: monospace; font-size: 12px;">{fallback_url}</a>
+                <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; word-break: break-all; font-family: monospace; font-size: 12px; color: #2563eb; text-align: center; margin: 0 auto; max-width: 520px; line-height: 1.5;">
+                    <a href="{fallback_url}" style="color: #2563eb; text-decoration: underline; word-break: break-all; font-family: monospace; font-size: 12px;">{display_url}</a>
                 </div>
             </div>
             """

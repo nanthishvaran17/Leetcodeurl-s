@@ -85,14 +85,12 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
         if not contest_sessions:
             return _empty_hist_report("No contest sessions found in database.")
 
-        # 2. Load roster
+        from backend.services.contest_performance_service import matches_dept, matches_year, is_official_student
         all_stus = db.query(Student).options(joinedload(Student.department)).all()
         roster = [
             s for s in all_stus
             if (s.is_active is True or s.is_active is None)
-            and s.reg_no
-            and not s.reg_no.startswith("CONCUR_")
-            and not s.reg_no.startswith("732224TEST")
+            and is_official_student(s.reg_no)
         ]
         print(f"DEBUG: Initial roster length: {len(roster)}")
         from backend.services.contest_performance_service import matches_dept, matches_year
@@ -180,6 +178,7 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
                 "year": year_disp,
                 "accommodation": getattr(s, "accommodation", None) or "Day Scholar",
                 "twelfth_cutoff": getattr(s, "twelfth_cutoff", None),
+                "cutoff": getattr(s, "twelfth_cutoff", None),
                 "username": s.username or "Unlinked",
                 "totalAttended": total_attended,
                 "total_attended": total_attended,

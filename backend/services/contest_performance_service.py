@@ -80,6 +80,17 @@ def normalize_year_filter(target_year: Optional[str]) -> Optional[str]:
     return t
 
 
+def is_official_student(reg_no: Optional[str]) -> bool:
+    if not reg_no:
+        return False
+    r = reg_no.strip().upper()
+    if any(r.startswith(p) for p in ("CONCUR_", "TEST_", "NOTIF_", "7322STU", "7322TEST", "732224TEST", "STU_", "NOTIF_STU")):
+        return False
+    if "TEST" in r or "BETA" in r or "RBAC" in r or "DEMO" in r:
+        return False
+    return True
+
+
 def normalize_dept_val(code_raw: Optional[str], name_raw: Optional[str] = "") -> str:
     c = (code_raw or "").upper().strip()
     n = (name_raw or "").upper().strip()

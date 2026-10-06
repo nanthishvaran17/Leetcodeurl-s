@@ -1207,8 +1207,15 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             type="button"
                             onClick={() => {
                               const randomHex = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
-                              const rolePrefix = isGlobalRole ? 'ADM' : 'FAC';
-                              setFormData(prev => ({ ...prev, institutional_id: `NEC-STAFF-${rolePrefix}-${randomHex}` }));
+                                let rolePrefix = 'STAFF';
+                                if (formData.role === 'Department HOD') rolePrefix = 'HOD';
+                                else if (formData.role === 'Administrator') rolePrefix = 'ADMIN';
+                                else if (formData.role === 'Super Admin') rolePrefix = 'SUPERADMIN';
+                                else if (formData.role === 'Principal') rolePrefix = 'PRIN';
+                                else if (formData.role === 'Management') rolePrefix = 'MGMT';
+                                else if (formData.role === 'Faculty Mentor') rolePrefix = 'FACULTY';
+                                else if (formData.role === 'Staff Mentor') rolePrefix = 'STAFF';
+                                setFormData(prev => ({ ...prev, institutional_id: `NEC-${rolePrefix}-${randomHex}` }));
                             }}
                             className="h-12 px-4 rounded-2xl bg-brand-100 dark:bg-brand-500/20 text-brand-800 dark:text-brand-300 text-xs font-black hover:bg-brand-200 transition-all flex items-center shrink-0 cursor-pointer border border-brand-200 dark:border-brand-500/30"
                           >

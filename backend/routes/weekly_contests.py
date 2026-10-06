@@ -179,7 +179,7 @@ def _extract_contest_number(session: WeeklySession) -> int:
         nums = re.findall(r'\d+', str(session.contest_name))
         if nums:
             return int(nums[-1])
-    return int(session.week_number or session.id or 0)
+    return int(session.week_number or session.id or 0)  # type: ignore
 
 def _resolve_session(session_id_or_slug: Any, db: Session) -> Optional[WeeklySession]:
     """Resolves WeeklySession from numeric id, session_code, contest_id, or contest slug/number."""
@@ -256,7 +256,7 @@ def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user:
         "PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED"
     )]
     participant_count = len(attended)
-    attendance_rate = round((float(participant_count) / max(int(total_students), 1)) * 100, 2)
+    attendance_rate = round((float(participant_count) / max(int(total_students), 1)) * 100, 2)  # type: ignore
     
     scores = [r.contest_score for r in attended if r.contest_score is not None]
     ranks = [r.contest_rank for r in attended if r.contest_rank is not None and r.contest_rank > 0]
@@ -308,7 +308,7 @@ def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user:
     }
     for d_obj in all_depts_db:
         if d_obj.code and d_obj.code not in dept_stats:
-            dept_stats[d_obj.code] = {
+            dept_stats[str(d_obj.code)] = {
                 "name": d_obj.name or d_obj.code,
                 "total": 0,
                 "public": 0,
@@ -462,7 +462,7 @@ def get_contest_questions_endpoint(
     session = _resolve_session(session_id, db)
     if not session:
         raise HTTPException(status_code=404, detail="Contest session not found")
-    return get_contest_question_analytics(session_id=int(session.id), db=db, current_user=current_user)
+    return get_contest_question_analytics(session_id=int(session.id), db=db, current_user=current_user)  # type: ignore
 
 
 @router.get("/sessions/{session_id}/analytics")
@@ -481,8 +481,8 @@ def get_contest_deep_analytics_endpoint(
     session = _resolve_session(session_id, db)
     if not session:
         raise HTTPException(status_code=404, detail="Contest session not found")
-    dept_stats = get_contest_dept_analytics(session_id=int(session.id), db=db, current_user=current_user)
-    comparison = get_week_comparison(session_id=int(session.id), dept=dept, year=year, attendance=attendance, db=db, current_user=current_user)
+    dept_stats = get_contest_dept_analytics(session_id=int(session.id), db=db, current_user=current_user)  # type: ignore
+    comparison = get_week_comparison(session_id=int(session.id), dept=dept, year=year, attendance=attendance, db=db, current_user=current_user)  # type: ignore
     return {
         "sessionId": session.id,
         "contestNumber": _extract_contest_number(session),
@@ -573,7 +573,7 @@ def get_session_live_telemetry(
         total_solved = len(solvers)
         q_stats[f"q{q_idx}"] = {
             "totalSolved": total_solved,
-            "solvePercent": round((float(total_solved) / max(int(total_students), 1)) * 100, 1) if total_students else 0.0,
+            "solvePercent": round((float(total_solved) / max(int(total_students), 1)) * 100, 1) if total_students else 0.0,  # type: ignore
             "firstSolver": solvers[0].name if solvers else None,
             "firstSolverDept": solvers[0].dept if solvers else None,
             "firstSolverYear": solvers[0].year if solvers else None,
@@ -584,7 +584,7 @@ def get_session_live_telemetry(
         role = (getattr(current_user, "override_role", None) or current_user.role or "").lower()
         if "staff" in role or "faculty" in role:
             from backend.services.faculty_assignment_service import faculty_assignment_service
-            assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))
+            assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))  # type: ignore
             if assigned_ids:
                 # Filter leaderboard & top performers for faculty mentorship scope
                 telemetry["topLeaderboard"] = [
@@ -1187,6 +1187,15 @@ def get_session_matrix(
         current_user = None
 
     from backend.services.canonical_contest_engine import build_canonical_contest_dataset
+    
+    if not isinstance(page, int):
+        page = 1
+    if not isinstance(limit, int):
+        limit = 50
+    if not isinstance(paginated, bool):
+        # The default for the query param is False, so if we got the Query object, it should be False
+        paginated = False
+
     canonical_data = build_canonical_contest_dataset(
         session_id=session_id, db=db, current_user=current_user,
         dept=final_dept, year=final_year, attendance=final_attendance
@@ -1371,8 +1380,8 @@ def get_week_comparison(
 
     # Read from single canonical normalized dataset engine (fast in-memory filter)
     from backend.services.canonical_contest_engine import build_canonical_contest_dataset
-    curr_data = build_canonical_contest_dataset(int(current_session.id), dept=final_dept, year=final_year, attendance=final_attendance, db=db, current_user=current_user)
-    prev_data = build_canonical_contest_dataset(int(prev_session.id), dept=final_dept, year=final_year, attendance=final_attendance, db=db, current_user=current_user) if prev_session else None
+    curr_data = build_canonical_contest_dataset(int(current_session.id), dept=final_dept, year=final_year, attendance=final_attendance, db=db, current_user=current_user)  # type: ignore
+    prev_data = build_canonical_contest_dataset(int(prev_session.id), dept=final_dept, year=final_year, attendance=final_attendance, db=db, current_user=current_user) if prev_session else None  # type: ignore
 
     curr_metrics = curr_data["metrics"]
     prev_metrics = prev_data["metrics"] if prev_data else {
@@ -2502,7 +2511,7 @@ def get_post_930_solvers(
     assigned_student_ids = None
     from backend.services.authorization_service import _STAFF_ROLES
     if user and user_role_clean in _STAFF_ROLES:
-        assigned_ids_list = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(user.id))
+        assigned_ids_list = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(user.id))  # type: ignore
         assigned_student_ids = set(assigned_ids_list)
         if student_id and student_id not in assigned_student_ids:
             raise HTTPException(
@@ -3417,11 +3426,11 @@ async def simulate_live_solve_step(
     session_id_val = req.session_id
     if not session_id_val:
         session = SundayLiveIngestionEngine.get_or_create_live_session(db)
-        session_id_val = int(session.id)
+        session_id_val = int(session.id)  # type: ignore
 
     res = await SundayLiveIngestionEngine.simulate_question_solve_progression(
         db=db,
-        session_id=int(session_id_val),
+        session_id=session_id_val,
         student_id=req.student_id,
         target_solved=req.target_solved
     )
@@ -3446,7 +3455,7 @@ def get_live_contest_summary(
     if not session:
         raise HTTPException(status_code=404, detail="Live contest session not found.")
 
-    metrics = SundayLiveIngestionEngine.recalculate_live_summary_metrics(db, int(session.id))
+    metrics = SundayLiveIngestionEngine.recalculate_live_summary_metrics(db, int(session.id))  # type: ignore
     return {
         "session_id": session.id,
         "contest_id": session.contest_id,

@@ -8,7 +8,11 @@ import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
 const formatAuditDate = (dateString: string) => {
   if (!dateString) return '—';
   try {
-    const d = new Date(dateString);
+    let dStr = dateString;
+    if (dStr.includes('T') && !dStr.endsWith('Z') && !dStr.includes('+')) {
+      dStr += 'Z';
+    }
+    const d = new Date(dStr);
     if (isNaN(d.getTime())) return dateString;
     return new Intl.DateTimeFormat('en-IN', {
       day: '2-digit',
