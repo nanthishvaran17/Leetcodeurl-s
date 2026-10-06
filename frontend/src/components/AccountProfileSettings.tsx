@@ -1144,7 +1144,7 @@ export const AccountProfileSettings: React.FC = () => {
         row.eachCell(cell => {
           cell.font = { name: 'Times New Roman', size: 11 };
           cell.border = { top: {style:'thin', color:{argb:'FF000000'}}, left: {style:'thin', color:{argb:'FF000000'}}, bottom: {style:'thin', color:{argb:'FF000000'}}, right: {style:'thin', color:{argb:'FF000000'}} };
-          cell.alignment = { vertical: 'center', wrapText: true };
+          cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
         });
         
         // Custom styling for specific columns
