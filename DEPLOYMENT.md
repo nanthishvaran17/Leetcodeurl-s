@@ -1,4 +1,4 @@
-# 🏛️ NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
+# ️ NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
 ## Nandha LeetCode Intelligence — Production Cloud Deployment Guide
 
 This project is configured for a modern, decoupled cloud architecture:
@@ -7,7 +7,7 @@ This project is configured for a modern, decoupled cloud architecture:
 
 ---
 
-## ⚡ 1. Frontend Deployment on Vercel
+##  1. Frontend Deployment on Vercel
 
 Vercel hosts the React + TypeScript frontend with instant global edge caching and zero cold starts.
 
@@ -28,7 +28,7 @@ Vercel hosts the React + TypeScript frontend with instant global edge caching an
 
 ---
 
-## ⚡ 2. Backend Cloud Container Deployment (FastAPI)
+##  2. Backend Cloud Container Deployment (FastAPI)
 
 The FastAPI backend runs continuous background tasks, Sunday automation schedulers (08:00–09:30 IST), WebSockets, and LeetCode sync workers.
 
@@ -66,7 +66,7 @@ uvicorn backend.main:app --host 0.0.0.0 --port 8000
 
 ---
 
-## 🔒 3. Authentication & RBAC Scope
+##  3. Authentication & RBAC Scope
 
 - **Super Admin**: Institutional Scope, Staff Allocation, Snapshots, System Operations.
 - **HOD**: Department Scope, Analytics, Escalations.
@@ -79,5 +79,5 @@ uvicorn backend.main:app --host 0.0.0.0 --port 8000
 
 ---
 
-## 📜 4. Historical Migration Note
+##  4. Historical Migration Note
 *(Archival reference: The platform was previously hosted as a unified container on Render and has now been migrated to Vercel for the frontend + independent Cloud FastAPI container runtime for the backend.)*

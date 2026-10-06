@@ -1043,7 +1043,7 @@ export const StaffVerificationSection: React.FC = () => {
             {/* Modal Footer */}
             <div className="flex items-center justify-between pt-1 text-xs text-slate-500">
               <span className="font-semibold text-[11px] truncate">
-                {previewDoc.isLocal ? '⚡ Unsaved local document preview' : '🔒 Verified server storage document'}
+                {previewDoc.isLocal ? 'Unsaved local document preview' : 'Verified server storage document'}
               </span>
               <button
                 type="button"

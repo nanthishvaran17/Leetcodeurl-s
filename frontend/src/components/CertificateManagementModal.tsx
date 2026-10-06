@@ -883,7 +883,7 @@ export const CertificateManagementModal: React.FC<{
                               className="w-full sm:flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center space-x-2 shadow-xl shadow-emerald-500/25 cursor-pointer transition-all transform hover:scale-[1.01] active:scale-[0.99] border border-emerald-300"
                             >
                               <Zap className="w-4.5 h-4.5 text-slate-950 fill-current" />
-                              <span>⚡ Issue & Register Now</span>
+                              <span>Issue & Register Now</span>
                             </button>
                             <button
                               type="button"
@@ -966,7 +966,7 @@ export const CertificateManagementModal: React.FC<{
                             className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs flex items-center justify-center space-x-1.5 shadow-md cursor-pointer transition-all border border-emerald-400/40"
                           >
                             <Zap className="w-4 h-4 text-slate-950 fill-current" />
-                            <span>⚡ Issue Now</span>
+                            <span>Issue Now</span>
                           </button>
                           <button
                             type="button"
@@ -1055,7 +1055,7 @@ export const CertificateManagementModal: React.FC<{
                             className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs flex items-center justify-center space-x-1.5 shadow-md cursor-pointer transition-all border border-emerald-400/40"
                           >
                             <Zap className="w-4 h-4 text-slate-950 fill-current" />
-                            <span>⚡ Issue Now</span>
+                            <span>Issue Now</span>
                           </button>
                           <button
                             type="button"

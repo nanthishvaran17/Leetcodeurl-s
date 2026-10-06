@@ -264,7 +264,7 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
 
             p_st_p = Paragraph(p_st, success_cell_style if p_st == "ATTENDED" else risk_cell_style)
             c_st_p = Paragraph(c_st, success_cell_style if c_st == "ATTENDED" else risk_cell_style)
-            diff_p = Paragraph(diff_str, success_cell_style if str(diff_str).startswith("+") else (risk_cell_style if str(diff_str).startswith("-") else neutral_cell_style))
+            diff_p = Paragraph(diff_str, success_cell_style if str(diff_str).startswith("+") else (risk_cell_style if str(diff_str).startswith("-") else neutral_cell_style))  # type: ignore
             trend_p = Paragraph(trend_str, success_cell_style if ("Improving" in trend_str or "↑" in trend_str) else (risk_cell_style if ("Declining" in trend_str or "↓" in trend_str) else neutral_cell_style))
 
             table_data.append([

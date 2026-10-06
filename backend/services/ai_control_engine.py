@@ -59,7 +59,7 @@ class AIControlEngine:
                 return {
                     "success": True,
                     "requestId": req_id,
-                    "answer": f"### 📄 Verified PDF Report Ready\n\nHere is your requested PDF report: **{art.get('title', 'Institutional Performance Report')}**.",
+                    "answer": f"###  Verified PDF Report Ready\n\nHere is your requested PDF report: **{art.get('title', 'Institutional Performance Report')}**.",
                     "data": art,
                     "checked": ["Generated Artifact Store", "Verified Database Matrix"],
                     "source": "Verified Institutional Database",

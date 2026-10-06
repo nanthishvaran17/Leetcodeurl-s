@@ -17,6 +17,7 @@ export interface Notification {
   recipientUserId: string;
   createdAt: any;
   isRead: boolean;
+  isArchived?: boolean;
   actionRoute?: string;
   entityType?: string;
   entityId?: string;
@@ -55,6 +56,7 @@ interface GlobalNotificationContextType {
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   deleteNotification: (id: string) => Promise<void>;
+  archiveNotification: (id: string) => Promise<void>;
   registerFCMDeviceToken: (token: string, platform?: string) => Promise<boolean>;
   refreshNotifications: () => Promise<void>;
 }
@@ -444,13 +446,42 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     }
   }, [allNotifications, token]);
 
-  // Apply category filter in a pure memo -- no subscription restart needed
-  const notifications = React.useMemo(() =>
-    selectedCategory === 'all'
-      ? allNotifications
-      : allNotifications.filter(n => normalizeCategory(n.category || n.type) === selectedCategory.toLowerCase()),
-    [allNotifications, selectedCategory]
-  );
+  const archiveNotification = useCallback(async (notificationId: string) => {
+    setAllNotifications(prev => prev.map(n => {
+      if (n.id === notificationId || n.eventId === notificationId) {
+        return { ...n, isArchived: true, isRead: true };
+      }
+      return n;
+    }));
+
+    // If it was unread, decrement the unread count since archiving implicitly marks it as read/handled
+    setUnreadCount(prev => {
+      const item = allNotifications.find(n => n.id === notificationId || n.eventId === notificationId);
+      return item && !item.isRead ? Math.max(0, prev - 1) : prev;
+    });
+
+    if (token) {
+      try {
+        await fetch(getApiUrl(`/notifications/${notificationId}/archive`), {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch (err) {
+        console.warn("REST API archive notice:", err);
+      }
+    }
+  }, [allNotifications, token]);
+
+  const notifications = React.useMemo(() => {
+    if (selectedCategory === 'archived') {
+      return allNotifications.filter(n => n.isArchived);
+    }
+    const unarchived = allNotifications.filter(n => !n.isArchived);
+    if (selectedCategory === 'all') {
+      return unarchived;
+    }
+    return unarchived.filter(n => normalizeCategory(n.category || n.type) === selectedCategory.toLowerCase());
+  }, [allNotifications, selectedCategory]);
 
   // Memoize the context value so stable-reference consumers don't re-render
   const ctxValue = React.useMemo(() => ({
@@ -466,10 +497,11 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    archiveNotification,
     registerFCMDeviceToken,
     refreshNotifications: fetchFromBackendAPI
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [notifications, allNotifications, unreadCount, isLoading, error, selectedCategory, preferences, markAsRead, markAllAsRead, deleteNotification, registerFCMDeviceToken, fetchFromBackendAPI]);
+  }), [notifications, allNotifications, unreadCount, isLoading, error, selectedCategory, preferences, markAsRead, markAllAsRead, deleteNotification, archiveNotification, registerFCMDeviceToken, fetchFromBackendAPI]);
 
   return (
     <GlobalNotificationContext.Provider value={ctxValue}>

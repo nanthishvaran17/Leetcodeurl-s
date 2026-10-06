@@ -8,7 +8,7 @@ def get_current_ist_datetime() -> datetime.datetime:
     """Returns current datetime in Asia/Kolkata (IST)."""
     return datetime.datetime.now(IST_TZ)
 
-def get_most_recent_sunday_date(target_dt: datetime.datetime = None) -> datetime.date:
+def get_most_recent_sunday_date(target_dt: datetime.datetime = None) -> datetime.date:  # type: ignore
     """
     Returns the date of the current/most recent Sunday in IST.
     If today is Sunday, returns today.
@@ -21,7 +21,7 @@ def get_most_recent_sunday_date(target_dt: datetime.datetime = None) -> datetime
     sunday_dt = target_dt - datetime.timedelta(days=days_since_sunday)
     return sunday_dt.date()
 
-def get_immediately_previous_sunday_date(now_ist: datetime.datetime = None) -> datetime.date:
+def get_immediately_previous_sunday_date(now_ist: datetime.datetime = None) -> datetime.date:  # type: ignore
     """
     Calculates the date of the immediately previous Sunday in IST.
     If today is Tuesday 25-Aug-2026, returns 23-Aug-2026.
@@ -42,7 +42,7 @@ def get_immediately_previous_sunday_date(now_ist: datetime.datetime = None) -> d
         days_since_sunday = (weekday + 1)
         return (now_ist - datetime.timedelta(days=days_since_sunday)).date()
 
-def get_upcoming_sunday_date(target_dt: datetime.datetime = None) -> datetime.date:
+def get_upcoming_sunday_date(target_dt: datetime.datetime = None) -> datetime.date:  # type: ignore
     """
     Returns the date of the next upcoming Sunday in IST.
     If today is Sunday and before 09:30 AM IST, returns today.
@@ -72,7 +72,7 @@ def calculate_contest_number(contest_date: datetime.date) -> int:
     weeks_diff = (contest_date - ref_date).days // 7
     return ref_contest + weeks_diff
 
-def calculate_contest_status(contest_date: datetime.date, current_dt: datetime.datetime = None) -> str:
+def calculate_contest_status(contest_date: datetime.date, current_dt: datetime.datetime = None) -> str:  # type: ignore
     """
     Determines contest status dynamically using Asia/Kolkata timezone.
     Contest window: 08:00 AM IST – 09:30 AM IST.
@@ -144,7 +144,7 @@ def _get_leetcode_top_contests() -> list:
             },
             method="POST"
         )
-        with urllib.request.urlopen(req, timeout=4) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode('utf-8'))
             contests = data.get("data", {}).get("topTwoContests", [])
             _top_contests_cache = contests
@@ -156,7 +156,7 @@ def _get_leetcode_top_contests() -> list:
         _top_contests_cached_at = now
         return []
 
-def fetch_leetcode_live_contest_info(target_contest_num: int = None) -> Dict[str, Any]:
+def fetch_leetcode_live_contest_info(target_contest_num: int = None) -> Dict[str, Any]:  # type: ignore
     """
     Attempts to fetch live contest metadata directly from LeetCode GraphQL API.
     Uses global top-contests TTL caching (10 mins) to prevent repetitive network requests.
@@ -198,14 +198,14 @@ def fetch_leetcode_contest_questions(title_slug: str) -> list:
             },
             method="POST"
         )
-        with urllib.request.urlopen(req, timeout=4) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode('utf-8'))
             return data.get("data", {}).get("contest", {}).get("questions", [])
     except Exception as e:
         logger.warning(f"[CONTEST_DISCOVERY] Live LeetCode questions fetch failed for {title_slug}: {e}")
         return []
 
-def discover_contest_metadata(target_date: datetime.date = None, override_contest_num: int = None) -> Dict[str, Any]:
+def discover_contest_metadata(target_date: datetime.date = None, override_contest_num: int = None) -> Dict[str, Any]:  # type: ignore
     """
     Dynamic LeetCode Weekly Contest Discovery Engine.
     Discovers contest ID, title, date, start time, end time, and dynamic problem list.

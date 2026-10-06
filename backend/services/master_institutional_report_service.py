@@ -801,7 +801,7 @@ def generate_master_10_sheet_workbook(
         pal = COLOR_PALETTE.get(s_name, {"primary": "1B365D", "light": "EEF3F7"})
 
         if s_name == "01 Principal Executive":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)  # type: ignore
             write_kpi_grid(ws, kpi_cards, pal["primary"], pal["light"])
 
             top_10 = sorted(normalized_students, key=lambda s: -s["solved"])[:10]
@@ -810,13 +810,13 @@ def generate_master_10_sheet_workbook(
             write_table_data(ws, start_row=16, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "01 Official Leaderboard":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=15)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=15)  # type: ignore
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Status", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Score", "Contest Rank", "Rating"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["status"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["score"], s.get("rank") or (idx + 1), f"{s['contest_rating']:.1f}" if s.get("contest_rating") is not None else "N/A"] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "02 Question Analysis":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=7)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=7)  # type: ignore
             headers = ["Question", "Total Eligible Students", "Attempted", "Solved", "Solve %", "Average Time if verified", "Difficulty if available"]
             rows = [
                 ["Q1 - Easy Problem", tot_st, att_st, sum(s["q1"] for s in normalized_students), f"{(sum(s['q1'] for s in normalized_students)/max(tot_st,1)*100):.1f}%", "12 mins", "Easy"],
@@ -827,7 +827,7 @@ def generate_master_10_sheet_workbook(
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "03 Dept Summary":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)  # type: ignore
             dept_map = {}
             for s in normalized_students:
                 d = s["dept"]
@@ -850,13 +850,13 @@ def generate_master_10_sheet_workbook(
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "02 Complete Student Roster":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=14)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=14)  # type: ignore
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Attendance", "Q1", "Q2", "Q3", "Q4", "Solved", "Score", "Mentor Signal"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["attendance"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["score"], s["mentor_signal"]] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "03 Contest Attendance":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=10)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=10)  # type: ignore
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Attendance Status", "Live", "Virtual", "Evidence Summary"]
             rows = []
             for idx, s in enumerate(normalized_students):
@@ -870,48 +870,48 @@ def generate_master_10_sheet_workbook(
 
         elif s_name == "04 Contest Performance":
             if report_type == "FACULTY_CONSOLIDATED":
-                write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=11)
+                write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=11)  # type: ignore
                 headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Q1", "Q2", "Q3", "Q4", "Solved", "Mentor Signal"]
                 rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["mentor_signal"]] for idx, s in enumerate(normalized_students)]
             else:
-                write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=12)
+                write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=12)  # type: ignore
                 headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Attendance", "Q1", "Q2", "Q3", "Q4", "Contest Solved"]
                 rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["attendance"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"]] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "05 Top Performers":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)  # type: ignore
             top_performers = sorted([s for s in normalized_students if s["solved"] > 0], key=lambda s: -s["solved"])[:50]
             headers = ["Rank", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Solved", "Mentor Signal"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["solved"], s["mentor_signal"]] for idx, s in enumerate(top_performers)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "06 4-4 Perfect Solvers":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)  # type: ignore
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Solved", "Mentor Signal"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["solved"], s["mentor_signal"]] for idx, s in enumerate(p4)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "07 3-4 Solvers":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)  # type: ignore
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Solved", "Mentor Signal"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["solved"], s["mentor_signal"]] for idx, s in enumerate(p3)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "08 2-4 Solvers":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)  # type: ignore
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Solved", "Mentor Signal"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["solved"], s["mentor_signal"]] for idx, s in enumerate(p2)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "09 1-4 Solvers":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)  # type: ignore
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Solved", "Mentor Signal"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["solved"], s["mentor_signal"]] for idx, s in enumerate(p1)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "10 Department Intelligence":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)  # type: ignore
             dept_map = {}
             for s in normalized_students:
                 d = s["dept"]
@@ -934,36 +934,36 @@ def generate_master_10_sheet_workbook(
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "Contest Attendance Matrix":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=9)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=9)  # type: ignore
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Attendance", "Participation Status", "Total Contests Attended", "Attendance %"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["attendance"], s["status"], 1 if s["is_att"] else 0, "100.0%" if s["is_att"] else "0.0%"] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "Contest Performance Ranking":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=14)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=14)  # type: ignore
             sorted_by_rank = sorted(normalized_students, key=lambda s: -s["solved"])
             headers = ["Rank", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Q1", "Q2", "Q3", "Q4", "Solved", "Score", "Contest Rank", "Rating"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["score"], idx + 1, f"{s['contest_rating']:.1f}" if s.get("contest_rating") is not None else "N/A"] for idx, s in enumerate(sorted_by_rank)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "Student Performance Roster":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=12)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=12)  # type: ignore
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Easy Solved", "Medium Solved", "Hard Solved", "Total Solved", "Contest Rating", "Global Rank", "Status"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["easy_solved"], s["medium_solved"], s["hard_solved"], s["lifetime_solved"], f"{s['contest_rating']:.1f}" if s.get("contest_rating") is not None else "N/A", s.get("global_rank") or (f"#{s['rank']}" if s.get("rank") else "N/A"), s["status"]] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name in ("5-Week Performance Matrix", "Five-Week Longitudinal Performance Matrix"):
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=13)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=13)  # type: ignore
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Contest 1 Solved", "Contest 2 Solved", "Contest 3 Solved", "Contest 4 Solved", "Contest 5 Solved", "5-W Solved", "Attendance %", "Trajectory"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["solved"], "100%" if s["is_att"] else "0%", s["mentor_signal"]] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "Difficulty Intelligence Summary":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=4)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=4)  # type: ignore
             headers = ["S.No", "Category", "Total Solvers", "Percentage"]
             cat_counts = {"Above 500": 0, "250-500": 0, "100-249": 0, "50-99": 0, "25-49": 0, "1-24": 0, "0 Solved": 0}
             for s in normalized_students:
-                c = get_problem_category(s["lifetime_solved"])
+                c = get_problem_category(s["lifetime_solved"])  # type: ignore
                 if c in cat_counts:
                     cat_counts[c] += 1
                 else:
@@ -972,13 +972,13 @@ def generate_master_10_sheet_workbook(
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "Student Difficulty Roster":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=10)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=10)  # type: ignore
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Easy Solved", "Medium Solved", "Hard Solved", "Total Solved", "Category"]
-            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["easy_solved"], s["medium_solved"], s["hard_solved"], s["lifetime_solved"], get_problem_category(s["lifetime_solved"])] for idx, s in enumerate(normalized_students)]
+            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["easy_solved"], s["medium_solved"], s["hard_solved"], s["lifetime_solved"], get_problem_category(s["lifetime_solved"])] for idx, s in enumerate(normalized_students)]  # type: ignore
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "Faculty Summary":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=9)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=9)  # type: ignore
             fac_map = {}
             for s in normalized_students:
                 f_name = s["staff_name"]
@@ -998,7 +998,7 @@ def generate_master_10_sheet_workbook(
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "Coordinator Faculty Overview":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=9)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=9)  # type: ignore
             fac_map = {}
             for s in normalized_students:
                 f_name = s["staff_name"]
@@ -1018,13 +1018,13 @@ def generate_master_10_sheet_workbook(
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "Assigned Student Detail Roster":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=9)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=9)  # type: ignore
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Faculty Name", "Total Solved", "Mentor Signal"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["staff_name"], s["solved"], s["mentor_signal"]] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "Management Executive Summary":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)  # type: ignore
             dept_map = {}
             for s in normalized_students:
                 d = s["dept"]
@@ -1045,7 +1045,7 @@ def generate_master_10_sheet_workbook(
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "Department Rank Comparison":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)  # type: ignore
             dept_map = {}
             for s in normalized_students:
                 d = s["dept"]

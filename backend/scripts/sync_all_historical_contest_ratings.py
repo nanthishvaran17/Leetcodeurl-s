@@ -45,10 +45,10 @@ query userContestHistory($username: String!) {
 def extract_contest_number(title_or_slug: str) -> Optional[int]:
     if not title_or_slug:
         return None
-    m = re.search(r'(?:weekly|biweekly)?[- ]?contest[- ]?(\d+)', str(title_or_slug), re.IGNORECASE)
+    m = re.search(r'(?:weekly|biweekly)?[- ]?contest[- ]?(\d+)', str(title_or_slug), re.IGNORECASE)  # type: ignore
     if m:
         return int(m.group(1))
-    m2 = re.search(r'(\d+)', str(title_or_slug))
+    m2 = re.search(r'(\d+)', str(title_or_slug))  # type: ignore
     if m2:
         return int(m2.group(1))
     return None
@@ -75,9 +75,9 @@ async def run_sync():
         # Map contest_number -> session_id
         session_contest_map: Dict[int, int] = {}
         for s in sessions:
-            c_num = extract_contest_number(s.contest_id or s.contest_name or "")
+            c_num = extract_contest_number(s.contest_id or s.contest_name or "")  # type: ignore
             if c_num:
-                session_contest_map[c_num] = s.id
+                session_contest_map[c_num] = s.id  # type: ignore
 
         print("=" * 80, flush=True)
         print("MAPPED CONTEST SESSIONS:", flush=True)
@@ -125,11 +125,11 @@ async def run_sync():
                             ).first()
 
                             if wpr:
-                                wpr.contest_rating = float(rating)
+                                wpr.contest_rating = float(rating)  # type: ignore
                                 if ranking and int(ranking) > 0:
-                                    wpr.contest_rank = int(ranking)
+                                    wpr.contest_rank = int(ranking)  # type: ignore
                                 if attended and (wpr.total_contest_solved is None or wpr.total_contest_solved == 0) and solved > 0:
-                                    wpr.total_contest_solved = solved
+                                    wpr.total_contest_solved = solved  # type: ignore
                                 total_ratings_synced += 1
 
                 db.commit()

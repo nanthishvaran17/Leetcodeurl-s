@@ -166,7 +166,7 @@ export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialI
                     <div key={key} className={`p-3.5 rounded-2xl border flex items-center justify-between ${isSolved ? solvedCls : 'bg-slate-100 dark:bg-navy-950 border-slate-200 dark:border-navy-800 text-slate-400'}`}>
                       <div>
                         <span className="text-xs font-black block">{label}</span>
-                        <span className="text-[10px] font-semibold">{isSolved ? 'SOLVED ✓' : 'NOT SOLVED'}</span>
+                        <span className="text-[10px] font-semibold">{isSolved ? 'SOLVED ' : 'NOT SOLVED'}</span>
                       </div>
                       {isSolved ? <CheckCircle2 className={`w-5 h-5 ${iconCls}`} /> : <XCircle className="w-5 h-5 text-slate-400" />}
                     </div>

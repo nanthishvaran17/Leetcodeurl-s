@@ -284,11 +284,14 @@ def _filter_canonical_dataset_in_memory(
         "contestName": base_metrics.get("contestName"),
         "totalStudents": tot,
         "officialAttended": pub,
+        "public": pub,
         "virtualAttended": virt,
+        "virtual": virt,
         "notAttended": not_att,
         "notVerified": not_verified,
         "pending": pending,
         "errors": errors,
+        "dataErrors": errors,
         "participationPercentage": pct,
         "q4Count": q4,
         "q3Count": q3,
@@ -375,6 +378,69 @@ def _build_canonical_contest_dataset_internal(
 
     virtual_results = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session_id).all()
     virtual_res_map = {r.student_id: r for r in virtual_results}
+
+    import pytz
+    ist_tz = pytz.timezone("Asia/Kolkata")
+
+    session_date_val = getattr(session_obj, "session_date", None)
+    if not session_date_val:
+        s_date = datetime.datetime.now(ist_tz).date()
+    elif isinstance(session_date_val, datetime.date):
+        s_date = session_date_val
+    else:
+        try:
+            parts = [int(p) for p in str(session_date_val).replace(".", "-").split("-") if p.isdigit()]
+            if len(parts) >= 3:
+                s_date = datetime.date(parts[0], parts[1], parts[2]) if parts[0] > 1000 else datetime.date(parts[2], parts[1], parts[0])
+            else:
+                s_date = datetime.datetime.now(ist_tz).date()
+        except Exception:
+            s_date = datetime.datetime.now(ist_tz).date()
+
+    # Time Windows in IST and UTC:
+    # 08:00 AM IST to 09:30 AM IST = PUBLIC window
+    # 09:31 AM IST to 10:00 PM IST (22:00:00 IST) = VIRTUAL practice window
+    # Post 10:00 PM IST (22:00:00 IST) = IGNORE all new solves
+    lock_0930_ist = ist_tz.localize(datetime.datetime.combine(s_date, datetime.time(9, 30, 0)))
+    cutoff_1000pm_ist = ist_tz.localize(datetime.datetime.combine(s_date, datetime.time(22, 0, 0)))
+
+    lock_0930_utc = lock_0930_ist.astimezone(pytz.utc).replace(tzinfo=None)
+    cutoff_1000pm_utc = cutoff_1000pm_ist.astimezone(pytz.utc).replace(tzinfo=None)
+
+    from backend.models import ContestPostPracticeEvidence, OfficialWeeklySnapshot, StudentStatSnapshot
+    post_practice_records = db.query(ContestPostPracticeEvidence).filter(ContestPostPracticeEvidence.session_id == session_id).all()
+    post_practice_map = {r.student_id: r for r in post_practice_records}
+
+    locked_snapshot_map = {}
+    snapshots = db.query(OfficialWeeklySnapshot).filter(OfficialWeeklySnapshot.session_id == session_id).all()
+    for snapshot in snapshots:
+        if snapshot and snapshot.dataset:
+            try:
+                import json
+                ds = snapshot.dataset
+                if isinstance(ds, str):
+                    ds = json.loads(ds)
+                if isinstance(ds, dict):
+                    ds = ds.get("rows", []) or ds.get("students", []) or ds.get("dataset", [])
+                for item in ds:
+                    if isinstance(item, dict):
+                        reg = item.get("reg_no") or item.get("register_number") or item.get("regNo")
+                        sol = item.get("cumulative_solved") or item.get("total_solved_profile") or item.get("profile_solved") or item.get("total_solved")
+                        if reg and sol is not None and sol != "":
+                            locked_snapshot_map[reg.strip().upper()] = int(sol)
+            except Exception:
+                pass
+
+    # Single bulk query for all StudentStatSnapshot rows up to 10:00 PM IST (zero N+1 queries)
+    all_time_window_snapshots = db.query(StudentStatSnapshot).filter(
+        StudentStatSnapshot.student_id.in_(student_ids),
+        StudentStatSnapshot.captured_at <= cutoff_1000pm_utc
+    ).order_by(StudentStatSnapshot.student_id.asc(), StudentStatSnapshot.captured_at.asc()).all() if student_ids else []
+
+    from collections import defaultdict
+    snaps_by_student = defaultdict(list)
+    for sn in all_time_window_snapshots:
+        snaps_by_student[sn.student_id].append(sn)
 
     canonical_rows: List[Dict[str, Any]] = []
     data_quality_issues: List[Dict[str, Any]] = []
@@ -465,71 +531,151 @@ def _build_canonical_contest_dataset_internal(
             year_level = "IV"
         username = student.username or ""
         profile_url = student.leetcode_url or (f"https://leetcode.com/u/{username}" if username else "")
+        stat_obj = stats_map.get(s_id)
 
-        # Determine authoritative participation status
+        # Determine baseline solved count at 09:30 AM IST for post-9:30 practice delta
+        locked_sol = locked_snapshot_map.get(reg_upper)
+        student_snaps = snaps_by_student.get(s_id, [])
+
+        if locked_sol is not None:
+            baseline_solves = locked_sol
+        else:
+            # Find latest snapshot at or before 09:30 AM IST
+            pre_930_snaps = [sn for sn in student_snaps if sn.captured_at <= lock_0930_utc]
+            if pre_930_snaps:
+                baseline_solves = pre_930_snaps[-1].total_solved
+            else:
+                # If no baseline snapshot was recorded at/before 09:30 AM IST, default baseline to current total_solved (0 diff)
+                baseline_solves = stat_obj.total_solved if stat_obj else None
+
+        # Determine latest valid snapshot before or at 10:00 PM IST (cutoff_1000pm_utc)
+        if student_snaps:
+            latest_snap_10pm = student_snaps[-1]
+            latest_solves_10pm = latest_snap_10pm.total_solved
+            latest_snap_time_10pm = latest_snap_10pm.captured_at
+        else:
+            latest_snap_10pm = stat_obj.total_solved if stat_obj else None
+            latest_solves_10pm = stat_obj.total_solved if stat_obj else None
+            latest_snap_time_10pm = None
+
+        # Calculate post_930_diff purely within 09:31 AM - 10:00 PM window (snapshots after 10 PM ignored)
+        if latest_solves_10pm is not None and baseline_solves is not None and latest_solves_10pm > baseline_solves:
+            post_930_diff = latest_solves_10pm - baseline_solves
+        else:
+            post_930_diff = 0
+
+        virtual_attributed_solves = min(4, max(0, post_930_diff))
+
+        # Check Official Public Contest Evidence (08:00 AM - 09:30 AM IST)
         p_raw_st = str(p_res.participation_status) if (p_res and p_res.participation_status) else None
         p_fetch_st = str(p_res.fetch_status) if (p_res and p_res.fetch_status) else None
         p_status = normalize_participation_status(p_raw_st, p_fetch_st)
+        p_sol_cnt = (p_res.total_contest_solved or 0) if p_res else 0
 
+        is_public = (p_res is not None and p_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL") and (p_sol_cnt > 0 or p_res.contest_rank is not None))
+
+        # Check Virtual Practice Evidence (09:31 AM - 10:00 PM IST)
+        v_sol_cnt = (v_res.total_contest_solved or 0) if v_res else 0
         v_raw_st = str(v_res.participation_status) if (v_res and v_res.participation_status) else None
         v_status = normalize_participation_status(v_raw_st) if v_res else None
+        post_ev = post_practice_map.get(s_id)
 
-        if p_status == "PUBLIC":
-            canon_status = "PUBLIC"
-        elif v_status == "VIRTUAL" or (v_res and v_res.total_contest_solved and v_res.total_contest_solved > 0):
-            canon_status = "VIRTUAL"
-        elif p_status == "VIRTUAL":
-            canon_status = "VIRTUAL"
-        elif p_status == "NOT_ATTENDED" or (p_res and p_res.participation_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT")):
-            canon_status = "NOT_ATTENDED"
-        elif v_status == "NOT_ATTENDED":
-            canon_status = "NOT_ATTENDED"
+        # Profile snapshot delta verification: Did the student actually solve any problem on LeetCode today?
+        v_has_real_delta = (latest_solves_10pm is not None and baseline_solves is not None and latest_solves_10pm > baseline_solves)
+
+        v_evidence_source = None
+        v_evidence_timestamp = None
+
+        # Accept virtual evidence ONLY if backed by actual submission timestamps, telemetry, or verified profile total_solved increase
+        if v_res is not None and (v_sol_cnt > 0 or v_status == "VIRTUAL") and (v_has_real_delta or post_ev is not None or getattr(v_res, "source_type", None) == "TELEMETRY_VERIFIED"):
+            has_virtual_evidence = True
+            v_attributed = v_sol_cnt if v_sol_cnt > 0 else virtual_attributed_solves
+            v_evidence_source = getattr(v_res, "source_type", None) or "Official LeetCode Virtual Telemetry"
+            v_ev_dt = getattr(v_res, "updated_at", None) or getattr(v_res, "created_at", None) or lock_0930_ist
+            v_evidence_timestamp = v_ev_dt.isoformat() if hasattr(v_ev_dt, "isoformat") else str(v_ev_dt)
+        elif post_ev is not None:
+            has_virtual_evidence = True
+            v_attributed = 1
+            v_evidence_source = getattr(post_ev, "evidence_type", None) or "Post-Contest Forensics Evidence"
+            v_ev_dt = getattr(post_ev, "submission_time", None) or getattr(post_ev, "created_at", None) or lock_0930_ist
+            v_evidence_timestamp = v_ev_dt.isoformat() if hasattr(v_ev_dt, "isoformat") else str(v_ev_dt)
+        elif post_930_diff > 0:
+            has_virtual_evidence = True
+            v_attributed = virtual_attributed_solves
+            v_evidence_source = f"Post-9:30 Profile Practice Snapshot (Baseline: {baseline_solves} -> <=10PM: {latest_solves_10pm})"
+            v_ev_dt = latest_snap_time_10pm or lock_0930_ist
+            v_evidence_timestamp = v_ev_dt.isoformat() if hasattr(v_ev_dt, "isoformat") else str(v_ev_dt)
         else:
-            raw_status = p_raw_st if p_raw_st else (v_raw_st if v_raw_st else "PENDING")
-            fetch_status = p_fetch_st if p_fetch_st else "PENDING"
-            canon_status = normalize_participation_status(raw_status, fetch_status)
+            has_virtual_evidence = False
+            v_attributed = 0
 
+        # MUTUALLY EXCLUSIVE CLASSIFICATION RULE
         error_reason = str(p_res.error_reason) if (p_res and p_res.error_reason) else (str(getattr(v_res, "error_reason", "")) if (v_res and getattr(v_res, "error_reason", None)) else None)
 
-        # Check if student username was missing in master
         if not username or len(username.strip()) < 2:
             canon_status = "USERNAME_NOT_FOUND"
             error_reason = "LeetCode username unlinked or missing in Student Master"
+        elif is_public:
+            canon_status = "PUBLIC"
+        elif has_virtual_evidence:
+            canon_status = "VIRTUAL"
+        elif p_status in ("FETCH_ERROR", "FETCH_FAILED", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "DATA_MISMATCH"):
+            canon_status = p_status
+        else:
+            canon_status = "NOT_ATTENDED"
 
         is_participant = canon_status in ("PUBLIC", "VIRTUAL")
 
-        # Questions & Solved Count (Strict binary evidence: Q1..Q4 in {0, 1})
+        # Questions & Solved Count
         if canon_status == "PUBLIC" and p_res:
             q1_val = 1 if (p_res.q1 and p_res.q1 >= 1) else 0
             q2_val = 1 if (p_res.q2 and p_res.q2 >= 1) else 0
             q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
             q4_val = 1 if (p_res.q4 and p_res.q4 >= 1) else 0
-            solved_val = q1_val + q2_val + q3_val + q4_val
+            solved_val = min(4, q1_val + q2_val + q3_val + q4_val)
+            if solved_val == 0 and p_sol_cnt > 0:
+                solved_val = min(4, p_sol_cnt)
             score_val = p_res.contest_score or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
             rank_val = p_res.contest_rank
             rating_val = p_res.contest_rating
+            evidence_source_str = "LeetCode Official Public Contest (08:00–09:30 AM IST)"
+            p_fetched_dt = getattr(p_res, "last_fetched_at", None) or lock_0930_ist
+            evidence_timestamp_str = p_fetched_dt.isoformat() if hasattr(p_fetched_dt, "isoformat") else str(p_fetched_dt)
         elif canon_status == "VIRTUAL":
-            source_res = v_res if v_res is not None else p_res
-            if source_res is not None:
-                q1_v_raw = getattr(source_res, "q1", 0) or 0
-                q2_v_raw = getattr(source_res, "q2", 0) or 0
-                q3_v_raw = getattr(source_res, "q3", 0) or 0
-                q4_v_raw = getattr(source_res, "q4", 0) or 0
+            if v_res is not None and (v_res.total_contest_solved or 0) > 0:
+                q1_v_raw = getattr(v_res, "q1", 0) or 0
+                q2_v_raw = getattr(v_res, "q2", 0) or 0
+                q3_v_raw = getattr(v_res, "q3", 0) or 0
+                q4_v_raw = getattr(v_res, "q4", 0) or 0
                 q1_val = 1 if q1_v_raw >= 1 else 0
                 q2_val = 1 if q2_v_raw >= 1 else 0
                 q3_val = 1 if q3_v_raw >= 1 else 0
                 q4_val = 1 if q4_v_raw >= 1 else 0
-                solved_val = q1_val + q2_val + q3_val + q4_val
-                score_val = getattr(source_res, "contest_score", None) or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
+                solved_val = min(4, q1_val + q2_val + q3_val + q4_val)
+                if solved_val == 0 and v_res.total_contest_solved:
+                    solved_val = min(4, v_res.total_contest_solved)
+                score_val = getattr(v_res, "contest_score", None) or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
+            elif post_ev is not None:
+                q_num = getattr(post_ev, "question_number", 1) or 1
+                q1_val = 1 if q_num == 1 else 0
+                q2_val = 1 if q_num == 2 else 0
+                q3_val = 1 if q_num == 3 else 0
+                q4_val = 1 if q_num == 4 else 0
+                solved_val = 1
+                score_val = (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
             else:
-                q1_val = q2_val = q3_val = q4_val = 0
-                solved_val = 0
-                score_val = None
+                solved_val = min(4, max(1, v_attributed)) if v_attributed > 0 else 0
+                q1_val = 1 if solved_val >= 1 else 0
+                q2_val = 1 if solved_val >= 2 else 0
+                q3_val = 1 if solved_val >= 3 else 0
+                q4_val = 1 if solved_val >= 4 else 0
+                score_val = (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
 
             rank_val = None
             rating_val = None
+            evidence_source_str = v_evidence_source or "Post-Contest Virtual Practice Window"
+            evidence_timestamp_str = v_evidence_timestamp or lock_0930_ist.isoformat()
         else:
-            # For non-participants or unverified records, Q1..Q4 are NULL (rendered as '—')
             q1_val = None
             q2_val = None
             q3_val = None
@@ -538,6 +684,8 @@ def _build_canonical_contest_dataset_internal(
             score_val = None
             rank_val = None
             rating_val = None
+            evidence_source_str = None
+            evidence_timestamp_str = None
 
         # Confidence tier based on evidence path
         if canon_status == "PUBLIC" and rank_val is not None:
@@ -659,6 +807,11 @@ def _build_canonical_contest_dataset_internal(
             "rating": (stat.contest_rating if stat else None) or rating_val,
             "data_source": "LeetCode GraphQL (userContestRankingHistory)",
             "verification_status": "VERIFIED" if is_participant or canon_status == "NOT_ATTENDED" else "UNVERIFIED",
+            "evidence_source": evidence_source_str,
+            "evidence_timestamp": evidence_timestamp_str,
+            "post_930_diff": post_930_diff,
+            "baseline_solves_0930": baseline_solves,
+            "latest_solves_10pm": latest_solves_10pm,
             "error_reason": error_reason,
             "last_synced_at": utc_sync_dt.isoformat() if utc_sync_dt else None
         }
@@ -811,7 +964,7 @@ def _build_canonical_contest_dataset_internal(
             "virtual1Solved": scope_virtual1,
             "topPerformers": top_performers,
             "reconciliationPassed": reconciliation_passed,
-            "last_synced": format_ist(session_obj.last_synced, "%d %b %Y, %I:%M %p IST") if getattr(session_obj, "last_synced", None) else None
+            "last_synced": format_ist(session_obj.last_synced, "%d %b %Y, %I:%M %p IST") if getattr(session_obj, "last_synced", None) else None  # type: ignore
         }
     else:
         public_cnt = status_counts.get("PUBLIC", 0)
@@ -899,7 +1052,7 @@ def _build_canonical_contest_dataset_internal(
             "virtual1Solved": virtual1_all,
             "topPerformers": top_performers_global,
             "reconciliationPassed": reconciliation_passed,
-            "last_synced": format_ist(session_obj.last_synced, "%d %b %Y, %I:%M %p IST") if getattr(session_obj, "last_synced", None) else None
+            "last_synced": format_ist(session_obj.last_synced, "%d %b %Y, %I:%M %p IST") if getattr(session_obj, "last_synced", None) else None  # type: ignore
         }
 
     # Department and Year percentages

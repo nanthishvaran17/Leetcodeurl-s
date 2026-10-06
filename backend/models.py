@@ -895,6 +895,9 @@ class AdminSettingsModel(Base):
 
 class StudentStatSnapshot(Base):
     __tablename__ = "student_stat_snapshots"
+    __table_args__ = (
+        Index("ix_student_stat_snapshots_student_captured", "student_id", "captured_at"),
+    )
     
     id = Column(Integer, primary_key=True, index=True)
     student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
@@ -1308,6 +1311,8 @@ class AdminSession(Base):
     revoked_at = Column(DateTime, nullable=True)
     ip_hash = Column(String(128), nullable=True)
     user_agent_hash = Column(String(128), nullable=True)
+    ip_address = Column(String(255), nullable=True)
+    device_name = Column(String(500), nullable=True)
 
     user = relationship("User")
 
@@ -2862,6 +2867,7 @@ class NotificationRecord(Base):
     priority = Column(String(20), default="normal", nullable=False) # low, normal, high, critical
     
     is_read = Column(Boolean, default=False, index=True)
+    is_archived = Column(Boolean, default=False, index=True)
     read_at = Column(DateTime, nullable=True)
     expires_at = Column(DateTime, nullable=True)
     delivery_status = Column(String(30), default="SENT") # PENDING, SENT, DELIVERED, FAILED

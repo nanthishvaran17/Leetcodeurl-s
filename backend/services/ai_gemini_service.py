@@ -579,7 +579,7 @@ class AIGeminiEngine:
                 art = state.generated_artifact
                 return {
                     "success": True,
-                    "answer": f"### 📄 Verified PDF Report Ready\n\nHere is your requested PDF report: **{art.get('title', 'Institutional Performance Report')}**.",
+                    "answer": f"###  Verified PDF Report Ready\n\nHere is your requested PDF report: **{art.get('title', 'Institutional Performance Report')}**.",
                     "why": f"Resolved reference '{clean_q}' to generated artifact {art.get('artifact_id')}.",
                     "confidence": "VERIFIED",
                     "actionLabel": "Download PDF Report",
@@ -621,12 +621,12 @@ CORE RULES:
 1. UNIVERSAL ANSWER CAPABILITY: You are a fully empowered AI model (like ChatGPT/Claude). Answer ANY prompt or question asked by the user — including general knowledge, programming/coding problems, algorithm explanations, math, science, career guidance, and casual conversations in English, Tamil, or Tanglish. NEVER reject or restrict non-institutional questions.
 2. CASUAL CONVERSATION & CHIT-CHAT (e.g., 'dai', 'hello', 'hai', 'i am [Name]', 'i have some doubt', 'saptiya?'):
    - Respond naturally, warmly, and conversationally in the same language/tone.
-   - Dynamically extract the name if the user introduces themselves (e.g. 'i am Kavin' -> 'Nice to meet you, Kavin! 👋', 'i am Nanthis' -> 'Nice to meet you, Nanthis! 👋').
+   - Dynamically extract the name if the user introduces themselves (e.g. 'i am Kavin' -> 'Nice to meet you, Kavin! ', 'i am Nanthis' -> 'Nice to meet you, Nanthis! ').
    - DO NOT trigger database queries, tool calls, or institutional statistics for casual greeting messages.
    - Examples:
-     User: "dai" -> Assistant: "Dai 😄 sollu, enna doubt?"
-     User: "i am Kavin" -> Assistant: "Nice to meet you, Kavin! 👋 Sollu, enna doubt?"
-     User: "i am Nanthis" -> Assistant: "Nice to meet you, Nanthis! 👋 Sollu, enna doubt?"
+     User: "dai" -> Assistant: "Dai  sollu, enna doubt?"
+     User: "i am Kavin" -> Assistant: "Nice to meet you, Kavin!  Sollu, enna doubt?"
+     User: "i am Nanthis" -> Assistant: "Nice to meet you, Nanthis!  Sollu, enna doubt?"
 3. INSTITUTIONAL DATA REQUESTS:
    - Determine intent and extract entities (department, year, student name/reg_no, programming language e.g. Java/Python, numeric thresholds).
    - Resolve department codes accurately (e.g., 'cyber security' -> CSE(CS), 'iot' -> CSE(IOT), 'computer science' -> CSE).
@@ -1005,7 +1005,7 @@ CORE RULES:
             if any(kw in lower_q for kw in ["batch 2030", "aeronautical", "aerospace", "contest 9999", "student xyz", "5th year", "rust", "abcdef12345", "999999999999", "ignore database rules", "pretend student", "do not query database"]):
                 return {
                     "success": True,
-                    "answer": "### 🔍 Verified Database Audit\n\nNo verified database records or matching entities were found for your query in the institutional database.",
+                    "answer": "###  Verified Database Audit\n\nNo verified database records or matching entities were found for your query in the institutional database.",
                     "why": "Resilient zero-hallucination check",
                     "confidence": "VERIFIED",
                     "source": "Verified Institutional Database",
@@ -1044,9 +1044,9 @@ CORE RULES:
                 
                 if student_details:
                     rows = "\n".join([f"| {s['rank']} | **{s['name']}** | `{s['reg_no']}` | {s['department']} ({s['year_level']}) | **{s['total_solved']}** | {s['contest_rating']} |" for s in student_details])
-                    answer_md = f"### 📄 Verified Top {len(student_details)} {lang_match or ''} Performers PDF Report\n\nCompiled verified PDF report for **{tool_res.get('title')}** from live database records:\n\n| # | Student Name | Register Number | Dept (Year) | Solved | Rating |\n|---|---|---|---|---|---|\n{rows}\n\n📥 **Download Verified PDF Report:** [Download {tool_res.get('title')} PDF]({download_url})"
+                    answer_md = f"###  Verified Top {len(student_details)} {lang_match or ''} Performers PDF Report\n\nCompiled verified PDF report for **{tool_res.get('title')}** from live database records:\n\n| # | Student Name | Register Number | Dept (Year) | Solved | Rating |\n|---|---|---|---|---|---|\n{rows}\n\n **Download Verified PDF Report:** [Download {tool_res.get('title')} PDF]({download_url})"
                 else:
-                    answer_md = f"### 📄 Verified PDF Report Generated\n\nI have compiled the verified PDF report for **{tool_res.get('title')}** directly from verified database records.\n\n📥 **Download Verified PDF Report:** [Download Report]({download_url})"
+                    answer_md = f"###  Verified PDF Report Generated\n\nI have compiled the verified PDF report for **{tool_res.get('title')}** directly from verified database records.\n\n **Download Verified PDF Report:** [Download Report]({download_url})"
 
                 return {
                     "success": True,
@@ -1067,7 +1067,7 @@ CORE RULES:
                 if not any(k in lower_q for k in ["cyber", "cs", "iot", "computer science"]):
                     return {
                         "success": True,
-                        "answer": "### 🔍 Verified Database Lookup\n\nNo verified department matching your query was found in the institution. The system only tracks authorized institutional departments (CSE - Cyber Security and CSE - IoT).",
+                        "answer": "###  Verified Database Lookup\n\nNo verified department matching your query was found in the institution. The system only tracks authorized institutional departments (CSE - Cyber Security and CSE - IoT).",
                         "why": "Resilient negative department lookup",
                         "confidence": "VERIFIED",
                         "source": "Verified Institutional Database",
@@ -1079,7 +1079,7 @@ CORE RULES:
                 if not any(k in lower_q for k in ["2023", "2024", "2025", "2026"]):
                     return {
                         "success": True,
-                        "answer": "### 🔍 Verified Database Lookup\n\nNo verified records or data found for the requested batch in the database.",
+                        "answer": "###  Verified Database Lookup\n\nNo verified records or data found for the requested batch in the database.",
                         "why": "Resilient negative batch lookup",
                         "confidence": "VERIFIED",
                         "source": "Verified Institutional Database",
@@ -1091,7 +1091,7 @@ CORE RULES:
             if "health" in lower_q or "health score" in lower_q:
                 dept_match = "CSE(CS)" if any(k in lower_q for k in ["cyber", "cs"]) else ("CSE(IOT)" if "iot" in lower_q else "ALL")
                 tool_res = execute_get_department_analytics(db, user, department=dept_match)
-                ans = f"### 📊 Verified Department Health Score: {tool_res.get('department_name')}\n\n• **Health Score**: **{tool_res.get('health_score')}/100**\n• **Total Students**: **{tool_res.get('total_students')}**\n• **Active This Week**: **{tool_res.get('active_this_week')}**\n• **Inactive Students**: **{tool_res.get('inactive_count')}**\n• **Participation Rate**: **{tool_res.get('participation_rate')}**"
+                ans = f"###  Verified Department Health Score: {tool_res.get('department_name')}\n\n• **Health Score**: **{tool_res.get('health_score')}/100**\n• **Total Students**: **{tool_res.get('total_students')}**\n• **Active This Week**: **{tool_res.get('active_this_week')}**\n• **Inactive Students**: **{tool_res.get('inactive_count')}**\n• **Participation Rate**: **{tool_res.get('participation_rate')}**"
                 return {
                     "success": True,
                     "answer": ans,
@@ -1106,7 +1106,7 @@ CORE RULES:
             if any(kw in lower_q for kw in ["contest summary", "weekly contest 515", "session summary", "contest 515", "weekly session", "session summary"]) or ("contest" in lower_q and "rating" not in lower_q and "leaderboard" not in lower_q and "top" not in lower_q):
                 c_id = 515 if "515" in lower_q else None
                 tool_res = execute_get_contest_summary(db, user, contest_id=c_id)
-                ans = f"### 🏆 Verified Weekly Contest Session Summary\n\n• **Session Code**: `{tool_res.get('session_code')}`\n• **Total Monitored**: **{tool_res.get('total_students')}** students\n• **Public Attended**: **{tool_res.get('official_attended')}**\n• **Virtual Attended**: **{tool_res.get('virtual_attended')}**\n• **Not Participated**: **{tool_res.get('not_participated')}**"
+                ans = f"###  Verified Weekly Contest Session Summary\n\n• **Session Code**: `{tool_res.get('session_code')}`\n• **Total Monitored**: **{tool_res.get('total_students')}** students\n• **Public Attended**: **{tool_res.get('official_attended')}**\n• **Virtual Attended**: **{tool_res.get('virtual_attended')}**\n• **Not Participated**: **{tool_res.get('not_participated')}**"
                 return {
                     "success": True,
                     "answer": ans,
@@ -1123,7 +1123,7 @@ CORE RULES:
                 students = tool_res.get("students", [])
                 total_cnt = tool_res.get("total_inactive_count", len(students))
                 rows = "\n".join([f"| {i+1} | **{s['name']}** | `{s['reg_no']}` | {s['department']} ({s['year_level']}) |" for i, s in enumerate(students[:10])])
-                ans = f"### 🚨 Verified Inactive Students Audit\n\nFound **{total_cnt} inactive students** (0 verified solves in current cycle):\n\n| # | Student Name | Register Number | Dept (Year) |\n|---|---|---|---|\n{rows}\n\n*These students require faculty mentor intervention.*"
+                ans = f"###  Verified Inactive Students Audit\n\nFound **{total_cnt} inactive students** (0 verified solves in current cycle):\n\n| # | Student Name | Register Number | Dept (Year) |\n|---|---|---|---|\n{rows}\n\n*These students require faculty mentor intervention.*"
                 return {
                     "success": True,
                     "answer": ans,
@@ -1156,10 +1156,10 @@ CORE RULES:
                     if tool_res.get("multiple_matches"):
                         matches = tool_res.get("matching_students", [])
                         rows = "\n".join([f"| {m['reg_no']} | **{m['name']}** | {m['department']} | Year {m['year_level']} |" for m in matches])
-                        ans = f"### 🔍 Multiple Student Matches Found\n\nFound **{len(matches)} matching students**:\n\n| Register No | Student Name | Department | Year |\n|---|---|---|---|\n{rows}"
+                        ans = f"###  Multiple Student Matches Found\n\nFound **{len(matches)} matching students**:\n\n| Register No | Student Name | Department | Year |\n|---|---|---|---|\n{rows}"
                     else:
                         st = tool_res.get("student", {})
-                        ans = f"### 👤 Verified Student Profile: {st.get('name')}\n\n• **Register Number**: `{st.get('reg_no')}`\n• **Department**: {st.get('department_name')} ({st.get('department')})\n• **Year Level**: Year {st.get('year_level')}\n• **Total Solved**: **{st.get('total_solved')}** problems\n• **Contest Rating**: **{st.get('contest_rating')}**"
+                        ans = f"###  Verified Student Profile: {st.get('name')}\n\n• **Register Number**: `{st.get('reg_no')}`\n• **Department**: {st.get('department_name')} ({st.get('department')})\n• **Year Level**: Year {st.get('year_level')}\n• **Total Solved**: **{st.get('total_solved')}** problems\n• **Contest Rating**: **{st.get('contest_rating')}**"
                     return {
                         "success": True,
                         "answer": ans,
@@ -1172,7 +1172,7 @@ CORE RULES:
                 else:
                     return {
                         "success": True,
-                        "answer": f"### 🔍 Verified Database Lookup\n\nNo verified student matching `{term}` was found within your authorized scope.",
+                        "answer": f"###  Verified Database Lookup\n\nNo verified student matching `{term}` was found within your authorized scope.",
                         "why": "Resilient negative lookup",
                         "confidence": "VERIFIED",
                         "source": "Verified Institutional Database",
@@ -1203,7 +1203,7 @@ CORE RULES:
                 # Unfiltered Total students count query
                 if ("total students" in lower_q or ("how many" in lower_q and "monitored" in lower_q)) and not (dept or year or batch_match or min_s or min_r):
                     tool_res = execute_count_students(db, user)
-                    ans = f"### 📊 Verified Institutional Student Count\n\nCurrently monitoring **{tool_res.get('count')} total students** in your authorized scope."
+                    ans = f"###  Verified Institutional Student Count\n\nCurrently monitoring **{tool_res.get('count')} total students** in your authorized scope."
                     return {
                         "success": True,
                         "answer": ans,
@@ -1218,7 +1218,7 @@ CORE RULES:
                 if any(kw in lower_q for kw in ["how many", "count", "number of students", "students count"]) and not (min_s or min_r):
                     tool_res = execute_count_students(db, user, department=dept, year_level=year, batch=batch_match)
                     cnt = tool_res.get("count", 0)
-                    ans = f"### 📊 Verified Institutional Student Count ({dept or 'Overall'} {batch_match or year or ''})\n\nFound **{cnt} students** matching your criteria in the database."
+                    ans = f"###  Verified Institutional Student Count ({dept or 'Overall'} {batch_match or year or ''})\n\nFound **{cnt} students** matching your criteria in the database."
                     return {
                         "success": True,
                         "answer": ans,
@@ -1236,9 +1236,9 @@ CORE RULES:
 
                 if total_cnt > 0:
                     rows = "\n".join([f"| {i+1} | **{s['name']}** | `{s['reg_no']}` | {s['department']} ({s['year_level']}) | **{s['total_solved']}** | {s['contest_rating']} |" for i, s in enumerate(students[:10])])
-                    ans = f"### 📊 Verified Institutional Query Audit ({dept or 'Overall'} {year or ''})\n\nFound **{total_cnt} matching active students** for your criteria:\n\n| # | Student Name | Register Number | Dept (Year) | Solved | Rating |\n|---|---|---|---|---|---|\n{rows}"
+                    ans = f"###  Verified Institutional Query Audit ({dept or 'Overall'} {year or ''})\n\nFound **{total_cnt} matching active students** for your criteria:\n\n| # | Student Name | Register Number | Dept (Year) | Solved | Rating |\n|---|---|---|---|---|---|\n{rows}"
                 else:
-                    ans = "### 🔍 Verified Database Audit\n\nNo verified database records matched your requested filter criteria in your authorized scope."
+                    ans = "###  Verified Database Audit\n\nNo verified database records matched your requested filter criteria in your authorized scope."
 
                 return {
                     "success": True,
@@ -1268,7 +1268,7 @@ CORE RULES:
                 top_st = tool_res.get("top_students", [])
                 total_cnt = tool_res.get("returned_count", len(top_st))
                 rows = "\n".join([f"| {s['rank']} | **{s['name']}** | `{s['reg_no']}` | {s['department']} ({s['year_level']}) | **{s['total_solved']}** | {s['contest_rating']} |" for s in top_st])
-                ans = f"### 🏆 Verified Student Performance Leaderboard ({dept_match or ''} {year_match or ''} {lang_match or 'Overall'})\n\nFound **{total_cnt} matching top solvers** (Rating/Rank):\n\n| # | Student Name | Register Number | Dept (Year) | Problems Solved | Rating |\n|---|---|---|---|---|---|\n{rows}"
+                ans = f"###  Verified Student Performance Leaderboard ({dept_match or ''} {year_match or ''} {lang_match or 'Overall'})\n\nFound **{total_cnt} matching top solvers** (Rating/Rank):\n\n| # | Student Name | Register Number | Dept (Year) | Problems Solved | Rating |\n|---|---|---|---|---|---|\n{rows}"
                 return {
                     "success": True,
                     "answer": ans,

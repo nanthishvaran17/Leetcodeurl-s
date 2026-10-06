@@ -624,51 +624,51 @@ def get_student_intelligence(
 
     selection_reasons = []
     if dept_filter != "all":
-        selection_reasons.append(f"✓ {dept_code} department requirement met")
+        selection_reasons.append(f" {dept_code} department requirement met")
     if lang_filter != "all":
         lang_cnt = lang_breakdown.get(lang_filter, 0)
-        selection_reasons.append(f"✓ {lang_filter} requirement met — {lang_cnt} solved" if lang_cnt > 0 else f"✓ {lang_filter} language requirement met")
+        selection_reasons.append(f" {lang_filter} requirement met — {lang_cnt} solved" if lang_cnt > 0 else f" {lang_filter} language requirement met")
     if min_tot_val > 0:
-        selection_reasons.append(f"✓ Total solved requirement met — {tot} solved (≥ {min_tot_val})")
+        selection_reasons.append(f" Total solved requirement met — {tot} solved (≥ {min_tot_val})")
     if min_med_val > 0:
-        selection_reasons.append(f"✓ Medium requirement met — {med} solved (≥ {min_med_val})")
+        selection_reasons.append(f" Medium requirement met — {med} solved (≥ {min_med_val})")
     if min_hrd_val > 0:
-        selection_reasons.append(f"✓ Hard requirement met — {hrd} solved (≥ {min_hrd_val})")
+        selection_reasons.append(f" Hard requirement met — {hrd} solved (≥ {min_hrd_val})")
     if min_rat_val > 0:
-        selection_reasons.append(f"✓ Contest rating requirement met — {c_rating or 0} (≥ {min_rat_val})")
+        selection_reasons.append(f" Contest rating requirement met — {c_rating or 0} (≥ {min_rat_val})")
     if min_acc_val > 0:
-        selection_reasons.append(f"✓ Acceptance requirement met — {acc_rate or 0}% (≥ {min_acc_val}%)")
+        selection_reasons.append(f" Acceptance requirement met — {acc_rate or 0}% (≥ {min_acc_val}%)")
 
     if not selection_reasons:
-        selection_reasons.append(f"✓ High total solved count ({tot} problems solved)")
+        selection_reasons.append(f" High total solved count ({tot} problems solved)")
         if primary_lang != "N/A":
             primary_cnt = lang_breakdown.get(primary_lang, 0)
-            selection_reasons.append(f"✓ Primary language proficiency in {primary_lang} ({primary_cnt} solved)" if primary_cnt > 0 else f"✓ Primary language proficiency in {primary_lang}")
+            selection_reasons.append(f" Primary language proficiency in {primary_lang} ({primary_cnt} solved)" if primary_cnt > 0 else f" Primary language proficiency in {primary_lang}")
         if med >= 50:
-            selection_reasons.append(f"✓ Strong medium problem solving capability ({med} medium solved)")
+            selection_reasons.append(f" Strong medium problem solving capability ({med} medium solved)")
         if hrd >= 15:
-            selection_reasons.append(f"✓ Proven hard problem solving capability ({hrd} hard solved)")
+            selection_reasons.append(f" Proven hard problem solving capability ({hrd} hard solved)")
         if c_rating and c_rating >= 1400:
-            selection_reasons.append(f"✓ Solid contest performance ({c_rating:.0f} rating)")
+            selection_reasons.append(f" Solid contest performance ({c_rating:.0f} rating)")
 
     # 10. Strengths & Areas to Watch
     strengths = []
-    if tot >= 150: strengths.append(f"✓ Strong problem-solving volume ({tot} total solved)")
-    if med >= 50: strengths.append(f"✓ Strong Medium problem performance ({med} solved)")
-    if hrd >= 15: strengths.append(f"✓ Proven Hard problem solving capability ({hrd} solved)")
-    if c_rating and c_rating >= 1500: strengths.append(f"✓ High contest rating ({c_rating:.0f})")
-    if isinstance(current_streak, int) and current_streak >= 14: strengths.append(f"✓ High activity consistency ({current_streak} day streak)")
-    if acc_rate and acc_rate >= 50.0: strengths.append(f"✓ Healthy submission acceptance rate ({acc_rate:.1f}%)")
+    if tot >= 150: strengths.append(f" Strong problem-solving volume ({tot} total solved)")
+    if med >= 50: strengths.append(f" Strong Medium problem performance ({med} solved)")
+    if hrd >= 15: strengths.append(f" Proven Hard problem solving capability ({hrd} solved)")
+    if c_rating and c_rating >= 1500: strengths.append(f" High contest rating ({c_rating:.0f})")
+    if isinstance(current_streak, int) and current_streak >= 14: strengths.append(f" High activity consistency ({current_streak} day streak)")
+    if acc_rate and acc_rate >= 50.0: strengths.append(f" Healthy submission acceptance rate ({acc_rate:.1f}%)")
 
     areas_to_watch = []
-    if acc_rate and acc_rate < 40.0: areas_to_watch.append(f"⚠️ Submission acceptance rate is below average ({acc_rate:.1f}%)")
-    if not c_attended or c_attended == 0: areas_to_watch.append("⚠️ Contest participation could improve")
-    if hrd < 10 and med >= 50: areas_to_watch.append("⚠️ Hard problem ratio is lower than Medium")
-    if isinstance(current_streak, int) and current_streak < 3: areas_to_watch.append(f"⚠️ Current activity streak is low ({current_streak} days)")
+    if acc_rate and acc_rate < 40.0: areas_to_watch.append(f"️ Submission acceptance rate is below average ({acc_rate:.1f}%)")
+    if not c_attended or c_attended == 0: areas_to_watch.append("️ Contest participation could improve")
+    if hrd < 10 and med >= 50: areas_to_watch.append("️ Hard problem ratio is lower than Medium")
+    if isinstance(current_streak, int) and current_streak < 3: areas_to_watch.append(f"️ Current activity streak is low ({current_streak} days)")
 
     # 11. HR Decision Summary
     perf_sc = scoring["performance_score"]
-    cand_stars = "★★★★★" if perf_sc >= 85 else ("★★★★☆" if perf_sc >= 70 else ("★★★☆☆" if perf_sc >= 50 else "★★☆☆☆"))
+    cand_stars = "" if perf_sc >= 85 else ("" if perf_sc >= 70 else ("" if perf_sc >= 50 else ""))
     coding_eval = "Excellent" if tot >= 300 else ("Strong" if tot >= 150 else ("Moderate" if tot >= 60 else "Needs Improvement"))
     contest_eval = "Strong" if (c_rating and c_rating >= 1500) else ("Moderate" if (c_rating and c_rating >= 1200) else "N/A")
     consistency_eval = "Excellent" if (isinstance(current_streak, int) and current_streak >= 14) else ("Good" if (isinstance(active_days, int) and active_days >= 30) else "Moderate")

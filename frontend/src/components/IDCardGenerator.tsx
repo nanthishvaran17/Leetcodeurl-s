@@ -332,7 +332,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
 
     ctx.fillStyle = '#059669';
     ctx.font = '900 60px "Inter", sans-serif';
-    ctx.fillText('✓ VERIFIED STUDENT RECORD', box2X + 48, gridY2 + 184);
+    ctx.fillText(' VERIFIED STUDENT RECORD', box2X + 48, gridY2 + 184);
 
     // Credential Pass ID Strip
     const stripY = gridY2 + boxH + 48;

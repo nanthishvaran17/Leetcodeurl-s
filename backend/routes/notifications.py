@@ -217,6 +217,7 @@ def get_user_notifications_endpoint(
             "body": r.body,
             "priority": r.priority,
             "isRead": any_read,
+            "isArchived": any(rec.is_archived for rec in grp_records),
             "readAt": r.read_at.isoformat() if r.read_at else None,
             "actionRoute": r.route,
             "entityType": r.entity_type,
@@ -493,6 +494,52 @@ def delete_notification_endpoint(
         db.commit()
 
     return {"success": True, "notification_id": notification_id, "deleted_count": deleted_count}
+
+
+@router.put("/{notification_id}/archive")
+def archive_notification_endpoint(
+    notification_id: str,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Marks a notification and its duplicates as archived for the current user."""
+    user_id_variants = get_user_id_variants(current_user)
+
+    target = db.query(NotificationRecord).filter(
+        or_(
+            NotificationRecord.notification_id == notification_id,
+            NotificationRecord.event_id == notification_id
+        )
+    ).first()
+
+    archived_count = 0
+
+    if target:
+        event_id = target.event_id
+        title = target.title
+        body = target.body
+
+        records = db.query(NotificationRecord).filter(
+            and_(
+                NotificationRecord.recipient_user_id.in_(list(user_id_variants)),
+                or_(
+                    NotificationRecord.notification_id == notification_id,
+                    (NotificationRecord.event_id == event_id if event_id else False),
+                    and_(NotificationRecord.title == title, NotificationRecord.body == body)
+                )
+            )
+        ).all()
+
+        if not records:
+            records = [target]
+
+        for r in records:
+            cast(Any, r).is_archived = True
+            archived_count += 1
+
+        db.commit()
+
+    return {"success": True, "notification_id": notification_id, "archived_count": archived_count}
 
 
 

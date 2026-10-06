@@ -66,7 +66,7 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
     ? (student.department?.code || student.department?.name || 'CSE') 
     : (student.department || 'CSE');
 
-  const shareText = `🔥 Check out my LeetCode Stats!\n👤 ${student.name || 'Student'} (${deptName})\n📊 Solved: ${totalSolved} Problems (E:${easy} M:${medium} H:${hard})\n🏆 Rank: ${rankDisplay} | Rating: ${contestRating}\n⚡ Streak: ${streak} Days\n\nTracked via College LeetCode Hub!`;
+  const shareText = `Check out my LeetCode Stats!\nStudent: ${student.name || 'Student'} (${deptName})\nSolved: ${totalSolved} Problems (E:${easy} M:${medium} H:${hard})\nRank: ${rankDisplay} | Rating: ${contestRating}\nStreak: ${streak} Days\n\nTracked via College LeetCode Hub!`;
 
   // Handle Native Share functionality
   const handleShare = async () => {

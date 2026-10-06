@@ -837,7 +837,7 @@ export const ReportsPage: React.FC = () => {
 
                         {/* Dropdown Panel */}
                         {rptTypeOpen && (
-                          <div className="absolute z-[200] top-full left-0 right-0 sm:right-auto mt-2 w-full sm:w-[500px] md:w-[740px] min-w-[290px] rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-700/60 shadow-[0_30px_80px_-10px_rgba(0,0,0,0.25)] dark:shadow-[0_30px_80px_-10px_rgba(0,0,0,0.75)] animate-in fade-in slide-in-from-top-3 duration-200">
+                          <div className="absolute z-[200] top-full left-0 mt-2 w-max max-w-[calc(100vw-32px)] sm:w-[500px] md:w-[740px] min-w-[290px] rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-700/60 shadow-[0_30px_80px_-10px_rgba(0,0,0,0.25)] dark:shadow-[0_30px_80px_-10px_rgba(0,0,0,0.75)] animate-in fade-in slide-in-from-top-3 duration-200">
                             {/* Dropdown header bar */}
                             <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-[#1e2233] via-[#1a1f35] to-[#1e2233] border-b-2 border-brand-500/40" style={{background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'}}>
                               <div className="flex items-center gap-2.5">

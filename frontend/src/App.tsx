@@ -86,6 +86,7 @@ const ContestIntegrityMonitor = safeLazy(() => import('./pages/ContestIntegrityM
 const PrivacyPolicyPage = safeLazy(() => import('./pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
 const TermsOfServicePage = safeLazy(() => import('./pages/TermsOfServicePage').then(m => ({ default: m.TermsOfServicePage })));
 const HRCandidateFinderPage = safeLazy(() => import('./pages/HRCandidateFinderPage').then(m => ({ default: m.HRCandidateFinderPage })));
+const DeveloperStudio = safeLazy(() => import('./pages/DeveloperStudio').then(m => ({ default: m.DeveloperStudio })));
 
 const PageSkeleton = () => (
   <div className="w-full max-w-[1600px] mx-auto space-y-6 p-4 sm:p-6 animate-pulse">
@@ -731,14 +732,17 @@ export const App: React.FC = () => {
   
   const ROLE_PERMISSIONS = useMemo<Record<string, string[]>>(() => ({
     // Super admin / admin: full system access
-    admin:            ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
-    administrator:    ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
-    super_admin:      ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
-    'super admin':    ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    admin:            ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'dev-studio'],
+    administrator:    ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'dev-studio'],
+    super_admin:      ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'dev-studio'],
+    'super admin':    ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'dev-studio'],
     // HOD: command center + all academic tools
     hod:              ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
     'department hod': ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
     department_hod:   ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    principal:        ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    management:       ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    director:         ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
     // FACULTY / STAFF MENTOR: full academic & contest tools
     faculty:          ALL_ACADEMIC_TABS,
     'faculty mentor': ALL_ACADEMIC_TABS,
@@ -859,7 +863,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-navy-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative">
+    <div className="min-h-screen overflow-x-hidden bg-white dark:bg-navy-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative">
       {/* Top Page Transition Progress Loader */}
       {isNavigating && (
         <div className="fixed top-0 left-0 right-0 z-[100050] h-[3px] bg-brand-500/10 dark:bg-brand-400/10 pointer-events-none">
@@ -900,7 +904,7 @@ export const App: React.FC = () => {
       <div className={`flex-1 w-full mx-auto relative ${
         activeTab === 'messages'
           ? 'pt-0 pb-0 px-0 max-w-full'
-          : 'pt-1.5 sm:pt-3 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 px-3 sm:px-5 lg:px-7 2xl:px-8 max-w-full'
+          : 'pt-1.5 sm:pt-3 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 px-2 sm:px-3 max-w-full'
       }`}>
         
         {/* Slide-out Sidebar Drawer */}
@@ -1057,6 +1061,12 @@ export const App: React.FC = () => {
                 isTabAllowed('ai-control')
                   ? <AIControlCenterPage />
                   : renderAccessDenied('AI Control Center — Admin Only')
+              )}
+
+              {activeTab === 'dev-studio' && (
+                isTabAllowed('dev-studio')
+                  ? <DeveloperStudio />
+                  : renderAccessDenied('Developer Studio — Admin Only')
               )}
             </Suspense>
           </ErrorBoundary>

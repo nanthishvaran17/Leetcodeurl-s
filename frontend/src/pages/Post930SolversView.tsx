@@ -188,52 +188,52 @@ export const Post930SolversView: React.FC = () => {
       </div>
 
       {/* Summary KPI Grid — 5 Headline Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-        <div className="glass-card p-5 rounded-3xl border border-indigo-500/30 space-y-1.5 shadow-lg">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+        <div className="glass-card p-4 sm:p-5 rounded-3xl border border-indigo-500/30 space-y-1.5 shadow-lg">
           <span className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">
             Students Detected
           </span>
-          <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400">
+          <p className="text-2xl sm:text-3xl font-black text-indigo-600 dark:text-indigo-400">
             {summary.students_detected}
           </p>
           <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Verified post-window solvers</p>
         </div>
 
-        <div className="glass-card p-5 rounded-3xl border border-indigo-500/30 space-y-1.5 shadow-lg">
+        <div className="glass-card p-4 sm:p-5 rounded-3xl border border-indigo-500/30 space-y-1.5 shadow-lg">
           <span className="text-[10px] font-black uppercase text-indigo-500 tracking-wider">
             Post-9:30 Problems
           </span>
-          <p className="text-3xl font-black text-indigo-500">
+          <p className="text-2xl sm:text-3xl font-black text-indigo-500">
             +{summary.total_post_solves}
           </p>
           <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Deduplicated problem solves</p>
         </div>
 
-        <div className="glass-card p-5 rounded-3xl border border-purple-500/30 space-y-1.5 shadow-lg">
+        <div className="glass-card p-4 sm:p-5 rounded-3xl border border-purple-500/30 space-y-1.5 shadow-lg">
           <span className="text-[10px] font-black uppercase text-purple-500 tracking-wider">
             Post-9:30 Submissions
           </span>
-          <p className="text-3xl font-black text-purple-500">
+          <p className="text-2xl sm:text-3xl font-black text-purple-500">
             {summary.total_post_submissions || summary.total_post_solves}
           </p>
           <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Total submission attempts</p>
         </div>
 
-        <div className="glass-card p-5 rounded-3xl border space-y-1.5 shadow-lg">
+        <div className="glass-card p-4 sm:p-5 rounded-3xl border space-y-1.5 shadow-lg">
           <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
             Earliest Activity
           </span>
-          <p className="text-xl font-black text-slate-900 dark:text-white">
+          <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white truncate">
             {summary.earliest_activity}
           </p>
           <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">First qualifying solve</p>
         </div>
 
-        <div className="glass-card p-5 rounded-3xl border space-y-1.5 shadow-lg">
+        <div className="glass-card p-4 sm:p-5 rounded-3xl border space-y-1.5 shadow-lg col-span-2 sm:col-span-1">
           <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
             Latest Activity
           </span>
-          <p className="text-xl font-black text-slate-900 dark:text-white">
+          <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white truncate">
             {summary.latest_activity}
           </p>
           <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Most recent solve</p>
@@ -268,22 +268,22 @@ export const Post930SolversView: React.FC = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5 items-end">
 
           {/* Search Input */}
-          <div className="flex flex-col space-y-1.5 w-full min-w-0">
+          <div className="flex flex-col space-y-1.5 w-full min-w-0 md:col-span-2 xl:col-span-2">
             <label className="block text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider truncate flex items-center h-4 leading-4 m-0 p-0">
               <span>Search Student</span>
             </label>
             <div className="relative w-full">
-              <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search name, reg no, username..."
-                className="w-full pl-10 pr-9 h-11 rounded-2xl border border-slate-300 dark:border-navy-700 bg-slate-50 dark:bg-navy-900 text-xs font-bold text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all shadow-xs"
+                placeholder="Search name, reg no, username"
+                className="w-full pl-10 pr-9 h-11 rounded-2xl border border-slate-300 dark:border-navy-700 bg-slate-50 dark:bg-navy-900 text-xs font-bold text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all shadow-xs text-left"
               />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
               {search && (
                 <button
                   type="button"
@@ -307,7 +307,7 @@ export const Post930SolversView: React.FC = () => {
               { value: '3', label: '3+ Post-9:30 Solves' }
             ]}
             placeholder="Select Min Solves"
-            triggerClassName="w-full h-11 bg-slate-50 dark:bg-navy-900 border-slate-300 dark:border-navy-700 text-xs font-bold text-slate-800 dark:text-slate-200 rounded-2xl shadow-xs hover:border-brand-500/60 transition-all"
+            triggerClassName="w-full h-11 px-3.5 bg-slate-50 dark:bg-navy-900 border border-slate-300 dark:border-navy-700 text-xs font-bold text-slate-800 dark:text-slate-200 rounded-2xl shadow-xs hover:border-brand-500/60 transition-all"
           />
 
           {/* Sort By Filter */}
@@ -322,7 +322,7 @@ export const Post930SolversView: React.FC = () => {
               { value: 'name', label: 'Sort: Student Name A-Z' }
             ]}
             placeholder="Select Sort"
-            triggerClassName="w-full h-11 bg-slate-50 dark:bg-navy-900 border-slate-300 dark:border-navy-700 text-xs font-bold text-slate-800 dark:text-slate-200 rounded-2xl shadow-xs hover:border-brand-500/60 transition-all"
+            triggerClassName="w-full h-11 px-3.5 bg-slate-50 dark:bg-navy-900 border border-slate-300 dark:border-navy-700 text-xs font-bold text-slate-800 dark:text-slate-200 rounded-2xl shadow-xs hover:border-brand-500/60 transition-all"
           />
 
           {/* Department Filter */}
@@ -344,7 +344,7 @@ export const Post930SolversView: React.FC = () => {
                 }))
             ]}
             placeholder="All Depts"
-            triggerClassName="w-full h-11 bg-slate-50 dark:bg-navy-900 border-slate-300 dark:border-navy-700 text-xs font-bold text-slate-800 dark:text-slate-200 rounded-2xl shadow-xs hover:border-brand-500/60 transition-all"
+            triggerClassName="w-full h-11 px-3.5 bg-slate-50 dark:bg-navy-900 border border-slate-300 dark:border-navy-700 text-xs font-bold text-slate-800 dark:text-slate-200 rounded-2xl shadow-xs hover:border-brand-500/60 transition-all"
           />
 
           {/* Year Filter */}
@@ -359,17 +359,17 @@ export const Post930SolversView: React.FC = () => {
               { value: 'IV', label: 'IV Year' }
             ]}
             placeholder="All Years"
-            triggerClassName="w-full h-11 bg-slate-50 dark:bg-navy-900 border-slate-300 dark:border-navy-700 text-xs font-bold text-slate-800 dark:text-slate-200 rounded-2xl shadow-xs hover:border-brand-500/60 transition-all"
+            triggerClassName="w-full h-11 px-3.5 bg-slate-50 dark:bg-navy-900 border border-slate-300 dark:border-navy-700 text-xs font-bold text-slate-800 dark:text-slate-200 rounded-2xl shadow-xs hover:border-brand-500/60 transition-all"
           />
 
         </div>
       </div>
 
       {/* Main Solvers Table (Desktop) & Cards (Mobile) */}
-      <div className="glass-card rounded-3xl border overflow-hidden shadow-xl">
+      <div className="glass-card rounded-3xl border overflow-hidden shadow-xl max-w-full">
         
         {/* MOBILE CARDS VIEW (md:hidden) */}
-        <div className="block md:hidden p-4 space-y-3">
+        <div className="block md:hidden p-4 sm:p-5 flex flex-col gap-5 sm:gap-6">
           {loading ? (
             <div className="p-8 text-center text-slate-400 font-bold animate-pulse">
               Detecting post-9:30 AM solvers & verifying submission timestamps...
@@ -386,10 +386,10 @@ export const Post930SolversView: React.FC = () => {
             filteredStudents.map((st: any) => (
               <div
                 key={st.student_id}
-                className="bg-white dark:bg-navy-900/90 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700/80 shadow-md space-y-3 transition-all hover:shadow-lg"
+                className="bg-white dark:bg-navy-900/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-700/80 shadow-md space-y-3.5 transition-all hover:shadow-lg"
               >
                 {/* Header: Name, Reg No & Dept Badge */}
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start justify-between flex-wrap gap-2">
                   <div className="min-w-0 flex-1">
                     <h4 className="font-black text-sm text-slate-900 dark:text-white truncate">
                       {st.student_name}
@@ -427,22 +427,22 @@ export const Post930SolversView: React.FC = () => {
                 </div>
 
                 {/* Timestamps & Actions */}
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-navy-800 gap-2">
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-navy-800 gap-2 flex-wrap sm:flex-nowrap">
                   <div className="flex flex-col text-[10px] text-slate-500 dark:text-slate-400 font-bold min-w-0">
                     <span className="truncate">First: <strong className="text-slate-700 dark:text-slate-300">{st.first_post_window_solve_formatted || '—'}</strong></span>
                     <span className="truncate">Latest: <strong className="text-slate-700 dark:text-slate-300">{st.latest_post_window_solve_formatted || '—'}</strong></span>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 ml-auto">
                     <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
                       <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                       <span>{st.evidence_status || 'VERIFIED'}</span>
                     </span>
                     <button
                       onClick={() => setSelectedStudent(st)}
-                      className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold flex items-center space-x-1 transition-all text-[11px] shadow-xs active:scale-95 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black flex items-center space-x-1 transition-all text-xs shadow-xs active:scale-95 cursor-pointer whitespace-nowrap"
                     >
                       <Eye className="w-3.5 h-3.5" />
-                      <span>Inspect</span>
+                      <span>Inspect Solves</span>
                     </button>
                   </div>
                 </div>
@@ -452,21 +452,21 @@ export const Post930SolversView: React.FC = () => {
         </div>
 
         {/* DESKTOP TABLE VIEW (hidden md:block) */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div className="hidden md:block overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-navy-700">
+          <table className="w-full text-left text-xs min-w-[1100px]">
             <thead className="bg-slate-100 dark:bg-navy-900 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider border-b border-slate-200 dark:border-navy-700">
               <tr>
-                <th className="px-4 py-3.5 whitespace-nowrap">Student Name</th>
-                <th className="px-4 py-3.5 whitespace-nowrap">Reg No</th>
-                <th className="px-4 py-3.5 whitespace-nowrap">Dept / Class</th>
-                <th className="px-4 py-3.5 text-right whitespace-nowrap">Official 09:30 Solved</th>
-                <th className="px-4 py-3.5 text-right whitespace-nowrap">Post-9:30 Solves</th>
-                <th className="px-4 py-3.5 text-right whitespace-nowrap">Submissions</th>
-                <th className="px-4 py-3.5 text-right whitespace-nowrap">Current Total</th>
-                <th className="px-4 py-3.5 whitespace-nowrap">First Activity</th>
-                <th className="px-4 py-3.5 whitespace-nowrap">Latest Activity</th>
-                <th className="px-4 py-3.5 whitespace-nowrap">Evidence Status</th>
-                <th className="px-4 py-3.5 whitespace-nowrap sticky right-0 z-20 bg-slate-100 dark:bg-navy-900 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.4)] text-center">Action</th>
+                <th className="px-5 py-3.5 min-w-[170px] whitespace-nowrap">Student Name</th>
+                <th className="px-4 py-3.5 min-w-[130px] whitespace-nowrap">Reg No</th>
+                <th className="px-4 py-3.5 min-w-[160px] whitespace-nowrap">Dept / Class</th>
+                <th className="px-4 py-3.5 min-w-[150px] text-right whitespace-nowrap">Official 09:30 Solved</th>
+                <th className="px-4 py-3.5 min-w-[140px] text-right whitespace-nowrap">Post-9:30 Solves</th>
+                <th className="px-4 py-3.5 min-w-[120px] text-right whitespace-nowrap">Submissions</th>
+                <th className="px-4 py-3.5 min-w-[130px] text-right whitespace-nowrap">Current Total</th>
+                <th className="px-4 py-3.5 min-w-[150px] whitespace-nowrap">First Activity</th>
+                <th className="px-4 py-3.5 min-w-[150px] whitespace-nowrap">Latest Activity</th>
+                <th className="px-5 py-3.5 min-w-[160px] whitespace-nowrap">Evidence Status</th>
+                <th className="px-5 py-3.5 min-w-[150px] whitespace-nowrap sticky right-0 z-20 bg-slate-100 dark:bg-navy-900 border-l border-slate-200/80 dark:border-navy-700/80 shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.08)] dark:shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.5)] text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-navy-800">
@@ -507,7 +507,7 @@ export const Post930SolversView: React.FC = () => {
               ) : (
                 filteredStudents.map((st: any) => (
                   <tr key={st.student_id} className="group hover:bg-slate-50/80 dark:hover:bg-navy-850 transition-colors">
-                    <td className="px-4 py-3.5 font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
+                    <td className="px-5 py-3.5 font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
                       {st.student_name}
                     </td>
                     <td className="px-4 py-3.5 font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
@@ -537,16 +537,16 @@ export const Post930SolversView: React.FC = () => {
                     <td className="px-4 py-3.5 font-bold text-slate-900 dark:text-white whitespace-nowrap">
                       {st.latest_post_window_solve_formatted || '—'}
                     </td>
-                    <td className="px-4 py-3.5 whitespace-nowrap">
+                    <td className="px-5 py-3.5 whitespace-nowrap min-w-[160px]">
                       <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
                         <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                         <span>{st.evidence_status || 'VERIFIED'}</span>
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 whitespace-nowrap sticky right-0 z-10 bg-white group-hover:bg-slate-50 dark:bg-navy-950 dark:group-hover:bg-navy-850 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.4)] transition-colors text-center">
+                    <td className="px-5 py-3.5 whitespace-nowrap sticky right-0 z-10 bg-white group-hover:bg-slate-50 dark:bg-navy-950 dark:group-hover:bg-navy-850 border-l border-slate-200/80 dark:border-navy-700/80 shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.08)] dark:shadow-[-6px_0_12px_-3px_rgba(0,0,0,0.5)] transition-colors text-center">
                       <button
                         onClick={() => setSelectedStudent(st)}
-                        className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black flex items-center space-x-1.5 transition-all text-xs shadow-sm cursor-pointer whitespace-nowrap"
+                        className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black flex items-center justify-center space-x-1.5 transition-all text-xs shadow-sm cursor-pointer whitespace-nowrap mx-auto"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Inspect Solves</span>

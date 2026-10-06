@@ -65,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
   const roleClean = (user?.role || '').trim().toLowerCase();
   const isFaculty = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(roleClean);
-  const isHOD = ['hod', 'department hod', 'department_hod'].includes(roleClean);
+  const isHOD = ['hod', 'department hod', 'department_hod', 'principal', 'management', 'director'].includes(roleClean);
   const isAdmin = ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean);
   const isStudent = roleClean === 'student';
 
@@ -179,6 +179,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'account-settings', label: 'Account Settings', icon: User },
         { id: 'settings', label: 'Admin Settings', icon: Settings },
         { id: 'audit', label: 'Audit Log', icon: ShieldAlert },
+        { id: 'dev-studio', label: 'Developer Studio', icon: Cpu, badge: 'LIVE', badgeColor: 'amber' },
       ]
     }
   ];
@@ -196,13 +197,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
     }
   ];
 
-  const sections: NavSection[] = isFaculty
-    ? facultySections
+  const sections: NavSection[] = isAdmin
+    ? adminSections
     : isHOD
     ? hodSections
-    : isStudent
-    ? studentSections
-    : adminSections;
+    : isFaculty
+    ? facultySections
+    : studentSections;
 
 
   if (typeof document === 'undefined') return null;
@@ -260,7 +261,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             </div>
 
             {/* Region 2: Independently Scrollable Menu (Compact & Crisp) */}
-            <div className="space-y-4 sm:space-y-4.5 overflow-y-auto pr-0.5 flex-1 min-h-0 custom-scrollbar overscroll-contain py-1.5 relative z-10">
+            <div className="space-y-4 sm:space-y-5 overflow-y-auto pr-0.5 flex-1 min-h-0 custom-scrollbar overscroll-contain py-1.5 relative z-10">
               {sections.map((section, sIdx) => (
                 <div key={sIdx} className="space-y-1.5">
                   <div className="px-1 pb-0.5 flex items-center justify-between">

@@ -170,7 +170,7 @@ def is_rating_settled(username: str) -> tuple[bool, Optional[str]]:
 
         settled = latest_start_utc >= expected_start
         if settled:
-            log.info(f"[SETTLED] ✅ Rating settled for contest: {latest_title}")
+            log.info(f"[SETTLED]  Rating settled for contest: {latest_title}")
         else:
             log.warning(
                 f"[SETTLED] ⏳ Rating NOT settled yet. Latest entry is "

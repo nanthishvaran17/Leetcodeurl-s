@@ -1,4 +1,4 @@
-# 🚀 LeetCode Weekly Contest Report — Automation System
+#  LeetCode Weekly Contest Report — Automation System
 
 Automated weekly performance reporter for **Nanthish S (`nanthishvaran_07`)**, B.E. CSE (Cyber Security) at Nandha Engineering College.
 
@@ -6,7 +6,7 @@ Automatically fetches contest rating/stats from LeetCode's GraphQL API, tracks h
 
 ---
 
-## 📁 Directory Structure
+##  Directory Structure
 
 ```text
 contest_reporter/
@@ -29,7 +29,7 @@ contest_reporter/
 
 ---
 
-## ⚡ Quick Start
+##  Quick Start
 
 ### 1. Install Dependencies
 
@@ -61,7 +61,7 @@ SENDER_NAME=NEC LeetCode Tracker
 
 ---
 
-## 🛠️ Usage & Commands
+## ️ Usage & Commands
 
 ### 1. Test Dry Run (Mock Data, No Email Sent)
 Verify report generation without touching the network or sending emails:
@@ -100,7 +100,7 @@ python scheduler.py
 
 ---
 
-## 🤖 GitHub Actions Workflow
+##  GitHub Actions Workflow
 
 The system includes a pre-configured GitHub Actions workflow in `.github/workflows/weekly_report.yml`.
 

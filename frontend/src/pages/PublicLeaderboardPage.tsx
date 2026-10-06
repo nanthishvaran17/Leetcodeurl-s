@@ -112,9 +112,9 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
   const uniqueYears = [...new Set(students.map(s => s.year_level).filter(Boolean))];
 
   const MEDAL_CONFIGS = [
-    { rank: 2, color: 'from-slate-400 to-slate-600', borderColor: 'border-slate-300 dark:border-slate-600', textColor: 'text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-300 dark:border-slate-700 shadow-2xs', emoji: '🥈', label: 'SILVER', size: 'scale-95', order: 'order-1' },
-    { rank: 1, color: 'from-amber-400 via-amber-500 to-yellow-500', borderColor: 'border-amber-400 dark:border-amber-500', textColor: 'text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-md border border-amber-300 dark:border-amber-800 shadow-2xs', emoji: '🥇', label: 'GOLD', size: 'scale-110', order: 'order-2' },
-    { rank: 3, color: 'from-amber-600 to-orange-600', borderColor: 'border-amber-500 dark:border-orange-500', textColor: 'text-orange-800 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/80 px-2 py-0.5 rounded-md border border-orange-300 dark:border-orange-800 shadow-2xs', emoji: '🥉', label: 'BRONZE', size: 'scale-95', order: 'order-3' },
+    { rank: 2, color: 'from-slate-400 to-slate-600', borderColor: 'border-slate-300 dark:border-slate-600', textColor: 'text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-300 dark:border-slate-700 shadow-2xs', emoji: '', label: 'SILVER', size: 'scale-95', order: 'order-1' },
+    { rank: 1, color: 'from-amber-400 via-amber-500 to-yellow-500', borderColor: 'border-amber-400 dark:border-amber-500', textColor: 'text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-md border border-amber-300 dark:border-amber-800 shadow-2xs', emoji: '', label: 'GOLD', size: 'scale-110', order: 'order-2' },
+    { rank: 3, color: 'from-amber-600 to-orange-600', borderColor: 'border-amber-500 dark:border-orange-500', textColor: 'text-orange-800 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/80 px-2 py-0.5 rounded-md border border-orange-300 dark:border-orange-800 shadow-2xs', emoji: '', label: 'BRONZE', size: 'scale-95', order: 'order-3' },
   ];
 
   return (

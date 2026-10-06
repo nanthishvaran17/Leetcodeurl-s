@@ -47,7 +47,7 @@ from backend.time_utils import IST, UTC
 
 def run_full_production_verification():
     print("=" * 85)
-    print("🏆 FINAL 10/10 SUNDAY LIVE CONTEST ENGINE — PRODUCTION VERIFICATION RUNNER")
+    print(" FINAL 10/10 SUNDAY LIVE CONTEST ENGINE — PRODUCTION VERIFICATION RUNNER")
     print("Verification Timestamp: " + datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S IST"))
     print("Timezone Scope: Asia/Kolkata (IST) & UTC Storage")
     print("=" * 85)
@@ -282,7 +282,7 @@ def run_full_production_verification():
     # FINAL PRODUCTION CERTIFICATION SUMMARY
     # -------------------------------------------------------------------------
     print("\n" + "=" * 85)
-    print("🏆 SUNDAY LIVE CONTEST ENGINE — PRODUCTION CERTIFICATION MATRIX")
+    print(" SUNDAY LIVE CONTEST ENGINE — PRODUCTION CERTIFICATION MATRIX")
     print("=" * 85)
     all_clean = True
     for label, passed in verification_matrix:
@@ -293,12 +293,12 @@ def run_full_production_verification():
 
     print("=" * 85)
     if all_clean:
-        print("🏆 SUNDAY LIVE CONTEST ENGINE: 10/10 PRODUCTION VERIFIED!")
+        print(" SUNDAY LIVE CONTEST ENGINE: 10/10 PRODUCTION VERIFIED!")
         print("Verification Window : 07:50 AM – 10:00 AM IST")
         print("Status              : ALL CRITICAL TESTS PASSED")
         print("Result              : PRODUCTION READY")
     else:
-        print("⚠️ PRODUCTION CERTIFICATION FAILED — UNRESOLVED ERRORS EXIST.")
+        print("️ PRODUCTION CERTIFICATION FAILED — UNRESOLVED ERRORS EXIST.")
     print("=" * 85)
 
     return all_clean

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X, Loader2, ArrowLeft } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { getCachedData, setCachedData, getRequestKey } from '../../services/api';
 import axios from 'axios';
 
@@ -72,7 +73,7 @@ export const RecipientSelector: React.FC<Props> = ({ onClose, onSelect }) => {
     (r.department || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  return (
+  return createPortal(
     <div 
       className="fixed inset-0 z-[100050] flex items-center justify-center p-0 sm:p-6 bg-black/60 sm:backdrop-blur-md animate-in fade-in duration-200"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
@@ -152,6 +153,7 @@ export const RecipientSelector: React.FC<Props> = ({ onClose, onSelect }) => {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

@@ -29,7 +29,7 @@ const config: CapacitorConfig = {
   // API calls use VITE_API_URL baked into the build
   server: {
     androidScheme: 'https',
-    cleartext: false
+    cleartext: true
   }
 };
 

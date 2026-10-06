@@ -46,7 +46,7 @@ from backend.time_utils import IST, UTC
 
 def run_websocket_full_production_verification():
     print("=" * 85)
-    print("🏆 WEBSOCKET REAL-TIME CONTEST UI — 10/10 PRODUCTION HARDENING VERIFIER")
+    print(" WEBSOCKET REAL-TIME CONTEST UI — 10/10 PRODUCTION HARDENING VERIFIER")
     print("Verification Timestamp: " + datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S IST"))
     print("Architecture Target   : Database-First Event Delivery & Zero Manual Refresh UI")
     print("=" * 85)
@@ -273,7 +273,7 @@ def run_websocket_full_production_verification():
     # FINAL CERTIFICATION DISPLAY
     # -------------------------------------------------------------------------
     print("\n" + "=" * 60)
-    print("🏆 WEBSOCKET REAL-TIME UI")
+    print(" WEBSOCKET REAL-TIME UI")
     print("10/10 PRODUCTION VERIFIED")
     print("=" * 60)
     all_ok = True

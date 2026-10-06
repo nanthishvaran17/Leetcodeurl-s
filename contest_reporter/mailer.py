@@ -50,7 +50,7 @@ def _html_body(
         <tr>
           <td colspan="2" style="padding:10px;background:#FFF9E6;border-radius:6px;
                                   color:#F5B800;font-weight:bold;font-size:14px;">
-            🎉 Rating milestone crossed: {m}! Outstanding achievement.
+             Rating milestone crossed: {m}! Outstanding achievement.
           </td>
         </tr>"""
 
@@ -153,7 +153,7 @@ def _html_body(
                   <div style="font-size:10px;color:#B0BEC5;font-weight:700;
                                text-transform:uppercase;letter-spacing:1px;">Streak</div>
                   <div style="font-size:26px;font-weight:800;color:#1B2A4A;margin:4px 0;">
-                    {streak}w 🔥
+                    {streak}w 
                   </div>
                 </td>
               </tr>
@@ -299,7 +299,7 @@ def send_report(
 
         _smtp_send_with_retry(msg, r_email)
         sent_to.append(r_email)
-        log.info(f"[MAILER] ✅ Sent to {r_name} <{r_email}>")
+        log.info(f"[MAILER]  Sent to {r_name} <{r_email}>")
 
     return sent_to
 

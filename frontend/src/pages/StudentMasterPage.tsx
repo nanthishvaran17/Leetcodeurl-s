@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { 
   Users, Trash2, Edit2, ShieldAlert, BadgeInfo, CheckCircle, 
   X, Check, AlertCircle, Sparkles, Building2, LayoutList, Calendar,
-  Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight, Mail
+  Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight, Mail, User
 } from 'lucide-react';
 import { GlobalFilter } from '../components/GlobalFilter';
 import api from '../services/api';
@@ -526,8 +526,8 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             type="text"
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            placeholder="Search name, register no, username..."
-            className="w-full pl-12 pr-12 py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all"
+            placeholder="Search students by name, reg no..."
+            className="w-full pl-11 pr-10 py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all text-ellipsis"
           />
           {localSearch && (
             <button
@@ -652,43 +652,46 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           className="modal-overlay-responsive animate-modal-backdrop select-none"
           onClick={(e) => { if (e.target === e.currentTarget) handleCloseAddModal(); }}
         >
-          <div className="modal-container-responsive max-w-lg max-h-[85vh] sm:max-h-[88vh] my-auto bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden animate-modal-content flex flex-col text-white">
+          <div className="w-full h-full sm:h-auto max-h-[100dvh] sm:max-h-[88vh] max-w-lg my-auto bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden mobile-responsive-modal animate-modal-content">
             
-            {/* Header */}
-            <div className="px-6 py-5 border-b border-slate-800 bg-slate-900 shrink-0 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2.5 rounded-2xl bg-brand-500/10 border border-brand-500/25 text-brand-400 shadow-inner">
-                  <UserPlus className="w-5 h-5 text-brand-400" />
+            {/* Fixed Header */}
+            <div className="px-4 py-3.5 sm:px-6 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0 z-20 shadow-md safe-area-pt">
+              <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+                <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shrink-0">
+                  <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                  <h3 className="text-base font-black text-white tracking-tight">Add New Student Record</h3>
-                  <p className="text-xs text-slate-400 font-medium mt-0.5">
-                    Enroll student into institutional intelligence directory
+                <div className="min-w-0">
+                  <h3 id="add-student-dialog-title" className="text-sm sm:text-base font-black text-white tracking-tight truncate uppercase">ADD STUDENT RECORD</h3>
+                  <p className="text-[11px] sm:text-xs text-slate-300 font-mono font-medium truncate">
+                    <span>Enroll student into institutional intelligence directory</span>
                   </p>
                 </div>
               </div>
-              <button 
+              <button
                 type="button"
-                onClick={handleCloseAddModal} 
-                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
-                title="Close modal"
+                onClick={handleCloseAddModal}
+                title="Close"
+                className="p-2 rounded-xl bg-white/10 hover:bg-rose-500/80 active:scale-95 transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0 ml-2"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateStudent} className="p-6 flex-1 min-h-0 overflow-y-auto space-y-4 text-xs custom-scrollbar bg-slate-900">
+            <form onSubmit={handleCreateStudent} className="flex flex-col flex-1 min-h-0 relative">
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-5 bg-white dark:bg-slate-900 custom-scrollbar">
               
               {/* Section 1: Primary Identification */}
               <div className="space-y-3">
-                <span className="text-[10px] font-black uppercase text-brand-400 tracking-wider flex items-center gap-1.5">
-                  1. Identity & Roster Info
+                <span className="text-[10px] sm:text-[11px] font-black uppercase text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded flex items-center gap-1.5 border border-indigo-100 dark:border-indigo-500/20 w-fit">
+                  <span className="bg-indigo-500 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] shrink-0">1</span>
+                  <User className="w-3.5 h-3.5" />
+                  IDENTITY & ROSTER INFO
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">
-                      Register Number <span className="text-rose-400 font-bold">*</span>
+                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">
+                      Register Number <span className="text-rose-500 font-black">*</span>
                     </label>
                     <input
                       type="text"
@@ -696,13 +699,13 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                       onChange={(e) => setRegNo(e.target.value)}
                       placeholder="e.g. 732224CC001"
                       required
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 font-medium text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-inner"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">
-                      Student Name <span className="text-rose-400 font-bold">*</span>
+                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">
+                      Student Name <span className="text-rose-500 font-black">*</span>
                     </label>
                     <input
                       type="text"
@@ -710,7 +713,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. AJAY A"
                       required
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 font-medium text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-inner"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
                     />
                   </div>
                 </div>
@@ -718,25 +721,26 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
               {/* Section 2: Department & Academic Year */}
               <div className="space-y-3 pt-1">
-                <span className="text-[10px] font-black uppercase text-brand-400 tracking-wider flex items-center gap-1.5">
-                  2. Academic Placement
+                <span className="text-[10px] sm:text-[11px] font-black uppercase text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded flex items-center gap-1.5 border border-indigo-100 dark:border-indigo-500/20 w-fit">
+                  <span className="bg-indigo-500 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] shrink-0">2</span>
+                  ACADEMIC PLACEMENT
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">Department</label>
+                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Department</label>
                     <GlobalFilter
                       value={deptId?.toString() || ""}
                       onChange={(val) => setDeptId(Number(val))}
                       dropdownWidth="w-full"
                       options={departments.map((d: any) => ({ value: String(d.id), label: d.name, pillText: d.code }))}
-                      icon={<Building2 className="w-4 h-4 text-brand-400" />}
+                      icon={<Building2 className="w-4 h-4 text-brand-500" />}
                       placeholder="Select Department"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">Year Level</label>
+                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Year Level</label>
                     <GlobalFilter
                       value={yearLevel}
                       onChange={(val) => setYearLevel(val)}
@@ -756,48 +760,49 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
               {/* Section 3: Contact & Accommodation */}
               <div className="space-y-3 pt-1">
-                <span className="text-[10px] font-black uppercase text-brand-400 tracking-wider flex items-center gap-1.5">
-                  3. Contact & Accommodation
+                <span className="text-[10px] sm:text-[11px] font-black uppercase text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded flex items-center gap-1.5 border border-indigo-100 dark:border-indigo-500/20 w-fit">
+                  <span className="bg-indigo-500 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] shrink-0">3</span>
+                  CONTACT & ACCOMMODATION
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">Personal Email</label>
+                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Personal Email</label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="e.g. ajay@gmail.com"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 font-medium text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-inner"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">Institutional Email</label>
+                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Institutional Email</label>
                     <input
                       type="email"
                       value={institutionalEmail}
                       onChange={(e) => setInstitutionalEmail(e.target.value)}
                       placeholder="e.g. 732224CC001@nandhaengg.org"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 font-medium text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-inner"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">12th Cut-off Score</label>
+                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">12th Cut-off Score</label>
                     <input
                       type="number"
                       step="0.01"
                       value={cutOffScore}
                       onChange={(e) => setCutOffScore(e.target.value)}
                       placeholder="e.g. 185.50"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 font-medium text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-inner"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">Accommodation</label>
+                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Accommodation</label>
                     <GlobalFilter
                       value={accommodationType}
                       onChange={(val) => setAccommodationType(val)}
@@ -814,12 +819,13 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               </div>
 
               {/* Section 4: LeetCode Verification Link */}
-              <div className="space-y-2 pt-2 border-t border-slate-800">
+              <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase text-brand-400 tracking-wider">
-                    4. LeetCode Live Sync Integration
+                  <span className="text-[10px] sm:text-[11px] font-black uppercase text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded flex items-center gap-1.5 border border-indigo-100 dark:border-indigo-500/20 w-fit">
+                    <span className="bg-indigo-500 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] shrink-0">4</span>
+                    LEETCODE LIVE SYNC INTEGRATION
                   </span>
-                  <span className="text-[10px] font-bold text-slate-400">AUTOMATIC VERIFICATION</span>
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">AUTOMATIC VERIFICATION</span>
                 </div>
 
                 <div className="relative">
@@ -829,12 +835,12 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                     value={leetcodeUrl}
                     onChange={(e) => handleLcUrlChange(e.target.value)}
                     placeholder="e.g. https://leetcode.com/u/ajay_a/"
-                    className={`w-full px-3.5 py-2.5 pr-10 rounded-xl border bg-slate-950/80 font-medium text-white placeholder-slate-500 transition-all shadow-inner ${
+                    className={`w-full h-11 px-4 pr-10 rounded-xl border-2 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-sm ${
                       lcValidation.status === 'valid'
-                        ? 'border-emerald-500 focus:ring-2 focus:ring-emerald-500/30'
+                        ? 'border-emerald-500 focus:ring-4 focus:ring-emerald-500/10'
                         : lcValidation.status === 'not_found' || lcValidation.status === 'identity_mismatch' || lcValidation.status === 'invalid_format'
-                        ? 'border-rose-500 focus:ring-2 focus:ring-rose-500/30'
-                        : 'border-slate-800 focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500'
+                        ? 'border-rose-500 focus:ring-4 focus:ring-rose-500/10'
+                        : 'border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10'
                     } focus:outline-none`}
                   />
                   {/* Inline status icon */}
@@ -854,18 +860,19 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                 <LcValidationChip state={lcValidation} />
 
                 {!saveAllowed && (
-                  <p className="text-[11px] text-slate-400 italic">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
                     Tip: Fix the LeetCode URL above, or clear it to save record without profile sync.
                   </p>
                 )}
               </div>
+              </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
+              {/* Fixed Footer */}
+              <div className="px-4 py-3 sm:px-6 sm:py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-950/50 flex flex-col sm:flex-row items-center justify-end gap-3 shrink-0 safe-area-pb">
                 <button
                   type="button"
                   onClick={handleCloseAddModal}
-                  className="px-4 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 font-extrabold transition-all cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-2.5 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-navy-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all shadow-sm min-h-[44px] cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -873,25 +880,21 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                   type="submit"
                   disabled={loading || !saveAllowed}
                   title={!saveAllowed ? 'Fix the LeetCode URL to continue' : undefined}
-                  className={`px-5 py-2.5 rounded-xl font-black text-xs shadow-lg transition-all cursor-pointer flex items-center gap-2 active:scale-95 ${
-                    loading || !saveAllowed
-                      ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed shadow-none'
-                      : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-500/25'
-                  }`}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50 text-white text-xs sm:text-sm font-black rounded-xl transition-all shadow-md shadow-indigo-500/20 flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                       <span>Enrolling...</span>
                     </>
                   ) : lcValidation.status === 'valid' ? (
                     <>
-                      <CheckCircle className="w-4 h-4 text-white" />
+                      <CheckCircle className="w-4 h-4 shrink-0" />
                       <span>Save & Verify ({lcValidation.username})</span>
                     </>
                   ) : (
                     <>
-                      <UserPlus className="w-4 h-4 text-white" />
+                      <UserPlus className="w-4 h-4 shrink-0" />
                       <span>Save Student Record</span>
                     </>
                   )}

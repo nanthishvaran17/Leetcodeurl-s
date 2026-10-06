@@ -665,8 +665,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             "medium_solved": getattr(st_profile, "medium_solved", 0) if st_profile else 0,
             "hard_solved": getattr(st_profile, "hard_solved", 0) if st_profile else 0,
             "accommodation": getattr(s, "accommodation", "") or "—",
-            "twelfth_cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
-            "cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
+            "twelfth_cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,  # type: ignore
+            "cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,  # type: ignore
             "score": (solved_val * 3) if (is_att and solved_val is not None) else "—",
             "rank": disp_rank,
             "global_rank": disp_rank,

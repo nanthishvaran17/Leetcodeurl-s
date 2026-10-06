@@ -144,7 +144,7 @@ def generate_narrative(
     # Milestones
     if milestones_crossed:
         for m in milestones_crossed:
-            lines.append(f"🎉 Rating milestone crossed: {m}!")
+            lines.append(f" Rating milestone crossed: {m}!")
 
     return " ".join(lines)
 

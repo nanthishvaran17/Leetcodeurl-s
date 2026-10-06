@@ -225,34 +225,45 @@ class DownloadManager {
       });
 
       const jobId = createRes.data?.job_id;
+      const initialStatus = createRes.data?.status;
       if (!jobId) throw new Error("Failed to create report job");
 
       state.downloadId = jobId; // Update to the real reference ID
-      this.updateState(state, options.onStateChange);
 
-      // 2. Poll Status
-      let isComplete = false;
-      let finalFilePath = '';
-      
-      while (!isComplete) {
-        await new Promise(r => setTimeout(r, 2000)); // Poll every 2 seconds
+      // Fast-path: If job is already COMPLETED (instant cache hit < 30ms), skip polling entirely!
+      if (initialStatus === 'COMPLETED') {
+        state.status = 'DOWNLOADING';
+        this.updateState(state, options.onStateChange);
+      } else {
+        this.updateState(state, options.onStateChange);
+
+        // 2. Poll Status with fast adaptive interval (150ms initial delay)
+        let isComplete = false;
+        let pollDelay = 150;
+        let pollAttempts = 0;
         
-        const statusRes = await api.get(`${endpoint}/${jobId}?_t=${Date.now()}`, {
-          headers: { ...authHeaders }
-        });
-        
-        const jobStatus = statusRes.data?.status;
-        
-        if (jobStatus === 'COMPLETED') {
-          isComplete = true;
-          state.status = 'DOWNLOADING';
-          this.updateState(state, options.onStateChange);
-        } else if (jobStatus === 'FAILED') {
-          throw new Error(statusRes.data?.error_message || "Report generation failed");
-        } else {
-          state.status = jobStatus === 'PROCESSING' ? 'PROCESSING' : 'GENERATING';
-          state.progress = statusRes.data?.progress || 0;
-          this.updateState(state, options.onStateChange);
+        while (!isComplete) {
+          await new Promise(r => setTimeout(r, pollDelay));
+          pollAttempts++;
+          if (pollAttempts > 3) pollDelay = Math.min(pollDelay + 250, 1000); // Back off gradually up to 1s max
+          
+          const statusRes = await api.get(`${endpoint}/${jobId}?_t=${Date.now()}`, {
+            headers: { ...authHeaders }
+          });
+          
+          const jobStatus = statusRes.data?.status;
+          
+          if (jobStatus === 'COMPLETED') {
+            isComplete = true;
+            state.status = 'DOWNLOADING';
+            this.updateState(state, options.onStateChange);
+          } else if (jobStatus === 'FAILED') {
+            throw new Error(statusRes.data?.error_message || "Report generation failed");
+          } else {
+            state.status = jobStatus === 'PROCESSING' ? 'PROCESSING' : 'GENERATING';
+            state.progress = statusRes.data?.progress || 0;
+            this.updateState(state, options.onStateChange);
+          }
         }
       }
 

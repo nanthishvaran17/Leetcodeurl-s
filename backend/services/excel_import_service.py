@@ -164,7 +164,7 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
         # Reverse map: canonical_field -> raw_header (ignoring excluded/blank targets)
         canonical_to_raw = {}
         for raw_col, target_field in effective_mapping.items():
-            if target_field and str(target_field).strip() and str(target_field).strip() not in ("exclude", "-- Unmapped / Exclude --"):
+            if target_field and str(target_field).strip() and str(target_field).strip() not in ("exclude", "-- Unmapped / Exclude --"):  # type: ignore
                 canonical_to_raw[target_field] = raw_col
 
         # Load existing reference data safely
@@ -188,7 +188,7 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
         seen_reg_nos = set()
 
         for idx, row in df.iterrows():
-            row_num = int(idx) + 2  # 1-based + header row
+            row_num = int(idx) + 2  # 1-based + header row  # type: ignore
 
             def _get_val(canonical_key: str) -> str:
                 raw_col = canonical_to_raw.get(canonical_key)
@@ -357,7 +357,7 @@ def validate_excel_import_file(file_bytes: bytes) -> Dict[str, Any]:
         seen_in_file = set()
 
         for idx, row in df.iterrows():
-            row_num = int(idx) + 2 # 1-based index + header row
+            row_num = int(idx) + 2 # 1-based index + header row  # type: ignore
             reg_no = str(row.get("register_no") or row.get("reg_no") or row.get("register_number") or "").strip()
             name = str(row.get("name") or row.get("student_name") or "").strip()
             dept = str(row.get("department") or row.get("dept") or row.get("branch") or "").strip()
@@ -521,7 +521,7 @@ def commit_smart_excel_import(
 
         canonical_to_raw = {}
         for raw_col, target_field in effective_mapping.items():
-            if target_field and str(target_field).strip() and str(target_field).strip() not in ("exclude", "-- Unmapped / Exclude --"):
+            if target_field and str(target_field).strip() and str(target_field).strip() not in ("exclude", "-- Unmapped / Exclude --"):  # type: ignore
                 canonical_to_raw[target_field] = raw_col
 
         # 1. Register confirmed/detected new departments
@@ -566,7 +566,7 @@ def commit_smart_excel_import(
         affected_student_ids = []
 
         for idx, row in df.iterrows():
-            row_num = int(idx) + 2
+            row_num = int(idx) + 2  # type: ignore
 
             def _get_val(canonical_key: str) -> str:
                 raw_col = canonical_to_raw.get(canonical_key)

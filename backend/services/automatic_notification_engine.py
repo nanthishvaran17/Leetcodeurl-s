@@ -178,12 +178,12 @@ class AutomaticNotificationEngine:
                 # 4. Format detailed faculty message with Yesterday vs Today allocation status difference
                 title = "Daily Allocation Status & Performance Summary (10:00 AM)"
                 body = (
-                    f"📊 Daily Allocation Status & Progress Summary (10:00 AM IST)\n\n"
-                    f"👥 Total Allocated Mentees: {total_assigned}\n"
-                    f"🔥 Active Solvers: {active_today} today (vs {active_yesterday} yesterday | Diff: {fmt_diff(diff_active)})\n"
-                    f"💡 Problems Solved: {new_problems} today (vs {problems_yesterday} yesterday | Diff: {fmt_diff(diff_problems)})\n"
-                    f"⚠️ Requiring Attention: {attention_today} today (vs {attention_yesterday} yesterday | Diff: {fmt_diff(diff_attention)})\n"
-                    f"🏆 New Milestones: {new_milestones}\n\n"
+                    f" Daily Allocation Status & Progress Summary (10:00 AM IST)\n\n"
+                    f" Total Allocated Mentees: {total_assigned}\n"
+                    f" Active Solvers: {active_today} today (vs {active_yesterday} yesterday | Diff: {fmt_diff(diff_active)})\n"
+                    f" Problems Solved: {new_problems} today (vs {problems_yesterday} yesterday | Diff: {fmt_diff(diff_problems)})\n"
+                    f"️ Requiring Attention: {attention_today} today (vs {attention_yesterday} yesterday | Diff: {fmt_diff(diff_attention)})\n"
+                    f" New Milestones: {new_milestones}\n\n"
                     f"View detailed student performance & mentee allocation status."
                 )
 
@@ -204,7 +204,7 @@ class AutomaticNotificationEngine:
                 try:
                     from backend.services.bot_notification_service import BotNotificationService
                     bot_msg = (
-                        f"📊 Daily Allocation Status (10:00 AM IST)\n"
+                        f" Daily Allocation Status (10:00 AM IST)\n"
                         f"Faculty: {faculty.username}\n"
                         f"Allocated Mentees: {total_assigned}\n"
                         f"Active Today: {active_today} vs Yesterday: {active_yesterday} ({fmt_diff(diff_active)})\n"

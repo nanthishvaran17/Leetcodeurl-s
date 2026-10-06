@@ -239,8 +239,8 @@ def normalize_row_data(r: dict) -> dict:
         "solved": solved,
         "solved_str": f"{solved}/4",
         "score": score,
-        "rating": f"{int(round(rating_val)):,}" if rating_val is not None else "—",
-        "rating_raw": int(round(rating_val)) if rating_val is not None else None,
+        "rating": f"{int(round(rating_val)):,}" if rating_val is not None else "—",  # type: ignore
+        "rating_raw": int(round(rating_val)) if rating_val is not None else None,  # type: ignore
         "rank": f"#{rank_val:,}" if rank_val is not None else "—",
         "rank_raw": rank_val,
         "perf_score": perf_score,

@@ -233,7 +233,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
       formData.append('file', selected);
 
       try {
-        const res = await api.post('/students/analyze-import', formData);
+        const res = await api.post('/students/analyze-import', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
 
         if (res.data && res.data.success) {
           setAnalysisData(res.data);
@@ -261,7 +263,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
     formData.append('custom_mapping', JSON.stringify(customMapping));
 
     try {
-      const res = await api.post('/students/analyze-import', formData);
+      const res = await api.post('/students/analyze-import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
       if (res.data && res.data.success) {
         setAnalysisData(res.data);
@@ -290,7 +294,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
     formData.append('confirmed_new_departments', JSON.stringify(confirmedNewDepts));
 
     try {
-      const res = await api.post('/students/commit-import', formData);
+      const res = await api.post('/students/commit-import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
       if (res.data && res.data.success) {
         setCommitSummary(res.data.summary);
@@ -489,12 +495,12 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
           {/* STEP 2: COLUMN MAPPING */}
           {step === 2 && analysisData && (
             <div className="space-y-5">
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                 <div>
                   <p className="font-bold text-slate-900 dark:text-white">Detected {analysisData.raw_headers.length} Columns in <code>{file?.name}</code></p>
                   <p className="text-slate-500 text-[11px]">Review auto-detected canonical field mappings below and verify required columns.</p>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 font-black text-[11px] uppercase">
+                <span className="px-3 py-1.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 font-black text-[11px] uppercase text-center w-full sm:w-auto shrink-0 border border-brand-500/20 shadow-sm">
                   Header Intelligence Active
                 </span>
               </div>
@@ -504,9 +510,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800">
                     <tr>
-                      <th className="p-3">Uploaded Header</th>
-                      <th className="p-3">Confidence</th>
-                      <th className="p-3">Mapped Canonical Target Field</th>
+                      <th className="p-3 whitespace-nowrap">Uploaded Header</th>
+                      <th className="p-3 whitespace-nowrap">Confidence</th>
+                      <th className="p-3 whitespace-nowrap min-w-[200px]">Mapped Canonical Target Field</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -516,18 +522,18 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
 
                       return (
                         <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-900/50">
-                          <td className="p-3 font-extrabold text-slate-900 dark:text-white font-mono">{h}</td>
-                          <td className="p-3">
+                          <td className="p-3 font-extrabold text-slate-900 dark:text-white font-mono whitespace-nowrap">{h}</td>
+                          <td className="p-3 whitespace-nowrap">
                             {conf === 'HIGH' ? (
-                              <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase">
+                              <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase inline-block whitespace-nowrap">
                                 HIGH CONFIDENCE
                               </span>
                             ) : conf === 'MEDIUM' ? (
-                              <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-black uppercase">
+                              <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-black uppercase inline-block whitespace-nowrap">
                                 MEDIUM CONFIDENCE
                               </span>
                             ) : (
-                              <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[10px] font-black uppercase">
+                              <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[10px] font-black uppercase inline-block whitespace-nowrap">
                                 MANUAL CHECK
                               </span>
                             )}
@@ -676,7 +682,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                           <td className="p-3 whitespace-nowrap font-medium">{r.year}</td>
                           <td className="p-3 font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                             <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase">
-                              ✓ CREATE NEW
+                               CREATE NEW
                             </span>
                           </td>
                         </tr>

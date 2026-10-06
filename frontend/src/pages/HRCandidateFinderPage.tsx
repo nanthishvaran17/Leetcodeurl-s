@@ -1147,18 +1147,18 @@ export const HRCandidateFinderPage: React.FC = () => {
     const selectionReasons = (intel?.selection_reasons && intel.selection_reasons.length > 0)
       ? intel.selection_reasons
       : [
-        `✓ High total solved count (${totSolved} problems solved)`,
-        `✓ Primary language proficiency in ${c.primary_language}`,
-        `✓ Strong medium problem solving capability (${medSolved} medium solved)`,
-        `✓ Proven hard problem solving capability (${hrdSolved} hard solved)`
+        ` High total solved count (${totSolved} problems solved)`,
+        ` Primary language proficiency in ${c.primary_language}`,
+        ` Strong medium problem solving capability (${medSolved} medium solved)`,
+        ` Proven hard problem solving capability (${hrdSolved} hard solved)`
       ];
 
     const strengthsList = (intel?.strengths && intel.strengths.length > 0)
       ? intel.strengths
       : [
-        `✓ Strong problem-solving volume (${totSolved} total solved)`,
-        `✓ Proven hard problem solving capability (${hrdSolved} hard solved)`,
-        `✓ High contest rating (${contestRating})`
+        ` Strong problem-solving volume (${totSolved} total solved)`,
+        ` Proven hard problem solving capability (${hrdSolved} hard solved)`,
+        ` High contest rating (${contestRating})`
       ];
 
     const watchList = (intel?.areas_to_watch && intel.areas_to_watch.length > 0)
@@ -1168,7 +1168,7 @@ export const HRCandidateFinderPage: React.FC = () => {
       ];
 
     const hrDecision = intel?.hr_decision ?? {
-      candidate_strength: perfScore >= 85 ? "★★★★★" : "★★★★☆",
+      candidate_strength: perfScore >= 85 ? "" : "",
       coding_eval: totSolved >= 300 ? "Excellent" : "Strong",
       contest_eval: contestRating !== "N/A" && Number(contestRating) >= 1500 ? "Strong" : "Moderate",
       consistency_eval: streak >= 14 ? "Excellent" : "Good",

@@ -23,7 +23,7 @@ from backend.services.llm_service import LLMService
 def run_master_test_suite():
     db = SessionLocal()
     print("=" * 80)
-    print("      🚀 STARTING MASTER AI ACCURACY & RELIABILITY TEST SUITE 🚀")
+    print("       STARTING MASTER AI ACCURACY & RELIABILITY TEST SUITE ")
     print("=" * 80)
     
     total_tests = 0
@@ -423,7 +423,7 @@ def run_master_test_suite():
     # FINAL METRIC & ACCURACY SCORE SUMMARY
     # =========================================================================
     overall_accuracy = round((passed_tests / total_tests) * 100, 2) if total_tests > 0 else 0.0
-    status_str = "PRODUCTION READY 🚀" if overall_accuracy >= 95.0 else ("NEEDS MINOR IMPROVEMENTS ⚠️" if overall_accuracy >= 90.0 else "NOT PRODUCTION READY ❌")
+    status_str = "PRODUCTION READY " if overall_accuracy >= 95.0 else ("NEEDS MINOR IMPROVEMENTS ️" if overall_accuracy >= 90.0 else "NOT PRODUCTION READY ")
 
     print("\n" + "=" * 80)
     print("                    MASTER TEST SUITE FINAL REPORT")

@@ -423,13 +423,13 @@ class InstitutionalIntelligenceService:
             uname = authed_student.username or authed_student.primary_leetcode_id or "Linked"
             dept_code = authed_student.department.code if authed_student.department else "N/A"
 
-            markdown_resp = f"""### 👤 Student Spotlight: **{authed_student.name}** (`{authed_student.reg_no}`)
+            markdown_resp = f"""###  Student Spotlight: **{authed_student.name}** (`{authed_student.reg_no}`)
 
 • **Department**: {authed_student.department.name if authed_student.department else 'N/A'} ({dept_code} - Year {authed_student.year_level or 'III'})  
 • **LeetCode Profile**: [@{uname}]({lc_url})  
 • **Sync Status**: Verified (Active Ground Truth)
 
-#### 📊 Coding & Contest Overview
+####  Coding & Contest Overview
 - **Total Problems Solved**: **{tot}** (Easy: {easy} | Medium: {med} | Hard: {hrd})
 - **Primary Language**: **{primary_lang}**
 - **Contest Rating**: **{c_rating}** (Global Rank: {g_rank})
@@ -481,7 +481,7 @@ I can also generate an Executive PDF report or show detailed submission history 
                     elif "top" in htext: ctx_summary = "Top Technical Performers Report"
                     elif "staff" in htext: ctx_summary = "Staff Progress & Mentoring Report"
 
-            markdown_resp = f"""### 📄 Executive PDF Report Generation
+            markdown_resp = f"""###  Executive PDF Report Generation
 
 I have prepared the PDF report generation request for:  
 **"{ctx_summary}"**
@@ -635,7 +635,7 @@ Click the button below to view or export the verified PDF document."""
             if not rows:
                 rows = "| 1 | **Department Staff Team** | All Students Assigned | Active Mentoring |"
 
-            markdown_resp = f"""### 👨‍🏫 Staff Mentoring & Progress Summary
+            markdown_resp = f"""### ‍ Staff Mentoring & Progress Summary
 
 Here is the current staff mentoring allocation and tracking breakdown:
 
@@ -703,14 +703,14 @@ I can show specific student progress assigned to any faculty member."""
                     )
             gainer_rows = "\n".join(gainer_rows_list) if gainer_rows_list else "| 1 | **All Active Solvers** | Live Sync | Scope Active | 100% |"
 
-            markdown_resp = f"""### 📊 Yesterday vs Today Daily Solves Digest
+            markdown_resp = f"""###  Yesterday vs Today Daily Solves Digest
             
 **Scope**: {dept_match or 'Institutional Scope'} ({in_scope_count} Active Students)
 • **Total Live Solved Problems**: **{total_solved_today:,}**
 • **Active Solvers in Cycle**: **{active_today_count}** / {in_scope_count} students ({round(active_today_count/max(in_scope_count, 1)*100, 1)}%)
 • **Daily Status**: verified ground truth active database sync
 
-#### 🏆 Top Solvers (Current Standing)
+####  Top Solvers (Current Standing)
 | # | Student Name | Register Number | Dept | Total Solved |
 |---|---|---|---|---|
 {gainer_rows}
@@ -739,13 +739,13 @@ I can show specific student progress assigned to any faculty member."""
             p_1 = sum(1 for r in in_scope_results if (r.total_contest_solved == 1 or (r.q1+r.q2+r.q3+r.q4) == 1))
             p_0 = sum(1 for r in in_scope_results if (r.total_contest_solved == 0 or (r.q1+r.q2+r.q3+r.q4) == 0))
 
-            markdown_resp = f"""### 🏆 Sunday Contest Official 9:35 AM Completion Report
+            markdown_resp = f"""###  Sunday Contest Official 9:35 AM Completion Report
 
 **Contest Session**: **{session_name}** (Sunday Official Session)  
 **Session Finalization Time**: **09:35 AM IST**  
-**Audit Status**: ✅ **100% VERIFIED AUTHENTIC DATA**
+**Audit Status**:  **100% VERIFIED AUTHENTIC DATA**
 
-#### 📊 Solved Breakdown (Q1 + Q2 + Q3 + Q4)
+####  Solved Breakdown (Q1 + Q2 + Q3 + Q4)
 - **4/4 Perfect Solvers**: **{p_4}** students
 - **3/4 Solvers**: **{p_3}** students
 - **2/4 Solvers**: **{p_2}** students
@@ -782,14 +782,14 @@ I can show specific student progress assigned to any faculty member."""
                     matching = [r for r in in_scope_results if (r.total_contest_solved == target_num or (r.q1+r.q2+r.q3+r.q4) == target_num)]
                     
                     if not matching:
-                        markdown_resp = f"### 🎯 Contest Score Audit ({target_num}/4 Solved)\n\n**Contest**: {latest_session.contest_name}\n\nNo active students in current scope scored exactly **{target_num}/4** in this contest session."
+                        markdown_resp = f"###  Contest Score Audit ({target_num}/4 Solved)\n\n**Contest**: {latest_session.contest_name}\n\nNo active students in current scope scored exactly **{target_num}/4** in this contest session."
                     else:
                         rows = "\n".join([
                             f"| {i+1} | **{r.name or student_map[r.student_id].name}** | `{r.reg_no or student_map[r.student_id].reg_no}` | {r.dept or 'N/A'} ({r.year or 'N/A'}) | **{target_num}/4** | VERIFIED |"
                             for i, r in enumerate(matching[:25])
                         ])
                         more_msg = f"\n\n*...and {len(matching) - 25} more solvers with {target_num}/4 score.*" if len(matching) > 25 else ""
-                        markdown_resp = f"### 🎯 Contest Score Audit ({target_num}/4 Solved)\n\n**Contest**: {latest_session.contest_name}\n\nFound **{len(matching)} student(s)** who achieved **{target_num}/4 solved** in the official contest:\n\n| # | Student Name | Register Number | Dept / Year | Contest Ratio | Evidence Status |\n|---|---|---|---|---|---|\n{rows}{more_msg}"
+                        markdown_resp = f"###  Contest Score Audit ({target_num}/4 Solved)\n\n**Contest**: {latest_session.contest_name}\n\nFound **{len(matching)} student(s)** who achieved **{target_num}/4 solved** in the official contest:\n\n| # | Student Name | Register Number | Dept / Year | Contest Ratio | Evidence Status |\n|---|---|---|---|---|---|\n{rows}{more_msg}"
 
                     return {
                         "query": query,
@@ -805,11 +805,11 @@ I can show specific student progress assigned to any faculty member."""
                     absentees = [s for s in all_students if s.id not in participated_ids]
 
                     if not absentees:
-                        markdown_resp = f"### 🏆 Contest Attendance Report\n\n**Contest**: {latest_session.contest_name}\n\n✅ **100% Participation**: All **{in_scope_count} students** in scope attended the contest."
+                        markdown_resp = f"###  Contest Attendance Report\n\n**Contest**: {latest_session.contest_name}\n\n **100% Participation**: All **{in_scope_count} students** in scope attended the contest."
                     else:
                         rows = "\n".join([f"| {i+1} | **{s.name}** | `{s.reg_no}` | {s.department.code if s.department else 'N/A'} |" for i, s in enumerate(absentees[:20])])
                         more_msg = f"\n\n*...and {len(absentees) - 20} more student absentees.*" if len(absentees) > 20 else ""
-                        markdown_resp = f"### 🚨 Contest Absentee Audit\n\n**Contest**: {latest_session.contest_name}\n\nFound **{len(absentees)} student absentees** out of {in_scope_count} total students:\n\n| # | Student Name | Register Number | Department |\n|---|---|---|---|\n{rows}{more_msg}"
+                        markdown_resp = f"###  Contest Absentee Audit\n\n**Contest**: {latest_session.contest_name}\n\nFound **{len(absentees)} student absentees** out of {in_scope_count} total students:\n\n| # | Student Name | Register Number | Department |\n|---|---|---|---|\n{rows}{more_msg}"
 
                     return {
                         "query": query,
@@ -825,7 +825,7 @@ I can show specific student progress assigned to any faculty member."""
                     cnt = r.total_contest_solved if r.total_contest_solved in score_counts else (r.q1+r.q2+r.q3+r.q4)
                     score_counts[min(max(cnt, 0), 4)] += 1  # type: ignore
 
-                markdown_resp = f"""### 📊 Weekly Contest Performance Snapshot
+                markdown_resp = f"""###  Weekly Contest Performance Snapshot
 
 **Contest Session**: {latest_session.contest_name} ({latest_session.session_date or 'Recent'})
 
@@ -859,11 +859,11 @@ I can show specific student progress assigned to any faculty member."""
                     inactive_students.append(s)
 
             if not inactive_students:
-                markdown_resp = f"### ⚡ Student Activity Audit\n\n✅ **High Engagement**: All **{in_scope_count} students** in your scope have active coding submissions."
+                markdown_resp = f"###  Student Activity Audit\n\n **High Engagement**: All **{in_scope_count} students** in your scope have active coding submissions."
             else:
                 rows = "\n".join([f"| {i+1} | **{s.name}** | `{s.reg_no}` | {s.department.code if s.department else 'N/A'} |" for i, s in enumerate(inactive_students[:20])])
                 more_msg = f"\n\n*...and {len(inactive_students) - 20} more inactive students.*" if len(inactive_students) > 20 else ""
-                markdown_resp = f"### ⚠️ Inactive Students Audit\n\nFound **{len(inactive_students)} inactive solvers** (0 verified submissions in current cycle) out of {in_scope_count} students:\n\n| # | Student Name | Register Number | Department |\n|---|---|---|---|\n{rows}{more_msg}"
+                markdown_resp = f"### ️ Inactive Students Audit\n\nFound **{len(inactive_students)} inactive solvers** (0 verified submissions in current cycle) out of {in_scope_count} students:\n\n| # | Student Name | Register Number | Department |\n|---|---|---|---|\n{rows}{more_msg}"
 
             return {
                 "query": query,
@@ -930,13 +930,13 @@ I can show specific student progress assigned to any faculty member."""
                         f"| {i+1} | **{s['name']}** | `{s['reg_no']}` | {s['dept_year']} | **{s['lang_solved']}** | {s['solved']} | {round(s['rating'], 1) if s['rating'] else 'Unrated'} |"
                         for i, s in enumerate(top_list)
                     ])
-                    markdown_resp = f"### 🥇 Top {limit_num} {d_txt}Solvers {l_txt}{y_txt}\n\nRanked top verified solvers by **{lang_match}** problems solved:\n\n| Rank | Student Name | Register Number | Dept / Year | {lang_match} Solved | Total Solved | Contest Rating |\n|---|---|---|---|---|---|---|\n{rows}{scope_note}"
+                    markdown_resp = f"###  Top {limit_num} {d_txt}Solvers {l_txt}{y_txt}\n\nRanked top verified solvers by **{lang_match}** problems solved:\n\n| Rank | Student Name | Register Number | Dept / Year | {lang_match} Solved | Total Solved | Contest Rating |\n|---|---|---|---|---|---|---|\n{rows}{scope_note}"
                 else:
                     rows = "\n".join([
                         f"| {i+1} | **{s['name']}** | `{s['reg_no']}` | {s['dept_year']} | **{s['solved']}** | {round(s['rating'], 1) if s['rating'] else 'Unrated'} |"
                         for i, s in enumerate(top_list)
                     ])
-                    markdown_resp = f"### 🥇 Top {limit_num} {d_txt}Performers Leaderboard {y_txt}\n\nRanked top solvers by total verified LeetCode problems solved:\n\n| Rank | Student Name | Register Number | Dept / Year | Problems Solved | Contest Rating |\n|---|---|---|---|---|---|\n{rows}{scope_note}"
+                    markdown_resp = f"###  Top {limit_num} {d_txt}Performers Leaderboard {y_txt}\n\nRanked top solvers by total verified LeetCode problems solved:\n\n| Rank | Student Name | Register Number | Dept / Year | Problems Solved | Contest Rating |\n|---|---|---|---|---|---|\n{rows}{scope_note}"
             else:
                 markdown_resp = f"No verified students found for {d_txt}{y_txt}in current scope."
 
@@ -950,7 +950,7 @@ I can show specific student progress assigned to any faculty member."""
 
         # F. TODAY'S SUMMARY / WHAT IS HAPPENING TODAY
         if any(w in q_clean for w in ["today", "happening", "summary", "overview"]):
-            markdown_resp = f"""### 📅 Institutional Intelligence Briefing for Today
+            markdown_resp = f"""###  Institutional Intelligence Briefing for Today
 
 Currently monitoring **{in_scope_count} active students** across {dept_name}.
 
@@ -1001,26 +1001,26 @@ You can ask me to view inactive students, contest absentees, staff progress, or 
         """
         # ChatGPT / Claude style full feature request
         if any(kw in q_clean for kw in ["chat gpt", "chatgpt", "claude", "full feature", "full version", "feature", "feceit"]):
-            return """### 🤖 Full-Featured ChatGPT & Claude-Style Intelligence Engine
+            return """###  Full-Featured ChatGPT & Claude-Style Intelligence Engine
 
 I am equipped with comprehensive AI assistant capabilities for **Nandha Engineering College**:
 
-- 💬 **ChatGPT & Claude-Style Conversational AI**: Instant answers, natural language processing, Tanglish & English support.
-- 🔍 **Student Spotlight & Lookup**: Detailed profiles, LeetCode rating, global rank, and language breakdowns (e.g. `732224CC031`).
-- 📊 **Department & Roster Intelligence**: Department-level rankings, attendance tracking, and performance analytics.
-- 🏆 **Sunday Weekly Contest Engine**: Immutability locks, Post-9:30 AM solver detection, and Q1–Q4 ratio tracking.
-- 📄 **1-Click Executive PDF & Excel Reports**: Automated audit exports and staff mentoring summaries.
+-  **ChatGPT & Claude-Style Conversational AI**: Instant answers, natural language processing, Tanglish & English support.
+-  **Student Spotlight & Lookup**: Detailed profiles, LeetCode rating, global rank, and language breakdowns (e.g. `732224CC031`).
+-  **Department & Roster Intelligence**: Department-level rankings, attendance tracking, and performance analytics.
+-  **Sunday Weekly Contest Engine**: Immutability locks, Post-9:30 AM solver detection, and Q1–Q4 ratio tracking.
+-  **1-Click Executive PDF & Excel Reports**: Automated audit exports and staff mentoring summaries.
 
 *How can I assist you right now? Feel free to ask any question or request a report!*"""
 
         # Institution name / college mention
         if any(kw in q_clean for kw in ["nandha", "anndha", "enggiene", "engineering college", "nec"]):
-            return "Welcome! 🏫 I am the **Institutional Intelligence Assistant** for **Nandha Engineering College**. I continuously monitor all **1,573 active students** across CSE, IT, ECE, EEE, AIDS, and AGRI departments. How can I assist you with your department analytics today?"
+            return "Welcome!  I am the **Institutional Intelligence Assistant** for **Nandha Engineering College**. I continuously monitor all **1,573 active students** across CSE, IT, ECE, EEE, AIDS, and AGRI departments. How can I assist you with your department analytics today?"
 
         # User introductions
         if any(p in q_clean for p in ["i am ", "my name is ", "i'm ", "nanthish"]):
             name_str = "Nanthish" if "nanthish" in q_clean else "there"
-            return f"Hello **{name_str}**! 👋 Great to connect with you. I am your Institutional Intelligence Assistant for Nandha Engineering College. I monitor all **1,573 active students** across CSE, IT, ECE, EEE, AIDS, and AGRI departments. How can I help you today?"
+            return f"Hello **{name_str}**!  Great to connect with you. I am your Institutional Intelligence Assistant for Nandha Engineering College. I monitor all **1,573 active students** across CSE, IT, ECE, EEE, AIDS, and AGRI departments. How can I help you today?"
 
         data_keywords = ["student", "staff", "cse", "it", "ece", "eee", "mech", "civil", "aids", "aiml", "iot", "report", "pdf", "contest", "conetst", "weelky", "weekly", "sonet", "3/4", "4/4", "2/4", "1/4", "0/4", "ratio", "absent", "inactive", "pending", "top", "rank", "solved", "rating", "7322", "path", "detail"]
         if any(kw in q_clean for kw in data_keywords) or re.search(r'[0-4]\s*/\s*4', q_clean):
@@ -1035,7 +1035,7 @@ I am equipped with comprehensive AI assistant capabilities for **Nandha Engineer
                 return "Good afternoon! What would you like to check today?"
             elif "evening" in q_clean:
                 return "Good evening! Ready to assist with your institutional analytics."
-            return "Hello! 👋 How can I help you today?"
+            return "Hello!  How can I help you today?"
 
         # 2. Identity
         if any(phrase in q_clean for phrase in ["who are you", "what is your name", "what's your name", "who created you", "what are you"]):
@@ -1050,10 +1050,10 @@ I am equipped with comprehensive AI assistant capabilities for **Nandha Engineer
             return "I'm doing well, thanks! Ready to help you with the institutional data."
 
         if "give" in q_clean or "sollu" in q_clean or "sollunga" in q_clean or "paaru" in q_clean:
-            return "Hello! 👋 I am ready to assist. You can ask me:\n- *'Show CSE top performers'*\n- *'Who missed the last contest?'*\n- *'Show Post-9:30 AM solvers report'*\n- *'Lookup student 732224CC031'*\n- *'Export Executive PDF Report'*\nOr ask any question about the roster!"
+            return "Hello!  I am ready to assist. You can ask me:\n- *'Show CSE top performers'*\n- *'Who missed the last contest?'*\n- *'Show Post-9:30 AM solvers report'*\n- *'Lookup student 732224CC031'*\n- *'Export Executive PDF Report'*\nOr ask any question about the roster!"
         
         if "joke" in q_clean:
-            return "Why do programmers prefer dark mode? Because light attracts bugs! 🐛 😄 How can I assist with your student data today?"
+            return "Why do programmers prefer dark mode? Because light attracts bugs!   How can I assist with your student data today?"
 
         # 5. Thanks
         if any(phrase in q_clean for phrase in ["thanks", "thank you", "nandri", "thx", "many thanks"]):

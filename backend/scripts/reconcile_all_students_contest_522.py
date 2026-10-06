@@ -164,19 +164,19 @@ async def run_reconciliation(session_id: int = 13, contest_number: int = 522):
                         ).first()
 
                         if wpr:
-                            wpr.q1 = final_q1
-                            wpr.q2 = final_q2
-                            wpr.q3 = final_q3
-                            wpr.q4 = final_q4
-                            wpr.total_contest_solved = final_solved
-                            wpr.contest_score = final_score
+                            wpr.q1 = final_q1  # type: ignore
+                            wpr.q2 = final_q2  # type: ignore
+                            wpr.q3 = final_q3  # type: ignore
+                            wpr.q4 = final_q4  # type: ignore
+                            wpr.total_contest_solved = final_solved  # type: ignore
+                            wpr.contest_score = final_score  # type: ignore
                             if hist_rank:
                                 wpr.contest_rank = hist_rank
                             if hist_rating:
                                 wpr.contest_rating = hist_rating
-                            wpr.participation_status = status_str
-                            wpr.confidence = "VERIFIED"
-                            wpr.fetch_status = "SUCCESS"
+                            wpr.participation_status = status_str  # type: ignore
+                            wpr.confidence = "VERIFIED"  # type: ignore
+                            wpr.fetch_status = "SUCCESS"  # type: ignore
 
                         pwpr = db.query(PreviousWeekParticipationRecord).filter(
                             PreviousWeekParticipationRecord.session_id == session.id,
@@ -206,16 +206,16 @@ async def run_reconciliation(session_id: int = 13, contest_number: int = 522):
                             )
                             db.add(pwpr)
                         else:
-                            pwpr.q1 = final_q1
-                            pwpr.q2 = final_q2
-                            pwpr.q3 = final_q3
-                            pwpr.q4 = final_q4
-                            pwpr.problems_solved = final_solved
-                            pwpr.official_score = final_score
+                            pwpr.q1 = final_q1  # type: ignore
+                            pwpr.q2 = final_q2  # type: ignore
+                            pwpr.q3 = final_q3  # type: ignore
+                            pwpr.q4 = final_q4  # type: ignore
+                            pwpr.problems_solved = final_solved  # type: ignore
+                            pwpr.official_score = final_score  # type: ignore
                             if hist_rank:
                                 pwpr.official_rank = hist_rank
-                            pwpr.participation_type = status_str
-                            pwpr.verification_status = "VERIFIED"
+                            pwpr.participation_type = status_str  # type: ignore
+                            pwpr.verification_status = "VERIFIED"  # type: ignore
 
                         total_synced += 1
 

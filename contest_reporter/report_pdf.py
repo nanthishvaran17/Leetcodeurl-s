@@ -149,7 +149,7 @@ def generate_pdf(
 
         [Paragraph("STREAK", S["kpi_label"]),
          Paragraph(f"{analysis.get('streak', 0)}w", S["kpi_value"]),
-         Paragraph("🔥 Consecutive", ParagraphStyle("d3", fontSize=7, fontName="Helvetica",
+         Paragraph(" Consecutive", ParagraphStyle("d3", fontSize=7, fontName="Helvetica",
                                                       alignment=TA_CENTER))],
     ]]
     col_w = doc.width / 4
@@ -178,14 +178,14 @@ def generate_pdf(
     story.append(HRFlowable(width="100%", thickness=0.5, color=LIGHT, spaceAfter=3*mm))
 
     # ── Narrative ──────────────────────────────────────────────────────────────
-    _section_banner(story, doc, "📝  Performance Summary", S)
+    _section_banner(story, doc, "  Performance Summary", S)
     story.append(Paragraph(analysis.get("narrative", "No data available."), S["italic"]))
     story.append(Spacer(1, 3*mm))
 
     # ── Tag weakness table ─────────────────────────────────────────────────────
     weak_tags = analysis.get("weak_tags") or []
     if weak_tags:
-        _section_banner(story, doc, "📉  Topic Weakness (Lowest Accuracy)", S)
+        _section_banner(story, doc, "  Topic Weakness (Lowest Accuracy)", S)
         tag_rows = [["Topic Tag", "Accuracy", "Attempted", "Accepted"]]
         for t in weak_tags:
             tag_rows.append([
@@ -214,7 +214,7 @@ def generate_pdf(
     if analysis.get("milestones_crossed"):
         for m in analysis["milestones_crossed"]:
             story.append(Paragraph(
-                f"🎉  Rating milestone crossed this week: <b>{m}</b>! Outstanding achievement.",
+                f"  Rating milestone crossed this week: <b>{m}</b>! Outstanding achievement.",
                 ParagraphStyle("milestone", fontSize=10, fontName="Helvetica-Bold",
                                textColor=GREEN, spaceAfter=3)
             ))
@@ -222,7 +222,7 @@ def generate_pdf(
     # ── Rating history mini-table ───────────────────────────────────────────────
     hist = analysis.get("history") or []
     if hist:
-        _section_banner(story, doc, "📊  Recent Contest History", S)
+        _section_banner(story, doc, "  Recent Contest History", S)
         recent = list(reversed(hist[:8]))  # last 8, oldest first
         hist_rows = [["Contest", "Rating", "Δ Rating", "Rank", "Solved"]]
         prev_r = None

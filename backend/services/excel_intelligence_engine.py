@@ -1,7 +1,7 @@
 import re
 import datetime
 from typing import Dict, Any, List, Optional, Tuple
-import pandas as pd
+import pandas as pd  # type: ignore
 
 # Canonical student import schema fields
 CANONICAL_FIELDS = {
@@ -128,28 +128,28 @@ def normalize_department_value(val: Any, existing_depts: Dict[str, Any]) -> Tupl
     
     # Check exact code or name in existing departments
     for key, dept_obj in existing_depts.items():
-        k_clean = str(key).upper().replace(".", "").replace(" ", "").replace("&", "")
+        k_clean = str(key).upper().replace(".", "").replace(" ", "").replace("&", "")  # type: ignore
         if dept_upper == k_clean or (len(dept_upper) >= 4 and dept_upper in k_clean):
-            code = dept_obj.code if hasattr(dept_obj, 'code') else str(key)
+            code = dept_obj.code if hasattr(dept_obj, 'code') else str(key)  # type: ignore
             d_id = dept_obj.id if hasattr(dept_obj, 'id') else None
             return (code, d_id, "HIGH", False)
 
     # Common synonym aliases
     if any(k in dept_upper for k in ["CYBER", "CSECS", "CS"]):
         for key, dept_obj in existing_depts.items():
-            if "CS" in str(key).upper():
+            if "CS" in str(key).upper():  # type: ignore
                 return (dept_obj.code, dept_obj.id, "HIGH", False)
     elif any(k in dept_upper for k in ["IOT", "CSEIOT", "CI"]):
         for key, dept_obj in existing_depts.items():
-            if "IOT" in str(key).upper() or "CI" in str(key).upper():
+            if "IOT" in str(key).upper() or "CI" in str(key).upper():  # type: ignore
                 return (dept_obj.code, dept_obj.id, "HIGH", False)
     elif any(k in dept_upper for k in ["IT", "INFORMATION"]):
         for key, dept_obj in existing_depts.items():
-            if "IT" in str(key).upper():
+            if "IT" in str(key).upper():  # type: ignore
                 return (dept_obj.code, dept_obj.id, "HIGH", False)
     elif any(k in dept_upper for k in ["AIDS", "ARTIFICIAL"]):
         for key, dept_obj in existing_depts.items():
-            if "AIDS" in str(key).upper():
+            if "AIDS" in str(key).upper():  # type: ignore
                 return (dept_obj.code, dept_obj.id, "HIGH", False)
 
     # Flag as newly discovered department
@@ -184,7 +184,7 @@ def detect_column_headers(raw_headers: List[str]) -> Tuple[Dict[str, str], Dict[
     used_canonicals = set()
 
     for h in raw_headers:
-        clean_h = str(h).strip().lower().replace(" ", "_").replace(".", "").replace("-", "_")
+        clean_h = str(h).strip().lower().replace(" ", "_").replace(".", "").replace("-", "_")  # type: ignore
 
         matched_field = None
         confidence = "LOW"
@@ -247,7 +247,7 @@ def find_best_header_row_and_dataframe(file_bytes: bytes) -> Tuple[pd.DataFrame,
             df_std = pd.read_excel(io.BytesIO(file_bytes))
         except Exception:
             df_std = pd.read_csv(io.BytesIO(file_bytes))
-        return df_std, [str(c).strip() for c in df_std.columns]
+        return df_std, [str(c).strip() for c in df_std.columns]  # type: ignore
 
     header_keywords = {
         "reg", "roll", "register", "reg_no", "regno", "roll_no", "rollno",
@@ -291,5 +291,5 @@ def find_best_header_row_and_dataframe(file_bytes: bytes) -> Tuple[pd.DataFrame,
     except Exception:
         df_std = pd.read_csv(io.BytesIO(file_bytes))
     
-    return df_std, [str(c).strip() for c in df_std.columns]
+    return df_std, [str(c).strip() for c in df_std.columns]  # type: ignore
 

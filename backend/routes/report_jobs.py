@@ -286,6 +286,38 @@ def create_report_job(
         created_at=datetime.datetime.now(datetime.timezone.utc)
     )
     
+    # Fast-path check: Is this report already pre-generated and READY in ReportCache?
+    format_ext = payload.get("format", "xlsx")
+    filters_dict = payload.get("filters", {})
+    if rep_type not in ("FORENSIC_PDF", "CERTIFICATE_FORENSIC_PDF", "DATA_ISSUES_EXCEL", "DATA_ISSUES_CSV"):
+        try:
+            from backend.services.pregenerated_report_service import get_or_create_report
+            from backend.models import ReportCache
+            
+            cached_info = get_or_create_report(
+                db=db,
+                report_type=rep_type,
+                format=format_ext,
+                filters=filters_dict,
+                current_user=current_user,
+                institution_id=institution_id,
+                background=True  # Read-only check
+            )
+            
+            if cached_info and cached_info.get("status") == "READY" and cached_info.get("cache_id"):
+                cache_rec = db.query(ReportCache).filter(ReportCache.id == cached_info["cache_id"]).first()
+                if cache_rec and cache_rec.storage_path and os.path.exists(cache_rec.storage_path) and os.path.getsize(cache_rec.storage_path) > 0:
+                    new_job.status = "COMPLETED"  # type: ignore
+                    new_job.progress = 100  # type: ignore
+                    new_job.file_path = cache_rec.storage_path  # type: ignore
+                    new_job.completed_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore
+                    db.add(new_job)
+                    db.commit()
+                    logger.info(f"[ReportJob Engine] Instant cache hit for job {job_id} ({rep_type})")
+                    return {"job_id": job_id, "status": "COMPLETED"}
+        except Exception as e:
+            logger.warning(f"[ReportJob Engine] Fast-path cache lookup failed: {e}")
+
     db.add(new_job)
     db.commit()
     
@@ -407,7 +439,7 @@ def download_report_job_file(
     return FileResponse(
         path=job.file_path,
         media_type=media_type,
-        filename=filename,
+        filename=filename,  # type: ignore
         headers={
             "Content-Disposition": f'attachment; filename="{filename}"',
             "Cache-Control": "private, no-cache, no-store, must-revalidate",

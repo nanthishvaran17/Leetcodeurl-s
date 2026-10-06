@@ -150,7 +150,9 @@ def create_server_admin_session(db: Session, user: User, request: Request, respo
         expires_at=expires,
         last_used_at=now,
         ip_hash=ip_h,
-        user_agent_hash=ua_h
+        user_agent_hash=ua_h,
+        ip_address=client_ip,
+        device_name=ua_str[:500] if ua_str else "Unknown Device"
     )
     db.add(session_rec)
     db.commit()
@@ -2562,3 +2564,76 @@ async def passkey_login_verify(request: Request, response: Response, db: Session
         logger.error(f"[PASSKEY] Login verification error: {e}")
         return JSONResponse(status_code=400, content={"success": False, "message": f"Authentication failed: {str(e)}"})
 
+@router.get("/sessions")
+def get_user_sessions(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Returns all active sessions for the current user."""
+    now = _utcnow()
+    sessions = db.query(AdminSession).filter(
+        AdminSession.user_id == current_user.id,
+        AdminSession.revoked_at == None,
+        AdminSession.expires_at > now
+    ).order_by(AdminSession.last_used_at.desc()).all()
+    
+    # Check which one is the current session by matching the cookie/token hash
+    candidate_tokens = []
+    auth_header = request.headers.get("Authorization")
+    if auth_header:
+        parts = auth_header.strip().split()
+        if len(parts) == 2 and parts[0].lower() in ["bearer", "token"]:
+            candidate_tokens.append(parts[1].strip())
+    
+    for cookie_name in ["admin_session_token", "session_token", "access_token", "token"]:
+        if request.cookies.get(cookie_name):
+            candidate_tokens.append(request.cookies.get(cookie_name).strip())
+            
+    current_hashes = [hashlib.sha256(t.encode('utf-8')).hexdigest() for t in candidate_tokens if t]
+
+    result = []
+    for s in sessions:
+        is_current = s.token_hash in current_hashes
+        
+        # Format time display
+        time_str = "Unknown"
+        if s.last_used_at:
+            diff = (now - s.last_used_at).total_seconds()
+            if is_current or diff < 300:
+                time_str = "Active Now"
+            elif diff < 3600:
+                time_str = f"{int(diff // 60)} mins ago"
+            elif diff < 86400:
+                time_str = f"{int(diff // 3600)} hours ago"
+            else:
+                time_str = f"{int(diff // 86400)} days ago"
+                
+        # Format device display (try to use plaintext, fallback to hash representation)
+        device_display = s.device_name or "Secure Session"
+        ip_display = s.ip_address or s.ip_hash[:16] if s.ip_hash else "Unknown IP"
+        
+        result.append({
+            "id": s.session_id,
+            "device": device_display,
+            "ip": ip_display,
+            "time": f"Active Now (Current Session)" if is_current else time_str,
+            "current": is_current,
+            "created_at": s.created_at.isoformat() if s.created_at else None,
+            "expires_at": s.expires_at.isoformat() if s.expires_at else None
+        })
+        
+    return {"success": True, "sessions": result}
+
+
+@router.delete("/sessions/{session_id}")
+def revoke_session(session_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Revokes a specific session."""
+    session_rec = db.query(AdminSession).filter(
+        AdminSession.session_id == session_id,
+        AdminSession.user_id == current_user.id
+    ).first()
+    
+    if not session_rec:
+        raise HTTPException(status_code=404, detail="Session not found.")
+        
+    session_rec.revoked_at = _utcnow()
+    db.commit()
+    
+    return {"success": True, "message": "Session revoked successfully."}

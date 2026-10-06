@@ -19,7 +19,7 @@ import { GlobalModalBackdrop } from './GlobalModalBackdrop';
 import { DynamicQRCode } from './DynamicQRCode';
 import Cropper from 'react-easy-crop';
 import 'react-easy-crop/react-easy-crop.css';
-import { startRegistration } from '@simplewebauthn/browser';
+import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser';
 
 const getCroppedImg = (imageSrc: string, pixelCrop: any): Promise<string> => {
   const canvas = document.createElement('canvas');
@@ -384,7 +384,8 @@ export const AccountProfileSettings: React.FC = () => {
   const [is2FAEnabled, setIs2FAEnabled] = useState<boolean>(() => localStorage.getItem('nec_2fa_enabled') === 'true' || Boolean((user as any)?.is_2fa_enabled));
   const [show2FASetupModal, setShow2FASetupModal] = useState<boolean>(false);
   const [totpCodeInput, setTotpCodeInput] = useState<string>('');
-  const [totpSecret] = useState<string>('JBSWY3DPEHPK3PXP');
+  const [totpSecret, setTotpSecret] = useState<string>('');
+  const [totpUri, setTotpUri] = useState<string>('');
   const [backupCodes] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('nec_backup_codes');
@@ -407,11 +408,8 @@ export const AccountProfileSettings: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Active Sessions
-  const [sessions, setSessions] = useState([
-    { id: 'sess-1', device: 'Google Chrome on Windows 11', ip: '103.24.188.42 (Campus Wi-Fi)', time: 'Active Now (Current Session)', current: true },
-    { id: 'sess-2', device: 'Safari on iPhone 15 Pro', ip: '49.37.12.189 (Mobile Network)', time: 'Yesterday, 06:45 PM', current: false },
-    { id: 'sess-3', device: 'Firefox on Linux Workstation', ip: '10.20.4.15 (CSE Lab 2)', time: '3 days ago', current: false }
-  ]);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState<boolean>(true);
 
   // Security Login History Audit
   const [loginHistory] = useState<any[]>([]);
@@ -621,6 +619,26 @@ export const AccountProfileSettings: React.FC = () => {
     };
     if (user) {
       fetchMentees();
+    }
+  }, [user]);
+
+  const fetchSessions = async () => {
+    setSessionsLoading(true);
+    try {
+      const res = await api.get('/auth/sessions');
+      if (res.data?.success && res.data.sessions) {
+        setSessions(res.data.sessions);
+      }
+    } catch (err) {
+      console.error('Failed to fetch sessions', err);
+    } finally {
+      setSessionsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchSessions();
     }
   }, [user]);
 
@@ -838,14 +856,41 @@ export const AccountProfileSettings: React.FC = () => {
     notify.success('Mentee list exported as CSV successfully!', '', { category: 'ADMIN' });
   };
 
-  const handleRevokeSession = (sessionId: string) => {
-    setSessions(prev => prev.filter(s => s.id !== sessionId));
-    notify.success('Device session revoked successfully', '', { category: 'ADMIN' });
+  const handleRevokeSession = async (sessionId: string) => {
+    try {
+      await api.delete(`/auth/sessions/${sessionId}`);
+      setSessions(prev => prev.filter(s => s.id !== sessionId));
+      notify.success('Device session revoked successfully', '', { category: 'ADMIN' });
+    } catch (err: any) {
+      notify.error(err.response?.data?.detail || err.response?.data?.message || 'Failed to revoke session', '', { category: 'ADMIN' });
+    }
   };
 
-  const handleRevokeAllOtherSessions = () => {
-    setSessions(prev => prev.filter(s => s.current));
-    notify.success('All other remote device sessions revoked', '', { category: 'ADMIN' });
+  const handleRevokeAllOtherSessions = async () => {
+    try {
+      const otherSessions = sessions.filter(s => !s.current);
+      for (const s of otherSessions) {
+        await api.delete(`/auth/sessions/${s.id}`);
+      }
+      setSessions(prev => prev.filter(s => s.current));
+      notify.success('All other remote device sessions revoked', '', { category: 'ADMIN' });
+    } catch (err) {
+      notify.error('Failed to revoke some sessions', '', { category: 'ADMIN' });
+    }
+  };
+
+  const handleOpen2FASetup = async () => {
+    try {
+      const res = await api.post('/auth/2fa/generate');
+      if (res.data?.secret && res.data?.uri) {
+        setTotpSecret(res.data.secret);
+        setTotpUri(res.data.uri);
+        setTotpCodeInput('');
+        setShow2FASetupModal(true);
+      }
+    } catch (err) {
+      notify.error('Failed to generate 2FA secret', '', { category: 'ADMIN' });
+    }
   };
 
   const institutionalId = (user as any)?.institutional_id || `NEC-STAFF-${user?.id ? String(user.id).padStart(3, '0') : '098'}`;
@@ -858,12 +903,7 @@ export const AccountProfileSettings: React.FC = () => {
     return `BEGIN:VCARD\r\nVERSION:3.0\r\nN:${fullName || 'Faculty Member'};;;;\r\nFN:${fullName || 'Faculty Member'}\r\nTITLE:${designation || 'Staff'}\r\nORG:Nandha Engineering College (Autonomous);${departmentName}\r\nTEL;TYPE=WORK,VOICE:${phoneNumber || '9042020879'}\r\nEMAIL;TYPE=WORK:${user?.email || 'nanthishvaran17@gmail.com'}\r\nNOTE:Institutional ID: ${institutionalId} | Status: VERIFIED ACTIVE | Auth: SHA256-${institutionalId.toLowerCase()}-verified\r\nURL:https://nandhaengg.org\r\nEND:VCARD`;
   }, [institutionalId, fullName, designation, departmentName, phoneNumber, user?.email]);
 
-  // Dynamic Scannable TOTP Authenticator URI
-  const totpUri = useMemo(() => {
-    const issuer = encodeURIComponent('Nandha Engineering College');
-    const account = encodeURIComponent(user?.email || institutionalId);
-    return `otpauth://totp/${issuer}:${account}?secret=${totpSecret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`;
-  }, [user?.email, institutionalId, totpSecret]);
+
 
   // Export profile summary JSON
   const handleExportProfileJson = () => {
@@ -1353,7 +1393,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         <div className="relative z-10 space-y-5 sm:space-y-6">
           {/* Top Sub-row: Category Badge, IST Clock & Quick Actions */}
           <div className="flex items-center justify-between gap-2 pb-3 border-b border-white/15">
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-brand-500/25 border border-brand-400/40 text-brand-200 text-[10px] sm:text-xs font-black uppercase tracking-wider">
+            <div className="inline-flex items-center whitespace-nowrap shrink-0 px-3 py-1 rounded-full bg-brand-500/25 border border-brand-400/40 text-brand-200 text-[10px] sm:text-xs font-black uppercase tracking-wider">
               <span className="hidden sm:inline">Personal Identity • Self-Service Hub</span>
               <span className="sm:hidden">Identity Hub</span>
             </div>
@@ -1543,13 +1583,13 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
       </div>
 
       {/* 3. RESPONSIVE 5-TAB NAVIGATION — ULTRA PREMIUM DESIGN */}
-      <div className="flex flex-col lg:flex-row gap-2 p-2 rounded-[20px] bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-white/10 shadow-[inset_0_1px_4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_4px_rgba(255,255,255,0.02)] relative overflow-hidden">
+      <div className="flex flex-wrap gap-2 p-2 rounded-[20px] bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-white/10 shadow-[inset_0_1px_4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_4px_rgba(255,255,255,0.02)] relative">
         
         {/* Tab 1: Personal & Academic Profile */}
         <button
           type="button"
           onClick={() => setActiveTab('profile')}
-          className={`flex-1 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
+          className={`flex-1 min-w-[140px] lg:min-w-0 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
             activeTab === 'profile'
               ? 'text-white bg-gradient-to-r from-brand-600 to-indigo-600 shadow-[0_4px_12px_rgba(79,70,229,0.3)]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
@@ -1564,7 +1604,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         <button
           type="button"
           onClick={() => setActiveTab('security')}
-          className={`flex-1 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
+          className={`flex-1 min-w-[140px] lg:min-w-0 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
             activeTab === 'security'
               ? 'text-white bg-gradient-to-r from-emerald-500 to-teal-600 shadow-[0_4px_12px_rgba(16,185,129,0.3)]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
@@ -1579,7 +1619,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         <button
           type="button"
           onClick={() => setActiveTab('preferences')}
-          className={`flex-1 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
+          className={`flex-1 min-w-[140px] lg:min-w-0 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
             activeTab === 'preferences'
               ? 'text-white bg-gradient-to-r from-purple-500 to-pink-600 shadow-[0_4px_12px_rgba(168,85,247,0.3)]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
@@ -1594,7 +1634,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         <button
           type="button"
           onClick={() => setActiveTab('id_card')}
-          className={`flex-1 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
+          className={`flex-1 min-w-[140px] lg:min-w-0 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
             activeTab === 'id_card'
               ? 'text-white bg-gradient-to-r from-sky-500 to-blue-600 shadow-[0_4px_12px_rgba(14,165,233,0.3)]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
@@ -1609,7 +1649,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         <button
           type="button"
           onClick={() => setActiveTab('mentorship')}
-          className={`flex-1 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
+          className={`flex-1 min-w-[140px] lg:min-w-0 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
             activeTab === 'mentorship'
               ? 'text-white bg-gradient-to-r from-amber-500 to-orange-600 shadow-[0_4px_12px_rgba(245,158,11,0.3)]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
@@ -1758,7 +1798,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       value={fullName}
                       onChange={e => setFullName(e.target.value)}
                       placeholder="Dr. / Mr. / Ms. Name"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
                       required
                     />
                   </div>
@@ -1771,7 +1811,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       value={designation}
                       onChange={e => setDesignation(e.target.value)}
                       placeholder="e.g. Assistant Professor, Lead System Architect, HOD"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
                     />
                   </div>
 
@@ -1783,7 +1823,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       value={phoneNumber}
                       onChange={e => setPhoneNumber(e.target.value)}
                       placeholder="+91 9876543210"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
                     />
                   </div>
 
@@ -1807,13 +1847,13 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         }}
                         placeholder="MM/DD/YYYY (e.g. 08/15/1990)"
                         maxLength={10}
-                        className="w-full h-11 pl-4 pr-10 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-mono font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                        className="w-full h-11 pl-4 pr-10 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-mono font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
                       />
                       <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center">
                         <input
                           type="date"
                           id="acc-settings-dob-picker"
-                          className="opacity-0 absolute w-6 h-6 cursor-pointer"
+                          className="opacity-0 absolute w-6 h-6 cursor-pointer text-ellipsis"
                           onChange={e => {
                             if (e.target.value) {
                               const parts = e.target.value.split('-');
@@ -1851,7 +1891,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       value={officeLocation}
                       onChange={e => setOfficeLocation(e.target.value)}
                       placeholder="e.g. CS Block Room 204"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
                     />
                   </div>
 
@@ -1863,7 +1903,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       value={emergencyContactName}
                       onChange={e => setEmergencyContactName(e.target.value)}
                       placeholder="e.g. Spouse / Parent / Relative"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
                     />
                   </div>
 
@@ -1875,7 +1915,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       value={emergencyContactPhone}
                       onChange={e => setEmergencyContactPhone(e.target.value)}
                       placeholder="+91 9876543210"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
                     />
                   </div>
 
@@ -1887,7 +1927,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       value={highestDegree}
                       onChange={e => setHighestDegree(e.target.value)}
                       placeholder="e.g. M.E. Computer Science & Engineering • Anna University"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
                     />
                   </div>
 
@@ -1899,7 +1939,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       value={specialization}
                       onChange={e => setSpecialization(e.target.value)}
                       placeholder="e.g. Algorithms, Distributed Cloud Systems, Deep Learning"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
                     />
                   </div>
 
@@ -1911,7 +1951,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       value={coursesTaught}
                       onChange={e => setCoursesTaught(e.target.value)}
                       placeholder="e.g. CS8451 Design & Analysis of Algorithms, Data Structures Lab"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
                     />
                   </div>
 
@@ -2053,8 +2093,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
                       <label className="block text-xs font-black text-slate-900 dark:text-slate-100">ORCID iD</label>
                       <input
                         type="text"
@@ -2067,7 +2107,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       />
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       <label className="block text-xs font-black text-slate-900 dark:text-slate-100">LeetCode Handle</label>
                       <input
                         type="text"
@@ -2143,13 +2183,13 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         type={showCurrentPassword ? 'text' : 'password'}
                         value={currentPassword}
                         onChange={e => setCurrentPassword(e.target.value)}
-                        placeholder="Enter current password to authorize changes"
-                        className="w-full h-11 px-4 pr-10 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                        placeholder="Enter current password"
+                        className="w-full h-11 pl-4 pr-11 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
                       />
                       <button
                         type="button"
                         onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
                       >
                         {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -2165,7 +2205,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           value={newPassword}
                           onChange={e => setNewPassword(e.target.value)}
                           placeholder="Min 6 characters"
-                          className="w-full h-11 px-4 pr-10 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                          className="w-full h-11 pl-4 pr-11 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
                         />
                         <button
                           type="button"
@@ -2184,7 +2224,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         value={confirmPassword}
                         onChange={e => setConfirmPassword(e.target.value)}
                         placeholder="Repeat new password"
-                        className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                        className="w-full h-11 pl-4 pr-11 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
                       />
                     </div>
                   </div>
@@ -2235,33 +2275,40 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <h4 className="text-xs font-black text-slate-950 dark:text-white">Windows Hello / Touch ID / YubiKey</h4>
                     <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Sign in instantly without passwords using cryptographic biometrics.</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        const optionsRes = await api.get('/auth/passkey/register-options');
-                        const options = optionsRes.data?.options || optionsRes.data;
-                        if (!options || (!options.challenge && !options.rp)) {
-                          notify.error('Failed to get passkey options from server', '', { category: 'ADMIN' });
-                          return;
+                  {browserSupportsWebAuthn() ? (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const optionsRes = await api.get('/auth/passkey/register-options');
+                          const options = optionsRes.data?.options || optionsRes.data;
+                          if (!options || (!options.challenge && !options.rp)) {
+                            notify.error('Failed to get passkey options from server', '', { category: 'ADMIN' });
+                            return;
+                          }
+                          const attResp = await startRegistration(options);
+                          const verifyRes = await api.post('/auth/passkey/register-verify', attResp);
+                          if (verifyRes.data?.success) {
+                            notify.success('Passkey registered successfully! You can now use it to sign in.', '', { category: 'ADMIN' });
+                          } else {
+                            notify.error(verifyRes.data?.message || 'Failed to register passkey', '', { category: 'ADMIN' });
+                          }
+                        } catch (err: any) {
+                          console.error('Passkey registration error:', err);
+                          notify.error(err?.message || 'Passkey registration failed.', '', { category: 'ADMIN' });
                         }
-                        const attResp = await startRegistration(options);
-                        const verifyRes = await api.post('/auth/passkey/register-verify', attResp);
-                        if (verifyRes.data?.success) {
-                          notify.success('Passkey registered successfully! You can now use it to sign in.', '', { category: 'ADMIN' });
-                        } else {
-                          notify.error(verifyRes.data?.message || 'Failed to register passkey', '', { category: 'ADMIN' });
-                        }
-                      } catch (err: any) {
-                        console.error('Passkey registration error:', err);
-                        notify.error(err?.message || 'Passkey registration failed.', '', { category: 'ADMIN' });
-                      }
-                    }}
-                    className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0"
-                  >
-                    <Fingerprint className="w-3.5 h-3.5" />
-                    <span>Register Passkey</span>
-                  </button>
+                      }}
+                      className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0"
+                    >
+                      <Fingerprint className="w-3.5 h-3.5" />
+                      <span>Register Passkey</span>
+                    </button>
+                  ) : (
+                    <div className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-navy-800 text-slate-500 dark:text-slate-400 text-xs font-black inline-flex items-center gap-1.5 shrink-0 select-none">
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      <span>Not Supported on Device</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -2288,7 +2335,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   {!is2FAEnabled ? (
                     <button
                       type="button"
-                      onClick={() => setShow2FASetupModal(true)}
+                      onClick={handleOpen2FASetup}
                       className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-2"
                     >
                       <QrCode className="w-4 h-4" />
@@ -2347,7 +2394,15 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   )}
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 relative">
+                  {sessionsLoading && (
+                    <div className="absolute inset-0 bg-white/50 dark:bg-navy-900/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-2xl">
+                      <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                  {sessions.length === 0 && !sessionsLoading && (
+                    <div className="p-4 text-center text-xs font-bold text-slate-500">No active sessions found.</div>
+                  )}
                   {sessions.map(s => (
                     <div key={s.id} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 flex items-center justify-between gap-3">
                       <div className="space-y-0.5 min-w-0">
@@ -2447,21 +2502,22 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             <div className="lg:col-span-7 space-y-6">
               
               <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 gap-3 sm:gap-0">
                   <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Automated Portal Alerts
+                    <Bell className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" /> 
+                    <span>Automated Portal Alerts</span>
                   </h3>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3 sm:gap-2 self-end sm:self-auto">
                     <button
                       type="button"
                       onClick={playChimeSound}
-                      className="px-2.5 py-1 rounded-lg text-xs font-black bg-purple-100 hover:bg-purple-200 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300 transition-colors border border-purple-300 dark:border-purple-500/30 cursor-pointer flex items-center gap-1"
+                      className="px-2.5 py-1 rounded-lg text-xs font-black bg-purple-100 hover:bg-purple-200 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300 transition-colors border border-purple-300 dark:border-purple-500/30 cursor-pointer flex items-center gap-1.5 shrink-0"
                       title="Test Audio Chime"
                     >
                       <Volume2 className="w-3.5 h-3.5" />
                       <span>Test Audio</span>
                     </button>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Real-Time Sync</span>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">Real-Time Sync</span>
                   </div>
                 </div>
 
@@ -2694,8 +2750,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                   {/* Institution Header */}
                   <div className="flex items-center justify-between border-b border-white/20 pb-4 relative z-10">
-                    <div className="flex items-center gap-4 sm:gap-5">
-                      <div className="w-12 h-12 shrink-0 rounded-xl bg-white/15 border border-white/30 flex items-center justify-center font-black text-amber-300 text-xl shadow-inner tracking-wide">
+                    <div className="flex items-center gap-6 sm:gap-8">
+                      <div className="w-12 h-12 shrink-0 rounded-xl bg-white/15 border border-white/30 flex items-center justify-center font-black text-amber-300 text-xl shadow-inner tracking-wide mr-1 sm:mr-2">
                         NEC
                       </div>
                       <div className="flex flex-col gap-0.5">
@@ -3163,7 +3219,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     type="text"
                     readOnly
                     value={totpSecret}
-                    className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-slate-100 dark:bg-navy-950 font-mono font-black text-xs text-indigo-600 dark:text-indigo-400 select-all"
+                    className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-slate-100 dark:bg-navy-950 font-mono font-black text-xs text-indigo-600 dark:text-indigo-400 select-all text-ellipsis"
                   />
                   <button
                     type="button"
@@ -3184,13 +3240,6 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <label className="block text-xs font-black text-slate-950 dark:text-white">
                     2. Enter 6-digit code:
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setTotpCodeInput('849201')}
-                    className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-                  >
-                    Use Sample Code (849201)
-                  </button>
                 </div>
                 <input
                   type="text"
@@ -3198,7 +3247,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   value={totpCodeInput}
                   onChange={e => setTotpCodeInput(e.target.value.replace(/\D/g, ''))}
                   placeholder="000 000"
-                  className="w-full h-11 px-4 rounded-xl border-2 border-indigo-500 bg-white dark:bg-navy-950 text-center font-mono font-black text-lg tracking-widest text-slate-950 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="w-full h-11 px-4 rounded-xl border-2 border-indigo-500 bg-white dark:bg-navy-950 text-center font-mono font-black text-lg tracking-widest text-slate-950 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 text-ellipsis"
                 />
               </div>
             </div>
@@ -3214,17 +3263,21 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               <button
                 type="button"
                 onClick={async () => {
-                  const codeToVerify = totpCodeInput.trim() || '849201';
+                  const codeToVerify = totpCodeInput.trim();
                   if (codeToVerify.length === 6) {
-                    setIs2FAEnabled(true);
-                    localStorage.setItem('nec_2fa_enabled', 'true');
                     try {
-                      await api.put('/auth/profile', { is_2fa_enabled: true });
-                    } catch {}
-                    setShow2FASetupModal(false);
-                    setShowBackupCodesModal(true);
-                    notify.success('Two-Factor Authentication activated successfully!', '', { category: 'ADMIN' });
-                    playChimeSound();
+                      const res = await api.post('/auth/2fa/verify', { code: codeToVerify });
+                      if (res.data?.success) {
+                        setIs2FAEnabled(true);
+                        localStorage.setItem('nec_2fa_enabled', 'true');
+                        setShow2FASetupModal(false);
+                        setShowBackupCodesModal(true);
+                        notify.success('Two-Factor Authentication activated successfully!', '', { category: 'ADMIN' });
+                        playChimeSound();
+                      }
+                    } catch (err: any) {
+                      notify.error(err.response?.data?.detail || 'Invalid verification code', '', { category: 'ADMIN' });
+                    }
                   } else {
                     notify.error('Please enter a 6-digit verification code', '', { category: 'ADMIN' });
                   }

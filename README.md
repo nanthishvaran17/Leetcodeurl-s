@@ -25,7 +25,7 @@
 
 ---
 
-## 📖 Table of Contents
+##  Table of Contents
 
 <table>
 <tr>
@@ -67,7 +67,7 @@
 
 ---
 
-## 🧭 Overview
+##  Overview
 
 **Nandha LeetCode Intelligence** is an institutional performance platform that transforms raw LeetCode contest activity into structured, verifiable, and actionable academic intelligence.
 
@@ -104,45 +104,45 @@ Raw Activity → Verified Data → Performance Intelligence
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
 | Feature | Description |
 |---|---|
-| 🔍 **Contest Intelligence** | Discover, track, and process recurring contest activity automatically |
-| 🔄 **Student Synchronization** | Process large student datasets through controlled, reliable synchronization |
-| ✅ **Participation Verification** | Validate participation using available evidence, not assumption |
-| ⚖️ **Data Reconciliation** | Resolve inconsistencies between collected and authoritative records |
-| 📊 **Performance Intelligence** | Analyze rank, rating, score, solved problems, and progress over time |
-| 🏛️ **Institutional Analytics** | Aggregate individual performance into institution-level insight |
-| 💎 **Emerald Vault** | Recognize verified student achievements with structured categories |
-| 🪪 **Digital Performance Pass** | A structured, verifiable digital record of student performance |
-| 📑 **Automated Reporting** | Generate institutional reports directly from processed results |
-| ⚙️ **Workflow Automation** | Reduce repetitive operational and administrative work |
-| 🔐 **Role-Based Access** | Enforce access according to institutional scope and hierarchy |
-| ⚡ **Real-Time Updates** | Synchronized dashboard updates wherever real-time infra is implemented |
+|  **Contest Intelligence** | Discover, track, and process recurring contest activity automatically |
+|  **Student Synchronization** | Process large student datasets through controlled, reliable synchronization |
+|  **Participation Verification** | Validate participation using available evidence, not assumption |
+| ️ **Data Reconciliation** | Resolve inconsistencies between collected and authoritative records |
+|  **Performance Intelligence** | Analyze rank, rating, score, solved problems, and progress over time |
+| ️ **Institutional Analytics** | Aggregate individual performance into institution-level insight |
+|  **Emerald Vault** | Recognize verified student achievements with structured categories |
+|  **Digital Performance Pass** | A structured, verifiable digital record of student performance |
+|  **Automated Reporting** | Generate institutional reports directly from processed results |
+| ️ **Workflow Automation** | Reduce repetitive operational and administrative work |
+|  **Role-Based Access** | Enforce access according to institutional scope and hierarchy |
+|  **Real-Time Updates** | Synchronized dashboard updates wherever real-time infra is implemented |
 
 ---
 
-## 🏫 Platform Scope
+##  Platform Scope
 
 Built from the ground up for institutional-scale requirements.
 
 <table>
 <tr><td>
 
-- 🎓 **1,500+ students** actively tracked
-- 🏢 Multiple academic groups
-- 📅 Multiple academic years
-- 🗓️ Weekly contest activity
-- 🕰️ Historical performance information
+-  **1,500+ students** actively tracked
+-  Multiple academic groups
+-  Multiple academic years
+- ️ Weekly contest activity
+- ️ Historical performance information
 
 </td><td>
 
-- ✅ Verified performance records
-- 📈 Institutional-level analytics
-- 📋 Institutional reporting
-- 🏆 Achievement recognition
-- 🔒 Evidence-first data integrity
+-  Verified performance records
+-  Institutional-level analytics
+-  Institutional reporting
+-  Achievement recognition
+-  Evidence-first data integrity
 
 </td></tr>
 </table>
@@ -151,7 +151,7 @@ Built from the ground up for institutional-scale requirements.
 
 ---
 
-## 🏗️ System Architecture
+## ️ System Architecture
 
 The platform follows a layered architecture connecting external contest activity to institutional intelligence.
 
@@ -189,7 +189,7 @@ External Contest Platform → Contest Discovery → Application API
 
 ---
 
-## ⚙️ Core Processing Pipeline
+## ️ Core Processing Pipeline
 
 ```text
 Student Activity → Data Collection → Validation → Normalization
@@ -201,7 +201,7 @@ This design cleanly separates **external data collection** from **downstream ana
 
 ---
 
-## 🔎 Contest Discovery Engine
+##  Contest Discovery Engine
 
 The Contest Discovery Engine identifies relevant contest information using available contest metadata and scheduling logic.
 
@@ -217,7 +217,7 @@ Contest Metadata → Schedule Evaluation → Contest Identification → Contest 
 
 ---
 
-## 🔄 Student Synchronization
+##  Student Synchronization
 
 Large student datasets are processed through **controlled synchronization**, not uncontrolled concurrent requests.
 
@@ -238,7 +238,7 @@ Large student datasets are processed through **controlled synchronization**, not
 
 ---
 
-## ✅ Participation Verification
+##  Participation Verification
 
 Participation is never inferred solely from the presence or absence of an external record. The verification pipeline evaluates available evidence alongside contest context.
 
@@ -251,7 +251,7 @@ This distinguishes **confirmed participation** from information that simply **ca
 
 ---
 
-## ⚖️ Reconciliation Engine
+## ️ Reconciliation Engine
 
 The Reconciliation Engine maintains consistency between collected information and available authoritative contest records.
 
@@ -270,7 +270,7 @@ Collected Records + Available Official Records
 
 ---
 
-## 🧬 Evidence-First Data Model
+##  Evidence-First Data Model
 
 ### Evidence Over Assumptions
 
@@ -300,7 +300,7 @@ This prevents unavailable information from being silently and incorrectly conver
 
 ---
 
-## 📈 Performance Intelligence
+##  Performance Intelligence
 
 Contest activity is converted into structured, comparable performance signals:
 
@@ -318,7 +318,7 @@ These signals power:
 
 ---
 
-## 🏛️ Institutional Analytics
+## ️ Institutional Analytics
 
 The analytics layer transforms student-level data into institution-level insight.
 
@@ -338,7 +338,7 @@ Student Records → Performance Metrics → Aggregated Insights
 
 ---
 
-## 💎 Emerald Vault
+##  Emerald Vault
 
 ### Verified Achievement Recognition
 
@@ -346,14 +346,14 @@ The **Emerald Vault** is a dedicated recognition layer for verified student achi
 
 <table>
 <tr>
-<td align="center">🏅<br><b>100 Club</b></td>
-<td align="center">🔥<br><b>Streak Master</b></td>
-<td align="center">🏆<br><b>Contest Champion</b></td>
+<td align="center"><br><b>100 Club</b></td>
+<td align="center"><br><b>Streak Master</b></td>
+<td align="center"><br><b>Contest Champion</b></td>
 </tr>
 <tr>
-<td align="center">⚡<br><b>Fast Solver</b></td>
-<td align="center">🧠<br><b>DSA Specialist</b></td>
-<td align="center">📈<br><b>Weekly Improver</b></td>
+<td align="center"><br><b>Fast Solver</b></td>
+<td align="center"><br><b>DSA Specialist</b></td>
+<td align="center"><br><b>Weekly Improver</b></td>
 </tr>
 </table>
 
@@ -361,7 +361,7 @@ Recognition is grounded in available performance **evidence**, never unsupported
 
 ---
 
-## 🪪 Digital Performance Pass
+##  Digital Performance Pass
 
 ### A Verifiable Digital Performance Representation
 
@@ -386,7 +386,7 @@ Where implemented, verification identifiers provide a structured mechanism for v
 
 ---
 
-## 🔁 Weekly Contest Lifecycle
+##  Weekly Contest Lifecycle
 
 ```text
 DISCOVER → SCHEDULE → LIVE → SNAPSHOT → VERIFY → ANALYZE → REPORT → RECOGNIZE
@@ -405,7 +405,7 @@ DISCOVER → SCHEDULE → LIVE → SNAPSHOT → VERIFY → ANALYZE → REPORT �
 
 ---
 
-## 🤖 Institutional Automation
+##  Institutional Automation
 
 ```text
 Pre-Flight → Contest Discovery → Live Processing → Data Validation
@@ -424,7 +424,7 @@ Pre-Flight → Contest Discovery → Live Processing → Data Validation
 
 ---
 
-## 📑 Reporting
+##  Reporting
 
 ```text
 Contest Completion → Verification → Analysis → Result Processing
@@ -435,7 +435,7 @@ Reporting is a **core institutional workflow**, not an afterthought bolted on ma
 
 ---
 
-## 🔐 Security & Access Control
+##  Security & Access Control
 
 ```text
 ADMIN → Institution Scope
@@ -456,7 +456,7 @@ ADMIN → Institution Scope
 
 ---
 
-## 🛠️ Technology Stack
+## ️ Technology Stack
 
 <table>
 <tr><td valign="top">
@@ -512,7 +512,7 @@ Email
 
 ---
 
-## 🧾 Data Integrity
+##  Data Integrity
 
 ```text
 AVAILABLE → VALIDATE → NORMALIZE → STORE → VERIFY → ANALYZE → REPORT
@@ -528,7 +528,7 @@ The system preserves uncertainty rather than silently converting missing informa
 
 ---
 
-## 🧩 Engineering Principles
+##  Engineering Principles
 
 | # | Principle | Description |
 |---|---|---|
@@ -543,7 +543,7 @@ The system preserves uncertainty rather than silently converting missing informa
 
 ---
 
-## 📊 Scalability & Reliability
+##  Scalability & Reliability
 
 ```text
 PostgreSQL Indexing · Pagination · Batch Processing · Connection Pooling
@@ -564,7 +564,7 @@ Controlled Processing + Data Integrity + Failure Isolation
 
 ---
 
-## 🖼️ Product Screenshots
+## ️ Product Screenshots
 
 > Use only authentic screenshots from the deployed platform. **No fabricated or AI-generated product images.**
 
@@ -578,7 +578,7 @@ Controlled Processing + Data Integrity + Failure Isolation
 
 ---
 
-## 📌 Current Platform Scope
+##  Current Platform Scope
 
 | Area | Current Representation |
 |---|---|
@@ -593,7 +593,7 @@ This documentation intentionally avoids unsupported claims regarding uptime perc
 
 ---
 
-## 🧪 Engineering Quality
+##  Engineering Quality
 
 ```text
 Automated Testing · Production Validation · Database Integrity
@@ -604,7 +604,7 @@ Only capabilities verified in the current implementation are represented as acti
 
 ---
 
-## 🚀 Production Readiness
+##  Production Readiness
 
 ```text
 Application Delivery → Backend Processing → Persistent Data
@@ -616,7 +616,7 @@ Production-readiness claims are always backed by the actual deployed environment
 
 ---
 
-## 🔮 Future Scope
+##  Future Scope
 
 Planned exploration areas — clearly separated from currently implemented features:
 
@@ -631,7 +631,7 @@ Planned exploration areas — clearly separated from currently implemented featu
 
 ---
 
-## 🎯 Project Principles
+##  Project Principles
 
 ```text
 TRACK → VERIFY → UNDERSTAND → ACT
@@ -646,7 +646,7 @@ TRACK → VERIFY → UNDERSTAND → ACT
 
 ---
 
-## 🏁 Conclusion
+##  Conclusion
 
 **Nandha LeetCode Intelligence** provides a unified approach to institutional competitive-programming performance management.
 

@@ -311,8 +311,8 @@ export const ComparePage: React.FC = () => {
 
         <div className="relative z-10 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
-              <span>HEAD-TO-HEAD COMPARISON ARENA • STUDENT, DEPT, YEAR & BATCH ANALYTICS</span>
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] md:text-xs font-black uppercase tracking-widest">
+              <span>Comparison Arena</span>
             </div>
 
             {/* Mode Switcher Buttons */}
@@ -669,163 +669,213 @@ export const ComparePage: React.FC = () => {
               </div>
 
               {/* Cards Comparison Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-7 gap-6 items-stretch">
+              <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 lg:gap-6 items-center relative">
                 
+                {/* Background ambient glow behind VS */}
+                <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-500/10 blur-[100px] rounded-full pointer-events-none z-0" />
+
                 {/* Student A Card (3 cols) */}
-                <div className={`lg:col-span-3 glass-card p-6 rounded-3xl border-2 transition-all space-y-5 flex flex-col justify-between ${
+                <div className={`lg:col-span-3 relative z-10 p-1 rounded-3xl transition-all duration-500 ${
                   battleResult?.winner === 'A'
-                    ? 'border-amber-400/70 shadow-xl shadow-amber-500/10 bg-gradient-to-b from-amber-500/5 via-white to-white dark:via-navy-950 dark:to-navy-950'
-                    : 'border-slate-200 dark:border-slate-800'
+                    ? 'bg-gradient-to-b from-amber-400 via-amber-600 to-amber-900 shadow-[0_0_40px_-10px_rgba(251,191,36,0.3)]'
+                    : 'bg-gradient-to-b from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800'
                 }`}>
-                  <div className="space-y-5">
-                    <div className="flex items-center justify-between">
-                      <span className="px-3 py-1 rounded-full text-xs font-black bg-brand-600 text-white shadow-sm">
+                  <div className="h-full bg-white dark:bg-[#0f111a] rounded-[22px] p-6 lg:p-8 flex flex-col justify-between space-y-8 relative overflow-hidden group">
+                    {/* Inner glowing orb */}
+                    {battleResult?.winner === 'A' && (
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-[200px] bg-amber-500/20 blur-[50px] rounded-full pointer-events-none" />
+                    )}
+                    
+                    <div className="flex items-center justify-between relative z-10">
+                      <span className={`px-4 py-1.5 rounded-full text-xs font-black shadow-sm tracking-wide ${battleResult?.winner === 'A' ? 'bg-amber-500 text-white shadow-amber-500/30' : 'bg-brand-600 text-white'}`}>
                         Rank #{studentA.college_rank || '—'}
                       </span>
-                      <span className="px-3 py-1 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-300 font-mono font-bold text-xs border border-brand-500/20">
+                      <span className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-mono font-bold text-xs border border-slate-200 dark:border-white/10 backdrop-blur-md">
                         {studentA.department?.code} • {studentA.year_level} Year
                       </span>
                     </div>
 
-                    <div className="text-center space-y-2">
-                      <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 border-white/20">
-                        {studentA.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    <div className="text-center space-y-4 relative z-10">
+                      <div className="relative w-28 h-28 mx-auto">
+                        <div className={`absolute inset-0 rounded-full blur-md opacity-60 group-hover:opacity-100 transition-opacity duration-500 ${battleResult?.winner === 'A' ? 'bg-gradient-to-tr from-amber-400 to-orange-600 animate-pulse' : 'bg-gradient-to-tr from-brand-400 to-indigo-600'}`} />
+                        <div className={`relative w-full h-full rounded-full text-white font-black text-4xl flex items-center justify-center shadow-xl border-4 ${battleResult?.winner === 'A' ? 'bg-gradient-to-tr from-amber-500 to-orange-500 border-amber-200 dark:border-amber-900' : 'bg-gradient-to-tr from-brand-600 to-indigo-600 border-white dark:border-navy-800'}`}>
+                          {studentA.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </div>
                       </div>
-                      <h3 className="font-extrabold text-lg text-slate-900 dark:text-white truncate max-w-[260px] mx-auto">
-                        {studentA.name}
-                      </h3>
-                      <p className="text-xs text-brand-600 dark:text-brand-400 font-mono font-bold">
-                        {studentA.reg_no}
-                      </p>
+                      <div>
+                        <h3 className="font-black text-xl text-slate-900 dark:text-white truncate max-w-[280px] mx-auto tracking-tight">
+                          {studentA.name}
+                        </h3>
+                        <p className="text-xs text-brand-600 dark:text-brand-400 font-mono font-bold mt-1">
+                          {studentA.reg_no}
+                        </p>
+                      </div>
                       {studentA.username && (
                         <a
                           href={`https://leetcode.com/u/${studentA.username}/`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center space-x-1 text-[11px] text-slate-500 hover:text-brand-500 transition-colors font-mono font-semibold"
+                          className="inline-flex items-center justify-center space-x-1.5 text-xs text-slate-500 hover:text-brand-500 transition-colors font-mono font-semibold bg-slate-50 dark:bg-white/5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10"
                         >
                           <span>@{studentA.username}</span>
-                          <Sparkles className="w-3 h-3 text-amber-500" />
+                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                         </a>
                       )}
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 text-center">
-                      <p className="text-[11px] text-emerald-700 dark:text-emerald-300 font-extrabold uppercase tracking-wider">Total Problems Solved</p>
-                      <h4 className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                        {studentA.stats?.total_solved || 0}
-                      </h4>
+                    <div className="relative z-10">
+                      <div className="p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 text-center relative overflow-hidden group-hover:border-brand-500/30 transition-colors">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 opacity-80" />
+                        <p className="text-xs text-slate-500 font-extrabold uppercase tracking-widest mt-1">Total Problems Solved</p>
+                        <h4 className="text-4xl font-black text-slate-900 dark:text-white mt-2 tracking-tight">
+                          {studentA.stats?.total_solved || 0}
+                        </h4>
+                      </div>
                     </div>
 
                     {/* Difficulty Stats Breakdown */}
-                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                      <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold">
-                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Easy</p>
-                        <p className="text-base font-black mt-0.5">{studentA.stats?.easy_solved || 0}</p>
+                    <div className="grid grid-cols-3 gap-3 text-center text-xs relative z-10">
+                      <div className="p-3 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-sm">
+                        <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Easy</p>
+                        <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">{studentA.stats?.easy_solved || 0}</p>
                       </div>
-                      <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold">
-                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Medium</p>
-                        <p className="text-base font-black mt-0.5">{studentA.stats?.medium_solved || 0}</p>
+                      <div className="p-3 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-sm">
+                        <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Medium</p>
+                        <p className="text-lg font-black text-amber-500">{studentA.stats?.medium_solved || 0}</p>
                       </div>
-                      <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold">
-                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Hard</p>
-                        <p className="text-base font-black mt-0.5">{studentA.stats?.hard_solved || 0}</p>
+                      <div className="p-3 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-sm">
+                        <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Hard</p>
+                        <p className="text-lg font-black text-rose-500">{studentA.stats?.hard_solved || 0}</p>
                       </div>
                     </div>
 
                     {/* Extended Metrics: Contest Rating & Active Streak */}
-                    <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                      <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400">
-                        <p className="text-[10px] uppercase font-bold text-slate-500">Contest Rating</p>
-                        <p className="text-sm font-black mt-0.5">{studentA.stats?.contest_rating ? Math.round(studentA.stats.contest_rating) : 'Unrated'}</p>
+                    <div className="grid grid-cols-2 gap-3 text-center text-xs relative z-10">
+                      <div className="p-3 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-sm flex flex-col justify-center">
+                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Contest Rating</p>
+                        <p className="text-base font-black mt-1 text-indigo-600 dark:text-indigo-400 flex justify-center items-center gap-1">
+                           <Star className="w-3.5 h-3.5 fill-indigo-500/20" />
+                           {studentA.stats?.contest_rating ? Math.round(studentA.stats.contest_rating) : 'Unrated'}
+                        </p>
                       </div>
-                      <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400">
-                        <p className="text-[10px] uppercase font-bold text-slate-500">Weekly Progress</p>
-                        <p className="text-sm font-black mt-0.5">+{studentA.weekly_progress || 0}</p>
+                      <div className="p-3 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-sm flex flex-col justify-center">
+                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Weekly Progress</p>
+                        <p className="text-base font-black mt-1 text-purple-600 dark:text-purple-400 flex justify-center items-center gap-1">
+                          <TrendingUp className="w-3.5 h-3.5" />
+                          +{studentA.weekly_progress || 0}
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* VS Center Emblem (1 col) */}
-                <div className="lg:col-span-1 flex flex-col items-center justify-center space-y-2 py-4">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-base flex items-center justify-center shadow-xl border-2 border-white dark:border-navy-900">
-                    VS
+                <div className="lg:col-span-1 flex flex-col items-center justify-center space-y-3 py-6 lg:py-0 relative z-20">
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-brand-500 via-purple-500 to-indigo-500 rounded-full blur-xl opacity-50 group-hover:opacity-100 transition-opacity animate-pulse" />
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#0a0c10] border-4 border-slate-800 flex items-center justify-center shadow-2xl relative">
+                       <span className="bg-gradient-to-br from-brand-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent font-black text-2xl sm:text-3xl italic tracking-tighter">
+                         VS
+                       </span>
+                    </div>
                   </div>
-                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">MATCHUP</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-px bg-slate-300 dark:bg-slate-700" />
+                    <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-[0.2em]">Matchup</span>
+                    <div className="w-8 h-px bg-slate-300 dark:bg-slate-700" />
+                  </div>
                 </div>
 
                 {/* Student B Card (3 cols) */}
-                <div className={`lg:col-span-3 glass-card p-6 rounded-3xl border-2 transition-all space-y-5 flex flex-col justify-between ${
+                <div className={`lg:col-span-3 relative z-10 p-1 rounded-3xl transition-all duration-500 ${
                   battleResult?.winner === 'B'
-                    ? 'border-amber-400/70 shadow-xl shadow-amber-500/10 bg-gradient-to-b from-amber-500/5 via-white to-white dark:via-navy-950 dark:to-navy-950'
-                    : 'border-slate-200 dark:border-slate-800'
+                    ? 'bg-gradient-to-b from-amber-400 via-amber-600 to-amber-900 shadow-[0_0_40px_-10px_rgba(251,191,36,0.3)]'
+                    : 'bg-gradient-to-b from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800'
                 }`}>
-                  <div className="space-y-5">
-                    <div className="flex items-center justify-between">
-                      <span className="px-3 py-1 rounded-full text-xs font-black bg-indigo-600 text-white shadow-sm">
+                  <div className="h-full bg-white dark:bg-[#0f111a] rounded-[22px] p-6 lg:p-8 flex flex-col justify-between space-y-8 relative overflow-hidden group">
+                    {/* Inner glowing orb */}
+                    {battleResult?.winner === 'B' && (
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-[200px] bg-amber-500/20 blur-[50px] rounded-full pointer-events-none" />
+                    )}
+                    
+                    <div className="flex items-center justify-between relative z-10">
+                      <span className={`px-4 py-1.5 rounded-full text-xs font-black shadow-sm tracking-wide ${battleResult?.winner === 'B' ? 'bg-amber-500 text-white shadow-amber-500/30' : 'bg-indigo-600 text-white'}`}>
                         Rank #{studentB.college_rank || '—'}
                       </span>
-                      <span className="px-3 py-1 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-mono font-bold text-xs border border-indigo-500/20">
+                      <span className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-mono font-bold text-xs border border-slate-200 dark:border-white/10 backdrop-blur-md">
                         {studentB.department?.code} • {studentB.year_level} Year
                       </span>
                     </div>
 
-                    <div className="text-center space-y-2">
-                      <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 border-white/20">
-                        {studentB.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    <div className="text-center space-y-4 relative z-10">
+                      <div className="relative w-28 h-28 mx-auto">
+                        <div className={`absolute inset-0 rounded-full blur-md opacity-60 group-hover:opacity-100 transition-opacity duration-500 ${battleResult?.winner === 'B' ? 'bg-gradient-to-tr from-amber-400 to-orange-600 animate-pulse' : 'bg-gradient-to-tr from-indigo-400 to-purple-600'}`} />
+                        <div className={`relative w-full h-full rounded-full text-white font-black text-4xl flex items-center justify-center shadow-xl border-4 ${battleResult?.winner === 'B' ? 'bg-gradient-to-tr from-amber-500 to-orange-500 border-amber-200 dark:border-amber-900' : 'bg-gradient-to-tr from-indigo-600 to-purple-600 border-white dark:border-navy-800'}`}>
+                          {studentB.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </div>
                       </div>
-                      <h3 className="font-extrabold text-lg text-slate-900 dark:text-white truncate max-w-[260px] mx-auto">
-                        {studentB.name}
-                      </h3>
-                      <p className="text-xs text-indigo-600 dark:text-indigo-400 font-mono font-bold">
-                        {studentB.reg_no}
-                      </p>
+                      <div>
+                        <h3 className="font-black text-xl text-slate-900 dark:text-white truncate max-w-[280px] mx-auto tracking-tight">
+                          {studentB.name}
+                        </h3>
+                        <p className="text-xs text-indigo-600 dark:text-indigo-400 font-mono font-bold mt-1">
+                          {studentB.reg_no}
+                        </p>
+                      </div>
                       {studentB.username && (
                         <a
                           href={`https://leetcode.com/u/${studentB.username}/`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center space-x-1 text-[11px] text-slate-500 hover:text-indigo-500 transition-colors font-mono font-semibold"
+                          className="inline-flex items-center justify-center space-x-1.5 text-xs text-slate-500 hover:text-indigo-500 transition-colors font-mono font-semibold bg-slate-50 dark:bg-white/5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10"
                         >
                           <span>@{studentB.username}</span>
-                          <Sparkles className="w-3 h-3 text-amber-500" />
+                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                         </a>
                       )}
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 text-center">
-                      <p className="text-[11px] text-emerald-700 dark:text-emerald-300 font-extrabold uppercase tracking-wider">Total Problems Solved</p>
-                      <h4 className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                        {studentB.stats?.total_solved || 0}
-                      </h4>
+                    <div className="relative z-10">
+                      <div className="p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 text-center relative overflow-hidden group-hover:border-indigo-500/30 transition-colors">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 opacity-80" />
+                        <p className="text-xs text-slate-500 font-extrabold uppercase tracking-widest mt-1">Total Problems Solved</p>
+                        <h4 className="text-4xl font-black text-slate-900 dark:text-white mt-2 tracking-tight">
+                          {studentB.stats?.total_solved || 0}
+                        </h4>
+                      </div>
                     </div>
 
                     {/* Difficulty Stats Breakdown */}
-                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                      <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold">
-                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Easy</p>
-                        <p className="text-base font-black mt-0.5">{studentB.stats?.easy_solved || 0}</p>
+                    <div className="grid grid-cols-3 gap-3 text-center text-xs relative z-10">
+                      <div className="p-3 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-sm">
+                        <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Easy</p>
+                        <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">{studentB.stats?.easy_solved || 0}</p>
                       </div>
-                      <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold">
-                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Medium</p>
-                        <p className="text-base font-black mt-0.5">{studentB.stats?.medium_solved || 0}</p>
+                      <div className="p-3 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-sm">
+                        <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Medium</p>
+                        <p className="text-lg font-black text-amber-500">{studentB.stats?.medium_solved || 0}</p>
                       </div>
-                      <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold">
-                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Hard</p>
-                        <p className="text-base font-black mt-0.5">{studentB.stats?.hard_solved || 0}</p>
+                      <div className="p-3 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-sm">
+                        <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Hard</p>
+                        <p className="text-lg font-black text-rose-500">{studentB.stats?.hard_solved || 0}</p>
                       </div>
                     </div>
 
                     {/* Extended Metrics: Contest Rating & Active Streak */}
-                    <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                      <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400">
-                        <p className="text-[10px] uppercase font-bold text-slate-500">Contest Rating</p>
-                        <p className="text-sm font-black mt-0.5">{studentB.stats?.contest_rating ? Math.round(studentB.stats.contest_rating) : 'Unrated'}</p>
+                    <div className="grid grid-cols-2 gap-3 text-center text-xs relative z-10">
+                      <div className="p-3 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-sm flex flex-col justify-center">
+                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Contest Rating</p>
+                        <p className="text-base font-black mt-1 text-indigo-600 dark:text-indigo-400 flex justify-center items-center gap-1">
+                           <Star className="w-3.5 h-3.5 fill-indigo-500/20" />
+                           {studentB.stats?.contest_rating ? Math.round(studentB.stats.contest_rating) : 'Unrated'}
+                        </p>
                       </div>
-                      <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400">
-                        <p className="text-[10px] uppercase font-bold text-slate-500">Weekly Progress</p>
-                        <p className="text-sm font-black mt-0.5">+{studentB.weekly_progress || 0}</p>
+                      <div className="p-3 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-sm flex flex-col justify-center">
+                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Weekly Progress</p>
+                        <p className="text-base font-black mt-1 text-purple-600 dark:text-purple-400 flex justify-center items-center gap-1">
+                          <TrendingUp className="w-3.5 h-3.5" />
+                          +{studentB.weekly_progress || 0}
+                        </p>
                       </div>
                     </div>
                   </div>

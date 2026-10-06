@@ -24,6 +24,7 @@ def export_dynamic_word(dataset: dict) -> bytes:
     report_type = str(dataset.get("reportType") or dataset.get("report_type") or "").upper().strip()
     is_wow = (
         report_type in ("WEEK_ON_WEEK_INTELLIGENCE", "WOW_INTEL", "WEEK_ON_WEEK")
+    rows = []
         or (rows and any(k in rows[0] for k in ("prev_status", "curr_status", "solved_delta", "trend")))
         or "wowSummary" in dataset
     )
@@ -108,7 +109,7 @@ def export_dynamic_word(dataset: dict) -> bytes:
 
             row_data = [sno_val, reg_val, name_val, dept_val, yr_val, p_st, p_sol, p_sc, c_st, c_sol, c_sc, diff_str, trend_str]
             for c_idx, val in enumerate(row_data):
-                row_cells[c_idx].text = str(val)
+                row_cells[c_idx].text = str(val)  # type: ignore
                 for run in row_cells[c_idx].paragraphs[0].runs:
                     run.font.size = Pt(7.5)
     else:

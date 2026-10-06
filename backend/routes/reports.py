@@ -1603,7 +1603,7 @@ def _get_dataset_for_id(
             if len(u_years) == 1 and u_years[0] and year in ("ALL", "", None):
                 year = u_years[0]
 
-        r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=effective_att, db=db, report_type=report_type)
+        r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=effective_att, db=db, report_type=report_type)  # type: ignore
         if has_active_filters:
             from backend.services.contest_performance_service import matches_dept, matches_year
             

@@ -55,7 +55,7 @@ def migrate_and_verify(src_url: str, dst_url: str):
 
             dst_count_after = dst_conn.execute(dst_tbl.count()).scalar()
             
-            status = "✅ MATCH" if src_count == dst_count_after else "❌ MISMATCH"
+            status = " MATCH" if src_count == dst_count_after else " MISMATCH"
             print(f"Table: {tbl_name:<35} Source: {src_count:<6} Dest: {dst_count_after:<6} [{status}]")
             
             if src_count != dst_count_after:
@@ -63,9 +63,9 @@ def migrate_and_verify(src_url: str, dst_url: str):
 
     print("\n" + "=" * 60)
     if not mismatches:
-        print("🎉 MIGRATION VERIFICATION COMPLETE: ALL TABLES MATCH (100% INTEGRITY)")
+        print(" MIGRATION VERIFICATION COMPLETE: ALL TABLES MATCH (100% INTEGRITY)")
     else:
-        print(f"⚠️  WARNING: {len(mismatches)} tables have row count differences:")
+        print(f"️  WARNING: {len(mismatches)} tables have row count differences:")
         for t, s, d in mismatches:
             print(f"  - {t}: Source={s}, Dest={d}")
     print("=" * 60)

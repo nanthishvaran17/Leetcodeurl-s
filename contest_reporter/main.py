@@ -148,7 +148,7 @@ def run(dry_run: bool = False, test_email: bool = False, force: bool = False) ->
     # 9. Mark as sent (idempotency)
     if sent_to:
         database.mark_email_sent(latest_title, sent_to)
-        log.info(f"[MAIN] ✅ Pipeline complete. Report sent for '{latest_title}'.")
+        log.info(f"[MAIN]  Pipeline complete. Report sent for '{latest_title}'.")
     else:
         log.warning("[MAIN] No emails were sent successfully.")
         return 1

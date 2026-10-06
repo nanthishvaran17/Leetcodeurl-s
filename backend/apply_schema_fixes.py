@@ -30,7 +30,7 @@ def apply_fixes():
                     ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
                     ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none'
             """))
-            logger.info("  ✓ students.primary_leetcode_id / secondary_leetcode_id / secondary_status")
+            logger.info("   students.primary_leetcode_id / secondary_leetcode_id / secondary_status")
 
             # 2. Backfill primary_leetcode_id from username
             result = conn.execute(text("""
@@ -38,7 +38,7 @@ def apply_fixes():
                 SET primary_leetcode_id = username
                 WHERE primary_leetcode_id IS NULL AND username IS NOT NULL
             """))
-            logger.info(f"  ✓ Backfilled primary_leetcode_id for {result.rowcount} students")
+            logger.info(f"   Backfilled primary_leetcode_id for {result.rowcount} students")
 
             # 3. Indexes (CREATE INDEX IF NOT EXISTS is a no-op if already exists)
             conn.execute(text("""
@@ -49,7 +49,7 @@ def apply_fixes():
                 CREATE INDEX IF NOT EXISTS ix_students_secondary_leetcode_id
                 ON students (secondary_leetcode_id)
             """))
-            logger.info("  ✓ Indexes on primary/secondary_leetcode_id")
+            logger.info("   Indexes on primary/secondary_leetcode_id")
 
             # 4. weekly_verification_records table
             conn.execute(text("""
@@ -67,20 +67,20 @@ def apply_fixes():
                         UNIQUE (student_id, verification_week, notification_type)
                 )
             """))
-            logger.info("  ✓ weekly_verification_records table")
+            logger.info("   weekly_verification_records table")
 
             # 5. Missing columns from recent updates
             conn.execute(text("""
                 ALTER TABLE weekly_session_snapshots
                     ADD COLUMN IF NOT EXISTS is_sequence_broken BOOLEAN DEFAULT FALSE
             """))
-            logger.info("  ✓ weekly_session_snapshots.is_sequence_broken")
+            logger.info("   weekly_session_snapshots.is_sequence_broken")
             
             conn.execute(text("""
                 ALTER TABLE student_contest_participations
                     ADD COLUMN IF NOT EXISTS official_attendance_state VARCHAR(30)
             """))
-            logger.info("  ✓ student_contest_participations.official_attendance_state")
+            logger.info("   student_contest_participations.official_attendance_state")
 
             # 6. Cleanup unneeded departments and their students (Keep only CS(1) and IoT(2))
             logger.info("Cleaning up unneeded departments and students (Keeping only CS/IoT)...")
@@ -89,7 +89,7 @@ def apply_fixes():
             # we safely deactivate students instead of deleting them.
             conn.execute(text("UPDATE students SET is_active = false WHERE department_id NOT IN (1, 2)"))
             
-            logger.info("  ✓ Successfully enforced CS/IoT-only data constraint via deactivation.")
+            logger.info("   Successfully enforced CS/IoT-only data constraint via deactivation.")
 
             conn.commit()
             logger.info("Schema fixes applied successfully — all columns verified.")

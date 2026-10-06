@@ -54,7 +54,7 @@ def _border(ws, min_row, max_row, min_col, max_col):
 
 def _sheet_raw(wb: openpyxl.Workbook, history: list[dict], settings: dict) -> None:
     ws = wb.active
-    ws.title = "📊 Contest History"
+    ws.title = " Contest History"
     ws.sheet_properties.tabColor = NAVY
 
     # Title row
@@ -117,7 +117,7 @@ def _sheet_raw(wb: openpyxl.Workbook, history: list[dict], settings: dict) -> No
 # ─── Sheet 2: This Week's Summary ──────────────────────────────────────────────
 
 def _sheet_summary(wb: openpyxl.Workbook, analysis: dict, settings: dict) -> None:
-    ws = wb.create_sheet("📋 This Week")
+    ws = wb.create_sheet(" This Week")
     ws.sheet_properties.tabColor = GOLD
 
     def section_header(row: int, text: str):
@@ -149,7 +149,7 @@ def _sheet_summary(wb: openpyxl.Workbook, analysis: dict, settings: dict) -> Non
     ws.row_dimensions[1].height = 28
     row = 2
 
-    section_header(row, "🏆  Headline Stats"); row += 1
+    section_header(row, "  Headline Stats"); row += 1
     kv(row, "Current Rating",    round(analysis.get("current_rating") or 0, 1)); row += 1
     kv(row, "Rating Change",     analysis.get("rating_delta"), green_if_positive=True); row += 1
     kv(row, "5-Week Avg Rating", analysis.get("rolling_avg_5")); row += 1
@@ -160,7 +160,7 @@ def _sheet_summary(wb: openpyxl.Workbook, analysis: dict, settings: dict) -> Non
     kv(row, "Participation Streak", f"{analysis.get('streak', 0)} weeks"); row += 1
     row += 1
 
-    section_header(row, "📉  Tag Weakness Analysis (Weakest First)"); row += 1
+    section_header(row, "  Tag Weakness Analysis (Weakest First)"); row += 1
     ws.cell(row=row, column=1, value="Topic Tag").font = Font(bold=True)
     ws.cell(row=row, column=2, value="Accuracy %").font = Font(bold=True)
     ws.cell(row=row, column=3, value="Attempted").font = Font(bold=True)
@@ -175,7 +175,7 @@ def _sheet_summary(wb: openpyxl.Workbook, analysis: dict, settings: dict) -> Non
         row += 1
     row += 1
 
-    section_header(row, "✍️  Auto-Generated Performance Narrative"); row += 1
+    section_header(row, "️  Auto-Generated Performance Narrative"); row += 1
     ws.merge_cells(f"A{row}:E{row + 3}")
     c = ws.cell(row=row, column=1, value=analysis.get("narrative", ""))
     c.alignment = Alignment(wrap_text=True, vertical="top")
@@ -184,16 +184,16 @@ def _sheet_summary(wb: openpyxl.Workbook, analysis: dict, settings: dict) -> Non
 
     if analysis.get("milestones_crossed"):
         row += 5
-        section_header(row, "🎉  Milestones This Week"); row += 1
+        section_header(row, "  Milestones This Week"); row += 1
         for m in analysis["milestones_crossed"]:
-            ws.cell(row=row, column=1, value=f"🏅 Rating {m} crossed!").font = Font(bold=True, color=GOLD)
+            ws.cell(row=row, column=1, value=f" Rating {m} crossed!").font = Font(bold=True, color=GOLD)
             row += 1
 
 
 # ─── Sheet 3: Rating Chart ─────────────────────────────────────────────────────
 
 def _sheet_chart(wb: openpyxl.Workbook, history: list[dict]) -> None:
-    ws = wb.create_sheet("📈 Rating Chart")
+    ws = wb.create_sheet(" Rating Chart")
     ws.sheet_properties.tabColor = GREEN
 
     # Write data for chart (oldest first)

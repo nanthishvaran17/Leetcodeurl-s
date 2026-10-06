@@ -45,7 +45,7 @@ def classify_participation(finish_time_seconds, contest_date):
         return {
             "type": "NOT_ATTENDED",
             "time": None,
-            "display": "🔴 NOT ATTENDED",
+            "display": " NOT ATTENDED",
             "detail": "—"
         }
     
@@ -278,7 +278,7 @@ def process_students_with_timestamps(students, contest_slug, contest_date):
                 "year": year,
                 "username": username,
                 "participation_type": "NOT_ATTENDED",
-                "participation_display": "🔴 NOT ATTENDED",
+                "participation_display": " NOT ATTENDED",
                 "participation_time": "—",
                 "problems_solved": 0,
                 "rank": None,
@@ -334,7 +334,7 @@ def generate_two_reports(results, contest_slug, contest_date):
             ["Category", "Count", "Percentage"],
             ["🟢 LIVE (Official 8:00-9:30 AM)", len(live), f"{round(len(live)/tot*100, 1)}%"],
             ["🟣 VIRTUAL (Post 9:30 AM)", len(virtual), f"{round(len(virtual)/tot*100, 1)}%"],
-            ["🔴 NOT ATTENDED", len(not_attended), f"{round(len(not_attended)/tot*100, 1)}%"],
+            [" NOT ATTENDED", len(not_attended), f"{round(len(not_attended)/tot*100, 1)}%"],
             [],
             ["VIRTUAL PARTICIPATION TIME BREAKDOWN"],
             ["Time Range", "Students"]
@@ -368,7 +368,7 @@ def generate_two_reports(results, contest_slug, contest_date):
                 "Student Name": r["name"],
                 "Dept": r["department"],
                 "Year": r["year"],
-                "Participation": "🔴 NOT ATTENDED",
+                "Participation": " NOT ATTENDED",
                 "Solved": 0,
                 "Rank": "—",
                 "Rating": "—"
@@ -385,7 +385,7 @@ def generate_two_reports(results, contest_slug, contest_date):
             ["OFFICIAL PARTICIPATION SUMMARY (MANAGEMENT)"],
             ["Category", "Count", "Percentage"],
             ["🟢 LIVE (Official)", len(live), f"{round(len(live)/tot*100, 1)}%"],
-            ["🔴 NOT ATTENDED", official_not_attended, f"{round(official_not_attended/tot*100, 1)}%"]
+            [" NOT ATTENDED", official_not_attended, f"{round(official_not_attended/tot*100, 1)}%"]
         ]
         pd.DataFrame(external_summary_rows).to_excel(writer, sheet_name='Summary', index=False, header=False)
     
@@ -409,23 +409,23 @@ def run_sunday_automation(contest_slug="weekly-contest-514", contest_date=None, 
         contest_date = datetime.now(IST)
     
     print("\n" + "=" * 70)
-    print("🚀 SUNDAY AUTOMATION PIPELINE EXECUTING")
+    print(" SUNDAY AUTOMATION PIPELINE EXECUTING")
     print("=" * 70)
-    print(f"📅 Contest Slug: {contest_slug}")
-    print(f"🕐 Date:         {contest_date.strftime('%A, %d %B %Y')}")
+    print(f" Contest Slug: {contest_slug}")
+    print(f" Date:         {contest_date.strftime('%A, %d %B %Y')}")
     print("=" * 70)
     
     students = load_students_roster()
-    print(f"📊 Loaded {len(students)} student roster records.")
+    print(f" Loaded {len(students)} student roster records.")
     
     results = process_students_with_timestamps(students, contest_slug, contest_date)
     reports = generate_two_reports(results, contest_slug, contest_date)
     
-    print(f"\n📊 Summary Stats:")
+    print(f"\n Summary Stats:")
     print(f"  • 🟢 LIVE (Official):    {reports['live']} ({round(reports['live']/reports['total']*100, 1)}%)")
     print(f"  • 🟣 VIRTUAL (Post 9:30): {reports['virtual']} ({round(reports['virtual']/reports['total']*100, 1)}%)")
-    print(f"  • 🔴 NOT ATTENDED:        {reports['not_attended']} ({round(reports['not_attended']/reports['total']*100, 1)}%)")
-    print(f"\n📁 Saved Excel Reports:")
+    print(f"  •  NOT ATTENDED:        {reports['not_attended']} ({round(reports['not_attended']/reports['total']*100, 1)}%)")
+    print(f"\n Saved Excel Reports:")
     print(f"  • Internal: {reports['internal_file']}")
     print(f"  • External: {reports['external_file']}")
     
@@ -468,7 +468,7 @@ def run_sunday_automation(contest_slug="weekly-contest-514", contest_date=None, 
                     <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{round(reports['virtual']/reports['total']*100, 1)}%</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold;">🔴 NOT ATTENDED</td>
+                    <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold;"> NOT ATTENDED</td>
                     <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{reports['not_attended']}</td>
                     <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{round(reports['not_attended']/reports['total']*100, 1)}%</td>
                 </tr>
@@ -480,7 +480,7 @@ def run_sunday_automation(contest_slug="weekly-contest-514", contest_date=None, 
         </html>
         """
         
-        print(f"\n📧 Dispatching Dual Reports Email to: {recipient}...")
+        print(f"\n Dispatching Dual Reports Email to: {recipient}...")
         ok, err = send_email(
             recipient=recipient,
             subject=subject,
@@ -490,7 +490,7 @@ def run_sunday_automation(contest_slug="weekly-contest-514", contest_date=None, 
         print(f"  -> Dispatched to {recipient}: Success={ok}, Error={err}")
     
     print("\n" + "=" * 70)
-    print("✅ SUNDAY AUTOMATION PIPELINE COMPLETED SUCCESSFULLY")
+    print(" SUNDAY AUTOMATION PIPELINE COMPLETED SUCCESSFULLY")
     print("=" * 70)
     return reports
 
@@ -524,10 +524,10 @@ def start_scheduler():
     )
     
     scheduler.start()
-    print("\n✅ Automated Scheduler Active in Asia/Kolkata timezone:")
-    print("  📅 Sunday 08:00 AM - Contest Tracking Begins")
-    print("  📅 Sunday 09:30 AM - Live Contest Ends & Snapshot")
-    print("  📅 Monday 07:00 AM - Dual Reports Generation & Email Dispatch")
+    print("\n Automated Scheduler Active in Asia/Kolkata timezone:")
+    print("   Sunday 08:00 AM - Contest Tracking Begins")
+    print("   Sunday 09:30 AM - Live Contest Ends & Snapshot")
+    print("   Monday 07:00 AM - Dual Reports Generation & Email Dispatch")
     return scheduler
 
 # ============================================
@@ -557,7 +557,7 @@ def main():
                 time.sleep(60)
         except (KeyboardInterrupt, SystemExit):
             scheduler.shutdown()
-            print("\n⚠️ Scheduler stopped.")
+            print("\n️ Scheduler stopped.")
 
 if __name__ == "__main__":
     main()

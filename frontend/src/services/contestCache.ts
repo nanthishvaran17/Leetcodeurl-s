@@ -25,7 +25,7 @@ const telemetryLog: ContestTelemetry[] = [];
 export function logContestTelemetry(telem: ContestTelemetry) {
   telemetryLog.push(telem);
   console.log(
-    `%c⚡ [CONTEST PERFORMANCE] Contest ${telem.contestNumber || telem.sessionId} | First UI: ${telem.firstUiMs.toFixed(0)}ms | Summary: ${telem.summaryApiMs.toFixed(0)}ms | Questions: ${telem.questionsApiMs.toFixed(0)}ms | Roster: ${telem.rosterApiMs.toFixed(0)}ms | Total Ready: ${telem.totalReadyMs.toFixed(0)}ms | Cache: ${telem.cacheHit ? 'HIT (SWR)' : 'NETWORK'}`,
+    `%c [CONTEST PERFORMANCE] Contest ${telem.contestNumber || telem.sessionId} | First UI: ${telem.firstUiMs.toFixed(0)}ms | Summary: ${telem.summaryApiMs.toFixed(0)}ms | Questions: ${telem.questionsApiMs.toFixed(0)}ms | Roster: ${telem.rosterApiMs.toFixed(0)}ms | Total Ready: ${telem.totalReadyMs.toFixed(0)}ms | Cache: ${telem.cacheHit ? 'HIT (SWR)' : 'NETWORK'}`,
     'color: #00e676; font-weight: bold; background: #0f172a; padding: 4px 8px; border-radius: 6px;'
   );
 }

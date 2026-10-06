@@ -1,5 +1,5 @@
 import io
-import pandas as pd
+import pandas as pd  # type: ignore
 import pytest
 from backend.database import SessionLocal
 from backend.models import Student, Department, User
@@ -96,7 +96,7 @@ def test_leetcode_url_normalization():
     """Test LeetCode URL handle extraction."""
     url1, username1 = normalize_leetcode_url("https://leetcode.com/u/john_doe/")
     assert username1 == "john_doe"
-    assert "leetcode.com/u/john_doe/" in url1
+    assert "leetcode.com/u/john_doe/" in url1  # type: ignore
 
     url2, username2 = normalize_leetcode_url("jane_smith")
     assert username2 == "jane_smith"
@@ -182,7 +182,7 @@ def test_analyze_and_commit_import_flow():
 
         db.expire_all()
         st1_updated = db.query(Student).filter(Student.reg_no == "TEST99901").first()
-        assert st1_updated.name == "Test Student Alpha Updated"
+        assert st1_updated.name == "Test Student Alpha Updated"  # type: ignore
 
         # Clean up test records
         db.query(Student).filter(Student.reg_no.in_(["TEST99901", "TEST99902"])).delete(synchronize_session=False)

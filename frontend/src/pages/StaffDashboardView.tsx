@@ -745,7 +745,7 @@ export const StaffDashboardView: React.FC = () => {
                           className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition cursor-pointer"
                           title="Clear Student Filter"
                         >
-                          ✕
+                          
                         </span>
                       )}
                       <ChevronDown
@@ -777,7 +777,7 @@ export const StaffDashboardView: React.FC = () => {
                             onClick={() => setStudentSelectSearch('')}
                             className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-xs font-bold"
                           >
-                            ✕
+                            
                           </button>
                         )}
                       </div>
@@ -957,7 +957,7 @@ export const StaffDashboardView: React.FC = () => {
                   onClick={() => setSearch('')}
                   className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold cursor-pointer"
                 >
-                  ✕
+                  
                 </button>
               )}
             </div>
@@ -1000,7 +1000,7 @@ export const StaffDashboardView: React.FC = () => {
               }}
               className="px-2.5 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black transition-all cursor-pointer shadow-sm shrink-0"
             >
-              Clear All Filters ✕
+              Clear All Filters 
             </button>
           </div>
         )}

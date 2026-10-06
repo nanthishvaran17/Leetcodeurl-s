@@ -2687,8 +2687,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.97 }}
                     transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute z-[9999] right-0 mt-2 w-[calc(100vw-32px)] sm:w-[380px] max-w-[380px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] p-3.5 space-y-2 focus:outline-none select-none"
-                    style={{ backgroundColor: '#ffffff' }}
+                    className="fixed bottom-4 left-4 right-4 z-[9999] sm:absolute sm:top-[calc(100%+8px)] sm:bottom-auto sm:left-auto sm:right-0 sm:w-[380px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] p-3.5 space-y-2 focus:outline-none select-none sm:origin-top-right"
                   >
                     {/* SECTION 1: ACTIONS */}
                     <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800">
@@ -3525,7 +3524,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <p className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">Participation</p>
               <TrendingUp className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <div className="text-left">
+            <div className="text-center w-full">
               <p className="text-2xl sm:text-3xl font-black font-mono text-indigo-700 dark:text-indigo-300 leading-none">
                 <AnimatedNumber value={stats.attendedRows + stats.virtualRows} />
               </p>
@@ -3989,7 +3988,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               )}
 
               {/* MOBILE VIEW: High-density full-width responsive cards (Zero Horizontal Scroll) */}
-              <div className="block md:hidden divide-y divide-slate-100 dark:divide-slate-800 p-3 space-y-3">
+              <div className="block md:hidden p-4 sm:p-5 space-y-4 sm:space-y-5">
                 {paginatedMatrixRows.length === 0 ? (
                   <div className="p-8 text-center text-slate-500 font-bold">
                     No students found

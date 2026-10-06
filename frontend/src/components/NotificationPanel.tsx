@@ -49,6 +49,7 @@ interface NotificationPanelProps {
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
+  { id: 'archived', label: 'Archived' },
   { id: 'assignments', label: 'Assignments' },
   { id: 'attendance', label: 'Attendance' },
   { id: 'exams', label: 'Exams' },
@@ -57,7 +58,7 @@ const CATEGORIES = [
   { id: 'announcements', label: 'Announcements' },
 ];
 
-const NotificationItem = ({ n, handleNotificationClick, deleteNotification, markAsRead, setActiveFileModal, getIcon }: any) => {
+const NotificationItem = ({ n, handleNotificationClick, deleteNotification, archiveNotification, markAsRead, setActiveFileModal, getIcon }: any) => {
   const [swipeX, setSwipeX] = useState(0);
   const THRESHOLD = 70;
 
@@ -72,7 +73,7 @@ const NotificationItem = ({ n, handleNotificationClick, deleteNotification, mark
     } else if (offset > THRESHOLD || velocity > 400) {
       // Swiped RIGHT → Archive (hide)
       setSwipeX(120);
-      setTimeout(() => deleteNotification(n.id), 280);
+      setTimeout(() => archiveNotification(n.id), 280);
     } else {
       setSwipeX(0);
     }
@@ -164,6 +165,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    archiveNotification,
     registerFCMDeviceToken
   } = useGlobalNotifications();
 
@@ -487,11 +489,16 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-navy-800 overflow-x-auto overflow-y-hidden whitespace-nowrap shrink-0 bg-white dark:bg-navy-950 touch-pan-x snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {CATEGORIES.map((cat) => {
                 const categoryCount = cat.id === 'all'
-                  ? allNotifications.length
-                  : allNotifications.filter(n => normalizeCategory(n.category || n.type) === cat.id).length;
+                  ? allNotifications.filter(n => !n.isArchived).length
+                  : cat.id === 'archived'
+                    ? allNotifications.filter(n => n.isArchived).length
+                    : allNotifications.filter(n => !n.isArchived && normalizeCategory(n.category || n.type) === cat.id).length;
+                
                 const categoryUnread = cat.id === 'all'
                   ? unreadCount
-                  : allNotifications.filter(n => !n.isRead && normalizeCategory(n.category || n.type) === cat.id).length;
+                  : cat.id === 'archived'
+                    ? 0
+                    : allNotifications.filter(n => !n.isArchived && !n.isRead && normalizeCategory(n.category || n.type) === cat.id).length;
 
                 return (
                   <button
@@ -565,6 +572,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                       n={n}
                       handleNotificationClick={handleNotificationClick}
                       deleteNotification={deleteNotification}
+                      archiveNotification={archiveNotification}
                       markAsRead={markAsRead}
                       setActiveFileModal={setActiveFileModal}
                       getIcon={getIcon}

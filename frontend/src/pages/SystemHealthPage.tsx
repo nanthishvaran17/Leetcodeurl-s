@@ -904,12 +904,11 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         />
       </div>
 
-      {/* 3. EXCEPTION-FIRST "ATTENTION REQUIRED" & NEXT BEST ACTION */}
-      {/* 3. EXCEPTION-FIRST "ATTENTION REQUIRED" & NEXT BEST ACTION */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Left Column: Attention Required (Shown only when exceptions are present) */}
+      {/* 3. EXCEPTION-FIRST "ATTENTION REQUIRED" */}
+      <div className="flex flex-col gap-4">
+        {/* Attention Required (Shown only when exceptions are present) */}
         {attentionItems.length > 0 && (
-          <div className="lg:col-span-2 p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+          <div className="w-full p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
               <div className="flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-amber-500" />
@@ -953,35 +952,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           </div>
         )}
 
-        {/* Right Column: Intelligent Next Best Action (Full width when 0 exceptions) */}
-        <div className={`${attentionItems.length > 0 ? 'lg:col-span-1' : 'lg:col-span-3'} p-5 rounded-3xl bg-gradient-to-br from-navy-900 via-indigo-950 to-navy-900 text-white border border-indigo-900/50 shadow-sm flex flex-col justify-between space-y-4`}>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="px-2 py-0.5 text-[9.5px] font-black uppercase rounded bg-indigo-500/30 text-indigo-300 border border-indigo-400/30">
-                INTELLIGENT ACTION CENTER
-              </span>
-              <Zap className="w-4 h-4 text-amber-400" />
-            </div>
-            <h3 className="text-sm font-black text-white">{nextBestAction.title}</h3>
-            <p className="text-xs text-indigo-200/80 leading-relaxed">{nextBestAction.context}</p>
-          </div>
 
-          <div className="pt-2 border-t border-indigo-800/50">
-            <button
-              onClick={() => {
-                if (nextBestAction?.recommendedAction) {
-                  handleExecuteAction(nextBestAction.recommendedAction);
-                } else {
-                  setActiveOpsTab('automation');
-                }
-              }}
-              className="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-500 hover:to-brand-500 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>Execute Recommended Action</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
       </div>
 
 
@@ -1081,7 +1052,6 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
               <div className="space-y-1">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl sm:rounded-full bg-brand-500/20 border border-brand-400/30 text-amber-300 text-[10px] sm:text-xs font-black uppercase tracking-wider leading-snug">
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                   <span>DATA INTEGRITY & PROFILE HEALTH • REALTIME AUDIT BOARD</span>
                 </div>
                 <h4 className="text-base font-black text-white">Data Quality & Profile Health Dashboard</h4>
@@ -2322,7 +2292,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
                   <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">EVENT ID</span><strong className="text-slate-900 dark:text-white">{selectedAuditDetail.audit_id}</strong></div>
                   <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">TRACE ID</span><strong className="text-cyan-600 dark:text-cyan-400">{selectedAuditDetail.trace_id || `trace_${selectedAuditDetail.audit_id.toLowerCase()}`}</strong></div>
-                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">INTEGRITY STATUS</span><strong className={selectedAuditDetail.integrity_verified !== false ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}>{selectedAuditDetail.integrity_status || '✓ VERIFIED'}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">INTEGRITY STATUS</span><strong className={selectedAuditDetail.integrity_verified !== false ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}>{selectedAuditDetail.integrity_status || ' VERIFIED'}</strong></div>
                 </div>
               </div>
 

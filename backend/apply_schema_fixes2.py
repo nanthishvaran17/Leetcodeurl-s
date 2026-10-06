@@ -23,20 +23,20 @@ def apply_fixes():
             # 1. Add missing column to weekly_session_snapshots
             try:
                 conn.execute(text("ALTER TABLE weekly_session_snapshots ADD COLUMN is_sequence_broken BOOLEAN DEFAULT FALSE"))
-                logger.info("  ✓ weekly_session_snapshots.is_sequence_broken added")
+                logger.info("   weekly_session_snapshots.is_sequence_broken added")
             except Exception as e:
                 if 'duplicate column name' in str(e).lower() or 'already exists' in str(e).lower():
-                    logger.info("  ✓ weekly_session_snapshots.is_sequence_broken already exists")
+                    logger.info("   weekly_session_snapshots.is_sequence_broken already exists")
                 else:
                     logger.warning(f"  ? weekly_session_snapshots.is_sequence_broken issue: {e}")
                     
             # 2. Add missing column to student_contest_participations
             try:
                 conn.execute(text("ALTER TABLE student_contest_participations ADD COLUMN official_attendance_state VARCHAR(30)"))
-                logger.info("  ✓ student_contest_participations.official_attendance_state added")
+                logger.info("   student_contest_participations.official_attendance_state added")
             except Exception as e:
                 if 'duplicate column name' in str(e).lower() or 'already exists' in str(e).lower():
-                    logger.info("  ✓ student_contest_participations.official_attendance_state already exists")
+                    logger.info("   student_contest_participations.official_attendance_state already exists")
                 else:
                     logger.warning(f"  ? student_contest_participations.official_attendance_state issue: {e}")
 

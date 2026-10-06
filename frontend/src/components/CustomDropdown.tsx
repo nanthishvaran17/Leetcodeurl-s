@@ -304,8 +304,8 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
           }
           setIsOpen(!isOpen);
         }}
-        className={`flex items-center justify-between flex-nowrap space-x-2 transition-all duration-200 text-left cursor-pointer group shadow-sm box-border active:scale-[0.98] touch-manipulation ${
-          triggerClassName || 'w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-white dark:bg-slate-800/90 border-slate-300 dark:border-slate-700 hover:border-brand-500/60'
+        className={`flex items-center justify-between flex-nowrap space-x-2 transition-all duration-200 text-left cursor-pointer group shadow-sm box-border active:scale-[0.98] touch-manipulation px-3.5 border ${
+          triggerClassName || 'w-full h-11 min-h-[44px] py-2 rounded-2xl bg-white dark:bg-slate-800/90 border-slate-300 dark:border-slate-700 hover:border-brand-500/60'
         } ${
           isOpen
             ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10'

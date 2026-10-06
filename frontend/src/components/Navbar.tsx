@@ -67,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         className="sticky top-0 z-40 bg-white/95 dark:bg-navy-950/95 backdrop-blur-md border-b border-slate-200 dark:border-navy-800 transition-colors shadow-xs pt-safe-top"
         style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 0px)' }}
       >
-        <div className="w-full max-w-full mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="w-full max-w-full mx-auto px-2 sm:px-3">
           <div className="flex items-center justify-between min-h-[56px] sm:min-h-[68px] py-2 sm:py-2.5 gap-1 sm:gap-4">
             
             {/* Left: Hamburger Button (Mobile/Tablet) + Branding */}

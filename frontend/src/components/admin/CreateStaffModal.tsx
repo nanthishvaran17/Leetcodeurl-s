@@ -595,7 +595,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-2 rounded-lg border border-emerald-200 dark:border-emerald-500/30">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-bold">✓ Account setup email sent</span>
+              <span className="text-xs font-bold"> Account setup email sent</span>
             </div>
 
             <div className="flex gap-4 pt-4">

@@ -25,7 +25,7 @@ def scheduled_job():
     if exit_code != 0:
         log.error(f"[SCHEDULER] Pipeline returned exit code {exit_code}")
     else:
-        log.info("[SCHEDULER] ✅ Job completed successfully.")
+        log.info("[SCHEDULER]  Job completed successfully.")
 
 
 def start():

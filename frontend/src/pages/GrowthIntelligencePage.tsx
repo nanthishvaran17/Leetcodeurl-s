@@ -308,19 +308,22 @@ export const GrowthIntelligencePage: React.FC = () => {
     <div className="space-y-8 py-2 pb-16 animate-slideUp">
 
       {/* Executive Header Banner */}
-      <div className={`relative rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-brand-500/30 ${deptOpen || yearOpen ? 'z-50' : 'z-10'}`}>
+      <div className={`relative rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 shadow-lg border border-brand-500/30 ${deptOpen || yearOpen ? 'z-50' : 'z-10'}`}>
         <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-5 sm:gap-6">
           <div className="space-y-3.5 max-w-2xl">
-            <div className="flex items-center gap-3.5">
-              <div className="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0 shadow-lg shadow-emerald-500/10">
-                <TrendingUp className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />
+            <div className="flex items-start sm:items-center gap-3 sm:gap-3.5">
+              <div className="p-2 sm:p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0 shadow-lg shadow-emerald-500/10 mt-1 sm:mt-0">
+                <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 stroke-[2.5]" />
               </div>
-              <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight text-white leading-tight">
-                Growth Intelligence & <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300">Time Machine</span>
+              <h1 className="text-xl sm:text-3xl xl:text-4xl font-black tracking-tight text-white leading-tight">
+                Growth Intelligence <span className="hidden sm:inline">&</span>
+                <br className="sm:hidden" />
+                <span className="sm:hidden text-emerald-400/80 mr-1.5">&</span>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300">Time Machine</span>
               </h1>
             </div>
 
@@ -330,37 +333,41 @@ export const GrowthIntelligencePage: React.FC = () => {
           </div>
 
           {/* Filters, Timeframe Selector Pills & Live Refresh Button */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full xl:w-auto mt-2 xl:mt-0">
             
             {/* Department Filter */}
-            <GlobalFilter
-              options={departmentOptions}
-              value={deptFilter}
-              onChange={(val) => setDeptFilter(val)}
-              icon={<Building2 className="w-3.5 h-3.5 text-brand-400" />}
-              dropdownWidth="min-w-[240px]"
-              showSearch={false}
-              variant="dark"
-            />
+            <div className="w-full sm:w-auto">
+              <GlobalFilter
+                options={departmentOptions}
+                value={deptFilter}
+                onChange={(val) => setDeptFilter(val)}
+                icon={<Building2 className="w-3.5 h-3.5 text-brand-400" />}
+                dropdownWidth="w-full sm:min-w-[240px]"
+                showSearch={false}
+                variant="dark"
+              />
+            </div>
 
             {/* Academic Year Filter */}
-            <GlobalFilter
-              options={yearOptions}
-              value={yearFilter}
-              onChange={(val) => setYearFilter(val)}
-              icon={<GraduationCap className="w-3.5 h-3.5 text-brand-400" />}
-              dropdownWidth="min-w-[210px]"
-              showSearch={false}
-              variant="dark"
-            />
+            <div className="w-full sm:w-auto">
+              <GlobalFilter
+                options={yearOptions}
+                value={yearFilter}
+                onChange={(val) => setYearFilter(val)}
+                icon={<GraduationCap className="w-3.5 h-3.5 text-brand-400" />}
+                dropdownWidth="w-full sm:min-w-[210px]"
+                showSearch={false}
+                variant="dark"
+              />
+            </div>
 
             {/* Timeframe Selector Pills */}
-            <div className="flex items-center space-x-1 bg-navy-900/90 p-1.5 rounded-2xl border border-slate-700/80 shadow-inner backdrop-blur-md">
+            <div className="flex items-center w-full sm:w-auto bg-navy-900/90 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-slate-700/80 shadow-inner backdrop-blur-md overflow-x-auto hide-scrollbar">
               {(['today', '7d', '30d', 'all'] as const).map((p) => (
                 <button
                   key={p}
                   onClick={() => setPeriod(p)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                  className={`flex-1 sm:flex-none whitespace-nowrap px-2 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
                     period === p
                       ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30 scale-105'
                       : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -376,7 +383,7 @@ export const GrowthIntelligencePage: React.FC = () => {
               onClick={handleManualRefresh}
               disabled={loading || isRefreshing}
               title="Refresh Growth Metrics & Solve Deltas"
-              className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center justify-center space-x-2 px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer w-full sm:w-auto"
             >
               <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>

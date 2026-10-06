@@ -2565,7 +2565,7 @@ def get_post_930_solvers(
                                 if sol is not None and sol != '' and reg_key not in locked_snapshot_map:
                                     try:
                                         val = int(sol)
-                                        if val > 4:
+                                        if val >= 0:
                                             locked_snapshot_map[reg_key] = val
                                     except:
                                         pass
@@ -2702,12 +2702,29 @@ def get_post_930_solvers(
             if post_contest_solves == 0 and highest_v_score > 0:
                 post_contest_solves = min(max_remaining_contest_problems, highest_v_score)
 
-        if post_contest_solves <= 0 or not qualifying_problems:
+        # Profile Diff logic bounded to Sunday 10:00 PM IST
+        official_snapshot_profile = locked_snapshot_map.get(reg_key)
+        if official_snapshot_profile is not None and post_contest_solves == 0:
+            sunday_10pm_ist = ist_tz.localize(datetime.datetime.combine(target_date, datetime.time(22, 5, 0)))
+            sunday_10pm_utc = sunday_10pm_ist.astimezone(pytz.utc).replace(tzinfo=None)
+            
+            valid_snaps = [sn for sn in snaps_after_by_student.get(s.id, []) if sn.captured_at and sn.captured_at <= sunday_10pm_utc]
+            if valid_snaps:
+                latest_snap = max(valid_snaps, key=lambda x: x.captured_at)
+                end_of_day_profile = latest_snap.total_solved_profile or latest_snap.cumulative_solved or current_total_profile
+            else:
+                end_of_day_profile = current_total_profile
+
+            diff = end_of_day_profile - official_snapshot_profile
+            if diff > 0:
+                post_contest_solves = min(max_remaining_contest_problems, diff)
+
+        if post_contest_solves <= 0:
             continue
 
         if not qualifying_problems and post_contest_solves > 0:
             student_submissions = post_contest_solves + 1
-            post_snap = None
+            post_snap = snaps_after_by_student.get(s.id, [])
             if post_snap and post_snap[0].captured_at:
                 c_at = post_snap[0].captured_at
                 base_time_ist = pytz.utc.localize(c_at).astimezone(ist_tz) if c_at.tzinfo is None else c_at.astimezone(ist_tz)
@@ -2722,8 +2739,8 @@ def get_post_930_solvers(
                 base_time_ist = lock_datetime + datetime.timedelta(minutes=5)
 
             qualifying_problems.append({
-                "problem_name": f"Post-Session Contest Problem Solved (+{post_contest_solves})",
-                "name": f"Post-Session Contest Problem Solved (+{post_contest_solves})",
+                "problem_name": f"Virtual Practice Solved (+{post_contest_solves} problems)",
+                "name": f"Virtual Practice Solved (+{post_contest_solves} problems)",
                 "problem_id": f"POST_{s.id}",
                 "solved_at": base_time_ist.strftime("%I:%M:%S %p IST"),
                 "timestamp_ist": base_time_ist.strftime("%I:%M:%S %p IST"),
@@ -2871,79 +2888,123 @@ def export_post_930_solvers_excel(
 
     # Style definitions
     header_fill = PatternFill(start_color="1E1E2D", end_color="1E1E2D", fill_type="solid")
-    header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
-    data_font = Font(name="Calibri", size=10)
-    badge_font = Font(name="Calibri", size=10, bold=True, color="D97706")
-    border_side = Side(border_style="thin", color="E2E8F0")
+    header_font = Font(name="Calibri", size=10, bold=True, color="FFFFFF") # Smaller font
+    data_font = Font(name="Calibri", size=9) # Smaller font for A4 fit
+    badge_font = Font(name="Calibri", size=9, bold=True, color="D97706")
+    border_side = Side(border_style="thin", color="000000")
     thin_border = Border(left=border_side, right=border_side, top=border_side, bottom=border_side)
+    
+    import os
+    from openpyxl.drawing.image import Image
+    # Try finding the transparent logo in the root directory
+    logo_path = os.path.join(os.getcwd(), "transparent_logo.png")
+    if not os.path.exists(logo_path):
+        logo_path = os.path.join(os.getcwd(), "round_logo.png")
+        
+    if os.path.exists(logo_path):
+        try:
+            img = Image(logo_path)
+            # Resize logo to fit well
+            img.width = 90
+            img.height = 90
+            ws.add_image(img, "A1")
+        except:
+            pass
 
     # Title Block
-    ws.merge_cells("A1:M1")
+    ws.merge_cells("A1:O1")
     title_cell = ws["A1"]
-    title_cell.value = f"SUNDAY CONTEST — POST-9:30 AM SOLVERS REPORT ({data.get('session_date')})"
-    title_cell.font = Font(name="Calibri", size=14, bold=True, color="4F46E5")
-    title_cell.alignment = Alignment(horizontal="left", vertical="center")
-    ws.row_dimensions[1].height = 30
+    title_cell.value = f"SUNDAY CONTEST — POST-9:30 AM SOLVERS ({data.get('session_date')})"
+    title_cell.font = Font(name="Calibri", size=12, bold=True, color="4F46E5")
+    title_cell.alignment = Alignment(horizontal="center", vertical="center")
+    title_cell.border = thin_border
+    ws.row_dimensions[1].height = 40
 
-    # Headers
+    # Compact Headers for A4 Print
     headers = [
-        "Student Name", "Register Number", "Department", "Year", "Section",
-        "Official 09:30 Locked Solved", "Post-9:30 Problems Solved", "Post-9:30 Submissions",
-        "Current Total Solved", "First Post-9:30 Solve", "Latest Post-9:30 Solve",
-        "Post-9:30 Problems", "Evidence Status"
+        "Student Name", "Reg No", "Dept", "Year", "Sec",
+        "LeetCode ID", "Contest",
+        "09:30\nSolved", "Post-9:30\nSolves", "Total\nAttempts",
+        "Total\nSolved", "First\nSolve", "Latest\nSolve",
+        "Problems List", "Status"
     ]
 
-    ws.append([]) # Row 2 blank
-    ws.append(headers) # Row 3 Headers
-    ws.row_dimensions[3].height = 25
+    ws.append(headers) # Row 2 Headers (No blank row)
+    ws.row_dimensions[2].height = 30
 
     for col_num, header in enumerate(headers, 1):
-        cell = ws.cell(row=3, column=col_num)
+        cell = ws.cell(row=2, column=col_num)
         cell.fill = header_fill
         cell.font = header_font
-        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
         cell.border = thin_border
 
     # Data Rows
-    for row_idx, st in enumerate(data.get("students", []), 4):
+    contest_code = data.get("session_code", "WEEKLY_CONTEST")
+    for row_idx, st in enumerate(data.get("students", []), 3):
         prob_names = ", ".join([p.get("problem_name", p.get("name", "")) for p in st.get("problems", [])])
+        
+        # Format dates to be more compact
+        first_solve = st.get("first_post_window_solve_formatted", "").replace(" IST", "").replace("Sun ", "")
+        latest_solve = st.get("latest_post_window_solve_formatted", "").replace(" IST", "").replace("Sun ", "")
+        
         row_vals = [
             st.get("student_name"),
             st.get("register_number", st.get("reg_no")),
-            st.get("department"),
+            st.get("department", "").replace("CSE", "").replace("(", "").replace(")", ""), # Compact Dept
             st.get("year", st.get("year_level")),
             st.get("section"),
+            st.get("username"),
+            contest_code.replace("WEEKLY_", "W"), # Compact contest
             st.get("official_locked_solved"),
             st.get("post_window_solve_count"),
             st.get("post_window_submission_count", st.get("post_window_solve_count")),
             st.get("current_total_solved"),
-            st.get("first_post_window_solve_formatted"),
-            st.get("latest_post_window_solve_formatted"),
+            first_solve,
+            latest_solve,
             prob_names,
             st.get("evidence_status", "VERIFIED")
         ]
         ws.append(row_vals)
-        ws.row_dimensions[row_idx].height = 20
+        ws.row_dimensions[row_idx].height = 25
 
-        for col_num in range(1, 14):
+        for col_num in range(1, 16):
             cell = ws.cell(row=row_idx, column=col_num)
             cell.font = data_font
             cell.border = thin_border
-            if col_num in (6, 7, 8, 9):
-                cell.alignment = Alignment(horizontal="right", vertical="center")
-            elif col_num == 13:
+            # All center aligned, wrap text on long columns
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            if col_num == 15:
                 cell.font = badge_font
-                cell.alignment = Alignment(horizontal="center", vertical="center")
-            else:
-                cell.alignment = Alignment(horizontal="left", vertical="center")
 
-    # Column Widths
-    for col in ws.columns:
-        if not col or col[0].column is None:
-            continue
-        max_len = max(len(str(cell.value or '')) for cell in col)
-        col_letter = get_column_letter(int(col[0].column))
-        ws.column_dimensions[col_letter].width = max(max_len + 4, 14)
+    # Column Widths and Page Setup for A4 Printing
+    ws.page_setup.orientation = ws.ORIENTATION_LANDSCAPE
+    ws.page_setup.paperSize = ws.PAPERSIZE_A4
+    ws.page_setup.fitToPage = True
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+    
+    # Strict column widths for A4
+    col_widths = {
+        'A': 16, # Name
+        'B': 12, # Reg No
+        'C': 8,  # Dept
+        'D': 7,  # Year
+        'E': 5,  # Sec
+        'F': 14, # LeetCode ID
+        'G': 9,  # Contest
+        'H': 7,  # 09:30
+        'I': 8,  # Post
+        'J': 8,  # Submissions
+        'K': 7,  # Total
+        'L': 10, # First
+        'M': 10, # Latest
+        'N': 18, # Problems
+        'O': 9   # Status
+    }
+
+    for col_letter, width in col_widths.items():
+        ws.column_dimensions[col_letter].width = width
 
     output = io.BytesIO()
     wb.save(output)

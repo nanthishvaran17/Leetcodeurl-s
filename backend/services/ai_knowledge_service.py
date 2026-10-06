@@ -171,7 +171,7 @@ class AIKnowledgeEngine:
             return {
                 "success": True,
                 "answer": (
-                    "### ❓ Clarification Requested\n\n"
+                    "###  Clarification Requested\n\n"
                     "**DIRECT ANSWER**: Multiple institutional performance metrics are available for ranking top students.\n\n"
                     "**KEY EVIDENCE**:\n"
                     "• **Contest Rating**: Official LeetCode contest rating history.\n"
@@ -210,7 +210,7 @@ class AIKnowledgeEngine:
                 return {
                     "success": True,
                     "answer": (
-                        "### 📄 Institutional Intelligence PDF Report Prepared\n\n"
+                        "###  Institutional Intelligence PDF Report Prepared\n\n"
                         "**DIRECT ANSWER**: The official institutional performance report has been compiled directly from single-source-of-truth backend records.\n\n"
                         "**KEY EVIDENCE**:\n"
                         f"• Enrolled Students: {dataset.get('metrics', {}).get('totalStudents', 300)}\n"
@@ -321,7 +321,7 @@ class AIKnowledgeEngine:
                     return {
                         "success": True,
                         "answer": (
-                            "### ✉️ Official HOD Weekly Performance Report Dispatched\n\n"
+                            "### ️ Official HOD Weekly Performance Report Dispatched\n\n"
                             "**DIRECT ANSWER**: The official institutional summary report has been compiled and emailed to leadership.\n\n"
                             "**KEY EVIDENCE**:\n"
                             f"• Recipient: `{masked_admin}`\n"
@@ -409,7 +409,7 @@ class AIKnowledgeEngine:
             return {
                 "success": True,
                 "answer": (
-                    f"### 🏛️ Institutional Intelligence Briefing\n\n"
+                    f"### ️ Institutional Intelligence Briefing\n\n"
                     f"**DIRECT ANSWER**: Hello. Here is your live institutional brief based on current verified database records:\n\n"
                     f"**KEY EVIDENCE**:\n"
                     f"• **Enrolled Scope**: **{total_students}** active students across **{dept_count}** departments.\n"

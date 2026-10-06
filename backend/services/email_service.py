@@ -516,7 +516,7 @@ def _log_to_db(msg_id: str, recipient: str, subject: str, status: str, err: Opti
         logger.error(f"[EMAIL_DB_LOG_FAILED] Failed to record email delivery to DB: {e}")
 
 EMOJI_CLEAN_REGEX = re.compile(
-    r"[\U00010000-\U0010FFFF"  # Emojis, Symbols, Flags, Emoticons (❤️, 👍, 🏆, 📊, 🚨, etc.)
+    r"[\U00010000-\U0010FFFF"  # Emojis, Symbols, Flags, Emoticons (️, , , , , etc.)
     r"\u2600-\u27BF"          # Misc Symbols & Dingbats
     r"\u2300-\u23FF"          # Technical Symbols
     r"\u2B00-\u2BFF"          # Arrows & Misc Symbols
@@ -529,7 +529,7 @@ EMOJI_CLEAN_REGEX = re.compile(
 )
 
 def strip_all_emojis(text: Optional[str]) -> str:
-    """Strips all emojis (e.g. ❤️, 👍, 🏆, 📊, 🚨) and decorative icons to ensure strictly clean, professional emails."""
+    """Strips all emojis (e.g. ️, , , , ) and decorative icons to ensure strictly clean, professional emails."""
     if not text:
         return ""
     cleaned = EMOJI_CLEAN_REGEX.sub("", text)
