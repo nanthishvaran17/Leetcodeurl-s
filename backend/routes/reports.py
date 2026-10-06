@@ -1373,6 +1373,12 @@ def _enrich_dataset_ranks_and_ratings(dataset: dict, db: Session) -> dict:
                 reg = str(r.get("reg_no") or r.get("register_no") or "").strip()
                 if reg:
                     all_reg_nos.add(reg)
+                    reg_u = reg.upper()
+                    all_reg_nos.add(reg_u)
+                    reg_clean = reg_u.replace("7322", "")
+                    if reg_clean:
+                        all_reg_nos.add(reg_clean)
+                        all_reg_nos.add(f"7322{reg_clean}")
     all_reg_nos.discard("")
 
     if all_reg_nos:
@@ -1389,15 +1395,53 @@ def _enrich_dataset_ranks_and_ratings(dataset: dict, db: Session) -> dict:
         ).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
          .filter(Student.reg_no.in_(all_reg_nos)).all()
         
-        detail_map = {
-            reg: {
+        detail_map = {}
+        for reg_db, accom, cut, grank, prank, crat in st_details:
+            entry = {
                 "accom": accom or "",
                 "cutoff": float(cut) if cut is not None else None,
                 "rank": grank or prank,
                 "rating": crat
             }
-            for reg, accom, cut, grank, prank, crat in st_details
-        }
+            if reg_db:
+                r_orig = str(reg_db).strip()
+                r_upper = r_orig.upper()
+                r_clean = r_upper.replace("7322", "")
+                detail_map[r_orig] = entry
+                detail_map[r_upper] = entry
+                if r_clean:
+                    detail_map[r_clean] = entry
+                    detail_map[f"7322{r_clean}"] = entry
+
+        # Fallback enrichment from student_academic_metadata.json if DB fields are null or missing
+        try:
+            _meta_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "student_academic_metadata.json")
+            if os.path.exists(_meta_path):
+                import json
+                with open(_meta_path, "r", encoding="utf-8") as _mf:
+                    _mdata = json.load(_mf)
+                for _m in _mdata:
+                    _mr = (_m.get("reg_no") or "").strip().upper()
+                    if _mr:
+                        _mclean = _mr.replace("7322", "")
+                        for _k in (_mr, _mclean, f"7322{_mclean}"):
+                            if _k not in detail_map:
+                                detail_map[_k] = {
+                                    "accom": _m.get("accommodation") or "",
+                                    "cutoff": float(_m["twelfth_cutoff"]) if _m.get("twelfth_cutoff") is not None else None,
+                                    "rank": None,
+                                    "rating": None
+                                }
+                            else:
+                                if (not detail_map[_k].get("accom") or detail_map[_k].get("accom") in ("—", "None", "")) and _m.get("accommodation"):
+                                    detail_map[_k]["accom"] = _m["accommodation"]
+                                if detail_map[_k].get("cutoff") is None and _m.get("twelfth_cutoff") is not None:
+                                    try:
+                                        detail_map[_k]["cutoff"] = float(_m["twelfth_cutoff"])
+                                    except (ValueError, TypeError):
+                                        pass
+        except Exception:
+            pass
 
         # Query aggregate contest solves across all public and virtual contest sessions
         c_stats_map = {}
@@ -1426,14 +1470,21 @@ def _enrich_dataset_ranks_and_ratings(dataset: dict, db: Session) -> dict:
 
         for reg_val, sq1, sq2, sq3, sq4, stot, scnt in pub_rows:
             rkey = str(reg_val).strip()
-            if rkey not in c_stats_map:
-                c_stats_map[rkey] = {"q1": 0, "q2": 0, "q3": 0, "q4": 0, "tot": 0, "attended": 0}
-            c_stats_map[rkey]["q1"] += int(sq1 or 0)
-            c_stats_map[rkey]["q2"] += int(sq2 or 0)
-            c_stats_map[rkey]["q3"] += int(sq3 or 0)
-            c_stats_map[rkey]["q4"] += int(sq4 or 0)
-            c_stats_map[rkey]["tot"] += int(stot or 0)
-            c_stats_map[rkey]["attended"] += int(scnt or 0)
+            r_data = {
+                "q1": int(sq1 or 0),
+                "q2": int(sq2 or 0),
+                "q3": int(sq3 or 0),
+                "q4": int(sq4 or 0),
+                "tot": int(stot or 0),
+                "attended": int(scnt or 0)
+            }
+            c_stats_map[rkey] = r_data
+            rkey_u = rkey.upper()
+            c_stats_map[rkey_u] = r_data
+            rkey_clean = rkey_u.replace("7322", "")
+            if rkey_clean:
+                c_stats_map[rkey_clean] = r_data
+                c_stats_map[f"7322{rkey_clean}"] = r_data
 
         is_virt_att = or_(
             WeeklyVirtualResult.participation_status.in_(ATTENDED_STATUSES),
@@ -1453,21 +1504,27 @@ def _enrich_dataset_ranks_and_ratings(dataset: dict, db: Session) -> dict:
 
         for reg_val, sq1, sq2, sq3, sq4, stot, scnt in virt_rows:
             rkey = str(reg_val).strip()
-            if rkey not in c_stats_map:
-                c_stats_map[rkey] = {"q1": 0, "q2": 0, "q3": 0, "q4": 0, "tot": 0, "attended": 0}
-            c_stats_map[rkey]["q1"] += int(sq1 or 0)
-            c_stats_map[rkey]["q2"] += int(sq2 or 0)
-            c_stats_map[rkey]["q3"] += int(sq3 or 0)
-            c_stats_map[rkey]["q4"] += int(sq4 or 0)
-            c_stats_map[rkey]["tot"] += int(stot or 0)
-            c_stats_map[rkey]["attended"] += int(scnt or 0)
+            rkey_u = rkey.upper()
+            rkey_clean = rkey_u.replace("7322", "")
+            for k in (rkey, rkey_u, rkey_clean, f"7322{rkey_clean}"):
+                if k:
+                    if k not in c_stats_map:
+                        c_stats_map[k] = {"q1": 0, "q2": 0, "q3": 0, "q4": 0, "tot": 0, "attended": 0}
+                    c_stats_map[k]["q1"] += int(sq1 or 0)
+                    c_stats_map[k]["q2"] += int(sq2 or 0)
+                    c_stats_map[k]["q3"] += int(sq3 or 0)
+                    c_stats_map[k]["q4"] += int(sq4 or 0)
+                    c_stats_map[k]["tot"] += int(stot or 0)
+                    c_stats_map[k]["attended"] += int(scnt or 0)
         
         for rl in row_lists:
             for r in rl:
                 if isinstance(r, dict):
                     reg = str(r.get("reg_no") or r.get("register_no") or "").strip()
+                    reg_u = reg.upper()
+                    reg_clean = reg_u.replace("7322", "")
 
-                    db_c = c_stats_map.get(reg, {})
+                    db_c = c_stats_map.get(reg) or c_stats_map.get(reg_u) or c_stats_map.get(reg_clean) or c_stats_map.get(f"7322{reg_clean}") or {}
                     q1_val = r.get("q1") if r.get("q1") is not None else db_c.get("q1")
                     q2_val = r.get("q2") if r.get("q2") is not None else db_c.get("q2")
                     q3_val = r.get("q3") if r.get("q3") is not None else db_c.get("q3")
@@ -1486,7 +1543,6 @@ def _enrich_dataset_ranks_and_ratings(dataset: dict, db: Session) -> dict:
                         q4=q4_val,
                         contest_solved=c_sol
                     )
-
                     r["contest_easy"] = breakdown["contest_easy"]
                     r["contest_medium"] = breakdown["contest_medium"]
                     r["contest_hard"] = breakdown["contest_hard"]
@@ -1506,14 +1562,16 @@ def _enrich_dataset_ranks_and_ratings(dataset: dict, db: Session) -> dict:
                     elif not r.get("total_attended"):
                         r["total_attended"] = r.get("contests_attended")
 
-                    if reg in detail_map:
-                        info = detail_map[reg]
-                        if not r.get("accommodation") or str(r.get("accommodation")).strip() in ("—", "None", "nan", "NaN", ""):
+                    info = detail_map.get(reg) or detail_map.get(reg_u) or detail_map.get(reg_clean) or detail_map.get(f"7322{reg_clean}")
+                    if info:
+                        if info.get("accom") and (not r.get("accommodation") or str(r.get("accommodation")).strip() in ("—", "None", "nan", "NaN", "", "Day Scholar") or info.get("accom") == "Hostel"):
                             r["accommodation"] = info["accom"]
-                        if r.get("twelfth_cutoff") is None or str(r.get("twelfth_cutoff")).strip() in ("—", "None", ""):
+                        if info.get("cutoff") is not None:
                             r["twelfth_cutoff"] = info["cutoff"]
-                        if r.get("cutoff") is None or str(r.get("cutoff")).strip() in ("—", "None", ""):
                             r["cutoff"] = info["cutoff"]
+                        elif r.get("twelfth_cutoff") is None or str(r.get("twelfth_cutoff")).strip() in ("—", "None", ""):
+                            r["twelfth_cutoff"] = info.get("cutoff")
+                            r["cutoff"] = info.get("cutoff")
 
                         gr = r.get("global_rank") or r.get("contest_global_ranking") or r.get("profile_rank")
                         if gr is None or str(gr).strip() in ("—", "None", "nan", "NaN", "null", "", "0"):

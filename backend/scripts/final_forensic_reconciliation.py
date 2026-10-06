@@ -44,9 +44,9 @@ query getUserContestAndSubmissions($username: String!) {
 
 async def run_full_forensic_reconciliation():
     db = SessionLocal()
-    session = db.query(WeeklySession).filter(WeeklySession.id == 21).first()
+    session = db.query(WeeklySession).filter(WeeklySession.contest_name.like('%516%')).first()
     if not session:
-        print("ERROR: Session 21 not found!")
+        print("ERROR: Session 516 not found!")
         return
 
     students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).order_by(Student.id.asc()).all()

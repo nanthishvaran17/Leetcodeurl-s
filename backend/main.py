@@ -117,6 +117,14 @@ async def _deferred_startup_tasks():
         except Exception as _sj_err:
             logger.warning(f"[STARTUP] Sync job recovery note: {_sj_err}")
 
+        # 3. Student academic metadata sync (accommodation & 12th cutoff)
+        try:
+            from backend.scripts.sync_student_academic_metadata import sync_academic_metadata
+            sync_academic_metadata(quiet=True)
+            logger.info("[STARTUP] Student academic metadata (accommodation & 12th cutoff) verified.")
+        except Exception as _meta_err:
+            logger.warning(f"[STARTUP] Student metadata sync note: {_meta_err}")
+
     try:
         await asyncio.to_thread(_run_blocking_db_init)
 
