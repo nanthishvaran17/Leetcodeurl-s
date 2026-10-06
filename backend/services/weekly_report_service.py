@@ -432,6 +432,9 @@ def generate_weekly_performance_data(
             "medium": med,
             "hard": hd,
             "total_solved": tot,
+            "accommodation": getattr(s, "accommodation", "") or getattr(s, "accommodation_type", "") or "",
+            "twelfth_cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
+            "cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
             "category": category_name,
             "profile_ranking": getattr(st, "public_profile_ranking", None),
             "contest_rating": (getattr(curr_pub_obj, "contest_rating", None) if curr_pub_obj and getattr(curr_pub_obj, "contest_rating", None) else getattr(st, "contest_rating", None)),
@@ -479,6 +482,9 @@ def generate_weekly_performance_data(
             "batch": batch_label,
             "leetcode_url": s.leetcode_url,
             "username": s.username,
+            "accommodation": getattr(s, "accommodation", "") or getattr(s, "accommodation_type", "") or "",
+            "twelfth_cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
+            "cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
             "total_solved": last_tot,
             "category": last_category_name,
             "public_result": last_pub_outcome,
@@ -691,6 +697,8 @@ def generate_weekly_performance_data(
 
         "all_students_current": all_students_current,
         "all_students_last_week": all_students_last_week,
+        "allStudents": all_students_current,
+        "rows": all_students_current,
 
         "rosters": {
             "all_current": all_students_current,

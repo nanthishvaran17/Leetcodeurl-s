@@ -173,6 +173,9 @@ def build_five_week_trend_report(
             "contests_attended": tot_att,
             "attendance_rate": att_pct,
             "trajectory": trajectory,
+            "accommodation": getattr(s, "accommodation", "") or getattr(s, "accommodation_type", "") or "",
+            "twelfth_cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
+            "cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
             "status": "PUBLIC_ATTENDED" if tot_sol > 0 else "NOT_ATTENDED",
             "mentor_signal": trajectory
         })

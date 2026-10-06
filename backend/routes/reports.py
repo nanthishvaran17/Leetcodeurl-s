@@ -1016,6 +1016,7 @@ def generate_universal_report(
             return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "private, no-cache"})
 
         dataset = build_universal_report(db, config, current_user=current_user)
+        dataset = _enrich_dataset_ranks_and_ratings(dataset, db)
 
         import orjson
         json_bytes = orjson.dumps(dataset)
@@ -1342,24 +1343,36 @@ def _enrich_dataset_ranks_and_ratings(dataset: dict, db: Session) -> dict:
     if any(k in rtype_u for k in ("WEEK_ON_WEEK", "WOW")):
         return dataset
 
-    rows = (
-        dataset.get("rows") or 
-        dataset.get("allStudents") or 
-        dataset.get("all_rows") or 
-        dataset.get("all_students_current") or 
-        dataset.get("all_students") or 
-        dataset.get("students") or 
-        []
-    )
-    if not rows:
+    if not dataset.get("rows") and dataset.get("all_students_current"):
+        dataset["rows"] = dataset["all_students_current"]
+    if not dataset.get("allStudents") and dataset.get("all_students_current"):
+        dataset["allStudents"] = dataset["all_students_current"]
+
+    row_lists = []
+    seen_ids = set()
+    for k in ("rows", "allStudents", "topStudents", "all_students_current", "all_rows", "all_students", "students"):
+        candidate = dataset.get(k)
+        if isinstance(candidate, list) and candidate and id(candidate) not in seen_ids:
+            seen_ids.add(id(candidate))
+            row_lists.append(candidate)
+
+    if not row_lists:
         return dataset
+
+    rows = dataset.get("rows") or row_lists[0]
 
     # Check if this is a week-on-week row schema
     first_r = rows[0] if isinstance(rows[0], dict) else {}
     if "prev_status" in first_r or "curr_status" in first_r or "solved_delta" in first_r:
         return dataset
 
-    all_reg_nos = {str(r.get("reg_no") or r.get("register_no") or "").strip() for r in rows if isinstance(r, dict) and (r.get("reg_no") or r.get("register_no"))}
+    all_reg_nos = set()
+    for rl in row_lists:
+        for r in rl:
+            if isinstance(r, dict):
+                reg = str(r.get("reg_no") or r.get("register_no") or "").strip()
+                if reg:
+                    all_reg_nos.add(reg)
     all_reg_nos.discard("")
 
     if all_reg_nos:
@@ -1449,68 +1462,69 @@ def _enrich_dataset_ranks_and_ratings(dataset: dict, db: Session) -> dict:
             c_stats_map[rkey]["tot"] += int(stot or 0)
             c_stats_map[rkey]["attended"] += int(scnt or 0)
         
-        for r in rows:
-            if isinstance(r, dict):
-                reg = str(r.get("reg_no") or r.get("register_no") or "").strip()
+        for rl in row_lists:
+            for r in rl:
+                if isinstance(r, dict):
+                    reg = str(r.get("reg_no") or r.get("register_no") or "").strip()
 
-                db_c = c_stats_map.get(reg, {})
-                q1_val = r.get("q1") if r.get("q1") is not None else db_c.get("q1")
-                q2_val = r.get("q2") if r.get("q2") is not None else db_c.get("q2")
-                q3_val = r.get("q3") if r.get("q3") is not None else db_c.get("q3")
-                q4_val = r.get("q4") if r.get("q4") is not None else db_c.get("q4")
+                    db_c = c_stats_map.get(reg, {})
+                    q1_val = r.get("q1") if r.get("q1") is not None else db_c.get("q1")
+                    q2_val = r.get("q2") if r.get("q2") is not None else db_c.get("q2")
+                    q3_val = r.get("q3") if r.get("q3") is not None else db_c.get("q3")
+                    q4_val = r.get("q4") if r.get("q4") is not None else db_c.get("q4")
 
-                c_sol = r.get("contest_solved")
-                if c_sol is None or (isinstance(c_sol, (int, float)) and c_sol == 0 and db_c.get("tot", 0) > 0):
-                    c_sol = r.get("total_contest_solved")
-                if c_sol is None or (isinstance(c_sol, (int, float)) and c_sol == 0 and db_c.get("tot", 0) > 0):
-                    c_sol = db_c.get("tot")
+                    c_sol = r.get("contest_solved")
+                    if c_sol is None or (isinstance(c_sol, (int, float)) and c_sol == 0 and db_c.get("tot", 0) > 0):
+                        c_sol = r.get("total_contest_solved")
+                    if c_sol is None or (isinstance(c_sol, (int, float)) and c_sol == 0 and db_c.get("tot", 0) > 0):
+                        c_sol = db_c.get("tot")
 
-                breakdown = compute_contest_difficulty_breakdown(
-                    q1=q1_val,
-                    q2=q2_val,
-                    q3=q3_val,
-                    q4=q4_val,
-                    contest_solved=c_sol
-                )
+                    breakdown = compute_contest_difficulty_breakdown(
+                        q1=q1_val,
+                        q2=q2_val,
+                        q3=q3_val,
+                        q4=q4_val,
+                        contest_solved=c_sol
+                    )
 
-                r["contest_easy"] = breakdown["contest_easy"]
-                r["contest_medium"] = breakdown["contest_medium"]
-                r["contest_hard"] = breakdown["contest_hard"]
-                r["contest_easy_solved"] = breakdown["contest_easy"]
-                r["contest_medium_solved"] = breakdown["contest_medium"]
-                r["contest_hard_solved"] = breakdown["contest_hard"]
-                
-                # Check if weeklyData is present or if contests_attended is already accurately calculated
-                if isinstance(r.get("weeklyData"), list) and len(r.get("weeklyData")) > 0:
-                    att_count = sum(1 for w in r.get("weeklyData", []) if w.get("att"))
-                    r["contests_attended"] = att_count
-                    r["total_attended"] = att_count
-                    r["totalAttended"] = att_count
-                elif not r.get("contests_attended") or r.get("contests_attended") == 0:
-                    r["contests_attended"] = db_c.get("attended", 0)
-                    r["total_attended"] = db_c.get("attended", 0)
-                elif not r.get("total_attended"):
-                    r["total_attended"] = r.get("contests_attended")
+                    r["contest_easy"] = breakdown["contest_easy"]
+                    r["contest_medium"] = breakdown["contest_medium"]
+                    r["contest_hard"] = breakdown["contest_hard"]
+                    r["contest_easy_solved"] = breakdown["contest_easy"]
+                    r["contest_medium_solved"] = breakdown["contest_medium"]
+                    r["contest_hard_solved"] = breakdown["contest_hard"]
+                    
+                    # Check if weeklyData is present or if contests_attended is already accurately calculated
+                    if isinstance(r.get("weeklyData"), list) and len(r.get("weeklyData")) > 0:
+                        att_count = sum(1 for w in r.get("weeklyData", []) if w.get("att"))
+                        r["contests_attended"] = att_count
+                        r["total_attended"] = att_count
+                        r["totalAttended"] = att_count
+                    elif not r.get("contests_attended") or r.get("contests_attended") == 0:
+                        r["contests_attended"] = db_c.get("attended", 0)
+                        r["total_attended"] = db_c.get("attended", 0)
+                    elif not r.get("total_attended"):
+                        r["total_attended"] = r.get("contests_attended")
 
-                if reg in detail_map:
-                    info = detail_map[reg]
-                    if not r.get("accommodation") or r.get("accommodation") == "—":
-                        r["accommodation"] = info["accom"]
-                    if r.get("twelfth_cutoff") is None:
-                        r["twelfth_cutoff"] = info["cutoff"]
-                    if r.get("cutoff") is None:
-                        r["cutoff"] = info["cutoff"]
+                    if reg in detail_map:
+                        info = detail_map[reg]
+                        if not r.get("accommodation") or str(r.get("accommodation")).strip() in ("—", "None", "nan", "NaN", ""):
+                            r["accommodation"] = info["accom"]
+                        if r.get("twelfth_cutoff") is None or str(r.get("twelfth_cutoff")).strip() in ("—", "None", ""):
+                            r["twelfth_cutoff"] = info["cutoff"]
+                        if r.get("cutoff") is None or str(r.get("cutoff")).strip() in ("—", "None", ""):
+                            r["cutoff"] = info["cutoff"]
 
-                    gr = r.get("global_rank") or r.get("contest_global_ranking") or r.get("profile_rank")
-                    if gr is None or str(gr).strip() in ("—", "None", "nan", "NaN", "null", "", "0"):
-                        matched_rank, matched_rat = info["rank"], info["rating"]
-                        if matched_rank and str(matched_rank).strip() not in ("—", "None", "0"):
-                            r["global_rank"] = matched_rank
-                            r["contest_global_ranking"] = matched_rank
-                            r["profile_rank"] = matched_rank
-                        if matched_rat and str(matched_rat).strip() not in ("—", "None", "0", "1500", "1500.0"):
-                            r["contest_rating"] = matched_rat
-                            r["rating"] = matched_rat
+                        gr = r.get("global_rank") or r.get("contest_global_ranking") or r.get("profile_rank")
+                        if gr is None or str(gr).strip() in ("—", "None", "nan", "NaN", "null", "", "0"):
+                            matched_rank, matched_rat = info["rank"], info["rating"]
+                            if matched_rank and str(matched_rank).strip() not in ("—", "None", "0"):
+                                r["global_rank"] = matched_rank
+                                r["contest_global_ranking"] = matched_rank
+                                r["profile_rank"] = matched_rank
+                            if matched_rat and str(matched_rat).strip() not in ("—", "None", "0", "1500", "1500.0"):
+                                r["contest_rating"] = matched_rat
+                                r["rating"] = matched_rat
 
     rtype_u = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
     is_contest_only = any(k in rtype_u for k in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "WEEKLY_CONTEST", "SUNDAY_LIVE"))

@@ -194,6 +194,9 @@ def normalize_student_record(s_dict: Dict[str, Any]) -> Dict[str, Any]:
         "score": score_display,
         "mentor_signal": get_mentor_signal(solved),
         "rank": s_dict.get("rank") or s_dict.get("global_rank") or s_dict.get("college_rank"),
+        "accommodation": str(s_dict.get("accommodation") or s_dict.get("accomodation") or "—"),
+        "twelfth_cutoff": s_dict.get("twelfth_cutoff") if s_dict.get("twelfth_cutoff") is not None else s_dict.get("cutoff"),
+        "cutoff": s_dict.get("cutoff") if s_dict.get("cutoff") is not None else s_dict.get("twelfth_cutoff"),
         "staff_name": staff_name
     }
 

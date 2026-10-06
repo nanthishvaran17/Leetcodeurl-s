@@ -234,6 +234,10 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         raw["title"] = title
         raw["dataStatus"] = "READY" if raw.get("total_students", 0) > 0 else "PARTIAL"
         raw["generatedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        if not raw.get("rows"):
+            raw["rows"] = raw.get("all_students_current", [])
+        if not raw.get("allStudents"):
+            raw["allStudents"] = raw.get("all_students_current", [])
         return _save_and_return(raw)
 
     cfg_filters = config.filters or {}

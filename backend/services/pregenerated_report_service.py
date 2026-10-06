@@ -561,6 +561,8 @@ def generate_report_bytes(
     )
 
     dataset = build_universal_report(db, config, current_user=current_user)
+    from backend.routes.reports import _enrich_dataset_ranks_and_ratings
+    dataset = _enrich_dataset_ranks_and_ratings(dataset, db)
 
     if fmt in ("excel", "xlsx"):
         if flt.get("student_id"):

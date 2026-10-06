@@ -1302,8 +1302,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               <td className="px-3 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{r.name}</td>
                               <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{r.dept}</td>
                               <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{r.year}</td>
-                              <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(r.accommodation)}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{r.twelfth_cutoff !== undefined && r.twelfth_cutoff !== null ? Number(r.twelfth_cutoff).toFixed(1) : (r.cutoff !== undefined && r.cutoff !== null ? Number(r.cutoff).toFixed(1) : "—")}</td>
+                              <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(r.accommodation || r.accomodation || r.accommodation_type)}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{r.twelfth_cutoff !== undefined && r.twelfth_cutoff !== null ? Number(r.twelfth_cutoff).toFixed(1) : (r.cutoff !== undefined && r.cutoff !== null ? Number(r.cutoff).toFixed(1) : (r.twelfthCutoff !== undefined && r.twelfthCutoff !== null ? Number(r.twelfthCutoff).toFixed(1) : "—"))}</td>
                               {(r.weeklyData || []).map((wd: any, widx: number) => (
                                 <td key={widx} className={`px-3 py-2.5 text-center font-black text-sm ${wd.att ? (wd.solved >= 3 ? 'text-emerald-700 dark:text-emerald-300' : wd.solved >= 1 ? 'text-brand-700 dark:text-brand-300' : 'text-amber-700 dark:text-amber-300') : 'text-slate-500 dark:text-slate-400 font-bold'}`}>
                                   {wd.att ? wd.solved : '—'}
