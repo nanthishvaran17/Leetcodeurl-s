@@ -88,6 +88,7 @@ def sync_academic_metadata(quiet: bool = False):
         updated_cutoff_count = 0
         updated_accom_count = 0
         total_students_touched = 0
+        matched_count = 0
 
         for s in students:
             db_full_reg = (s.reg_no or "").strip().upper()
@@ -107,6 +108,7 @@ def sync_academic_metadata(quiet: bool = False):
             if not matched:
                 continue
 
+            matched_count += 1
             changed = False
             new_accom = matched.get("accommodation")
             new_cutoff = matched.get("twelfth_cutoff")
@@ -135,10 +137,15 @@ def sync_academic_metadata(quiet: bool = False):
 
         db.commit()
 
+        existing_cutoffs = sum(1 for s in students if s.twelfth_cutoff is not None)
+        existing_hostels = sum(1 for s in students if s.accommodation and "HOSTEL" in str(s.accommodation).upper())
+
         if not quiet:
-            print(f"[OK] Updated Cutoff marks for : {updated_cutoff_count} records")
-            print(f"[OK] Updated Accommodation for: {updated_accom_count} records")
-            print(f"[OK] Total Students enriched  : {total_students_touched}")
+            print(f"[*] Matched Students in JSON : {matched_count} / {len(students)}")
+            print(f"[OK] Newly Updated Cutoff marks: {updated_cutoff_count} records")
+            print(f"[OK] Newly Updated Accom     : {updated_accom_count} records")
+            print(f"[OK] Total Students with Cutoff: {existing_cutoffs} / {len(students)}")
+            print(f"[OK] Total Hostel Students     : {existing_hostels} / {len(students)}")
 
         # Purge stale report caches so new reports compute immediately
         try:
