@@ -1048,6 +1048,7 @@ export const AccountProfileSettings: React.FC = () => {
     try {
       const notifyToast = notify.loading('Generating perfect Excel report...', '', { duration: 10000, category: 'ADMIN' });
       // Dynamic import of exceljs for client-side workbook generation
+      // @ts-ignore
       const excelMod: any = await import('exceljs');
       const ExcelJS = excelMod.default ? excelMod.default : (excelMod.Workbook ? excelMod : (window as any).ExcelJS);
       const workbook = new (ExcelJS.Workbook || ExcelJS)();
