@@ -1048,7 +1048,8 @@ export const AccountProfileSettings: React.FC = () => {
     try {
       const notifyToast = notify.loading('Generating perfect Excel report...', '', { duration: 10000, category: 'ADMIN' });
       // Import browser-bundled version to avoid Vite Node.js polyfill missing errors (like stream/events)
-      const excelMod = await import('exceljs/dist/exceljs.min.js');
+      // @ts-ignore - TS doesn't find type definitions for internal dist path directly
+      const excelMod: any = await import('exceljs/dist/exceljs.min.js');
       const ExcelJS = excelMod.default ? excelMod.default : (excelMod.Workbook ? excelMod : (window as any).ExcelJS);
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Security Audit Log', {
