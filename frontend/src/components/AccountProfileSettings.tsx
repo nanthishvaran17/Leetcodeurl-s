@@ -1084,53 +1084,51 @@ export const AccountProfileSettings: React.FC = () => {
       }
 
       if (logoLeftId !== undefined) {
-        // Anchor to A1
+        // Anchor to top left A1
         worksheet.addImage(logoLeftId, {
-          tl: { col: 0, row: 0 },
-          ext: { width: 90, height: 80 }
+          tl: { col: 0.05, row: 0.1 },
+          ext: { width: 85, height: 75 }
         });
       }
       
       if (logoRightId !== undefined) {
-        // Anchor to G1 (which is column index 6)
+        // Anchor to top right G1 (which is column index 6)
         worksheet.addImage(logoRightId, {
-          tl: { col: 6, row: 0 },
-          ext: { width: 120, height: 80 }
+          tl: { col: 6.1, row: 0.1 },
+          ext: { width: 115, height: 75 }
         });
       }
 
       const colSpan = 7;
       
-      // Setup Title Headers - Extra height so images look proportional
-      worksheet.getRow(1).height = 80;
-      worksheet.getRow(2).height = 70;
-      worksheet.getRow(3).height = 25;
-      worksheet.getRow(4).height = 20;
+      // Setup Title Headers - Balanced, compact executive spacing
+      worksheet.getRow(1).height = 46;
+      worksheet.getRow(2).height = 24;
+      worksheet.getRow(3).height = 20;
+      worksheet.getRow(4).height = 10; // Clean small gap
 
-      // 2. Main Title (Row 2)
-      worksheet.mergeCells('A2:G2');
-      const titleCell = worksheet.getCell('A2');
+      // 1. Main Title (Row 1)
+      worksheet.mergeCells('A1:G1');
+      const titleCell = worksheet.getCell('A1');
       titleCell.value = 'OFFICIAL FACULTY SECURITY ACCESS & AUDIT LOG REPORT';
-      titleCell.font = { name: 'Times New Roman', size: 18, bold: true, color: { argb: 'FF000080' } };
+      titleCell.font = { name: 'Times New Roman', size: 16, bold: true, color: { argb: 'FF000080' } };
       titleCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
 
-      // 3. Subtitle (Row 3)
-      worksheet.mergeCells('A3:G3');
-      const subCell = worksheet.getCell('A3');
+      // 2. Subtitle (Row 2)
+      worksheet.mergeCells('A2:G2');
+      const subCell = worksheet.getCell('A2');
       subCell.value = `Faculty: ${fullName || user?.username} | Dept: ${departmentName}`;
-      subCell.font = { name: 'Times New Roman', size: 14, bold: true, color: { argb: 'FF333333' } };
+      subCell.font = { name: 'Times New Roman', size: 12, bold: true, color: { argb: 'FF333333' } };
       subCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
 
-      // 4. Generated At (Row 4)
-      worksheet.mergeCells('A4:G4');
-      const genCell = worksheet.getCell('A4');
+      // 3. Generated At (Row 3)
+      worksheet.mergeCells('A3:G3');
+      const genCell = worksheet.getCell('A3');
       genCell.value = `Generated At: ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata', dateStyle: 'long', timeStyle: 'short' })} IST`;
-      genCell.font = { name: 'Times New Roman', size: 11, color: { argb: 'FF000000' } };
+      genCell.font = { name: 'Times New Roman', size: 10, color: { argb: 'FF555555' } };
       genCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
 
-      worksheet.addRow([]); // Row 5 Blank
-
-      // 5. Headers (Row 6)
+      // 4. Headers (Row 5)
       const headerRow = worksheet.addRow(['Event ID', 'Date', 'Time (IST)', 'IP Address', 'Access Network', 'Authentication Method', 'Security Status']);
       headerRow.font = { name: 'Times New Roman', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
       headerRow.alignment = { horizontal: 'center', vertical: 'center' };
@@ -1140,7 +1138,7 @@ export const AccountProfileSettings: React.FC = () => {
         cell.border = { top: {style:'thin', color: {argb:'FF000000'}}, left: {style:'thin', color: {argb:'FF000000'}}, bottom: {style:'thin', color: {argb:'FF000000'}}, right: {style:'thin', color: {argb:'FF000000'}} };
       });
 
-      // 6. Data Rows
+      // 5. Data Rows
       loginHistory.forEach(h => {
         const row = worksheet.addRow([h.id, h.date, h.time, h.ip, h.network, h.method, h.status]);
         row.eachCell(cell => {
@@ -1159,7 +1157,7 @@ export const AccountProfileSettings: React.FC = () => {
         statusCell.alignment = { horizontal: 'center', vertical: 'center' };
       });
 
-      // 7. Column widths
+      // 6. Column widths
       worksheet.getColumn(1).width = 40; // Event ID
       worksheet.getColumn(2).width = 20; // Date
       worksheet.getColumn(3).width = 20; // Time
@@ -1169,7 +1167,7 @@ export const AccountProfileSettings: React.FC = () => {
       worksheet.getColumn(7).width = 25; // Status
 
       // Alternating row colors
-      for(let i = 7; i <= worksheet.rowCount; i++) {
+      for(let i = 6; i <= worksheet.rowCount; i++) {
         if(i % 2 !== 0) {
           worksheet.getRow(i).eachCell(cell => {
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };

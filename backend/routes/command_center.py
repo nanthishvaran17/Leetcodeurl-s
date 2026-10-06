@@ -633,28 +633,29 @@ def export_command_center_report_excel(
     elif report_type == "EXECUTIVE":
         col_span = 5
 
-    # Setup Title Headers - Extra height so images look proportional
-    ws.row_dimensions[1].height = 80
-    ws.row_dimensions[2].height = 70
-    ws.row_dimensions[3].height = 25
-    ws.row_dimensions[4].height = 20
+    # Setup Title Headers - Balanced, compact executive spacing
+    ws.row_dimensions[1].height = 46
+    ws.row_dimensions[2].height = 24
+    ws.row_dimensions[3].height = 20
+    ws.row_dimensions[4].height = 10
 
     title = data.get("report_title", "Nandha Executive Institutional Coding Health Report")
     
-    # Merge across all columns for title. Row 1 is reserved for logos to prevent overlapping.
-    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=col_span) # Hide gridlines
-    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=col_span)
-    cell = ws.cell(row=2, column=1, value=title)
+    # 1. Main Title (Row 1)
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=col_span)
+    cell = ws.cell(row=1, column=1, value=title)
     cell.font = title_font
     cell.alignment = center_align
 
-    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=col_span)
-    cell = ws.cell(row=3, column=1, value=data.get("department_scope", "All Departments"))
+    # 2. Subtitle (Row 2)
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=col_span)
+    cell = ws.cell(row=2, column=1, value=data.get("department_scope", "All Departments"))
     cell.font = subtitle_font
     cell.alignment = center_align
 
-    ws.merge_cells(start_row=4, start_column=1, end_row=4, end_column=col_span)
-    cell = ws.cell(row=4, column=1, value=f"Generated At: {data.get('generated_at', '')}")
+    # 3. Generated At (Row 3)
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=col_span)
+    cell = ws.cell(row=3, column=1, value=f"Generated At: {data.get('generated_at', '')}")
     cell.font = cell_font
     cell.alignment = center_align
 
