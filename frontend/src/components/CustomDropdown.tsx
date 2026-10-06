@@ -93,10 +93,25 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
         transformOrigin = 'bottom';
       }
 
+      const viewportWidth = window.innerWidth;
+      let width = rect.width;
+      let left = rect.left;
+
+      if (viewportWidth < 640) {
+        width = Math.min(viewportWidth - 24, Math.max(rect.width, 260));
+      }
+
+      if (left + width > viewportWidth - 12) {
+        left = Math.max(12, viewportWidth - width - 12);
+      }
+      if (left < 12) {
+        left = 12;
+      }
+
       const newCoords = {
         top: Math.max(8, top),
-        left: rect.left,
-        width: rect.width,
+        left,
+        width,
         maxHeight: Math.min(maxHeight, 256),
         transformOrigin
       };

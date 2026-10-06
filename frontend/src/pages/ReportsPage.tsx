@@ -837,27 +837,27 @@ export const ReportsPage: React.FC = () => {
 
                         {/* Dropdown Panel */}
                         {rptTypeOpen && (
-                          <div className="absolute z-[200] top-full left-0 mt-2 w-max max-w-[calc(100vw-32px)] sm:w-[500px] md:w-[740px] min-w-[290px] rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-700/60 shadow-[0_30px_80px_-10px_rgba(0,0,0,0.25)] dark:shadow-[0_30px_80px_-10px_rgba(0,0,0,0.75)] animate-in fade-in slide-in-from-top-3 duration-200">
+                          <div className="absolute z-[200] top-full left-0 right-0 sm:right-auto mt-2 w-full sm:w-[500px] md:w-[740px] max-w-[calc(100vw-32px)] rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-700/60 shadow-[0_30px_80px_-10px_rgba(0,0,0,0.25)] dark:shadow-[0_30px_80px_-10px_rgba(0,0,0,0.75)] animate-in fade-in slide-in-from-top-3 duration-200">
                             {/* Dropdown header bar */}
-                            <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-[#1e2233] via-[#1a1f35] to-[#1e2233] border-b-2 border-brand-500/40" style={{background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'}}>
-                              <div className="flex items-center gap-2.5">
-                                <div className="w-7 h-7 rounded-xl bg-brand-500/25 border border-brand-400/30 flex items-center justify-center">
+                            <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 bg-gradient-to-r from-[#1e2233] via-[#1a1f35] to-[#1e2233] border-b-2 border-brand-500/40" style={{background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'}}>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-7 h-7 rounded-xl bg-brand-500/25 border border-brand-400/30 flex items-center justify-center shrink-0">
                                   <LayoutTemplate className="w-4 h-4 text-brand-300" />
                                 </div>
-                                <span className="text-sm font-black text-white tracking-wide">Select Report Type</span>
+                                <span className="text-xs sm:text-sm font-black text-white tracking-wide truncate">Select Report Type</span>
                               </div>
-                              <span className="text-[11px] font-bold text-white bg-brand-500/30 border border-brand-400/40 px-2.5 py-0.5 rounded-full">
-                                {allOpts.length} Reports Available
+                              <span className="text-[10px] sm:text-[11px] font-bold text-white bg-brand-500/30 border border-brand-400/40 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
+                                {allOpts.length} Reports
                               </span>
                             </div>
                             {/* Two-column body */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 max-h-[65vh] overflow-y-auto overscroll-contain">
+                            <div className="grid grid-cols-1 md:grid-cols-2 max-h-[55vh] sm:max-h-[65vh] overflow-y-auto overscroll-contain">
                               {/* LEFT: Contest Reports */}
-                              <div className="p-4 sm:p-5 bg-slate-50/90 dark:bg-navy-900/60 backdrop-blur-xl border-r-0 md:border-r border-slate-200/60 dark:border-slate-700/40">
+                              <div className="p-3.5 sm:p-5 bg-slate-50/90 dark:bg-navy-900/60 backdrop-blur-xl border-r-0 md:border-r border-slate-200/60 dark:border-slate-700/40">
                                 {reportCategories.length > 0 && renderCategory(reportCategories[0])}
                               </div>
                               {/* RIGHT: Performance, Consolidated, Executive */}
-                              <div className="p-4 sm:p-5 bg-white/95 dark:bg-navy-950/90 backdrop-blur-xl flex flex-col gap-y-5">
+                              <div className="p-3.5 sm:p-5 bg-white/95 dark:bg-navy-950/90 backdrop-blur-xl flex flex-col gap-y-4 sm:gap-y-5">
                                 {reportCategories.slice(1).map(cat => (
                                   <div key={cat.title}>
                                     {renderCategory(cat)}
