@@ -15,7 +15,6 @@ import api, { triggerSingleStudentSync } from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
-import { LiveIndicator } from '../components/LiveIndicator';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';

@@ -4,7 +4,6 @@ import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, Che
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
-import { LiveIndicator } from './LiveIndicator';
 import { SignOutConfirmModal } from './SignOutConfirmModal';
 const NotificationPanel = lazy(() => import('./NotificationPanel').then(m => ({ default: m.NotificationPanel })));
 import { useGlobalNotifications } from '../context/GlobalNotificationContext';
@@ -114,8 +113,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Right: Actions */}
             <div className="flex items-center gap-3 sm:gap-4 lg:gap-5 flex-shrink-0">
               
-              <LiveIndicator />
-
               {/* Sync Status Button */}
               <button
                 type="button"
