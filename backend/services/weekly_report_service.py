@@ -344,6 +344,16 @@ def generate_weekly_performance_data(
     for snap in db_snaps_curr:
         curr_snapshots_by_pid[str(snap.people_id)] = snap
 
+    curr_contest_history_map = {}
+    last_contest_history_map = {}
+    from backend.models import LeetCodeContestRatingHistory
+    if curr_contest_num:
+        for r in db.query(LeetCodeContestRatingHistory).filter(LeetCodeContestRatingHistory.contest_name == f"Weekly Contest {curr_contest_num}").all():
+            curr_contest_history_map[r.student_id] = r
+    if last_contest_num:
+        for r in db.query(LeetCodeContestRatingHistory).filter(LeetCodeContestRatingHistory.contest_name == f"Weekly Contest {last_contest_num}").all():
+            last_contest_history_map[r.student_id] = r
+
     # Step 6: Process Students & Deduplicate by People ID
     processed_pids = set()
     all_students_current = []
@@ -448,8 +458,9 @@ def generate_weekly_performance_data(
             "cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
             "category": curr_category_name,
             "profile_ranking": getattr(st, "public_profile_ranking", None),
-            "contest_rating": (getattr(curr_pub_obj, "contest_rating", None) if curr_pub_obj and getattr(curr_pub_obj, "contest_rating", None) else getattr(st, "contest_rating", None)),
+            "contest_rating": (getattr(curr_contest_history_map.get(s.id), "rating_after", None) if curr_contest_history_map.get(s.id) and getattr(curr_contest_history_map.get(s.id), "rating_after", None) is not None else (getattr(curr_pub_obj, "contest_rating", None) if curr_pub_obj and getattr(curr_pub_obj, "contest_rating", None) else getattr(st, "contest_rating", None))),
             "contest_ranking": (getattr(curr_pub_obj, "contest_rank", None) if curr_pub_obj and getattr(curr_pub_obj, "contest_rank", None) else getattr(st, "contest_global_ranking", None)),
+            "contest_global_ranking": (getattr(curr_pub_obj, "contest_rank", None) if curr_pub_obj and getattr(curr_pub_obj, "contest_rank", None) else getattr(st, "contest_global_ranking", None)),
             "contest_name": f"Weekly Contest {curr_contest_num}",
             "public_result": curr_pub_outcome,
             "last_public_result": last_pub_outcome,

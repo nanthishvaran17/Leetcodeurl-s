@@ -195,6 +195,7 @@ def fetch_normalized_students(
 
     # Precompute session-specific results if a historical session_id is provided
     session_result_map = {}
+    historical_rating_map = {}
     if session_id and str(session_id).lower() not in ("all", "none", "latest"):
         try:
             from backend.services.weekly_session_resolver import resolve_target_weekly_session
@@ -209,6 +210,14 @@ def fetch_normalized_students(
                 for vr in virt_recs:
                     if vr.student_id not in session_result_map:
                         session_result_map[vr.student_id] = vr
+            
+            if target_ws and target_ws.contest_name:
+                from backend.models import LeetCodeContestRatingHistory
+                h_rows = db.query(LeetCodeContestRatingHistory).filter(
+                    LeetCodeContestRatingHistory.contest_name == target_ws.contest_name
+                ).all()
+                for r in h_rows:
+                    historical_rating_map[r.student_id] = r
         except Exception as ex:
             logger.warning(f"[SESSION_RESULT_MAP_ERR] {ex}")
 
@@ -273,26 +282,18 @@ def fetch_normalized_students(
         effective_rating = None
         g_rank = None
 
-        if sess_rec and getattr(sess_rec, "contest_rating", None) is not None and float(getattr(sess_rec, "contest_rating", 0) or 0) > 0:
-            effective_rating = float(sess_rec.contest_rating)
-        if sess_rec and getattr(sess_rec, "contest_rank", None) is not None and int(getattr(sess_rec, "contest_rank", 0) or 0) > 0:
-            g_rank = int(sess_rec.contest_rank)
+        if session_id and str(session_id).lower() not in ("all", "none", "latest"):
+            h_row = historical_rating_map.get(s.id)
+            if h_row:
+                if h_row.rating_after is not None:
+                    effective_rating = round(float(h_row.rating_after), 1)
+                if h_row.contest_rank is not None:
+                    g_rank = int(h_row.contest_rank)
 
-        if (effective_rating is None or g_rank is None) and session_id and str(session_id).lower() not in ("all", "none", "latest"):
-            from backend.services.weekly_session_resolver import resolve_target_weekly_session
-            target_ws = resolve_target_weekly_session(db, session_id)
-            if target_ws:
-                from backend.models import LeetCodeContestRatingHistory
-                h_row = db.query(LeetCodeContestRatingHistory).filter(
-                    LeetCodeContestRatingHistory.student_id == s.id,
-                    LeetCodeContestRatingHistory.contest_name == target_ws.contest_name,
-                    LeetCodeContestRatingHistory.rating_after.isnot(None)
-                ).first()
-                if h_row:
-                    if effective_rating is None and h_row.rating_after is not None:
-                        effective_rating = round(float(h_row.rating_after), 1)
-                    if g_rank is None and h_row.contest_rank is not None:
-                        g_rank = int(h_row.contest_rank)
+        if effective_rating is None and sess_rec and getattr(sess_rec, "contest_rating", None) is not None and float(getattr(sess_rec, "contest_rating", 0) or 0) > 0:
+            effective_rating = float(sess_rec.contest_rating)
+        if g_rank is None and sess_rec and getattr(sess_rec, "contest_rank", None) is not None and int(getattr(sess_rec, "contest_rank", 0) or 0) > 0:
+            g_rank = int(sess_rec.contest_rank)
 
         # Fallback to current live profile stats ONLY if no specific past session was requested
         if not session_id or str(session_id).lower() in ("all", "none", "latest"):
