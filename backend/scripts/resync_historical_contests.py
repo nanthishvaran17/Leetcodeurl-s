@@ -320,6 +320,62 @@ async def backfill_historical(
                 rec.fetch_status = "SUCCESS"
                 rec.last_fetched_at = datetime.datetime.now(datetime.timezone.utc)
 
+                # Parallel update PreviousWeekParticipationRecord
+                from backend.models import PreviousWeekParticipationRecord, ContestParticipation
+                prev_p = (
+                    db.query(PreviousWeekParticipationRecord)
+                    .filter(
+                        PreviousWeekParticipationRecord.session_id == session.id,
+                        PreviousWeekParticipationRecord.student_id == student.id,
+                        PreviousWeekParticipationRecord.is_active_version == True,
+                    )
+                    .first()
+                )
+                if not prev_p:
+                    prev_p = PreviousWeekParticipationRecord(
+                        session_id=session.id,
+                        contest_id=session.contest_id or f"weekly-contest-{cn}",
+                        contest_slug=session.contest_id or f"weekly-contest-{cn}",
+                        contest_title=session.contest_name or f"Weekly Contest {cn}",
+                        student_id=student.id,
+                        leetcode_username=student.username,
+                        participation_type="PUBLIC" if status in ("PUBLIC_ATTENDED", "PUBLIC", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE") else "NOT_PARTICIPATED",
+                        is_active_version=True,
+                        dataset_version=1,
+                    )
+                    db.add(prev_p)
+
+                prev_p.problems_solved = solved
+                prev_p.official_score = score
+                prev_p.official_rank = rank
+                prev_p.q1 = q1
+                prev_p.q2 = q2
+                prev_p.q3 = q3
+                prev_p.q4 = q4
+                prev_p.participation_type = "PUBLIC" if status in ("PUBLIC_ATTENDED", "PUBLIC", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE") else "NOT_PARTICIPATED"
+
+                # Parallel update ContestParticipation
+                cp = (
+                    db.query(ContestParticipation)
+                    .filter(
+                        ContestParticipation.student_id == student.id,
+                        ContestParticipation.contest_name == (session.contest_name or f"Weekly Contest {cn}"),
+                    )
+                    .first()
+                )
+                if not cp:
+                    cp = ContestParticipation(
+                        student_id=student.id,
+                        contest_id=session.contest_id or f"weekly-contest-{cn}",
+                        contest_name=session.contest_name or f"Weekly Contest {cn}",
+                    )
+                    db.add(cp)
+
+                cp.problems_solved = solved
+                cp.contest_rank = rank
+                cp.contest_rating_after = float(rating) if rating else None
+                cp.participation_type = "OFFICIAL" if status in ("PUBLIC_ATTENDED", "PUBLIC", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE") else "UNKNOWN"
+
                 if status in ("PUBLIC_ATTENDED", "PUBLIC", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE"):
                     counters[cn]["official"] += 1
                 else:
