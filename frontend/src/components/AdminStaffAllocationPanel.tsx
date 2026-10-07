@@ -13,6 +13,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNotification } from '../context/NotificationContext';
 import { AllocationConfirmationModal } from './admin/AllocationConfirmationModal';
 import { CustomDropdown, DropdownOption } from './CustomDropdown';
+import { normalizeAcademicYear, matchesAcademicYear, matchesDepartment } from '../utils/filterUtils';
 
 export const AdminStaffAllocationPanel: React.FC = () => {
   const { user } = useAuth();
@@ -146,9 +147,12 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
       const matchDept = selectedDept === 'ALL' ||
         String(st.department_id) === String(selectedDept) ||
-        (st.department || '').toUpperCase() === selectedDept.toUpperCase();
+        (st.department || '').toUpperCase() === selectedDept.toUpperCase() ||
+        matchesDepartment(st, selectedDept);
 
       const matchYear = selectedYear === 'ALL' ||
+        normalizeAcademicYear(st.year_level) === normalizeAcademicYear(selectedYear) ||
+        matchesAcademicYear(st, selectedYear) ||
         (st.year_level || '').toUpperCase() === selectedYear.toUpperCase();
 
       return matchSearch && matchDept && matchYear;

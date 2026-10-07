@@ -2390,7 +2390,7 @@ export const HODCommandCenter: React.FC = () => {
  </Card>
 
  {/* Year Benchmarks & Skill Gaps Full-Width Row */}
- <div className="lg:col-span-12 grid grid-cols-1 lg:grid-cols-2 gap-5">
+ <div className="lg:col-span-12 grid grid-cols-1 lg:grid-cols-2 gap-6 my-6">
  {/* Year-Wise Academic Benchmarks Card */}
  <Card className="p-5 space-y-4">
  <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
@@ -2481,7 +2481,7 @@ export const HODCommandCenter: React.FC = () => {
  </div>
 
  {/* 8. FACULTY MENTORS PERFORMANCE & COMPLETION MATRIX */}
- <Card id="staff-performance-section" className="p-5 space-y-3.5 scroll-mt-20">
+ <Card id="staff-performance-section" className="p-5 space-y-3.5 scroll-mt-20 mt-6">
  <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
  <div>
  <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">

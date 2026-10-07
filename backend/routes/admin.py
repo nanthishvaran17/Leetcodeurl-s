@@ -800,8 +800,29 @@ def get_unassigned_students(
 
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
-    if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
-        query = query.filter(Student.year_level == year_level.strip().upper())
+    if year_level and str(year_level).strip().upper() not in ['ALL', 'ALL YEARS', 'ALL_YEARS', '']:
+        clean_yl = str(year_level).strip().upper()
+        years_map = {
+            "I": ["1", "I", "1ST", "I YEAR", "1 YEAR", "YEAR I", "YEAR 1", "1ST YEAR"],
+            "II": ["2", "II", "2ND", "II YEAR", "2 YEAR", "YEAR II", "YEAR 2", "2ND YEAR"],
+            "III": ["3", "III", "3RD", "III YEAR", "3 YEAR", "YEAR III", "YEAR 3", "3RD YEAR"],
+            "IV": ["4", "IV", "4TH", "IV YEAR", "4 YEAR", "YEAR IV", "YEAR 4", "4TH YEAR"],
+            "1": ["1", "I", "1ST", "I YEAR", "1 YEAR", "YEAR I", "YEAR 1", "1ST YEAR"],
+            "2": ["2", "II", "2ND", "II YEAR", "2 YEAR", "YEAR II", "YEAR 2", "2ND YEAR"],
+            "3": ["3", "III", "3RD", "III YEAR", "3 YEAR", "YEAR III", "YEAR 3", "3RD YEAR"],
+            "4": ["4", "IV", "4TH", "IV YEAR", "4 YEAR", "YEAR IV", "YEAR 4", "4TH YEAR"]
+        }
+        target_years = years_map.get(clean_yl)
+        if not target_years:
+            stripped = clean_yl.replace('YEAR', '').replace('YR', '').strip()
+            target_years = years_map.get(stripped, [clean_yl, stripped])
+            
+        from sqlalchemy import or_, func
+        conds = [Student.year_level.in_(target_years)]
+        for t in target_years:
+            conds.append(func.upper(Student.year_level) == t.upper())
+            conds.append(func.upper(Student.year_level).like(f"%{t.upper()}%"))
+        query = query.filter(or_(*conds))
 
     unassigned = query.order_by(Student.year_level, Student.reg_no).all()
 
