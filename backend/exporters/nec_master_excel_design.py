@@ -106,9 +106,9 @@ COLUMN_WIDTH_MAP = {
 def get_asset_logo_paths() -> tuple[Optional[str], Optional[str]]:
     """Finds official NANDHA Emblem (white crest badge) and 25 NEC Anniversary logos on disk."""
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    left_logo = os.path.join(base_dir, "assets", "nandha_emblem.png")
+    left_logo = os.path.join(base_dir, "assets", "nandha_emblem_white_transparent.png")
     if not os.path.exists(left_logo):
-        left_logo = os.path.join(base_dir, "assets", "nandha_emblem_white_transparent.png")
+        left_logo = os.path.join(base_dir, "assets", "nandha_emblem.png")
         if not os.path.exists(left_logo):
             left_logo = None
 
@@ -147,6 +147,23 @@ def apply_master_college_identity(
     last_col_letter = get_column_letter(cols)
     ws.sheet_view.showGridLines = True
 
+    # Dynamic font scaling and logo sizing based on column count to prevent overlap
+    if cols <= 7:
+        font_title_size = 12
+        font_sub_size = 8.5
+        target_h = 38
+    elif cols <= 10:
+        font_title_size = 14
+        font_sub_size = 9
+        target_h = 44
+    else:
+        font_title_size = 16
+        font_sub_size = 10
+        target_h = 48
+
+    font_title = Font(name=PRIMARY_FONT, size=font_title_size, bold=True, color="FFFFFF")
+    font_sub = Font(name=PRIMARY_FONT, size=font_sub_size, italic=True, color="FFFFFF")
+
     # 1. Fill Row 1 & Row 2 with Primary Navy across all columns & set unified outer border (no internal gridlines)
     for r in range(1, 3):
         for c in range(1, cols + 1):
@@ -164,18 +181,18 @@ def apply_master_college_identity(
     # Row 1: Main Title Banner (Merged across all columns)
     ws.merge_cells(f"A1:{last_col_letter}1")
     ws["A1"] = "NANDHA ENGINEERING COLLEGE, ERODE – 638 052"
-    ws["A1"].font = FONT_COLLEGE_TITLE
+    ws["A1"].font = font_title
     ws["A1"].alignment = ALIGN_CENTER
-    ws.row_dimensions[1].height = 38
+    ws.row_dimensions[1].height = 36
 
     # Row 2: Subtitle (Merged across all columns)
     ws.merge_cells(f"A2:{last_col_letter}2")
     ws["A2"] = "(AUTONOMOUS) • ESTD 2001 | Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai"
-    ws["A2"].font = FONT_SUBTITLE
+    ws["A2"].font = font_sub
     ws["A2"].alignment = ALIGN_CENTER
-    ws.row_dimensions[2].height = 22
+    ws.row_dimensions[2].height = 20
 
-    # Insert Left Emblem Logo (54px height, exact 12.5px left & 6.3px top offset away from edges)
+    # Insert Left Emblem Logo (scaled to target_h, exact 12.5px left & 4px top offset away from edges)
     if left_logo:
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
@@ -185,18 +202,17 @@ def apply_master_college_identity(
 
             with PILImage.open(left_logo) as pil_l:
                 orig_w, orig_h = pil_l.size
-            target_h = 54
-            target_w = int(target_h * (orig_w / orig_h)) if orig_h else 81
+            target_w = int(target_h * (orig_w / orig_h)) if orig_h else 60
 
             img_left = OpenPyxlImage(left_logo)
-            marker_l = AnchorMarker(col=0, colOff=120000, row=0, rowOff=60000)
+            marker_l = AnchorMarker(col=0, colOff=60000, row=0, rowOff=40000)
             size_l = XDRPositiveSize2D(cx=int(target_w * 9525), cy=int(target_h * 9525))
             img_left.anchor = OneCellAnchor(_from=marker_l, ext=size_l)
             ws.add_image(img_left)
         except Exception:
             pass
 
-    # Insert Right 25 NEC Anniversary Logo (54px height, exact 4px right & 6.3px top offset)
+    # Insert Right 25 NEC Anniversary Logo (scaled to target_h, exact 4px right & 4px top offset)
     if right_logo:
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
@@ -206,11 +222,10 @@ def apply_master_college_identity(
 
             with PILImage.open(right_logo) as pil_r:
                 orig_w, orig_h = pil_r.size
-            target_h = 54
-            target_w = int(target_h * (orig_w / orig_h)) if orig_h else 54
+            target_w = int(target_h * (orig_w / orig_h)) if orig_h else target_h
 
             img_right = OpenPyxlImage(right_logo)
-            marker_r = AnchorMarker(col=cols - 1, colOff=40000, row=0, rowOff=60000)
+            marker_r = AnchorMarker(col=cols - 1, colOff=30000, row=0, rowOff=40000)
             size_r = XDRPositiveSize2D(cx=int(target_w * 9525), cy=int(target_h * 9525))
             img_right.anchor = OneCellAnchor(_from=marker_r, ext=size_r)
             ws.add_image(img_right)
