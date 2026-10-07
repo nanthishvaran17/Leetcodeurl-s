@@ -41,6 +41,61 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string) {
   return 'failed';
 }
 
+function getDeptCode(st: any): string {
+  if (!st) return '—';
+  if (typeof st.department === 'string' && st.department.trim()) return st.department.trim();
+  if (st.department && typeof st.department === 'object') {
+    if (st.department.code) return st.department.code;
+    if (st.department.name) return st.department.name;
+  }
+  if (st.dept_code) return st.dept_code;
+  if (st.department_code) return st.department_code;
+  if (st.dept) return st.dept;
+  if (st.department_id === 1) return 'CSE(CS)';
+  if (st.department_id === 2) return 'CSE(IOT)';
+  if (st.department_id === 7) return 'IT';
+  return '—';
+}
+
+function getContestRatingDisplay(st: any): string {
+  if (!st) return '—';
+  const rawRating = st.stats?.contest_rating 
+    ?? st.contest_rating 
+    ?? st.public_contest_result?.contest_rating 
+    ?? st.lc_contest_standing?.contest_rating;
+  if (rawRating == null || Number(rawRating) <= 0 || Number(rawRating) === 1500) return '—';
+  return Math.round(Number(rawRating)).toLocaleString();
+}
+
+function getContestRankDisplay(st: any): string {
+  if (!st) return '—';
+  const rawRank = st.stats?.contest_global_ranking 
+    ?? st.stats?.global_rank 
+    ?? st.stats?.contest_rank 
+    ?? st.contest_global_ranking 
+    ?? st.global_rank 
+    ?? st.contest_rank 
+    ?? st.public_contest_result?.contest_rank 
+    ?? st.lc_contest_standing?.contest_global_ranking;
+  if (rawRank == null || Number(rawRank) <= 0 || Number(rawRank) === 50000) return '—';
+  return `#${Number(rawRank).toLocaleString()}`;
+}
+
+function getProfileRankDisplay(st: any): string {
+  if (!st) return '—';
+  const rawProfileRank = st.stats?.public_profile_ranking 
+    ?? st.stats?.profile_global_ranking 
+    ?? st.stats?.profile_rank 
+    ?? st.stats?.ranking 
+    ?? st.public_profile_ranking 
+    ?? st.profile_rank 
+    ?? st.profile_global_ranking 
+    ?? st.ranking 
+    ?? st.lc_problem_stats?.profile_global_ranking;
+  if (!rawProfileRank || Number(rawProfileRank) <= 0 || Number(rawProfileRank) >= 5000000) return '—';
+  return `#${Number(rawProfileRank).toLocaleString()}`;
+}
+
 // million-ignore
 export const FastStudentRow = memo(({ 
   studentId,
@@ -130,7 +185,7 @@ export const FastStudentRow = memo(({
               </span>
               <span className="text-slate-300 dark:text-slate-600">•</span>
               <span className="text-[10px] font-black tracking-tight text-slate-600 dark:text-slate-300">
-                {student.department?.code || student.department?.name || '—'} {formatStudentYearBadge(student)}
+                {getDeptCode(student)} {formatStudentYearBadge(student)}
               </span>
             </div>
 
@@ -152,11 +207,7 @@ export const FastStudentRow = memo(({
             <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 shadow-sm">
               <span className="text-[9px] font-black uppercase tracking-wider">RATING</span>
               <span className="text-[11px] font-black font-mono">
-                {(() => {
-                  const rawRating = student.stats?.contest_rating ?? (student as any).contest_rating;
-                  if (rawRating == null || rawRating <= 0 || Number(rawRating) === 1500 || Number(rawRating) === 1500.0) return '—';
-                  return Math.round(Number(rawRating)).toLocaleString();
-                })()}
+                {getContestRatingDisplay(student)}
               </span>
             </div>
           </div>
@@ -188,7 +239,7 @@ export const FastStudentRow = memo(({
             ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700"><Clock className="w-3 h-3" /><span>Pending</span></span>
             : syncState === 'failed'
               ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800"><AlertCircle className="w-3 h-3" /><span>Failed</span></span>
-              : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">Unranked</span>
+              : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700">Unranked</span>
         }
       </div>
 
@@ -212,7 +263,7 @@ export const FastStudentRow = memo(({
       </div>
 
       <div className="hidden md:flex flex-none w-36 px-3 text-[11px] font-bold items-center justify-start gap-0.5 self-center my-auto overflow-hidden min-h-[44px]">
-        <span className="text-slate-900 dark:text-white truncate font-extrabold">{student.department?.code || student.department?.name || '—'}</span>
+        <span className="text-slate-900 dark:text-white truncate font-extrabold">{getDeptCode(student)}</span>
         <span className="text-slate-600 dark:text-slate-300 shrink-0 font-extrabold px-0.5">/</span>
         <span className="text-slate-800 dark:text-slate-200 shrink-0 font-extrabold">{formatStudentYearBadge(student)}</span>
       </div>
@@ -267,27 +318,15 @@ export const FastStudentRow = memo(({
       </div>
 
       <div className="hidden md:flex flex-none w-24 px-3 items-center justify-center text-center text-amber-600 dark:text-amber-400 font-extrabold">
-        {(() => {
-          const rawRating = student.stats?.contest_rating ?? (student as any).contest_rating;
-          if (rawRating == null || rawRating <= 0 || Number(rawRating) === 1500 || Number(rawRating) === 1500.0) return '—';
-          return Math.round(Number(rawRating)).toLocaleString();
-        })()}
+        {getContestRatingDisplay(student)}
       </div>
 
       <div className="hidden md:flex flex-none w-28 px-3 items-center justify-center text-center text-indigo-700 dark:text-indigo-300 font-extrabold">
-        {(() => {
-          const rawRank = student.stats?.contest_global_ranking ?? (student as any).contest_global_ranking;
-          if (rawRank == null || rawRank <= 0 || rawRank === 50000) return '—';
-          return `#${Number(rawRank).toLocaleString()}`;
-        })()}
+        {getContestRankDisplay(student)}
       </div>
 
       <div className="hidden md:flex flex-none w-28 px-3 items-center justify-center text-center text-slate-900 dark:text-slate-100 font-extrabold">
-        {(() => {
-          const rawProfileRank = student.stats?.public_profile_ranking ?? (student as any).public_profile_ranking;
-          if (!rawProfileRank || rawProfileRank >= 5000000 || rawProfileRank <= 0) return '—';
-          return `#${Number(rawProfileRank).toLocaleString()}`;
-        })()}
+        {getProfileRankDisplay(student)}
       </div>
 
       <div className="hidden md:flex flex-none w-32 px-3 items-center justify-center text-center" onClick={(e) => e.stopPropagation()}>

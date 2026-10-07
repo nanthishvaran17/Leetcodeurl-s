@@ -14,12 +14,12 @@ export interface DropdownOption {
   hidePill?: boolean;
 }
 
-interface CustomDropdownProps {
+interface MultiSelectDropdownProps {
   id?: string;
   label: string;
   options: DropdownOption[];
-  value: string;
-  onChange: (value: string) => void;
+  values: string[];
+  onChange: (values: string[]) => void;
   icon?: LucideIcon;
   placeholder?: string;
   align?: 'left' | 'right' | 'auto';
@@ -31,11 +31,11 @@ interface CustomDropdownProps {
   forceDirection?: 'up' | 'down' | 'auto';
 }
 
-export const CustomDropdown: React.FC<CustomDropdownProps> = ({
+export const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
   id,
   label,
   options,
-  value,
+  values = [],
   onChange,
   icon: HeaderIcon,
   placeholder = 'Select option...',
@@ -54,7 +54,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const lastCoordsRef = useRef<string | null>(null);
 
   // Find selected option
-  const selectedOption = options.find((opt) => opt.value === value && !opt.label.toLowerCase().startsWith('select'));
+  const selectedOptions = options.filter((opt) => values.includes(opt.value));
   
   // Filter out redundant placeholder options (e.g. value: '' with label 'Select ...') from selectable popover list
   const selectableOptions = options.filter((opt) => {
@@ -67,10 +67,10 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   // Keep focusedIndex in sync with selected value when opened
   useEffect(() => {
     if (isOpen) {
-      const idx = selectableOptions.findIndex((opt) => opt.value === value);
+      const idx = selectableOptions.findIndex((opt) => values.includes(opt.value));
       setFocusedIndex(idx >= 0 ? idx : 0);
     }
-  }, [isOpen, value, selectableOptions]);
+  }, [isOpen, values = [], selectableOptions]);
 
   const updateCoords = useCallback(() => {
     if (dropdownRef.current) {
@@ -132,10 +132,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
     }
   }, [selectableOptions.length]);
 
-  const handleSelect = (optionValue: string) => {
-    onChange(optionValue);
-    setIsOpen(false);
-  };
+  const handleSelect = (optionValue: string) => { const newValues = values.includes(optionValue) ? values.filter(v => v !== optionValue) : [...values = [], optionValue]; onChange(newValues); };
 
   // Close dropdown on outside click or keyboard navigation (Escape, ArrowUp, ArrowDown, Enter)
   useEffect(() => {
@@ -213,10 +210,11 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
             transformOrigin: coords.transformOrigin || 'top',
             zIndex: 99999999
           }}
-          className="overflow-y-auto rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] p-2 space-y-1 focus:outline-none scrollbar-thin"
+          className="overflow-y-auto rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] focus:outline-none scrollbar-thin"
         >
+          <div className="p-2 space-y-1">
           {selectableOptions.map((opt, idx) => {
-            const isSelected = opt.value === value;
+            const isSelected = values.includes(opt.value);
             const isFocused = idx === focusedIndex;
             const OptIcon = opt.icon;
 
@@ -288,6 +286,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
               </button>
             );
           })}
+          </div>
         </motion.div>
       </AnimatePresence>,
       document.body
@@ -346,17 +345,15 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
             </div>
           )}
           <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden">
-            {selectedOption?.badge && !selectedOption.hidePill && !hideTriggerBadge && (
-              <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${
-                selectedOption.badgeColor || 'bg-brand-100 dark:bg-brand-900/80 text-brand-900 dark:text-brand-200 border-brand-300 dark:border-brand-800'
-              }`}>
-                {selectedOption.badge}
+            {values.length > 0 && (
+              <span className="shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border bg-brand-100 dark:bg-brand-900/80 text-brand-900 dark:text-brand-200 border-brand-300 dark:border-brand-800">
+                {values.length}
               </span>
             )}
             <span className={`text-xs font-black truncate block min-w-0 flex-1 ${
-              selectedOption ? 'text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'
+              values.length > 0 ? 'text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'
             }`}>
-              {selectedOption ? selectedOption.label : (placeholder || label || 'Select...')}
+              {values.length === 0 ? (placeholder || label || 'Select...') : `Selected`}
             </span>
           </div>
         </div>

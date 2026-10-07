@@ -49,7 +49,7 @@ export const StaffVerificationSection: React.FC = () => {
   const [reporters, setReporters] = useState<any[]>([]);
 
   // Reviewer state
-  const isReviewerRole = ['super admin', 'admin', 'super_admin', 'hod', 'department hod', 'principal', 'management'].includes((user?.role || '').toLowerCase());
+  const isReviewerRole = ['super admin', 'admin', 'super_admin', 'hod', 'department hod', 'principal', 'management', 'placement coordinator'].includes((user?.role || '').toLowerCase());
   const [adminVerifications, setAdminVerifications] = useState<any[]>([]);
   const [adminLoading, setAdminLoading] = useState<boolean>(false);
   const [adminStatusFilter, setAdminStatusFilter] = useState<string>('ALL');

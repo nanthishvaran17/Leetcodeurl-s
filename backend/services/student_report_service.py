@@ -83,15 +83,16 @@ def generate_student_report(
         if total_solved == 0 and (easy_solved + medium_solved + hard_solved) > 0:
             total_solved = easy_solved + medium_solved + hard_solved
 
-        contest_rating = (rt_stats.contest_rating if rt_stats and rt_stats.contest_rating is not None 
+        raw_rating = (rt_stats.contest_rating if rt_stats and rt_stats.contest_rating is not None 
                           else (stats.contest_rating if stats else 0.0))
+        contest_rating = round(raw_rating) if raw_rating else 0
 
         # 1. Global Rank Resolution
         raw_global_rank = None
         if rt_stats:
-            raw_global_rank = rt_stats.contest_global_ranking or rt_stats.public_profile_ranking
+            raw_global_rank = rt_stats.public_profile_ranking or rt_stats.contest_global_ranking
         if not raw_global_rank and stats:
-            raw_global_rank = getattr(stats, "contest_global_ranking", None) or getattr(stats, "public_profile_ranking", None)
+            raw_global_rank = getattr(stats, "public_profile_ranking", None) or getattr(stats, "contest_global_ranking", None)
             
         if raw_global_rank and str(raw_global_rank).strip() not in ("0", "N/A", "None"):
             global_rank = f"#{int(raw_global_rank):,}"
@@ -218,7 +219,7 @@ def generate_student_report(
             "easy": easy_solved,
             "medium": medium_solved,
             "hard": hard_solved,
-            "contest_rating": round(contest_rating, 1) if contest_rating else 0.0,  # type: ignore
+            "contest_rating": int(round(contest_rating)) if contest_rating else 0,  # type: ignore
             "global_rank": global_rank,
             "college_rank": college_rank,
             "active_streak": active_streak,

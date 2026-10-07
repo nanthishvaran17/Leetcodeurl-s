@@ -3,7 +3,7 @@ import {
   Users, UserPlus, RefreshCw, CheckCircle2, AlertTriangle, User,
   Search, Sliders, ArrowRight, Power, Filter, X, Building2,
   Trash2, UserCheck, ShieldAlert, Sparkles, Check, AlertOctagon, ChevronDown,
-  Eye, BookOpen, Trophy, Award, UserMinus
+  Eye, BookOpen, Trophy, Award, UserMinus, Mail, Activity
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -723,82 +723,79 @@ export const AdminStaffAllocationPanel: React.FC = () => {
               return (
                 <div
                   key={st.id}
-                  className={`group relative rounded-2xl border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden w-full max-w-full min-w-0 box-border flex flex-col justify-between ${!st.is_active
-                    ? 'bg-slate-50/80 dark:bg-navy-950/50 border-slate-200 dark:border-navy-800 opacity-60'
-                    : isFull
-                      ? 'bg-gradient-to-b from-rose-50/40 via-white to-white dark:from-rose-950/20 dark:via-navy-900/90 dark:to-navy-950 border-rose-200/90 dark:border-rose-900/70 hover:border-rose-400 dark:hover:border-rose-600 shadow-rose-500/5'
-                      : count >= 20
-                        ? 'bg-gradient-to-b from-amber-50/40 via-white to-white dark:from-amber-950/20 dark:via-navy-900/90 dark:to-navy-950 border-amber-200/90 dark:border-amber-900/70 hover:border-amber-400 dark:hover:border-amber-600 shadow-amber-500/5'
-                        : 'bg-white/95 dark:bg-navy-900/90 border-slate-200/90 dark:border-navy-700/80 hover:border-indigo-400/80 dark:hover:border-indigo-500/80 hover:shadow-indigo-500/10 shadow-sm'
-                    }`}
+                  className="group relative rounded-3xl p-5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-500/60 dark:hover:border-indigo-500/60 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 space-y-4 overflow-hidden flex flex-col justify-between"
                 >
-                  {/* Subtle top ambient glow strip */}
-                  <div className={`h-1 w-full shrink-0 ${!st.is_active ? 'bg-slate-300 dark:bg-navy-700' : isFull
-                    ? 'bg-gradient-to-r from-rose-500 via-pink-500 to-orange-500'
-                    : count >= 20
-                      ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500'
-                      : 'bg-gradient-to-r from-sky-400 via-indigo-500 to-violet-600'
+                  {/* Linear Glowing Top Accent Line */}
+                  <div className={`absolute top-0 left-0 right-0 h-1 transition-all duration-500 ${!st.is_active 
+                    ? 'bg-slate-300 dark:bg-slate-700' 
+                    : isFull
+                      ? 'bg-gradient-to-r from-rose-500 via-pink-500 to-orange-500'
+                      : count >= 20
+                        ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500'
+                        : 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 group-hover:h-1.5'
                     }`} />
 
                   {/* Ambient corner light */}
-                  <div className={`absolute -top-10 -right-10 w-24 h-24 rounded-full blur-2xl pointer-events-none opacity-20 group-hover:opacity-60 transition-opacity duration-500 ${isFull ? 'bg-rose-500' : count >= 20 ? 'bg-amber-500' : 'bg-indigo-500'
-                    }`} />
+                  <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl pointer-events-none opacity-20 group-hover:opacity-60 group-hover:scale-150 transition-all duration-500 ${
+                    isFull ? 'bg-rose-500' : count >= 20 ? 'bg-amber-500' : 'bg-indigo-500'
+                  }`} />
 
-                  <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between space-y-3.5 relative z-1">
+                  <div className="flex flex-col flex-1 justify-between space-y-3.5 relative z-1">
                     {/* Header: Avatar + Staff Info + Status Pill */}
-                    <div className="flex items-start justify-between gap-2.5 w-full min-w-0">
+                    <div className="flex items-start justify-between gap-3 w-full min-w-0 pt-1">
                       <div className="flex items-center space-x-3 min-w-0 flex-1">
-                        <div className={`relative w-11 h-11 rounded-xl flex items-center justify-center text-base font-black text-white shadow-md ring-2 ring-white dark:ring-navy-800 shrink-0 ${!st.is_active ? 'bg-slate-400'
+                        <div className={`relative w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black text-white shadow-lg shadow-indigo-500/10 border border-white/20 shrink-0 ${!st.is_active ? 'bg-slate-400'
                           : isFull ? 'bg-gradient-to-tr from-rose-600 to-orange-500'
                             : count >= 20 ? 'bg-gradient-to-tr from-amber-500 to-orange-500'
-                              : 'bg-gradient-to-tr from-indigo-600 via-blue-600 to-sky-500'
+                              : 'bg-gradient-to-tr from-indigo-600 via-blue-600 to-violet-600'
                           }`}>
                           {st.username?.charAt(0)?.toUpperCase() || '?'}
                           {st.is_active && (
-                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-navy-900 bg-emerald-500 shadow-2xs" />
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 bg-emerald-500 shadow-2xs" />
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-black text-sm text-slate-900 dark:text-white leading-tight truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" title={st.username}>
+                          <h4 className="font-black text-base text-slate-900 dark:text-white leading-tight truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" title={st.username}>
                             {st.username}
                           </h4>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-mono mt-0.5" title={st.email}>
-                            {st.email || 'No email configured'}
-                          </p>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate" title={st.email}>
+                            <Mail className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                            <span className="truncate">{st.email || 'No email'}</span>
+                          </div>
                         </div>
                       </div>
 
                       {/* Status Badge */}
                       <div className="shrink-0">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap shadow-2xs ${!st.is_active
-                          ? 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-navy-800 dark:text-slate-400 dark:border-navy-700'
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap shadow-2xs ${!st.is_active
+                          ? 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
                           : isFull
-                            ? 'bg-rose-50 text-rose-700 border border-rose-200/80 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-900/60'
+                            ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                             : count >= 20
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-900/60'
-                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-900/60'
+                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                           }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${!st.is_active ? 'bg-slate-400' : isFull ? 'bg-rose-500' : count >= 20 ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
+                          <span className={`w-2 h-2 rounded-full ${!st.is_active ? 'bg-slate-400' : isFull ? 'bg-rose-500' : count >= 20 ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
                           {!st.is_active ? 'DISABLED' : isFull ? 'FULL' : 'AVAILABLE'}
                         </span>
                       </div>
                     </div>
 
                     {/* Department Tag & Quick Action Buttons */}
-                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-navy-800/80">
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
                       <div className="min-w-0 flex-1">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100/90 dark:bg-navy-800/90 text-slate-700 dark:text-slate-300 text-[10px] font-bold border border-slate-200/60 dark:border-navy-700/60 uppercase tracking-wider truncate max-w-full">
-                          <Building2 className="w-3 h-3 text-indigo-500 shrink-0" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 text-[10px] font-black border border-slate-200/60 dark:border-slate-700/60 uppercase tracking-wider truncate max-w-full">
+                          <Building2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                           <span className="truncate">{st.department || 'GENERAL'}</span>
                         </span>
                       </div>
 
                       {/* Action buttons toolbar */}
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
                           onClick={() => handleOpenStaffRoster(st)}
-                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-navy-800 hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 dark:hover:text-white text-slate-600 dark:text-slate-300 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                          className="p-2 rounded-xl bg-indigo-50/80 hover:bg-indigo-600 text-indigo-600 hover:text-white dark:bg-indigo-950/50 dark:hover:bg-indigo-600 dark:text-indigo-300 dark:hover:text-white border border-indigo-200/60 dark:border-indigo-800/60 transition-all active:scale-95 cursor-pointer shadow-2xs"
                           title="View Student Roster"
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -806,9 +803,9 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => triggerToggleStatusModal(st)}
-                          className={`p-1.5 rounded-lg transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs ${st.is_active
-                            ? 'bg-slate-100 dark:bg-navy-800 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 text-slate-600 dark:text-slate-300'
-                            : 'bg-emerald-50 hover:bg-emerald-500 hover:text-white dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300'
+                          className={`p-2 rounded-xl border transition-all active:scale-95 cursor-pointer shadow-2xs ${st.is_active
+                            ? 'bg-slate-100 dark:bg-slate-800 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700/80'
+                            : 'bg-emerald-50/80 hover:bg-emerald-600 text-emerald-700 hover:text-white dark:bg-emerald-950/50 dark:hover:bg-emerald-600 dark:text-emerald-300 dark:hover:text-white border-emerald-200/60 dark:border-emerald-800/60'
                             }`}
                           title={st.is_active ? 'Disable Staff Account' : 'Enable Staff Account'}
                         >
@@ -817,7 +814,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => triggerDeleteStaffModal(st)}
-                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-navy-800 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 dark:hover:text-white text-slate-600 dark:text-slate-300 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
+                          className="p-2 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-600 hover:text-white border border-rose-200/60 dark:border-rose-800/60 transition-all active:scale-95 cursor-pointer shadow-2xs"
                           title="Delete Staff Account"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -826,27 +823,30 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                     </div>
 
                     {/* Allocation Progress Inset Card */}
-                    <div className="p-3 rounded-xl bg-slate-50/90 dark:bg-navy-950/60 border border-slate-200/60 dark:border-navy-800/60 space-y-2">
+                    <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 space-y-2">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-600 dark:text-slate-400 font-bold text-[11px]">Mentee Capacity</span>
+                        <span className="text-slate-500 dark:text-slate-400 font-bold text-[11px] uppercase tracking-wider flex items-center gap-1">
+                          <Activity className="w-3.5 h-3.5 text-sky-500" />
+                          Mentee Capacity
+                        </span>
                         <div className="flex items-center gap-1.5">
-                          <span className={`font-mono font-black text-xs ${isFull ? 'text-rose-500' : count >= 20 ? 'text-amber-500' : 'text-slate-900 dark:text-white'}`}>
+                          <span className={`font-mono font-bold text-xs ${isFull ? 'text-rose-500' : count >= 20 ? 'text-amber-500' : 'text-slate-900 dark:text-white'}`}>
                             {count} <span className="text-slate-400 font-normal">/ {maxCap}</span>
                           </span>
-                          <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${isFull ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300' : 'bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-400'}`}>
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${isFull ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}>
                             {percent}%
                           </span>
                         </div>
                       </div>
 
                       {/* Progress bar */}
-                      <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden shadow-inner">
+                      <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-700 ease-out ${isFull
-                            ? 'bg-gradient-to-r from-rose-500 via-pink-500 to-orange-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]'
+                            ? 'bg-gradient-to-r from-rose-500 via-pink-500 to-orange-500'
                             : count >= 20
                               ? 'bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500'
-                              : 'bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-600'
+                              : 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500'
                             }`}
                           style={{ width: `${percent}%` }}
                         />
@@ -998,95 +998,111 @@ export const AdminStaffAllocationPanel: React.FC = () => {
             </div>
 
             {/* Quick Range & Batch Selection Control Bar */}
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700/80 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            <div className="p-3 sm:p-4 rounded-3xl bg-white/70 dark:bg-navy-900/60 border border-slate-200/50 dark:border-navy-700/50 shadow-xl backdrop-blur-xl flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 transition-all hover:border-brand-500/30">
               
               {/* Left: Quick Preset Count Buttons */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-navy-400 mr-1 flex items-center gap-1">
-                  <Sliders className="w-3.5 h-3.5 text-sky-500" />
-                  <span>Quick Select:</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-indigo-600 shadow-md shadow-brand-500/20 shrink-0 mr-1">
+                  <Sliders className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-navy-300 mr-1">
+                  Quick Select
                 </span>
 
-                {[10, 20, 30, 45, 50].map((num) => (
+                <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100/80 dark:bg-navy-950/80 rounded-2xl border border-slate-200/60 dark:border-navy-800/60 backdrop-blur-md">
+                  {[10, 20, 30, 45, 50].map((num) => {
+                    const isSelected = selectedStudents.length === Math.min(num, filteredUnassigned.length) && selectedStudents.length > 0;
+                    return (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => selectFirstN(num)}
+                        disabled={filteredUnassigned.length === 0}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-gradient-to-r from-brand-500 to-indigo-600 text-white shadow-md shadow-brand-500/30 scale-105 border-0'
+                            : 'bg-transparent text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-navy-800 hover:shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-navy-700'
+                        }`}
+                      >
+                        1 to {Math.min(num, filteredUnassigned.length || num)}
+                      </button>
+                    );
+                  })}
+                  
+                  <div className="w-px h-5 bg-slate-300 dark:bg-navy-700 mx-1"></div>
+
                   <button
-                    key={num}
                     type="button"
-                    onClick={() => selectFirstN(num)}
+                    onClick={toggleSelectAll}
                     disabled={filteredUnassigned.length === 0}
-                    className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer border ${
-                      selectedStudents.length === Math.min(num, filteredUnassigned.length) && selectedStudents.length > 0
-                        ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
-                        : 'bg-slate-100 hover:bg-sky-50 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:border-sky-300'
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      selectedStudents.length === filteredUnassigned.length && filteredUnassigned.length > 0
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/30 scale-105 border-0'
+                        : 'bg-transparent text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-navy-800 hover:shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-navy-700'
                     }`}
                   >
-                    1 to {Math.min(num, filteredUnassigned.length || num)}
+                    All ({filteredUnassigned.length})
                   </button>
-                ))}
-
-                <button
-                  type="button"
-                  onClick={toggleSelectAll}
-                  disabled={filteredUnassigned.length === 0}
-                  className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer border ${
-                    selectedStudents.length === filteredUnassigned.length && filteredUnassigned.length > 0
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                      : 'bg-slate-100 hover:bg-indigo-50 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:border-indigo-300'
-                  }`}
-                >
-                  All ({filteredUnassigned.length})
-                </button>
+                </div>
 
                 {selectedStudents.length > 0 && (
                   <button
                     type="button"
                     onClick={() => setSelectedStudents([])}
-                    className="px-2 py-1 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer flex items-center gap-1"
+                    className="ml-1 px-3 py-1.5 rounded-xl text-xs font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/30 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-3.5 h-3.5 stroke-[3]" />
                     <span>Clear</span>
                   </button>
                 )}
               </div>
 
               {/* Right: Custom Range Inputs (From # to #) */}
-              <div className="flex items-center gap-2 self-start md:self-auto flex-wrap sm:flex-nowrap">
-                <div className="flex items-center gap-1.5 bg-slate-100/90 dark:bg-navy-950 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-navy-700 text-xs">
-                  <span className="font-bold text-slate-500 dark:text-navy-400 text-[11px]">Range:</span>
-                  <span className="text-[11px] font-mono text-slate-400">#</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={filteredUnassigned.length || 1}
-                    value={rangeFrom}
-                    onChange={(e) => setRangeFrom(e.target.value)}
-                    placeholder="1"
-                    className="w-12 py-0.5 px-1 bg-white dark:bg-navy-800 border border-slate-300 dark:border-navy-600 rounded-lg text-center font-bold text-xs text-slate-900 dark:text-white outline-none focus:ring-1 focus:ring-sky-500"
-                  />
-                  <span className="font-bold text-slate-500 dark:text-navy-400 text-[11px]">to</span>
-                  <span className="text-[11px] font-mono text-slate-400">#</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={filteredUnassigned.length || 1}
-                    value={rangeTo}
-                    onChange={(e) => setRangeTo(e.target.value)}
-                    placeholder="20"
-                    className="w-12 py-0.5 px-1 bg-white dark:bg-navy-800 border border-slate-300 dark:border-navy-600 rounded-lg text-center font-bold text-xs text-slate-900 dark:text-white outline-none focus:ring-1 focus:ring-sky-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => selectRange(rangeFrom, rangeTo)}
-                    className="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Apply Range</span>
-                  </button>
+              <div className="flex items-center gap-3 self-start xl:self-auto flex-wrap sm:flex-nowrap">
+                <div className="flex items-center p-1.5 bg-slate-100/80 dark:bg-navy-950/80 rounded-2xl border border-slate-200/60 dark:border-navy-800/60 backdrop-blur-md shadow-inner">
+                  <div className="flex items-center px-2">
+                    <span className="font-black text-slate-500 dark:text-navy-400 text-[10px] uppercase tracking-wider">Range</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px] font-mono font-bold text-slate-400 ml-1">#</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={filteredUnassigned.length || 1}
+                      value={rangeFrom}
+                      onChange={(e) => setRangeFrom(e.target.value)}
+                      placeholder="1"
+                      className="w-12 h-8 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-xl text-center font-black text-xs text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-brand-500/50 shadow-sm transition-all"
+                    />
+                    <span className="font-black text-slate-400 dark:text-navy-500 text-[10px] uppercase px-1">to</span>
+                    <span className="text-[11px] font-mono font-bold text-slate-400">#</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={filteredUnassigned.length || 1}
+                      value={rangeTo}
+                      onChange={(e) => setRangeTo(e.target.value)}
+                      placeholder="20"
+                      className="w-12 h-8 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-xl text-center font-black text-xs text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-brand-500/50 shadow-sm transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => selectRange(rangeFrom, rangeTo)}
+                      className="ml-1.5 px-3 h-8 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/25 flex items-center gap-1.5 cursor-pointer active:scale-95"
+                    >
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      <span>Apply</span>
+                    </button>
+                  </div>
                 </div>
 
                 {selectedStudents.length > 0 && (
-                  <span className="px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 text-[11px] font-black shrink-0">
-                    {selectedStudents.length} Selected
-                  </span>
+                  <div className="flex items-center px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 shadow-sm">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-2"></div>
+                    <span className="text-[11px] font-black uppercase tracking-wider">
+                      {selectedStudents.length} Selected
+                    </span>
+                  </div>
                 )}
               </div>
             </div>

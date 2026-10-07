@@ -1,5 +1,6 @@
 import React from 'react';
-import { Calendar, Filter, ChevronDown } from 'lucide-react';
+import { Calendar, Filter } from 'lucide-react';
+import { CustomDropdown } from '../CustomDropdown';
 
 export type AnalyticsPeriod = 'today' | 'yesterday' | 'this_week' | 'last_week' | 'this_month' | 'last_month' | '30d' | '90d' | 'academic_year' | 'custom';
 
@@ -27,27 +28,22 @@ export const GlobalAnalyticsFilter: React.FC<GlobalAnalyticsFilterProps> = ({
   className = ''
 }) => {
   return (
-    <div className={`flex flex-wrap items-center gap-3 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-xl p-3 shadow-xs ${className}`}>
-      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 pl-1">
-        <Filter className="w-4 h-4" />
-        <span className="text-sm font-semibold uppercase tracking-wider">Timeframe</span>
+    <div className={`flex flex-wrap items-center gap-3 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl p-2 sm:p-2.5 shadow-sm ${className}`}>
+      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 pl-2">
+        <Filter className="w-4 h-4 text-brand-500" />
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Timeframe</span>
       </div>
       
-      <div className="relative group">
-        <select
-          value={period}
-          onChange={(e) => setPeriod(e.target.value as AnalyticsPeriod)}
-          className="appearance-none bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-600 rounded-lg py-2 pl-10 pr-10 text-sm font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-brand-500 outline-none hover:bg-slate-100 dark:hover:bg-navy-700 transition-colors"
-        >
-          {PERIOD_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-        <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
-      </div>
+      <CustomDropdown
+        label="Timeframe"
+        value={period}
+        onChange={(val) => setPeriod(val as AnalyticsPeriod)}
+        options={PERIOD_OPTIONS}
+        icon={Calendar}
+        menuWidthClass="w-56"
+        align="right"
+        triggerClassName="bg-slate-50 dark:bg-navy-900 border-slate-200 dark:border-navy-700 hover:bg-slate-100 dark:hover:bg-navy-800 text-xs sm:text-sm font-bold text-slate-800 dark:text-white rounded-xl py-2 px-3.5 shadow-xs"
+      />
     </div>
   );
 };

@@ -355,7 +355,7 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
     )
 
     r_hdr_row = 7
-    r_headers = ["S.No", "Register No", "Student Name", "Dept", "Yr", "Easy", "Med", "Hard", "Total", "Category", "Curr Week", "Last Week"]
+    r_headers = ["S.No", "Register No", "Student Name", "Dept", "Yr", "Easy", "Med", "Hard", "Total", "Rating", "Rank", "Category", "Curr Week", "Last Week"]
     for c_i, h in enumerate(r_headers, 1):
         c = ws_roster.cell(row=r_hdr_row, column=c_i, value=h)
         c.font = FONT_TBL_HDR
@@ -387,6 +387,8 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
             s.get("medium") if s.get("medium") is not None else "—",
             s.get("hard") if s.get("hard") is not None else "—",
             s.get("total_solved") if s.get("total_solved") is not None else "—",
+            s.get("contest_rating") if s.get("contest_rating") is not None else s.get("rating") if s.get("rating") is not None else "—",
+            s.get("global_rank") if s.get("global_rank") is not None else s.get("rank") if s.get("rank") is not None else "—",
             str(s.get("category") or "—"),
             pub_res,
             last_res

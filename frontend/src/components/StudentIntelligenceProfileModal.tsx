@@ -656,14 +656,14 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
           }}
         >
           <div
-            className="w-full max-w-4xl lg:max-w-5xl my-auto mx-auto bg-white text-slate-900 shadow-2xl border border-slate-200 rounded-3xl sm:rounded-[32px] overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[90vh] transition-all duration-150 shrink-0 print:max-h-none print:overflow-visible print:border-none print:shadow-none print:rounded-none"
+            className="w-full max-w-4xl lg:max-w-5xl my-auto mx-auto bg-white text-slate-900 shadow-2xl border border-slate-200/80 rounded-3xl sm:rounded-[32px] overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[90vh] transition-all duration-150 shrink-0 print:max-h-none print:overflow-visible print:border-none print:shadow-none print:rounded-none"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* 1. TOP HERO HEADER & IDENTITY - SLEEK COMPACT HEADER */}
-            <div className="bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950 text-white px-3 sm:px-6 py-2.5 sm:py-3 border-b border-indigo-500/20 shrink-0 relative z-10 rounded-t-2xl sm:rounded-t-[32px]">
-              <div className="flex items-center justify-between gap-2 sm:gap-3 min-w-0">
+            {/* 1. TOP HERO HEADER & IDENTITY - ELEGANT PERFECTLY ALIGNED HEADER */}
+            <div className="bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950 text-white px-4 sm:px-6 py-3.5 sm:py-4 border-b border-indigo-500/20 shrink-0 relative z-10 rounded-t-2xl sm:rounded-t-[32px] shadow-lg">
+              <div className="flex items-center justify-between gap-3 sm:gap-4 min-w-0">
                 {/* Avatar & Student Name */}
-                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
                   <button
                     onClick={onClose}
                     className="hidden sm:flex p-2 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-slate-200 hover:text-white transition-all cursor-pointer shrink-0 shadow-md"
@@ -672,23 +672,31 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                     <ArrowLeft className="w-4 h-4" />
                   </button>
 
-                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black text-base sm:text-lg shadow-md border border-white/20 shrink-0">
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black text-lg sm:text-xl shadow-md border-2 border-white/20 shrink-0">
                     {st.name ? st.name.charAt(0).toUpperCase() : (initialStudent?.name?.charAt(0)?.toUpperCase() || 'S')}
                   </div>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-sm sm:text-lg font-black text-white tracking-tight truncate">
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    {/* Line 1: Name + Reg No + Category Badge */}
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                      <h2 className="text-base sm:text-lg font-black text-white tracking-tight leading-tight truncate">
                         {st.name || initialStudent?.name || 'Student Profile'}
                       </h2>
-                      <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-400/30 text-[9px] sm:text-[10px] font-black uppercase tracking-wider shrink-0">
+
+                      {(st.reg_no || initialStudent?.reg_no) && (
+                        <span className="font-mono font-black text-amber-300 text-xs bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-500/40 shrink-0">
+                          {st.reg_no || initialStudent?.reg_no}
+                        </span>
+                      )}
+
+                      <span className="hidden md:inline-flex px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-400/30 text-[10px] font-black uppercase tracking-wider shrink-0">
                         Institutional Intelligence
                       </span>
                     </div>
 
-                    <div className="text-[10px] sm:text-[11px] text-slate-100 font-bold truncate">
+                    {/* Line 2: Department, Batch, Section, Cutoff */}
+                    <div className="text-xs text-slate-200 font-semibold flex items-center gap-1.5 flex-wrap leading-tight">
                       {(() => {
-                        const reg = st.reg_no || initialStudent?.reg_no;
                         const dept = st.department || st.dept_code || initialStudent?.department?.name || initialStudent?.department?.code || initialStudent?.dept;
                         const rawBatch = st.batch || st.year_level || initialStudent?.batch || initialStudent?.year_level;
                         const batchStr = rawBatch ? (String(rawBatch).includes('Year') ? String(rawBatch) : `${rawBatch} Year`) : '';
@@ -698,16 +706,15 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         const cutoffStr = cutoffVal !== null && cutoffVal !== undefined && cutoffVal !== '' && !isNaN(Number(cutoffVal)) ? `Cutoff: ${Number(cutoffVal).toFixed(1)}` : null;
 
                         const metaParts = [
-                          reg ? <span key="reg" className="font-mono font-black text-amber-300">{reg}</span> : null,
                           dept ? <span key="dept" className="text-white font-bold">{dept}</span> : null,
-                          batchStr ? <span key="batch" className="text-slate-200">{batchStr}</span> : null,
-                          secStr ? <span key="sec" className="text-slate-200">{secStr}</span> : null,
-                          cutoffStr ? <span key="cutoff" className="text-cyan-300 font-mono font-bold bg-cyan-900/40 px-1.5 py-0.5 rounded border border-cyan-500/30">{cutoffStr}</span> : null
+                          batchStr ? <span key="batch" className="text-slate-200 font-medium">{batchStr}</span> : null,
+                          secStr ? <span key="sec" className="text-slate-200 font-medium">{secStr}</span> : null,
+                          cutoffStr ? <span key="cutoff" className="text-cyan-300 font-mono font-bold bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/30">{cutoffStr}</span> : null
                         ].filter(Boolean);
 
                         return metaParts.map((part, idx) => (
                           <React.Fragment key={idx}>
-                            {idx > 0 && <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-400 align-middle mx-1.5 shrink-0" />}
+                            {idx > 0 && <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-400 align-middle mx-0.5 shrink-0" />}
                             {part}
                           </React.Fragment>
                         ));
@@ -716,14 +723,14 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                   </div>
                 </div>
 
-                {/* Header Action Buttons */}
+                {/* Header Action Buttons - Vertically Centered */}
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   {st.leetcode_url && (
                     <a
                       href={st.leetcode_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer shadow-xs"
+                      className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer shadow-xs"
                       title="Primary LeetCode Account"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -734,7 +741,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                   <button
                     onClick={handleRefreshStudent}
                     disabled={refreshing}
-                    className="p-2 sm:px-3 sm:py-1 rounded-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                    className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
                     title="Live Refresh LeetCode Data"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
@@ -743,7 +750,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   <button
                     onClick={handlePrintDossier}
-                    className="p-2 sm:px-3 sm:py-1 rounded-full bg-white/10 hover:bg-white/20 text-slate-200 font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 border border-white/20 shadow-xs shrink-0"
+                    className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-white/10 hover:bg-white/20 text-slate-200 font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 border border-white/20 shadow-xs shrink-0"
                     title="Print Dossier"
                   >
                     <FileText className="w-3.5 h-3.5" />
@@ -762,7 +769,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
             </div>
 
             {/* TAB SELECTOR NAVIGATION BAR - 2 COLS ON MOBILE, 4 ON DESKTOP */}
-            <div className="bg-slate-100/80 px-3 sm:px-6 py-2.5 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 shrink-0 sticky top-0 z-50">
+            <div className="bg-slate-100/90 backdrop-blur-md px-3 sm:px-6 py-2.5 border-b border-slate-200/80 grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 shrink-0 sticky top-0 z-50">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -774,8 +781,8 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                     }}
                     className={`px-2.5 sm:px-3 py-2 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer flex items-center justify-start gap-1.5 w-full text-left shadow-2xs ${
                       isActive
-                        ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30 border border-brand-500 scale-[1.02] z-10'
-                        : 'bg-white hover:bg-slate-50 text-slate-900 hover:text-brand-600 border border-slate-300/90 hover:border-slate-400'
+                        ? 'bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-brand-500/20 border border-brand-500/30 scale-[1.02] z-10'
+                        : 'bg-white hover:bg-slate-200/70 text-slate-700 hover:text-slate-900 border border-slate-200/80'
                     }`}
                   >
                     <tab.icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : 'text-brand-600'}`} />
@@ -785,10 +792,10 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
               })}
             </div>
 
-            {/* 2. MAIN CONTENT BODY (HIGH-CONTRAST LIGHT THEME) */}
+            {/* 2. MAIN CONTENT BODY (ELEGANT LIGHT MODE) */}
             <div
               id="modal-content-body"
-              className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 bg-slate-100/90 text-slate-900 flex flex-col gap-6 pb-24 scroll-smooth custom-scrollbar print:max-h-none print:overflow-visible print:bg-white print:p-0 print:pb-0"
+              className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 bg-slate-50/70 text-slate-900 flex flex-col gap-6 pb-24 scroll-smooth custom-scrollbar print:max-h-none print:overflow-visible print:bg-white print:p-0 print:pb-0"
             >
               {loading ? (
                 <div className="py-24 flex flex-col items-center justify-center gap-3">
@@ -796,7 +803,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                   <p className="text-sm font-extrabold text-slate-900">
                     Compiling complete student intelligence ledger...
                   </p>
-                  <p className="text-xs text-slate-800 font-extrabold">Loading DSA metrics, contest ratings, submissions, and badges</p>
+                  <p className="text-xs text-slate-500 font-extrabold">Loading DSA metrics, contest ratings, submissions, and badges</p>
                 </div>
               ) : (
                 <>
@@ -808,54 +815,54 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                           <Activity className="w-4 h-4 text-brand-600" />
                           <span>1. Executive Performance KPI Dashboard</span>
                         </h3>
-                        <span className="text-[11px] font-black text-slate-900 font-mono bg-white px-2.5 py-1 rounded-full border border-slate-300 shadow-2xs">100% Real Database Ground Truth</span>
+                        <span className="text-[11px] font-black text-emerald-800 font-mono bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 shadow-2xs">100% Real Database Ground Truth</span>
                       </div>
 
                       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
                         {/* KPI 1: Total Solved */}
-                        <div className="col-span-2 bg-white p-4 sm:p-5 rounded-3xl border border-slate-300 shadow-sm space-y-1 hover:shadow-md transition-all flex flex-col items-center text-center">
-                          <span className="text-[10px] font-black text-slate-900 uppercase tracking-wider block">Total Solved</span>
+                        <div className="col-span-2 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-md hover:border-brand-300 transition-all flex flex-col items-center text-center">
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Total Solved</span>
                           <div className="text-2xl sm:text-3xl font-black text-slate-950 font-mono">
                             {totalSolved}
                           </div>
                           <div className="flex justify-center items-center gap-1 text-[11px] font-extrabold font-mono pt-1">
-                            <span className="text-emerald-700">{easySolved}E</span>
+                            <span className="text-emerald-600">{easySolved}E</span>
                             <span className="text-slate-400">•</span>
-                            <span className="text-amber-700">{mediumSolved}M</span>
+                            <span className="text-amber-600">{mediumSolved}M</span>
                             <span className="text-slate-400">•</span>
                             <span className="text-rose-600">{hardSolved}H</span>
                           </div>
                         </div>
 
                         {/* KPI 2: Acceptance Rate */}
-                        <div className="col-span-2 bg-white p-4 sm:p-5 rounded-3xl border border-slate-300 shadow-sm space-y-1 hover:shadow-md transition-all flex flex-col items-center text-center">
-                          <span className="text-[10px] font-black text-slate-900 uppercase tracking-wider block">Acceptance Rate</span>
+                        <div className="col-span-2 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-md hover:border-brand-300 transition-all flex flex-col items-center text-center">
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Acceptance Rate</span>
                           <div className="text-2xl sm:text-3xl font-black text-slate-950 font-mono">
                             {coding.acceptance_rate || 'N/A'}
                           </div>
-                          <div className="text-[11px] text-slate-900 font-black truncate pt-1">
+                          <div className="text-[11px] text-slate-500 font-black truncate pt-1">
                             {coding.total_submissions ? `${coding.total_submissions} Total Submissions` : 'Profile Synchronized'}
                           </div>
                         </div>
 
                         {/* KPI 3: Contest Rating */}
-                        <div className="col-span-2 bg-purple-50 p-4 sm:p-5 rounded-3xl border border-purple-300 shadow-sm space-y-1 hover:shadow-md transition-all flex flex-col items-center text-center">
-                          <span className="text-[10px] font-black text-purple-900 uppercase tracking-wider block">Contest Rating</span>
+                        <div className="col-span-2 bg-purple-50/60 p-4 sm:p-5 rounded-3xl border border-purple-200/80 shadow-sm hover:shadow-md hover:border-purple-300 transition-all flex flex-col items-center text-center">
+                          <span className="text-[10px] font-black text-purple-700 uppercase tracking-wider block">Contest Rating</span>
                           <div className="text-2xl sm:text-3xl font-black text-purple-950 font-mono">
                             {contestRatingVal}
                           </div>
-                          <div className="text-[11px] text-purple-950 font-black truncate pt-1">
+                          <div className="text-[11px] text-purple-700/80 font-black truncate pt-1">
                             {contestsAttendedVal && contestsAttendedVal !== '0' ? `${contestsAttendedVal} Contests Attended` : 'Verified Profile'}
                           </div>
                         </div>
 
                         {/* KPI 4: Global Rank */}
-                        <div className="col-span-2 bg-blue-50 p-4 sm:p-5 rounded-3xl border border-blue-300 shadow-sm space-y-1 hover:shadow-md transition-all flex flex-col items-center text-center">
-                          <span className="text-[10px] font-black text-blue-900 uppercase tracking-wider block">Global Rank</span>
+                        <div className="col-span-2 bg-blue-50/60 p-4 sm:p-5 rounded-3xl border border-blue-200/80 shadow-sm hover:shadow-md hover:border-blue-300 transition-all flex flex-col items-center text-center">
+                          <span className="text-[10px] font-black text-blue-700 uppercase tracking-wider block">Global Rank</span>
                           <div className="text-xl sm:text-2xl font-black text-blue-950 font-mono truncate w-full text-center">
                             {globalRankVal}
                           </div>
-                          <div className="text-[11px] text-blue-950 font-black truncate pt-1">
+                          <div className="text-[11px] text-blue-700/80 font-black truncate pt-1">
                             {topPercentageVal && topPercentageVal !== 'N/A' ? `Top ${topPercentageVal}` : 'N/A'}
                           </div>
                         </div>
@@ -863,24 +870,24 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                       {/* Secondary Student Activity Row */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="bg-white p-4 rounded-3xl border border-slate-300 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center">
-                          <span className="text-[10px] font-black text-slate-900 uppercase tracking-wider block">Active Coding Days</span>
-                          <div className="text-xl font-black text-slate-950 font-mono mt-0.5">
+                        <div className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center">
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Active Coding Days</span>
+                          <div className="text-xl font-black text-slate-900 font-mono mt-0.5">
                             {activity.active_days ?? coding.active_days ?? 0} Days
                           </div>
                         </div>
 
-                        <div className="bg-white p-4 rounded-3xl border border-slate-300 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center">
-                          <span className="text-[10px] font-black text-slate-900 uppercase tracking-wider block">Activity Streak</span>
-                          <div className="text-xl font-black text-amber-700 font-mono mt-0.5 flex justify-center items-center gap-1">
-                            <Flame className="w-4 h-4 text-amber-600" />
+                        <div className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center">
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Activity Streak</span>
+                          <div className="text-xl font-black text-amber-600 font-mono mt-0.5 flex justify-center items-center gap-1">
+                            <Flame className="w-4 h-4 text-amber-500" />
                             <span>{activity.current_streak ?? 0} Days</span>
                           </div>
                         </div>
 
-                        <div className="bg-white p-4 rounded-3xl border border-slate-300 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center">
-                          <span className="text-[10px] font-black text-slate-900 uppercase tracking-wider block">Primary Language</span>
-                          <div className="text-base font-black text-brand-700 font-mono mt-1 truncate w-full text-center">
+                        <div className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center">
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Primary Language</span>
+                          <div className="text-base font-black text-brand-600 font-mono mt-1 truncate w-full text-center">
                             {intelData?.primary_language || 'Auto-Detected'}
                           </div>
                         </div>
@@ -890,33 +897,33 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   {/* TAB 2: DSA / PROBLEM-SOLVING DIFFICULTY INTELLIGENCE */}
                   {activeTab === 'dsa' && (
-                    <div id="dsa" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-300 shadow-sm space-y-6 animate-fade-in scroll-mt-20">
+                    <div id="dsa" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-6 animate-fade-in scroll-mt-20">
                       <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                           <Brain className="w-4 h-4 text-indigo-600" />
                           <span>2. DSA / Problem-Solving Intelligence</span>
                         </h3>
-                        <span className="text-[11px] font-black text-slate-900 font-mono bg-slate-200/80 px-2.5 py-0.5 rounded-full border border-slate-300">Real-Time Solved Data</span>
+                        <span className="text-[11px] font-black text-slate-700 font-mono bg-slate-100 px-3 py-1 rounded-full border border-slate-200">Real-Time Solved Data</span>
                       </div>
 
                       {/* Primary KPI Summary Row */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                        <div className="p-4 rounded-3xl bg-indigo-50/80 border border-indigo-200/80 hover:shadow-md transition-all">
+                        <div className="p-4 rounded-3xl bg-indigo-50/60 border border-indigo-200/80 hover:border-indigo-300 transition-all">
                           <span className="text-[10px] font-black text-indigo-700 uppercase tracking-wider block">Total Solved</span>
                           <div className="text-2xl font-black text-indigo-950 font-mono mt-0.5">{totalSolved}</div>
                         </div>
 
-                        <div className="p-4 rounded-3xl bg-blue-50/80 border border-blue-200/80 hover:shadow-md transition-all">
+                        <div className="p-4 rounded-3xl bg-blue-50/60 border border-blue-200/80 hover:border-blue-300 transition-all">
                           <span className="text-[10px] font-black text-blue-700 uppercase tracking-wider block">Total Submissions</span>
                           <div className="text-2xl font-black text-blue-950 font-mono mt-0.5">{totalSubmissions > 0 ? totalSubmissions : 'Synced'}</div>
                         </div>
 
-                        <div className="p-4 rounded-3xl bg-emerald-50/80 border border-emerald-200/80 hover:shadow-md transition-all">
+                        <div className="p-4 rounded-3xl bg-emerald-50/60 border border-emerald-200/80 hover:border-emerald-300 transition-all">
                           <span className="text-[10px] font-black text-emerald-700 uppercase tracking-wider block">Active Coding Days</span>
                           <div className="text-2xl font-black text-emerald-950 font-mono mt-0.5">{activeDaysCount} Days</div>
                         </div>
 
-                        <div className="p-4 rounded-3xl bg-amber-50/80 border border-amber-200/80 hover:shadow-md transition-all">
+                        <div className="p-4 rounded-3xl bg-amber-50/60 border border-amber-200/80 hover:border-amber-300 transition-all">
                           <span className="text-[10px] font-black text-amber-700 uppercase tracking-wider block">Acceptance Rate</span>
                           <div className="text-2xl font-black text-amber-950 font-mono mt-0.5">{acceptanceRateVal}</div>
                         </div>
@@ -926,38 +933,38 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center pt-2 border-t border-slate-200">
                         <div className="md:col-span-2 space-y-4">
                           <div className="flex items-center justify-between flex-wrap gap-2">
-                            <span className="text-[11px] font-black text-slate-900 uppercase tracking-wider block">Difficulty Volume Breakdown</span>
+                            <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider block">Difficulty Volume Breakdown</span>
                             <span className="text-[11px] font-black font-mono text-indigo-900 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200">
                               Sum: {easySolved} Easy + {mediumSolved} Medium + {hardSolved} Hard = {totalSolved} Total
                             </span>
                           </div>
                           <div className="grid grid-cols-3 gap-3 text-center">
-                            <div className="p-4 rounded-3xl bg-emerald-50 border border-emerald-200/80 hover:shadow-md transition-all">
-                              <span className="text-[10px] font-black text-emerald-800 uppercase">Easy</span>
+                            <div className="p-4 rounded-3xl bg-emerald-50/60 border border-emerald-200/80 hover:border-emerald-300 transition-all">
+                              <span className="text-[10px] font-black text-emerald-700 uppercase">Easy</span>
                               <div className="text-3xl font-black text-emerald-950 font-mono mt-1">{easySolved}</div>
-                              <span className="text-[11px] font-black text-emerald-700">{easyPct}% of total</span>
+                              <span className="text-[11px] font-black text-emerald-600">{easyPct}% of total</span>
                             </div>
 
-                            <div className="p-4 rounded-3xl bg-amber-50 border border-amber-200/80 hover:shadow-md transition-all">
-                              <span className="text-[10px] font-black text-amber-800 uppercase">Medium</span>
+                            <div className="p-4 rounded-3xl bg-amber-50/60 border border-amber-200/80 hover:border-amber-300 transition-all">
+                              <span className="text-[10px] font-black text-amber-700 uppercase">Medium</span>
                               <div className="text-3xl font-black text-amber-950 font-mono mt-1">{mediumSolved}</div>
-                              <span className="text-[11px] font-black text-amber-700">{mediumPct}% of total</span>
+                              <span className="text-[11px] font-black text-amber-600">{mediumPct}% of total</span>
                             </div>
 
-                            <div className="p-4 rounded-3xl bg-rose-50 border border-rose-200/80 hover:shadow-md transition-all">
-                              <span className="text-[10px] font-black text-rose-800 uppercase">Hard</span>
+                            <div className="p-4 rounded-3xl bg-rose-50/60 border border-rose-200/80 hover:border-rose-300 transition-all">
+                              <span className="text-[10px] font-black text-rose-700 uppercase">Hard</span>
                               <div className="text-3xl font-black text-rose-950 font-mono mt-1">{hardSolved}</div>
-                              <span className="text-[11px] font-black text-rose-700">{hardPct}% of total</span>
+                              <span className="text-[11px] font-black text-rose-600">{hardPct}% of total</span>
                             </div>
                           </div>
 
                           <div className="space-y-1.5 pt-2">
-                            <div className="w-full bg-slate-200 h-5 rounded-full overflow-hidden flex border border-slate-300">
+                            <div className="w-full bg-slate-100 h-5 rounded-full overflow-hidden flex border border-slate-200">
                               <div className="bg-emerald-500 h-full transition-all" style={{ width: `${easyPct}%` }} title={`Easy: ${easySolved}`} />
                               <div className="bg-amber-500 h-full transition-all" style={{ width: `${mediumPct}%` }} title={`Medium: ${mediumSolved}`} />
                               <div className="bg-rose-500 h-full transition-all" style={{ width: `${hardPct}%` }} title={`Hard: ${hardSolved}`} />
                             </div>
-                            <div className="flex items-center justify-between text-xs font-black text-slate-900 font-mono">
+                            <div className="flex items-center justify-between text-xs font-black text-slate-700 font-mono">
                               <span>Easy: {easyPct}%</span>
                               <span>Medium: {mediumPct}%</span>
                               <span>Hard: {hardPct}%</span>
@@ -990,7 +997,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                                     color: '#0f172a',
                                     fontSize: '11px',
                                     fontWeight: 'bold',
-                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
                                   }}
                                   itemStyle={{
                                     color: '#0f172a',
@@ -998,7 +1005,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                                     fontWeight: 'bold'
                                   }}
                                   labelStyle={{
-                                    color: '#2563eb',
+                                    color: '#4f46e5',
                                     fontSize: '11px',
                                     fontWeight: 'bold'
                                   }}
@@ -1007,7 +1014,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                               </PieChart>
                             </ResponsiveContainer>
                           ) : (
-                            <div className="text-center text-xs text-slate-700 font-extrabold">No solved problems recorded.</div>
+                            <div className="text-center text-xs text-slate-500 font-extrabold">No solved problems recorded.</div>
                           )}
                         </div>
                       </div>
@@ -1016,42 +1023,42 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   {/* TAB 3: CONTEST INTELLIGENCE */}
                   {activeTab === 'contests' && (
-                    <div id="contests" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-300 shadow-sm space-y-6 animate-fade-in scroll-mt-20">
+                    <div id="contests" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-6 animate-fade-in scroll-mt-20">
                       <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                           <Trophy className="w-4 h-4 text-purple-600" />
                           <span>3. Contest Intelligence &amp; Rating Progression</span>
                         </h3>
-                        <span className="text-[11px] font-black text-purple-900 font-mono">
+                        <span className="text-[11px] font-black text-purple-900 font-mono bg-purple-50 px-3 py-1 rounded-full border border-purple-200">
                           {bestRatingVal ? `Peak Rating: ${bestRatingVal}` : 'Official Contest Record'}
                         </span>
                       </div>
 
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                        <div className="p-3.5 rounded-2xl bg-purple-100/70 border border-purple-300">
-                          <span className="text-[10px] font-black text-purple-900 uppercase">Current Rating</span>
+                        <div className="p-3.5 rounded-2xl bg-purple-50/60 border border-purple-200/80">
+                          <span className="text-[10px] font-black text-purple-700 uppercase">Current Rating</span>
                           <div className="text-2xl font-black text-purple-950 font-mono mt-0.5">
                             {contestRatingVal}
                           </div>
                         </div>
 
-                        <div className="p-3.5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
-                          <span className="text-[10px] font-black text-slate-900 uppercase">Best Rating</span>
+                        <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 shadow-2xs">
+                          <span className="text-[10px] font-black text-slate-500 uppercase">Best Rating</span>
                           <div className="text-2xl font-black text-slate-950 font-mono mt-0.5">
                             {bestRatingVal}
                           </div>
                         </div>
 
-                        <div className="p-3.5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
-                          <span className="text-[10px] font-black text-slate-900 uppercase">Contests Attended</span>
+                        <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 shadow-2xs">
+                          <span className="text-[10px] font-black text-slate-500 uppercase">Contests Attended</span>
                           <div className="text-2xl font-black text-slate-950 font-mono mt-0.5">
                             {contestsAttendedVal}
                           </div>
                         </div>
 
-                        <div className="p-3.5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
-                          <span className="text-[10px] font-black text-slate-900 uppercase">Best Rank</span>
-                          <div className="text-2xl font-black text-emerald-700 font-mono mt-0.5">
+                        <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 shadow-2xs">
+                          <span className="text-[10px] font-black text-slate-500 uppercase">Best Rank</span>
+                          <div className="text-2xl font-black text-emerald-600 font-mono mt-0.5">
                             {bestRankVal}
                           </div>
                         </div>
@@ -1059,8 +1066,8 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                       {/* Progression Chart */}
                       {contestHistoryList.length > 1 && (
-                        <div className="p-4 rounded-2xl bg-white border border-slate-300 space-y-2 shadow-sm">
-                          <span className="text-[11px] font-black text-slate-900 uppercase tracking-wider block">
+                        <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-2 shadow-2xs">
+                          <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider block">
                             Official Contest Rating Progression History ({contestHistoryList.length} contests)
                           </span>
                           <div className="h-48 w-full">
@@ -1068,13 +1075,13 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                               <AreaChart data={contestHistoryList.map(h => ({ date: h.date, rating: Number(String(h.rating_after || 0).replace(/[^0-9.]/g, '')), name: h.contest_name }))}>
                                 <defs>
                                   <linearGradient id="ratingGrad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
                                     <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.0} />
                                   </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" opacity={0.8} />
-                                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#1e293b', fontWeight: 'bold' }} stroke="#475569" />
-                                <YAxis domain={['dataMin - 50', 'dataMax + 50']} tick={{ fontSize: 10, fill: '#1e293b', fontWeight: 'bold' }} stroke="#475569" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.8} />
+                                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }} stroke="#cbd5e1" />
+                                <YAxis domain={['dataMin - 50', 'dataMax + 50']} tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }} stroke="#cbd5e1" />
                                 <RechartsTooltip
                                   contentStyle={{
                                     backgroundColor: '#ffffff',
@@ -1083,15 +1090,15 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                                     color: '#0f172a',
                                     fontSize: '11px',
                                     fontWeight: 'bold',
-                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
                                   }}
                                   itemStyle={{
-                                    color: '#8b5cf6',
+                                    color: '#7c3aed',
                                     fontSize: '12px',
                                     fontWeight: 'bold'
                                   }}
                                   labelStyle={{
-                                    color: '#1e293b',
+                                    color: '#475569',
                                     fontSize: '11px',
                                     fontWeight: 'bold'
                                   }}
@@ -1106,15 +1113,15 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                       {/* Contest History Ledger */}
                       <div className="space-y-2">
-                        <span className="text-[11px] font-black text-slate-900 uppercase tracking-wider block">
+                        <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider block">
                           Recent Contest History ({contestHistoryList.length} Sessions)
                         </span>
                         {contestHistoryList.length > 0 ? (
                           <div className="w-full">
                             {/* Desktop Table View */}
-                            <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-300 shadow-sm bg-white">
+                            <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 shadow-sm bg-white">
                               <table className="w-full text-left text-xs whitespace-nowrap">
-                                <thead className="bg-slate-200/90 text-slate-950 font-black uppercase text-[10px]">
+                                <thead className="bg-slate-100 text-slate-950 font-black uppercase text-[10px] border-b border-slate-200">
                                   <tr>
                                     <th className="py-2.5 px-3">Contest Name</th>
                                     <th className="py-2.5 px-3">Date</th>
@@ -1123,13 +1130,13 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                                     <th className="py-2.5 px-3 text-right">Rating After</th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-200 font-bold text-slate-900">
+                                <tbody className="divide-y divide-slate-100 font-bold text-slate-900">
                                   {contestHistoryList.map((h: any, idx: number) => (
                                     <tr key={idx} className="hover:bg-slate-50 transition-colors">
                                       <td className="py-2.5 px-3 font-extrabold text-slate-950">{h.contest_name}</td>
-                                      <td className="py-2.5 px-3 font-mono font-bold text-slate-900">{h.date}</td>
+                                      <td className="py-2.5 px-3 font-mono font-bold text-slate-600">{h.date}</td>
                                       <td className="py-2.5 px-3 text-center font-mono font-black text-purple-700">{h.contest_rank}</td>
-                                      <td className="py-2.5 px-3 text-center font-extrabold text-emerald-700">{h.problems_solved} / {h.total_problems || 4}</td>
+                                      <td className="py-2.5 px-3 text-center font-extrabold text-emerald-600">{h.problems_solved} / {h.total_problems || 4}</td>
                                       <td className="py-2.5 px-3 text-right font-mono font-black text-slate-950">{h.rating_after}</td>
                                     </tr>
                                   ))}
@@ -1140,7 +1147,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                             {/* Mobile Card View */}
                             <div className="md:hidden flex flex-col gap-3">
                               {contestHistoryList.map((h: any, idx: number) => (
-                                <div key={idx} className="p-4 rounded-2xl border border-slate-300 bg-white space-y-3 shadow-sm">
+                                <div key={idx} className="p-4 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-sm">
                                   <div className="flex justify-between items-start gap-2">
                                     <span className="font-extrabold text-slate-950 text-sm leading-tight">{h.contest_name}</span>
                                     <span className="px-2 py-1 rounded-lg bg-purple-100 text-purple-900 font-mono font-black text-[10px] shrink-0 border border-purple-200">
@@ -1150,15 +1157,15 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                                   
                                   <div className="grid grid-cols-2 gap-2 text-xs">
                                     <div>
-                                      <span className="text-[10px] font-black text-slate-900 uppercase block">Date</span>
-                                      <span className="font-mono font-bold text-slate-950 mt-0.5 inline-block">{h.date}</span>
+                                      <span className="text-[10px] font-black text-slate-500 uppercase block">Date</span>
+                                      <span className="font-mono font-bold text-slate-700 mt-0.5 inline-block">{h.date}</span>
                                     </div>
                                     <div className="text-right">
-                                      <span className="text-[10px] font-black text-slate-900 uppercase block">Score / Solved</span>
-                                      <span className="font-bold text-emerald-700 mt-0.5 inline-block">{h.problems_solved} / {h.total_problems || 4}</span>
+                                      <span className="text-[10px] font-black text-slate-500 uppercase block">Score / Solved</span>
+                                      <span className="font-bold text-emerald-600 mt-0.5 inline-block">{h.problems_solved} / {h.total_problems || 4}</span>
                                     </div>
-                                    <div className="col-span-2 pt-2 border-t border-slate-200 mt-1 flex justify-between items-center">
-                                      <span className="text-[10px] font-black text-slate-900 uppercase">Rating After</span>
+                                    <div className="col-span-2 pt-2 border-t border-slate-100 mt-1 flex justify-between items-center">
+                                      <span className="text-[10px] font-black text-slate-500 uppercase">Rating After</span>
                                       <span className="font-mono font-black text-slate-950 text-sm">{h.rating_after}</span>
                                     </div>
                                   </div>
@@ -1167,7 +1174,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                             </div>
                           </div>
                         ) : (
-                          <div className="p-4 text-center text-xs text-slate-700 font-extrabold bg-slate-50 rounded-2xl border border-slate-200">
+                          <div className="p-4 text-center text-xs text-slate-500 font-extrabold bg-slate-50 rounded-2xl border border-slate-200">
                             No contest participation history recorded.
                           </div>
                         )}
@@ -1177,59 +1184,59 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   {/* TAB 4: CODING ACTIVITY HEATMAP */}
                   {activeTab === 'activity' && (
-                    <div id="activity" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-300 shadow-sm space-y-6 animate-fade-in scroll-mt-20">
+                    <div id="activity" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-6 animate-fade-in scroll-mt-20">
                       <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                           <Zap className="w-4 h-4 text-amber-500" />
                           <span>4. Coding Activity Calendar &amp; Consistency</span>
                         </h3>
-                        <span className="text-[11px] font-black text-amber-900 font-mono">
+                        <span className="text-[11px] font-black text-amber-900 font-mono bg-amber-50 px-3 py-1 rounded-xl border border-amber-200">
                           Active Days: {activity.active_days ?? coding.active_days ?? 'N/A'}
                         </span>
                       </div>
 
                       {/* 7d, 30d, 90d, 365d Submission Counters */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                        <div className="p-4 rounded-3xl bg-slate-50 border border-slate-300 space-y-1 hover:border-amber-400/40 hover:shadow-md transition-all">
-                          <span className="text-xs font-black text-slate-900 uppercase tracking-wider block">7-Day Submissions</span>
-                          <div className="text-2xl sm:text-3xl font-black text-amber-700 font-mono">
+                        <div className="p-4 rounded-3xl bg-slate-50 border border-slate-200 space-y-1 hover:border-amber-400/40 hover:shadow-md transition-all">
+                          <span className="text-xs font-black text-slate-500 uppercase tracking-wider block">7-Day Submissions</span>
+                          <div className="text-2xl sm:text-3xl font-black text-amber-600 font-mono">
                             {sub7d}
                           </div>
-                          <span className="text-[10px] font-black text-slate-800 block font-mono uppercase">Past 7 Days Activity</span>
+                          <span className="text-[10px] font-black text-slate-500 block font-mono uppercase">Past 7 Days Activity</span>
                         </div>
 
-                        <div className="p-4 rounded-3xl bg-slate-50 border border-slate-300 space-y-1 hover:border-brand-400/40 hover:shadow-md transition-all">
-                          <span className="text-xs font-black text-slate-900 uppercase tracking-wider block">30-Day Submissions</span>
-                          <div className="text-2xl sm:text-3xl font-black text-brand-700 font-mono">
+                        <div className="p-4 rounded-3xl bg-slate-50 border border-slate-200 space-y-1 hover:border-brand-400/40 hover:shadow-md transition-all">
+                          <span className="text-xs font-black text-slate-500 uppercase tracking-wider block">30-Day Submissions</span>
+                          <div className="text-2xl sm:text-3xl font-black text-brand-600 font-mono">
                             {sub30d}
                           </div>
-                          <span className="text-[10px] font-black text-slate-800 block font-mono uppercase">Past 30 Days Activity</span>
+                          <span className="text-[10px] font-black text-slate-500 block font-mono uppercase">Past 30 Days Activity</span>
                         </div>
 
-                        <div className="p-4 rounded-3xl bg-slate-50 border border-slate-300 space-y-1 hover:border-blue-400/40 hover:shadow-md transition-all">
-                          <span className="text-xs font-black text-slate-900 uppercase tracking-wider block">90-Day Submissions</span>
-                          <div className="text-2xl sm:text-3xl font-black text-blue-700 font-mono">
+                        <div className="p-4 rounded-3xl bg-slate-50 border border-slate-200 space-y-1 hover:border-blue-400/40 hover:shadow-md transition-all">
+                          <span className="text-xs font-black text-slate-500 uppercase tracking-wider block">90-Day Submissions</span>
+                          <div className="text-2xl sm:text-3xl font-black text-blue-600 font-mono">
                             {sub90d}
                           </div>
-                          <span className="text-[10px] font-black text-slate-800 block font-mono uppercase">Past 90 Days Activity</span>
+                          <span className="text-[10px] font-black text-slate-500 block font-mono uppercase">Past 90 Days Activity</span>
                         </div>
 
-                        <div className="p-4 rounded-3xl bg-slate-50 border border-slate-300 space-y-1 hover:border-purple-400/40 hover:shadow-md transition-all">
-                          <span className="text-xs font-black text-slate-900 uppercase tracking-wider block">365-Day Submissions</span>
-                          <div className="text-2xl sm:text-3xl font-black text-purple-700 font-mono">
+                        <div className="p-4 rounded-3xl bg-slate-50 border border-slate-200 space-y-1 hover:border-purple-400/40 hover:shadow-md transition-all">
+                          <span className="text-xs font-black text-slate-500 uppercase tracking-wider block">365-Day Submissions</span>
+                          <div className="text-2xl sm:text-3xl font-black text-purple-600 font-mono">
                             {sub365d}
                           </div>
-                          <span className="text-[10px] font-black text-slate-800 block font-mono uppercase">Full Year / All Time</span>
+                          <span className="text-[10px] font-black text-slate-500 block font-mono uppercase">Full Year / All Time</span>
                         </div>
                       </div>
 
                       {/* Submission Heatmap Grid */}
-                      <div className="p-5 rounded-3xl bg-slate-50 border border-slate-300 space-y-3">
+                      <div className="p-5 rounded-3xl bg-slate-50 border border-slate-200 space-y-3">
                         <div className="flex items-center justify-between flex-wrap gap-2">
                           <span className="text-xs font-black text-slate-900 uppercase tracking-wider block">
                             LeetCode Contribution Activity Calendar (Past 365 Days)
                           </span>
-                          <span className="text-[11px] font-black text-emerald-800 font-mono bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-300">
+                          <span className="text-[11px] font-black text-emerald-800 font-mono bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
                             Most active day: {activity.most_active_day || 'Sunday, Aug 23, 2026'}
                           </span>
                         </div>
@@ -1243,16 +1250,16 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                             const cnt = h.count || 0;
                             const bg =
                               cnt === 0
-                                ? 'bg-slate-300'
+                                ? 'bg-slate-200/80 border border-slate-300/40'
                                 : cnt < 3
-                                ? 'bg-emerald-400'
+                                ? 'bg-emerald-400 text-slate-950 font-black'
                                 : cnt < 6
-                                ? 'bg-emerald-600'
-                                : 'bg-emerald-700';
+                                ? 'bg-emerald-600 text-white font-black'
+                                : 'bg-emerald-700 text-white font-black';
                             return (
                               <div
                                 key={idx}
-                                className={`h-7 rounded-xl ${bg} flex items-center justify-center text-[10px] font-black text-white shadow-2xs transition-all hover:scale-115 hover:shadow-md hover:z-10 cursor-pointer`}
+                                className={`h-7 rounded-xl ${bg} flex items-center justify-center text-[10px] font-black shadow-2xs transition-all hover:scale-115 hover:shadow-md hover:z-10 cursor-pointer`}
                                 title={`${h.date}: ${cnt} submissions`}
                               >
                                 {cnt > 0 ? cnt : ''}
@@ -1266,14 +1273,14 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   {/* TAB 5: DEDICATED RECENT SUBMISSIONS PAGE */}
                   {activeTab === 'submissions' && (
-                    <div id="submissions" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-300 shadow-sm space-y-4 animate-fade-in scroll-mt-20">
+                    <div id="submissions" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-4 animate-fade-in scroll-mt-20">
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div>
                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                             <FileText className="w-4 h-4 text-brand-600" />
                             <span>5. Recent Submissions &amp; Problem Solves ({submissions.length} items)</span>
                           </h3>
-                          <p className="text-[11px] text-slate-800 font-bold mt-0.5">Verified real-time solved problems log from LeetCode profile</p>
+                          <p className="text-[11px] text-slate-500 font-bold mt-0.5">Verified real-time solved problems log from LeetCode profile</p>
                         </div>
 
                         <input
@@ -1281,16 +1288,16 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                           placeholder="Filter problem title or language..."
                           value={probSearch}
                           onChange={(e) => setProbSearch(e.target.value)}
-                          className="px-3.5 py-1.5 rounded-xl text-xs bg-slate-50 border border-slate-300 w-64 font-bold text-slate-950 placeholder-slate-500"
+                          className="px-3.5 py-1.5 rounded-xl text-xs bg-slate-50 border border-slate-300 w-64 font-bold text-slate-950 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white transition-colors"
                         />
                       </div>
 
                       {submissions.length > 0 ? (
                         <div className="w-full">
                           {/* Desktop Table View */}
-                          <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-300 shadow-sm bg-white">
+                          <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 shadow-sm bg-white">
                             <table className="w-full text-left text-xs whitespace-nowrap">
-                              <thead className="bg-slate-200/90 text-slate-950 font-black uppercase text-[10px]">
+                              <thead className="bg-slate-100 text-slate-950 font-black uppercase text-[10px] border-b border-slate-200">
                                 <tr>
                                   <th className="py-3 px-3.5">Problem Title</th>
                                   <th className="py-3 px-3.5">Language</th>
@@ -1299,7 +1306,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                                   <th className="py-3 px-3.5 text-right">Timestamp</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-slate-200 font-bold text-slate-900">
+                              <tbody className="divide-y divide-slate-100 font-bold text-slate-900">
                                 {submissions
                                   .filter((s: any) =>
                                     !probSearch ||
@@ -1313,26 +1320,26 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                                           href={`https://leetcode.com/problems/${s.title_slug || 'two-sum'}/`}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="hover:text-brand-600 flex items-start gap-1.5"
+                                          className="hover:text-brand-600 flex items-start gap-1.5 transition-colors"
                                         >
                                           <span className="break-words leading-tight">{s.title}</span>
-                                          <ExternalLink className="w-3.5 h-3.5 text-slate-600 shrink-0 mt-0.5" />
+                                          <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
                                         </a>
                                       </td>
                                       <td className="py-3 px-3.5">
-                                        <span className="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-900 font-black text-[10px] border border-blue-200">
+                                        <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-900 font-black text-[10px] border border-blue-200">
                                           {s.language}
                                         </span>
                                       </td>
                                       <td className="py-3 px-3.5 text-center">
-                                        <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 font-black text-[10px] border border-emerald-200">
+                                        <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-900 font-black text-[10px] border border-emerald-200">
                                           {s.status}
                                         </span>
                                       </td>
-                                      <td className="py-3 px-3.5 text-center font-mono font-bold text-slate-900">
+                                      <td className="py-3 px-3.5 text-center font-mono font-bold text-slate-700">
                                         {s.runtime && s.runtime !== 'N/A' ? s.runtime : '—'} {s.memory && s.memory !== 'N/A' ? `• ${s.memory}` : ''}
                                       </td>
-                                      <td className="py-3 px-3.5 text-right font-mono font-bold text-slate-900">{s.timestamp}</td>
+                                      <td className="py-3 px-3.5 text-right font-mono font-bold text-slate-600">{s.timestamp}</td>
                                     </tr>
                                   ))}
                               </tbody>
@@ -1348,7 +1355,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                                 (s.language || '').toLowerCase().includes(probSearch.toLowerCase())
                               )
                               .map((s: any, idx: number) => (
-                                <div key={idx} className="p-4 rounded-2xl border border-slate-300 bg-white space-y-3 shadow-sm">
+                                <div key={idx} className="p-4 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-sm">
                                   <div className="flex justify-between items-start gap-2">
                                     <a
                                       href={`https://leetcode.com/problems/${s.title_slug || 'two-sum'}/`}
@@ -1357,25 +1364,25 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                                       className="font-black text-slate-950 text-sm hover:text-brand-600 flex items-start gap-1.5 leading-tight flex-1 break-words"
                                     >
                                       <span>{s.title}</span>
-                                      <ExternalLink className="w-3.5 h-3.5 text-slate-600 shrink-0 mt-0.5" />
+                                      <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
                                     </a>
-                                    <span className="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-900 font-black text-[10px] shrink-0 border border-emerald-200">
+                                    <span className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-900 font-black text-[10px] shrink-0 border border-emerald-200">
                                       {s.status}
                                     </span>
                                   </div>
                                   
                                   <div className="grid grid-cols-2 gap-2 text-xs">
                                     <div>
-                                      <span className="text-[10px] font-black text-slate-900 uppercase block">Language</span>
+                                      <span className="text-[10px] font-black text-slate-500 uppercase block">Language</span>
                                       <span className="font-black text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 mt-0.5 inline-block">{s.language}</span>
                                     </div>
                                     <div className="text-right">
-                                      <span className="text-[10px] font-black text-slate-900 uppercase block">Timestamp</span>
-                                      <span className="font-mono font-bold text-slate-950 mt-0.5 inline-block">{s.timestamp}</span>
+                                      <span className="text-[10px] font-black text-slate-500 uppercase block">Timestamp</span>
+                                      <span className="font-mono font-bold text-slate-700 mt-0.5 inline-block">{s.timestamp}</span>
                                     </div>
-                                    <div className="col-span-2 pt-2 border-t border-slate-200 mt-1">
-                                      <span className="text-[10px] font-black text-slate-900 uppercase block">Runtime / Memory</span>
-                                      <span className="font-mono font-bold text-slate-950 mt-0.5 inline-block">
+                                    <div className="col-span-2 pt-2 border-t border-slate-100 mt-1">
+                                      <span className="text-[10px] font-black text-slate-500 uppercase block">Runtime / Memory</span>
+                                      <span className="font-mono font-bold text-slate-700 mt-0.5 inline-block">
                                         {s.runtime && s.runtime !== 'N/A' ? s.runtime : '—'} {s.memory && s.memory !== 'N/A' ? `• ${s.memory}` : ''}
                                       </span>
                                     </div>
@@ -1385,7 +1392,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                           </div>
                         </div>
                       ) : (
-                        <div className="p-8 text-center text-xs text-slate-700 font-extrabold bg-slate-50 rounded-2xl border border-slate-300">
+                        <div className="p-8 text-center text-xs text-slate-500 font-extrabold bg-slate-50 rounded-2xl border border-slate-200">
                           No recent submission activity recorded.
                         </div>
                       )}
@@ -1394,16 +1401,16 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   {/* TAB 6: EARNED BADGES & ACHIEVEMENTS */}
                   {activeTab === 'badges' && (
-                    <div id="badges" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-300 shadow-sm space-y-5 animate-fade-in scroll-mt-20">
+                    <div id="badges" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-5 animate-fade-in scroll-mt-20">
                       <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <div>
                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                             <Award className="w-4 h-4 text-amber-500" />
                             <span>6. Earned Badges &amp; Achievements</span>
                           </h3>
-                          <p className="text-[11px] text-slate-800 font-bold mt-0.5">Verified LeetCode badges ordered by rank &amp; milestone tier</p>
+                          <p className="text-[11px] text-slate-500 font-bold mt-0.5">Verified LeetCode badges ordered by rank &amp; milestone tier</p>
                         </div>
-                        <span className="px-3 py-1 rounded-xl bg-amber-500/10 text-amber-700 border border-amber-500/30 text-xs font-black font-mono">
+                        <span className="px-3 py-1 rounded-xl bg-amber-500/10 text-amber-800 border border-amber-500/30 text-xs font-black font-mono">
                           Total Badges: {badges.length}
                         </span>
                       </div>
@@ -1415,7 +1422,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                             return (
                               <div
                                 key={idx}
-                                className="p-4 rounded-2xl bg-slate-50 border border-slate-300 flex flex-col items-center text-center space-y-2.5 hover:border-amber-400/50 hover:shadow-md transition-all group"
+                                className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 flex flex-col items-center text-center space-y-2.5 hover:border-amber-400/60 hover:shadow-md transition-all group"
                               >
                                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center relative overflow-hidden shrink-0">
                                   {b.icon_url ? (
@@ -1451,7 +1458,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                           })}
                         </div>
                       ) : (
-                        <div className="p-8 text-center text-xs text-slate-700 font-extrabold bg-slate-50 rounded-2xl border border-slate-300">
+                        <div className="p-8 text-center text-xs text-slate-500 font-extrabold bg-slate-50 rounded-2xl border border-slate-200">
                           No LeetCode badges recorded yet for this student.
                         </div>
                       )}
@@ -1460,16 +1467,16 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   {/* TAB 7: LANGUAGE INTELLIGENCE */}
                   {activeTab === 'languages' && (
-                    <div id="languages" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-300 shadow-sm space-y-5 animate-fade-in scroll-mt-20">
+                    <div id="languages" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-5 animate-fade-in scroll-mt-20">
                       <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <div>
                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                             <Sparkles className="w-4 h-4 text-amber-500" />
                             <span>7. Language Intelligence</span>
                           </h3>
-                          <p className="text-[11px] text-slate-800 font-bold mt-0.5">Multi-language problem-solving distribution &amp; proficiency</p>
+                          <p className="text-[11px] text-slate-500 font-bold mt-0.5">Multi-language problem-solving distribution &amp; proficiency</p>
                         </div>
-                        <span className="px-3 py-1 rounded-xl bg-amber-500/10 text-amber-700 border border-amber-500/30 text-xs font-black font-mono">
+                        <span className="px-3 py-1 rounded-xl bg-amber-500/10 text-amber-800 border border-amber-500/30 text-xs font-black font-mono">
                           Primary: {intelData?.primary_language || 'Java'}
                         </span>
                       </div>
@@ -1483,7 +1490,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                             return (
                               <div
                                 key={idx}
-                                className="p-4 rounded-2xl bg-slate-50 border border-slate-300 space-y-3 hover:border-slate-400 transition-all shadow-2xs"
+                                className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3 hover:border-slate-300 transition-all shadow-2xs"
                               >
                                 <div className="flex items-center justify-between text-xs">
                                   <div className="flex items-center gap-2.5">
@@ -1500,10 +1507,10 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                                 </div>
 
                                 <div className="space-y-1">
-                                  <div className="w-full bg-slate-200 h-3 rounded-full overflow-hidden p-0.5 border border-slate-300/40">
+                                  <div className="w-full bg-slate-200/80 h-3 rounded-full overflow-hidden p-0.5 border border-slate-300/40">
                                     <div className={`h-full rounded-full ${style.barBg} transition-all duration-500`} style={{ width: `${pct}%` }} />
                                   </div>
-                                  <div className="flex justify-between items-center text-[10px] font-mono text-slate-900 font-black pt-0.5">
+                                  <div className="flex justify-between items-center text-[10px] font-mono text-slate-600 font-black pt-0.5">
                                     <span>Relative Volume</span>
                                     <span>{pct}% of top language</span>
                                   </div>
@@ -1513,7 +1520,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                           })}
                         </div>
                       ) : (
-                        <div className="p-8 text-center text-xs text-slate-700 font-extrabold bg-slate-50 rounded-2xl border border-slate-300">
+                        <div className="p-8 text-center text-xs text-slate-500 font-extrabold bg-slate-50 rounded-2xl border border-slate-200">
                           No language breakdown data recorded for this student.
                         </div>
                       )}
@@ -1522,14 +1529,14 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                   {/* TAB 8: TOPIC & SKILL INTELLIGENCE */}
                   {activeTab === 'topics' && (
-                    <div id="topics" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-300 shadow-sm space-y-5 animate-fade-in scroll-mt-20">
+                    <div id="topics" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-5 animate-fade-in scroll-mt-20">
                       <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <div>
                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                             <Target className="w-4 h-4 text-brand-600" />
                             <span>8. Topic &amp; Skill Intelligence</span>
                           </h3>
-                          <p className="text-[11px] text-slate-800 font-bold mt-0.5">Categorized DSA problem-solving mastery breakdown</p>
+                          <p className="text-[11px] text-slate-500 font-bold mt-0.5">Categorized DSA problem-solving mastery breakdown</p>
                         </div>
                         <span className="px-3 py-1 rounded-xl bg-brand-500/10 text-brand-700 border border-brand-500/30 text-xs font-black font-mono">
                           DSA Proficiency
@@ -1545,7 +1552,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                             return (
                               <div
                                 key={idx}
-                                className="p-4 rounded-2xl bg-slate-50 border border-slate-300 space-y-3 hover:border-slate-400 transition-all shadow-2xs"
+                                className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3 hover:border-slate-300 transition-all shadow-2xs"
                               >
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="space-y-0.5 min-w-0">
@@ -1560,15 +1567,15 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                                     <span className="font-mono font-black text-slate-950 text-base block">
                                       {t.problems_solved}
                                     </span>
-                                    <span className="text-[10px] text-slate-900 font-black uppercase block">Solved</span>
+                                    <span className="text-[10px] text-slate-500 font-black uppercase block">Solved</span>
                                   </div>
                                 </div>
 
                                 <div className="space-y-1">
-                                  <div className="w-full bg-slate-200 h-3 rounded-full overflow-hidden p-0.5 border border-slate-300">
+                                  <div className="w-full bg-slate-200/80 h-3 rounded-full overflow-hidden p-0.5 border border-slate-300/40">
                                     <div className={`h-full rounded-full ${style.barBg} transition-all duration-500`} style={{ width: `${pct}%` }} />
                                   </div>
-                                  <div className="flex justify-between items-center text-[10px] font-mono text-slate-900 font-black pt-0.5">
+                                  <div className="flex justify-between items-center text-[10px] font-mono text-slate-600 font-black pt-0.5">
                                     <span>Domain Weight</span>
                                     <span>{pct}% Mastery</span>
                                   </div>
@@ -1578,7 +1585,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                           })}
                         </div>
                       ) : (
-                        <div className="p-8 text-center text-xs text-slate-700 font-extrabold bg-slate-50 rounded-2xl border border-slate-300">
+                        <div className="p-8 text-center text-xs text-slate-500 font-extrabold bg-slate-50 rounded-2xl border border-slate-200">
                           Topic-level intelligence unavailable for this student.
                         </div>
                       )}
@@ -1591,9 +1598,9 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                       <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                           <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                          <span>9. Data Quality & Telemetry Audit</span>
+                          <span>9. Data Quality &amp; Telemetry Audit</span>
                         </h3>
-                        <span className="text-[11px] font-black text-emerald-900 font-mono bg-emerald-50 px-3 py-1 rounded-full border border-emerald-300 shadow-2xs flex items-center gap-1.5">
+                        <span className="text-[11px] font-black text-emerald-800 font-mono bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 shadow-2xs flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                           100% Verified Ground Truth
                         </span>
@@ -1601,48 +1608,48 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         {/* Audit Card 1: Data Verification */}
-                        <div className="bg-white p-5 rounded-3xl border border-slate-300 shadow-sm space-y-2">
+                        <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-black text-slate-900 uppercase tracking-wider">Verification Status</span>
+                            <span className="text-xs font-black text-slate-500 uppercase tracking-wider">Verification Status</span>
                             <CheckCircle className="w-5 h-5 text-emerald-600" />
                           </div>
-                          <div className="text-2xl font-black text-emerald-700 font-mono">100% Verified</div>
-                          <p className="text-xs text-slate-800 font-bold leading-relaxed">
-                            Official LeetCode API & Institutional Database Ground Truth Audit.
+                          <div className="text-2xl font-black text-emerald-600 font-mono">100% Verified</div>
+                          <p className="text-xs text-slate-600 font-bold leading-relaxed">
+                            Official LeetCode API &amp; Institutional Database Ground Truth Audit.
                           </p>
                         </div>
 
                         {/* Audit Card 2: Fetch Latency */}
-                        <div className="bg-white p-5 rounded-3xl border border-slate-300 shadow-sm space-y-2">
+                        <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-black text-slate-900 uppercase tracking-wider">Fetch Latency</span>
+                            <span className="text-xs font-black text-slate-500 uppercase tracking-wider">Fetch Latency</span>
                             <Zap className="w-5 h-5 text-amber-500" />
                           </div>
-                          <div className="text-2xl font-black text-amber-700 font-mono">
+                          <div className="text-2xl font-black text-amber-600 font-mono">
                             {fetchLatency ? `${fetchLatency} ms` : '15 ms'}
                           </div>
-                          <p className="text-xs text-slate-800 font-bold leading-relaxed">
+                          <p className="text-xs text-slate-600 font-bold leading-relaxed">
                             High-speed indexed cached ledger query response benchmark.
                           </p>
                         </div>
 
                         {/* Audit Card 3: Synchronization Timestamp */}
-                        <div className="bg-white p-5 rounded-3xl border border-slate-300 shadow-sm space-y-2">
+                        <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-black text-slate-900 uppercase tracking-wider">Last Synced</span>
+                            <span className="text-xs font-black text-slate-500 uppercase tracking-wider">Last Synced</span>
                             <RefreshCw className="w-5 h-5 text-indigo-500" />
                           </div>
                           <div className="text-base font-black text-slate-950 font-mono">
                             {st.last_synced || lastFetchTime || 'Real-Time'}
                           </div>
-                          <p className="text-xs text-slate-800 font-bold leading-relaxed">
+                          <p className="text-xs text-slate-600 font-bold leading-relaxed">
                             Live synchronization timestamp with official LeetCode engine.
                           </p>
                         </div>
                       </div>
 
                       {/* Account Connections & Audit Control */}
-                      <div className="bg-white p-5 rounded-3xl border border-slate-300 shadow-sm space-y-4">
+                      <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm space-y-4">
                         <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                           <Database className="w-4 h-4 text-brand-600" />
                           <span>Registered LeetCode Accounts Audit</span>
@@ -1650,7 +1657,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {st.leetcode_url && (
-                            <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-300 flex items-center justify-between gap-2">
+                            <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200 flex items-center justify-between gap-2">
                               <div>
                                 <span className="text-[10px] font-black uppercase text-amber-950 block">Primary LeetCode Handle</span>
                                 <span className="text-xs font-mono font-black text-amber-950">@{st.username || 'LeetCode'}</span>
@@ -1678,7 +1685,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                               if (!secUser) return null;
                               const secUrl = acc.profile_url || `https://leetcode.com/u/${secUser}/`;
                               return (
-                                <div key={idx} className="p-3.5 rounded-2xl bg-sky-50/90 border border-sky-300 flex items-center justify-between gap-2">
+                                <div key={idx} className="p-3.5 rounded-2xl bg-sky-50/90 border border-sky-200 flex items-center justify-between gap-2">
                                   <div>
                                     <span className="text-[10px] font-black uppercase text-sky-950 block">Secondary LeetCode Handle</span>
                                     <span className="text-xs font-mono font-black text-sky-950">@{secUser}</span>
@@ -1724,13 +1731,13 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
             </div>
 
             {/* 3. ELEGANT MODAL FOOTER */}
-            <div className="px-4 sm:px-6 py-3 bg-white border-t border-slate-200 flex items-center justify-between shrink-0 text-xs flex-wrap gap-2 rounded-b-2xl sm:rounded-b-[32px]">
-              <div className="flex items-center gap-3 text-slate-800 font-bold text-[11px]">
-                <span className="px-3 py-1 rounded-full bg-slate-100 border border-slate-300 font-mono text-slate-900 font-bold">
+            <div className="px-4 sm:px-6 py-3.5 bg-white border-t border-slate-200 flex items-center justify-between shrink-0 text-xs flex-wrap gap-2 rounded-b-2xl sm:rounded-b-[32px]">
+              <div className="flex items-center gap-3 text-slate-700 font-bold text-[11px]">
+                <span className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 font-mono text-slate-800 font-bold">
                   Student ID: <strong className="text-slate-950 font-black">{st.id || studentId}</strong>
                 </span>
                 <span className="text-slate-400">•</span>
-                <span className="font-extrabold text-slate-800">Institutional Intelligence Ledger</span>
+                <span className="font-extrabold text-slate-700">Institutional Intelligence Ledger</span>
               </div>
               <button
                 onClick={onClose}

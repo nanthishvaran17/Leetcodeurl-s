@@ -28,6 +28,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { user, logout, isAuthenticated } = useAuth();
 
   const [freshness, setFreshness] = useState<any>(null);
+  const [menteesCount, setMenteesCount] = useState<number | null>(null);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
@@ -40,7 +41,15 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   useEffect(() => {
     loadFreshness();
-    const interval = setInterval(loadFreshness, 30000);
+    if (isAuthenticated && ['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes((user?.role || '').toLowerCase())) {
+      loadMenteesCount();
+    }
+    const interval = setInterval(() => {
+      loadFreshness();
+      if (isAuthenticated && ['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes((user?.role || '').toLowerCase())) {
+        loadMenteesCount();
+      }
+    }, 30000);
     const handleToggleNotifications = () => {
       setShowNotifications(prev => !prev);
     };
@@ -49,7 +58,19 @@ export const Navbar: React.FC<NavbarProps> = ({
       clearInterval(interval);
       window.removeEventListener('toggle_notifications', handleToggleNotifications);
     };
-  }, []);
+  }, [isAuthenticated, user?.role]);
+
+  const loadMenteesCount = async () => {
+    try {
+      const { default: api } = await import('../services/api');
+      const res = await api.get('/faculty-assignments/my-students');
+      if (res.data && res.data.total_assigned !== undefined) {
+        setMenteesCount(res.data.total_assigned);
+      }
+    } catch (err) {
+      console.warn("Mentees load warning:", err);
+    }
+  };
 
   const loadFreshness = async () => {
     try {
@@ -95,9 +116,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span className="font-black text-[10px] xs:text-[11.5px] leading-tight sm:text-base sm:leading-tight tracking-tight text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors whitespace-nowrap truncate">
                       NANDHA INTELLIGENCE
                     </span>
-                    {freshness?.total_students ? (
+                    {(freshness?.total_students || menteesCount !== null) ? (
                       <span className="hidden sm:inline-flex px-2 py-0.5 text-[9px] font-black rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 whitespace-nowrap flex-shrink-0 items-center">
-                        {['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes((user?.role || '').toLowerCase()) ? '20 MENTEES' : `${freshness.total_students} STUDENTS`}
+                        {['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes((user?.role || '').toLowerCase()) 
+                          ? `${menteesCount !== null ? menteesCount : '...'} MENTEES` 
+                          : `${freshness?.total_students || 0} STUDENTS`}
                       </span>
                     ) : null}
                   </div>

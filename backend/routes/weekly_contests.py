@@ -1917,7 +1917,7 @@ def sync_single_weekly_contest(
     session_id: int,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="Weekly Contest Sync", required_roles=["admin", "super admin", "hod"]))
+    current_user = Depends(require_security_access(resource_name="Weekly Contest Sync"))
 ):
     """
     Sync ONLY the selected contest session using authoritative 4-state reconciliation engine.
@@ -3077,7 +3077,8 @@ async def sync_public_participants(
     """
     if (current_user.role or "").strip() not in (
         "Admin", "SuperAdmin", "Super Admin", "Principal", "Management",
-        "HOD", "Department HOD", "hod", "Staff", "Faculty"
+        "HOD", "Department HOD", "hod", "Placement Coordinator", "placement coordinator", 
+        "Staff", "Faculty", "Faculty Mentor", "Staff Mentor", "faculty mentor", "staff mentor"
     ):
         raise HTTPException(status_code=403, detail="Unauthorized to trigger contest synchronization.")
 
@@ -3121,7 +3122,8 @@ def get_public_participants_audits(
     """
     if (current_user.role or "").strip() not in (
         "Admin", "SuperAdmin", "Super Admin", "Principal", "Management",
-        "HOD", "Department HOD", "hod"
+        "HOD", "Department HOD", "hod", "Placement Coordinator", "placement coordinator",
+        "Staff", "Faculty", "Faculty Mentor", "Staff Mentor", "faculty mentor", "staff mentor"
     ):
         raise HTTPException(status_code=403, detail="Unauthorized to view contest audit history.")
 

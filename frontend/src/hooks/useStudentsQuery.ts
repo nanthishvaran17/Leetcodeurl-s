@@ -46,7 +46,14 @@ export const useStudentsQuery = () => {
 
         if (serverVersion > 0 && cachedVersion > 0) {
           if (cachedVersion > serverVersion) {
-            return cachedStudent; // Keep our newer live patched version
+            return {
+              ...serverStudent,
+              ...cachedStudent,
+              stats: {
+                ...(serverStudent.stats || {}),
+                ...(cachedStudent.stats || {})
+              }
+            }; // Keep our newer live patched version but preserve schema from server
           }
           return serverStudent;
         }
@@ -56,7 +63,14 @@ export const useStudentsQuery = () => {
         const cachedTime = parseUtcTime(cachedStudent.stats?.last_verified_at);
         
         if (cachedTime > serverTime) {
-          return cachedStudent; // Keep our newer live patched version
+          return {
+            ...serverStudent,
+            ...cachedStudent,
+            stats: {
+              ...(serverStudent.stats || {}),
+              ...(cachedStudent.stats || {})
+            }
+          }; // Keep our newer live patched version but preserve schema from server
         }
         
         return serverStudent;

@@ -519,7 +519,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       </div>
 
       {/* Search Bar - Redesigned */}
-      <div className="bg-white dark:bg-navy-950 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-navy-700 space-y-4">
+      <div className="bg-white dark:bg-navy-950 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-navy-700 space-y-4 mb-6 sm:mb-8">
         <div className="relative flex items-center">
           <input
             type="text"

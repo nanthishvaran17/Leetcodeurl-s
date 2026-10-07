@@ -852,6 +852,14 @@ def start_scheduler():
         replace_existing=True
     )
 
+    # 5.c Daily Midnight Live Sync (Ensures 100% Accurate Growth Deltas for Today/7d/30d)
+    scheduler.add_job(
+        daily_auto_refresh_job,
+        CronTrigger(hour=23, minute=50, timezone=tz),
+        id='daily_midnight_sync',
+        replace_existing=True
+    )
+
     # 6. Sunday 09:40 AM IST — Automated Idempotent Email Dispatch
     scheduler.add_job(
         sunday_0940_email_job,
@@ -992,21 +1000,21 @@ def start_scheduler():
     )
 
     # ── FRIDAY WEEKLY INTELLIGENCE PIPELINE ─────────────────────────────────────
-    # Friday Window Polling: Every 30 mins from 16:00 to 23:30 IST on Fridays (starts 4:00 PM IST)
+    # Friday Window Polling: Every 30 mins from 08:00 to 10:00 IST on Fridays
     scheduler.add_job(
         friday_weekly_window_polling_job,
-        CronTrigger(day_of_week='fri', hour='16-23', minute='0,30', timezone=IST),
+        CronTrigger(day_of_week='fri', hour='8-10', minute='0,30', timezone=IST),
         id='friday_weekly_window_polling',
         replace_existing=True,
         max_instances=1,
         coalesce=True,
         misfire_grace_time=1800
     )
-    # Primary Lock & Publication: Every Friday at 23:30 IST
+    # Primary Lock & Publication: Every Friday at 10:00 IST
     scheduler.add_job(
         friday_weekly_report_job,
-        CronTrigger(day_of_week='fri', hour=23, minute=30, timezone=IST),
-        id='friday_weekly_intelligence_2330',
+        CronTrigger(day_of_week='fri', hour=10, minute=0, timezone=IST),
+        id='friday_weekly_intelligence_1000',
         replace_existing=True,
         max_instances=1,
         coalesce=True,

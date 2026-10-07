@@ -1419,7 +1419,7 @@ export const HODCommandCenter: React.FC = () => {
  ];
 
  return (
- <div className="max-w-full pt-1 sm:pt-6 w-full box-border space-y-8 sm:space-y-10 md:space-y-12 pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
+ <div className="max-w-full w-full box-border space-y-8 sm:space-y-10 md:space-y-12 pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
 
 
 
@@ -1810,7 +1810,10 @@ export const HODCommandCenter: React.FC = () => {
  count: inactiveInScope,
  title: 'Inactive Solvers',
  sub: '0 problems solved in current cycle',
- onClick: () => setSelectedStatus('INACTIVE')
+ onClick: () => {
+   setSelectedStatus('INACTIVE');
+   setTimeout(() => document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+ }
  },
  {
  color: 'text-amber-600 bg-amber-50 border-amber-200',
@@ -1818,7 +1821,10 @@ export const HODCommandCenter: React.FC = () => {
  count: needsAtt?.declining_count || 0,
  title: 'Declining Weekly Velocity',
  sub: 'Submissions decreased vs last cycle',
- onClick: () => setSelectedStatus('INACTIVE')
+ onClick: () => {
+   setSelectedStatus('INACTIVE');
+   setTimeout(() => document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+ }
  },
  {
  color: 'text-brand-600 bg-brand-50 border-brand-200',
@@ -1826,7 +1832,10 @@ export const HODCommandCenter: React.FC = () => {
  count: improvingInScope,
  title: 'Accelerating Solvers',
  sub: 'Rating velocity increased this week',
- onClick: () => setSelectedStatus('IMPROVING')
+ onClick: () => {
+   setSelectedStatus('IMPROVING');
+   setTimeout(() => document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+ }
  }
  ].map((item, idx) => (
  <div key={idx} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-800/40 min-h-[76px]">

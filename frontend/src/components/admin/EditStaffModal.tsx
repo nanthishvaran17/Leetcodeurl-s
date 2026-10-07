@@ -264,6 +264,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   const roleOptions: DropdownOption[] = [
     { value: 'Principal', label: 'Principal', badge: 'PRN', sublabel: 'Head of Institution', icon: Building2 },
     { value: 'Management', label: 'Management', badge: 'MGT', sublabel: 'Institution Trust & Management', icon: Briefcase },
+    { value: 'Placement Coordinator', label: 'Placement Coordinator', badge: 'PLC', sublabel: 'Department-wide placement access', icon: Briefcase },
     { value: 'Faculty Mentor', label: 'Proctor', badge: 'PRC', sublabel: 'Student mentoring & intervention access', icon: GraduationCap },
     { value: 'Staff Mentor', label: 'Staff Mentor', badge: 'STF', sublabel: 'Student support & academic guidance', icon: User },
     { value: 'Department HOD', label: 'Department HOD', badge: 'HOD', sublabel: 'Department-level academic oversight', icon: Building2 },
@@ -275,6 +276,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
     const map: Record<string, { icon: React.ElementType; color: string; bgColor: string; borderColor: string; badgeColor: string; desc: string }> = {
       'Principal': { icon: Building2, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-50 dark:bg-blue-500/10', borderColor: 'border-blue-200 dark:border-blue-500/30', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border-blue-200 dark:border-blue-500/30', desc: 'Head of Institution' },
       'Management': { icon: Briefcase, color: 'text-slate-700 dark:text-slate-300', bgColor: 'bg-slate-100 dark:bg-slate-800', borderColor: 'border-slate-300 dark:border-slate-600', badgeColor: 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600', desc: 'Institution Trust & Management' },
+      'Placement Coordinator': { icon: Briefcase, color: 'text-cyan-600 dark:text-cyan-400', bgColor: 'bg-cyan-50 dark:bg-cyan-500/10', borderColor: 'border-cyan-200 dark:border-cyan-500/30', badgeColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/30', desc: 'Department-wide placement access' },
       'Faculty Mentor': { icon: GraduationCap, color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-50 dark:bg-indigo-500/10', borderColor: 'border-indigo-200 dark:border-indigo-500/30', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30', desc: 'Student mentoring & intervention access' },
       'Staff Mentor': { icon: User, color: 'text-brand-600 dark:text-brand-400', bgColor: 'bg-brand-50 dark:bg-brand-500/10', borderColor: 'border-brand-200 dark:border-brand-500/30', badgeColor: 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border-brand-200 dark:border-brand-500/30', desc: 'Student support & academic guidance' },
       'Department HOD': { icon: Building2, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-50 dark:bg-purple-500/10', borderColor: 'border-purple-200 dark:border-purple-500/30', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border-purple-200 dark:border-purple-500/30', desc: 'Department-level academic oversight' },
@@ -432,7 +434,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         mentoring_role: formData.mentoring_role ? formData.mentoring_role.trim() : undefined,
         role: formData.role,
         department_id: deptIdToSend,
-        hod_department_ids: formData.role === 'Department HOD' && formData.hod_department_ids.length > 0 ? formData.hod_department_ids.map(id => parseInt(id, 10)) : undefined,
+        hod_department_ids: ['Department HOD', 'Placement Coordinator'].includes(formData.role) && formData.hod_department_ids.length > 0 ? formData.hod_department_ids.map(id => parseInt(id, 10)) : undefined,
         is_active: isActive,
         date_of_birth: formattedDOB,
         receive_email_reports: automatedReportsEnabled,
@@ -845,7 +847,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                         <div className="w-full h-11 px-4 flex items-center rounded-2xl border border-dashed border-brand-400 dark:border-brand-500/40 bg-brand-50/50 dark:bg-brand-500/5 text-xs font-black text-brand-950 dark:text-brand-200">
                           All Departments (Global Scope)
                         </div>
-                      ) : formData.role === 'Department HOD' ? (
+                      ) : ['Department HOD', 'Placement Coordinator'].includes(formData.role) ? (
                         <div className="relative" ref={hodDeptRef}>
                           <button
                             type="button"

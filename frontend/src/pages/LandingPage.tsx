@@ -985,7 +985,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               id="faculty-department-filter"
               label="Mentee Scope"
               options={[
-                { value: 'all', label: 'My Allocated Mentees (20)' },
+                { value: 'all', label: 'My Allocated Mentees' },
                 { value: 'CSE(CS)', label: 'CSE (Cyber Security)' }
               ]}
               value={selectedDept}

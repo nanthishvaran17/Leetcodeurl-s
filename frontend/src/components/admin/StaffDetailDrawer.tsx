@@ -53,14 +53,18 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
     return () => { isMounted = false; };
   }, [staff?.id, studentList]);
 
-  const assignedCount = staff.assigned_count || mentees.length;
-  const activeCount = staff.active_count ?? mentees.filter(m => (m.total_solved || 0) > 0 || m.is_active).length;
+  const assignedCount = loadingMentees ? (staff.assigned_count || mentees.length) : mentees.length;
+  const activeCount = loadingMentees ? (staff.active_count ?? mentees.filter(m => (m.total_solved || 0) > 0 || m.is_active).length) : mentees.filter(m => (m.total_solved || 0) > 0 || m.is_active).length;
   const completionRate = assignedCount > 0 
     ? Math.round((activeCount / assignedCount) * 100) 
     : 0;
 
-  const totalProblemsSolved = mentees.reduce((acc, m) => acc + (m.total_solved || 0), 0) || staff.coding_activity || 0;
+  const totalProblemsSolved = loadingMentees ? (staff.coding_activity || 0) : mentees.reduce((acc, m) => acc + (m.total_solved || 0), 0);
   const targetCompletedCount = mentees.filter(m => (m.total_solved || 0) >= 10).length;
+  
+  const recentContestAttendedCount = mentees.filter(m => m.contest_standing && m.contest_standing !== '—' && !m.contest_standing.startsWith('0/')).length;
+  const contestAttendanceRate = assignedCount > 0 ? Math.round((recentContestAttendedCount / assignedCount) * 100) : 0;
+
 
   return (
     <div className="fixed inset-0 z-[100050] flex justify-center items-end sm:justify-end sm:items-stretch bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in sm:p-0 pt-4" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -72,18 +76,16 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
           <div className="absolute -top-10 -right-10 w-56 h-56 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
 
-          {/* Close row */}
-          <div className="flex justify-end pt-4 px-5 relative z-10">
-            <button
-              onClick={onClose}
-              className="p-2 bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white rounded-xl backdrop-blur-md transition cursor-pointer"
-            >
-              <X size={16} />
-            </button>
-          </div>
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white rounded-xl backdrop-blur-md transition cursor-pointer z-20"
+          >
+            <X size={18} />
+          </button>
 
           {/* Avatar + Info */}
-          <div className="flex items-end gap-4 px-6 pb-5 relative z-10">
+          <div className="flex items-center gap-4 px-6 pt-6 pb-5 relative z-10 pr-14">
             <div
               className={`relative shrink-0 ${staff.profile_photo ? 'cursor-pointer active:scale-95 hover:scale-105 transition-transform' : ''}`}
               onClick={() => { if (staff.profile_photo) setShowPhotoZoom(true); }}
@@ -154,7 +156,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                 Scope: {staff.department_code || 'Dept'}
               </span>
             </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
               {/* Assigned Capacity */}
               <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Assigned Capacity</div>
@@ -197,6 +199,21 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                 <div className="mt-2 text-[10px] text-slate-600 dark:text-slate-400 font-bold">
                   {targetCompletedCount} mentees with 10+ solves
                 </div>
+              </div>
+
+              {/* Recent Contest Attendance */}
+              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Sunday Contest</div>
+                <div className="flex items-baseline gap-1">
+                  <div className="text-xl font-black text-blue-600 dark:text-blue-400">
+                    {recentContestAttendedCount}
+                  </div>
+                  <div className="text-[11px] text-slate-500">/ {assignedCount} attended</div>
+                </div>
+                <div className="mt-2 w-full h-2 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden border border-slate-200 dark:border-navy-700">
+                  <div className={`h-full rounded-full transition-all duration-500 ${contestAttendanceRate >= 80 ? 'bg-blue-500' : contestAttendanceRate >= 50 ? 'bg-indigo-400' : 'bg-slate-400'}`} style={{ width: `${contestAttendanceRate}%` }} />
+                </div>
+                <div className="text-[10px] text-slate-700 dark:text-slate-300 mt-1 font-bold text-right">{contestAttendanceRate}% turnout</div>
               </div>
             </div>
           </div>

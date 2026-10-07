@@ -556,111 +556,118 @@ const UpdateModal: React.FC<{
   const labelCls = "block text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-navy-300 mb-1.5 flex items-center gap-1.5";
 
   useEffect(() => {
+    document.body.style.overflow = 'hidden';
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [onClose]);
 
   if (typeof document === 'undefined') return null;
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[999999] flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[999999] flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in overflow-y-auto"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-2xl max-h-[94vh] sm:max-h-[90vh] flex flex-col rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700/80 shadow-2xl shadow-indigo-950/30 overflow-hidden my-auto">
+      <div className="w-full max-w-2xl max-h-[92vh] sm:max-h-[88vh] flex flex-col rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700/80 shadow-2xl shadow-indigo-950/30 overflow-hidden my-auto min-h-0">
 
-        {/* Premium Executive Header */}
-        <div className="relative overflow-hidden p-6 bg-gradient-to-r from-slate-950 via-navy-950 to-indigo-950 text-white border-b border-slate-800/80 shrink-0">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="relative z-10 flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3.5 min-w-0 flex-1">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-500 via-indigo-600 to-purple-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-brand-500/30 border border-white/20 shrink-0">
-                {item.student_name.charAt(0)}
-              </div>
-              <div className="space-y-1 min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
-                  {item.is_escalated && (
-                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 font-black tracking-wide animate-pulse">
-                      ESCALATED
+        {/* Unified Scroll Container (Header + Signal Banner + Form Body) */}
+        <div className="overflow-y-auto flex-1 min-h-0 custom-scrollbar overscroll-contain touch-pan-y">
+
+          {/* Premium Executive Header */}
+          <div className="relative overflow-hidden p-5 sm:p-6 bg-gradient-to-r from-slate-950 via-navy-950 to-indigo-950 text-white border-b border-slate-800/80">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="relative z-10 flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-500 via-indigo-600 to-purple-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-brand-500/30 border border-white/20 shrink-0">
+                  {item.student_name.charAt(0)}
+                </div>
+                <div className="space-y-1 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
+                    {item.is_escalated && (
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 font-black tracking-wide animate-pulse">
+                        ESCALATED
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-lg sm:text-2xl font-black text-white tracking-tight leading-snug truncate" title={item.student_name}>
+                    {item.student_name}
+                  </h3>
+
+                  <p className="text-[11px] sm:text-xs text-slate-300 font-mono flex items-center gap-1.5 flex-wrap">
+                    <span className="font-bold">{item.reg_no}</span>
+                    <span className="text-slate-500">•</span>
+                    <span>{item.department_code}</span>
+                    <span className="text-slate-500">•</span>
+                    <span className="px-1.5 py-0.5 rounded-md bg-white/10 text-white font-sans text-[10px] font-black">{item.year_level} Year</span>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-brand-300 font-bold truncate max-w-full" title={`@${item.leetcode_username}`}>@{item.leetcode_username}</span>
+                  </p>
+
+                  {/* Quick Metrics Bar */}
+                  <div className="flex items-center gap-2 pt-1.5 text-[10px] sm:text-[11px] text-slate-300 font-bold flex-wrap">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
+                      <CheckCircle2 size={12} className="text-emerald-400" />
+                      {item.total_solved} Solved
                     </span>
-                  )}
-                </div>
-
-                <h3 className="text-lg sm:text-2xl font-black text-white tracking-tight leading-snug truncate" title={item.student_name}>
-                  {item.student_name}
-                </h3>
-
-                <p className="text-[11px] sm:text-xs text-slate-300 font-mono flex items-center gap-1.5 flex-wrap">
-                  <span className="font-bold">{item.reg_no}</span>
-                  <span className="text-slate-500">•</span>
-                  <span>{item.department_code}</span>
-                  <span className="text-slate-500">•</span>
-                  <span className="px-1.5 py-0.5 rounded-md bg-white/10 text-white font-sans text-[10px] font-black">{item.year_level} Year</span>
-                  <span className="text-slate-500">•</span>
-                  <span className="text-brand-300 font-bold truncate max-w-full" title={`@${item.leetcode_username}`}>@{item.leetcode_username}</span>
-                </p>
-
-                {/* Quick Metrics Bar */}
-                <div className="flex items-center gap-2 pt-1.5 text-[10px] sm:text-[11px] text-slate-300 font-bold flex-wrap">
-                  <span className="inline-flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
-                    <CheckCircle2 size={12} className="text-emerald-400" />
-                    {item.total_solved} Solved
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
-                    <Award size={12} className="text-amber-400" />
-                    {item.current_rating} Rating
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
-                    <Activity size={12} className="text-cyan-400" />
-                    {item.contests_attended} Contests
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-400">
-                    <Clock size={12} />
-                    {item.last_active_days_ago}d ago
-                  </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
+                      <Award size={12} className="text-amber-400" />
+                      {item.current_rating} Rating
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
+                      <Activity size={12} className="text-cyan-400" />
+                      {item.contests_attended} Contests
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-400">
+                      <Clock size={12} />
+                      {item.last_active_days_ago}d ago
+                    </span>
+                  </div>
                 </div>
               </div>
+
+              <button
+                onClick={onClose}
+                className="p-2 rounded-2xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition cursor-pointer shrink-0 border border-white/10 ml-auto"
+                title="Close modal"
+              >
+                <X size={18} />
+              </button>
             </div>
-
-            <button
-              onClick={onClose}
-              className="p-2 rounded-2xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition cursor-pointer shrink-0 border border-white/10 ml-auto"
-              title="Close modal"
-            >
-              <X size={18} />
-            </button>
           </div>
-        </div>
 
-        {/* Signal & Recommendation Banner */}
-        <div className="px-6 py-3.5 bg-gradient-to-r from-indigo-500/10 via-brand-500/5 to-purple-500/10 dark:from-indigo-950/50 dark:via-navy-900/60 dark:to-purple-950/50 border-b border-indigo-100 dark:border-navy-700/80 flex items-start gap-3 shrink-0">
-          <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 mt-0.5 shrink-0">
-            <Sparkles size={16} />
-          </div>
-          <div className="space-y-0.5 flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                Triggered Intelligence Signal
-              </span>
-              <span className="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-[10px] font-black font-mono">
-                {item.signal_type}
-              </span>
+          {/* Signal & Recommendation Banner */}
+          <div className="px-6 py-3.5 bg-gradient-to-r from-indigo-500/10 via-brand-500/5 to-purple-500/10 dark:from-indigo-950/50 dark:via-navy-900/60 dark:to-purple-950/50 border-b border-indigo-100 dark:border-navy-700/80 flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 mt-0.5 shrink-0">
+              <Sparkles size={16} />
             </div>
-            <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold italic leading-relaxed">
-              "{item.recommended_action}"
-            </p>
+            <div className="space-y-0.5 flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                  Triggered Intelligence Signal
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-[10px] font-black font-mono">
+                  {item.signal_type}
+                </span>
+              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold italic leading-relaxed">
+                "{item.recommended_action}"
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* Form Body */}
-        <div className="overflow-y-auto flex-1 p-6 space-y-5 custom-scrollbar">
+          {/* Form Body Content */}
+          <div className="p-5 sm:p-6 space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>
@@ -815,6 +822,7 @@ const UpdateModal: React.FC<{
               {msg}
             </div>
           )}
+        </div>
         </div>
 
         {/* Modal Footer */}
@@ -998,7 +1006,7 @@ export const FacultyActionCenter: React.FC = () => {
   const totalPages = Math.ceil(filteredCount / pageSize);
   const hasFilters = !!(filterPriority || filterStatus || filterYear || search);
 
-  const thCls = "text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-left py-3.5 px-3.5 first:pl-5";
+  const thCls = "text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-left py-3.5 px-3.5 first:pl-5";
   const tdCls = "py-3.5 px-3.5 text-sm first:pl-5";
   const filterSelectCls = "rounded-xl bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-brand-500 transition cursor-pointer";
 
@@ -1223,46 +1231,45 @@ export const FacultyActionCenter: React.FC = () => {
           </div>
         </div>
       ) : items.length === 0 ? (
-        <div className="relative overflow-hidden rounded-3xl bg-slate-900/90 dark:bg-navy-950/90 border border-emerald-500/25 dark:border-emerald-500/30 p-8 sm:p-12 text-center shadow-2xl backdrop-blur-xl transition-all duration-300">
+        <div className="relative overflow-hidden rounded-3xl bg-white/70 dark:bg-navy-950/70 border border-emerald-500/20 dark:border-emerald-500/30 p-8 sm:p-12 text-center shadow-xl backdrop-blur-xl transition-all duration-300">
           {/* Decorative Ambient Radial Glow */}
-          <div className="absolute -top-24 -left-24 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-24 -left-24 w-72 h-72 bg-emerald-400/20 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-brand-400/20 dark:bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 max-w-md mx-auto flex flex-col items-center">
             {/* Animated Icon Ring */}
-            <div className="relative mb-5">
-              <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-500 opacity-25 blur-lg animate-pulse" />
-              <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-0.5 shadow-xl flex items-center justify-center">
-                <div className="w-full h-full rounded-[22px] bg-slate-950/90 flex items-center justify-center">
-                  {hasFilters || kpiFilter ? (
-                    <Search className="w-9 h-9 text-slate-400" />
+            <div className="relative mb-6">
+              <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-emerald-400 to-teal-400 opacity-30 dark:opacity-25 blur-lg animate-pulse" />
+              <div className="relative w-24 h-24 rounded-3xl bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 border border-emerald-200 dark:border-emerald-700/50 shadow-xl flex items-center justify-center overflow-hidden">
+                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/10 to-transparent" />
+                 {hasFilters || kpiFilter ? (
+                    <Search className="w-10 h-10 text-slate-400 dark:text-slate-300 relative z-10" />
                   ) : (
-                    <CheckCircle2 className="w-9 h-9 text-emerald-400 animate-bounce-slow" />
+                    <CheckCircle2 className="w-12 h-12 text-emerald-500 dark:text-emerald-400 animate-bounce-slow relative z-10" />
                   )}
-                </div>
               </div>
             </div>
 
             {/* Pill Status Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-black uppercase tracking-widest mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-black uppercase tracking-widest mb-4 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5" />
               <span>{hasFilters || kpiFilter ? 'Filter Scope Active' : 'Institutional Status: Optimal'}</span>
             </div>
 
             {/* Title */}
-            <h3 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight mb-2.5">
+            <h3 className="font-display text-2xl sm:text-3xl font-black text-slate-800 dark:text-white tracking-tight mb-3">
               {hasFilters || kpiFilter ? 'No Matching Students Found' : 'All Students Operating at Target Health'}
             </h3>
 
             {/* Description */}
-            <p className="text-xs sm:text-sm text-slate-300 dark:text-slate-400 font-medium leading-relaxed mb-6 max-w-sm">
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-8 max-w-sm">
               {hasFilters || kpiFilter
                 ? 'No student intervention records matched your currently selected department, academic year, priority, or KPI filters.'
                 : 'Zero critical risk warnings or pending intervention requests detected across all tracked engineering profiles.'}
             </p>
 
             {/* Interactive Action Buttons */}
-            <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3 w-full">
               {(hasFilters || kpiFilter) ? (
                 <button
                   onClick={() => {
@@ -1272,7 +1279,7 @@ export const FacultyActionCenter: React.FC = () => {
                     setSearch('');
                     setKpiFilter(null);
                   }}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-brand-500/20 transition-all cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 w-full sm:w-auto rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-brand-500/30 transition-all cursor-pointer active:scale-95"
                 >
                   <RotateCcw className="w-4 h-4" />
                   Reset All Filters
@@ -1280,7 +1287,7 @@ export const FacultyActionCenter: React.FC = () => {
               ) : (
                 <button
                   onClick={() => loadData()}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 font-extrabold text-xs transition-all cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 w-full sm:w-auto rounded-xl bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-500/20 dark:hover:bg-emerald-500/30 border border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-extrabold text-xs transition-all cursor-pointer shadow-sm hover:shadow-md active:scale-95"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Refresh Intelligence Signals
@@ -1292,7 +1299,7 @@ export const FacultyActionCenter: React.FC = () => {
       ) : (
         <>
           {/* Mobile Intervention Cards (Compact, 100% width, no wasted space) */}
-          <div className="block md:hidden space-y-3">
+          <div className="block md:hidden space-y-3 mt-6">
             {items.map((item) => {
               const statusCls = STATUS_CONFIG[item.status] || 'bg-slate-100 text-slate-600 border border-slate-200';
               const isExpanded = expandedRow === item.id;
@@ -1401,18 +1408,17 @@ export const FacultyActionCenter: React.FC = () => {
             })}
           </div>
 
-          {/* Desktop Table View */}
-          <div className="hidden md:block table-responsive-container rounded-2xl bg-white dark:bg-navy-850 border border-slate-200 dark:border-navy-700 backdrop-blur-sm shadow-sm overflow-hidden">
-            <table className="w-full table-fixed min-w-[800px]">
+          <div className="hidden md:block table-responsive-container rounded-2xl bg-white dark:bg-navy-850 border border-slate-200 dark:border-navy-700 backdrop-blur-sm shadow-sm overflow-x-auto mt-6">
+            <table className="w-full table-fixed min-w-[1150px]">
               <colgroup>
-                <col style={{ width: '22%' }} />
-                <col style={{ width: '12%' }} />
+                <col style={{ width: '25%' }} />
+                <col style={{ width: '11%' }} />
                 <col style={{ width: '9%' }} />
-                <col style={{ width: '20%' }} />
+                <col style={{ width: '15%' }} />
                 <col style={{ width: '10%' }} />
-                <col style={{ width: '12%' }} />
-                <col style={{ width: '8%' }} />
+                <col style={{ width: '11%' }} />
                 <col style={{ width: '7%' }} />
+                <col style={{ width: '12%' }} />
               </colgroup>
               <thead className="table-header-group border-b border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950">
                 <tr>
@@ -1436,8 +1442,8 @@ export const FacultyActionCenter: React.FC = () => {
                         {/* Student */}
                         <td className={tdCls}>
                           <div className="font-bold text-sm text-slate-800 dark:text-white truncate">{item.student_name}</div>
-                          <div className="text-[11.5px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                            <span className="font-mono text-slate-600 dark:text-slate-300">{item.reg_no}</span> · {item.department_code} · {formatYearLevel(item.year_level)}
+                          <div className="text-[11.5px] font-bold text-slate-600 dark:text-slate-400 truncate mt-0.5">
+                            <span className="font-mono text-slate-700 dark:text-slate-300">{item.reg_no}</span> · {item.department_code} · {formatYearLevel(item.year_level)}
                           </div>
                         </td>
 
@@ -1450,12 +1456,12 @@ export const FacultyActionCenter: React.FC = () => {
                         <td className={tdCls}>
                           <div className="text-xs space-y-1">
                             <div className="flex items-center gap-1.5">
-                              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Rating:</span>
-                              <span className="font-bold text-slate-700 dark:text-slate-200 font-mono text-[11.5px]">{item.current_rating || 0}</span>
+                              <span className="text-[11px] text-slate-700 dark:text-slate-300 font-bold">Rating:</span>
+                              <span className="font-black text-slate-900 dark:text-white font-mono text-[11.5px]">{Math.round(Number(item.current_rating || 0))}</span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Solved:</span>
-                              <span className="font-bold text-slate-700 dark:text-slate-200 font-mono text-[11.5px]">{item.total_solved || 0}</span>
+                              <span className="text-[11px] text-slate-700 dark:text-slate-300 font-bold">Solved:</span>
+                              <span className="font-black text-slate-900 dark:text-white font-mono text-[11.5px]">{item.total_solved || 0}</span>
                             </div>
                           </div>
                         </td>
@@ -1479,15 +1485,15 @@ export const FacultyActionCenter: React.FC = () => {
 
                         {/* Faculty */}
                         <td className={tdCls}>
-                          <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium truncate">
-                            <User size={12} className="text-slate-400 shrink-0" />
+                          <div className="flex items-center gap-1.5 text-xs text-slate-900 dark:text-white font-bold truncate">
+                            <User size={12} className="text-slate-600 dark:text-slate-400 shrink-0" />
                             <span className="truncate">{item.assigned_faculty_name || 'Unassigned'}</span>
                           </div>
                         </td>
 
                         {/* Due Date */}
                         <td className={tdCls}>
-                          <div className={`text-xs font-mono ${item.due_date ? 'text-slate-600 dark:text-slate-300 font-medium' : 'text-slate-400'}`}>{formatDate(item.due_date)}</div>
+                          <div className={`text-xs font-mono ${item.due_date ? 'text-slate-700 dark:text-slate-200 font-bold' : 'text-slate-500 font-bold'}`}>{formatDate(item.due_date)}</div>
                         </td>
 
                         {/* Actions */}

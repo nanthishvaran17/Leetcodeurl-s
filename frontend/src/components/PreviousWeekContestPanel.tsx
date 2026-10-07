@@ -810,7 +810,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     if (isFacultyRole) {
       optsMap.set('ALL', {
         value: 'ALL',
-        label: 'My Allocated Mentees (20)',
+        label: 'My Allocated Mentees',
         code: 'MENTEES',
         color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
       });

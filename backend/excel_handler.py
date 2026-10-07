@@ -1038,8 +1038,8 @@ def generate_student_performance_detail_excel(db: Session, current_user: Optiona
                     (st.medium_solved if is_ver and st else 0) if (st and is_ver) else 0,
                     (st.hard_solved if is_ver and st else 0) if (st and is_ver) else 0,
                     (st.total_solved if is_ver and st else 0) if (st and is_ver) else 0,
-                    (round(st.contest_rating, 1) if (is_ver and st and st.contest_rating) else "N/A"),
-                    (st.contest_global_ranking if (is_ver and st and st.contest_global_ranking) else "N/A"),
+                    (int(round(st.contest_rating)) if (is_ver and st and st.contest_rating) else "N/A"),
+                    ((st.public_profile_ranking or st.contest_global_ranking) if (is_ver and st and (st.public_profile_ranking or st.contest_global_ranking)) else "N/A"),
                     contest_cnt,
                     (st.last_updated.strftime("%Y-%m-%d %H:%M") if (st and st.last_updated) else "N/A"),
                     ("VERIFIED" if is_ver else "UNVERIFIED")
@@ -1136,7 +1136,7 @@ def generate_8_sheet_master_tracker(db: Session, current_user: Optional[User] = 
     for r_idx, s in enumerate(all_students, start=2):
         st = s.stats
         is_v = st and st.validation_status == "verified"
-        row_v = [r_idx - 1, s.reg_no, s.name, s.department.code if s.department else "", s.year_level, (st.easy_solved if is_v and st else 0) if st else 0, (st.medium_solved if is_v and st else 0) if st else 0, (st.hard_solved if is_v and st else 0) if st else 0, (st.total_solved if is_v and st else 0) if st else 0, round(st.contest_rating, 1) if (is_v and st and st.contest_rating) else "N/A", st.contest_global_ranking if (is_v and st and st.contest_global_ranking) else "N/A", "VERIFIED" if is_v else "UNVERIFIED", st.last_updated.strftime("%Y-%m-%d %H:%M") if (st and st.last_updated) else "N/A"]
+        row_v = [r_idx - 1, s.reg_no, s.name, s.department.code if s.department else "", s.year_level, (st.easy_solved if is_v and st else 0) if st else 0, (st.medium_solved if is_v and st else 0) if st else 0, (st.hard_solved if is_v and st else 0) if st else 0, (st.total_solved if is_v and st else 0) if st else 0, int(round(st.contest_rating)) if (is_v and st and st.contest_rating) else "N/A", (st.public_profile_ranking or st.contest_global_ranking) if (is_v and st and (st.public_profile_ranking or st.contest_global_ranking)) else "N/A", "VERIFIED" if is_v else "UNVERIFIED", st.last_updated.strftime("%Y-%m-%d %H:%M") if (st and st.last_updated) else "N/A"]
         for c_idx, val in enumerate(row_v, start=1):
             c = ws2.cell(row=r_idx, column=c_idx, value=val)
             c.font = font_data; c.border = thin_border
@@ -1168,7 +1168,7 @@ def generate_8_sheet_master_tracker(db: Session, current_user: Optional[User] = 
     sorted_college = sorted(all_students, key=lambda s: (s.stats.total_solved or 0) if s.stats else 0, reverse=True)
     for r_idx, s in enumerate(sorted_college, start=2):
         st = s.stats
-        row_v = [r_idx - 1, s.reg_no, s.name, s.department.code if s.department else "", s.year_level, (st.total_solved or 0) if st else 0, (st.easy_solved or 0) if st else 0, (st.medium_solved or 0) if st else 0, (st.hard_solved or 0) if st else 0, round(st.contest_rating, 1) if (st and st.contest_rating) else "N/A"]
+        row_v = [r_idx - 1, s.reg_no, s.name, s.department.code if s.department else "", s.year_level, (st.total_solved or 0) if st else 0, (st.easy_solved or 0) if st else 0, (st.medium_solved or 0) if st else 0, (st.hard_solved or 0) if st else 0, int(round(st.contest_rating)) if (st and st.contest_rating) else "N/A"]
         for c_idx, val in enumerate(row_v, start=1):
             c = ws4.cell(row=r_idx, column=c_idx, value=val)
             c.font = font_data; c.border = thin_border
@@ -1187,7 +1187,7 @@ def generate_8_sheet_master_tracker(db: Session, current_user: Optional[User] = 
         dept_studs.sort(key=lambda s: (s.stats.total_solved or 0) if s.stats else 0, reverse=True)
         for d_rank, s in enumerate(dept_studs, start=1):
             st = s.stats
-            row_v = [dept.code, d_rank, s.reg_no, s.name, s.year_level, (st.total_solved or 0) if st else 0, round(st.contest_rating, 1) if (st and st.contest_rating) else "N/A"]
+            row_v = [dept.code, d_rank, s.reg_no, s.name, s.year_level, (st.total_solved or 0) if st else 0, int(round(st.contest_rating)) if (st and st.contest_rating) else "N/A"]
             for c_idx, val in enumerate(row_v, start=1):
                 c = ws5.cell(row=r5_idx, column=c_idx, value=val)
                 c.font = font_data; c.border = thin_border

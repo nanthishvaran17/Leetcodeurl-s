@@ -11,7 +11,7 @@ import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
 import { GlobalFilter } from '../components/GlobalFilter';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
-import { useDepartmentsQuery } from '../hooks/useDashboardQueries';
+import { useDepartments } from '../contexts/DepartmentContext';
 
 interface DepartmentDashboardProps {
   onSelectStudent: (student: StudentData) => void;
@@ -20,7 +20,7 @@ interface DepartmentDashboardProps {
 export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSelectStudent }) => {
   const { notify, confirmAction } = useNotification();
   const { refreshAllData } = useGlobalData();
-  const { data: departments = [] } = useDepartmentsQuery();
+  const { departments = [] } = useDepartments();
   const [selectedDept, setSelectedDept] = useState<string>('all');
   const [yearLevel, setYearLevel] = useState<string>('all');
   const [nameSearch, setNameSearch] = useState<string>('');
@@ -329,35 +329,71 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       </div>
 
       {/* Main View Display */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
-            {selectedDept === 'all' || selectedDept === 'ALL'
-              ? 'All Departments'
-              : (departments.find(d => String(d.id) === String(selectedDept))?.name || selectedDept)}
-            {' • '}
-            {yearLevel === 'all' || yearLevel === 'ALL'
-              ? 'All Academic Years'
-              : `${yearLevel} Year`}
-            {nameSearch.trim() && (
-              <span className="text-brand-500 dark:text-brand-400">
-                {' • "{0}"'.replace('{0}', nameSearch.trim())}
+      <div className="space-y-6">
+        <div className="flex items-center flex-wrap gap-3 mb-5">
+          {/* Active Filters Premium Pill */}
+          <div className="inline-flex items-center flex-wrap gap-2.5 px-3.5 sm:px-4 py-2 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-navy-900 dark:to-navy-800/80 border border-slate-200/80 dark:border-navy-700/80 rounded-2xl shadow-sm">
+            <div className="flex items-center space-x-1.5 text-slate-700 dark:text-slate-200">
+              <Building2 className="w-4 h-4 text-brand-500" />
+              <span className="font-black text-xs sm:text-sm tracking-tight">
+                {selectedDept === 'all' || selectedDept === 'ALL'
+                  ? 'All Departments'
+                  : (departments.find(d => String(d.id) === String(selectedDept))?.name || selectedDept)}
               </span>
+            </div>
+            
+            <span className="text-slate-300 dark:text-navy-600 font-bold px-0.5">•</span>
+            
+            <div className="flex items-center space-x-1.5 text-slate-700 dark:text-slate-200">
+              <GraduationCap className="w-4 h-4 text-indigo-500" />
+              <span className="font-black text-xs sm:text-sm tracking-tight">
+                {yearLevel === 'all' || yearLevel === 'ALL'
+                  ? 'All Academic Years'
+                  : `${yearLevel} Year`}
+              </span>
+            </div>
+            
+            {nameSearch.trim() && (
+              <>
+                <span className="text-slate-300 dark:text-navy-600 font-bold px-0.5">•</span>
+                <div className="flex items-center space-x-1.5 text-brand-600 dark:text-brand-400">
+                  <Search className="w-3.5 h-3.5" />
+                  <span className="font-black text-xs sm:text-sm tracking-tight">
+                    "{nameSearch.trim()}"
+                  </span>
+                </div>
+              </>
             )}
-            {solvedFilter !== 'all' && solvedFilter !== 'ALL'
-              ? ` • ${{
-                  '500_plus': '500+',
-                  'above_500': '500+',
-                  '251_500': '251–500',
-                  '250_500': '251–500',
-                  '101_250': '101–250',
-                  '1_100': '1–100',
-                  'less_100': '1–100',
-                  'not_started': 'Not Started'
-                }[solvedFilter] ?? ''} Solved`
-              : ''}
-            {` (${totalStudents} ${totalStudents === 1 ? 'Student' : 'Students'})`}
-          </h3>
+            
+            {solvedFilter !== 'all' && solvedFilter !== 'ALL' && (
+              <>
+                <span className="text-slate-300 dark:text-navy-600 font-bold px-0.5">•</span>
+                <div className="flex items-center space-x-1.5 text-rose-600 dark:text-rose-400">
+                  <Trophy className="w-3.5 h-3.5" />
+                  <span className="font-black text-xs sm:text-sm tracking-tight">
+                    {{
+                      '500_plus': '500+',
+                      'above_500': '500+',
+                      '251_500': '251–500',
+                      '250_500': '251–500',
+                      '101_250': '101–250',
+                      '1_100': '1–100',
+                      'less_100': '1–100',
+                      'not_started': 'Not Started'
+                    }[solvedFilter] ?? ''} Solved
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+          
+          {/* Total Count Premium Pill */}
+          <div className="inline-flex items-center space-x-2 px-4 py-2 bg-brand-50 dark:bg-brand-500/10 border border-brand-200 dark:border-brand-500/20 rounded-2xl shadow-sm">
+            <Users className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+            <span className="text-xs sm:text-sm font-black text-brand-700 dark:text-brand-300 tracking-wide uppercase">
+              {totalStudents} {totalStudents === 1 ? 'STUDENT' : 'STUDENTS'}
+            </span>
+          </div>
         </div>
 
         {finalStudentList.length === 0 ? (

@@ -1181,22 +1181,30 @@ export const AccountProfileSettings: React.FC = () => {
       worksheet.mergeCells('A1:G1');
       const titleCell = worksheet.getCell('A1');
       titleCell.value = 'OFFICIAL FACULTY SECURITY ACCESS & AUDIT LOG REPORT';
-      titleCell.font = { name: 'Times New Roman', size: 16, bold: true, color: { argb: 'FF000080' } };
+      titleCell.font = { name: 'Times New Roman', size: 16, bold: true, color: { argb: 'FFFFFFFF' } }; // White text to match HTML
       titleCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
 
       // 2. Subtitle (Row 2)
       worksheet.mergeCells('A2:G2');
       const subCell = worksheet.getCell('A2');
       subCell.value = `Faculty: ${fullName || user?.username} | Dept: ${departmentName}`;
-      subCell.font = { name: 'Times New Roman', size: 12, bold: true, color: { argb: 'FF333333' } };
+      subCell.font = { name: 'Times New Roman', size: 12, bold: true, color: { argb: 'FFFDE047' } }; // Yellow text to match HTML
       subCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
 
       // 3. Generated At (Row 3)
       worksheet.mergeCells('A3:G3');
       const genCell = worksheet.getCell('A3');
       genCell.value = `Generated At: ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata', dateStyle: 'long', timeStyle: 'short' })} IST`;
-      genCell.font = { name: 'Times New Roman', size: 10, color: { argb: 'FF555555' } };
+      genCell.font = { name: 'Times New Roman', size: 10, color: { argb: 'FFCBD5E1' } }; // Light Gray text to match HTML
       genCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+
+      // Apply dark blue fill to the entire header block (rows 1-4)
+      for (let i = 1; i <= 4; i++) {
+        for (let j = 1; j <= 7; j++) {
+          const cell = worksheet.getCell(i, j);
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF002147' } };
+        }
+      }
 
       // 4. Headers (Row 5)
       const headerRow = worksheet.addRow(['Event ID', 'Date', 'Time (IST)', 'IP Address', 'Access Network', 'Authentication Method', 'Security Status']);
@@ -1248,11 +1256,35 @@ export const AccountProfileSettings: React.FC = () => {
       // Export
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       const url = URL.createObjectURL(blob);
+
+      if (isMobile) {
+        // Fallback for Mobile WebViews / APKs where blob URLs are blocked
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const dataUrl = reader.result as string;
+          const a = document.createElement('a');
+          a.href = dataUrl;
+          a.download = `NEC_Security_Audit_${institutionalId}_${new Date().toISOString().split('T')[0]}.xlsx`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          notify.dismiss(notifyToast);
+          notify.success('Security audit report downloaded with perfect alignment!', '', { category: 'ADMIN' });
+        };
+        reader.readAsDataURL(blob);
+        return;
+      }
+
       const a = document.createElement('a');
       a.href = url;
       a.download = `NEC_Security_Audit_${institutionalId}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
       notify.dismiss(notifyToast);

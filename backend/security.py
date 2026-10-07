@@ -529,6 +529,7 @@ def require_security_access(
             "staff mentor": "staff",
             "department hod": "hod",
             "department_hod": "hod",
+            "placement coordinator": "hod",
             "administrator": "admin",
             "super admin": "admin",
             "super_admin": "admin"

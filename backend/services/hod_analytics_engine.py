@@ -214,9 +214,17 @@ def get_institutional_benchmarks(
         if f.department_id:
             faculty_map[f.department_id] = faculty_map.get(f.department_id, 0) + 1
             
-    # Pre-fetch student goals for completion rate
-    completed_goals = db.query(StudentGoal).filter(StudentGoal.status == "COMPLETED").all()
-    completed_map = {g.student_id: True for g in completed_goals}
+    # Pre-fetch contest participation for completion rate (Latest Sunday Contest)
+    from backend.models import PreviousWeekParticipationRecord
+    latest_session = db.query(PreviousWeekParticipationRecord.session_id).order_by(PreviousWeekParticipationRecord.session_id.desc()).first()
+    if latest_session:
+        latest_participation = db.query(PreviousWeekParticipationRecord.student_id).filter(
+            PreviousWeekParticipationRecord.session_id == latest_session[0],
+            PreviousWeekParticipationRecord.participation_type.in_(["PUBLIC", "VIRTUAL"])
+        ).all()
+        completed_map = {r[0]: True for r in latest_participation}
+    else:
+        completed_map = {}
 
     for did, d in dept_map.items():
         stats_rows = dept_stats.get(did, [])

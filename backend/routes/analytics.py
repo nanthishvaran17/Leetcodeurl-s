@@ -277,7 +277,7 @@ def get_analytics_compare_students(
         easy_solved = stats.easy_solved if stats and stats.easy_solved is not None else 0
         medium_solved = stats.medium_solved if stats and stats.medium_solved is not None else 0
         hard_solved = stats.hard_solved if stats and stats.hard_solved is not None else 0
-        contest_rating = stats.contest_rating if stats else None
+        contest_rating = int(round(stats.contest_rating)) if (stats and stats.contest_rating is not None) else None
 
         if total_solved >= 300 or (contest_rating and contest_rating >= 1600):
             trajectory = "High Performance Growth"

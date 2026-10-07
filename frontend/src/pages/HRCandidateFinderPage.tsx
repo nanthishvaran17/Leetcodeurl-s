@@ -5,7 +5,7 @@ import {
   Trophy, TrendingUp, TrendingDown, Minus,
   FileSpreadsheet, FileText, AlertTriangle, CheckCircle2,
   Brain, Star, Award, Users, Download, ExternalLink,
-  BarChart2, Target, Zap, Code2, Shield, X, Check, Info, Sparkles, UserCheck, HelpCircle, Eye
+  BarChart2, Target, Zap, Code2, Shield, X, Check, Info, Sparkles, UserCheck, HelpCircle, Eye, Printer
 } from "lucide-react";
 import api from "../services/api";
 import { triggerDownload } from "../utils/mobileDownload";
@@ -1453,7 +1453,10 @@ export const HRCandidateFinderPage: React.FC = () => {
 
   // PDF Export
   const exportToPDF = () => {
-    window.print();
+    alert("To save this report as a PDF, please select 'Save as PDF' in the Destination dropdown of the print dialog that opens.");
+    setTimeout(() => {
+      window.print();
+    }, 200);
   };
 
   const selectClass = "w-full h-10 px-3.5 rounded-2xl border border-slate-200/90 dark:border-navy-700 bg-white/90 dark:bg-navy-950/90 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-blue-400 dark:hover:border-navy-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all cursor-pointer shadow-2xs backdrop-blur-sm";
@@ -2084,7 +2087,7 @@ export const HRCandidateFinderPage: React.FC = () => {
       <div className="hidden md:block bg-white dark:bg-navy-900 rounded-3xl border border-slate-200/90 dark:border-navy-700/80 shadow-xl shadow-slate-200/50 dark:shadow-none p-6 md:p-8 space-y-6 relative overflow-hidden backdrop-blur-md">
 
         {/* TOP ACCENT DECORATIVE LINE */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 via-purple-600 via-emerald-500 to-indigo-600 rounded-t-3xl -mt-6 -mx-6 md:-mx-8 mb-6" />
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 via-purple-600 via-emerald-500 to-indigo-600" />
 
         {/* WORKSPACE TOOLBAR */}
         <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-100 dark:border-navy-800">
@@ -2387,7 +2390,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                 <FileSpreadsheet className="w-4 h-4" /> Export Excel
               </button>
               <button onClick={exportToPDF} className="flex-1 sm:flex-initial flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-xs border border-slate-600 dark:border-navy-600 transition-all cursor-pointer">
-                <FileText className="w-4 h-4" /> Export PDF
+                <Printer className="w-4 h-4" /> Print PDF
               </button>
             </div>
 
@@ -2468,12 +2471,15 @@ export const HRCandidateFinderPage: React.FC = () => {
                       <tr key={c.id} onClick={() => setSelectedCandidate(c)} className="hover:bg-blue-50/40 dark:hover:bg-navy-800/50 transition-colors cursor-pointer group">
                         <td className="py-3.5 px-4 text-left font-bold text-slate-900 dark:text-white w-[17%]">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-xs shadow-xs flex-shrink-0 group-hover:scale-110 transition-transform">
+                            <div 
+                              className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-xs shadow-xs flex-shrink-0 group-hover:scale-110 transition-transform print:bg-blue-600 print:text-white print:border print:border-blue-700"
+                              style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' } as React.CSSProperties}
+                            >
                               {c.name.charAt(0)}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <div className="font-bold text-slate-900 dark:text-white text-xs leading-tight truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{c.name}</div>
-                              <div className="text-[10px] text-slate-400 font-mono leading-none truncate">{c.username}</div>
+                              <div className="font-bold text-slate-900 dark:text-white text-xs leading-tight truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors print:text-slate-900">{c.name}</div>
+                              <div className="text-[10px] text-slate-400 font-mono leading-none truncate print:text-slate-500">{c.username}</div>
                             </div>
                           </div>
                         </td>

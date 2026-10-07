@@ -114,7 +114,7 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       // Determine scope flags from user role
       const u = getUserSnapshot();
       const role = ((u?.role) || '').trim().toLowerCase();
-      const hodRoles = ['hod', 'department hod', 'department_hod'];
+      const hodRoles = ['hod', 'department hod', 'department_hod', 'placement coordinator'];
       const globalRoles = ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management'];
       setIsHodScope(hodRoles.includes(role));
       setIsGlobalAccess(globalRoles.includes(role));

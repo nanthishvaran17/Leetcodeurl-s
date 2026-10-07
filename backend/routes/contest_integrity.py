@@ -108,13 +108,13 @@ def get_cases(request: Request, status: Optional[str] = None, db: Session = Depe
             (Student.reg_no == clean_reg)
         ).first()
 
-        # Strict Role-based Mentee Scope
-        if assigned_ids is not None:
-            if not student or student.id not in assigned_ids:
-                continue
-        elif authorized_dept_ids is not None:
-            if not student or student.department_id not in authorized_dept_ids:
-                continue
+        # Strict Role-based Mentee Scope (Disabled as requested to show all cases)
+        # if assigned_ids is not None:
+        #     if not student or student.id not in assigned_ids:
+        #         continue
+        # elif authorized_dept_ids is not None:
+        #     if not student or student.department_id not in authorized_dept_ids:
+        #         continue
         
         student_name = student.name if student else (f"Student ({clean_reg})" if clean_reg else "Unknown")
         dept_id = student.department_id if student else None

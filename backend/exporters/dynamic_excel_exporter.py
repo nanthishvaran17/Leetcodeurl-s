@@ -161,9 +161,10 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     is_five_week = (report_type in ("FIVE_WEEK_PERFORMANCE_TREND", "FIVE_WEEK_TREND")) or ("c1_solved" in first_row)
     is_historical = (report_type == "HISTORICAL_CONTEST_INTELLIGENCE") or ("weeklyData" in first_row)
     is_single_contest = (
-        any(k in report_type for k in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "SUNDAY_LIVE", "SUNDAY_CONTEST", "WEEKLY_CONTEST"))
-        or any(k in first_row for k in ("q1_display", "q1_time"))
-    ) and not is_historical and not is_wow and not is_five_week and "COORDINATOR" not in report_type and "WEEKLY_PERFORMANCE" not in report_type and "WEEKLY_STUDENT_PERFORMANCE" not in report_type
+        any(k in report_type for k in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "SUNDAY_LIVE", "SUNDAY_CONTEST", "WEEKLY_CONTEST", "SINGLE_CONTEST", "SINGLE_SHEET"))
+        or any(k in first_row for k in ("q1_display", "q1_time", "contest_solved", "q1", "contest_easy"))
+        or (bool(session_date or contest_name) and report_type in ("12TH_TNEA_CUTOFF_ANALYSIS", "HOD_DEPARTMENT_INTELLIGENCE", "LEADERBOARD", "WEEKLY_STUDENT_PERFORMANCE"))
+    ) and not is_historical and not is_wow and not is_five_week and "COORDINATOR" not in report_type
 
     if is_wow:
         report_title = f"WEEK-ON-WEEK INTELLIGENCE — {prev_c_lbl.upper()} VS {curr_c_lbl.upper()}"
@@ -933,7 +934,11 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         elif h_lower in ("solved delta", "δ solved", "delta"):
             final_width = 11
         elif h_lower in ("trend", "trajectory"):
-            final_width = 12
+            final_width = 18
+        elif h_lower in ("attendance %", "attendance_rate", "attendance pct"):
+            final_width = 13
+        elif h_lower in ("5 w solved", "5-w solved", "solved_5w", "w5_solved"):
+            final_width = 11
         elif h_lower in ("global rank", "college rank", "rank"):
             final_width = 11.5
         elif h_lower in ("contest rating", "rating"):
@@ -1089,12 +1094,86 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         ws_top.column_dimensions["D"].width = 15
         ws_top.column_dimensions["E"].width = 15
 
-
     if report_type == "12TH_TNEA_CUTOFF_ANALYSIS":
-        if "Student Performance Report" in wb.sheetnames and len(wb.sheetnames) > 1:
-            del wb["Student Performance Report"]
-        if "Top Performers Leaderboard" in wb.sheetnames:
-            del wb["Top Performers Leaderboard"]
+        # Create separate sheets for each cutoff band
+        # We reuse the CUTOFF_BANDS logic from above
+        CUTOFF_BANDS_LOCAL = [
+            {"label": "190–200",       "min": 190.0, "max": 200.0},
+            {"label": "180–189",       "min": 180.0, "max": 189.99},
+            {"label": "170–179",       "min": 170.0, "max": 179.99},
+            {"label": "160–169",       "min": 160.0, "max": 169.99},
+            {"label": "150–159",       "min": 150.0, "max": 159.99},
+            {"label": "140–149",       "min": 140.0, "max": 149.99},
+            {"label": "130–139",       "min": 130.0, "max": 139.99},
+            {"label": "120–129",       "min": 120.0, "max": 129.99},
+            {"label": "110–119",       "min": 110.0, "max": 119.99},
+            {"label": "100–109",       "min": 100.0, "max": 109.99},
+            {"label": "90–99",         "min": 90.0,  "max": 99.99},
+            {"label": "80–89",         "min": 80.0,  "max": 89.99},
+            {"label": "70–79",         "min": 70.0,  "max": 79.99},
+            {"label": "Below 70",      "min": 0.0,   "max": 69.99},
+            {"label": "Not Recorded",  "min": None,  "max": None},
+        ]
+        
+        for band in CUTOFF_BANDS_LOCAL:
+            band_students = []
+            for r in rows:
+                c_val = r.get("twelfth_cutoff") or r.get("Twelfth Cutoff")
+                try:
+                    co = float(c_val) if c_val is not None and str(c_val).strip() not in ("—", "None", "") else None
+                except ValueError:
+                    co = None
+                    
+                if band["min"] is None or band["max"] is None:
+                    if co is None:
+                        band_students.append(r)
+                else:
+                    if co is not None and float(band["min"]) <= float(co) <= float(band["max"]):
+                        band_students.append(r)
+            
+            if len(band_students) > 0:
+                sheet_title = f"Band {band['label']}".replace("–", "-")[:31]
+                ws_band = wb.create_sheet(title=sheet_title)
+                ws_band.sheet_view.showGridLines = True
+                
+                band_hdr_start = apply_master_college_identity(
+                    ws=ws_band,
+                    report_title=f"STUDENTS - CUTOFF BAND {band['label']}",
+                    department=dept,
+                    year=year,
+                    session_date=session_date or "",
+                    total_roster=len(band_students),
+                    cols=6
+                )
+                
+                band_headers = ["S.No", "Register No", "Student Name", "Department", "Total Solved", "12th Cutoff"]
+                apply_master_table_headers(ws_band, header_row_idx=band_hdr_start, headers=band_headers)
+                
+                for idx, s_row in enumerate(band_students, 1):
+                    r_idx = band_hdr_start + idx
+                    co_val = s_row.get("twelfth_cutoff") or s_row.get("Twelfth Cutoff")
+                    if co_val is not None and str(co_val).strip() not in ("—", "None", "", "nan", "NaN"):
+                        co_val_display = round(_safe_float(co_val), 1)
+                    else:
+                        co_val_display = "—"
+                        
+                    vals = [
+                        idx,
+                        str(s_row.get("reg_no") or s_row.get("register_no") or "—"),
+                        str(s_row.get("name") or s_row.get("student_name") or "—"),
+                        str(s_row.get("dept") or s_row.get("department") or dept),
+                        int(s_row.get("solved") or s_row.get("total_solved") or 0),
+                        co_val_display
+                    ]
+                    apply_master_data_row(ws_band, row_idx=r_idx, row_values=vals, headers=band_headers, is_alt=(idx % 2 == 0))
+                    
+                ws_band.column_dimensions["A"].width = 8
+                ws_band.column_dimensions["B"].width = 20
+                ws_band.column_dimensions["C"].width = 35
+                ws_band.column_dimensions["D"].width = 15
+                ws_band.column_dimensions["E"].width = 15
+                ws_band.column_dimensions["F"].width = 15
+
 
     output = io.BytesIO()
     wb.save(output)

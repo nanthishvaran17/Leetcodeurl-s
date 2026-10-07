@@ -657,7 +657,7 @@ class User(Base):
     
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True, index=True)
     section_id = Column(Integer, ForeignKey("sections.id"), nullable=True, index=True)
-    academic_year = Column(String(20), nullable=True, index=True) # I Year, II Year, etc.
+    academic_year = Column(String(200), nullable=True, index=True) # I Year, II Year, etc. (Comma separated for multiple)
     mentoring_role = Column(String(50), nullable=True, index=True) # Faculty Mentor, Class Mentor, etc.
     
     require_password_change = Column(Boolean, default=False)

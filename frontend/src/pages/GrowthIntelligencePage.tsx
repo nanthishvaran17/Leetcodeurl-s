@@ -225,7 +225,8 @@ export const GrowthIntelligencePage: React.FC = () => {
         api.get(`/growth/improvers?period=${period}&limit=200&dept=${deptFilter}&year=${yearFilter}`),
         api.get(`/growth/college-delta?period=${period}&dept=${deptFilter}&year=${yearFilter}`)
       ]);
-      setImprovers(sortImprovers(impRes.data || []));
+      const filteredData = (impRes.data || []).filter((imp: Improver) => imp.delta_solved > 0);
+      setImprovers(sortImprovers(filteredData));
       setCollegeDelta(deltaRes.data || null);
     } catch (err) {
       console.error("Growth data fetch error:", err);
@@ -243,7 +244,8 @@ export const GrowthIntelligencePage: React.FC = () => {
         api.get(`/growth/improvers?period=${period}&limit=200&dept=${deptFilter}&year=${yearFilter}`),
         api.get(`/growth/college-delta?period=${period}&dept=${deptFilter}&year=${yearFilter}`)
       ]);
-      setImprovers(sortImprovers(impRes.data || []));
+      const filteredData = (impRes.data || []).filter((imp: Improver) => imp.delta_solved > 0);
+      setImprovers(sortImprovers(filteredData));
       setCollegeDelta(deltaRes.data || null);
       notify.success('Growth Telemetry Refreshed', 'Successfully synchronized 100% verified solve deltas and performance velocity.', { category: 'GROWTH ENGINE' });
     } catch (err) {
@@ -313,13 +315,13 @@ export const GrowthIntelligencePage: React.FC = () => {
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-5 sm:gap-6">
-          <div className="space-y-3.5 max-w-2xl">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6">
+          <div className="space-y-3.5 flex-1 max-w-2xl">
             <div className="flex items-start sm:items-center gap-3 sm:gap-3.5">
               <div className="p-2 sm:p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0 shadow-lg shadow-emerald-500/10 mt-1 sm:mt-0">
                 <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 stroke-[2.5]" />
               </div>
-              <h1 className="text-xl sm:text-3xl xl:text-4xl font-black tracking-tight text-white leading-tight">
+              <h1 className="text-xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
                 Growth Intelligence <span className="hidden sm:inline">&</span>
                 <br className="sm:hidden" />
                 <span className="sm:hidden text-emerald-400/80 mr-1.5">&</span>
@@ -333,11 +335,11 @@ export const GrowthIntelligencePage: React.FC = () => {
           </div>
 
           {/* Filters, Timeframe Selector Pills & Live Refresh Button */}
-          <div className="flex flex-col xl:flex-row flex-wrap items-stretch xl:items-center gap-2.5 sm:gap-3 w-full xl:w-auto mt-2 xl:mt-0">
+          <div className="flex flex-col 2xl:flex-row flex-wrap items-stretch lg:items-end 2xl:items-center justify-end gap-3 w-full lg:w-auto shrink-0 mt-2 lg:mt-0">
             
-            {/* Department & Academic Year Filters (2-Column Grid on Mobile for Compact Fitting) */}
-            <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 sm:gap-3 w-full xl:w-auto">
-              <div className="w-full lg:w-auto">
+            {/* Department & Academic Year Filters */}
+            <div className="flex flex-row items-center justify-end gap-2 sm:gap-3 w-full 2xl:w-auto">
+              <div className="flex-1 sm:flex-initial">
                 <GlobalFilter
                   options={departmentOptions}
                   value={deptFilter}
@@ -348,8 +350,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                   variant="dark"
                 />
               </div>
-
-              <div className="w-full lg:w-auto">
+              <div className="flex-1 sm:flex-initial">
                 <GlobalFilter
                   options={yearOptions}
                   value={yearFilter}
@@ -363,8 +364,8 @@ export const GrowthIntelligencePage: React.FC = () => {
             </div>
 
             {/* Timeframe Selector Pills & Sleek Inline Refresh Button */}
-            <div className="flex items-center gap-2 w-full xl:w-auto">
-              <div className="flex-1 sm:flex-initial flex items-center bg-navy-900/90 p-1 rounded-xl sm:rounded-2xl border border-slate-700/80 shadow-inner backdrop-blur-md overflow-x-auto hide-scrollbar">
+            <div className="flex items-center justify-end gap-2 w-full 2xl:w-auto">
+              <div className="flex-1 sm:flex-initial flex items-center justify-between bg-navy-900/90 p-1 rounded-xl sm:rounded-2xl border border-slate-700/80 shadow-inner backdrop-blur-md overflow-x-auto hide-scrollbar">
                 {(['today', '7d', '30d', 'all'] as const).map((p) => (
                   <button
                     key={p}
@@ -413,7 +414,7 @@ export const GrowthIntelligencePage: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            +{collegeDelta?.delta_total ?? 0}
+            {collegeDelta?.delta_total ?? 0}
           </div>
           <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">Problems solved in selected period</p>
         </div>
@@ -426,7 +427,7 @@ export const GrowthIntelligencePage: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">
-            +{collegeDelta?.easy_solved ?? 0}
+            {collegeDelta?.easy_solved ?? 0}
           </div>
           <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">Foundation skill building</p>
         </div>
@@ -439,7 +440,7 @@ export const GrowthIntelligencePage: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400">
-            +{collegeDelta?.medium_solved ?? 0}
+            {collegeDelta?.medium_solved ?? 0}
           </div>
           <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">Interview readiness problems</p>
         </div>
@@ -452,7 +453,7 @@ export const GrowthIntelligencePage: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl sm:text-3xl font-black text-rose-600 dark:text-rose-400">
-            +{collegeDelta?.hard_solved ?? 0}
+            {collegeDelta?.hard_solved ?? 0}
           </div>
           <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">Advanced DSA mastery</p>
         </div>
@@ -584,7 +585,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                       </div>
 
                       <span className="shrink-0 px-2.5 py-1 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-[11px]">
-                        {imp.department_code} • {imp.year_level} Yr
+                        {imp.department_code} • {imp.year_level}{!imp.year_level.toLowerCase().includes('year') ? ' Year' : ''}
                       </span>
                     </div>
 
@@ -599,14 +600,16 @@ export const GrowthIntelligencePage: React.FC = () => {
                       <div>
                         <div className="text-[10px] uppercase font-black text-emerald-600 dark:text-emerald-400">Growth (+Delta)</div>
                         <div className="mt-0.5">
-                          {imp.delta_solved === imp.total_solved ? (
-                            <span className="text-slate-500 font-bold text-xs">—</span>
-                          ) : imp.delta_solved > 0 ? (
+                          {imp.delta_solved > 0 ? (
                             <span className="font-bold text-emerald-600 dark:text-emerald-400 text-xs">
                               +{imp.delta_solved}
                             </span>
+                          ) : imp.delta_solved < 0 ? (
+                            <span className="font-bold text-rose-600 dark:text-rose-400 text-xs">
+                              {imp.delta_solved}
+                            </span>
                           ) : (
-                            <span className="font-bold text-slate-400 text-xs">—</span>
+                            <span className="font-bold text-slate-500 text-xs">0</span>
                           )}
                         </div>
                       </div>
@@ -799,7 +802,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                           {/* Department / Year Pill */}
                           <td className="py-4 px-4 text-center">
                             <span className="inline-block px-3 py-1 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-xs">
-                              {imp.department_code} • {imp.year_level} Yr
+                              {imp.department_code} • {imp.year_level}{!imp.year_level.toLowerCase().includes('year') ? ' Year' : ''}
                             </span>
                           </td>
 
@@ -810,11 +813,7 @@ export const GrowthIntelligencePage: React.FC = () => {
 
                           {/* Growth Delta */}
                           <td className="py-4 px-4 text-center">
-                            {imp.delta_solved === imp.total_solved ? (
-                              <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-slate-50 dark:bg-navy-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-navy-700 font-black text-sm shadow-sm" title="Initial Baseline">
-                                <span>—</span>
-                              </span>
-                            ) : imp.delta_solved > 0 ? (
+                            {imp.delta_solved > 0 ? (
                               <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-black text-sm shadow-sm">
                                 <span>+{imp.delta_solved}</span>
                               </span>
@@ -824,7 +823,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                               </span>
                             ) : (
                               <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-navy-800 font-black text-sm shadow-sm">
-                                <span>—</span>
+                                <span>0</span>
                               </span>
                             )}
                           </td>
@@ -891,7 +890,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                         {imp.reg_no}
                                       </span>
                                       <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300">
-                                        {imp.department_code} • {imp.year_level} Yr
+                                        {imp.department_code} • {imp.year_level}{!imp.year_level.toLowerCase().includes('year') ? ' Year' : ''}
                                       </span>
                                     </div>
                                     <p className="text-xs text-slate-500 font-semibold">

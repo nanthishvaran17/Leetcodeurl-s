@@ -13,7 +13,7 @@ import { studentLiveStore, useStudentStoreVersion } from '../../stores/studentLi
 
 interface CreateStaffModalProps {
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (staff?: any) => void;
   departments: any[];
   staffList: any[];
   notify: any;
@@ -154,6 +154,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     { value: 'Faculty Mentor', label: 'Proctor', badge: 'PRC', sublabel: 'Student mentoring & intervention access', icon: GraduationCap },
     { value: 'Staff Mentor', label: 'Staff Mentor', badge: 'STF', sublabel: 'Student support & academic guidance', icon: User },
     { value: 'Department HOD', label: 'Department HOD', badge: 'HOD', sublabel: 'Department-level academic oversight', icon: Building2 },
+    { value: 'Placement Coordinator', label: 'Placement Coordinator', badge: 'PLC', sublabel: 'Placement & recruitment oversight', icon: Briefcase },
     { value: 'Administrator', label: 'Administrator', badge: 'ADM', sublabel: 'Institutional administration & management', icon: Key },
     { value: 'Super Admin', label: 'Super Admin', badge: 'S-ADM', sublabel: 'Full system control & root access', icon: Shield }
   ];
@@ -165,6 +166,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
       'Faculty Mentor': { icon: GraduationCap, color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-50 dark:bg-indigo-500/10', borderColor: 'border-indigo-200 dark:border-indigo-500/30', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30', desc: 'Student mentoring & intervention access' },
       'Staff Mentor': { icon: User, color: 'text-brand-600 dark:text-brand-400', bgColor: 'bg-brand-50 dark:bg-brand-500/10', borderColor: 'border-brand-200 dark:border-brand-500/30', badgeColor: 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border-brand-200 dark:border-brand-500/30', desc: 'Student support & academic guidance' },
       'Department HOD': { icon: Building2, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-50 dark:bg-purple-500/10', borderColor: 'border-purple-200 dark:border-purple-500/30', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border-purple-200 dark:border-purple-500/30', desc: 'Department-level academic oversight' },
+      'Placement Coordinator': { icon: Briefcase, color: 'text-teal-600 dark:text-teal-400', bgColor: 'bg-teal-50 dark:bg-teal-500/10', borderColor: 'border-teal-200 dark:border-teal-500/30', badgeColor: 'bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300 border-teal-200 dark:border-teal-500/30', desc: 'Placement & recruitment oversight' },
       'Administrator': { icon: Key, color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-50 dark:bg-amber-500/10', borderColor: 'border-amber-200 dark:border-amber-500/30', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-200 dark:border-amber-500/30', desc: 'Institutional administration & management' },
       'Super Admin': { icon: Shield, color: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-50 dark:bg-rose-500/10', borderColor: 'border-rose-200 dark:border-rose-500/30', badgeColor: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border-rose-200 dark:border-rose-500/30', desc: 'Full system control & root access' },
     };
@@ -187,7 +189,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     role: 'Faculty Mentor',
     department_id: departments.length > 0 ? String(departments[0].id) : '1',
     hod_department_ids: [] as string[],
-    academic_year: '',
+    academic_year_ids: [] as string[],
     designation: '',
     date_of_birth: '',
     require_password_change: true,
@@ -207,14 +209,17 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [roleOpen, setRoleOpen] = useState(false);
   const [hodDeptOpen, setHodDeptOpen] = useState(false);
+  const [academicYearOpen, setAcademicYearOpen] = useState(false);
   const roleRef = useRef<HTMLDivElement>(null);
   const hodDeptRef = useRef<HTMLDivElement>(null);
+  const academicYearRef = useRef<HTMLDivElement>(null);
   const formContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (roleRef.current && !roleRef.current.contains(e.target as Node)) setRoleOpen(false);
       if (hodDeptRef.current && !hodDeptRef.current.contains(e.target as Node)) setHodDeptOpen(false);
+      if (academicYearRef.current && !academicYearRef.current.contains(e.target as Node)) setAcademicYearOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -360,7 +365,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   const validateCurrentStep = (step: number): boolean => {
     const errors: Record<string, string> = {};
     if (step === 1) {
-      if (['Faculty Mentor', 'Staff Mentor'].includes(formData.role) && !formData.academic_year) {
+      if (['Faculty Mentor', 'Staff Mentor'].includes(formData.role) && (!formData.academic_year_ids || formData.academic_year_ids.length === 0)) {
         errors.academic_year = 'Academic Year is required for Mentors';
       }
     } else if (step === 2) {
@@ -412,23 +417,23 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
     // Validate all required steps before submit
     const errors: Record<string, string> = {};
-    if (!formData.full_name.trim()) errors.full_name = 'Required';
+    if (!formData.full_name.trim()) errors.full_name = 'Full Name is required';
     if (!formData.username.trim()) {
-      errors.username = 'Required';
+      errors.username = 'Username is required';
     } else {
       const uLower = formData.username.trim().toLowerCase();
       const exists = (staffList || []).some((s: any) => (s.username || '').toLowerCase().trim() === uLower);
       if (exists) {
-        errors.username = `Username '@${formData.username.trim()}' is already taken by another staff member.`;
+        errors.username = `Username '@${formData.username.trim()}' is already taken.`;
       }
     }
     if (!formData.email.trim() || !formData.email.includes('@') || !formData.email.includes('.')) errors.email = 'Valid email address required';
-    if (!formData.phone_number.trim()) errors.phone_number = 'Required';
-    if (!formData.institutional_id.trim()) errors.institutional_id = 'Required';
-    if (!formData.date_of_birth.trim()) errors.date_of_birth = 'Required';
+    if (!formData.phone_number.trim()) errors.phone_number = 'Phone Number is required';
+    if (!formData.institutional_id.trim()) errors.institutional_id = 'Institutional ID is required';
+    if (!formData.date_of_birth.trim()) errors.date_of_birth = 'Date of Birth is required';
     else if (!isValidDate(formData.date_of_birth)) errors.date_of_birth = 'Invalid calendar date';
-    if (['Faculty Mentor', 'Staff Mentor'].includes(formData.role) && !formData.academic_year) {
-      errors.academic_year = 'Required for Mentors';
+    if (['Faculty Mentor', 'Staff Mentor'].includes(formData.role) && (!formData.academic_year_ids || formData.academic_year_ids.length === 0)) {
+      errors.academic_year = 'Academic Year is required for Mentors';
     }
     if (!allReqsMet) errors.password = 'Password does not meet requirements';
     if (formData.password && !passwordsMatch) errors.confirm_password = 'Passwords do not match';
@@ -470,8 +475,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
         password: formData.password?.trim() || undefined,
         role: formData.role,
         department_id: deptIdToSend,
-        hod_department_ids: formData.role === 'Department HOD' && formData.hod_department_ids.length > 0 ? formData.hod_department_ids.map(id => parseInt(id, 10)) : undefined,
-        academic_year: isGlobalRole ? 'All Years' : (formData.academic_year || undefined),
+        hod_department_ids: formData.hod_department_ids.length > 0 && !isGlobalAdmin ? formData.hod_department_ids.map(id => parseInt(id, 10)) : undefined,
+        academic_year: isGlobalRole ? 'All Years' : (formData.academic_year_ids.length > 0 ? formData.academic_year_ids.join(', ') : undefined),
         designation: formData.designation || undefined,
         date_of_birth: formattedDOB,
         is_active: formData.account_status === 'Active',
@@ -486,7 +491,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
       setCreatedStaffSummary(createdStaff);
       notify.success(`Staff account '${formData.username}' created successfully!`, '', { category: 'ADMIN' });
-      onSuccess();
+      onSuccess(createdStaff);
     } catch (err: any) {
       console.error('Failed to create staff account:', err);
       const safeErrMsg = err.response?.data?.detail || 'Unable to complete staff account provisioning. Please try again.';
@@ -705,7 +710,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                   <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <h4 className="text-xs font-black uppercase tracking-wider text-rose-950 dark:text-rose-100">
-                      Action Required: Please Fix Highlighted Errors
+                      Action Required: Please Fix {Object.keys(formErrors).length} {Object.keys(formErrors).length === 1 ? 'Error' : 'Errors'}
                     </h4>
                     <ul className="text-xs font-bold mt-2 space-y-1.5 text-rose-800 dark:text-rose-300">
                       {Object.entries(formErrors).map(([key, msg]) => (
@@ -823,7 +828,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                               <span className="text-xs font-black text-brand-900 dark:text-brand-200">All Departments (Global Scope)</span>
                             </div>
                           </div>
-                        ) : formData.role === 'Department HOD' ? (
+                        ) : (
                           <div className="relative">
                             <button
                               type="button"
@@ -881,34 +886,74 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                               </div>
                             )}
                           </div>
-                        ) : (
-                          <CustomDropdown
-                            options={departmentOptions}
-                            label=""
-                            value={formData.department_id}
-                            onChange={(val) => setFormData({ ...formData, department_id: val, hod_department_ids: [val] })}
-                            placeholder="Select Department..."
-                            icon={Building2}
-                          />
                         )}
                       </div>
 
                       {/* Academic Year */}
-                      <div className="space-y-1.5">
+                      <div className="space-y-1.5" ref={academicYearRef}>
                         <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1">Academic Year *</label>
                         {isGlobalRole ? (
                           <div className="w-full min-h-[48px] flex items-center px-4 py-2.5 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-navy-800/40">
                             <span className="text-xs font-black text-slate-800 dark:text-slate-200">All Years (Global Access)</span>
                           </div>
                         ) : (
-                          <CustomDropdown
-                            options={academicYearOptions}
-                            label=""
-                            value={formData.academic_year}
-                            onChange={(val) => setFormData({ ...formData, academic_year: val })}
-                            placeholder="Select Academic Year..."
-                            icon={GraduationCap}
-                          />
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => setAcademicYearOpen(!academicYearOpen)}
+                              className={`flex items-center justify-between flex-nowrap space-x-2 transition-all duration-200 text-left cursor-pointer group shadow-sm box-border w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-white dark:bg-slate-800/90 border-slate-300 dark:border-slate-700 hover:border-brand-500/60 ${academicYearOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10' : ''}`}
+                            >
+                              <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden pr-1.5">
+                                <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-colors ${
+                                  academicYearOpen
+                                    ? 'bg-brand-50 dark:bg-brand-950/80 border-brand-300 text-brand-600 dark:text-brand-400'
+                                    : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 group-hover:text-brand-600 group-hover:border-brand-500/50'
+                                }`}>
+                                  <GraduationCap className="w-3.5 h-3.5 shrink-0" />
+                                </div>
+                                <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden">
+                                  {formData.academic_year_ids.length > 0 && (
+                                    <span className="shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border bg-brand-100 dark:bg-brand-900/80 text-brand-900 dark:text-brand-200 border-brand-300 dark:border-brand-800">
+                                      {formData.academic_year_ids.length}
+                                    </span>
+                                  )}
+                                  <span className={`text-xs font-black truncate block min-w-0 flex-1 ${formData.academic_year_ids.length > 0 ? 'text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'}`}>
+                                    {formData.academic_year_ids.length === 0 ? 'Select Academic Year...' : `Selected`}
+                                  </span>
+                                </div>
+                              </div>
+                              <ChevronDown className={`w-4 h-4 shrink-0 text-slate-700 dark:text-slate-300 transition-transform duration-200 ${academicYearOpen ? 'rotate-180 text-brand-600 dark:text-brand-400' : 'group-hover:text-slate-900 dark:group-hover:text-white'}`} />
+                            </button>
+                            {academicYearOpen && (
+                              <div className="absolute left-0 right-0 z-[9999] mt-2 max-h-64 overflow-y-auto rounded-2xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl p-1.5 space-y-0.5">
+                                {academicYearOptions.filter(d => d.value !== '').map(opt => {
+                                  const isSel = formData.academic_year_ids.includes(opt.value);
+                                  return (
+                                    <button
+                                      key={opt.value}
+                                      type="button"
+                                      onClick={() => {
+                                        const newIds = isSel 
+                                          ? formData.academic_year_ids.filter(id => id !== opt.value)
+                                          : [...formData.academic_year_ids, opt.value];
+                                        setFormData({ ...formData, academic_year_ids: newIds });
+                                      }}
+                                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer ${isSel ? `bg-brand-50 dark:bg-brand-500/10` : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                    >
+                                      <div className="flex items-center space-x-2 flex-1 pr-2">
+                                        <span className={`text-[11px] leading-snug font-black whitespace-normal break-words ${isSel ? 'text-brand-700 dark:text-brand-300' : 'text-slate-700 dark:text-slate-300'}`}>
+                                          {opt.label}
+                                        </span>
+                                      </div>
+                                      <div className={`w-4 h-4 shrink-0 rounded flex items-center justify-center border transition-colors ${isSel ? 'bg-brand-500 border-brand-600 text-white' : 'border-slate-300 dark:border-slate-600'}`}>
+                                        {isSel && <Check className="w-3 h-3 stroke-[3]" />}
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
                         )}
                         {formErrors.academic_year && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.academic_year}</p>}
                       </div>
@@ -1480,6 +1525,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                 )}
 
               </form>
+              {/* Force blank space at the bottom so content doesn't stick to the fixed footer */}
+              <div className="h-32 sm:h-40 w-full shrink-0" aria-hidden="true" />
             </div>
           </div>
         </div>

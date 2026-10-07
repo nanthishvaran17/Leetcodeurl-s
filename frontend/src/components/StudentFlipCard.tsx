@@ -328,10 +328,8 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                     <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-100 tracking-wider mb-0.5">Contest Rank</span>
                     <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 truncate max-w-full">
                       {(() => {
-                        const status = (student as any).contest_status || 'NOT_ATTENDED';
-                        const isAttended = status === 'PUBLIC_ATTENDED' || status === 'PUBLIC' || status === 'ATTENDED' || status === 'VIRTUAL_ATTENDED' || status === 'VIRTUAL';
-                        const rawRank = student.stats?.contest_global_ranking ?? (student as any).contest_global_ranking;
-                        if (!isAttended || !rawRank || rawRank === 50000) return '—';
+                        const rawRank = student.stats?.contest_global_ranking ?? (student as any).contest_global_ranking ?? (student as any).global_rank ?? (student as any).contest_rank;
+                        if (!rawRank || Number(rawRank) <= 0 || Number(rawRank) === 50000) return '—';
                         return `#${Number(rawRank).toLocaleString('en-US')}`;
                       })()}
                     </span>
@@ -340,8 +338,8 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                     <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-100 tracking-wider mb-0.5">Global Rank</span>
                     <span className="text-sm font-black text-slate-900 dark:text-slate-100 truncate max-w-full">
                       {(() => {
-                        const rawProfileRank = student.stats?.public_profile_ranking ?? (student as any).public_profile_ranking;
-                        if (!rawProfileRank || rawProfileRank >= 5000000 || rawProfileRank <= 0) return '—';
+                        const rawProfileRank = student.stats?.public_profile_ranking ?? (student as any).public_profile_ranking ?? (student as any).profile_rank ?? (student as any).ranking;
+                        if (!rawProfileRank || Number(rawProfileRank) >= 5000000 || Number(rawProfileRank) <= 0) return '—';
                         return `#${Number(rawProfileRank).toLocaleString('en-US')}`;
                       })()}
                     </span>

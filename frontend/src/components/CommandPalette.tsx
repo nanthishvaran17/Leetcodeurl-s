@@ -77,7 +77,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   const roleClean = (user?.role || '').trim().toLowerCase();
   const isAdmin = ['admin', 'administrator', 'super_admin', 'super admin'].includes(roleClean);
-  const isHod = ['hod', 'department hod', 'department_hod'].includes(roleClean) || isAdmin;
+  const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean) || isAdmin;
   const isFacultyOrStaff = ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor'].includes(roleClean) || isHod;
 
   // Debounced Student API Search

@@ -291,54 +291,71 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
           </div>
         </div>
 
-        {/* Navigation Tabs - Grid 3 cols (100% width fit on mobile, ZERO horizontal scroll) */}
-        <div className="grid grid-cols-3 border-b border-slate-200 dark:border-navy-800 bg-slate-50 dark:bg-navy-950 px-2 sm:px-6 text-xs font-bold w-full select-none">
-          <button
-            type="button"
-            onClick={() => setActiveTab('overview')}
-            className={`py-3 border-b-2 flex items-center justify-center space-x-1 sm:space-x-2 transition-all cursor-pointer text-center ${
-              activeTab === 'overview'
-                ? 'border-brand-500 text-brand-600 dark:text-brand-400 font-black'
-                : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold'
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-            <span className="text-[11px] sm:text-xs truncate">
-              <span className="sm:hidden">Coding</span>
-              <span className="hidden sm:inline">Coding Performance</span>
-            </span>
-          </button>
+        {/* Modern Animated Navigation Tabs */}
+        <div className="relative px-3 sm:px-6 py-3 bg-slate-50/80 dark:bg-navy-950/80 backdrop-blur-md border-b border-slate-200/50 dark:border-navy-800/50 w-full select-none">
+          <div className="relative flex p-1 bg-slate-200/50 dark:bg-navy-900/50 rounded-2xl w-full">
+            {/* Background pill indicator (CSS-only animation) */}
+            <div 
+              className="absolute inset-y-1 bg-white dark:bg-navy-800 rounded-xl shadow-sm transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
+              style={{
+                width: 'calc(33.333% - 5.33px)',
+                left: activeTab === 'overview' ? '4px' : activeTab === 'notes' ? 'calc(33.333% + 1.33px)' : 'calc(66.666% - 1.33px)'
+              }}
+            />
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('notes')}
-            className={`py-3 border-b-2 flex items-center justify-center space-x-1 sm:space-x-2 transition-all cursor-pointer text-center ${
-              activeTab === 'notes'
-                ? 'border-brand-500 text-brand-600 dark:text-brand-400 font-black'
-                : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold'
-            }`}
-          >
-            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-            <span className="text-[11px] sm:text-xs truncate">
-              <span className="sm:hidden">Notes ({notes.length})</span>
-              <span className="hidden sm:inline">Private Notes ({notes.length})</span>
-            </span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('overview')}
+              className={`relative z-10 flex-1 py-2.5 flex items-center justify-center space-x-1.5 sm:space-x-2 transition-all duration-200 cursor-pointer text-center rounded-xl ${
+                activeTab === 'overview'
+                  ? 'text-brand-600 dark:text-brand-400 font-black'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold'
+              }`}
+            >
+              <Activity className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform ${activeTab === 'overview' ? 'scale-110' : ''}`} />
+              <span className="text-[11px] sm:text-xs tracking-tight truncate">
+                <span className="sm:hidden">Coding</span>
+                <span className="hidden sm:inline">Coding Performance</span>
+              </span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('followups')}
-            className={`py-3 border-b-2 flex items-center justify-center space-x-1 sm:space-x-2 transition-all cursor-pointer text-center ${
-              activeTab === 'followups'
-                ? 'border-brand-500 text-brand-600 dark:text-brand-400 font-black'
-                : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold'
-            }`}
-          >
-            <CheckSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-            <span className="text-[11px] sm:text-xs truncate">
-              Follow-Ups ({followUps.length})
-            </span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('notes')}
+              className={`relative z-10 flex-1 py-2.5 flex items-center justify-center space-x-1.5 sm:space-x-2 transition-all duration-200 cursor-pointer text-center rounded-xl ${
+                activeTab === 'notes'
+                  ? 'text-brand-600 dark:text-brand-400 font-black'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold'
+              }`}
+            >
+              <FileText className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform ${activeTab === 'notes' ? 'scale-110' : ''}`} />
+              <span className="text-[11px] sm:text-xs tracking-tight truncate flex items-center gap-1.5">
+                <span className="sm:hidden">Notes</span>
+                <span className="hidden sm:inline">Private Notes</span>
+                <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black leading-none ${activeTab === 'notes' ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300' : 'bg-slate-200 text-slate-500 dark:bg-navy-800 dark:text-slate-400'}`}>
+                  {notes.length}
+                </span>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('followups')}
+              className={`relative z-10 flex-1 py-2.5 flex items-center justify-center space-x-1.5 sm:space-x-2 transition-all duration-200 cursor-pointer text-center rounded-xl ${
+                activeTab === 'followups'
+                  ? 'text-brand-600 dark:text-brand-400 font-black'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold'
+              }`}
+            >
+              <CheckSquare className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform ${activeTab === 'followups' ? 'scale-110' : ''}`} />
+              <span className="text-[11px] sm:text-xs tracking-tight truncate flex items-center gap-1.5">
+                <span>Follow-Ups</span>
+                <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black leading-none ${activeTab === 'followups' ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300' : 'bg-slate-200 text-slate-500 dark:bg-navy-800 dark:text-slate-400'}`}>
+                  {followUps.length}
+                </span>
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Tab Contents */}

@@ -907,7 +907,7 @@ def create_staff_user(
         phone_number=payload.phone_number.strip(),
         designation=payload.designation.strip() if payload.designation else None,
         hashed_password=get_password_hash(raw_pwd),
-        role=payload.role if payload.role in ["Super Admin", "Administrator", "Department HOD", "Staff Mentor", "Faculty Mentor", "Admin", "Faculty", "Staff", "HOD", "Viewer"] else "Faculty Mentor",
+        role=payload.role if payload.role in ["Super Admin", "Administrator", "Department HOD", "Placement Coordinator", "Staff Mentor", "Faculty Mentor", "Admin", "Faculty", "Staff", "HOD", "Viewer"] else "Faculty Mentor",
         department_id=payload.department_id,
         section_id=payload.section_id,
         academic_year=payload.academic_year.strip() if payload.academic_year else None,
@@ -922,7 +922,7 @@ def create_staff_user(
     db.commit()
     db.refresh(staff_user)
 
-    if payload.role in ["HOD", "Department HOD"] and payload.hod_department_ids:
+    if payload.role in ["HOD", "Department HOD", "Placement Coordinator"] and payload.hod_department_ids:
         from backend.models import HODDepartmentAllocation
         for dept_id in payload.hod_department_ids:
             alloc = HODDepartmentAllocation(
@@ -1106,7 +1106,7 @@ def update_staff_user(
 
     if payload.role is not None and payload.role.strip():
         r_cleaned = payload.role.strip()
-        valid_roles = {"super admin": "Super Admin", "administrator": "Administrator", "department hod": "Department HOD", "staff mentor": "Staff Mentor", "faculty mentor": "Faculty Mentor", "admin": "Admin", "faculty": "Faculty", "staff": "Staff", "hod": "HOD", "viewer": "Viewer"}
+        valid_roles = {"super admin": "Super Admin", "administrator": "Administrator", "department hod": "Department HOD", "placement coordinator": "Placement Coordinator", "staff mentor": "Staff Mentor", "faculty mentor": "Faculty Mentor", "admin": "Admin", "faculty": "Faculty", "staff": "Staff", "hod": "HOD", "viewer": "Viewer"}
         matched_role = valid_roles.get(r_cleaned.lower(), r_cleaned)
         if staff_user.role != matched_role:
             if is_protected_super_admin(staff_user) and matched_role.lower() not in ["super admin", "admin", "administrator"]:
@@ -1155,7 +1155,7 @@ def update_staff_user(
     db.refresh(staff_user)
 
     if payload.hod_department_ids is not None:
-        if payload.role in ["HOD", "Department HOD"] or (not payload.role and staff_user.role in ["HOD", "Department HOD"]):
+        if payload.role in ["HOD", "Department HOD", "Placement Coordinator"] or (not payload.role and staff_user.role in ["HOD", "Department HOD", "Placement Coordinator"]):
             from backend.models import HODDepartmentAllocation
             db.query(HODDepartmentAllocation).filter(HODDepartmentAllocation.user_id == staff_user.id).delete()
             for dept_id in payload.hod_department_ids:

@@ -36,9 +36,13 @@ def _growth_cutoff(period: str) -> datetime.datetime:
         start_of_today_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
         return start_of_today_ist.astimezone(UTC_TZ)
     if period == "7d":
-        return now_utc - datetime.timedelta(days=7)
+        now_ist = datetime.datetime.now(IST_TZ)
+        start_of_7d = now_ist.replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=7)
+        return start_of_7d.astimezone(UTC_TZ)
     if period == "30d":
-        return now_utc - datetime.timedelta(days=30)
+        now_ist = datetime.datetime.now(IST_TZ)
+        start_of_30d = now_ist.replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=30)
+        return start_of_30d.astimezone(UTC_TZ)
     return datetime.datetime(2020, 1, 1, tzinfo=UTC_TZ)
 
 
@@ -128,30 +132,65 @@ def _derived_growth(db: Session, students: List[Student], cutoff: datetime.datet
             }
             continue
 
-        # Find baseline snapshot at or closest before cutoff
-        # Ensure cutoff is timezone-aware
+        # Find baseline snapshot closest to cutoff (must be AT or BEFORE the cutoff to accurately represent the start of the period)
         baseline_snap: Optional[StudentStatSnapshot] = None
         for snap in snaps:
             c_at = snap.captured_at
             if c_at.tzinfo is None:
                 c_at = c_at.replace(tzinfo=UTC_TZ)
+            
             if c_at <= cutoff:
                 baseline_snap = snap
             else:
+                # Snaps are ordered by time ascending, so the first one > cutoff means we found our closest <= cutoff
                 break
         
-        # If no snapshot existed before cutoff, take the earliest snapshot available
+        # Check if the baseline snapshot is too old to be considered for this period
+        # This prevents a snapshot from 3 months ago being used as the baseline for "Today"
+        if period == "today":
+            max_age_days = 2.0
+        elif period == "7d":
+            max_age_days = 5.0
+        elif period == "30d":
+            max_age_days = 15.0
+        else:
+            max_age_days = 365.0
+
+        if baseline_snap is not None:
+            b_at = baseline_snap.captured_at
+            if b_at.tzinfo is None:
+                b_at = b_at.replace(tzinfo=UTC_TZ)
+            age_days = (cutoff - b_at).total_seconds() / 86400.0
+            if age_days > max_age_days:
+                baseline_snap = None
+
         if baseline_snap is None:
-            baseline_snap = snaps[0]
+            # If there are no snapshots before the cutoff (or they are too old), 
+            # use the earliest available snapshot AFTER the cutoff
+            for snap in snaps:
+                c_at = snap.captured_at
+                if c_at.tzinfo is None:
+                    c_at = c_at.replace(tzinfo=UTC_TZ)
+                if c_at >= cutoff:
+                    baseline_snap = snap
+                    break
 
         latest_snap = snaps[-1]
 
         # Delta calculation between latest and baseline
-        b_tot = baseline_snap.total_solved or 0
-        b_easy = baseline_snap.easy_solved or 0
-        b_med = baseline_snap.medium_solved or 0
-        b_hard = baseline_snap.hard_solved or 0
-        b_rat = baseline_snap.contest_rating or cur_rat
+        if baseline_snap is None:
+            # No valid baseline for this period means no known growth
+            b_tot = cur_tot
+            b_easy = cur_easy
+            b_med = cur_med
+            b_hard = cur_hard
+            b_rat = cur_rat
+        else:
+            b_tot = baseline_snap.total_solved or 0
+            b_easy = baseline_snap.easy_solved or 0
+            b_med = baseline_snap.medium_solved or 0
+            b_hard = baseline_snap.hard_solved or 0
+            b_rat = baseline_snap.contest_rating or cur_rat
 
         l_tot = max(cur_tot, latest_snap.total_solved or 0)
         l_easy = max(cur_easy, latest_snap.easy_solved or 0)
@@ -164,11 +203,16 @@ def _derived_growth(db: Session, students: List[Student], cutoff: datetime.datet
         d_hard = max(0, l_hard - b_hard)
         d_rat = round(l_rat - b_rat, 1)  # type: ignore
 
-        # In case delta is 0 but snapshots indicate interim progress
+        # In case delta is 0 but snapshots indicate interim progress within the period
         if max(0, l_tot - b_tot) == 0 and len(snaps) > 1 and period in ("7d", "30d"):
-            d_easy = sum(max(0, (snaps[i].easy_solved or 0) - (snaps[i-1].easy_solved or 0)) for i in range(1, len(snaps)))
-            d_med = sum(max(0, (snaps[i].medium_solved or 0) - (snaps[i-1].medium_solved or 0)) for i in range(1, len(snaps)))
-            d_hard = sum(max(0, (snaps[i].hard_solved or 0) - (snaps[i-1].hard_solved or 0)) for i in range(1, len(snaps)))
+            period_snaps = [s for s in snaps if (s.captured_at.replace(tzinfo=UTC_TZ) if s.captured_at.tzinfo is None else s.captured_at) >= cutoff]
+            if baseline_snap and baseline_snap not in period_snaps:
+                period_snaps = [baseline_snap] + period_snaps
+            
+            if len(period_snaps) > 1:
+                d_easy = sum(max(0, (period_snaps[i].easy_solved or 0) - (period_snaps[i-1].easy_solved or 0)) for i in range(1, len(period_snaps)))
+                d_med = sum(max(0, (period_snaps[i].medium_solved or 0) - (period_snaps[i-1].medium_solved or 0)) for i in range(1, len(period_snaps)))
+                d_hard = sum(max(0, (period_snaps[i].hard_solved or 0) - (period_snaps[i-1].hard_solved or 0)) for i in range(1, len(period_snaps)))
 
         # Enforce exact math match so the UI numbers add up perfectly
         d_tot = d_easy + d_med + d_hard

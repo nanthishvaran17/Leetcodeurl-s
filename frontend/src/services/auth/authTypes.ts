@@ -45,7 +45,7 @@ export interface AuthUser {
 export function isHodRole(user: AuthUser | null): boolean {
   if (!user) return false;
   const r = (user.role || '').trim().toLowerCase();
-  return r === 'hod' || r === 'department hod' || r === 'department_hod';
+  return r === 'hod' || r === 'department hod' || r === 'department_hod' || r === 'placement coordinator';
 }
 
 export function isGlobalAccessRole(user: AuthUser | null): boolean {

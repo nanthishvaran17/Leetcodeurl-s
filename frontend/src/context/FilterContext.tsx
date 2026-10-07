@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useMemo, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback, ReactNode } from 'react';
 import { useDebounce } from '../hooks/useDebounce';
 import { studentLiveStore, useStudentListIds, useStudentStoreVersion } from '../stores/studentLiveStore';
 import { StudentEntity } from '../types/student';
@@ -32,7 +32,7 @@ function getHodDefaultDepartment(): string {
     if (!raw) return 'ALL';
     const user = JSON.parse(raw);
     const role = ((user?.role) || '').trim().toLowerCase();
-    const isHod = role === 'hod' || role === 'department hod' || role === 'department_hod';
+    const isHod = role === 'hod' || role === 'department hod' || role === 'department_hod' || role === 'placement coordinator';
     if (!isHod) return 'ALL';
     const codes: string[] = user?.authorized_department_codes || [];
     if (codes.length === 0) return 'ALL';

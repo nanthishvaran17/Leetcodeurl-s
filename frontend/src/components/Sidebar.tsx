@@ -65,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
   const roleClean = (user?.role || '').trim().toLowerCase();
   const isFaculty = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(roleClean);
-  const isHOD = ['hod', 'department hod', 'department_hod', 'principal', 'management', 'director'].includes(roleClean);
+  const isHOD = ['hod', 'department hod', 'department_hod', 'principal', 'management', 'director', 'placement coordinator'].includes(roleClean);
   const isAdmin = ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean);
   const isStudent = roleClean === 'student';
 

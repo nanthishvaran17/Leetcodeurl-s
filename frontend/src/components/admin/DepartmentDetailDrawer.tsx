@@ -58,38 +58,42 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
           className="relative w-full max-w-2xl bg-white dark:bg-navy-950 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-navy-700"
         >
           {/* Header */}
-          <div className="p-6 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between bg-slate-50/50 dark:bg-navy-800/50">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 flex items-center justify-center">
-                <Building2 size={24} />
+          <div className="relative p-6 border-b border-indigo-200/50 dark:border-indigo-900/50 flex items-start justify-between bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-navy-900 dark:via-navy-950 dark:to-indigo-950 overflow-hidden">
+            {/* Background elements */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-10 left-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex items-start gap-4 relative z-10 w-full pr-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+                <Building2 size={28} />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-display font-bold text-slate-900 dark:text-white">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-xl sm:text-2xl font-display font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-300 dark:to-purple-300">
                     {department.department_name}
                   </h2>
-                  <span className="px-2 py-0.5 text-xs font-bold font-mono rounded bg-slate-200 text-slate-700 dark:bg-navy-700 dark:text-slate-300">
+                  <span className="px-2.5 py-1 text-[10px] font-black font-mono rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50 shadow-sm shrink-0">
                     {department.department_code}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 mt-1.5 text-sm">
-                  <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                    department.health_status === 'Excellent' ? 'bg-emerald-100 text-emerald-800' :
-                    department.health_status === 'Healthy' ? 'bg-brand-100 text-brand-800' :
-                    department.health_status === 'Needs Attention' ? 'bg-amber-100 text-amber-800' :
-                    'bg-rose-100 text-rose-800'
+                <div className="flex flex-wrap items-center gap-3 mt-2 text-sm">
+                  <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase shadow-sm border ${
+                    department.health_status === 'Excellent' ? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800' :
+                    department.health_status === 'Healthy' ? 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800' :
+                    department.health_status === 'Needs Attention' ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800' :
+                    'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
                   }`}>
                     {department.health_status}
                   </span>
-                  <span className="text-slate-500 font-medium text-xs">
-                    Rank #{department.rank} Institutionally
+                  <span className="text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center gap-1 bg-white/50 dark:bg-navy-900/50 px-2 py-0.5 rounded-full border border-slate-200 dark:border-navy-700 shrink-0">
+                    Rank <span className="text-indigo-600 dark:text-indigo-400 font-black">#{department.rank}</span> Institutionally
                   </span>
                 </div>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800 transition"
+              className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-white dark:hover:bg-navy-800 transition-all hover:shadow-sm border border-transparent hover:border-slate-200 relative z-10 shrink-0"
             >
               <X size={20} />
             </button>

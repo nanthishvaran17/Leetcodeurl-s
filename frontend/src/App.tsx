@@ -714,7 +714,7 @@ export const App: React.FC = () => {
     if (['staff', 'faculty', 'professor', 'faculty mentor', 'faculty_mentor', 'staff mentor', 'staff_mentor'].includes(roleClean)) {
       return <StaffDashboardView />;
     }
-    if (['hod', 'head of department', 'head_of_department', 'department hod', 'department_hod'].includes(roleClean)) {
+    if (['hod', 'head of department', 'head_of_department', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean)) {
       return <HODCommandCenter />;
     }
     return (
@@ -740,6 +740,7 @@ export const App: React.FC = () => {
     // HOD: command center + all academic tools
     hod:              ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
     'department hod': ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    'placement coordinator': ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
     department_hod:   ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
     principal:        ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
     management:       ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],

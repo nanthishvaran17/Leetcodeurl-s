@@ -363,6 +363,54 @@ def download_official_college_summary_excel(
         logger.error(f"[EXPORT ERROR] export-official-college-summary failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Unable to generate report. Please try again.")
 
+@router.get("/download-contest-single-sheet")
+def download_contest_single_sheet_excel(
+    department: Optional[str] = Query("ALL"),
+    dept: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"),
+    attendance: Optional[str] = Query("ALL"),
+    session_id: Optional[str] = Query("latest"),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Single Sheet Excel", dept_scoped=True))
+):
+    eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+    eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+    eff_att = attendance if attendance != "ALL" else "ALL"
+
+    from backend.routes.reports import _get_dataset_for_id
+    dataset, r_filename = _get_dataset_for_id(
+        report_id=session_id,
+        db=db,
+        dept=eff_dept,
+        year=eff_year,
+        attendance=eff_att,
+        search="",
+        status=eff_att,
+        batch="ALL",
+        report_type="SINGLE_SHEET",
+        current_user=current_user
+    )
+
+    from backend.exporters.single_sheet_generator import generate_single_sheet_contest_excel
+    excel_bytes = generate_single_sheet_contest_excel(db, dataset, session_id)
+    
+    contest_name = str(dataset.get("contest_name") or dataset.get("contestName") or dataset.get("title") or "Weekly Contest")
+    import re
+    match = re.search(r'\d+', contest_name)
+    c_num = match.group(0) if match else "XX"
+    d_str = eff_dept.replace(" ", "_") if eff_dept != "ALL" else "All_Depts"
+    y_str = eff_year if eff_year != "ALL" else "All_Years"
+    from backend.services.weekly_session_resolver import resolve_target_weekly_session
+    t_session = resolve_target_weekly_session(db, session_id)
+    date_str = t_session.session_date.replace(".", "-") if t_session and getattr(t_session, 'session_date', None) else ""
+    out_filename = f"NEC_W{c_num}_{d_str}_{y_str}_{date_str}.xlsx" if date_str else f"NEC_W{c_num}_{d_str}_{y_str}.xlsx"
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{out_filename}"'}
+    )
+
 @router.get("/download")
 def download_master_10_sheet_excel(
     department: Optional[str] = Query("ALL"),
@@ -1461,8 +1509,8 @@ def _enrich_dataset_ranks_and_ratings(dataset: dict, db: Session) -> dict:
             entry = {
                 "accom": accom or "",
                 "cutoff": float(cut) if cut is not None else None,
-                "rank": grank or prank,
-                "rating": crat
+                "rank": prank or grank,
+                "rating": int(round(crat)) if crat else None
             }
             if reg_db:
                 r_orig = str(reg_db).strip()

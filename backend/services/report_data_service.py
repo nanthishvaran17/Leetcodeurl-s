@@ -262,9 +262,11 @@ def fetch_normalized_students(
         easy = st.easy_solved if (st and st.easy_solved is not None) else (0 if is_verified else 0)
         medium = st.medium_solved if (st and st.medium_solved is not None) else (0 if is_verified else 0)
         hard = st.hard_solved if (st and st.hard_solved is not None) else (0 if is_verified else 0)
-        total_solved = (easy or 0) + (medium or 0) + (hard or 0)
-        if st and st.total_solved is not None and st.total_solved > total_solved:
-            total_solved = st.total_solved
+        lifetime_total = (easy or 0) + (medium or 0) + (hard or 0)
+        if st and st.total_solved is not None and st.total_solved > lifetime_total:
+            lifetime_total = st.total_solved
+        
+        total_solved = lifetime_total
 
         # Session-specific historical contest rating & rank resolution
         sess_rec = session_result_map.get(s.id) if session_result_map else None
@@ -321,18 +323,42 @@ def fetch_normalized_students(
             elif canon_range == "1_100" and not (1 <= tot <= 100): continue
             elif canon_range == "not_started" and tot != 0: continue
 
-        filtered_students.append((s, st, dept_obj, sec_obj, is_verified, easy, medium, hard, total_solved, effective_rating, g_rank, att_count))
+        filtered_students.append((s, st, dept_obj, sec_obj, is_verified, easy, medium, hard, total_solved, effective_rating, g_rank, att_count, sess_rec, lifetime_total))
 
     rows: List[StudentRow] = []
-    for idx, (s, st, dept_obj, sec_obj, is_verified, easy, medium, hard, total_solved, effective_rating, g_rank, att_count) in enumerate(filtered_students, start=1):
-        category = get_problem_category(total_solved, is_verified)
+    for idx, (s, st, dept_obj, sec_obj, is_verified, easy, medium, hard, total_solved, effective_rating, g_rank, att_count, sess_rec, lifetime_total) in enumerate(filtered_students, start=1):
+        category = get_problem_category(lifetime_total, is_verified)
 
         sec_id = str(getattr(s, "secondary_leetcode_id", "") or "").strip()
         sec_url = f"https://leetcode.com/u/{sec_id}/" if sec_id else ""
         prim_id = str(getattr(s, "primary_leetcode_id", "") or s.username or "").strip()
 
-        from backend.routes.reports import compute_contest_difficulty_breakdown
-        c_brk = compute_contest_difficulty_breakdown(contest_solved=total_solved)
+        # Session-specific difficulty breakdown vs lifetime fallback
+        if sess_rec:
+            c_easy = 1 if (getattr(sess_rec, 'q1', False) or str(getattr(sess_rec, 'q1_display', '')).startswith('1')) else 0
+            c_med = (1 if (getattr(sess_rec, 'q2', False) or str(getattr(sess_rec, 'q2_display', '')).startswith('1')) else 0) + (1 if (getattr(sess_rec, 'q3', False) or str(getattr(sess_rec, 'q3_display', '')).startswith('1')) else 0)
+            c_hard = 1 if (getattr(sess_rec, 'q4', False) or str(getattr(sess_rec, 'q4_display', '')).startswith('1')) else 0
+            c_solved = getattr(sess_rec, 'questions_solved', None)
+            if c_solved is None:
+                c_solved = c_easy + c_med + c_hard
+        elif session_id and str(session_id).lower() not in ("all", "none", "latest"):
+            c_easy = 0
+            c_med = 0
+            c_hard = 0
+            c_solved = 0
+        else:
+            from backend.routes.reports import compute_contest_difficulty_breakdown
+            c_brk = compute_contest_difficulty_breakdown(contest_solved=total_solved)
+            c_easy = c_brk["contest_easy"]
+            c_med = c_brk["contest_medium"]
+            c_hard = c_brk["contest_hard"]
+            c_solved = total_solved
+
+        if session_id and str(session_id).lower() not in ("all", "none", "latest"):
+            easy = c_easy
+            medium = c_med
+            hard = c_hard
+            total_solved = c_solved
 
         rows.append(StudentRow(
             s_no=idx,
@@ -353,9 +379,9 @@ def fetch_normalized_students(
             medium=medium,
             hard=hard,
             total_solved=total_solved,
-            contest_easy=c_brk["contest_easy"],
-            contest_medium=c_brk["contest_medium"],
-            contest_hard=c_brk["contest_hard"],
+            contest_easy=c_easy,
+            contest_medium=c_med,
+            contest_hard=c_hard,
             contest_rating=round(effective_rating, 1) if (is_verified and effective_rating is not None) else None,
             rating=round(effective_rating, 1) if (is_verified and effective_rating is not None) else None,
             global_rank=g_rank,

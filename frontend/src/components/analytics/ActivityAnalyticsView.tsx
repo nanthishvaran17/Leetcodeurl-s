@@ -78,7 +78,14 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsProps> = ({
     );
   }
 
-  const { summary, trend, most_active } = data;
+  const { summary, most_active } = data;
+  let trend = data.trend || [];
+  
+  if (trend.length === 1) {
+    const pt = trend[0];
+    const prevDate = new Date(new Date(pt.date).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    trend = [{ ...pt, date: prevDate }, pt];
+  }
 
   const tooltipStyle = {
     backgroundColor: '#1e293b',

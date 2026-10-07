@@ -3,7 +3,7 @@ import {
   Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle,
   ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell,
   FileText, Clock, AlertCircle, ArrowRight, Download, Zap, Sparkles,
-  ChevronDown, Check, Filter
+  ChevronDown, Check, Filter, Moon, Trophy
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
@@ -26,7 +26,7 @@ export const StaffDashboardView: React.FC = () => {
   const [search, setSearch] = useState<string>('');
   const [selectedStudentFilter, setSelectedStudentFilter] = useState<string>('ALL');
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
-  const [filterStatus, setFilterStatus] = useState<'ALL' | 'ACTIVE' | 'COMPLETED' | 'IN_PROGRESS' | 'ATTENTION' | 'AT_RISK'>('ALL');
+  const [filterStatus, setFilterStatus] = useState<'ALL' | 'ACTIVE' | 'COMPLETED' | 'IN_PROGRESS' | 'ATTENTION' | 'AT_RISK' | 'UNRESPONSIVE'>('ALL');
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
   const [isStudentSelectOpen, setIsStudentSelectOpen] = useState<boolean>(false);
   const [studentSelectSearch, setStudentSelectSearch] = useState<string>('');
@@ -142,26 +142,32 @@ export const StaffDashboardView: React.FC = () => {
 
   // Strict helper predicates for classification to guarantee 100% exact match between KPI card counts and filtered list
   const isCompletedStudent = useCallback((s: any) => {
-    const solved = Number(s.stats?.total_solved ?? s.total_solved ?? s.totalSolved ?? 0);
     const sc = (s.status_code || '').toUpperCase();
     const sl = (s.status_label || '').toUpperCase();
-    return solved >= 100 || sc === 'EXCELLENT' || sc === 'COMPLETED' || sl.includes('EXCELLENT') || sl.includes('COMPLETED');
+    return sc === 'COMPLETED' || sl.includes('COMPLETED') || sc === 'EXCELLENT';
   }, []);
 
   const isAtRiskStudent = useCallback((s: any) => {
     if (isCompletedStudent(s)) return false;
-    const solved = Number(s.stats?.total_solved ?? s.total_solved ?? s.totalSolved ?? 0);
-    const days = Number(s.days_inactive ?? s.daysInactive ?? 0);
     const sc = (s.status_code || '').toUpperCase();
     const sl = (s.status_label || '').toUpperCase();
+    const days = Number(s.days_inactive ?? s.daysInactive ?? 0);
+    const solved = Number(s.stats?.total_solved ?? s.total_solved ?? s.totalSolved ?? 0);
     return sc === 'AT_RISK' || sc === 'RISK' || sc === 'PENDING_USERNAME' || sl.includes('AT RISK') || sl.includes('RISK') || days >= 8 || solved === 0 || !s.username;
   }, [isCompletedStudent]);
 
   const isAttentionStudent = useCallback((s: any) => {
     if (isCompletedStudent(s)) return false;
     if (isAtRiskStudent(s)) return false;
-    return true;
+    const sc = (s.status_code || '').toUpperCase();
+    return sc === 'ATTENTION' || sc === 'NEEDS_IMPROVEMENT';
   }, [isCompletedStudent, isAtRiskStudent]);
+
+  const isUnresponsiveStudent = useCallback((s: any) => {
+    if (isCompletedStudent(s)) return false;
+    const days = Number(s.days_inactive ?? s.daysInactive ?? 0);
+    return days >= 7;
+  }, [isCompletedStudent]);
 
   const isActiveStudent = useCallback((s: any) => {
     const solved = Number(s.stats?.total_solved ?? s.total_solved ?? s.totalSolved ?? 0);
@@ -174,6 +180,7 @@ export const StaffDashboardView: React.FC = () => {
   const completedCount = myStudents.filter(isCompletedStudent).length;
   const attentionCount = myStudents.filter(isAttentionStudent).length;
   const atRiskCount = myStudents.filter(isAtRiskStudent).length;
+  const unresponsiveCount = myStudents.filter(isUnresponsiveStudent).length;
   
   // Progress calculations based on 100 Target
   const totalSolvedSum = myStudents.reduce((acc: number, s: any) => acc + Number(s.stats?.total_solved ?? s.total_solved ?? 0), 0);
@@ -205,6 +212,8 @@ export const StaffDashboardView: React.FC = () => {
         if (!isAttentionStudent(s)) return false;
       } else if (filterStatus === 'AT_RISK') {
         if (!isAtRiskStudent(s)) return false;
+      } else if (filterStatus === 'UNRESPONSIVE') {
+        if (!isUnresponsiveStudent(s)) return false;
       }
 
       // 3. Text Search Filter (Case-insensitive matching Name, Reg No, Username, Dept)
@@ -222,7 +231,7 @@ export const StaffDashboardView: React.FC = () => {
 
       return true;
     });
-  }, [myStudents, selectedStudentFilter, filterStatus, search, isActiveStudent, isCompletedStudent, isAttentionStudent, isAtRiskStudent]);
+  }, [myStudents, selectedStudentFilter, filterStatus, search, isActiveStudent, isCompletedStudent, isAttentionStudent, isAtRiskStudent, isUnresponsiveStudent]);
 
   const handleSort = (field: 'name' | 'reg_no' | 'total_solved' | 'progress' | 'contest_rating' | 'status') => {
     if (sortField === field) {
@@ -247,8 +256,8 @@ export const StaffDashboardView: React.FC = () => {
         valB = b.reg_no || '';
         return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
       } else if (sortField === 'progress') {
-        valA = Math.min(a.total_solved || 0, 100);
-        valB = Math.min(b.total_solved || 0, 100);
+        valA = a.weekly_solved || 0;
+        valB = b.weekly_solved || 0;
       } else if (sortField === 'contest_rating') {
         valA = a.contest_rating || 0;
         valB = b.contest_rating || 0;
@@ -265,7 +274,7 @@ export const StaffDashboardView: React.FC = () => {
     });
   }, [filteredStudents, sortField, sortOrder]);
 
-  const handleCardFilterClick = (status: 'ALL' | 'ACTIVE' | 'COMPLETED' | 'IN_PROGRESS' | 'ATTENTION' | 'AT_RISK') => {
+  const handleCardFilterClick = (status: 'ALL' | 'ACTIVE' | 'COMPLETED' | 'IN_PROGRESS' | 'ATTENTION' | 'AT_RISK' | 'UNRESPONSIVE') => {
     setFilterStatus(status);
     setSelectedStudentFilter('ALL');
     setSearch('');
@@ -358,7 +367,7 @@ export const StaffDashboardView: React.FC = () => {
       </div>
 
       {/* Interactive Summary KPI Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3.5 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-3.5 sm:gap-4">
 
         {/* 1. Assigned (All) */}
         <div 
@@ -476,6 +485,35 @@ export const StaffDashboardView: React.FC = () => {
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <h3 className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 tracking-tight">
               {attentionCount}
+            </h3>
+          </div>
+          <p className="mt-2.5 text-xs font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1">
+            <span>Needs Action</span>
+            {filterStatus === 'ATTENTION' && <span className="text-[10px] text-amber-600 dark:text-amber-400 font-black">(Filtered)</span>}
+          </p>
+        </div>
+
+        {/* 5. Unresponsive (Inactive 7+ Days) */}
+        <div 
+          onClick={() => handleCardFilterClick('UNRESPONSIVE')}
+          title="Click to filter students who haven't solved anything in a week"
+          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+            filterStatus === 'UNRESPONSIVE'
+              ? 'bg-orange-50/90 dark:bg-orange-950/50 border-orange-500 ring-2 ring-orange-500/40 shadow-orange-500/10'
+              : 'bg-white dark:bg-navy-900 border-slate-200/90 dark:border-navy-700/80 hover:border-orange-300 dark:hover:border-orange-600'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-1 mb-2">
+            <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+              Unresponsive
+            </span>
+            <div className="p-1.5 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 shrink-0">
+              <Moon className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <h3 className="text-2xl sm:text-3xl font-black text-orange-600 dark:text-orange-400 tracking-tight">
+              {unresponsiveCount}
             </h3>
           </div>
           <p className="mt-2.5 text-xs font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1">
@@ -1091,23 +1129,23 @@ export const StaffDashboardView: React.FC = () => {
                   {/* Progress Bar & Stats Row */}
                   <div className="space-y-1.5 pt-0.5">
                     <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-slate-800 dark:text-slate-200 font-bold">Target Progress</span>
+                      <span className="text-slate-800 dark:text-slate-200 font-bold">Weekly Solved</span>
                       <span className="text-brand-600 dark:text-brand-400 font-mono font-black">
-                        {targetPct}% ({Math.min(solved, 100)}/100)
+                        {st.weekly_solved || 0}
                       </span>
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-navy-800 rounded-full h-2.5 overflow-hidden border border-slate-200/60 dark:border-navy-700/60 p-0.5">
                       <div
                         className={`h-1.5 rounded-full transition-all duration-500 ${
-                          solved >= 100
+                          (st.weekly_solved || 0) >= 10
                             ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
-                            : solved >= 50
+                            : (st.weekly_solved || 0) >= 5
                             ? 'bg-gradient-to-r from-sky-500 to-indigo-500'
-                            : solved >= 20
+                            : (st.weekly_solved || 0) > 0
                             ? 'bg-gradient-to-r from-amber-500 to-orange-500'
-                            : 'bg-gradient-to-r from-rose-500 to-red-600'
+                            : 'bg-slate-300 dark:bg-slate-600'
                         }`}
-                        style={{ width: `${targetPct}%` }}
+                        style={{ width: `${Math.min(((st.weekly_solved || 0) / 10) * 100, 100)}%` }}
                       />
                     </div>
                   </div>
@@ -1122,6 +1160,12 @@ export const StaffDashboardView: React.FC = () => {
                       <div className="bg-slate-50 dark:bg-navy-950 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-navy-800">
                         <span className="text-[10px] text-slate-700 dark:text-slate-300 font-black uppercase block">Rating</span>
                         <span className="font-black text-amber-500 dark:text-amber-400 text-xs">{st.contest_rating ? Math.round(st.contest_rating) : 'N/A'}</span>
+                      </div>
+                      <div className="bg-indigo-50 dark:bg-indigo-950/40 px-2.5 py-1 rounded-xl border border-indigo-200 dark:border-indigo-800/60 flex-1 min-w-[100px]">
+                        <span className="text-[10px] text-indigo-700 dark:text-indigo-300 font-black uppercase block whitespace-nowrap overflow-hidden text-ellipsis">Sun. Contest</span>
+                        <span className="font-black text-indigo-600 dark:text-indigo-400 text-xs">
+                          {st.recent_contest_score ? st.recent_contest_score.split('/')[0].trim() : '-'}
+                        </span>
                       </div>
                     </div>
 
@@ -1145,46 +1189,52 @@ export const StaffDashboardView: React.FC = () => {
           <table className="w-full text-left text-xs border-collapse">
             <thead className="bg-slate-100 dark:bg-navy-900 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider border-b border-slate-200 dark:border-navy-700 select-none">
               <tr>
-                <th onClick={() => handleSort('name')} className="px-3 py-3 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-navy-800 transition whitespace-nowrap">
+                <th onClick={() => handleSort('name')} className="px-5 py-4 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-navy-800 transition whitespace-nowrap">
                   <div className="flex items-center space-x-1">
                     <span>Student Name</span>
                     {sortField === 'name' ? (<span>{sortOrder === 'asc' ? '↑' : '↓'}</span>) : <span className="opacity-30">↕</span>}
                   </div>
                 </th>
-                <th onClick={() => handleSort('reg_no')} className="px-3 py-3 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-navy-800 transition whitespace-nowrap">
+                <th onClick={() => handleSort('reg_no')} className="px-5 py-4 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-navy-800 transition whitespace-nowrap">
                   <div className="flex items-center space-x-1">
                     <span>Reg No</span>
                     {sortField === 'reg_no' ? (<span>{sortOrder === 'asc' ? '↑' : '↓'}</span>) : <span className="opacity-30">↕</span>}
                   </div>
                 </th>
-                <th className="px-3 py-3 whitespace-nowrap">Dept / Class</th>
-                <th className="px-3 py-3 whitespace-nowrap">LeetCode Handle</th>
-                <th onClick={() => handleSort('progress')} className="px-3 py-3 cursor-pointer hover:bg-sky-100 dark:hover:bg-sky-950/80 transition whitespace-nowrap">
+                <th className="px-5 py-4 whitespace-nowrap">Dept / Class</th>
+                <th className="px-5 py-4 whitespace-nowrap">LeetCode Handle</th>
+                <th onClick={() => handleSort('progress')} className="px-5 py-4 cursor-pointer hover:bg-sky-100 dark:hover:bg-sky-950/80 transition whitespace-nowrap">
                   <div className="flex items-center space-x-1 text-sky-600 dark:text-sky-400 font-black">
                     <BarChart3 className="w-3.5 h-3.5" />
-                    <span>Target Progress</span>
+                    <span>Weekly Solved</span>
                     {sortField === 'progress' ? (<span>{sortOrder === 'asc' ? '↑' : '↓'}</span>) : <span className="opacity-40">↕</span>}
                   </div>
                 </th>
-                <th onClick={() => handleSort('total_solved')} className="px-3 py-3 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-navy-800 transition whitespace-nowrap text-center">
+                <th onClick={() => handleSort('total_solved')} className="px-5 py-4 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-navy-800 transition whitespace-nowrap text-center">
                   <div className="flex items-center justify-center space-x-1">
                     <span>Total Solved</span>
                     {sortField === 'total_solved' ? (<span>{sortOrder === 'asc' ? '↑' : '↓'}</span>) : <span className="opacity-30">↕</span>}
                   </div>
                 </th>
-                <th onClick={() => handleSort('contest_rating')} className="px-3 py-3 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-navy-800 transition whitespace-nowrap text-center">
+                <th onClick={() => handleSort('contest_rating')} className="px-5 py-4 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-navy-800 transition whitespace-nowrap text-center">
                   <div className="flex items-center justify-center space-x-1">
                     <span>Contest Rating</span>
                     {sortField === 'contest_rating' ? (<span>{sortOrder === 'asc' ? '↑' : '↓'}</span>) : <span className="opacity-30">↕</span>}
                   </div>
                 </th>
-                <th onClick={() => handleSort('status')} className="px-3 py-3 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-navy-800 transition whitespace-nowrap">
+                <th className="px-5 py-4 whitespace-nowrap text-center">
+                  <div className="flex items-center justify-center space-x-1 text-indigo-600 dark:text-indigo-400">
+                    <Trophy className="w-3.5 h-3.5" />
+                    <span>Sun. Contest</span>
+                  </div>
+                </th>
+                <th onClick={() => handleSort('status')} className="px-5 py-4 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-navy-800 transition whitespace-nowrap">
                   <div className="flex items-center space-x-1">
                     <span>Status</span>
                     {sortField === 'status' ? (<span>{sortOrder === 'asc' ? '↑' : '↓'}</span>) : <span className="opacity-30">↕</span>}
                   </div>
                 </th>
-                <th className="px-3 py-3 sticky right-0 z-20 bg-slate-100 dark:bg-navy-900 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.4)] whitespace-nowrap text-center">
+                <th className="px-5 py-4 sticky right-0 z-20 bg-slate-100 dark:bg-navy-900 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.4)] whitespace-nowrap text-center">
                   Action
                 </th>
               </tr>
@@ -1192,13 +1242,13 @@ export const StaffDashboardView: React.FC = () => {
             <tbody className="divide-y divide-gray-100 dark:divide-navy-800">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-slate-400 font-bold animate-pulse">
+                  <td colSpan={10} className="p-8 text-center text-slate-400 font-bold animate-pulse">
                     Loading your assigned students...
                   </td>
                 </tr>
               ) : sortedFilteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 px-4 text-center">
+                  <td colSpan={10} className="py-12 px-4 text-center">
                     <div className="flex flex-col items-center justify-center space-y-2">
                       <div className="p-3 rounded-2xl bg-slate-100 dark:bg-navy-800 text-slate-400">
                         <Search className="w-6 h-6 text-indigo-500" />
@@ -1233,57 +1283,64 @@ export const StaffDashboardView: React.FC = () => {
 
                   return (
                     <tr key={st.id} className="group hover:bg-slate-50/80 dark:hover:bg-navy-850 transition-colors">
-                      <td className="px-3 py-3 font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
+                      <td className="px-5 py-4 font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
                         {st.name}
                       </td>
-                      <td className="px-3 py-3 font-mono font-bold text-slate-900 dark:text-slate-100 text-xs whitespace-nowrap">
+                      <td className="px-5 py-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-xs whitespace-nowrap">
                         {st.reg_no}
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      <td className="px-5 py-4 whitespace-nowrap">
                         <span className="font-extrabold text-slate-900 dark:text-white">{st.department || 'CSE'}</span>{' '}
                         <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">
                           ({cleanYr || 'III'} Year)
                         </span>
                       </td>
-                      <td className="px-3 py-3 font-bold text-brand-600 dark:text-brand-400 whitespace-nowrap">
+                      <td className="px-5 py-4 font-bold text-brand-600 dark:text-brand-400 whitespace-nowrap">
                         {st.username ? `@${st.username}` : 'Not Linked'}
                       </td>
-                      {/* Target Progress Bar Column */}
-                      <td className="px-3 py-3">
-                        <div className="flex flex-col gap-1 min-w-[100px] max-w-[130px]">
+                      {/* Weekly Solved Bar Column */}
+                      <td className="px-5 py-4">
+                        <div className="flex flex-col gap-1.5 min-w-[120px] max-w-[150px]">
                           <div className="flex items-center justify-between text-xs font-black">
                             <span className="text-slate-900 dark:text-white font-mono">
-                              {targetPct}%
-                            </span>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-                              {Math.min(solved, 100)}/100
+                              {st.weekly_solved || 0} Solved
                             </span>
                           </div>
-                          <div className="w-full bg-slate-100 dark:bg-navy-800 rounded-full h-2 overflow-hidden border border-slate-200/60 dark:border-navy-700/60">
+                          <div className="w-full bg-slate-100 dark:bg-navy-800 rounded-full h-2.5 overflow-hidden border border-slate-200/60 dark:border-navy-700/60">
                             <div
-                              className={`h-2 rounded-full transition-all duration-500 ${
-                                solved >= 100
+                              className={`h-2.5 rounded-full transition-all duration-500 ${
+                                (st.weekly_solved || 0) >= 10
                                   ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
-                                  : solved >= 50
+                                  : (st.weekly_solved || 0) >= 5
                                   ? 'bg-gradient-to-r from-sky-500 to-indigo-500'
-                                  : solved >= 20
+                                  : (st.weekly_solved || 0) > 0
                                   ? 'bg-gradient-to-r from-amber-500 to-orange-500'
-                                  : 'bg-gradient-to-r from-rose-500 to-red-600'
+                                  : 'bg-slate-300 dark:bg-slate-600'
                               }`}
-                              style={{ width: `${targetPct}%` }}
+                              style={{ width: `${Math.min(((st.weekly_solved || 0) / 10) * 100, 100)}%` }}
                             />
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-3 font-black text-slate-900 dark:text-white text-center whitespace-nowrap">
+                      <td className="px-5 py-4 font-black text-slate-900 dark:text-white text-center whitespace-nowrap">
                         {solved}
                       </td>
-                      <td className="px-3 py-3 font-bold text-amber-500 text-center whitespace-nowrap">
+                      <td className="px-5 py-4 font-bold text-amber-500 text-center whitespace-nowrap">
                         {st.contest_rating ? Math.round(st.contest_rating) : 'N/A'}
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap">
-                        <div className="flex flex-col items-start gap-0.5">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border ${
+                      <td className="px-5 py-4 text-center whitespace-nowrap">
+                        {st.recent_contest_score ? (
+                          <div className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300">
+                            <span className="text-xs font-black">{st.recent_contest_score.split('/')[0].trim()}</span>
+                            <span className="text-[10px] text-indigo-400 font-extrabold tracking-wider">/ 4</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs font-bold text-slate-400 italic">-</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        <div className="flex flex-col items-start gap-1">
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black border ${
                             badgeColor === 'emerald'
                               ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                               : badgeColor === 'red'
@@ -1295,19 +1352,19 @@ export const StaffDashboardView: React.FC = () => {
                             {statusLabel}
                           </span>
                           {badgeColor === 'red' && st.days_inactive !== undefined && st.days_inactive > 0 && (
-                            <span className="text-[9px] font-bold text-rose-500 dark:text-rose-400 ml-1">
+                            <span className="text-[10px] font-bold text-rose-500 dark:text-rose-400 ml-1">
                               Inactive {st.days_inactive}d
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-3 sticky right-0 z-10 bg-white group-hover:bg-slate-50 dark:bg-navy-950 dark:group-hover:bg-navy-850 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.4)] transition-colors whitespace-nowrap text-center">
+                      <td className="px-5 py-4 sticky right-0 z-10 bg-white group-hover:bg-slate-50 dark:bg-navy-950 dark:group-hover:bg-navy-850 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.4)] transition-colors whitespace-nowrap text-center">
                         <button
                           type="button"
                           onClick={() => setSelectedStudent(st)}
-                          className="px-3 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 active:scale-95 text-white font-bold inline-flex items-center space-x-1.5 transition-all text-[11px] shadow-sm cursor-pointer"
+                          className="px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 active:scale-95 text-white font-bold inline-flex items-center space-x-1.5 transition-all text-xs shadow-sm cursor-pointer"
                         >
-                          <Eye className="w-3.5 h-3.5" />
+                          <Eye className="w-4 h-4" />
                           <span>Inspect</span>
                         </button>
                       </td>

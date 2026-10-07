@@ -98,9 +98,39 @@ def get_my_assigned_students(
         (Student.is_active == True) | (Student.is_active.is_(None))
     ).all()
 
+    from backend.models import StudentStatSnapshot
+    import datetime
+    
+    # Calculate weekly progress dynamically using StudentStatSnapshot (delta from 7 days ago)
+    weekly_prog_map = {}
+    if assigned_ids:
+        t_7d = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
+        snapshots = db.query(StudentStatSnapshot).filter(
+            StudentStatSnapshot.student_id.in_(assigned_ids)
+        ).order_by(StudentStatSnapshot.student_id, StudentStatSnapshot.captured_at.asc()).all()
+        
+        snap_map = {}
+        for snap in snapshots:
+            cap = snap.captured_at
+            if cap:
+                if cap.tzinfo is None:
+                    cap = cap.replace(tzinfo=datetime.timezone.utc)
+                if cap <= t_7d:
+                    snap_map[snap.student_id] = snap
+                elif snap.student_id not in snap_map:
+                    snap_map[snap.student_id] = snap
+                    
+        for s in students:
+            snap = snap_map.get(s.id)
+            if snap and s.stats and s.stats.total_solved is not None:
+                weekly_prog_map[s.id] = max(0, s.stats.total_solved - snap.total_solved)
+            else:
+                weekly_prog_map[s.id] = 0
+
     student_list = []
     for s in students:
-        perf = calculate_student_performance_status(s)
+        week_solved = weekly_prog_map.get(s.id, 0)
+        perf = calculate_student_performance_status(s, weekly_solved=week_solved)
         st_out = {
             "id": s.id,
             "reg_no": s.reg_no,
@@ -111,6 +141,7 @@ def get_my_assigned_students(
             "username": s.username,
             "leetcode_url": s.leetcode_url,
             "total_solved": s.stats.total_solved if s.stats else 0,
+            "weekly_solved": week_solved,
             "easy_solved": s.stats.easy_solved if s.stats else 0,
             "medium_solved": s.stats.medium_solved if s.stats else 0,
             "hard_solved": s.stats.hard_solved if s.stats else 0,
@@ -370,8 +401,8 @@ def get_faculty_workload_summary(
 # =========================================================================
 
 
-def calculate_student_performance_status(s: Student) -> Dict[str, Any]:
-    """Helper to automatically classify student status & trend."""
+def calculate_student_performance_status(s: Student, weekly_solved: int = 0) -> Dict[str, Any]:
+    """Helper to automatically classify student status & trend based on weekly performance."""
     total = s.stats.total_solved if (s.stats and s.stats.total_solved is not None) else 0
     streak = s.stats.max_streak if (s.stats and s.stats.max_streak is not None) else 0
     rating = s.stats.contest_rating if (s.stats and s.stats.contest_rating is not None) else 0.0
@@ -388,13 +419,13 @@ def calculate_student_performance_status(s: Student) -> Dict[str, Any]:
         status_label = "At Risk"
         status_code = "AT_RISK"
         badge_color = "red"
-    elif total < 30 or days_inactive >= 4:
-        status_label = "Needs Improvement"
-        status_code = "NEEDS_IMPROVEMENT"
-        badge_color = "yellow"
-    elif total >= 100 or streak >= 7 or rating >= 1400:
-        status_label = "Excellent"
-        status_code = "EXCELLENT"
+    elif weekly_solved == 0:
+        status_label = "Needs Attention"
+        status_code = "ATTENTION"
+        badge_color = "amber"
+    elif weekly_solved > 0:
+        status_label = "Completed"
+        status_code = "COMPLETED"
         badge_color = "emerald"
     else:
         status_label = "Improving"

@@ -1,7 +1,7 @@
 // Lightweight localStorage Cache Manager for Student & Summary Data
 // Eliminates ~300KB synchronous import of canonical static roster on initial bundle load
 
-const CACHE_VERSION = '2026.10.05.v2'; // bumped: exact department scope (Cyber Security: 161, IoT: 148, IT: 255)
+const CACHE_VERSION = '2026.10.07.v3'; // bumped: live department, rating, contest rank & profile rank fallback fixes
 
 export function checkCacheVersion(): void {
   if (typeof window === 'undefined') return;

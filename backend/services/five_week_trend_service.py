@@ -50,8 +50,15 @@ def build_five_week_trend_report(
         if len(usable_sessions) >= 5:
             break
 
-    # Sort chronological (oldest to newest)
-    five_sessions = sorted(usable_sessions, key=lambda s: s.id)
+    # Sort chronological (oldest to newest) by session_date if available, else by extracting number from contest_name, else fallback to id
+    def get_sort_key(s):
+        if hasattr(s, 'session_date') and s.session_date:
+            return s.session_date
+        import re
+        match = re.search(r'\d+', str(s.contest_name or ''))
+        return match.group(0) if match else str(s.id).zfill(10)
+        
+    five_sessions = sorted(usable_sessions, key=get_sort_key)
     session_ids = [s.id for s in five_sessions]
     session_names = [s.contest_name or f"Contest {s.id}" for s in five_sessions]
 

@@ -48,8 +48,25 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
   }, [period, studentId]);
 
   // Derived Data Calculations
-  const trendData = data?.trend_data || [];
-  const contestData = data?.contest_data || [];
+  const rawTrendData = data?.trend_data || [];
+  const trendData = useMemo(() => {
+    if (rawTrendData.length === 1) {
+      const pt = rawTrendData[0];
+      const prevDate = new Date(new Date(pt.date).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      return [{ ...pt, date: prevDate }, pt];
+    }
+    return rawTrendData;
+  }, [rawTrendData]);
+
+  const rawContestData = data?.contest_data || [];
+  const contestData = useMemo(() => {
+    if (rawContestData.length === 1) {
+      const pt = rawContestData[0];
+      const prevDate = new Date(new Date(pt.date).getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      return [{ ...pt, date: prevDate }, pt];
+    }
+    return rawContestData;
+  }, [rawContestData]);
 
   const activityData = useMemo(() => {
     if (!trendData.length) return [];
