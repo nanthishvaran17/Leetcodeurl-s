@@ -1,4 +1,14 @@
 import os
+import time
+
+# Force process timezone to Asia/Kolkata (IST) for AWS/Ubuntu runtime environment
+os.environ["TZ"] = "Asia/Kolkata"
+if hasattr(time, "tzset"):
+    try:
+        time.tzset()
+    except Exception:
+        pass
+
 import base64
 import json
 import asyncio

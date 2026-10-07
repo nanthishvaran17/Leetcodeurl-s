@@ -11,7 +11,10 @@ while preserving each report's unique table structure, data, KPIs, formulas, and
 
 import os
 import datetime
+from zoneinfo import ZoneInfo
 from typing import List, Dict, Any, Optional
+
+IST_TZ = ZoneInfo("Asia/Kolkata")
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -272,10 +275,11 @@ def apply_master_college_identity(
     ws["A4"].alignment = ALIGN_CENTER
     ws.row_dimensions[4].height = 24
 
-    # Row 5: Metadata Strip (100% Dynamic Session Date, Department, Year, Roster, Generated Timestamp)
+    # Row 5: Metadata Strip (100% Dynamic Session Date, Department, Year, Roster, Generated Timestamp in IST)
+    now_ist = datetime.datetime.now(IST_TZ)
     date_str = str(session_date or "").strip()
     if not date_str or date_str.upper() in ("LATEST", "NONE", "ALL"):
-        date_str = datetime.date.today().strftime("%d.%m.%Y")
+        date_str = now_ist.strftime("%d.%m.%Y")
     else:
         date_str = date_str.replace("SESSION-", "").replace("session-", "").strip()
         if "-" in date_str and len(date_str.split("-")[0]) == 4:
@@ -284,7 +288,7 @@ def apply_master_college_identity(
         elif "-" in date_str:
             date_str = date_str.replace("-", ".")
 
-    gen_time_str = datetime.datetime.now().strftime("%d %b %Y, %I:%M:%S %p IST")
+    gen_time_str = now_ist.strftime("%d %b %Y, %I:%M:%S %p IST")
     meta_text = f"Session Date: {date_str} | Department: {dept_str} | Year: {year_str} | Total Roster: {total_roster} Students | Generated: {gen_time_str}"
     
     ws.merge_cells(f"A5:{last_col_letter}5")
