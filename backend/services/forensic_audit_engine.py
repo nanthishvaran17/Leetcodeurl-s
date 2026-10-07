@@ -199,25 +199,40 @@ def build_normalized_forensic_report(
     elif prev_record and (prev_record.problems_solved or 0) > 0:
         participation_status = "PUBLIC_ATTENDED"
 
-    q1_val = 1 if ((contest_result and contest_result.q1) or (virtual_result and virtual_result.q1) or (prev_record and prev_record.q1)) else 0
-    q2_val = 1 if ((contest_result and contest_result.q2) or (virtual_result and virtual_result.q2) or (prev_record and prev_record.q2)) else 0
-    q3_val = 1 if ((contest_result and contest_result.q3) or (virtual_result and virtual_result.q3) or (prev_record and prev_record.q3)) else 0
-    q4_val = 1 if ((contest_result and contest_result.q4) or (virtual_result and virtual_result.q4) or (prev_record and prev_record.q4)) else 0
+    has_valid_prev = prev_record and getattr(prev_record, 'is_active_version', False)
+    has_valid_pub = contest_result and getattr(contest_result, 'fetch_status', '') == 'SUCCESS' and not ('ConnectTimeout' in str(getattr(contest_result, 'verification_evidence', '')))
 
-    total_solved = (contest_result.total_contest_solved if contest_result and contest_result.total_contest_solved is not None else 0) or (virtual_result.total_contest_solved if virtual_result and virtual_result.total_contest_solved is not None else 0) or (prev_record.problems_solved if prev_record and prev_record.problems_solved is not None else 0)
-    if not total_solved and (q1_val or q2_val or q3_val or q4_val):
-        total_solved = q1_val + q2_val + q3_val + q4_val
+    if has_valid_prev:
+        q1_val = 1 if prev_record.q1 else 0
+        q2_val = 1 if prev_record.q2 else 0
+        q3_val = 1 if prev_record.q3 else 0
+        q4_val = 1 if prev_record.q4 else 0
+        total_solved = prev_record.problems_solved if prev_record.problems_solved is not None else (q1_val + q2_val + q3_val + q4_val)
+        score_val = prev_record.official_score if prev_record.official_score is not None and prev_record.official_score > 0 else (q1_val*3 + q2_val*4 + q3_val*5 + q4_val*6)
+    elif contest_result:
+        q1_val = 1 if contest_result.q1 else 0
+        q2_val = 1 if contest_result.q2 else 0
+        q3_val = 1 if contest_result.q3 else 0
+        q4_val = 1 if contest_result.q4 else 0
+        total_solved = contest_result.total_contest_solved if contest_result.total_contest_solved is not None else (q1_val + q2_val + q3_val + q4_val)
+        score_val = contest_result.contest_score if contest_result.contest_score is not None and contest_result.contest_score > 0 else (q1_val*3 + q2_val*4 + q3_val*5 + q4_val*6)
+    elif virtual_result:
+        q1_val = 1 if virtual_result.q1 else 0
+        q2_val = 1 if virtual_result.q2 else 0
+        q3_val = 1 if virtual_result.q3 else 0
+        q4_val = 1 if virtual_result.q4 else 0
+        total_solved = virtual_result.total_contest_solved if virtual_result.total_contest_solved is not None else (q1_val + q2_val + q3_val + q4_val)
+        score_val = (q1_val*3 + q2_val*4 + q3_val*5 + q4_val*6)
+    else:
+        q1_val = q2_val = q3_val = q4_val = 0
+        total_solved = 0
+        score_val = 0
 
     # Score calculation from authoritative contest record (3, 4, 5, 6 points)
     q1_pts = 3 if q1_val else 0
     q2_pts = 4 if q2_val else 0
     q3_pts = 5 if q3_val else 0
     q4_pts = 6 if q4_val else 0
-    score_val = q1_pts + q2_pts + q3_pts + q4_pts
-    if contest_result and contest_result.contest_score and contest_result.contest_score > 0:
-        score_val = contest_result.contest_score
-    elif prev_record and prev_record.official_score and prev_record.official_score > 0:
-        score_val = prev_record.official_score
 
     rank_str = f"#{contest_result.contest_rank}" if (contest_result and contest_result.contest_rank) else (f"#{prev_record.official_rank}" if (prev_record and prev_record.official_rank) else (f"#{virtual_result.contest_rank}" if (virtual_result and virtual_result.contest_rank) else "—"))
     rating_str = f"{contest_result.contest_rating:.2f}" if (contest_result and contest_result.contest_rating) else (f"{virtual_result.contest_rating:.2f}" if (virtual_result and virtual_result.contest_rating) else "—")
