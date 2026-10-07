@@ -106,9 +106,9 @@ COLUMN_WIDTH_MAP = {
 def get_asset_logo_paths() -> tuple[Optional[str], Optional[str]]:
     """Finds official NANDHA Emblem (white crest badge) and 25 NEC Anniversary logos on disk."""
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    left_logo = os.path.join(base_dir, "assets", "nandha_emblem_white_transparent.png")
+    left_logo = os.path.join(base_dir, "assets", "nandha_emblem.png")
     if not os.path.exists(left_logo):
-        left_logo = os.path.join(base_dir, "assets", "nandha_emblem.png")
+        left_logo = os.path.join(base_dir, "assets", "nandha_emblem_white_transparent.png")
         if not os.path.exists(left_logo):
             left_logo = None
 
