@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Inbox, PenSquare, Users, Trash2, MoreVertical, AlertTriangle, ShieldOff, Archive, Pin, PinOff, Mail, MailOpen, MinusCircle, Sparkles, ShieldCheck, CheckCircle2, Loader2 } from 'lucide-react';
+import { Search, Inbox, PenSquare, Users, Trash2, MoreVertical, AlertTriangle, ShieldOff, Archive, Pin, PinOff, Mail, MailOpen, MinusCircle, Sparkles, ShieldCheck, CheckCircle2, Loader2, X } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export interface Conversation {
@@ -288,15 +288,29 @@ export const ConversationList: React.FC<Props> = ({
         </div>
         
         {/* Search Bar */}
-        <div className="relative group mb-2.5">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+        <div className="relative group mb-2.5 flex items-center">
           <input 
             type="text" 
             placeholder="Search messages, users, depts..." 
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full h-9 bg-slate-100 dark:bg-navy-950 border border-transparent dark:border-navy-800 focus:bg-white dark:focus:bg-navy-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 text-xs rounded-xl pl-9 pr-4 transition-all outline-none font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 shadow-xs"
+            autoComplete="off"
+            spellCheck={false}
+            className="w-full h-9 bg-slate-100 dark:bg-navy-950 border border-transparent dark:border-navy-800 focus:bg-white dark:focus:bg-navy-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 text-xs rounded-xl pl-9 pr-8 transition-all outline-none font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 shadow-xs text-left"
           />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+            <Search className="w-4 h-4 stroke-[2.5]" />
+          </div>
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => onSearchChange('')}
+              className="absolute inset-y-0 right-0 z-10 flex items-center px-2.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors"
+              title="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Tab Filters: All / Unread / Archived */}

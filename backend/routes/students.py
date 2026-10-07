@@ -807,9 +807,12 @@ def download_sample_student_excel():
     ws.row_dimensions[1].height = 26  # type: ignore
 
     sample_rows = [
-        ["732224CC001", "AJAY A", "CSE(CS)", "III", "2024-2028", "Hostel", 182.5, "ajay@college.edu", "https://leetcode.com/u/ajay_primary/", "https://leetcode.com/u/ajay_sec/"],
-        ["732224CC002", "AMRUTHA M", "CSE(CS)", "III", "2024-2028", "Day Scholar", 175.0, "amrutha@college.edu", "https://leetcode.com/u/amrutha_primary/", "https://leetcode.com/u/amrutha_sec/"],
-        ["732224CI001", "BHARATH K", "CSE(IOT)", "III", "2024-2028", "Hostel", 188.0, "bharath@college.edu", "https://leetcode.com/u/bharath_primary/", ""],
+        ["732223CS001", "DINESH R", "CSE(CS)", "IV Year", "2023-2027", "Hostel", 189.5, "dinesh.cs23@college.edu", "https://leetcode.com/u/dinesh_cs/", ""],
+        ["732224CS002", "AJAY A", "CSE(CS)", "III Year", "2024-2028", "Hostel", 182.5, "ajay.cs24@college.edu", "https://leetcode.com/u/ajay_cs/", ""],
+        ["732224CI001", "BHARATH K", "CSE(IOT)", "III Year", "2024-2028", "Day Scholar", 188.0, "bharath.iot24@college.edu", "https://leetcode.com/u/bharath_iot/", ""],
+        ["732225IT015", "KAVYA S", "IT", "II Year", "2025-2029", "Day Scholar", 176.0, "kavya.it25@college.edu", "https://leetcode.com/u/kavya_it/", ""],
+        ["732226EC008", "MANO B", "ECE", "I Year", "2026-2030", "Hostel", 184.0, "mano.ec26@college.edu", "https://leetcode.com/u/mano_ece/", ""],
+        ["732224AI012", "NIVETHA P", "AIDS", "III Year", "2024-2028", "Hostel", 191.0, "nivetha.ai24@college.edu", "https://leetcode.com/u/nivetha_ai/", ""],
     ]
 
     for row_idx, r_data in enumerate(sample_rows, start=2):

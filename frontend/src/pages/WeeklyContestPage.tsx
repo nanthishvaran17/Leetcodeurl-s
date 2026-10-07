@@ -1338,7 +1338,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     const deptParam = encodeURIComponent(selectedDeptFilter || 'ALL');
     const yearParam = encodeURIComponent(selectedYearFilter || 'ALL');
     const attParam = encodeURIComponent(selectedAttendanceFilter || 'ALL');
-    const url = `/reports/${selectedSessionId}/${format}?dept=${deptParam}&year=${yearParam}&attendance=${attParam}`;
+    const url = `/reports/${selectedSessionId}/${format}?dept=${deptParam}&year=${yearParam}&attendance=${attParam}&report_type=MASTER_10_SHEET`;
     const selSession = sessionsList.find(s => s.sessionId === selectedSessionId) || activeSessionObj;
 
     const contestName = selSession?.contestName || 'Weekly Contest';
@@ -2155,27 +2155,27 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {showAdminMonitor && (
         <div ref={adminMonitorRef} className="p-5 sm:p-7 rounded-3xl bg-slate-900 text-white border border-slate-700/80 shadow-lg space-y-6 animate-fade-in scroll-mt-6 mt-4 sm:mt-6">
           {/* Header with Title, Worker Badge, and Action Status */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-2xl bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-400">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div className="flex items-center space-x-3 min-w-0">
+              <div className="w-10 h-10 rounded-2xl bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-400 shrink-0">
                 <Shield className="w-5 h-5" />
               </div>
-              <div>
-                <h4 className="text-sm font-black uppercase tracking-wider text-brand-300 flex items-center gap-2">
+              <div className="min-w-0">
+                <h4 className="text-sm font-black uppercase tracking-wider text-brand-300 flex items-center gap-2 flex-wrap">
                   <span>Admin Live Contest Operations & Worker Telemetry</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/25 text-emerald-200 font-mono border border-emerald-400/40 font-bold">
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/25 text-emerald-200 font-mono border border-emerald-400/40 font-bold shrink-0">
                      ACTIVE SUITE
                   </span>
                 </h4>
-                <p className="text-xs text-slate-300 font-medium">Mission-control engine for real-time synchronization, worker gating, and invariant validation.</p>
+                <p className="text-xs text-slate-300 font-medium leading-relaxed">Mission-control engine for real-time synchronization, worker gating, and invariant validation.</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono px-3 py-1 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 flex items-center gap-1.5 shadow-inner">
-                <Cpu className="w-3.5 h-3.5 text-brand-400" />
+            <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+              <span className="text-[11px] font-mono px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 flex items-center gap-2 shadow-inner">
+                <Cpu className="w-3.5 h-3.5 text-brand-400 shrink-0" />
                 <span>Worker: <strong className="text-white font-black">{liveTelemetry?.workerId || 'WORKER-LIVE-5'}</strong></span>
-                <span className={`px-1.5 py-0.5 text-[9px] font-black rounded ${liveTelemetry?.workerState === 'RUNNING' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-400/50' :
+                <span className={`px-2 py-0.5 text-[9.5px] font-black rounded-md ${liveTelemetry?.workerState === 'RUNNING' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-400/50' :
                   liveTelemetry?.workerState === 'PAUSED' ? 'bg-amber-500/30 text-amber-300 border border-amber-400/50' :
                     'bg-slate-800 text-slate-200 border border-slate-700'
                   }`}>
@@ -2192,14 +2192,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <span>{adminActionMsg}</span>
               </span>
-              <button onClick={() => setAdminActionMsg('')} className="text-slate-300 hover:text-white">
+              <button onClick={() => setAdminActionMsg('')} className="text-slate-300 hover:text-white cursor-pointer">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
 
           {/* Interactive Tab Switcher Navigation */}
-          <div className="flex items-center gap-2 p-2 rounded-2xl bg-slate-950 border border-slate-800 overflow-x-auto scrollbar-none">
+          <div className="flex items-center gap-2 p-2 rounded-2xl bg-slate-950 border border-slate-800 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             <button
               onClick={() => setAdminSubTab('sync_ops')}
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'sync_ops'
@@ -2281,14 +2281,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           {/* Tab 1: Live Sync & Primary Controls */}
           {adminSubTab === 'sync_ops' && (
             <div className="space-y-5 animate-fade-in">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-black text-slate-200 block">Worker State</span>
+                  <span className="text-[10px] uppercase font-black text-slate-300 block">Worker State</span>
                   <span className="text-base font-mono font-black text-white">{liveTelemetry?.workerState || 'READY'}</span>
                   <span className="text-[10px] text-emerald-400 block font-bold">Single-Worker DB Lock Active</span>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-black text-slate-200 block">Students Processed</span>
+                  <span className="text-[10px] uppercase font-black text-slate-300 block">Students Processed</span>
                   <span className="text-base font-mono font-black text-emerald-400">
                     {loading ? <span className="animate-pulse">Loading...</span> : `${liveTelemetry?.processedCount ?? sessionMetrics?.totalStudents ?? 0} / ${sessionMetrics?.totalStudents ?? 0}`}
                   </span>
@@ -2297,65 +2297,73 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </div>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-black text-slate-200 block">Successful Syncs</span>
+                  <span className="text-[10px] uppercase font-black text-slate-300 block">Successful Syncs</span>
                   <span className="text-base font-mono font-black text-emerald-400">
                     {loading ? '...' : (liveTelemetry?.successfulCount ?? ((sessionMetrics?.totalStudents ?? 0) - (liveTelemetry?.failedCount ?? 0)))}
                   </span>
-                  <span className="text-[10px] text-slate-200 block font-bold">99% Accuracy Rate</span>
+                  <span className="text-[10px] text-slate-300 block font-bold">99% Accuracy Rate</span>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-black text-slate-200 block">Data Errors</span>
+                  <span className="text-[10px] uppercase font-black text-slate-300 block">Data Errors</span>
                   <span className="text-base font-mono font-black text-amber-400">{liveTelemetry?.failedCount || 20}</span>
                   <span className="text-[10px] text-amber-300 block font-bold">Auto-Retry Eligible</span>
                 </div>
               </div>
 
-              {/* Action Buttons Toolbar */}
-              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center flex-wrap gap-3">
-                <button
-                  onClick={() => handleAdminAction('start_live')}
-                  disabled={isPerformingAdminAction}
-                  className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-lg shadow-emerald-900/40 border border-emerald-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
-                >
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Start Live Sync</span>
-                </button>
+              {/* Action Buttons Toolbar - Clean Grid Layout */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3.5">
+                <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
+                  <span className="text-[11px] font-black text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 text-brand-400" />
+                    <span>Live Synchronization & Execution Controls</span>
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <button
+                    onClick={() => handleAdminAction('start_live')}
+                    disabled={isPerformingAdminAction}
+                    className="w-full h-11 inline-flex items-center justify-center space-x-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-lg shadow-emerald-950/50 border border-emerald-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    <span>Start Live Sync</span>
+                  </button>
 
-                <button
-                  onClick={() => handleAdminAction(liveTelemetry?.isPaused ? 'resume' : 'pause')}
-                  disabled={isPerformingAdminAction}
-                  className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-black shadow-lg shadow-amber-900/40 border border-amber-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
-                >
-                  <Pause className="w-3.5 h-3.5 fill-current" />
-                  <span>{liveTelemetry?.isPaused ? 'Resume Sync' : 'Pause Sync'}</span>
-                </button>
+                  <button
+                    onClick={() => handleAdminAction(liveTelemetry?.isPaused ? 'resume' : 'pause')}
+                    disabled={isPerformingAdminAction}
+                    className="w-full h-11 inline-flex items-center justify-center space-x-2 px-4 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-black shadow-lg shadow-amber-950/50 border border-amber-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  >
+                    <Pause className="w-3.5 h-3.5 fill-current" />
+                    <span>{liveTelemetry?.isPaused ? 'Resume Sync' : 'Pause Sync'}</span>
+                  </button>
 
-                <button
-                  onClick={() => handleAdminAction('sweep_verification')}
-                  disabled={isPerformingAdminAction}
-                  className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black shadow-lg shadow-indigo-900/40 border border-indigo-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Run 3-Day Verification Sweep</span>
-                </button>
+                  <button
+                    onClick={() => handleAdminAction('sweep_verification')}
+                    disabled={isPerformingAdminAction}
+                    className="w-full h-11 inline-flex items-center justify-center space-x-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black shadow-lg shadow-indigo-950/50 border border-indigo-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Run 3-Day Verification Sweep</span>
+                  </button>
 
-                <button
-                  onClick={() => handleAdminAction('reset_worker')}
-                  disabled={isPerformingAdminAction}
-                  className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black shadow-md border border-slate-500/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Reset Worker State</span>
-                </button>
+                  <button
+                    onClick={() => handleAdminAction('reset_worker')}
+                    disabled={isPerformingAdminAction}
+                    className="w-full h-11 inline-flex items-center justify-center space-x-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-black shadow-md border border-slate-700 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Reset Worker State</span>
+                  </button>
 
-                <button
-                  onClick={() => handleAdminAction('force_final_sync')}
-                  disabled={isPerformingAdminAction}
-                  className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black shadow-lg shadow-purple-900/40 border border-purple-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
-                >
-                  <FastForward className="w-3.5 h-3.5" />
-                  <span>Force Final Sync & Lock Snapshot</span>
-                </button>
+                  <button
+                    onClick={() => handleAdminAction('force_final_sync')}
+                    disabled={isPerformingAdminAction}
+                    className="w-full h-11 inline-flex items-center justify-center space-x-2 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black shadow-lg shadow-purple-950/50 border border-purple-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50 sm:col-span-2 lg:col-span-2"
+                  >
+                    <FastForward className="w-3.5 h-3.5" />
+                    <span>Force Final Sync & Lock Snapshot</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -2609,7 +2617,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       )}
 
       {/* PRIMARY VIEW TAB SWITCHER */}
-      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800">
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 mb-6 sm:mb-8">
         <button
           onClick={() => startTransition(() => setActiveTab('previous_week'))}
           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-xs font-black transition-all cursor-pointer ${
@@ -2637,7 +2645,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       {/* PREVIOUS WEEK CONTEST ANALYZER TAB */}
       {activeTab === 'previous_week' && (
-        <PreviousWeekContestPanel sessionId={selectedSessionId || currentSession?.sessionId || 18} onStudentClick={onSelectStudent} />
+        <div className="mt-2 sm:mt-4">
+          <PreviousWeekContestPanel sessionId={selectedSessionId || currentSession?.sessionId || 18} onStudentClick={onSelectStudent} />
+        </div>
       )}
 
       {/* SESSION ANALYTICS & ROSTER MATRIX TAB */}

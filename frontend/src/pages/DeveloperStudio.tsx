@@ -8,7 +8,11 @@ import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { createPortal } from 'react-dom';
 
-export const DeveloperStudio: React.FC = () => {
+interface DeveloperStudioProps {
+  onClose?: () => void;
+}
+
+export const DeveloperStudio: React.FC<DeveloperStudioProps> = ({ onClose }) => {
   const [currentPath, setCurrentPath] = useState('');
   const [files, setFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -22,6 +26,33 @@ export const DeveloperStudio: React.FC = () => {
   
   const { notify } = useNotification();
   const { user } = useAuth();
+
+  const handleExit = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      try {
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, '', '#/dashboard');
+        } else {
+          window.location.hash = '#/dashboard';
+        }
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      } catch (_e) {
+        window.location.hash = '#/dashboard';
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleExit();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const isAdmin = ['admin', 'super admin', 'administrator', 'super_admin'].includes(user?.role?.toLowerCase() || '');
 
@@ -184,7 +215,7 @@ export const DeveloperStudio: React.FC = () => {
         {/* Left Section: Back Button + Terminal Icon + Title + Badge */}
         <div className="flex items-center gap-2 min-w-0 shrink-0">
           <button
-            onClick={() => window.location.reload()}
+            onClick={handleExit}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors shrink-0 cursor-pointer border border-slate-700 active:scale-95"
             title="Back to Dashboard"
           >
@@ -222,14 +253,29 @@ export const DeveloperStudio: React.FC = () => {
           </button>
 
           <button
-            onClick={() => {
-              const link = document.createElement('a');
-              link.href = '/api/dev-studio/audit-report';
-              link.download = 'Developer_Studio_Audit_Report.json';
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              notify.info('Audit Report', 'Downloading the Developer Studio edit audit report...');
+            onClick={async () => {
+              try {
+                notify.info('Audit Report', 'Preparing Developer Studio audit report...');
+                const res = await api.get('/dev-studio/audit-report', { responseType: 'blob' });
+                const blob = new Blob([res.data], { type: 'application/json' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'Developer_Studio_Audit_Report.json');
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+                notify.success('Downloaded', 'Developer Studio audit report downloaded successfully.');
+              } catch (err) {
+                // Fallback direct URL download
+                const link = document.createElement('a');
+                link.href = '/api/dev-studio/audit-report';
+                link.download = 'Developer_Studio_Audit_Report.json';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+              }
             }}
             className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 rounded-lg font-bold text-xs transition-colors shrink-0 cursor-pointer"
             title="Download Audit Report"
@@ -251,7 +297,7 @@ export const DeveloperStudio: React.FC = () => {
           )}
 
           <button 
-            onClick={() => window.location.reload()} 
+            onClick={handleExit} 
             className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer shrink-0"
             title="Exit Developer Studio"
           >
@@ -311,6 +357,13 @@ export const DeveloperStudio: React.FC = () => {
                   <FileCode className="w-4 h-4 text-brand-400 shrink-0" />
                   <span className="text-xs sm:text-sm font-mono text-slate-300 truncate">{selectedFile}</span>
                 </div>
+                <button
+                  onClick={() => { setSelectedFile(null); setFileContent(''); }}
+                  className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors ml-auto cursor-pointer"
+                  title="Close file"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
               <textarea
                 value={fileContent}

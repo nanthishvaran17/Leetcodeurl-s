@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ConversationList, Conversation } from '../components/messaging/ConversationList';
 import { ChatWindow, Message } from '../components/messaging/ChatWindow';
-import { RecipientSelector } from '../components/messaging/RecipientSelector';
+import { RecipientSelector, Recipient } from '../components/messaging/RecipientSelector';
 import { ConversationInfoPanel } from '../components/messaging/ConversationInfoPanel';
 import { AskInstitutionPanel } from '../components/messaging/AskInstitutionPanel';
 import { SmartGroupModal } from '../components/messaging/SmartGroupModal';
 import { getApiUrl, getAuthHeaders } from '../services/api';
 import { downloadManager } from '../services/download/downloadManager';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { useMessagingWebSocket } from '../hooks/useMessagingWebSocket';
 import axios from 'axios';
 import { MessageSquare, Sparkles, Users, ShieldCheck, Plus, CheckCircle, Info, ArrowLeft, X } from 'lucide-react';
@@ -18,6 +19,7 @@ interface MessagesPageProps {
 
 export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => {
   const { token, user } = useAuth();
+  const { notify } = useNotification();
   
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -497,8 +499,14 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     } catch (err) {}
   };
 
-  const handleSelectRecipient = async (recipientId: string) => {
+  const handleSelectRecipient = async (recipientInput: Recipient | string) => {
     setIsSelectorOpen(false);
+    const recipient: Recipient = typeof recipientInput === 'string'
+      ? { id: recipientInput, name: recipientInput, role: 'User', department: '', type: 'STUDENT' }
+      : recipientInput;
+
+    const recipientId = recipient.id;
+
     if (forwardingMessage) {
       const targetMsg = forwardingMessage;
       setForwardingMessage(null);
@@ -511,26 +519,69 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
         if (res.data?.success) {
           await fetchConversations();
           handleSelectConversation(res.data.message.conversationId);
+          notify.success('Message Forwarded', `Sent to ${recipient.name}`);
         }
-      } catch (err) {}
+      } catch (err: any) {
+        console.error('Failed to forward message:', err);
+        notify.error('Forward Failed', err?.response?.data?.detail || 'Unable to forward message.');
+      }
       return;
     }
 
-    const existing = conversations.find(c => c.otherUser.id === recipientId);
+    const targetId = (recipientId || '').trim().toLowerCase();
+    const targetName = (recipient.name || '').trim().toLowerCase();
+
+    // Check if conversation already exists in current state
+    const existing = conversations.find(c => {
+      const otherId = (c.otherUser?.id || '').trim().toLowerCase();
+      const otherName = (c.otherUser?.name || '').trim().toLowerCase();
+      return (otherId && otherId === targetId) || (otherName && otherName === targetName);
+    });
+
     if (existing) {
       handleSelectConversation(existing.conversationId);
       return;
     }
+
+    // Call backend to create or get conversation record without auto-sending dummy messages
     try {
-      const res = await axios.post(getApiUrl('/messaging/messages'), {
-        content: 'Hello',
-        receiver_id: recipientId
+      const res = await axios.post(getApiUrl('/messaging/conversations'), {
+        recipient_id: recipientId
       }, { headers: await getAuthHeaders() });
-      if (res.data?.success) {
-        await fetchConversations();
-        handleSelectConversation(res.data.message.conversationId);
+
+      if (res.data?.success && res.data.conversation) {
+        const newConv = res.data.conversation;
+        setConversations(prev => {
+          const exists = prev.some(c => c.conversationId === newConv.conversationId);
+          return exists ? prev : [newConv, ...prev];
+        });
+        handleSelectConversation(newConv.conversationId);
+        return;
       }
-    } catch (err) {}
+    } catch (err: any) {
+      console.warn('Backend create conversation returned error, using fallback:', err);
+    }
+
+    // Fallback: Construct client-side conversation object immediately so chat opens instantly
+    const fallbackConvId = `CONV_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const fallbackConv: Conversation = {
+      conversationId: fallbackConvId,
+      otherUser: {
+        id: recipient.id,
+        name: recipient.name,
+        role: recipient.role,
+        department: recipient.department,
+        type: recipient.type as 'STAFF' | 'STUDENT',
+        isOnline: false
+      },
+      lastMessagePreview: null,
+      lastMessageAt: null,
+      unreadCount: 0,
+      isPinned: false,
+      isArchived: false
+    };
+    setConversations(prev => [fallbackConv, ...prev]);
+    handleSelectConversation(fallbackConvId);
   };
 
   const handleActionTrigger = (act: any) => {

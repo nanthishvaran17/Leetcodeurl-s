@@ -52,11 +52,12 @@ def _write_section_header(ws, row_idx: int, title: str, max_cols: int = 10):
         ws.cell(row=row_idx, column=c).border = GRID_BORDER
 
 
-def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workbook:
+def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optional[str] = "ALL", year: Optional[str] = "ALL") -> openpyxl.Workbook:
     """
     Appends Sheet 14 and Sheet 15 to the provided openpyxl Workbook.
     Guarantees exactly 2 new sheets ('14 Week-on-Week Intelligence' and '15 Historical Contest Intel')
     without leaving duplicate tabs or modifying existing original sheets.
+    Respects department and cohort year filters.
     """
     from backend.models import Student, WeeklySession, WeeklyPublicResult, Department
 
@@ -69,12 +70,14 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
                 pass
 
     from sqlalchemy.orm import joinedload
-    from backend.services.contest_performance_service import is_official_student
+    from backend.services.contest_performance_service import is_official_student, matches_dept, matches_year
     all_stus = db_session.query(Student).options(joinedload(Student.department)).all()
     master_students = [
         s for s in all_stus
         if (s.is_active is True or s.is_active is None)
         and is_official_student(s.reg_no)
+        and matches_dept(s.department.code if s.department else "", s.department.name if s.department else "", department, getattr(s, "department_id", None))
+        and matches_year(str(s.year_level or ""), year, str(s.reg_no or ""))
     ]
     master_students.sort(key=lambda s: s.reg_no)
 

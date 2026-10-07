@@ -123,7 +123,7 @@ const defaultFilters: AdvancedFilters = {
   profile_class: "all",
   improvement_priority: "all",
   trend: "all",
-  top_n: 100,
+  top_n: 10000,
   total_solved: defaultNumeric(0),
   easy_solved: defaultNumeric(0),
   medium_solved: defaultNumeric(0),
@@ -177,11 +177,11 @@ function evaluateNumeric(val: number | string | null | undefined, filter: Numeri
   if (typeof val === "number") {
     numVal = val;
   } else {
-    numVal = parseInt(String(val).replace(/\D/g, ""), 10);
+    numVal = parseFloat(String(val).replace(/[^0-9.-]/g, ""));
   }
   if (isNaN(numVal)) return false;
   switch (filter.op) {
-    case "=": return numVal === filter.val1;
+    case "=": return Math.abs(numVal - filter.val1) < 0.01;
     case ">": return numVal > filter.val1;
     case ">=": return numVal >= filter.val1;
     case "<": return numVal < filter.val1;
@@ -277,10 +277,12 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
         transformOrigin = 'bottom';
       }
 
-      // Expand popover width so department names display in full without truncation
-      const popoverWidth = Math.max(rect.width, 360);
+      // Expand popover width so department names display in full without truncation, constrained by viewport
+      const popoverWidth = Math.min(viewportWidth - 24, Math.max(rect.width, 360));
       let left = rect.left;
-      if (left + popoverWidth > viewportWidth - 16) {
+      if (viewportWidth < 640 || popoverWidth >= viewportWidth - 48) {
+        left = Math.max(12, Math.round((viewportWidth - popoverWidth) / 2));
+      } else if (left + popoverWidth > viewportWidth - 16) {
         left = Math.max(12, viewportWidth - popoverWidth - 16);
       }
 
@@ -709,6 +711,7 @@ export const HRCandidateFinderPage: React.FC = () => {
 
   const sortFieldOptions: SelectOption[] = [
     { value: "total_solved", label: "Total Solved", badge: "TOTAL" },
+    { value: "twelfth_cutoff", label: "12th Cut-off", badge: "CUTOFF" },
     { value: "performance_score", label: "Performance Score", badge: "SCORE" },
     { value: "placement_readiness_score", label: "Placement Readiness", badge: "READY" },
     { value: "medium_solved", label: "Medium Solved", badge: "MED" },
@@ -742,7 +745,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           placement_readiness: "all",
           risk_level: "all",
           profile_class: "all",
-          top_n: 100
+          top_n: 10000
         }
       });
 
@@ -938,10 +941,16 @@ export const HRCandidateFinderPage: React.FC = () => {
     result.sort((a, b) => {
       let va = a[sortField];
       let vb = b[sortField];
-      if (typeof va === "string") {
-        return sortAsc ? (va as string).localeCompare(vb as string) : (vb as string).localeCompare(va as string);
+      if (va === null || va === undefined) return sortAsc ? 1 : -1;
+      if (vb === null || vb === undefined) return sortAsc ? -1 : 1;
+      if (typeof va === "string" && typeof vb === "string") {
+        return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
       }
-      return sortAsc ? (va as number) - (vb as number) : (vb as number) - (va as number);
+      const na = Number(va);
+      const nb = Number(vb);
+      if (isNaN(na)) return sortAsc ? 1 : -1;
+      if (isNaN(nb)) return sortAsc ? -1 : 1;
+      return sortAsc ? na - nb : nb - na;
     });
 
     // Top N limit
@@ -1027,7 +1036,7 @@ export const HRCandidateFinderPage: React.FC = () => {
     numKeys.forEach(k => {
       const nf = filters[k] as NumericFilter;
       if (nf && (nf.active || nf.val1 > 0)) {
-        const titleName = k.replace("_", " ").replace(/\b\w/g, c => c.toUpperCase());
+        const titleName = k === "twelfth_cutoff" ? "12th Cut-off" : k.replace("_", " ").replace(/\b\w/g, c => c.toUpperCase());
         const opStr = nf.op === "BETWEEN" ? `${nf.val1} - ${nf.val2}` : `${nf.op} ${nf.val1}`;
         list.push({ key: k, label: `${titleName} ${opStr}` });
       }
@@ -1077,13 +1086,14 @@ export const HRCandidateFinderPage: React.FC = () => {
   const updateNumeric = (key: keyof AdvancedFilters, field: keyof NumericFilter, val: any) => {
     setFilters(prev => {
       const current = { ...(prev[key] as NumericFilter) };
-      if (field === "op") current.op = val as FilterOperator;
-      else if (field === "val1") {
-        current.val1 = Number(val);
-        current.active = Number(val) > 0 || current.op !== ">=";
+      if (field === "op") {
+        current.op = val as FilterOperator;
+      } else if (field === "val1") {
+        current.val1 = val === "" ? 0 : Number(val);
       } else if (field === "val2") {
-        current.val2 = Number(val);
+        current.val2 = val === "" ? 0 : Number(val);
       }
+      current.active = (current.val1 > 0 || current.val2 > 0) || (current.op !== ">=");
       return { ...prev, [key]: current };
     });
   };
@@ -1474,6 +1484,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           <input
             type="number"
             min={0}
+            step="any"
             value={nf.val1 || ""}
             onChange={e => updateNumeric(key, "val1", e.target.value)}
             placeholder="0"
@@ -1485,6 +1496,7 @@ export const HRCandidateFinderPage: React.FC = () => {
               <input
                 type="number"
                 min={0}
+                step="any"
                 value={nf.val2 || ""}
                 onChange={e => updateNumeric(key, "val2", e.target.value)}
                 placeholder="Max"
@@ -1573,19 +1585,23 @@ export const HRCandidateFinderPage: React.FC = () => {
           )}
         </label>
         <div className="relative group">
-          <Users className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-300 transition-colors" />
           <input
             type="text"
+            autoComplete="off"
+            spellCheck={false}
             value={filters.name_search}
             onChange={e => setFilters(p => ({ ...p, name_search: e.target.value }))}
             placeholder="Search student name..."
             className={`${inpClass} pl-10 pr-9 border-purple-200/90 dark:border-purple-900/60 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 shadow-xs`}
           />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-300 transition-colors">
+            <Users className="w-4 h-4" />
+          </div>
           {filters.name_search && (
             <button
               type="button"
               onClick={() => setFilters(p => ({ ...p, name_search: "" }))}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 p-0.5 rounded-full transition-colors cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 p-0.5 rounded-full transition-colors cursor-pointer z-10"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -1605,19 +1621,23 @@ export const HRCandidateFinderPage: React.FC = () => {
           )}
         </label>
         <div className="relative group">
-          <FileText className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-300 transition-colors" />
           <input
             type="text"
+            autoComplete="off"
+            spellCheck={false}
             value={filters.reg_no_search}
             onChange={e => setFilters(p => ({ ...p, reg_no_search: e.target.value }))}
             placeholder="Search register number..."
             className={`${inpClass} pl-10 pr-9 border-purple-200/90 dark:border-purple-900/60 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 shadow-xs`}
           />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-300 transition-colors">
+            <FileText className="w-4 h-4" />
+          </div>
           {filters.reg_no_search && (
             <button
               type="button"
               onClick={() => setFilters(p => ({ ...p, reg_no_search: "" }))}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 p-0.5 rounded-full transition-colors cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 p-0.5 rounded-full transition-colors cursor-pointer z-10"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -1637,19 +1657,23 @@ export const HRCandidateFinderPage: React.FC = () => {
           )}
         </label>
         <div className="relative group">
-          <Target className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-300 transition-colors" />
           <input
             type="text"
+            autoComplete="off"
+            spellCheck={false}
             value={filters.roll_no_search}
             onChange={e => setFilters(p => ({ ...p, roll_no_search: e.target.value }))}
             placeholder="Search roll number..."
             className={`${inpClass} pl-10 pr-9 border-purple-200/90 dark:border-purple-900/60 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 shadow-xs`}
           />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-300 transition-colors">
+            <Target className="w-4 h-4" />
+          </div>
           {filters.roll_no_search && (
             <button
               type="button"
               onClick={() => setFilters(p => ({ ...p, roll_no_search: "" }))}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 p-0.5 rounded-full transition-colors cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 p-0.5 rounded-full transition-colors cursor-pointer z-10"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -1669,19 +1693,23 @@ export const HRCandidateFinderPage: React.FC = () => {
           )}
         </label>
         <div className="relative group">
-          <Code2 className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-300 transition-colors" />
           <input
             type="text"
+            autoComplete="off"
+            spellCheck={false}
             value={filters.username_search}
             onChange={e => setFilters(p => ({ ...p, username_search: e.target.value }))}
             placeholder="Search username..."
             className={`${inpClass} pl-10 pr-9 border-purple-200/90 dark:border-purple-900/60 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 shadow-xs`}
           />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-300 transition-colors">
+            <Code2 className="w-4 h-4" />
+          </div>
           {filters.username_search && (
             <button
               type="button"
               onClick={() => setFilters(p => ({ ...p, username_search: "" }))}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 p-0.5 rounded-full transition-colors cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 p-0.5 rounded-full transition-colors cursor-pointer z-10"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -2378,14 +2406,27 @@ export const HRCandidateFinderPage: React.FC = () => {
             </div>
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <div className="relative w-full sm:w-auto">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={tableSearch}
                   onChange={e => setTableSearch(e.target.value)}
                   placeholder="Filter table..."
-                  className="pl-8 pr-3 py-2 rounded-lg border border-slate-200 dark:border-navy-700 text-xs bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-44 min-h-[40px] sm:min-h-0"
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="pl-8 pr-8 py-2 rounded-lg border border-slate-200 dark:border-navy-700 text-xs bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-44 min-h-[40px] sm:min-h-0 text-left"
                 />
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 z-10 text-slate-400">
+                  <Search className="w-3.5 h-3.5 stroke-[2.5]" />
+                </div>
+                {tableSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setTableSearch('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded-full z-10 cursor-pointer"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -2408,23 +2449,24 @@ export const HRCandidateFinderPage: React.FC = () => {
                 <table className="w-full text-left text-xs whitespace-nowrap table-fixed">
                   <thead className="sticky top-0 z-10 bg-slate-50/95 dark:bg-navy-950/95 backdrop-blur-md border-b border-slate-200 dark:border-navy-800 text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     <tr>
-                      <th className="py-3.5 px-4 text-left w-[18%]">Student</th>
-                      <th className="py-3.5 px-3 text-left w-[12%]">Register No</th>
+                      <th className="py-3.5 px-4 text-left w-[17%]">Student</th>
+                      <th className="py-3.5 px-3 text-left w-[11%]">Register No</th>
                       <th className="py-3.5 px-2 text-center w-[6%]">Dept</th>
-                      <th className="py-3.5 px-2 text-center w-[7%]">Batch</th>
-                      <th className="py-3.5 px-2 text-center w-[9%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("global_rank"); setSortAsc(!sortAsc); }}>Global Rank</th>
-                      <th className="py-3.5 px-2 text-center w-[8%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("total_solved"); setSortAsc(!sortAsc); }}>Total Solved</th>
+                      <th className="py-3.5 px-2 text-center w-[6%]">Batch</th>
+                      <th className="py-3.5 px-2 text-center w-[7%] cursor-pointer hover:text-cyan-600 transition-colors" onClick={() => { setSortField("twelfth_cutoff"); setSortAsc(!sortAsc); }}>12th Cut-off</th>
+                      <th className="py-3.5 px-2 text-center w-[8%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("global_rank"); setSortAsc(!sortAsc); }}>Global Rank</th>
+                      <th className="py-3.5 px-2 text-center w-[7%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("total_solved"); setSortAsc(!sortAsc); }}>Total Solved</th>
                       <th className="py-3.5 px-2 text-center w-[5%] cursor-pointer hover:text-emerald-600 transition-colors" onClick={() => { setSortField("easy_solved"); setSortAsc(!sortAsc); }}>Easy</th>
                       <th className="py-3.5 px-2 text-center w-[5%] cursor-pointer hover:text-amber-600 transition-colors" onClick={() => { setSortField("medium_solved"); setSortAsc(!sortAsc); }}>Medium</th>
                       <th className="py-3.5 px-2 text-center w-[5%] cursor-pointer hover:text-rose-600 transition-colors" onClick={() => { setSortField("hard_solved"); setSortAsc(!sortAsc); }}>Hard</th>
                       <th className="py-3.5 px-2 text-center w-[8%] cursor-pointer hover:text-purple-600 transition-colors" onClick={() => { setSortField("contest_rating"); setSortAsc(!sortAsc); }}>Contest Rating</th>
-                      <th className="py-3.5 px-3 text-center w-[17%]">Action</th>
+                      <th className="py-3.5 px-3 text-center w-[15%]">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
                     {paginatedCandidates.map((c) => (
                       <tr key={c.id} onClick={() => setSelectedCandidate(c)} className="hover:bg-blue-50/40 dark:hover:bg-navy-800/50 transition-colors cursor-pointer group">
-                        <td className="py-3.5 px-4 text-left font-bold text-slate-900 dark:text-white w-[18%]">
+                        <td className="py-3.5 px-4 text-left font-bold text-slate-900 dark:text-white w-[17%]">
                           <div className="flex items-center gap-2.5">
                             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-xs shadow-xs flex-shrink-0 group-hover:scale-110 transition-transform">
                               {c.name.charAt(0)}
@@ -2435,14 +2477,23 @@ export const HRCandidateFinderPage: React.FC = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3.5 px-3 text-left font-mono text-slate-600 dark:text-slate-300 font-medium text-xs w-[12%]">{c.reg_no}</td>
+                        <td className="py-3.5 px-3 text-left font-mono text-slate-600 dark:text-slate-300 font-medium text-xs w-[11%]">{c.reg_no}</td>
                         <td className="py-3.5 px-2 text-center w-[6%]">
                           <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold text-[10px] border border-slate-200/60 dark:border-navy-700">
                             {c.dept_code}
                           </span>
                         </td>
-                        <td className="py-3.5 px-2 text-center font-semibold text-slate-600 dark:text-slate-400 text-xs w-[7%]">{c.batch}</td>
-                        <td className="py-3.5 px-2 text-center w-[9%]">
+                        <td className="py-3.5 px-2 text-center font-semibold text-slate-600 dark:text-slate-400 text-xs w-[6%]">{c.batch}</td>
+                        <td className="py-3.5 px-2 text-center w-[7%]">
+                          {c.twelfth_cutoff !== null && c.twelfth_cutoff !== undefined ? (
+                            <span className="px-2 py-0.5 rounded-md bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 font-bold font-mono text-[10px] border border-cyan-200/60 dark:border-cyan-900/50">
+                              {Number(c.twelfth_cutoff).toFixed(1)}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 font-mono text-[10px]">—</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-2 text-center w-[8%]">
                           <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-mono font-black text-xs border border-blue-200/60 dark:border-blue-900/50">
                             {(() => {
                               const gr: any = c.global_rank;
@@ -2458,14 +2509,14 @@ export const HRCandidateFinderPage: React.FC = () => {
                             })()}
                           </span>
                         </td>
-                        <td className="py-3.5 px-2 text-center font-black text-slate-900 dark:text-white text-xs font-mono w-[8%]">{c.total_solved}</td>
+                        <td className="py-3.5 px-2 text-center font-black text-slate-900 dark:text-white text-xs font-mono w-[7%]">{c.total_solved}</td>
                         <td className="py-3.5 px-2 text-center font-bold text-emerald-600 dark:text-emerald-400 text-xs font-mono w-[5%]">{c.easy_solved}</td>
                         <td className="py-3.5 px-2 text-center font-bold text-amber-600 dark:text-amber-400 text-xs font-mono w-[5%]">{c.medium_solved}</td>
                         <td className="py-3.5 px-2 text-center font-bold text-rose-600 dark:text-rose-400 text-xs font-mono w-[5%]">{c.hard_solved}</td>
                         <td className="py-3.5 px-2 text-center font-extrabold text-purple-600 dark:text-purple-400 text-xs font-mono w-[8%]">
                           {c.contest_rating > 0 ? c.contest_rating.toLocaleString() : "0"}
                         </td>
-                        <td className="py-3.5 px-3 text-center w-[17%]">
+                        <td className="py-3.5 px-3 text-center w-[15%]">
                           <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <button
                               type="button"
@@ -2541,7 +2592,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Meta Bar: Register No, Batch, Dept */}
+                    {/* Meta Bar: Register No, Batch, Dept, 12th Cutoff */}
                     <div className="flex flex-wrap items-center justify-between gap-3 text-xs p-3 bg-slate-50 dark:bg-navy-900 rounded-xl border border-slate-100 dark:border-navy-800">
                       <div className="min-w-0 flex-1">
                         <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Register No</span>
@@ -2556,6 +2607,11 @@ export const HRCandidateFinderPage: React.FC = () => {
                             {c.dept_code}
                           </span>
                           <span className="font-semibold text-slate-600 dark:text-slate-400 text-[11px] sm:text-xs whitespace-nowrap">{c.batch}</span>
+                          {c.twelfth_cutoff !== null && c.twelfth_cutoff !== undefined && (
+                            <span className="px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 font-mono font-black text-[10px] border border-cyan-300 dark:border-cyan-800">
+                              Cutoff: {Number(c.twelfth_cutoff).toFixed(1)}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

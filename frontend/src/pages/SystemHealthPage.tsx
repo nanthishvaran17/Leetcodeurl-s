@@ -1242,8 +1242,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               <label className="block text-[11px] font-black uppercase text-slate-500 mb-1.5">
                 1. Select Student (Search by Name, Reg No, or Username)
               </label>
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <div className="relative flex items-center">
                 <input
                   type="text"
                   value={forensicSearchInput}
@@ -1254,11 +1253,16 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   onBlur={() => {
                     setTimeout(() => setShowStudentDropdown(false), 200);
                   }}
+                  autoComplete="off"
+                  spellCheck={false}
                   placeholder="Search student by name, register number, or LeetCode username..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-inner"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-inner text-left"
                 />
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
+                  <Search className="w-4 h-4 stroke-[2.5]" />
+                </div>
                 {isSearchingStudents && (
-                  <RefreshCw className="w-3.5 h-3.5 text-indigo-500 absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin" />
+                  <RefreshCw className="w-3.5 h-3.5 text-indigo-500 absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin z-10" />
                 )}
               </div>
 

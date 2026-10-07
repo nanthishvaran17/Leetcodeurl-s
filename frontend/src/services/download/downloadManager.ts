@@ -63,10 +63,11 @@ class DownloadManager {
 
       // 3. GENERATE REPORT VIA API (Axios Blob Request)
       // Note: We DO NOT emit notifyStart before the server responds successfully!
-      const response = await api.request({
+        const queryParams = { ...options.params, _t: Date.now() };
+        const response = await api.request({
         url: endpoint,
         method: options.method || 'GET',
-        params: options.params || {},
+        params: queryParams,
         data: options.data,
         responseType: 'blob',
         headers: {

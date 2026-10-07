@@ -209,6 +209,14 @@ def generate_weekly_performance_data(
     """
     CANONICAL WEEKLY PERFORMANCE DATASET GENERATOR
     """
+    # Step 0: Resolve session_id early to set report_date for historical accurate reporting
+    target_ws = None
+    if session_id and str(session_id).lower() not in ("latest", "all", "none", ""):
+        from backend.services.weekly_session_resolver import resolve_target_weekly_session
+        target_ws = resolve_target_weekly_session(db, session_id)
+        if target_ws and not report_date:
+            report_date = target_ws.session_date
+
     # Step 1: Reporting Period & Contest Discovery
     period_info = reporting_period_service.get_reporting_period(report_date)
     today_str = period_info["report_date_str"]
@@ -225,33 +233,16 @@ def generate_weekly_performance_data(
     last_contest_ids = [c["contest_id"] for c in discovered_last_contests]
     curr_contest_ids = [c["contest_id"] for c in discovered_curr_contests]
 
-    # Step 2: Session Resolution
-    if session_id and str(session_id).lower() not in ("latest", "all", "none", ""):
-        target_ws = None
-        if str(session_id).isdigit():
-            target_ws = db.query(WeeklySession).filter(WeeklySession.id == int(session_id)).first()
-        else:
-            target_ws = db.query(WeeklySession).filter(
-                (WeeklySession.session_date == str(session_id)) |
-                (WeeklySession.contest_name.ilike(f"%{session_id}%")) |
-                (WeeklySession.contest_id.ilike(f"%{session_id}%"))
-            ).first()
-
-        if target_ws:
-            prev_ws = db.query(WeeklySession).filter(WeeklySession.id < target_ws.id).order_by(WeeklySession.id.desc()).first()
-            session_res = {
-                "current_week_session": target_ws,
-                "last_week_session": prev_ws,
-                "current_week_contest": extract_contest_number(target_ws) or target_ws.id,
-                "last_week_contest": extract_contest_number(prev_ws) if prev_ws else "N/A",
-                "resolution_mode": "override_session_id"
-            }
-        else:
-            session_res = resolve_weekly_sessions(
-                db,
-                last_week=last_week_contest or (int(last_contest_ids[0]) if last_contest_ids and str(last_contest_ids[0]).isdigit() else None),
-                current_week=current_week_contest or (int(curr_contest_ids[0]) if curr_contest_ids and str(curr_contest_ids[0]).isdigit() else None)
-            )
+    # Step 2: Session Resolution (Continued)
+    if target_ws:
+        prev_ws = db.query(WeeklySession).filter(WeeklySession.id < target_ws.id).order_by(WeeklySession.id.desc()).first()
+        session_res = {
+            "current_week_session": target_ws,
+            "last_week_session": prev_ws,
+            "current_week_contest": extract_contest_number(target_ws) or target_ws.id,
+            "last_week_contest": extract_contest_number(prev_ws) if prev_ws else "N/A",
+            "resolution_mode": "override_session_id"
+        }
     else:
         session_res = resolve_weekly_sessions(
             db,
@@ -342,11 +333,16 @@ def generate_weekly_performance_data(
         for r in db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == last_session_id).all():
             last_vir_results[int(str(r.student_id))] = r
 
-    # Step 5: Load Historical Last Week Snapshots if Available
+    # Step 5: Load Historical Snapshots if Available
     last_snapshots_by_pid: Dict[str, WeeklyStudentSnapshot] = {}
-    db_snaps = db.query(WeeklyStudentSnapshot).filter(WeeklyStudentSnapshot.reporting_period_id == prev_period_id).all()
-    for snap in db_snaps:
+    db_snaps_last = db.query(WeeklyStudentSnapshot).filter(WeeklyStudentSnapshot.reporting_period_id == prev_period_id).all()
+    for snap in db_snaps_last:
         last_snapshots_by_pid[str(snap.people_id)] = snap
+
+    curr_snapshots_by_pid: Dict[str, WeeklyStudentSnapshot] = {}
+    db_snaps_curr = db.query(WeeklyStudentSnapshot).filter(WeeklyStudentSnapshot.reporting_period_id == curr_period_id).all()
+    for snap in db_snaps_curr:
+        curr_snapshots_by_pid[str(snap.people_id)] = snap
 
     # Step 6: Process Students & Deduplicate by People ID
     processed_pids = set()
@@ -399,6 +395,18 @@ def generate_weekly_performance_data(
         last_vir_outcome = classify_virtual_contest_outcome(last_vir_obj)
 
         hist_snap = last_snapshots_by_pid.get(str(pid))
+        curr_snap = curr_snapshots_by_pid.get(str(pid))
+
+        if curr_pub_outcome in ("NOT_ATTENDED", "DATA_ERROR", "PENDING", None) and curr_snap and curr_snap.contest_data:
+            try:
+                cdata = json.loads(str(curr_snap.contest_data))
+                if isinstance(cdata, dict) and cdata.get("public"):
+                    curr_pub_outcome = cdata.get("public")
+                if isinstance(cdata, dict) and cdata.get("virtual"):
+                    curr_vir_outcome = cdata.get("virtual")
+            except Exception:
+                pass
+
         if last_pub_outcome in ("NOT_ATTENDED", "DATA_ERROR", "PENDING", None) and hist_snap and hist_snap.contest_data:
             try:
                 cdata = json.loads(str(hist_snap.contest_data))
@@ -408,6 +416,9 @@ def generate_weekly_performance_data(
                     last_vir_outcome = cdata.get("virtual")
             except Exception:
                 pass
+
+        curr_tot = curr_snap.primary_solved_count if (curr_snap and target_ws) else tot
+        curr_category_name = curr_snap.solved_bucket if (curr_snap and target_ws) else category_name
 
         last_tot = hist_snap.primary_solved_count if hist_snap else tot
         last_category_name = hist_snap.solved_bucket if hist_snap else category_name
@@ -431,11 +442,11 @@ def generate_weekly_performance_data(
             "easy": easy,
             "medium": med,
             "hard": hd,
-            "total_solved": tot,
+            "total_solved": curr_tot,
             "accommodation": getattr(s, "accommodation", "") or getattr(s, "accommodation_type", "") or "",
             "twelfth_cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
             "cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
-            "category": category_name,
+            "category": curr_category_name,
             "profile_ranking": getattr(st, "public_profile_ranking", None),
             "contest_rating": (getattr(curr_pub_obj, "contest_rating", None) if curr_pub_obj and getattr(curr_pub_obj, "contest_rating", None) else getattr(st, "contest_rating", None)),
             "contest_ranking": (getattr(curr_pub_obj, "contest_rank", None) if curr_pub_obj and getattr(curr_pub_obj, "contest_rank", None) else getattr(st, "contest_global_ranking", None)),
@@ -712,7 +723,7 @@ def generate_weekly_performance_data(
 
 
 def run_sunday_0945_public_contest_workflow(db: Session) -> Dict[str, Any]:
-    """Triggers Sunday 9:45 AM Public Contest fetch, Excel generation, and Email workflow."""
+    # Triggers Sunday 9:45 AM Public Contest fetch, Excel generation, and Email workflow.
     try:
         data = generate_weekly_performance_data(db, save_snapshot=True)
         return {"status": "success", "message": "Public contest workflow completed", "report_id": data.get("report_id")}
@@ -722,7 +733,7 @@ def run_sunday_0945_public_contest_workflow(db: Session) -> Dict[str, Any]:
 
 
 def run_sunday_2200_virtual_contest_workflow(db: Session) -> Dict[str, Any]:
-    """Triggers Sunday 10:00 PM Virtual Contest fetch, Combined Excel generation, and Email workflow."""
+    # Triggers Sunday 10:00 PM Virtual Contest fetch, Combined Excel generation, and Email workflow.
     try:
         data = generate_weekly_performance_data(db, save_snapshot=True)
         return {"status": "success", "message": "Virtual contest workflow completed", "report_id": data.get("report_id")}

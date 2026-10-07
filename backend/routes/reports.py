@@ -873,6 +873,7 @@ def download_session_report_by_format(
     status: Optional[str] = Query("ALL"),
     search: Optional[str] = Query(""),
     batch: Optional[str] = Query("ALL"),
+    report_type: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Download Session Report", dept_scoped=True))
 ):
@@ -897,10 +898,36 @@ def download_session_report_by_format(
             search=eff_search,
             status=eff_att,
             batch=eff_batch,
+            report_type=report_type,
             current_user=current_user
         )
 
         if fmt in ("excel", "xlsx"):
+            rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
+            if rpt_t in ("MASTER_10_SHEET", "10_SHEET", "MASTER_WORKBOOK"):
+                from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
+                c_id = dataset.get("session_id") or dataset.get("contest_id")
+                try:
+                    excel_bytes = generate_master_10_sheet_workbook(
+                        db, 
+                        current_user=current_user, 
+                        contest_id=c_id, 
+                        department=eff_dept, 
+                        year=eff_year, 
+                        report_type=rpt_t,
+                        attendance=eff_att,
+                        search=eff_search,
+                        batch=eff_batch
+                    )
+                    if excel_bytes and len(excel_bytes) > 100:
+                        return Response(
+                            content=excel_bytes,
+                            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            headers={"Content-Disposition": f'attachment; filename="{r_filename}.xlsx"'}
+                        )
+                except Exception as e:
+                    logger.warning(f"[MASTER WORKBOOK FALLBACK in session_report] {e}")
+
             from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
             excel_bytes = export_dynamic_excel(dataset)
             return Response(
@@ -1145,24 +1172,58 @@ def get_contest_filename_base(
 
     type_slug = None
 
-    if "ASSIGNED" in rtype_str or "MENTORING" in rtype_str or "ASSIGNED" in cname_str:
-        type_slug = "Mentoring_Assigned_Students"
+    if "CUTOFF" in rtype_str or "12TH" in rtype_str or "TNEA" in rtype_str or "CUTOFF" in cname_str:
+        type_slug = "12th_TNEA_Cutoff"
+    elif "PRINCIPAL" in rtype_str or "PRINCIPAL" in cname_str:
+        type_slug = "Principal_Executive"
+    elif "FACULTY_COORDINATOR" in rtype_str or "COORDINATOR" in rtype_str:
+        type_slug = "Coordinator_Weekly"
     elif "FACULTY" in rtype_str or "FACULTY" in cname_str:
-        type_slug = "Faculty_Perf"
+        type_slug = "Faculty_Consolidated"
+    elif "HOD" in rtype_str or "HOD" in cname_str:
+        type_slug = "HOD_Dept_Intelligence"
+    elif "SUNDAY" in rtype_str or "SUNDAY" in cname_str:
+        type_slug = "Sunday_Live_Contest"
+    elif "LEADERBOARD" in rtype_str or "TOP_PERFORMERS" in rtype_str:
+        type_slug = "Top_Performers_Leaderboard"
+    elif "STREAK" in rtype_str or "DAILY" in rtype_str:
+        type_slug = "LeetCode_Daily_Streak"
+    elif "MONTHLY" in rtype_str:
+        type_slug = "Monthly_Institutional_Summary"
+    elif "PLACEMENT" in rtype_str or "ELIGIBILITY" in rtype_str:
+        type_slug = "Placement_Eligibility"
+    elif "GPA" in rtype_str or "SEMESTER" in rtype_str:
+        type_slug = "Semester_GPA_Correlation"
+    elif "GENDER" in rtype_str:
+        type_slug = "Gender_Wise_Analytics"
+    elif "HOSTEL" in rtype_str or "DAY_SCHOLAR" in rtype_str:
+        type_slug = "Hostel_vs_DayScholar"
+    elif "BOARDING" in rtype_str or "SCHOOL" in rtype_str:
+        type_slug = "Boarding_School_Type"
+    elif "DIFFICULTY" in rtype_str:
+        type_slug = "Problem_Difficulty_Distribution"
+    elif "MATRIX" in rtype_str:
+        type_slug = "Student_Performance_Matrix"
+    elif "ASSIGNED" in rtype_str or "MENTORING" in rtype_str or "ASSIGNED" in cname_str:
+        type_slug = "Mentoring_Assigned_Students"
     elif "HISTORICAL" in rtype_str or "HISTORICAL" in cname_str or "HIST" in rtype_str:
         type_slug = "Hist_Intel"
     elif "WEEK_ON_WEEK" in rtype_str or "WEEK-ON-WEEK" in cname_str or "WOW" in rtype_str or "WOW" in cname_str:
         type_slug = "WoW_Intel"
     elif "FIVE_WEEK" in rtype_str or "FIVE-WEEK" in cname_str or "TREND" in rtype_str or "TREND" in cname_str:
         type_slug = "Trend_5W"
-    elif "PRINCIPAL" in rtype_str or "PRINCIPAL" in cname_str:
-        type_slug = "Principal_Exec"
-    elif "HOD" in rtype_str or "HOD" in cname_str:
-        type_slug = "HOD_Intel"
     elif "COLLEGE" in rtype_str or "COLLEGE" in cname_str:
         type_slug = "College_Exec"
+    elif "MANAGEMENT" in rtype_str:
+        type_slug = "Management_Exec"
     elif "MASTER" in rtype_str or "MASTER" in cname_str:
         type_slug = "Master_Tracker"
+    elif "ATTENDANCE" in rtype_str:
+        type_slug = "Contest_Attendance"
+    elif "PERFORMANCE_RANKING" in rtype_str:
+        type_slug = "Contest_Performance"
+    elif "FRIDAY" in rtype_str:
+        type_slug = "Friday_Official"
     elif "STUDENT_PERFORMANCE" in rtype_str or "STUDENT PERFORMANCE" in cname_str:
         type_slug = "Student_Performance_Detail"
 
@@ -1525,15 +1586,18 @@ def _enrich_dataset_ranks_and_ratings(dataset: dict, db: Session) -> dict:
                     reg_clean = reg_u.replace("7322", "")
 
                     db_c = c_stats_map.get(reg) or c_stats_map.get(reg_u) or c_stats_map.get(reg_clean) or c_stats_map.get(f"7322{reg_clean}") or {}
-                    q1_val = r.get("q1") if r.get("q1") is not None else db_c.get("q1")
-                    q2_val = r.get("q2") if r.get("q2") is not None else db_c.get("q2")
-                    q3_val = r.get("q3") if r.get("q3") is not None else db_c.get("q3")
-                    q4_val = r.get("q4") if r.get("q4") is not None else db_c.get("q4")
+                    
+                    is_weekly = "WEEKLY" in rtype_u or "WOW" in rtype_u
+                    
+                    q1_val = r.get("q1") if r.get("q1") is not None else (0 if is_weekly else db_c.get("q1"))
+                    q2_val = r.get("q2") if r.get("q2") is not None else (0 if is_weekly else db_c.get("q2"))
+                    q3_val = r.get("q3") if r.get("q3") is not None else (0 if is_weekly else db_c.get("q3"))
+                    q4_val = r.get("q4") if r.get("q4") is not None else (0 if is_weekly else db_c.get("q4"))
 
                     c_sol = r.get("contest_solved")
-                    if c_sol is None or (isinstance(c_sol, (int, float)) and c_sol == 0 and db_c.get("tot", 0) > 0):
+                    if c_sol is None or (isinstance(c_sol, (int, float)) and c_sol == 0 and not is_weekly and db_c.get("tot", 0) > 0):
                         c_sol = r.get("total_contest_solved")
-                    if c_sol is None or (isinstance(c_sol, (int, float)) and c_sol == 0 and db_c.get("tot", 0) > 0):
+                    if c_sol is None or (isinstance(c_sol, (int, float)) and c_sol == 0 and not is_weekly and db_c.get("tot", 0) > 0):
                         c_sol = db_c.get("tot")
 
                     breakdown = compute_contest_difficulty_breakdown(
@@ -1614,6 +1678,7 @@ def _get_dataset_for_id(
     search: str = "",
     status: str = "ALL",
     batch: str = "ALL",
+    report_type: Optional[str] = None,
     current_user: Optional[Any] = None
 ):
     # Consolidate status/attendance if passed
@@ -1655,7 +1720,7 @@ def _get_dataset_for_id(
             (dataset.get("current_session") or {}).get("session_date") or 
             dataset.get("report_date")
         )
-        report_type = dataset.get("report_type") or dataset.get("reportType") or getattr(report, "report_type", None)
+        report_type = dataset.get("report_type") or dataset.get("reportType") or getattr(report, "report_type", None) or report_type
         
         rows = (
             dataset.get("allStudents") or 
@@ -1771,6 +1836,7 @@ def _get_dataset_for_id(
                 if hod_dept_ids:
                     rows = [r for r in rows if (r.get("department_id") or r.get("dept_id")) in hod_dept_ids]
 
+        dataset["report_type"] = report_type
         dataset["rows"] = rows
         dataset["allStudents"] = rows
         if has_active_filters:
@@ -1784,20 +1850,21 @@ def _get_dataset_for_id(
 
         # Fallback 1: If report_id is a dynamic RPT-, REP-, or REPORT- code, build dataset via build_universal_report
         if report_id.startswith("RPT-") or report_id.startswith("REP-") or report_id.startswith("REPORT-") or "REP" in report_id.upper():
-            rtype = "STUDENT_PERFORMANCE"
+            rtype = report_type or "STUDENT_PERFORMANCE"
             rid_u = report_id.upper()
-            if "HIST" in rid_u:
-                rtype = "HISTORICAL_CONTEST_INTELLIGENCE"
-            elif "WOW" in rid_u:
-                rtype = "WEEK_ON_WEEK_INTELLIGENCE"
-            elif "TREND" in rid_u:
-                rtype = "FIVE_WEEK_PERFORMANCE_TREND"
-            elif "FRIDAY" in rid_u:
-                rtype = "FRIDAY_OFFICIAL_CONTEST"
-            elif "SUNDAY" in rid_u:
-                rtype = "SUNDAY_LIVE_CONTEST"
-            elif "COORD" in rid_u or "PERFORMANCE" in rid_u or "WEEKLY" in rid_u or "REP-2026" in rid_u or rid_u.startswith("REP-"):
-                rtype = "WEEKLY_PERFORMANCE"
+            if not report_type:
+                if "HIST" in rid_u:
+                    rtype = "HISTORICAL_CONTEST_INTELLIGENCE"
+                elif "WOW" in rid_u:
+                    rtype = "WEEK_ON_WEEK_INTELLIGENCE"
+                elif "TREND" in rid_u:
+                    rtype = "FIVE_WEEK_PERFORMANCE_TREND"
+                elif "FRIDAY" in rid_u:
+                    rtype = "FRIDAY_OFFICIAL_CONTEST"
+                elif "SUNDAY" in rid_u:
+                    rtype = "SUNDAY_LIVE_CONTEST"
+                elif "COORD" in rid_u or "PERFORMANCE" in rid_u or "WEEKLY" in rid_u or "REP-2026" in rid_u or rid_u.startswith("REP-"):
+                    rtype = "WEEKLY_PERFORMANCE"
 
             from backend.services.report_engine import build_universal_report
             from backend.services.report_models import ReportConfig
@@ -1850,7 +1917,7 @@ def _get_dataset_for_id(
 
             contest_name = str(getattr(ws, "contest_name", None) or f"Weekly Contest {session_id}")
             session_date = str(getattr(ws, "session_date", None) or "")
-            r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=effective_att, db=db)
+            r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=effective_att, db=db, report_type=report_type)
 
             from backend.services.canonical_contest_engine import build_canonical_contest_dataset
             canonical_data = build_canonical_contest_dataset(
@@ -2059,7 +2126,7 @@ def _get_dataset_for_id(
             dataset = {
                 "report_id": f"Session_{session_id}",
                 "reportId": f"Session_{session_id}",
-                "report_type": "Weekly_Contest",
+                "report_type": report_type or "Weekly_Contest",
                 "contestId": ws.contest_id,
                 "contestName": contest_name,
                 "sessionDate": session_date,
@@ -2135,6 +2202,7 @@ def download_universal_excel(
     search: str = "",
     searchQuery: Optional[str] = None,
     batch: str = "ALL",
+    report_type: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Download Report Excel", dept_scoped=True))
 ):
@@ -2164,15 +2232,67 @@ def download_universal_excel(
             search=eff_search,
             status=status or "ALL",
             batch=batch,
+            report_type=report_type,
             current_user=current_user
         )
-        try:
-            from backend.exporters.excel_exporter import export_excel_from_dataset
-            excel_bytes = export_excel_from_dataset(dataset)
-        except Exception as ex_exp:
-            logger.warning(f"[UNIVERSAL EXCEL FALLBACK] Standard exporter failed: {ex_exp}, falling back to dynamic")
-            from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
-            excel_bytes = export_dynamic_excel(dataset)
+        rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
+        
+        if report_id.startswith("RPT-TREND-") or "TREND" in report_id.upper() or rpt_t == "FIVE_WEEK_PERFORMANCE_TREND":
+            from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
+            c_id = dataset.get("session_id") or dataset.get("contest_id")
+            excel_bytes = generate_master_10_sheet_workbook(
+                db, 
+                current_user=current_user, 
+                contest_id=c_id, 
+                department=eff_dept, 
+                year=eff_year, 
+                report_type="FIVE_WEEK_PERFORMANCE_TREND"
+            )
+            if not excel_bytes or len(excel_bytes) < 100:
+                raise ValueError("Generated Excel file is empty or corrupted.")
+            return Response(
+                content=excel_bytes,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={
+                    "Content-Disposition": f'attachment; filename="{r_filename}.xlsx"',
+                    "Access-Control-Expose-Headers": "Content-Disposition",
+                    "Cache-Control": "no-cache, no-store, must-revalidate"
+                }
+            )
+
+        if rpt_t in (
+            "MASTER_10_SHEET", "FRIDAY_OFFICIAL_CONTEST", "SUNDAY_LIVE_CONTEST",
+            "WEEKLY_CONTEST_INTELLIGENCE", "CONTEST_ATTENDANCE_PARTICIPATION",
+            "CONTEST_PERFORMANCE_RANKING", "WEEKLY_STUDENT_PERFORMANCE",
+            "PROBLEM_DIFFICULTY_INTELLIGENCE",
+            "FACULTY_CONSOLIDATED", "FACULTY_COORDINATOR_CONSOLIDATED",
+            "HOD_DEPARTMENT_INTELLIGENCE", "PRINCIPAL_EXECUTIVE",
+            "MANAGEMENT_EXECUTIVE_SUMMARY", "COLLEGE_EXECUTIVE", "DEPARTMENT_PERFORMANCE"
+        ):
+            from backend.services.pregenerated_report_service import generate_report_bytes
+            filters = {
+                "department": eff_dept,
+                "year": eff_year,
+                "attendance": eff_att,
+                "status": status,
+                "search": eff_search,
+                "batch": batch,
+                "session_id": dataset.get("session_id") or dataset.get("contest_id") or "latest"
+            }
+            try:
+                excel_bytes = generate_report_bytes(db, report_type=rpt_t, format="xlsx", filters=filters, current_user=current_user)
+            except Exception as e:
+                logger.warning(f"[MASTER WORKBOOK FALLBACK] {e}")
+                from backend.exporters.excel_exporter import export_excel_from_dataset
+                excel_bytes = export_excel_from_dataset(dataset)
+        else:
+            try:
+                from backend.exporters.excel_exporter import export_excel_from_dataset
+                excel_bytes = export_excel_from_dataset(dataset)
+            except Exception as ex_exp:
+                logger.warning(f"[UNIVERSAL EXCEL FALLBACK] Standard exporter failed: {ex_exp}, falling back to dynamic")
+                from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
+                excel_bytes = export_dynamic_excel(dataset)
 
         if not excel_bytes or len(excel_bytes) < 100:
             raise ValueError("Generated Excel file is empty or corrupted.")

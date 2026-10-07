@@ -761,16 +761,20 @@ export const StaffDashboardView: React.FC = () => {
                     <div className="absolute z-50 top-full left-0 mt-2 w-full sm:w-80 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-2 animate-in fade-in zoom-in-95">
                       {/* Search Bar inside Dropdown */}
                       <div className="relative flex items-center">
-                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
                           type="text"
                           autoFocus
+                          autoComplete="off"
+                          spellCheck={false}
                           value={studentSelectSearch}
                           onChange={(e) => setStudentSelectSearch(e.target.value)}
                           onMouseDown={(e) => e.stopPropagation()}
                           placeholder="Search student or reg no..."
-                          className="w-full h-9 pl-9 pr-7 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder:text-slate-400"
+                          className="w-full h-9 pl-9 pr-7 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder:text-slate-400 text-left"
                         />
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
+                          <Search className="w-3.5 h-3.5" />
+                        </div>
                         {studentSelectSearch && (
                           <button
                             type="button"
@@ -941,7 +945,6 @@ export const StaffDashboardView: React.FC = () => {
 
             {/* Search inside assigned set strictly */}
             <div className="relative w-full sm:w-64 shrink-0 flex items-center">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 value={search}
@@ -949,9 +952,14 @@ export const StaffDashboardView: React.FC = () => {
                   setSearch(e.target.value);
                   if (selectedStudentFilter !== 'ALL') setSelectedStudentFilter('ALL');
                 }}
+                autoComplete="off"
+                spellCheck={false}
                 placeholder="Search assigned students..."
-                className="w-full h-10 pl-10 pr-8 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition shadow-xs placeholder:font-medium"
+                className="w-full h-10 pl-10 pr-8 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition shadow-xs placeholder:font-medium text-left"
               />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
+                <Search className="w-4 h-4" />
+              </div>
               {search && (
                 <button
                   type="button"

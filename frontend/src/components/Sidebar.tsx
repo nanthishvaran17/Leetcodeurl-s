@@ -85,8 +85,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       items: [
         { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard, badge: 'MENTOR', badgeColor: 'indigo' },
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
-        { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'LIVE', badgeColor: 'rose', pulse: true },
-        { id: 'hr-candidate-finder', label: 'Placement & Hiring Portal', icon: Briefcase, badge: 'PLACEMENTS', badgeColor: 'purple' },
+        { id: 'faculty-action-center', label: 'Faculty Portal', icon: Zap, badge: 'LIVE', badgeColor: 'rose', pulse: true },
+        { id: 'hr-candidate-finder', label: 'Placement Portal', icon: Briefcase, badge: 'HIRE', badgeColor: 'purple' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
       ]
     },
@@ -119,8 +119,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       items: [
         { id: 'dashboard', label: 'HOD Dashboard', icon: LayoutDashboard },
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
-        { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'FACULTY', badgeColor: 'indigo' },
-        { id: 'hr-candidate-finder', label: 'Placement & Hiring Portal', icon: Briefcase, badge: 'PLACEMENTS', badgeColor: 'purple' },
+        { id: 'faculty-action-center', label: 'Faculty Portal', icon: Zap, badge: 'FACULTY', badgeColor: 'indigo' },
+        { id: 'hr-candidate-finder', label: 'Placement Portal', icon: Briefcase, badge: 'HIRE', badgeColor: 'purple' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
       ]
     },
@@ -153,9 +153,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       items: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
-        { id: 'hod-command-center', label: 'HOD Command Center', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
-        { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'STAFF', badgeColor: 'indigo' },
-        { id: 'hr-candidate-finder', label: 'Placement & Hiring Portal', icon: Briefcase, badge: 'PLACEMENTS', badgeColor: 'purple' },
+        { id: 'hod-command-center', label: 'HOD Dashboard', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
+        { id: 'faculty-action-center', label: 'Faculty Portal', icon: Zap, badge: 'STAFF', badgeColor: 'indigo' },
+        { id: 'hr-candidate-finder', label: 'Placement Portal', icon: Briefcase, badge: 'HIRE', badgeColor: 'purple' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
       ]
     },
@@ -235,18 +235,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                 type="button"
                 onClick={() => {
                   setActiveTab('dashboard');
-                  if (window.innerWidth < 1024) onClose();
+                  onClose();
                 }}
-                className="flex items-center space-x-2.5 hover:opacity-85 transition-opacity text-left cursor-pointer min-w-0"
+                className="flex items-center space-x-2.5 p-1 -m-1 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-900/80 active:scale-[0.98] transition-all text-left cursor-pointer min-w-0 group"
+                title="Return to Institutional Dashboard"
               >
-                <CollegeLogo size={30} />
+                <div className="shrink-0 transition-transform group-hover:scale-105">
+                  <CollegeLogo size={32} />
+                </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider truncate">
+                  <span className="text-xs sm:text-[13px] font-black text-slate-900 dark:text-white uppercase tracking-wider truncate leading-tight group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                     Nandha Intelligence
                   </span>
-                  <span className="text-[9.5px] font-bold text-slate-400 dark:text-slate-500 truncate">
-                    Institutional Platform
-                  </span>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[10px] sm:text-[10.5px] font-black tracking-wider text-brand-600 dark:text-brand-400 uppercase truncate">
+                      Institutional Platform
+                    </span>
+                  </div>
                 </div>
               </button>
               <button
@@ -312,7 +317,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                             }`}>
                               <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0 transition-transform duration-200" />
                             </div>
-                            <span className={`text-xs sm:text-[13px] tracking-normal leading-tight break-words transition-colors ${
+                            <span className={`text-xs sm:text-[13px] tracking-normal leading-tight whitespace-nowrap truncate transition-colors ${
                               isActive ? 'font-bold text-white' : 'font-semibold'
                             }`}>
                               {item.label}

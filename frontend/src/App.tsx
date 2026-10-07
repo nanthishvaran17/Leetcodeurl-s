@@ -260,6 +260,7 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
+      if (localStorage.getItem('biometric_app_lock') === 'false') return;
       import('@capacitor/core').then(({ Capacitor }) => {
         if (Capacitor.isNativePlatform()) {
           import('@capgo/capacitor-native-biometric').then(({ NativeBiometric }) => {
@@ -602,7 +603,7 @@ export const App: React.FC = () => {
     'ai-control-center': 'Opened AI Operations Control Center',
     'system-health': 'Visited System Health & Data Quality Board',
     reports: 'Opened Executive Reports & Data Exporters',
-    'hod-command-center': 'Visited HOD Command Center',
+    'hod-command-center': 'Visited HOD Dashboard',
     'faculty-action-center': 'Visited Faculty Action Center',
     'student-data-issues': 'Visited Student Data Issues & Reconciliation',
     certificates: 'Opened Certificate Verification Engine',
@@ -943,7 +944,7 @@ export const App: React.FC = () => {
               {activeTab === 'hod-command-center' && (
                 isTabAllowed('hod-command-center')
                   ? <HODCommandCenter />
-                  : renderAccessDenied('HOD Command Center')
+                  : renderAccessDenied('HOD Dashboard')
               )}
 
               {activeTab === 'faculty-action-center' && (
@@ -1065,7 +1066,7 @@ export const App: React.FC = () => {
 
               {activeTab === 'dev-studio' && (
                 isTabAllowed('dev-studio')
-                  ? <DeveloperStudio />
+                  ? <DeveloperStudio onClose={() => handleTabChange('dashboard')} />
                   : renderAccessDenied('Developer Studio — Admin Only')
               )}
             </Suspense>

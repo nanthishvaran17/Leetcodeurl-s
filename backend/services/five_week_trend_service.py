@@ -31,7 +31,7 @@ def build_five_week_trend_report(
     # Respect session_id to generate 5-week trend looking backward from the selected historical Sunday
     override_session_id = (config.filters or {}).get("session_id")
     query = db.query(WeeklySession)
-    if override_session_id:
+    if override_session_id and str(override_session_id).isdigit():
         query = query.filter(WeeklySession.id <= int(override_session_id))
     all_sessions = query.order_by(WeeklySession.id.desc()).all()
 
@@ -184,11 +184,14 @@ def build_five_week_trend_report(
 
     report_id = f"RPT-TREND-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
 
-    title = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)\nFIVE-WEEK PERFORMANCE TREND REPORT"
+    title = "FIVE-WEEK PERFORMANCE TREND REPORT"
     if raw_dept != "ALL":
         title = f"{title} ({raw_dept})"
     if raw_year != "ALL":
-        title = f"{title} ({raw_year} Year)"
+        y_clean = str(raw_year).strip()
+        if not y_clean.upper().endswith("YEAR"):
+            y_clean = f"{y_clean} Year"
+        title = f"{title} ({y_clean})"
 
     dataset = {
         "reportId": report_id,

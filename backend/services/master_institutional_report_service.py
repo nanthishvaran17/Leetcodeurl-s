@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from backend.models import Student, Department, Contest, ContestParticipationRecord, LeetCodeProfileStats, User
 from backend.services.authorization_service import apply_role_based_student_filter
 from backend.services.contest_performance_service import matches_dept, matches_year
+from backend.services.report_data_service import get_problem_category
 from backend.logger import logger
 
 # ==========================================
@@ -70,6 +71,10 @@ GRID_BORDER = Border(left=THIN_SIDE, right=THIN_SIDE, top=THIN_SIDE, bottom=THIN
 ALIGN_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
 ALIGN_LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
 ALIGN_RIGHT = Alignment(horizontal="right", vertical="center")
+
+# No-Wrap Alignments for Data Cells (Guarantees values stay on a single line)
+ALIGN_CENTER_NOWRAP = Alignment(horizontal="center", vertical="center", wrap_text=False)
+ALIGN_LEFT_NOWRAP = Alignment(horizontal="left", vertical="center", wrap_text=False)
 
 # Pre-created Reusable Fonts
 FONT_TITLE_C1 = Font(name=PRIMARY_FONT, size=15, bold=True, color="FFFFFF")
@@ -210,97 +215,31 @@ def write_sheet_header(
     contest_name: str,
     session_date: str,
     roster_scope: str,
-    cols: int = 8
+    cols: int = 8,
+    department: str = "ALL",
+    year: str = "ALL"
 ):
-    """Writes standardized header, logo, and metadata block (Rows 1-6)."""
-    pal = COLOR_PALETTE.get(sheet_title, {"primary": "1B365D", "light": "EEF3F7"})
-    primary_hex = pal["primary"]
-    light_hex = pal["light"]
-
-    last_col_letter = get_column_letter(max(8, cols))
-
-    # Gridlines and Print setup
-    ws.sheet_view.showGridLines = True
-    ws.page_setup.orientation = ws.ORIENTATION_LANDSCAPE
-    ws.page_setup.fitToWidth = 1
-    ws.page_setup.fitToHeight = 0
-
-    # Fill Header Rows 1-3 with primary color
-    hdr_fill = PatternFill(start_color=primary_hex, end_color=primary_hex, fill_type="solid")
+    """Writes standardized master institutional header, logo, and metadata block."""
+    from backend.exporters.nec_master_excel_design import apply_master_college_identity
     
-    # Merge A1:B3 for Logo Container
-    ws.merge_cells("A1:B3")
-    for r in range(1, 4):
-        for c in range(1, max(9, cols + 1)):
-            cell = ws.cell(row=r, column=c)
-            cell.fill = hdr_fill
-
-    # Title Banner (C1:H1, C2:H2, C3:H3)
-    ws.merge_cells(f"C1:{last_col_letter}1")
-    ws["C1"] = "NANDHA ENGINEERING COLLEGE"
-    ws["C1"].font = Font(name=PRIMARY_FONT, size=15, bold=True, color="FFFFFF")
-    ws["C1"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[1].height = 28
-
-    ws.merge_cells(f"C2:{last_col_letter}2")
-    ws["C2"] = "WEEKLY LEETCODE INTELLIGENCE REPORT"
-    ws["C2"].font = Font(name=PRIMARY_FONT, size=11, bold=True, color="FFFFFF")
-    ws["C2"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[2].height = 20
-
-    ws.merge_cells(f"C3:{last_col_letter}3")
-    ws["C3"] = f"{sheet_title.upper()} — {contest_name}"
-    ws["C3"].font = Font(name=PRIMARY_FONT, size=10, italic=True, color="FFFFFF")
-    ws["C3"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[3].height = 20
-
-    # Add Official Logo (Height EXACTLY 42px, anchor A1, exact aspect ratio preserved)
-    logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nandha_emblem.png")
-    if os.path.exists(logo_path):
+    # Parse roster scope count if provided
+    total_roster_val = 0
+    if roster_scope:
         try:
-            from openpyxl.drawing.image import Image as OpenPyxlImage
-            img = OpenPyxlImage(logo_path)
-            orig_w = getattr(img, "width", None)
-            orig_h = getattr(img, "height", None)
-            target_h = 42
-            if orig_w and orig_h and float(orig_h) > 0:
-                target_w = int(target_h * (float(orig_w) / float(orig_h)))
-            else:
-                target_w = 140
+            total_roster_val = int("".join(filter(str.isdigit, str(roster_scope))))
+        except Exception:
+            total_roster_val = 0
 
-            img.height = target_h
-            img.width = target_w
-            ws.add_image(img, "A1")
-        except Exception as e:
-            logger.warning(f"Failed to insert logo: {e}")
-
-    # Blank Row 4
-    ws.row_dimensions[4].height = 10
-
-    # Metadata Block (Rows 5-6)
-    meta_fill = PatternFill(start_color=light_hex, end_color=light_hex, fill_type="solid")
-    meta_font_val = Font(name=PRIMARY_FONT, size=9, bold=True, color="1E293B")
-
-    ws.merge_cells("A5:B5"); ws["A5"] = f"Contest: {contest_name}"
-    ws.merge_cells("C5:D5"); ws["C5"] = f"Date: {session_date}"
-    ws.merge_cells("E5:F5"); ws["E5"] = "Academic Year: 2026–2027"
-    ws.merge_cells("G5:H5"); ws["G5"] = f"Scope: {roster_scope}"
-    ws.row_dimensions[5].height = 20
-
-    gen_str = datetime.datetime.now().strftime("%d-%m-%Y %I:%M %p")
-    ws.merge_cells("A6:B6"); ws["A6"] = "Window: 08:00 AM – 09:30 AM IST"
-    ws.merge_cells("C6:D6"); ws["C6"] = f"Generated: {gen_str}"
-    ws.merge_cells("E6:F6"); ws["E6"] = "Version: v1.0"
-    ws.merge_cells("G6:H6"); ws["G6"] = "Template Rev: 3"
-    ws.row_dimensions[6].height = 20
-
-    for r in [5, 6]:
-        for c in range(1, 9):
-            cell = ws.cell(row=r, column=c)
-            cell.fill = meta_fill
-            cell.font = meta_font_val
-            cell.alignment = ALIGN_CENTER
-            cell.border = GRID_BORDER
+    apply_master_college_identity(
+        ws=ws,
+        report_title=sheet_title,
+        department=department,
+        year=year,
+        contest_name=contest_name,
+        session_date=session_date,
+        total_roster=total_roster_val,
+        cols=cols
+    )
 
 
 # ==========================================
@@ -308,17 +247,17 @@ def write_sheet_header(
 # ==========================================
 def write_kpi_grid(ws, kpi_list: List[Dict[str, Any]], primary_hex: str, light_hex: str):
     """
-    Writes clean 2x4 KPI Card Grid:
-    - Row 8: Card Labels 1-4 (A8:B8, C8:D8, E8:F8, G8:H8)
-    - Row 9: Card Values 1-4 (A9:B9, C9:D9, E9:F9, G9:H9)
-    - Row 10: Blank gap (Height 8)
-    - Row 11: Card Labels 5-8 (A11:B11, C11:D11, E11:F11, G11:H11)
-    - Row 12: Card Values 5-8 (A12:B12, C12:D12, E12:F12, G12:H12)
-    - Row 13: Blank gap (Height 10)
+    Writes Executive 2x4 KPI Card Grid:
+    - Dark Navy Header Strip (#1B365D) with crisp bold white text
+    - Ice-Tint Value Container (#F0F4F9) with prominent bold navy numbers
+    - Native numeric type parsing (eliminates all green triangle error warnings)
+    - Rows 8 & 9 for Cards 1-4; Rows 11 & 12 for Cards 5-8
     """
-    card_fill = PatternFill(start_color=light_hex, end_color=light_hex, fill_type="solid")
-    lbl_font = Font(name=PRIMARY_FONT, size=8, bold=True, color=primary_hex)
-    val_font = Font(name=PRIMARY_FONT, size=16, bold=True, color=primary_hex)
+    hdr_fill = PatternFill(start_color=primary_hex, end_color=primary_hex, fill_type="solid")
+    val_fill = PatternFill(start_color="F0F4F9", end_color="F0F4F9", fill_type="solid")
+    
+    lbl_font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF")
+    val_font = Font(name=PRIMARY_FONT, size=17, bold=True, color=primary_hex)
 
     positions = [
         (8, 1), (8, 3), (8, 5), (8, 7),     # Cards 1-4 at Row 8 (Label) & Row 9 (Value)
@@ -328,31 +267,58 @@ def write_kpi_grid(ws, kpi_list: List[Dict[str, Any]], primary_hex: str, light_h
     for idx, kpi in enumerate(kpi_list[:8]):
         lbl_row, start_col = positions[idx]
         val_row = lbl_row + 1
-        end_col_letter = get_column_letter(start_col + 1)
+        end_col = start_col + 1
         start_col_letter = get_column_letter(start_col)
+        end_col_letter = get_column_letter(end_col)
 
-        # Merge Label (Single row: ColA..ColB)
+        # 1. Card Header Strip (Dark Navy with White Bold Text)
         lbl_range = f"{start_col_letter}{lbl_row}:{end_col_letter}{lbl_row}"
         ws.merge_cells(lbl_range)
+        for c in range(start_col, end_col + 1):
+            cell = ws.cell(row=lbl_row, column=c)
+            cell.fill = hdr_fill
+            cell.border = GRID_BORDER
         lbl_cell = ws.cell(row=lbl_row, column=start_col, value=str(kpi['label']).upper())
         lbl_cell.font = lbl_font
         lbl_cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=False)
-        lbl_cell.fill = card_fill
 
-        # Merge Value (Single row: ColA..ColB)
+        # 2. Card Value Container (Ice Tint with Prominent Bold Navy Numbers)
         val_range = f"{start_col_letter}{val_row}:{end_col_letter}{val_row}"
         ws.merge_cells(val_range)
-        val_cell = ws.cell(row=val_row, column=start_col, value=str(kpi['value']))
+        for c in range(start_col, end_col + 1):
+            cell = ws.cell(row=val_row, column=c)
+            cell.fill = val_fill
+            cell.border = GRID_BORDER
+        
+        val_cell = ws.cell(row=val_row, column=start_col)
         val_cell.font = val_font
         val_cell.alignment = Alignment(horizontal="center", vertical="center")
-        val_cell.fill = card_fill
 
-        # Apply borders & fills across all 4 subcells (2 rows x 2 cols)
-        for r in range(lbl_row, lbl_row + 2):
-            for c in range(start_col, start_col + 2):
-                cell = ws.cell(row=r, column=c)
-                cell.fill = card_fill
-                cell.border = GRID_BORDER
+        # Native numeric parsing to eliminate green triangle error icons!
+        raw_val = kpi.get('value')
+        if isinstance(raw_val, (int, float)):
+            val_cell.value = raw_val
+        elif isinstance(raw_val, str):
+            v_s = raw_val.strip()
+            if v_s.endswith("%"):
+                try:
+                    num_f = float(v_s.rstrip("%").strip())
+                    val_cell.value = (num_f / 100.0) if num_f > 1.0 else num_f
+                    val_cell.number_format = '0.00%'
+                except ValueError:
+                    val_cell.value = v_s
+            elif v_s.replace(".", "", 1).replace("-", "", 1).isdigit():
+                try:
+                    if "." in v_s:
+                        val_cell.value = float(v_s)
+                    else:
+                        val_cell.value = int(v_s)
+                except ValueError:
+                    val_cell.value = v_s
+            else:
+                val_cell.value = v_s
+        else:
+            val_cell.value = raw_val
 
     ws.row_dimensions[7].height = 10
     ws.row_dimensions[8].height = 20  # Card Labels 1-4
@@ -417,8 +383,7 @@ def write_table_data(
 
     apply_column_widths(ws, headers)
 
-    # Enable Freeze Panes and AutoFilter
-    ws.freeze_panes = f"A{start_row + 1}"
+    # Enable AutoFilter
     last_col_letter = get_column_letter(len(headers))
     ws.auto_filter.ref = f"A{start_row}:{last_col_letter}{start_row + len(data_rows)}"
 
@@ -438,11 +403,46 @@ def write_table_data(
             if use_alt:
                 cell.fill = alt_fill
 
-            h_name = headers[col_idx - 1]
-            if h_name in ("S.No", "Rank", "Register No", "Department", "Year", "Q1", "Q2", "Q3", "Q4", "Solved", "Score", "Status", "Attendance"):
-                cell.alignment = ALIGN_CENTER
+            h_name = headers[col_idx - 1] if col_idx - 1 < len(headers) else ""
+            h_clean = str(h_name).replace('\n', ' ').strip()
+
+            # Convert text percentages and numeric strings to native Excel types to eliminate green error triangles!
+            if isinstance(val, str):
+                v_s = val.strip()
+                is_reg = any(k in h_clean.lower() for k in ("reg", "register", "roll"))
+                if is_reg:
+                    cell.number_format = "@"
+                elif v_s.endswith("%"):
+                    try:
+                        n_val = float(v_s.rstrip("%").strip())
+                        cell.value = (n_val / 100.0) if n_val > 1.0 else n_val
+                        cell.number_format = '0.00%'
+                    except ValueError:
+                        pass
+                elif v_s.replace(".", "", 1).replace("-", "", 1).isdigit():
+                    try:
+                        if "." in v_s:
+                            cell.value = float(v_s)
+                        else:
+                            cell.value = int(v_s)
+                    except ValueError:
+                        pass
+
+            is_name_col = any(k in h_name for k in ("Student Name", "Faculty Name", "Mentor Name", "Staff Name")) or h_name.strip() in ("Name", "Student Name", "Faculty Name")
+            if is_name_col:
+                cell.alignment = ALIGN_LEFT_NOWRAP
             else:
-                cell.alignment = ALIGN_LEFT
+                cell.alignment = ALIGN_CENTER_NOWRAP
+
+            # Auto-expand column width so values fit on a single line without wrapping or clipping
+            col_letter = get_column_letter(col_idx)
+            val_str = str(cell.value or val or "").strip()
+            if val_str:
+                max_line_len = max(len(line) for line in val_str.replace('\n', ' ').split('\n'))
+                required_w = max_line_len + 5
+                current_w = ws.column_dimensions[col_letter].width or 10
+                if required_w > current_w:
+                    ws.column_dimensions[col_letter].width = min(65, required_w)
 
             # Highlight Mentor Signals
             if h_name == "Mentor Signal":
@@ -472,7 +472,10 @@ def generate_master_10_sheet_workbook(
     contest_id: Optional[int] = None,
     department: Optional[str] = "ALL",
     year: Optional[str] = "ALL",
-    report_type: str = "MASTER_10_SHEET"
+    report_type: str = "MASTER_10_SHEET",
+    attendance: str = "ALL",
+    search: str = "",
+    batch: str = "ALL"
 ) -> bytes:
     """
     Generates the production-ready 10-Sheet Master Excel Intelligence Report, or subset based on report_type.
@@ -506,30 +509,8 @@ def generate_master_10_sheet_workbook(
 
     # Resolve target contest session if available
     from backend.models import WeeklySession, WeeklyPublicResult, WeeklyVirtualResult
-    target_session = None
-    if contest_id is not None and str(contest_id).strip() != "" and str(contest_id).strip().lower() != "latest":
-        c_str = str(contest_id).strip()
-        c_id_int = int(c_str) if c_str.isdigit() else None
-        if c_id_int is not None:
-            target_session = db.query(WeeklySession).filter(WeeklySession.id == c_id_int).first()
-        if not target_session:
-            target_session = db.query(WeeklySession).filter(WeeklySession.session_date == c_str).first()
-        if not target_session and ("." in c_str or "-" in c_str):
-            if "." in c_str:
-                parts = c_str.split(".")
-                if len(parts) == 3:
-                    alt_date = f"{parts[2]}-{parts[1]}-{parts[0]}"
-                    target_session = db.query(WeeklySession).filter(WeeklySession.session_date == alt_date).first()
-            elif "-" in c_str:
-                parts = c_str.split("-")
-                if len(parts) == 3:
-                    alt_date = f"{parts[2]}.{parts[1]}.{parts[0]}"
-                    target_session = db.query(WeeklySession).filter(WeeklySession.session_date == alt_date).first()
-        if not target_session:
-            target_session = db.query(WeeklySession).filter(WeeklySession.contest_id == c_str).first()
-    if not target_session:
-        from backend.routes.reports import _get_latest_completed_session
-        target_session = _get_latest_completed_session(db) or db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+    from backend.services.weekly_session_resolver import resolve_target_weekly_session
+    target_session = resolve_target_weekly_session(db, contest_id)
 
     public_map = {}
     virtual_map = {}
@@ -646,21 +627,32 @@ def generate_master_10_sheet_workbook(
         else:
             status_str = "VERIFIED" if s.username else "UNLINKED"
 
-        if report_type == "FRIDAY_OFFICIAL_CONTEST":
+        snp = snapshot_map.get(s.id)
+        if target_session and (is_historical or snp):
+            c_rating = (getattr(snp, "end_rating", None) if snp else None) or \
+                       (getattr(p_res, "contest_rating", None) if p_res else None) or \
+                       (getattr(v_res, "contest_rating", None) if v_res else None) or \
+                       (st_stats.contest_rating if st_stats and getattr(st_stats, "contest_rating", None) else None)
+            g_rank = (getattr(snp, "global_rank", None) if snp else None) or \
+                     (getattr(p_res, "contest_rank", None) if p_res else None) or \
+                     (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
+                     (st_stats.public_profile_ranking if st_stats and getattr(st_stats, "public_profile_ranking", None) else None) or \
+                     getattr(s, "global_rank", None)
+        elif report_type == "FRIDAY_OFFICIAL_CONTEST":
             c_rating = (st_stats.contest_rating if st_stats and getattr(st_stats, "contest_rating", None) else None) or \
                        (getattr(p_res, "contest_rating", None) if p_res else None) or \
                        (getattr(v_res, "contest_rating", None) if v_res else None)
-            g_rank = (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
+            g_rank = (getattr(p_res, "contest_rank", None) if p_res else None) or \
+                     (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
                      (st_stats.public_profile_ranking if st_stats and getattr(st_stats, "public_profile_ranking", None) else None) or \
-                     (getattr(p_res, "contest_rank", None) if p_res else None) or \
                      getattr(s, "global_rank", None)
         else:
             c_rating = (getattr(p_res, "contest_rating", None) if p_res else None) or \
                        (getattr(v_res, "contest_rating", None) if v_res else None) or \
                        (st_stats.contest_rating if st_stats and getattr(st_stats, "contest_rating", None) else None)
-            g_rank = (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
+            g_rank = (getattr(p_res, "contest_rank", None) if p_res else None) or \
+                     (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
                      (st_stats.public_profile_ranking if st_stats and getattr(st_stats, "public_profile_ranking", None) else None) or \
-                     (getattr(p_res, "contest_rank", None) if p_res else None) or \
                      getattr(s, "global_rank", None)
         easy_s = st_stats.easy_solved if (st_stats and st_stats.easy_solved is not None) else 0
         med_s = st_stats.medium_solved if (st_stats and st_stats.medium_solved is not None) else 0
@@ -700,6 +692,34 @@ def generate_master_10_sheet_workbook(
             "lifetime_solved": tot_lifetime,
         })
 
+    # Apply additional filters (attendance, search, batch)
+    filtered_students = []
+    att_filter = attendance.strip().upper() if attendance else "ALL"
+    q_search = search.strip().lower() if search else ""
+    batch_filter = batch.strip().upper() if batch else "ALL"
+    for r in raw_students:
+        # Status filtering
+        s_val = str(r["status"]).upper()
+        if att_filter != "ALL":
+            if att_filter == "DATA_ERROR" and s_val not in ("USERNAME_NOT_FOUND", "INVALID_USERNAME", "PENDING_USERNAME", "UNLINKED", "ERROR", "DATA_ERROR"):
+                continue
+            if att_filter in ("PUBLIC", "ATTENDED", "PUBLIC_ATTENDED", "VERIFIED") and s_val not in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+                continue
+            if att_filter in ("VIRTUAL", "VIRTUAL_ATTENDED") and s_val not in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+                continue
+            if att_filter in ("NOT_ATTENDED", "NOT ATTENDED", "ABSENT", "PUBLIC_NOT_ATTENDED", "NO_EVIDENCE") and s_val not in ("NOT_ATTENDED", "NO_EVIDENCE", "ABSENT", "PUBLIC_NOT_ATTENDED"):
+                continue
+            if att_filter not in ("DATA_ERROR", "PUBLIC", "ATTENDED", "PUBLIC_ATTENDED", "VERIFIED", "VIRTUAL", "VIRTUAL_ATTENDED", "NOT_ATTENDED", "NOT ATTENDED", "ABSENT", "PUBLIC_NOT_ATTENDED", "NO_EVIDENCE") and s_val != att_filter:
+                continue
+        # Search filtering
+        if q_search:
+            if not (q_search in str(r["name"] or "").lower() or q_search in str(r["reg_no"] or "").lower() or q_search in str(r["username"] or "").lower()):
+                continue
+        # Batch filtering would require batch field, omitted if not fully supported but we skip if we had one
+        filtered_students.append(r)
+    
+    raw_students = filtered_students
+
     # Step 1: 28-Point Validation Gate
     validate_source_dataset(raw_students)
 
@@ -722,10 +742,16 @@ def generate_master_10_sheet_workbook(
             contest_title = f"Weekly Contest {contest_id}"
     else:
         c_rec = db.query(Contest).filter(Contest.platform == "leetcode").order_by(Contest.id.desc()).first()
-        if c_rec and c_rec.contest_title:
-            contest_title = c_rec.contest_title
     from backend.time_utils import get_ist_date
-    session_date = get_ist_date().strftime("%d-%m-%Y")
+    session_date = None
+    if target_session and getattr(target_session, "session_date", None):
+        session_date = str(target_session.session_date).strip()
+    elif contest_id and str(contest_id).strip().upper() not in ("LATEST", "NONE", "ALL"):
+        session_date = str(contest_id).strip()
+    
+    if not session_date or session_date.upper() in ("LATEST", "NONE", "ALL"):
+        session_date = get_ist_date().strftime("%d.%m.%Y")
+        
     roster_scope = f"{len(normalized_students)} Authorized Students"
 
     # KPI Calculation
@@ -764,40 +790,9 @@ def generate_master_10_sheet_workbook(
         "10 Department Intelligence"
     ]
 
-    if report_type == "FRIDAY_OFFICIAL_CONTEST":
-        sheet_names = ["01 Official Leaderboard", "02 Question Analysis", "03 Dept Summary"]
-    elif report_type == "PRINCIPAL_EXECUTIVE":
-        sheet_names = ["01 Principal Executive", "05 Top Performers"]
-    elif report_type == "HOD_DEPARTMENT_INTELLIGENCE":
-        sheet_names = ["10 Department Intelligence", "02 Complete Student Roster", "05 Top Performers"]
-    elif report_type == "FACULTY_CONSOLIDATED":
-        sheet_names = ["Faculty Summary", "02 Complete Student Roster", "04 Contest Performance"]
-    elif report_type == "FACULTY_COORDINATOR_CONSOLIDATED":
-        sheet_names = ["Coordinator Faculty Overview", "Assigned Student Detail Roster"]
-    elif report_type == "DEPARTMENT_PERFORMANCE":
-        sheet_names = ["10 Department Intelligence"]
-    elif report_type == "SUNDAY_LIVE_CONTEST":
-        sheet_names = ["03 Contest Attendance", "04 Contest Performance", "05 Top Performers"]
-    elif report_type == "WEEKLY_CONTEST_INTELLIGENCE":
-        sheet_names = ["06 4-4 Perfect Solvers", "07 3-4 Solvers", "08 2-4 Solvers", "09 1-4 Solvers"]
-    elif report_type == "CONTEST_ATTENDANCE_PARTICIPATION":
-        sheet_names = ["Contest Attendance Matrix"]
-    elif report_type == "CONTEST_PERFORMANCE_RANKING":
-        sheet_names = ["Contest Performance Ranking"]
-    elif report_type == "WEEKLY_STUDENT_PERFORMANCE":
-        sheet_names = ["Student Performance Roster"]
-    elif report_type == "FIVE_WEEK_PERFORMANCE_TREND":
-        sheet_names = ["5-Week Performance Matrix"]
-    elif report_type == "PROBLEM_DIFFICULTY_INTELLIGENCE":
-        sheet_names = ["Difficulty Intelligence Summary", "Student Difficulty Roster"]
-    elif report_type == "MANAGEMENT_EXECUTIVE_SUMMARY":
-        sheet_names = ["Management Executive Summary", "Department Rank Comparison"]
-    elif report_type == "COLLEGE_EXECUTIVE":
-        sheet_names = ["01 Principal Executive", "10 Department Intelligence", "05 Top Performers"]
-    elif report_type in ("WEEK_ON_WEEK_INTELLIGENCE", "WEEK_ON_WEEK"):
-        sheet_names = []
-    elif report_type in ("HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"):
-        sheet_names = []
+    # Ensure the full Master 10-Sheet Workbook is generated regardless of sub-type
+    # (Users expect all sheets in the Excel export)
+    # The report_type might be specific for UI rendering, but Excel should be comprehensive.
 
     for s_name in sheet_names:
         ws = wb.create_sheet(title=s_name)
@@ -964,13 +959,12 @@ def generate_master_10_sheet_workbook(
         elif s_name == "Difficulty Intelligence Summary":
             write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=4)  # type: ignore
             headers = ["S.No", "Category", "Total Solvers", "Percentage"]
-            cat_counts = {"Above 500": 0, "250-500": 0, "100-249": 0, "50-99": 0, "25-49": 0, "1-24": 0, "0 Solved": 0}
+            cat_counts = {"Above 500": 0, "250-500": 0, "101-250": 0, "Less than 100": 0, "Not Yet Started": 0, "Data Unavailable": 0}
             for s in normalized_students:
                 c = get_problem_category(s["lifetime_solved"])  # type: ignore
-                if c in cat_counts:
-                    cat_counts[c] += 1
-                else:
-                    cat_counts["0 Solved"] += 1
+                if c not in cat_counts:
+                    cat_counts[c] = 0
+                cat_counts[c] += 1
             rows = [[idx, cat, cnt, f"{(cnt/max(tot_st,1)*100):.1f}%"] for idx, (cat, cnt) in enumerate(cat_counts.items(), 1)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
@@ -1072,7 +1066,7 @@ def generate_master_10_sheet_workbook(
     if report_type in ("MASTER_10_SHEET", "10_SHEET", "MASTER_WORKBOOK", "WEEK_ON_WEEK_INTELLIGENCE", "WEEK_ON_WEEK", "HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"):
         try:
             from backend.services.sheet_14_15_builder import append_sheets_14_and_15
-            append_sheets_14_and_15(wb, db)
+            append_sheets_14_and_15(wb, db, department=department, year=year)
         except Exception as _e_s1415:
             logger.warning(f"Note on appending Sheets 14 and 15: {_e_s1415}")
 

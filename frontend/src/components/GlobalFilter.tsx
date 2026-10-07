@@ -489,11 +489,15 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
     }
 
     let left = rect.left;
-    if (align === 'right' || left + computedWidth > window.innerWidth - 12) {
-      left = Math.max(12, rect.right - computedWidth);
-    }
-    if (left + computedWidth > window.innerWidth - 12) {
-      left = Math.max(12, window.innerWidth - computedWidth - 12);
+    if (window.innerWidth < 640 || computedWidth >= window.innerWidth - 48) {
+      left = Math.max(12, Math.round((window.innerWidth - computedWidth) / 2));
+    } else {
+      if (align === 'right') {
+        left = rect.right - computedWidth;
+      } else if (left + computedWidth > window.innerWidth - 12) {
+        left = rect.right - computedWidth;
+      }
+      left = Math.max(12, Math.min(left, window.innerWidth - computedWidth - 12));
     }
 
     const newCoords = {
@@ -775,9 +779,9 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
               maxWidth: 'calc(100vw - 24px)',
               zIndex: 999999,
             }}
-            className="animate-in fade-in zoom-in-95 duration-150"
+            className="animate-in fade-in zoom-in-95 duration-200 ease-out"
           >
-            <div className="bg-white dark:bg-navy-950 rounded-xl shadow-xl border border-slate-200 dark:border-navy-700/90 overflow-hidden flex flex-col">
+            <div className="bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/80 dark:border-navy-700/80 overflow-hidden flex flex-col ring-1 ring-slate-900/5 dark:ring-white/10">
               
               {/* Desktop Search Header Bar */}
               {showSearch && options.length > 3 && (
@@ -809,7 +813,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
               {/* Options List */}
               <div 
                 style={{ maxHeight: `${coords.maxHeight}px` }} 
-                className="overflow-y-auto overscroll-contain py-1 custom-scrollbar"
+                className="overflow-y-auto overscroll-contain p-2 custom-scrollbar space-y-1.5"
               >
                 {filteredOptions.length === 0 ? (
                   <div className="py-10 flex flex-col items-center justify-center text-center space-y-3">
@@ -837,13 +841,13 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                           setIsOpen(false);
                         }}
                         className={clsx(
-                          "w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-200 outline-none text-left cursor-pointer border mb-1 last:mb-0 group active:scale-[0.98]",
+                          "w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-200 outline-none text-left cursor-pointer border group active:scale-[0.98] relative overflow-hidden",
                           isSelected 
-                            ? `${theme.selectedBg} border-brand-400/40 shadow-md shadow-brand-500/25 font-black` 
-                            : `${theme.hoverBg} bg-white dark:bg-navy-950/90 border-slate-100 dark:border-navy-900 hover:border-brand-500/30 hover:shadow-xs`
+                            ? `${theme.selectedBg} border-transparent shadow-md ring-2 ring-brand-500/20 font-black z-10 scale-[1.01]` 
+                            : `${theme.hoverBg} bg-white dark:bg-navy-900 border-slate-200/60 dark:border-navy-800 hover:border-brand-500/40 hover:shadow-sm`
                         )}
                       >
-                        <div className="flex items-center space-x-2.5 flex-1 min-w-0 pr-2">
+                        <div className="flex items-center space-x-3 flex-1 min-w-0 pr-2 relative z-10">
                           {!hideIcon && (opt.icon || icon) && (
                             <div className={clsx(
                               "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-all duration-200 shadow-2xs group-hover:scale-105",
@@ -864,14 +868,14 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                           
                           {opt.hidePill !== true && (
                             <div className={clsx(
-                              "text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border shadow-2xs whitespace-nowrap transition-all",
-                              isSelected ? "bg-white/20 text-white border-white/30" : `${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder}`
+                              "text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md text-center shrink-0 border shadow-2xs whitespace-nowrap transition-all",
+                              isSelected ? "bg-white/20 text-white border-white/30 backdrop-blur-sm" : `${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder}`
                             )}>
                               {getPillText(opt)}
                             </div>
                           )}
                           <span className={clsx(
-                            "text-xs font-extrabold flex-1 min-w-0 tracking-tight leading-snug truncate transition-colors",
+                            "text-sm font-extrabold flex-1 min-w-0 tracking-tight leading-snug truncate transition-colors",
                             isSelected ? "text-white font-black" : "text-slate-800 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-400"
                           )}>
                             {opt.label}
@@ -879,8 +883,8 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                         </div>
 
                         {isSelected && (
-                          <div className="p-1 rounded-full bg-white/20 border border-white/40 shadow-xs shrink-0 ml-1.5">
-                            <Check className="w-3.5 h-3.5 text-white stroke-[3.5]" />
+                          <div className="p-1.5 rounded-full bg-white/20 border border-white/40 shadow-sm shrink-0 ml-2 relative z-10 backdrop-blur-sm">
+                            <Check className="w-4 h-4 text-white stroke-[3.5]" />
                           </div>
                         )}
                       </button>

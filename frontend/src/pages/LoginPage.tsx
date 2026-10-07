@@ -852,8 +852,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                           />
                           <button
                             type="button"
-                            className="toggle-visibility"
-                            onClick={() => setShowPassword(!showPassword)}
+                            className="toggle-visibility cursor-pointer z-10"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setShowPassword(prev => !prev);
+                            }}
                             aria-label={showPassword ? "Hide password" : "Show password"}
                           >
                             {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
@@ -1165,8 +1169,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                           />
                           <button
                             type="button"
-                            className="toggle-visibility"
-                            onClick={() => setShowPassword(!showPassword)}
+                            className="toggle-visibility cursor-pointer z-10"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setShowPassword(prev => !prev);
+                            }}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
                           >
                             {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
                           </button>

@@ -469,19 +469,24 @@ export const ContestIntegrityMonitor: React.FC = () => {
           {activeTab === 'CASES' && (
             <div className="flex items-center gap-3 w-full lg:w-auto flex-wrap sm:flex-nowrap justify-end flex-1 min-w-0">
               {/* Search Bar */}
-              <div className="relative flex-1 min-w-[200px] sm:max-w-xs">
-                <Search size={15} className="absolute left-3.5 top-3 text-slate-400 pointer-events-none" />
+              <div className="relative flex-1 min-w-[200px] sm:max-w-xs flex items-center">
                 <input
                   type="text"
                   placeholder="Search by name, reg no, username..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-10 pl-9 pr-8 rounded-xl border border-slate-200 bg-slate-50/60 text-xs font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:bg-white focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition"
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="w-full h-10 pl-9 pr-8 rounded-xl border border-slate-200 bg-slate-50/60 text-xs font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:bg-white focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-left transition"
                 />
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
+                  <Search size={15} />
+                </div>
                 {searchTerm && (
                   <button
+                    type="button"
                     onClick={() => setSearchTerm('')}
-                    className="absolute right-2.5 top-2.5 p-0.5 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 transition"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 transition cursor-pointer z-10"
                   >
                     <X size={12} />
                   </button>

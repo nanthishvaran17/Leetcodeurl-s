@@ -2,7 +2,7 @@ import uuid
 import json
 import datetime
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, and_, desc
+from sqlalchemy import or_, and_, desc, func, not_
 
 from backend.models import (
     User, Student, Conversation, Message, FacultyStudentAssignment, NotificationFile
@@ -117,22 +117,67 @@ class MessagingService:
     @staticmethod
     def _get_user_display(db: Session, user_id: str) -> dict:
         """Returns minimal display info for a user ID."""
-        # Try Staff
-        uid_num = int(user_id.replace("STAFF_", "")) if (user_id.isdigit() or ("STAFF_" in user_id and user_id.replace("STAFF_", "").isdigit())) else -1
-        u = db.query(User).filter(
-            or_(User.email == user_id, User.username == user_id, User.id == uid_num)
-        ).first()
-        if u:
-            dept = u.department.name if u.department else "Admin"
-            return {"id": MessagingService._get_user_id(u), "name": u.full_name or u.username, "role": u.role, "department": dept, "type": "STAFF"}
-        
-        # Try Student
+        if not user_id:
+            return {"id": "", "name": "Unknown User", "role": "Unknown", "department": "", "type": "UNKNOWN"}
+
+        target_clean = user_id.strip()
+
+        # 1. First, check Student directly (by reg_no, email, or username)
         s = db.query(Student).filter(
-            or_(Student.email == user_id, Student.reg_no == user_id, Student.username == user_id)
+            or_(
+                func.lower(Student.reg_no) == target_clean.lower(),
+                func.lower(Student.email) == target_clean.lower(),
+                func.lower(Student.username) == target_clean.lower()
+            )
         ).first()
         if s:
             dept = s.department.code if s.department else ""
-            return {"id": MessagingService._get_user_id(s), "name": s.name, "role": "Student", "department": f"{dept} • {s.year_level} Year", "type": "STUDENT"}
+            year_info = f" • {s.year_level} Year" if s.year_level else ""
+            return {
+                "id": MessagingService._get_user_id(s),
+                "name": s.name,
+                "role": "Student",
+                "department": f"{dept}{year_info}".strip(),
+                "type": "STUDENT"
+            }
+
+        # 2. Check Staff / User table
+        uid_num = int(target_clean.replace("STAFF_", "")) if (target_clean.isdigit() or ("STAFF_" in target_clean and target_clean.replace("STAFF_", "").isdigit())) else -1
+        u = db.query(User).filter(
+            or_(
+                func.lower(User.email) == target_clean.lower(),
+                func.lower(User.username) == target_clean.lower(),
+                User.id == uid_num
+            )
+        ).first()
+        if u:
+            # Check if this user account is a student login
+            if (u.role and "student" in u.role.lower()) or not u.full_name:
+                s_linked = db.query(Student).filter(
+                    or_(
+                        func.lower(Student.reg_no) == func.lower(u.username or ""),
+                        func.lower(Student.email) == func.lower(u.email or "")
+                    )
+                ).first()
+                if s_linked:
+                    dept = s_linked.department.code if s_linked.department else ""
+                    year_info = f" • {s_linked.year_level} Year" if s_linked.year_level else ""
+                    return {
+                        "id": MessagingService._get_user_id(s_linked),
+                        "name": s_linked.name,
+                        "role": "Student",
+                        "department": f"{dept}{year_info}".strip(),
+                        "type": "STUDENT"
+                    }
+
+            dept = u.department.name if u.department else "Administration"
+            return {
+                "id": MessagingService._get_user_id(u),
+                "name": u.full_name or u.username,
+                "role": u.role or "Staff",
+                "department": dept,
+                "type": "STAFF"
+            }
         
         return {"id": user_id, "name": "Unknown User", "role": "Unknown", "department": "", "type": "UNKNOWN"}
 
@@ -218,19 +263,21 @@ class MessagingService:
         dept_id = getattr(current_user, "department_id", None)
         current_id = MessagingService._get_user_id(current_user)
         
+        not_student_filter = or_(User.role.is_(None), ~User.role.ilike("%student%"))
         if "ADMIN" in role:
-            staff = db.query(User).filter(User.is_active == True, User.id != current_user.id).all()
+            staff = db.query(User).filter(User.is_active == True, User.id != current_user.id, not_student_filter).all()
             students = db.query(Student).filter(Student.is_active == True).all()
         elif "HOD" in role:
             hod_dept_ids = get_hod_authorized_department_ids(db, current_user)
             if hod_dept_ids:
                 staff = db.query(User).filter(
                     User.is_active == True, User.id != current_user.id,
+                    not_student_filter,
                     or_(User.department_id.in_(hod_dept_ids), User.role.ilike("%admin%"), User.role.ilike("%hod%"))
                 ).all()
                 students = db.query(Student).filter(Student.is_active == True, Student.department_id.in_(hod_dept_ids)).all()
             else:
-                staff_filter = [User.id != current_user.id, User.is_active == True]
+                staff_filter = [User.id != current_user.id, User.is_active == True, not_student_filter]
                 if dept_id:
                     staff_filter.append(or_(User.department_id == dept_id, User.role.ilike("%admin%"), User.role.ilike("%hod%")))
                 staff = db.query(User).filter(*staff_filter).all()
@@ -239,7 +286,7 @@ class MessagingService:
                     student_filter.append(Student.department_id == dept_id)
                 students = db.query(Student).filter(*student_filter).all()
         elif "FACULTY" in role or "STAFF" in role:
-            staff_filter = [User.id != current_user.id, User.is_active == True]
+            staff_filter = [User.id != current_user.id, User.is_active == True, not_student_filter]
             if dept_id:
                 staff_filter.append(or_(User.department_id == dept_id, User.department_id.is_(None), User.role.ilike("%admin%"), User.role.ilike("%hod%")))
             staff = db.query(User).filter(*staff_filter).all()
@@ -252,6 +299,7 @@ class MessagingService:
         else:
             staff_query = db.query(User).filter(
                 User.is_active == True,
+                not_student_filter,
                 or_(User.role.ilike("%admin%"), User.role.ilike("%hod%"), User.role.ilike("%faculty%"), User.role.ilike("%staff%"))
             )
             staff = staff_query.all()
@@ -261,23 +309,44 @@ class MessagingService:
                     staff.append(assignment.faculty)
             students = []
 
-        seen = set([current_id])
+        # --- Production-user guard: exclude test / probe accounts ---
+        _TEST_PATTERNS = ("_p930", "_p931", "test_", "probe_", "dummy_", "sample_", "_cap")
+        def _is_test_user(u) -> bool:
+            uname = (getattr(u, "username", "") or "").lower()
+            email = (getattr(u, "email", "") or "").lower()
+            return any(p in uname or p in email for p in _TEST_PATTERNS)
+
+        seen = set([str(current_id).strip().lower()])
         result = []
         for u in staff:
+            if _is_test_user(u):
+                continue
             uid = MessagingService._get_user_id(u)
-            if uid not in seen:
-                seen.add(uid)
+            uid_key = str(uid).strip().lower()
+            if uid_key not in seen:
+                seen.add(uid_key)
+                if u.email: seen.add(str(u.email).strip().lower())
+                if u.username: seen.add(str(u.username).strip().lower())
                 dept = u.department.name if u.department else "Administration"
                 result.append({"id": uid, "name": u.full_name or u.username, "role": u.role or "Staff", "department": dept, "type": "STAFF"})
         
         for s in students:
             uid = MessagingService._get_user_id(s)
-            if uid not in seen:
-                seen.add(uid)
+            uid_key = str(uid).strip().lower()
+            reg_key = str(s.reg_no).strip().lower() if s.reg_no else ""
+            email_key = str(s.email).strip().lower() if s.email else ""
+            
+            if uid_key not in seen and (not reg_key or reg_key not in seen) and (not email_key or email_key not in seen):
+                seen.add(uid_key)
+                if reg_key: seen.add(reg_key)
+                if email_key: seen.add(email_key)
                 dept = s.department.code if s.department else ""
-                result.append({"id": uid, "name": s.name, "role": "Student", "department": f"{dept} • {s.year_level} Year", "type": "STUDENT"})
+                year_info = f" • {s.year_level} Year" if s.year_level else ""
+                result.append({"id": uid, "name": s.name, "role": "Student", "department": f"{dept}{year_info}".strip(), "type": "STUDENT"})
                 
         return sorted(result, key=lambda x: x["name"])
+
+
 
     @staticmethod
     def get_or_create_conversation(db: Session, user1_id: str, user2_id: str) -> Conversation:

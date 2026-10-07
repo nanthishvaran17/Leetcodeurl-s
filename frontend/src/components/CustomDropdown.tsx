@@ -97,15 +97,14 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
       let width = rect.width;
       let left = rect.left;
 
-      if (viewportWidth < 640) {
+      if (viewportWidth < 640 || width >= viewportWidth - 48) {
         width = Math.min(viewportWidth - 24, Math.max(rect.width, 260));
-      }
-
-      if (left + width > viewportWidth - 12) {
-        left = Math.max(12, viewportWidth - width - 12);
-      }
-      if (left < 12) {
-        left = 12;
+        left = Math.max(12, Math.round((viewportWidth - width) / 2));
+      } else {
+        if (align === 'right') {
+          left = rect.right - width;
+        }
+        left = Math.max(12, Math.min(left, viewportWidth - width - 12));
       }
 
       const newCoords = {

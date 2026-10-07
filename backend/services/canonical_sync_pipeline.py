@@ -27,11 +27,13 @@ from backend.models import (
     LeetCodeLanguageStats,
     LeetCodeActivity,
     LeetCodeProfileStats,
+    LeetCodeSubmission,
 )
 from backend.leetcode_fetcher import (
     extract_leetcode_username,
     fetch_profile_and_stats,
     fetch_contest_data,
+    fetch_recent_submissions,
 )
 from backend.ranking import update_all_rankings_and_badges
 from backend.cache import cache
@@ -145,13 +147,15 @@ async def _sync_single_student_canonical_impl(
 
                     tasks = [
                         fetch_profile_and_stats(primary_id, client),
-                        fetch_contest_data(primary_id, client)
+                        fetch_contest_data(primary_id, client),
+                        fetch_recent_submissions(primary_id, client, limit=20)
                     ]
                     
                     if secondary_id and secondary_id.strip():
                         tasks.extend([
                             fetch_profile_and_stats(secondary_id, client),
-                            fetch_contest_data(secondary_id, client)
+                            fetch_contest_data(secondary_id, client),
+                            fetch_recent_submissions(secondary_id, client, limit=20)
                         ])
                         
                     results_raw = await asyncio.gather(*tasks, return_exceptions=True)
@@ -165,11 +169,13 @@ async def _sync_single_student_canonical_impl(
                             results.append({"status": "error", "detail": "Unknown fetch result"})
                             
                     if not secondary_id or not secondary_id.strip():
-                        phase_a_res, phase_b_res = results[0], results[1]
+                        phase_a_res, phase_b_res, phase_e_res = results[0], results[1], results[2]
                     else:
-                        p1_a, p1_b, p2_a, p2_b = results[0], results[1], results[2], results[3]
+                        p1_a, p1_b, p1_e = results[0], results[1], results[2]
+                        p2_a, p2_b, p2_e = results[3], results[4], results[5]
                         phase_a_res = _merge_phase_a(p1_a, p2_a)
                         phase_b_res = _merge_phase_b(p1_b, p2_b)
+                        phase_e_res = p1_e
     
                     phase_a_status = phase_a_res.get("status") if isinstance(phase_a_res, dict) else "error"
     
@@ -385,7 +391,35 @@ async def _sync_single_student_canonical_impl(
                                 db_student.add(existing_l)
                             existing_l.problems_solved = lang.get("problems_solved", 0)
                             existing_l.fetched_at = now_dt
-    
+
+                    # Phase E recent submissions
+                    if 'phase_e_res' in locals() and phase_e_res and isinstance(phase_e_res, dict) and phase_e_res.get("status") == "ok":
+                        subs_raw = phase_e_res.get("data", {}).get("submissions", [])
+                        for sub in subs_raw:
+                            tslug = sub.get("title_slug")
+                            if not tslug:
+                                continue
+                            raw_ts = sub.get("submission_timestamp")
+                            dt_val = datetime.datetime.fromtimestamp(raw_ts) if (raw_ts and isinstance(raw_ts, int) and raw_ts > 0) else now_dt
+
+                            existing_sub = db_student.query(LeetCodeSubmission).filter(
+                                LeetCodeSubmission.student_id == st.id,
+                                LeetCodeSubmission.title_slug == tslug,
+                                LeetCodeSubmission.submission_timestamp == dt_val
+                            ).first()
+                            if not existing_sub:
+                                existing_sub = LeetCodeSubmission(
+                                    student_id=st.id,
+                                    title_slug=tslug,
+                                    title=sub.get("title"),
+                                    lang=sub.get("lang"),
+                                    status_display=sub.get("status_display") or "Accepted",
+                                    runtime_display=sub.get("runtime_display"),
+                                    memory_display=sub.get("memory_display"),
+                                    submission_timestamp=dt_val
+                                )
+                                db_student.add(existing_sub)
+
                     # Phase B contest data (already fetched in network phase)
                     if phase_b_res and phase_b_res.get("status") == "ok" and phase_b_res.get("data"):
                         c_data = phase_b_res["data"]

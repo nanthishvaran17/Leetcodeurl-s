@@ -229,6 +229,21 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
             norm_year, year_conf = normalize_year_value(raw_year)
             norm_batch, batch_conf = normalize_batch_value(raw_batch)
             dept_code, dept_id, dept_conf, is_new_dept = normalize_department_value(raw_dept, dept_master)
+
+            # Auto-decode from Register Number if missing/low confidence (e.g. 732223 -> IV Year, 732224 -> III Year, 732225 -> II Year, 732226 -> I Year)
+            from backend.services.excel_intelligence_engine import decode_reg_no_attributes
+            decoded_attrs = decode_reg_no_attributes(reg_no)
+
+            if (not raw_year or year_conf == "LOW") and decoded_attrs.get("year"):
+                norm_year = decoded_attrs["year"]
+
+            if (not raw_batch or batch_conf == "LOW") and decoded_attrs.get("batch"):
+                norm_batch = decoded_attrs["batch"]
+
+            if (not raw_dept or dept_conf == "LOW") and decoded_attrs.get("department"):
+                d_code = decoded_attrs["department"]
+                dept_code, dept_id, dept_conf, is_new_dept = normalize_department_value(d_code, dept_master)
+
             lc_url, lc_username = normalize_leetcode_url(raw_lc_url)
             sec_lc_url, sec_username = normalize_leetcode_url(raw_sec_lc) if raw_sec_lc else (None, None)
 

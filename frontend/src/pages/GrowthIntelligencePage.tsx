@@ -333,61 +333,65 @@ export const GrowthIntelligencePage: React.FC = () => {
           </div>
 
           {/* Filters, Timeframe Selector Pills & Live Refresh Button */}
-          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full xl:w-auto mt-2 xl:mt-0">
+          <div className="flex flex-col xl:flex-row flex-wrap items-stretch xl:items-center gap-2.5 sm:gap-3 w-full xl:w-auto mt-2 xl:mt-0">
             
-            {/* Department Filter */}
-            <div className="w-full sm:w-auto">
-              <GlobalFilter
-                options={departmentOptions}
-                value={deptFilter}
-                onChange={(val) => setDeptFilter(val)}
-                icon={<Building2 className="w-3.5 h-3.5 text-brand-400" />}
-                dropdownWidth="w-full sm:min-w-[240px]"
-                showSearch={false}
-                variant="dark"
-              />
+            {/* Department & Academic Year Filters (2-Column Grid on Mobile for Compact Fitting) */}
+            <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 sm:gap-3 w-full xl:w-auto">
+              <div className="w-full lg:w-auto">
+                <GlobalFilter
+                  options={departmentOptions}
+                  value={deptFilter}
+                  onChange={(val) => setDeptFilter(val)}
+                  icon={<Building2 className="w-3.5 h-3.5 text-brand-400" />}
+                  dropdownWidth="w-full sm:min-w-[240px]"
+                  showSearch={false}
+                  variant="dark"
+                />
+              </div>
+
+              <div className="w-full lg:w-auto">
+                <GlobalFilter
+                  options={yearOptions}
+                  value={yearFilter}
+                  onChange={(val) => setYearFilter(val)}
+                  icon={<GraduationCap className="w-3.5 h-3.5 text-brand-400" />}
+                  dropdownWidth="w-full sm:min-w-[210px]"
+                  showSearch={false}
+                  variant="dark"
+                />
+              </div>
             </div>
 
-            {/* Academic Year Filter */}
-            <div className="w-full sm:w-auto">
-              <GlobalFilter
-                options={yearOptions}
-                value={yearFilter}
-                onChange={(val) => setYearFilter(val)}
-                icon={<GraduationCap className="w-3.5 h-3.5 text-brand-400" />}
-                dropdownWidth="w-full sm:min-w-[210px]"
-                showSearch={false}
-                variant="dark"
-              />
+            {/* Timeframe Selector Pills & Sleek Inline Refresh Button */}
+            <div className="flex items-center gap-2 w-full xl:w-auto">
+              <div className="flex-1 sm:flex-initial flex items-center bg-navy-900/90 p-1 rounded-xl sm:rounded-2xl border border-slate-700/80 shadow-inner backdrop-blur-md overflow-x-auto hide-scrollbar">
+                {(['today', '7d', '30d', 'all'] as const).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setPeriod(p)}
+                    className={`flex-1 sm:flex-none whitespace-nowrap px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
+                      period === p
+                        ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30 scale-105'
+                        : 'text-slate-300 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {p === 'today' ? 'Today' : p === '7d' ? 'Last 7 Days' : p === '30d' ? 'Last 30 Days' : 'All Time'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Live Refresh Button */}
+              <button
+                onClick={handleManualRefresh}
+                disabled={loading || isRefreshing}
+                title="Refresh Growth Metrics & Solve Deltas"
+                className="inline-flex items-center justify-center space-x-1.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
+              >
+                <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+              </button>
             </div>
 
-            {/* Timeframe Selector Pills */}
-            <div className="flex items-center w-full sm:w-auto bg-navy-900/90 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-slate-700/80 shadow-inner backdrop-blur-md overflow-x-auto hide-scrollbar">
-              {(['today', '7d', '30d', 'all'] as const).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPeriod(p)}
-                  className={`flex-1 sm:flex-none whitespace-nowrap px-2 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
-                    period === p
-                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30 scale-105'
-                      : 'text-slate-300 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  {p === 'today' ? 'Today' : p === '7d' ? 'Last 7 Days' : p === '30d' ? 'Last 30 Days' : 'All Time'}
-                </button>
-              ))}
-            </div>
-
-            {/* Live Refresh Button */}
-            <button
-              onClick={handleManualRefresh}
-              disabled={loading || isRefreshing}
-              title="Refresh Growth Metrics & Solve Deltas"
-              className="inline-flex items-center justify-center space-x-2 px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer w-full sm:w-auto"
-            >
-              <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
-            </button>
           </div>
         </div>
       </div>
@@ -398,59 +402,59 @@ export const GrowthIntelligencePage: React.FC = () => {
         </div>
       )}
 
-      {/* College Aggregate Delta Metrics KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      {/* College Aggregate Delta Metrics KPI Grid (2x2 grid on mobile, 4 columns on XL) */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         
-        <div className="glass-card p-5 rounded-3xl border border-emerald-500/30 bg-white dark:bg-navy-950 shadow-xl space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-            <span className="text-emerald-600 dark:text-emerald-400">Total Solved Growth</span>
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-              <TrendingUp className="w-5 h-5 stroke-[2.5]" />
+        <div className="glass-card p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-emerald-500/30 bg-white dark:bg-navy-950 shadow-xl space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider gap-1">
+            <span className="text-emerald-600 dark:text-emerald-400 truncate">Total Solved Growth</span>
+            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 sm:w-5 sm:h-5 stroke-[2.5]" />
             </div>
           </div>
-          <div className="text-3xl font-black text-slate-900 dark:text-white">
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
             +{collegeDelta?.delta_total ?? 0}
           </div>
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Problems solved in selected period</p>
+          <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">Problems solved in selected period</p>
         </div>
 
-        <div className="glass-card p-5 rounded-3xl border border-emerald-500/20 bg-white dark:bg-navy-950 shadow-xl space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-            <span className="text-emerald-600 dark:text-emerald-400">Easy Solved</span>
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-              <TrendingUp className="w-5 h-5 stroke-[2.5]" />
+        <div className="glass-card p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-emerald-500/20 bg-white dark:bg-navy-950 shadow-xl space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider gap-1">
+            <span className="text-emerald-600 dark:text-emerald-400 truncate">Easy Solved</span>
+            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 sm:w-5 sm:h-5 stroke-[2.5]" />
             </div>
           </div>
-          <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
+          <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">
             +{collegeDelta?.easy_solved ?? 0}
           </div>
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Foundation skill building</p>
+          <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">Foundation skill building</p>
         </div>
 
-        <div className="glass-card p-5 rounded-3xl border border-amber-500/20 bg-white dark:bg-navy-950 shadow-xl space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-            <span className="text-amber-600 dark:text-amber-400">Medium Solved</span>
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-              <TrendingUp className="w-5 h-5 stroke-[2.5]" />
+        <div className="glass-card p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-amber-500/20 bg-white dark:bg-navy-950 shadow-xl space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider gap-1">
+            <span className="text-amber-600 dark:text-amber-400 truncate">Medium Solved</span>
+            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 sm:w-5 sm:h-5 stroke-[2.5]" />
             </div>
           </div>
-          <div className="text-3xl font-black text-amber-600 dark:text-amber-400">
+          <div className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400">
             +{collegeDelta?.medium_solved ?? 0}
           </div>
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Interview readiness problems</p>
+          <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">Interview readiness problems</p>
         </div>
 
-        <div className="glass-card p-5 rounded-3xl border border-rose-500/20 bg-white dark:bg-navy-950 shadow-xl space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-            <span className="text-rose-600 dark:text-rose-400">Hard Solved</span>
-            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
-              <TrendingUp className="w-5 h-5 stroke-[2.5]" />
+        <div className="glass-card p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-rose-500/20 bg-white dark:bg-navy-950 shadow-xl space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider gap-1">
+            <span className="text-rose-600 dark:text-rose-400 truncate">Hard Solved</span>
+            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 sm:w-5 sm:h-5 stroke-[2.5]" />
             </div>
           </div>
-          <div className="text-3xl font-black text-rose-600 dark:text-rose-400">
+          <div className="text-2xl sm:text-3xl font-black text-rose-600 dark:text-rose-400">
             +{collegeDelta?.hard_solved ?? 0}
           </div>
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Advanced DSA mastery</p>
+          <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">Advanced DSA mastery</p>
         </div>
 
       </div>
@@ -694,27 +698,27 @@ export const GrowthIntelligencePage: React.FC = () => {
                               Loading history snapshots...
                             </div>
                           ) : historySnapshots.length > 0 ? (
-                            <div className="rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-950 max-w-full overflow-hidden">
+                            <div className="rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-950 max-w-full overflow-hidden shadow-xs">
                               <table className="w-full text-left text-[11px] table-fixed">
-                                <thead className="bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 uppercase font-black text-[9px] border-b border-slate-200 dark:border-navy-800">
+                                <thead className="bg-slate-100 dark:bg-navy-900/80 text-slate-700 dark:text-slate-300 uppercase font-black text-[9px] border-b border-slate-200 dark:border-navy-800">
                                   <tr>
-                                    <th className="py-2 px-2 w-[42%] truncate">Date</th>
-                                    <th className="py-2 px-1 text-center w-[18%]">Solved</th>
-                                    <th className="py-2 px-1 text-center text-emerald-600 w-[18%]">Delta</th>
-                                    <th className="py-2 px-1.5 text-right w-[22%]">Rating</th>
+                                    <th className="py-2.5 px-3 w-[38%]">Date</th>
+                                    <th className="py-2.5 px-2 text-center w-[20%]">Solved</th>
+                                    <th className="py-2.5 px-2 text-center text-emerald-600 dark:text-emerald-400 w-[20%]">Delta</th>
+                                    <th className="py-2.5 px-3 text-right w-[22%]">Rating</th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-200 dark:divide-navy-800 font-mono text-[10px]">
+                                <tbody className="divide-y divide-slate-200 dark:divide-navy-800/80 font-mono text-[10px]">
                                   {historySnapshots.map((snap) => (
-                                    <tr key={snap.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/60">
-                                      <td className="py-2 px-2 font-sans font-bold text-slate-800 dark:text-slate-200 truncate">
+                                    <tr key={snap.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors">
+                                      <td className="py-2.5 px-3 font-sans font-bold text-slate-800 dark:text-slate-200 truncate">
                                         {new Date(snap.captured_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                       </td>
-                                      <td className="py-2 px-1 text-center font-black text-slate-900 dark:text-white">{snap.total_solved}</td>
-                                      <td className="py-2 px-1 text-center font-bold text-emerald-600">
+                                      <td className="py-2.5 px-2 text-center font-black text-slate-900 dark:text-white">{snap.total_solved}</td>
+                                      <td className="py-2.5 px-2 text-center font-black text-emerald-600 dark:text-emerald-400">
                                         {snap.delta_total > 0 ? `+${snap.delta_total}` : snap.delta_total === snap.total_solved ? 'Base' : '0'}
                                       </td>
-                                      <td className="py-2 px-1.5 text-right text-slate-700 dark:text-slate-300 font-bold truncate">{snap.contest_rating ?? '—'}</td>
+                                      <td className="py-2.5 px-3 text-right text-slate-700 dark:text-slate-300 font-bold truncate">{snap.contest_rating ?? '—'}</td>
                                     </tr>
                                   ))}
                                 </tbody>

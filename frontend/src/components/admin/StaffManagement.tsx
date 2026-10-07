@@ -402,17 +402,26 @@ export const StaffManagement: React.FC = () => {
         </div>
 
         <div className="relative flex-1 sm:max-w-xs">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search username, email, ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-9 pl-9 pr-8 text-xs font-medium rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none shadow-sm"
+            autoComplete="off"
+            spellCheck={false}
+            className="w-full h-9 pl-9 pr-8 text-xs font-bold rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none shadow-sm text-left transition-all"
           />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
+            <Search className="w-4 h-4 stroke-[2.5]" />
+          </div>
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-              <X className="w-3.5 h-3.5" />
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute inset-y-0 right-0 z-10 flex items-center px-2.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors"
+              title="Clear search"
+            >
+              <X className="w-4 h-4 stroke-[2.5]" />
             </button>
           )}
         </div>

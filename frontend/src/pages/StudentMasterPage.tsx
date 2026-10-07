@@ -470,12 +470,12 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 lg:justify-end mt-4 lg:mt-0">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 lg:justify-end mt-4 lg:mt-0 w-full lg:w-auto">
             {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 p-1 bg-white/10 dark:bg-black/30 rounded-xl border border-white/15 shadow-inner backdrop-blur-md shrink-0">
+            <div className="grid grid-cols-2 sm:flex items-center gap-1 p-1 bg-white/10 dark:bg-black/30 rounded-xl border border-white/15 shadow-inner backdrop-blur-md w-full sm:w-auto">
               <button
                 onClick={() => setViewMode('table')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                className={`flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                   viewMode === 'table'
                     ? 'bg-gradient-to-r from-white to-slate-100 text-navy-950 shadow-md scale-[1.02]'
                     : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -486,7 +486,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               </button>
               <button
                 onClick={() => setViewMode('cards')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                className={`flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                   viewMode === 'cards'
                     ? 'bg-gradient-to-r from-white to-slate-100 text-navy-950 shadow-md scale-[1.02]'
                     : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -497,21 +497,21 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               </button>
             </div>
             
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="grid grid-cols-2 sm:flex items-center gap-2.5 w-full sm:w-auto">
               <button
                 onClick={onOpenImport}
-                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-black text-[11px] uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md shrink-0"
+                className="px-3.5 sm:px-4 py-2.5 sm:py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md"
               >
                 <UploadCloud className="w-4 h-4 text-brand-300 shrink-0" />
-                <span>Bulk Import</span>
+                <span className="truncate">Bulk Import</span>
               </button>
 
               <button
                 onClick={handleOpenAddModal}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-400 hover:to-indigo-500 text-white font-black text-[11px] uppercase tracking-wider shadow-lg shadow-brand-500/25 flex items-center gap-2 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-brand-300/40 shrink-0"
+                className="px-3.5 sm:px-4 py-2.5 sm:py-2 rounded-xl bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-400 hover:to-indigo-500 text-white font-black text-[11px] uppercase tracking-wider shadow-lg shadow-brand-500/25 flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-brand-300/40"
               >
                 <Plus className="w-4 h-4 shrink-0" />
-                <span>Add Student</span>
+                <span className="truncate">Add Student</span>
               </button>
             </div>
           </div>
@@ -521,14 +521,17 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       {/* Search Bar - Redesigned */}
       <div className="bg-white dark:bg-navy-950 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-navy-700 space-y-4">
         <div className="relative flex items-center">
-          <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
             placeholder="Search students by name, reg no..."
+            autoComplete="off"
             className="w-full pl-11 pr-10 py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all text-ellipsis"
           />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 z-10 text-slate-500 dark:text-slate-400">
+            <Search className="w-5 h-5" />
+          </div>
           {localSearch && (
             <button
               type="button"

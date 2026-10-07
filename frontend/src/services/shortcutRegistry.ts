@@ -77,7 +77,7 @@ export const GLOBAL_SHORTCUT_REGISTRY: ShortcutDefinition[] = [
   {
     id: 'nav_faculty_actions',
     keys: ['Alt', 'F'],
-    description: 'Faculty Action Center',
+    description: 'Faculty Portal',
     category: 'QUICK NAVIGATION',
     targetTab: 'faculty-action-center',
     allowedRoles: ['admin', 'administrator', 'super_admin', 'hod', 'faculty', 'staff']
@@ -85,7 +85,7 @@ export const GLOBAL_SHORTCUT_REGISTRY: ShortcutDefinition[] = [
   {
     id: 'nav_hod_center',
     keys: ['Alt', 'M'],
-    description: 'HOD Command Center',
+    description: 'HOD Dashboard',
     category: 'QUICK NAVIGATION',
     targetTab: 'hod-command-center',
     allowedRoles: ['admin', 'administrator', 'super_admin', 'hod']

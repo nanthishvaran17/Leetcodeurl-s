@@ -40,8 +40,8 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
     thick_border_side = Side(style='medium', color='000000')
     outer_border = Border(left=thick_border_side, right=thick_border_side, top=thick_border_side, bottom=thick_border_side)
 
-    align_center = Alignment(horizontal='center', vertical='center', wrap_text=True)
-    align_left = Alignment(horizontal='left', vertical='center', wrap_text=True)
+    align_center = Alignment(horizontal='center', vertical='center', wrap_text=False)
+    align_left = Alignment(horizontal='left', vertical='center', wrap_text=False)
 
     def setup_page_layout(ws):
         # 16. Reset worksheet print settings

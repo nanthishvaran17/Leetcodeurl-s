@@ -92,96 +92,24 @@ def _fmt_null(val, default="—"):
     return val
 
 def _write_college_header(ws, report_title: str, dept_text: str, cols: int, metadata_block: Optional[Dict[str, str]] = None):
-    last_col = get_column_letter(max(1, cols))
-    ws.sheet_view.showGridLines = True
-    ws.page_setup.orientation = ws.ORIENTATION_LANDSCAPE
-    ws.page_setup.fitToWidth = 1
-    ws.page_setup.fitToHeight = 0
-
-    # Row 1: Main Title (A1:last_col 1)
-    ws.merge_cells(f"A1:{last_col}1")
-    for c in range(1, cols + 1):
-        cell = ws.cell(row=1, column=c)
-        cell.fill = NAVY_PRIMARY
-        _apply_thin_border(cell)
-    ws["A1"] = "NANDHA ENGINEERING COLLEGE, ERODE – 638 052"
-    ws["A1"].font = FONT_MAIN_TITLE
-    ws["A1"].alignment = ALIGN_CENTER
-    ws.row_dimensions[1].height = 64
-
-    # Row 2: Subtitle (A2:last_col 2)
-    ws.merge_cells(f"A2:{last_col}2")
-    for c in range(1, cols + 1):
-        cell = ws.cell(row=2, column=c)
-        cell.fill = NAVY_SECONDARY
-        _apply_thin_border(cell)
-    ws["A2"] = "(AUTONOMOUS) • ESTD 2001 | Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai"
-    ws["A2"].font = FONT_SUBTITLE
-    ws["A2"].alignment = ALIGN_CENTER
-    ws.row_dimensions[2].height = 18
-
-    # Row 3: Department Context (A3:last_col 3)
-    ws.merge_cells(f"A3:{last_col}3")
-    for c in range(1, cols + 1):
-        cell = ws.cell(row=3, column=c)
-        cell.fill = SUB_FILL
-        _apply_thin_border(cell)
-    ws["A3"] = dept_text.upper()
-    ws["A3"].font = Font(name=FONT_TNR, size=11, bold=True, color="1B365D")
-    ws["A3"].alignment = ALIGN_CENTER
-    ws.row_dimensions[3].height = 18
-
-    # Row 4: Report Title
-    ws.merge_cells(f"A4:{last_col}4")
-    for c in range(1, cols + 1):
-        cell = ws.cell(row=4, column=c)
-        _apply_thin_border(cell)
-    ws["A4"] = report_title.upper()
-    ws["A4"].font = Font(name=FONT_TNR, size=13, bold=True, color="2E5B88")
-    ws["A4"].alignment = ALIGN_CENTER
-    ws.row_dimensions[4].height = 20
-
-    # College Emblem Image (Placed cleanly in B1 to avoid hugging edge)
-    logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nandha_emblem.png")
-    if os.path.exists(logo_path):
-        try:
-            from openpyxl.drawing.image import Image as OpenPyxlImage
-            img = OpenPyxlImage(logo_path)
-            img.height = 58
-            img.width = 90
-            ws.add_image(img, "B1")
-        except Exception:
-            pass
-
-    # 25 Years Anniversary Logo (Placed cleanly on top-right last_col 1)
-    logo_25_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nec_25_years_logo_transparent.png")
-    if not os.path.exists(logo_25_path):
-        logo_25_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nec_25_years_logo.png")
-    if os.path.exists(logo_25_path):
-        try:
-            from openpyxl.drawing.image import Image as OpenPyxlImage
-            img_25 = OpenPyxlImage(logo_25_path)
-            img_25.height = 56
-            img_25.width = 56
-            ws.add_image(img_25, f"{last_col}1")
-        except Exception:
-            pass
-
-    # Row 5: Metadata Block Line
-    if metadata_block:
-        meta_parts = [f"{k}: {v}" for k, v in metadata_block.items() if v]
-        meta_str = "   |   ".join(meta_parts)
-        ws.merge_cells(f"A5:{last_col}5")
-        META_FILL = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
-        FONT_META = Font(name=FONT_TNR, size=9.5, bold=True, color="1E293B")
-        for col_idx in range(1, cols + 1):
-            cell = ws.cell(row=5, column=col_idx)
-            cell.fill = META_FILL
-            _apply_thin_border(cell, force=True)
-        ws["A5"] = meta_str
-        ws["A5"].font = FONT_META
-        ws["A5"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-        ws.row_dimensions[5].height = 20
+    from backend.exporters.nec_master_excel_design import apply_master_college_identity
+    dept_parts = dept_text.split("•")
+    dept_val = dept_parts[0].replace("DEPARTMENT OF", "").strip() if "DEPARTMENT OF" in dept_text else "ALL"
+    year_val = dept_parts[1].replace("COHORT:", "").replace("YEAR", "").strip() if len(dept_parts) > 1 else "ALL"
+    
+    session_date = metadata_block.get("Date") if metadata_block else ""
+    total_roster = int(metadata_block.get("Total Roster", "0").split()[0]) if metadata_block and "Total Roster" in metadata_block else 0
+    
+    apply_master_college_identity(
+        ws=ws,
+        report_title=report_title,
+        department=dept_val,
+        year=year_val,
+        contest_name=metadata_block.get("Contest", "") if metadata_block else "",
+        session_date=session_date,
+        total_roster=total_roster,
+        cols=cols
+    )
 
 def normalize_row_data(r: dict) -> dict:
     """Ensures deterministic binary Q1-Q4 (0 or 1) and exact solved calculation."""

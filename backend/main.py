@@ -35,7 +35,7 @@ from backend.routes import (
     email_campaigns, bot_notifications, anti_cheat, placement_eligibility, gamification, accreditation,
     deep_tech_intelligence, url_import, contest_integrity, notifications, messaging, downloads, report_jobs
 )
-from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence, nlci, hr_candidate_finder
+from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence, nlci, hr_candidate_finder, dev_studio
 from backend.routes import command_center, scheduler, student_reports, staff_tools
 from backend import leetcode_tracker
 from backend.services.heartbeat_service import get_deep_health_telemetry

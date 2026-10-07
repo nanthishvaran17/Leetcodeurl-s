@@ -63,8 +63,8 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   const targetCompletedCount = mentees.filter(m => (m.total_solved || 0) >= 10).length;
 
   return (
-    <div className="fixed inset-0 z-[100050] flex justify-end bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-xl h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-[100050] flex justify-center items-end sm:justify-end sm:items-stretch bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in sm:p-0 pt-4" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="w-full max-w-xl h-[85vh] sm:h-[100dvh] bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden flex flex-col rounded-t-3xl sm:rounded-none">
 
         {/* Hero Header Profile Section */}
         <div className="relative bg-gradient-to-br from-[#0a1628] via-[#0f2244] to-[#1a1040] text-white overflow-hidden shrink-0">

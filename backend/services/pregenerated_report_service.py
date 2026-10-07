@@ -520,16 +520,8 @@ def generate_report_bytes(
             res = asyncio.run(report_gen.generate_complete_report(contest_id))  # type: ignore
         return res["excel_bytes"]
 
-    # 3. Master Institutional Workbook Engine (All 15 Purpose-Specific Reports)
-    if fmt in ("excel", "xlsx") and rpt in (
-        "MASTER_10_SHEET", "FRIDAY_OFFICIAL_CONTEST", "SUNDAY_LIVE_CONTEST",
-        "WEEKLY_CONTEST_INTELLIGENCE", "CONTEST_ATTENDANCE_PARTICIPATION",
-        "CONTEST_PERFORMANCE_RANKING", "WEEKLY_STUDENT_PERFORMANCE",
-        "FIVE_WEEK_PERFORMANCE_TREND", "PROBLEM_DIFFICULTY_INTELLIGENCE",
-        "FACULTY_CONSOLIDATED", "FACULTY_COORDINATOR_CONSOLIDATED",
-        "HOD_DEPARTMENT_INTELLIGENCE", "PRINCIPAL_EXECUTIVE",
-        "MANAGEMENT_EXECUTIVE_SUMMARY", "COLLEGE_EXECUTIVE", "DEPARTMENT_PERFORMANCE"
-    ):
+    # 3. Master Institutional Workbook Engine (ONLY for Master 10-Sheet Workbook)
+    if fmt in ("excel", "xlsx") and rpt in ("MASTER_10_SHEET", "10_SHEET", "MASTER_WORKBOOK"):
         from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
         c_id = flt.get("session_id") or flt.get("contest_id")
         return generate_master_10_sheet_workbook(db, current_user=current_user, contest_id=c_id, department=dept, year=year, report_type=rpt)
@@ -568,7 +560,8 @@ def generate_report_bytes(
         if flt.get("student_id"):
             from backend.exporters.student_excel_exporter import export_student_excel_from_dataset
             return export_student_excel_from_dataset(dataset, rpt)
-        return export_excel_from_dataset(dataset)
+        from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
+        return export_dynamic_excel(dataset)
     elif fmt == "pdf":
         if flt.get("student_id"):
             from backend.exporters.student_pdf_exporter import export_student_pdf_from_dataset

@@ -158,14 +158,18 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     prev_c_lbl = str(dataset.get("prevContest") or (dataset.get("wowSummary") or {}).get("prevContest") or "Last Week").strip()
     curr_c_lbl = str(dataset.get("currContest") or (dataset.get("wowSummary") or {}).get("currContest") or contest_name or "This Week").strip()
 
+    is_five_week = (report_type in ("FIVE_WEEK_PERFORMANCE_TREND", "FIVE_WEEK_TREND")) or ("c1_solved" in first_row)
     is_historical = (report_type == "HISTORICAL_CONTEST_INTELLIGENCE") or ("weeklyData" in first_row)
     is_single_contest = (
         any(k in report_type for k in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "SUNDAY_LIVE", "SUNDAY_CONTEST", "WEEKLY_CONTEST"))
         or any(k in first_row for k in ("q1_display", "q1_time"))
-    ) and not is_historical and not is_wow and "COORDINATOR" not in report_type and "WEEKLY_PERFORMANCE" not in report_type and "WEEKLY_STUDENT_PERFORMANCE" not in report_type
+    ) and not is_historical and not is_wow and not is_five_week and "COORDINATOR" not in report_type and "WEEKLY_PERFORMANCE" not in report_type and "WEEKLY_STUDENT_PERFORMANCE" not in report_type
 
     if is_wow:
         report_title = f"WEEK-ON-WEEK INTELLIGENCE — {prev_c_lbl.upper()} VS {curr_c_lbl.upper()}"
+    elif is_five_week:
+        d_title = dataset.get("title") or dataset.get("reportTitle")
+        report_title = (d_title.upper() if d_title else "FIVE-WEEK LONGITUDINAL PERFORMANCE MATRIX")
     elif is_historical:
         session_headers = dataset.get("sessionHeaders", [])
         if session_headers and len(session_headers) >= 1:
@@ -206,13 +210,36 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             ("Dept", "dept"),
             ("Yr", "year"),
             (f"{prev_c_lbl} Status", "prev_status"),
-            (f"{prev_c_lbl} Solved", "prev_solved"),
+            (f"{prev_c_lbl} Easy", "prev_easy"),
+            (f"{prev_c_lbl} Medium", "prev_medium"),
+            (f"{prev_c_lbl} Hard", "prev_hard"),
+            (f"{prev_c_lbl} Total Solved", "prev_solved"),
             (f"{prev_c_lbl} Score", "prev_score"),
             (f"{curr_c_lbl} Status", "curr_status"),
-            (f"{curr_c_lbl} Solved", "curr_solved"),
+            (f"{curr_c_lbl} Easy", "curr_easy"),
+            (f"{curr_c_lbl} Medium", "curr_medium"),
+            (f"{curr_c_lbl} Hard", "curr_hard"),
+            (f"{curr_c_lbl} Total Solved", "curr_solved"),
             (f"{curr_c_lbl} Score", "curr_score"),
             ("Δ Solved", "solved_delta"),
             ("Trend", "trend"),
+        ]
+    elif is_five_week:
+        sess_hdrs = dataset.get("sessionHeaders") or ["Contest 1", "Contest 2", "Contest 3", "Contest 4", "Contest 5"]
+        selected_cols = [
+            ("S.No", "__SNO__"),
+            ("Register No", "reg_no"),
+            ("Student Name", "name"),
+            ("Dept", "dept"),
+            ("Year", "year"),
+            (sess_hdrs[0] if len(sess_hdrs) > 0 else "Weekly Contest 1", "c1_solved"),
+            (sess_hdrs[1] if len(sess_hdrs) > 1 else "Weekly Contest 2", "c2_solved"),
+            (sess_hdrs[2] if len(sess_hdrs) > 2 else "Weekly Contest 3", "c3_solved"),
+            (sess_hdrs[3] if len(sess_hdrs) > 3 else "Weekly Contest 4", "c4_solved"),
+            (sess_hdrs[4] if len(sess_hdrs) > 4 else "Weekly Contest 5", "c5_solved"),
+            ("5-W Solved", "solved_5w"),
+            ("Attendance %", "attendance_rate"),
+            ("Trajectory", "trajectory"),
         ]
     else:
         # 1. Base Demographic Columns (Always first)
@@ -381,119 +408,19 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     _THIN_SIDE = Side(style='thin', color='334155')
     _THIN_BORDER = Border(left=_THIN_SIDE, right=_THIN_SIDE, top=_THIN_SIDE, bottom=_THIN_SIDE)
 
-    # Row 1: College Name Title (A1:last_col 1)
-    ws.merge_cells(f"A1:{last_col}1")
-    for c in range(1, cols + 1):
-        cell = ws.cell(row=1, column=c)
-        cell.fill = NAVY_PRIMARY
-        cell.border = _THIN_BORDER
-    ws["A1"] = "NANDHA ENGINEERING COLLEGE, ERODE – 638 052"
-    ws["A1"].font = FONT_TITLE
-    ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[1].height = 64
+    from backend.exporters.nec_master_excel_design import apply_master_college_identity
+    apply_master_college_identity(
+        ws=ws,
+        report_title=report_title,
+        department=dept,
+        year=year,
+        contest_name=session_date or "",
+        session_date=session_date or "",
+        total_roster=len(rows),
+        cols=cols
+    )
 
-    # Row 2: Subtitle
-    ws.merge_cells(f"A2:{last_col}2")
-    for c in range(1, cols + 1):
-        cell = ws.cell(row=2, column=c)
-        cell.fill = NAVY_SECONDARY
-        cell.border = _THIN_BORDER
-    ws["A2"] = "(AUTONOMOUS) • ESTD 2001 | Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai"
-    ws["A2"].font = FONT_SUBTITLE
-    ws["A2"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[2].height = 18
 
-    # Row 3: Department & Year Scope Context
-    ws.merge_cells(f"A3:{last_col}3")
-    for c in range(1, cols + 1):
-        cell = ws.cell(row=3, column=c)
-        cell.fill = SUB_FILL
-        cell.border = _THIN_BORDER
-    ws["A3"] = f"DEPARTMENT OF {dept} • COHORT: {year}".upper()
-    ws["A3"].font = FONT_DEPT
-    ws["A3"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[3].height = 18
-
-    # Row 4: Sheet / Report Title
-    ws.merge_cells(f"A4:{last_col}4")
-    for c in range(1, cols + 1):
-        cell = ws.cell(row=4, column=c)
-        cell.border = _THIN_BORDER
-    ws["A4"] = report_title.upper()
-    ws["A4"].font = FONT_RPT
-    ws["A4"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[4].height = 20
-
-    # Row 5: Metadata Block (Session Date, Timestamp, Scope Roster)
-    from backend.time_utils import now_ist, format_ist_datetime
-    now_str = dataset.get("generatedAtIST") or dataset.get("generated_at") or format_ist_datetime(now_ist())
-    meta_str = f"Session Date: {session_date or 'N/A'}   |   Department: {dept}   |   Year: {year}   |   Total Roster: {len(rows)} Students   |   Generated: {now_str}"
-    ws.merge_cells(f"A5:{last_col}5")
-    for c in range(1, cols + 1):
-        cell = ws.cell(row=5, column=c)
-        cell.fill = META_FILL
-        cell.border = _THIN_BORDER
-    ws["A5"] = meta_str
-    ws["A5"].font = FONT_META
-    ws["A5"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[5].height = 20
-
-    # Add College Emblem Logo — top-left corner, clean margin
-    logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nandha_emblem.png")
-    if os.path.exists(logo_path):
-        try:
-            from openpyxl.drawing.image import Image as OpenPyxlImage
-            from openpyxl.drawing.spreadsheet_drawing import AbsoluteAnchor
-            from openpyxl.drawing.xdr import XDRPoint2D, XDRPositiveSize2D
-            from openpyxl.utils.units import pixels_to_EMU
-
-            MARGIN_LEFT_EMU = pixels_to_EMU(10)
-            MARGIN_TOP_EMU  = pixels_to_EMU(8)
-            IMG_W_EMU  = pixels_to_EMU(92)
-            IMG_H_EMU  = pixels_to_EMU(58)
-
-            img_left = OpenPyxlImage(logo_path)
-            img_left.width  = 92
-            img_left.height = 58
-            img_left.anchor = AbsoluteAnchor(
-                pos=XDRPoint2D(MARGIN_LEFT_EMU, MARGIN_TOP_EMU),
-                ext=XDRPositiveSize2D(IMG_W_EMU, IMG_H_EMU)
-            )
-            ws.add_image(img_left)
-        except Exception:
-            pass
-
-    # Add 25 Years Anniversary Logo — top-right corner pinned to last column row 1
-    logo_25_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nec_25_years_logo_transparent.png")
-    if not os.path.exists(logo_25_path):
-        logo_25_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nec_25_years_logo.png")
-    if os.path.exists(logo_25_path):
-        try:
-            from openpyxl.drawing.image import Image as OpenPyxlImage
-            from openpyxl.drawing.spreadsheet_drawing import OneCellAnchor
-            from openpyxl.drawing.xdr import XDRPoint2D, XDRPositiveSize2D
-            from openpyxl.utils.units import pixels_to_EMU
-            from openpyxl.utils import column_index_from_string
-
-            LOGO2_W = 56
-            LOGO2_H = 56
-
-            # Place at last column, row 1 — offset by 6px margin inside the cell
-            img_right = OpenPyxlImage(logo_25_path)
-            img_right.width  = LOGO2_W
-            img_right.height = LOGO2_H
-
-            col_idx_r = column_index_from_string(last_col)
-            anchor_r = OneCellAnchor()
-            anchor_r._from.col   = col_idx_r - 1   # 0-indexed
-            anchor_r._from.row   = 0                # Row 1 (0-indexed)
-            anchor_r._from.colOff = pixels_to_EMU(6)
-            anchor_r._from.rowOff = pixels_to_EMU(6)
-            anchor_r.ext = XDRPositiveSize2D(pixels_to_EMU(LOGO2_W), pixels_to_EMU(LOGO2_H))
-            img_right.anchor = anchor_r
-            ws.add_image(img_right)
-        except Exception:
-            pass
 
     # Executive KPI Summary Block for Week-on-Week Intelligence
     if is_wow:
@@ -524,7 +451,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             ("C7:E7", 3, 5, f"THIS WEEK ({curr_c_lbl.upper()})"),
             ("F7:H7", 6, 8, f"LAST WEEK ({prev_c_lbl.upper()})"),
             ("I7:J7", 9, 10, "ATTENDANCE CHANGE"),
-            ("K7:M7", 11, 13, "TRAJECTORY DISTRIBUTION"),
+            ("K7:S7", 11, 19, "TRAJECTORY DISTRIBUTION"),
         ]
         ws.row_dimensions[7].height = 18
         for cell_range, c_start, c_end, lbl in kpi_headers:
@@ -542,7 +469,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             ("C8:E8", 3, 5, f"{curr_att} Attended", Font(name=FONT_TNR, size=11, bold=True, color="047857")),
             ("F8:H8", 6, 8, f"{prev_att} Attended", Font(name=FONT_TNR, size=11, bold=True, color="1B365D")),
             ("I8:J8", 9, 10, f"{att_delta_str} Students", Font(name=FONT_TNR, size=11, bold=True, color="047857" if att_delta >= 0 else "B91C1C")),
-            ("K8:M8", 11, 13, f"↑ {imp} Improved   ·   ↓ {dec} Declined   ·   → {stb} Stable", Font(name=FONT_TNR, size=10, bold=True, color="1E293B")),
+            ("K8:S8", 11, 19, f"↑ {imp} Improved   ·   ↓ {dec} Declined   ·   → {stb} Stable", Font(name=FONT_TNR, size=10, bold=True, color="1E293B")),
         ]
         ws.row_dimensions[8].height = 24
         for cell_range, c_start, c_end, val_str, font_style in kpi_values:
@@ -561,11 +488,11 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         r_hdr = 10
         start_row = 11
     else:
-        # Row 6: Table Headers (No empty spacing row)
-        r_hdr = 6
-        start_row = 7
+        # Row 7: Table Headers (Row 6 is empty spacer)
+        r_hdr = 7
+        start_row = 8
 
-    ws.row_dimensions[r_hdr].height = 26
+    ws.row_dimensions[r_hdr].height = 28
     for col_idx, h_text in enumerate(clean_headers, 1):
         cell = ws.cell(row=r_hdr, column=col_idx, value=h_text)
         cell.font = FONT_HDR
@@ -585,14 +512,12 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
     FONT_NEUTRAL = Font(name=FONT_TNR, size=10, bold=True, color="475569")
 
+    # Strict Alignment Rule: ONLY Student / Faculty Name columns are LEFT aligned.
+    # ALL OTHER COLUMNS (S.No, Reg No, Dept, Year, Handle, Solved, Q1-Q4, Rating, Rank, Status, Signals, etc.) ARE CENTER ALIGNED.
     LEFT_ALIGN_TITLES = {
-        "student name", "name", "full name", "student", 
-        "leetcode username", "username", "leetcode handle", "handle",
-        "institutional email", "college email", "student email", "email",
-        "department name",
-        "error description", "recommended action",
-        "fetch status", "verification status", "profile url", "leetcode url", "url",
-        "profile_url", "leetcode_url", "profile link", "profile"
+        "student name", "name", "full name", "student",
+        "faculty name", "faculty / mentor name", "staff / mentor name", 
+        "staff name", "mentor name"
     }
 
     CENTER_TITLES = {
@@ -1033,14 +958,21 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         # Compute it on the fly from rows
         from typing import List, Dict, Any
         CUTOFF_BANDS = [
-            {"label": "190+ Cut-off",      "min": 190.0, "max": 200.0},
-            {"label": "180+ Cut-off",      "min": 180.0, "max": 189.99},
-            {"label": "170–179",           "min": 170.0, "max": 179.99},
-            {"label": "160–169",           "min": 160.0, "max": 169.99},
-            {"label": "150–159",           "min": 150.0, "max": 159.99},
-            {"label": "140–149",           "min": 140.0, "max": 149.99},
-            {"label": "Below 140",         "min": 0.0,   "max": 139.99},
-            {"label": "Not Recorded",      "min": None,  "max": None},
+            {"label": "190–200",       "min": 190.0, "max": 200.0},
+            {"label": "180–189",       "min": 180.0, "max": 189.99},
+            {"label": "170–179",       "min": 170.0, "max": 179.99},
+            {"label": "160–169",       "min": 160.0, "max": 169.99},
+            {"label": "150–159",       "min": 150.0, "max": 159.99},
+            {"label": "140–149",       "min": 140.0, "max": 149.99},
+            {"label": "130–139",       "min": 130.0, "max": 139.99},
+            {"label": "120–129",       "min": 120.0, "max": 129.99},
+            {"label": "110–119",       "min": 110.0, "max": 119.99},
+            {"label": "100–109",       "min": 100.0, "max": 109.99},
+            {"label": "90–99",         "min": 90.0,  "max": 99.99},
+            {"label": "80–89",         "min": 80.0,  "max": 89.99},
+            {"label": "70–79",         "min": 70.0,  "max": 79.99},
+            {"label": "Below 70",      "min": 0.0,   "max": 69.99},
+            {"label": "Not Recorded",  "min": None,  "max": None},
         ]
         
         computed_summary = []
@@ -1072,141 +1004,91 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                         if tot_sol > 0: b_active += 1
                         if tot_sol >= 4: b_4sol += 1
                         
-            if b_total > 0:
-                computed_summary.append({
-                    "band": band["label"],
-                    "total": b_total,
-                    "active_solvers": b_active,
-                    "total_solved": b_solved,
-                    "solvers_4": b_4sol,
-                    "avg_solved": round(b_solved / max(b_active, 1), 2),
-                    "attendance_pct": round((b_active / max(b_total, 1)) * 100, 2)
-                })
+            computed_summary.append({
+                "band": band["label"],
+                "total": b_total,
+                "active_solvers": b_active,
+                "not_active": b_total - b_active,
+                "total_solved": b_solved,
+                "solvers_4": b_4sol,
+                "avg_solved": round(b_solved / max(b_active, 1), 2) if b_active > 0 else 0,
+                "attendance_pct": round((b_active / max(b_total, 1)) * 100, 2) if b_total > 0 else 0
+            })
         cutoff_summary = computed_summary
 
     if cutoff_summary and report_type == "12TH_TNEA_CUTOFF_ANALYSIS":
         ws_cutoff = wb.create_sheet(title="12TH TNEA CUTOFF")
         ws_cutoff.sheet_view.showGridLines = True
         
-        _apply_thin_border = lambda cell: setattr(cell, 'border', Border(
-            left=Side(style='thin', color='E2E8F0'),
-            right=Side(style='thin', color='E2E8F0'),
-            top=Side(style='thin', color='E2E8F0'),
-            bottom=Side(style='thin', color='E2E8F0')
-        ))
+        from backend.exporters.nec_master_excel_design import apply_master_college_identity, apply_master_table_headers, apply_master_data_row
 
-        # Title
-        ws_cutoff.merge_cells("A1:I1")
-        title_cell = ws_cutoff["A1"]
-        title_cell.value = "12TH TNEA CUTOFF"
-        title_cell.font = Font(name="Times New Roman", size=14, bold=True, color="1E293B")
-        title_cell.alignment = Alignment(horizontal="center", vertical="center")
-        ws_cutoff.row_dimensions[1].height = 30
+        hdr_start_row = apply_master_college_identity(
+            ws=ws_cutoff,
+            report_title="12TH TNEA CUTOFF REPORT",
+            department=dept,
+            year=year,
+            session_date=session_date or "",
+            total_roster=len(rows),
+            cols=9
+        )
         
-        # Headers
         c_headers = ["S.No", "12th Cutoff Band", "Total Students", "Attended", "Not Attended", "Participation %", "Total Solved", "Avg Solved", "4/4 Solvers"]
-        for c_i, h in enumerate(c_headers, 1):
-            c = ws_cutoff.cell(row=3, column=c_i, value=h)
-            c.font = Font(name="Times New Roman", size=10, bold=True, color="FFFFFF")
-            c.fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
-            c.alignment = Alignment(horizontal="center", vertical="center")
-            _apply_thin_border(c)
-        ws_cutoff.row_dimensions[3].height = 25
+        apply_master_table_headers(ws_cutoff, header_row_idx=hdr_start_row, headers=c_headers)
 
         # Data
-        r_start = 4
+        r_start = hdr_start_row + 1
         for idx, row_data in enumerate(cutoff_summary, 1):
             r_idx = r_start + idx - 1
             band = str(row_data.get("band") or row_data.get("band_name") or "Unknown")
             tot = int(row_data.get("total", row_data.get("total_students", 0)))
             act = int(row_data.get("active_solvers", row_data.get("attended", 0)))
             not_act = int(row_data.get("not_active", tot - act))
-            pct_val = row_data.get("attendance_pct", row_data.get("participation_pct", 0.0))
-            p_pct = f"{pct_val:.2f}%" if isinstance(pct_val, float) else pct_val
+            pct_val = _safe_float(row_data.get("attendance_pct", row_data.get("participation_pct", 0.0)))
+            if 0.0 < pct_val <= 1.0:
+                pct_val = pct_val * 100.0
+            p_pct = f"{pct_val:.2f}%"
             tot_sol = int(row_data.get("total_solved", row_data.get("total_solves", 0)))
             avg_sol = float(row_data.get("avg_solved", row_data.get("avg_solves", 0.0)))
             p4 = int(row_data.get("solvers_4", row_data.get("perfect_solvers", 0)))
             
             vals = [idx, band, tot, act, not_act, p_pct, tot_sol, avg_sol, p4]
-            for c_i, v in enumerate(vals, 1):
-                c = ws_cutoff.cell(row=r_idx, column=c_i, value=v)
-                c.font = Font(name="Times New Roman", size=10)
-                c.alignment = Alignment(horizontal="center", vertical="center")
-                _apply_thin_border(c)
-            ws_cutoff.row_dimensions[r_idx].height = 22
-
-        # Widths
-        ws_cutoff.column_dimensions["A"].width = 8
-        ws_cutoff.column_dimensions["B"].width = 25
-        ws_cutoff.column_dimensions["C"].width = 16
-        ws_cutoff.column_dimensions["D"].width = 16
-        ws_cutoff.column_dimensions["E"].width = 16
-        ws_cutoff.column_dimensions["F"].width = 18
-        ws_cutoff.column_dimensions["G"].width = 16
-        ws_cutoff.column_dimensions["H"].width = 16
-        ws_cutoff.column_dimensions["I"].width = 16
+            apply_master_data_row(ws_cutoff, row_idx=r_idx, row_values=vals, headers=c_headers, is_alt=(idx % 2 == 0))
 
     # Generate Extra Sheet: Top Performers Leaderboard
     top_students = dataset.get("topStudents", [])
     if top_students:
         ws_top = wb.create_sheet(title="Top Performers Leaderboard")
         ws_top.sheet_view.showGridLines = True
+        from backend.exporters.nec_master_excel_design import apply_master_college_identity, apply_master_table_headers, apply_master_data_row
 
-        _apply_thin_border_top = lambda cell: setattr(cell, 'border', Border(
-            left=Side(style='thin', color='000000'),
-            right=Side(style='thin', color='000000'),
-            top=Side(style='thin', color='000000'),
-            bottom=Side(style='thin', color='000000')
-        ))
+        hdr_top_start = apply_master_college_identity(
+            ws=ws_top,
+            report_title="TOP PERFORMERS LEADERBOARD",
+            department=dept,
+            year=year,
+            session_date=session_date or "",
+            total_roster=len(top_students),
+            cols=5
+        )
+        top_headers = ["Rank", "Register No", "Student Name", "Department", "Total Solved"]
+        apply_master_table_headers(ws_top, header_row_idx=hdr_top_start, headers=top_headers)
 
-        ws_top.merge_cells("A1:E1")
-        title_cell = ws_top["A1"]
-        title_cell.value = "TOP PERFORMERS LEADERBOARD"
-        title_cell.font = Font(name="Times New Roman", size=14, bold=True, color="1B365D")
-        title_cell.alignment = Alignment(horizontal="center", vertical="center")
-        
-        # Apply border to the merged title cell
-        for c_idx in range(1, 6):
-            _apply_thin_border_top(ws_top.cell(row=1, column=c_idx))
-            
-        ws_top.row_dimensions[1].height = 30
-
-        t_headers = ["Rank", "Register No", "Name", "Department", "Total Solved"]
-        for c_i, h in enumerate(t_headers, 1):
-            c = ws_top.cell(row=2, column=c_i, value=h)
-            c.font = Font(name="Times New Roman", size=11, bold=True, color="FFFFFF")
-            c.fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
-            c.alignment = Alignment(horizontal="center", vertical="center")
-            _apply_thin_border_top(c)
-        ws_top.row_dimensions[2].height = 25
-
-        r_start = 3
-        for idx, row_data in enumerate(top_students, 1):
-            r_idx = r_start + idx - 1
-            rank = idx
-            reg_no = str(row_data.get("reg_no") or row_data.get("register_no") or "")
-            name = str(row_data.get("name") or row_data.get("student_name") or "")
-            dept = str(row_data.get("dept") or row_data.get("department") or "")
-            if isinstance(row_data.get("department"), dict):
-                dept = str(row_data["department"].get("code", dept))
-            tot_sol = int(row_data.get("total_solved") or 0)
-            
-            vals = [rank, reg_no, name, dept, tot_sol]
-            for c_i, v in enumerate(vals, 1):
-                c = ws_top.cell(row=r_idx, column=c_i, value=v)
-                c.font = Font(name="Times New Roman", size=11)
-                if c_i in (1, 2, 4, 5):
-                    c.alignment = Alignment(horizontal="center", vertical="center")
-                else:
-                    c.alignment = Alignment(horizontal="left", vertical="center")
-                _apply_thin_border_top(c)
-            ws_top.row_dimensions[r_idx].height = 22
-
+        for idx, s_row in enumerate(top_students[:50], 1):
+            r_idx = hdr_top_start + idx
+            vals = [
+                idx,
+                str(s_row.get("reg_no") or s_row.get("register_no") or "—"),
+                str(s_row.get("name") or s_row.get("student_name") or "—"),
+                str(s_row.get("dept") or s_row.get("department") or dept),
+                int(s_row.get("solved") or s_row.get("total_solved") or 0)
+            ]
+            apply_master_data_row(ws_top, row_idx=r_idx, row_values=vals, headers=top_headers, is_alt=(idx % 2 == 0))
         ws_top.column_dimensions["A"].width = 8
         ws_top.column_dimensions["B"].width = 20
         ws_top.column_dimensions["C"].width = 35
         ws_top.column_dimensions["D"].width = 15
         ws_top.column_dimensions["E"].width = 15
+
 
     if report_type == "12TH_TNEA_CUTOFF_ANALYSIS":
         if "Student Performance Report" in wb.sheetnames and len(wb.sheetnames) > 1:

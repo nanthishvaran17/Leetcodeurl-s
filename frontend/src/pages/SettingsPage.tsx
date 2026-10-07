@@ -2003,14 +2003,17 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
             {/* Backups Filter Bar */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
               <div className="relative flex-1 max-w-md">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
                 <input
                   type="text"
                   value={backupSearch}
                   onChange={(e) => setBackupSearch(e.target.value)}
+                  autoComplete="off"
                   placeholder="Search snapshot files by name, date or hash..."
-                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 font-bold text-slate-900 dark:text-white"
+                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 text-left transition-all"
                 />
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
+                  <Search className="w-4 h-4 stroke-[2.5]" />
+                </div>
               </div>
               <span className="text-xs text-slate-600 dark:text-slate-300 font-black font-mono">
                 Showing {filteredBackups.length} of {backups.length} snapshots

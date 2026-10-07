@@ -186,6 +186,9 @@ def build_wow_intel_report(db, config, current_user=None) -> Dict[str, Any]:
                 "prev_q2": prev_d["q2"],
                 "prev_q3": prev_d["q3"],
                 "prev_q4": prev_d["q4"],
+                "prev_easy": prev_d["q1"],
+                "prev_medium": prev_d["q2"] + prev_d["q3"],
+                "prev_hard": prev_d["q4"],
                 "prev_solved": prev_d["solved"],
                 "prev_score": prev_d["score"],
                 # Current week
@@ -194,6 +197,9 @@ def build_wow_intel_report(db, config, current_user=None) -> Dict[str, Any]:
                 "curr_q2": curr_d["q2"],
                 "curr_q3": curr_d["q3"],
                 "curr_q4": curr_d["q4"],
+                "curr_easy": curr_d["q1"],
+                "curr_medium": curr_d["q2"] + curr_d["q3"],
+                "curr_hard": curr_d["q4"],
                 "curr_solved": curr_d["solved"],
                 "curr_score": curr_d["score"],
                 # Delta

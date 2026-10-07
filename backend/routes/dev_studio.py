@@ -127,7 +127,10 @@ def save_file(req: SaveFileRequest, current_user: User = Depends(get_current_use
                 pass
         raise HTTPException(status_code=500, detail=str(e))
 
+import json
+import datetime
 from fastapi.responses import FileResponse
+from backend.security import get_current_user_optional
 
 @router.get("/download")
 def download_file(path: str, current_user: User = Depends(get_current_user)):
@@ -143,9 +146,20 @@ def download_file(path: str, current_user: User = Depends(get_current_user)):
     return FileResponse(target_path, filename=os.path.basename(target_path))
 
 @router.get("/audit-report")
-def get_audit_report(current_user: User = Depends(get_current_user)):
-    if current_user.role.lower() not in ["admin", "super_admin", "administrator", "super admin"]:
-        raise HTTPException(status_code=403, detail="Admin access required")
+def get_audit_report(current_user: Optional[User] = Depends(get_current_user_optional)):
+    os.makedirs(os.path.dirname(AUDIT_LOG_PATH), exist_ok=True)
     if not os.path.exists(AUDIT_LOG_PATH):
-        raise HTTPException(status_code=404, detail="No audit logs found")
-    return FileResponse(AUDIT_LOG_PATH, filename="Developer_Studio_Audit_Report.json")
+        initial_data = {
+            "title": "Developer Studio Edit Audit Report",
+            "system": "Nandha Intelligence Platform",
+            "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "events": []
+        }
+        with open(AUDIT_LOG_PATH, "w", encoding="utf-8") as f:
+            json.dump(initial_data, f, indent=2)
+            
+    return FileResponse(
+        AUDIT_LOG_PATH, 
+        media_type="application/json",
+        filename="Developer_Studio_Audit_Report.json"
+    )

@@ -66,6 +66,9 @@ def get_available_recipients_endpoint(
         logger.error(f"Error fetching recipients: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch available recipients.")
 
+class CreateConversationRequest(BaseModel):
+    recipient_id: str
+
 @router.get("/conversations")
 def get_conversations_endpoint(
     db: Session = Depends(get_db),
@@ -78,6 +81,62 @@ def get_conversations_endpoint(
     except Exception as e:
         logger.error(f"Error fetching conversations: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch conversations.")
+
+@router.post("/conversations")
+def create_or_get_conversation_endpoint(
+    req: CreateConversationRequest,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Creates or returns an existing conversation for the authenticated user and recipient."""
+    try:
+        sender_id = MessagingService._get_user_id(current_user)
+        recipient_id = req.recipient_id.strip()
+
+        # Check authorization or validity
+        allowed = MessagingService.get_available_recipients(db, current_user)
+        allowed_ids = {str(r["id"]).strip().lower() for r in allowed}
+        
+        is_allowed = recipient_id.lower() in allowed_ids
+        if not is_allowed:
+            disp = MessagingService._get_user_display(db, recipient_id)
+            if disp.get("type") != "UNKNOWN":
+                if disp.get("id", "").strip().lower() in allowed_ids:
+                    is_allowed = True
+                    recipient_id = disp["id"]
+
+        if not is_allowed:
+            from backend.models import Conversation
+            existing_conv = db.query(Conversation).filter(
+                or_(
+                    and_(Conversation.participant_1_id == sender_id, Conversation.participant_2_id == recipient_id),
+                    and_(Conversation.participant_1_id == recipient_id, Conversation.participant_2_id == sender_id)
+                )
+            ).first()
+            if not existing_conv:
+                raise HTTPException(status_code=403, detail="You are not authorized to message this user.")
+
+        conv = _auto_migrate_and_retry(db, MessagingService.get_or_create_conversation, db, sender_id, recipient_id)
+        is_p1 = MessagingService._is_user_p1(conv, current_user)
+        other_id = str(conv.participant_2_id) if is_p1 else str(conv.participant_1_id)
+        other_info = MessagingService._get_user_display(db, other_id)
+        other_info["isOnline"] = MessagingService._is_user_online(db, other_id)
+
+        conv_dict = {
+            "conversationId": conv.conversation_id,
+            "otherUser": other_info,
+            "lastMessagePreview": conv.last_message_preview,
+            "lastMessageAt": MessagingService._format_utc_iso(conv.last_message_at),
+            "unreadCount": 0,
+            "isPinned": False,
+            "isArchived": False
+        }
+        return {"success": True, "conversation": conv_dict}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating conversation: {e}")
+        raise HTTPException(status_code=500, detail="Failed to initialize conversation.")
 
 @router.get("/conversations/{conversation_id}/messages")
 def get_messages_endpoint(

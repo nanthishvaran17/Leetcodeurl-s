@@ -227,7 +227,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       {
         id: 'nav_faculty',
         type: 'navigation',
-        label: 'Faculty Action Center',
+        label: 'Faculty Portal',
         sublabel: 'Manage assigned student rosters & tracking',
         icon: Shield,
         category: 'Commands',
@@ -236,7 +236,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       {
         id: 'nav_hod',
         type: 'navigation',
-        label: 'HOD Command Center',
+        label: 'HOD Dashboard',
         sublabel: 'Department executive overview & staff allocation',
         icon: Shield,
         category: 'Commands',
@@ -254,11 +254,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       {
         id: 'nav_placement_intelligence',
         type: 'navigation',
-        label: 'Placement & Hiring Portal',
+        label: 'Placement Portal',
         sublabel: 'Filter candidates by academic criteria, coding solves, and placement readiness',
         icon: Briefcase,
         category: 'Commands',
-        badge: 'PLACEMENTS',
+        badge: 'HIRE',
         action: () => onNavigate('hr-candidate-finder')
       },
       {

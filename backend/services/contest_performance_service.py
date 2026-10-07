@@ -183,18 +183,12 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     """
     # 1. Resolve the Target Contest Session dynamically
     filters = config.filters or {}
-    override_session_id = filters.get("session_id") or filters.get("report_date") or getattr(config, "report_date", None)
+    override_session_id = filters.get("session_id") or filters.get("session_date") or filters.get("report_date") or filters.get("date") or getattr(config, "report_date", None)
     
     session_obj = None
     if override_session_id and str(override_session_id).lower() not in ("latest", "all", "none", ""):
-        if str(override_session_id).isdigit():
-            session_obj = db.query(WeeklySession).filter(WeeklySession.id == int(override_session_id)).first()
-        else:
-            session_obj = db.query(WeeklySession).filter(
-                (WeeklySession.session_date == str(override_session_id)) |
-                (WeeklySession.contest_name.ilike(f"%{override_session_id}%")) |
-                (WeeklySession.contest_id.ilike(f"%{override_session_id}%"))
-            ).first()
+        from backend.services.weekly_session_resolver import resolve_target_weekly_session
+        session_obj = resolve_target_weekly_session(db, override_session_id)
 
     if not session_obj:
         resolved_info = resolve_weekly_sessions(db)

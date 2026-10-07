@@ -269,10 +269,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             <label htmlFor="dept-dashboard-name-search" className="block text-[11px] font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider truncate h-4 leading-4 m-0 p-0">
               Search Student Name
             </label>
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-700 dark:text-slate-200">
-                <Search className="w-4 h-4 stroke-[2.5]" />
-              </div>
+            <div className="relative flex items-center">
               <input
                 id="dept-dashboard-name-search"
                 type="text"
@@ -281,16 +278,22 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   setNameSearch(e.target.value);
                   setDisplayCount(32);
                 }}
+                autoComplete="off"
+                spellCheck={false}
                 placeholder="Search by name, reg no..."
-                className="w-full h-11 min-h-[44px] bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-600 dark:placeholder-slate-300 text-xs font-bold py-2 pl-9 pr-8 rounded-2xl border border-slate-300 dark:border-slate-700 shadow-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 truncate transition-all"
+                className="w-full h-11 min-h-[44px] bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs font-bold py-2 pl-10 pr-8 rounded-2xl border border-slate-300 dark:border-slate-700 shadow-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 text-left transition-all"
               />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
+                <Search className="w-4 h-4 stroke-[2.5]" />
+              </div>
               {nameSearch && (
                 <button
+                  type="button"
                   onClick={() => { setNameSearch(''); setDisplayCount(32); }}
-                  className="absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  className="absolute inset-y-0 right-0 z-10 flex items-center px-2.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors"
                   title="Clear search"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4 stroke-[2.5]" />
                 </button>
               )}
             </div>

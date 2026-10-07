@@ -169,30 +169,30 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
   const contestRatingVal =
     contests.contest_rating && contests.contest_rating !== 'N/A' && contests.contest_rating !== '0' && contests.contest_rating !== '—'
       ? contests.contest_rating
-      : st.contest_rating ?? initialStudent?.contest_rating ?? st.rating ?? initialStudent?.rating ?? (totalSolved >= 100 ? String(1500 + Math.round((totalSolved / 2200) * 450)) : '1746.3');
+      : st.contest_rating ?? initialStudent?.contest_rating ?? st.rating ?? initialStudent?.rating ?? 'Unrated';
 
   const globalRankVal =
     contests.global_rank && contests.global_rank !== 'N/A' && contests.global_rank !== '—'
       ? contests.global_rank
-      : st.global_rank ?? initialStudent?.global_rank ?? (totalSolved > 0 ? `#${Math.max(1200, Math.round(500000 / Math.max(1, totalSolved / 10))).toLocaleString()}` : '#94,251');
+      : st.global_rank ?? initialStudent?.global_rank ?? 'Unranked';
 
   const topPercentageVal =
     contests.top_percentage && contests.top_percentage !== 'N/A' && contests.top_percentage !== '—'
       ? contests.top_percentage
-      : st.top_percentage ?? initialStudent?.top_percentage ?? (totalSolved > 0 ? `${Math.max(0.5, Math.round((100 - (totalSolved / 2500) * 90) * 10) / 10)}%` : '10.9%');
+      : st.top_percentage ?? initialStudent?.top_percentage ?? 'N/A';
 
   const contestsAttendedVal =
     contests.contests_attended && contests.contests_attended !== 'N/A' && contests.contests_attended !== '0'
       ? contests.contests_attended
-      : st.contests_attended ?? initialStudent?.contests_attended ?? (totalSolved > 50 ? String(Math.max(3, Math.round(totalSolved / 150))) : '10');
+      : st.contests_attended ?? initialStudent?.contests_attended ?? '0';
 
   const bestRatingVal = contests.best_rating && contests.best_rating !== 'N/A' && contests.best_rating !== '—'
     ? contests.best_rating
-    : String(Number(String(contestRatingVal).replace(/[^0-9.]/g, '')) + 42 || 1788);
+    : (contestRatingVal !== 'Unrated' ? String(contestRatingVal) : 'N/A');
 
   const bestRankVal = contests.best_rank && contests.best_rank !== 'N/A' && contests.best_rank !== '—'
     ? contests.best_rank
-    : `#${Math.max(150, Math.round(Number(String(globalRankVal).replace(/[^0-9]/g, '')) * 0.72 || 65000)).toLocaleString()}`;
+    : (globalRankVal !== 'Unranked' ? String(globalRankVal) : 'N/A');
 
   const effectiveTotal = totalSolved > 0 ? totalSolved : (sumSolved > 0 ? sumSolved : 1);
   const easyPct = totalSolved > 0 || sumSolved > 0 ? Math.round((easySolved / effectiveTotal) * 1000) / 10 : 0;
@@ -358,6 +358,12 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
       const hour = (14 + i) % 24;
       const min = (10 + (i * 17)) % 60;
 
+      const d = new Date();
+      d.setDate(d.getDate() - dayOffset);
+      const yearStr = d.getFullYear();
+      const monthStr = String(d.getMonth() + 1).padStart(2, '0');
+      const dateStr = String(d.getDate()).padStart(2, '0');
+
       result.push({
         title: p.name,
         title_slug: p.slug,
@@ -365,7 +371,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
         status: "Accepted",
         runtime: `${(i % 5) + 1} ms`,
         memory: `${40 + (i % 15)}.${i % 9} MB`,
-        timestamp: `2026-09-${String(15 - dayOffset).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`
+        timestamp: `${yearStr}-${monthStr}-${dateStr} ${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`
       });
     }
 
@@ -376,69 +382,24 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
   const getLanguagesList = () => {
     if (rawLanguages && rawLanguages.length > 0) return rawLanguages;
-    if (totalSolved === 0) return [];
-    const primaryLang = intelData?.primary_language || 'Java';
-    const primarySolved = Math.max(1, Math.round(totalSolved * 0.88));
-    const remaining = Math.max(0, totalSolved - primarySolved);
-    const sqlSolved = Math.min(remaining, Math.max(1, Math.round(remaining * 0.6)));
-    const cppSolved = Math.max(0, remaining - sqlSolved);
-
-    const list: any[] = [{ language: primaryLang, solved: primarySolved }];
-    if (sqlSolved > 0) list.push({ language: 'MySQL', solved: sqlSolved });
-    if (cppSolved > 0) list.push({ language: 'C++', solved: cppSolved });
-    return list;
+    return [];
   };
 
-  const languagesList = React.useMemo(() => getLanguagesList(), [rawLanguages, totalSolved, intelData?.primary_language]);
+  const languagesList = React.useMemo(() => getLanguagesList(), [rawLanguages]);
 
   const getTopicsList = () => {
     if (rawTopics && rawTopics.length > 0) return rawTopics;
-    if (totalSolved === 0) return [];
-
-    return [
-      { topic_name: 'Arrays & Hashing', problems_solved: Math.round(totalSolved * 0.32) },
-      { topic_name: 'Strings & Text Processing', problems_solved: Math.round(totalSolved * 0.22) },
-      { topic_name: 'Dynamic Programming', problems_solved: Math.round(totalSolved * 0.16) },
-      { topic_name: 'Two Pointers & Sliding Window', problems_solved: Math.round(totalSolved * 0.12) },
-      { topic_name: 'Trees & Binary Search', problems_solved: Math.round(totalSolved * 0.10) },
-      { topic_name: 'Math & Bit Manipulation', problems_solved: Math.round(totalSolved * 0.08) }
-    ].filter((t) => t.problems_solved > 0);
+    return [];
   };
 
-  const topicsList = React.useMemo(() => getTopicsList(), [rawTopics, totalSolved]);
+  const topicsList = React.useMemo(() => getTopicsList(), [rawTopics]);
 
   const getContestHistoryList = () => {
     if (contestHistory && contestHistory.length > 0) return contestHistory;
-    if (!contestRatingVal || contestRatingVal === '0') return [];
-
-    const numContests = Math.max(3, Math.min(10, Number(contestsAttendedVal || 5)));
-    const baseRating = Math.round(Number(String(contestRatingVal).replace(/[^0-9.]/g, '')) || 1746);
-    const list: any[] = [];
-
-    for (let i = 0; i < numContests; i++) {
-      const cNum = 415 - (i * 3);
-      const dayOffset = (i * 14) + 2;
-      const d = new Date();
-      d.setDate(d.getDate() - dayOffset);
-      const dateStr = d.toISOString().split('T')[0];
-      const rating = Math.max(1300, Math.round(baseRating - ((numContests - 1 - i) * 22) + ((i % 3) * 15)));
-      const rank = Math.max(120, Math.round(150000 - (rating * 45) + (i * 350)));
-      const solved = Math.min(4, Math.max(1, (i % 3) + 2));
-
-      list.push({
-        contest_name: i % 2 === 0 ? `Weekly Contest ${cNum}` : `Biweekly Contest ${Math.round(cNum / 3)}`,
-        date: dateStr,
-        contest_rank: `#${rank.toLocaleString()}`,
-        problems_solved: solved,
-        total_problems: 4,
-        rating_after: rating
-      });
-    }
-
-    return list;
+    return [];
   };
 
-  const contestHistoryList = React.useMemo(() => getContestHistoryList(), [contestHistory, contestRatingVal, contestsAttendedVal]);
+  const contestHistoryList = React.useMemo(() => getContestHistoryList(), [contestHistory]);
 
   const getLanguageStyle = (langName: string) => {
     const l = (langName || '').toLowerCase();
@@ -733,12 +694,15 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         const batchStr = rawBatch ? (String(rawBatch).includes('Year') ? String(rawBatch) : `${rawBatch} Year`) : '';
                         const sec = st.section || initialStudent?.section;
                         const secStr = hasValidSection ? `Sec ${sec}` : '';
+                        const cutoffVal = st.twelfth_cutoff ?? st.twelfthCutoff ?? st.cutoff ?? initialStudent?.twelfth_cutoff ?? initialStudent?.twelfthCutoff ?? initialStudent?.cutoff;
+                        const cutoffStr = cutoffVal !== null && cutoffVal !== undefined && cutoffVal !== '' && !isNaN(Number(cutoffVal)) ? `Cutoff: ${Number(cutoffVal).toFixed(1)}` : null;
 
                         const metaParts = [
                           reg ? <span key="reg" className="font-mono font-black text-amber-300">{reg}</span> : null,
                           dept ? <span key="dept" className="text-white font-bold">{dept}</span> : null,
                           batchStr ? <span key="batch" className="text-slate-200">{batchStr}</span> : null,
-                          secStr ? <span key="sec" className="text-slate-200">{secStr}</span> : null
+                          secStr ? <span key="sec" className="text-slate-200">{secStr}</span> : null,
+                          cutoffStr ? <span key="cutoff" className="text-cyan-300 font-mono font-bold bg-cyan-900/40 px-1.5 py-0.5 rounded border border-cyan-500/30">{cutoffStr}</span> : null
                         ].filter(Boolean);
 
                         return metaParts.map((part, idx) => (
@@ -878,7 +842,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         <div className="col-span-2 bg-purple-50 p-4 sm:p-5 rounded-3xl border border-purple-300 shadow-sm space-y-1 hover:shadow-md transition-all flex flex-col items-center text-center">
                           <span className="text-[10px] font-black text-purple-900 uppercase tracking-wider block">Contest Rating</span>
                           <div className="text-2xl sm:text-3xl font-black text-purple-950 font-mono">
-                            {contestRatingVal || '1746.3'}
+                            {contestRatingVal}
                           </div>
                           <div className="text-[11px] text-purple-950 font-black truncate pt-1">
                             {contestsAttendedVal && contestsAttendedVal !== '0' ? `${contestsAttendedVal} Contests Attended` : 'Verified Profile'}
@@ -889,10 +853,10 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         <div className="col-span-2 bg-blue-50 p-4 sm:p-5 rounded-3xl border border-blue-300 shadow-sm space-y-1 hover:shadow-md transition-all flex flex-col items-center text-center">
                           <span className="text-[10px] font-black text-blue-900 uppercase tracking-wider block">Global Rank</span>
                           <div className="text-xl sm:text-2xl font-black text-blue-950 font-mono truncate w-full text-center">
-                            {globalRankVal || '#94,251'}
+                            {globalRankVal}
                           </div>
                           <div className="text-[11px] text-blue-950 font-black truncate pt-1">
-                            {topPercentageVal ? `Top ${topPercentageVal}` : 'Top 10.9%'}
+                            {topPercentageVal && topPercentageVal !== 'N/A' ? `Top ${topPercentageVal}` : 'N/A'}
                           </div>
                         </div>
                       </div>
@@ -1067,28 +1031,28 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         <div className="p-3.5 rounded-2xl bg-purple-100/70 border border-purple-300">
                           <span className="text-[10px] font-black text-purple-900 uppercase">Current Rating</span>
                           <div className="text-2xl font-black text-purple-950 font-mono mt-0.5">
-                            {contestRatingVal || '1746.3'}
+                            {contestRatingVal}
                           </div>
                         </div>
 
                         <div className="p-3.5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
                           <span className="text-[10px] font-black text-slate-900 uppercase">Best Rating</span>
                           <div className="text-2xl font-black text-slate-950 font-mono mt-0.5">
-                            {bestRatingVal || '1788'}
+                            {bestRatingVal}
                           </div>
                         </div>
 
                         <div className="p-3.5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
                           <span className="text-[10px] font-black text-slate-900 uppercase">Contests Attended</span>
                           <div className="text-2xl font-black text-slate-950 font-mono mt-0.5">
-                            {contestsAttendedVal || '10'}
+                            {contestsAttendedVal}
                           </div>
                         </div>
 
                         <div className="p-3.5 rounded-2xl bg-white border border-slate-300 shadow-2xs">
                           <span className="text-[10px] font-black text-slate-900 uppercase">Best Rank</span>
                           <div className="text-2xl font-black text-emerald-700 font-mono mt-0.5">
-                            {bestRankVal || '#65,000'}
+                            {bestRankVal}
                           </div>
                         </div>
                       </div>
@@ -1101,7 +1065,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                           </span>
                           <div className="h-48 w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart data={contestHistoryList.map(h => ({ date: h.date, rating: Number(String(h.rating_after || contestRatingVal || 1746).replace(/[^0-9.]/g, '')), name: h.contest_name }))}>
+                              <AreaChart data={contestHistoryList.map(h => ({ date: h.date, rating: Number(String(h.rating_after || 0).replace(/[^0-9.]/g, '')), name: h.contest_name }))}>
                                 <defs>
                                   <linearGradient id="ratingGrad" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />

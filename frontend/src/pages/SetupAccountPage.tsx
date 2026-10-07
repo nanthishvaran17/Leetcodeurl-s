@@ -151,20 +151,25 @@ const SetupAccountPage: React.FC = () => {
             <div className="space-y-6 animate-fade-in">
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">New Password *</label>
-                <div className="relative">
+                <div className="relative w-full h-12">
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full h-12 pl-4 pr-10 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-900 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"
+                    className="w-full h-full leading-normal pl-4 pr-12 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-900 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-[border-color,box-shadow] box-border"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-500 p-1 cursor-pointer"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowPassword(prev => !prev);
+                    }}
+                    className="absolute right-2.5 top-2 w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-brand-500 hover:bg-slate-200/50 dark:hover:bg-navy-800 transition-colors z-20 cursor-pointer select-none"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff size={16} className="text-brand-500 shrink-0" /> : <Eye size={16} className="shrink-0" />}
                   </button>
                 </div>
               </div>

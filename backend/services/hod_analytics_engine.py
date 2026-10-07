@@ -159,7 +159,16 @@ def _empty_health() -> Dict[str, Any]:
         "improving_count": 0, "avg_rating": 0, "avg_solved": 0,
     }
 
-def get_institutional_benchmarks(db: Session, current_user: Optional[User] = None) -> Dict[str, Any]:
+def get_institutional_benchmarks(
+    db: Session, 
+    current_user: Optional[User] = None,
+    dept_id: Optional[int] = None
+) -> Dict[str, Any]:
+    if current_user:
+        role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
+        if role_clean in ["hod", "head of department"] and current_user.department_id:
+            dept_id = current_user.department_id
+
     departments = db.query(Department).all()
     dept_map = {d.id: d for d in departments if _is_real_dept(d.code)}
     
@@ -178,10 +187,10 @@ def get_institutional_benchmarks(db: Session, current_user: Optional[User] = Non
     student_stats = q.all()
     
     dept_stats = {}
-    for student_id, dept_id, total_solved, contest_rating in student_stats:
-        if dept_id not in dept_stats:
-            dept_stats[dept_id] = []
-        dept_stats[dept_id].append({
+    for student_id, d_id, total_solved, contest_rating in student_stats:
+        if d_id not in dept_stats:
+            dept_stats[d_id] = []
+        dept_stats[d_id].append({
             "total_solved": total_solved,
             "contest_rating": contest_rating
         })
@@ -294,7 +303,7 @@ def get_institutional_benchmarks(db: Session, current_user: Optional[User] = Non
     # Assign Rank
     for idx, dm in enumerate(dept_matrix):
         dm["rank"] = idx + 1
-    year_matrix = calculate_year_matrix(db, current_user)
+    year_matrix = calculate_year_matrix(db, current_user, dept_id=dept_id)
 
     return {
         "department_matrix": dept_matrix,
@@ -313,10 +322,19 @@ def _canonical_year_code(val: Any) -> str:
         return "IV"
     return s
 
-def calculate_year_matrix(db: Session, current_user: Optional[User] = None) -> List[Dict[str, Any]]:
+def calculate_year_matrix(
+    db: Session, 
+    current_user: Optional[User] = None,
+    dept_id: Optional[int] = None
+) -> List[Dict[str, Any]]:
+    if current_user:
+        role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
+        if role_clean in ["hod", "head of department"] and current_user.department_id:
+            dept_id = current_user.department_id
+
     departments = db.query(Department).all()
     dept_map = {d.id: d for d in departments if _is_real_dept(d.code)}
-    YEAR_ORDER = {"I": 1, "II": 2, "III": 3, "IV": 4}
+    YEAR_ORDER = {"II": 2, "III": 3, "IV": 4, "I": 1}
     
     q = db.query(
         Student.year_level, 
@@ -325,9 +343,13 @@ def calculate_year_matrix(db: Session, current_user: Optional[User] = None) -> L
     ).outerjoin(
         LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
     ).filter(
-        Student.is_active == True,
-        Student.department_id.in_(dept_map.keys())
+        Student.is_active == True
     )
+    if dept_id:
+        q = q.filter(Student.department_id == dept_id)
+    else:
+        q = q.filter(Student.department_id.in_(dept_map.keys()))
+
     if current_user:
         q = apply_role_based_student_filter(q, current_user, db)
     student_stats = q.all()
@@ -347,6 +369,7 @@ def calculate_year_matrix(db: Session, current_user: Optional[User] = None) -> L
     year_matrix = []
     for c_year, stats_rows in stats_by_year.items():
         count = len(stats_rows)
+        # Exclude cohorts with 0 students (e.g. I Year when no students are enrolled)
         if count == 0:
             continue
 
@@ -486,19 +509,30 @@ def calculate_department_kpi_summary(
         if role_clean in ["hod", "head of department"] and current_user.department_id:
             dept_id = current_user.department_id
 
+    prod_dept_ids = [d.id for d in db.query(Department).all() if _is_real_dept(d.code)]
+
     # 1. Total Staff in department
     staff_q = db.query(User).filter(
         User.is_active == True,
-        User.role != "Student"
+        func.lower(User.role).in_(["faculty", "staff", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"]),
+        User.department_id.isnot(None),
+        ~User.username.ilike("test_%"),
+        ~User.username.ilike("dummy_%"),
+        ~User.username.ilike("sec_test_%"),
+        ~User.username.ilike("hardening_%")
     )
     if dept_id:
         staff_q = staff_q.filter(User.department_id == dept_id)
+    else:
+        staff_q = staff_q.filter(User.department_id.in_(prod_dept_ids))
     total_staff = staff_q.count()
 
     # 2. Base Student Query
     st_q = db.query(Student).filter(Student.is_active == True)
     if dept_id:
         st_q = st_q.filter(Student.department_id == dept_id)
+    else:
+        st_q = st_q.filter(Student.department_id.in_(prod_dept_ids))
     if year_level and year_level != "ALL":
         years_map_dict = {
             "I": ["1", "I", "1st", "I Year", "1 Year"],

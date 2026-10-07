@@ -18,8 +18,10 @@ from backend.models import (
     WeeklyStudentProgress
 )
 from backend.services.authorization_service import apply_role_based_student_filter
+from backend.leetcode_fetcher import extract_leetcode_username
 from backend.security import get_current_user_optional
 from backend.exporters.student_pdf_exporter import derive_student_batch_and_year
+from backend.exporters.nec_master_excel_design import apply_master_college_identity
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -490,30 +492,8 @@ def get_student_intelligence(
     ]
 
     if not topics:
-        if tot > 0:
-            topics = [
-                {"topic_slug": "array-hash", "topic_name": "Arrays & Hashing", "topic_tier": "advanced" if tot > 200 else "intermediate", "problems_solved": max(1, int(round(tot * 0.32)))},  # type: ignore
-                {"topic_slug": "string", "topic_name": "Strings & Text Processing", "topic_tier": "intermediate", "problems_solved": max(1, int(round(tot * 0.22)))},  # type: ignore
-                {"topic_slug": "dynamic-programming", "topic_name": "Dynamic Programming", "topic_tier": "advanced" if hrd > 5 else "intermediate", "problems_solved": max(1, int(round(tot * 0.16)))},  # type: ignore
-                {"topic_slug": "two-pointers", "topic_name": "Two Pointers & Sliding Window", "topic_tier": "intermediate", "problems_solved": max(1, int(round(tot * 0.12)))},  # type: ignore
-                {"topic_slug": "trees-graphs", "topic_name": "Trees & Binary Search", "topic_tier": "intermediate", "problems_solved": max(1, int(round(tot * 0.10)))},  # type: ignore
-                {"topic_slug": "math-bit", "topic_name": "Math & Bit Manipulation", "topic_tier": "fundamental", "problems_solved": max(1, int(round(tot * 0.08)))},  # type: ignore
-            ]
-            skills = [
-                {"category": "Advanced", "items": ["Arrays & Hashing", "Dynamic Programming", "Two Pointers"]},
-                {"category": "Intermediate", "items": ["Strings & Text Processing", "Trees & Binary Search"]},
-                {"category": "Fundamental", "items": ["Math & Bit Manipulation", "Sorting & Searching"]}
-            ]
-        else:
-            topics = [
-                {"topic_slug": "array-hash", "topic_name": "Arrays & Hashing", "topic_tier": "fundamental", "problems_solved": 0},
-                {"topic_slug": "string", "topic_name": "Strings & Text Processing", "topic_tier": "fundamental", "problems_solved": 0},
-                {"topic_slug": "two-pointers", "topic_name": "Two Pointers & Search", "topic_tier": "fundamental", "problems_solved": 0},
-                {"topic_slug": "math-logic", "topic_name": "Math & Logic", "topic_tier": "fundamental", "problems_solved": 0},
-            ]
-            skills = [
-                {"category": "Fundamental", "items": ["Arrays & Hashing", "Strings & Text Processing", "Math & Logic"]}
-            ]
+        topics = []
+        skills = []
     else:
         adv = [t.topic_name or t.topic_slug.replace("-", " ").title() for t in topic_records if t.topic_tier == "advanced" or t.problems_solved >= 30]
         inter = [t.topic_name or t.topic_slug.replace("-", " ").title() for t in topic_records if t.topic_tier == "intermediate" or (10 <= t.problems_solved < 30)]
@@ -524,7 +504,69 @@ def get_student_intelligence(
             {"category": "Fundamental", "items": fund[:8]}
         ]
 
-    # 7. Submissions & Problems
+    # 7. Submissions & Problems - Live fetch and upsert latest real-time submissions
+    c_sub_username, _, _ = extract_leetcode_username(
+        getattr(student, "primary_leetcode_id", None) or 
+        getattr(student, "leetcode_url", None) or 
+        getattr(student, "username", None) or 
+        (lc_prof.canonical_username if lc_prof else None)
+    )
+
+    if c_sub_username:
+        import httpx, asyncio, concurrent.futures
+        from backend.leetcode_fetcher import fetch_recent_submissions
+
+        async def _do_fetch_live_subs():
+            async with httpx.AsyncClient(timeout=4.0, follow_redirects=True) as client:
+                return await fetch_recent_submissions(c_sub_username, client=client, limit=20)
+
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(lambda: asyncio.run(_do_fetch_live_subs()))
+                res = future.result()
+
+            if res.get("status") == "ok":
+                subs_raw = res.get("data", {}).get("submissions", [])
+                now_dt = datetime.datetime.now(datetime.timezone.utc)
+                for sub in subs_raw:
+                    tslug = sub.get("title_slug")
+                    if not tslug:
+                        continue
+                    raw_ts = sub.get("submission_timestamp")
+                    dt_val = datetime.datetime.fromtimestamp(raw_ts) if (raw_ts and isinstance(raw_ts, int) and raw_ts > 0) else now_dt
+
+                    existing = db.query(LeetCodeSubmission).filter(
+                        LeetCodeSubmission.student_id == student.id,
+                        LeetCodeSubmission.title_slug == tslug,
+                        LeetCodeSubmission.submission_timestamp == dt_val
+                    ).first()
+                    if not existing:
+                        existing = LeetCodeSubmission(
+                            student_id=student.id,
+                            title_slug=tslug,
+                            title=sub.get("title"),
+                            lang=sub.get("lang"),
+                            status_display=sub.get("status_display") or "Accepted",
+                            runtime_display=sub.get("runtime_display"),
+                            memory_display=sub.get("memory_display"),
+                            submission_timestamp=dt_val
+                        )
+                        db.add(existing)
+                    else:
+                        if not existing.lang and sub.get("lang"):
+                            existing.lang = sub.get("lang")
+                        if not existing.runtime_display and sub.get("runtime_display"):
+                            existing.runtime_display = sub.get("runtime_display")
+                        if not existing.memory_display and sub.get("memory_display"):
+                            existing.memory_display = sub.get("memory_display")
+                        if not existing.title and sub.get("title"):
+                            existing.title = sub.get("title")
+
+                db.commit()
+        except Exception as exc:
+            print(f"[LIVE SUBMISSIONS FETCH ERROR] student={student.id} username={c_sub_username}: {exc}")
+            db.rollback()
+
     sub_records = (
         db.query(LeetCodeSubmission)
         .filter(LeetCodeSubmission.student_id == student.id)
@@ -532,60 +574,6 @@ def get_student_intelligence(
         .limit(20)
         .all()
     )
-
-    if not sub_records:
-        username = getattr(student, "username", None) or getattr(student, "primary_leetcode_id", None)
-        if username:
-            import httpx, asyncio, concurrent.futures
-            from backend.leetcode_fetcher import fetch_recent_submissions
-
-            async def _do_fetch():
-                async with httpx.AsyncClient(timeout=8.0) as client:
-                    return await fetch_recent_submissions(username, client=client, limit=20)  # type: ignore
-
-            try:
-                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                    future = executor.submit(lambda: asyncio.run(_do_fetch()))
-                    res = future.result()
-
-                if res.get("status") == "ok":
-                    subs_raw = res.get("data", {}).get("submissions", [])
-                    now_dt = datetime.datetime.now(datetime.timezone.utc)
-                    for sub in subs_raw:
-                        tslug = sub.get("title_slug")
-                        if not tslug:
-                            continue
-                        raw_ts = sub.get("submission_timestamp")
-                        dt_val = datetime.datetime.fromtimestamp(raw_ts) if (raw_ts and isinstance(raw_ts, int) and raw_ts > 0) else now_dt
-
-                        existing = db.query(LeetCodeSubmission).filter(
-                            LeetCodeSubmission.student_id == student.id,
-                            LeetCodeSubmission.title_slug == tslug,
-                            LeetCodeSubmission.submission_timestamp == dt_val
-                        ).first()
-                        if not existing:
-                            existing = LeetCodeSubmission(
-                                student_id=student.id,
-                                title_slug=tslug,
-                                title=sub.get("title"),
-                                lang=sub.get("lang"),
-                                status_display=sub.get("status_display") or "Accepted",
-                                runtime_display=sub.get("runtime_display"),
-                                memory_display=sub.get("memory_display"),
-                                submission_timestamp=dt_val
-                            )
-                            db.add(existing)
-                    db.commit()
-
-                    sub_records = (
-                        db.query(LeetCodeSubmission)
-                        .filter(LeetCodeSubmission.student_id == student.id)
-                        .order_by(LeetCodeSubmission.submission_timestamp.desc())
-                        .limit(20)
-                        .all()
-                    )
-            except Exception as exc:
-                print(f"[LIVE SUBMISSIONS FETCH ERROR] student={student.id} username={username}: {exc}")
 
     recent_submissions = [
         {
@@ -775,6 +763,7 @@ def get_student_intelligence(
             "heatmap": heatmap_data
         },
         "submissions": recent_submissions,
+        "recent_submissions": recent_submissions,
         "problems": recent_submissions,  # type: ignore
         "contests": {
             "contest_rating": int(round(c_rating)) if c_rating is not None else "N/A",  # type: ignore
@@ -1253,10 +1242,8 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     SUB_NAVY_FILL = PatternFill(start_color="2E5B88", end_color="2E5B88", fill_type="solid")
     GRAY_META_FILL = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
 
-    BLUE_KPI = PatternFill(start_color="1D4ED8", end_color="1D4ED8", fill_type="solid")
-    GREEN_KPI = PatternFill(start_color="166534", end_color="166534", fill_type="solid")
-    AMBER_KPI = PatternFill(start_color="B45309", end_color="B45309", fill_type="solid")
-    CYAN_KPI = PatternFill(start_color="0F766E", end_color="0F766E", fill_type="solid")
+    KPI_HDR_FILL = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
+    KPI_VAL_FILL = PatternFill(start_color="F0F4F9", end_color="F0F4F9", fill_type="solid")
 
     GRP_ID_FILL = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
     GRP_SOLVE_FILL = PatternFill(start_color="1E4620", end_color="1E4620", fill_type="solid")
@@ -1264,7 +1251,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
 
     ALT_ROW_FILL = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
 
-    _THIN_SIDE = Side(style='thin', color='CBD5E1')
+    _THIN_SIDE = Side(style='thin', color='000000')
     _THIN_BORDER = Border(left=_THIN_SIDE, right=_THIN_SIDE, top=_THIN_SIDE, bottom=_THIN_SIDE)
 
     ALIGN_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
@@ -1293,52 +1280,67 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     ws1.page_setup.fitToWidth = 1
     ws1.page_setup.fitToHeight = 0
 
-    last_col_letter = "U"
-    ws1.merge_cells(f"A1:{last_col_letter}1")
-    ws1["A1"] = "NANDHA LEETCODE INTELLIGENCE — MANAGEMENT REPORT"
-    ws1["A1"].font = FONT_TITLE; ws1["A1"].alignment = ALIGN_CENTER; ws1["A1"].fill = NAVY_FILL
-    ws1.row_dimensions[1].height = 30
-
-    ws1.merge_cells(f"A2:{last_col_letter}2")
-    ws1["A2"] = "Executive Management Overview"
-    ws1["A2"].font = FONT_SUBTITLE; ws1["A2"].alignment = ALIGN_CENTER; ws1["A2"].fill = SUB_NAVY_FILL
-    ws1.row_dimensions[2].height = 18
-
-    ws1.merge_cells(f"A3:{last_col_letter}3")
-    ws1["A3"] = f"Generated: {date_str}   |   Applied Filters: {filters_desc}   |   Total Students Exported: {tot_cnt}   |   Data Freshness: 100% Verified"
-    ws1["A3"].font = FONT_META; ws1["A3"].alignment = ALIGN_CENTER; ws1["A3"].fill = GRAY_META_FILL
-    ws1.row_dimensions[3].height = 18
+    apply_master_college_identity(
+        ws=ws1,
+        report_title="MANAGEMENT EXECUTIVE SUMMARY REPORT",
+        department="ALL",
+        year="ALL",
+        session_date=date_str,
+        total_roster=tot_cnt,
+        cols=22
+    )
 
     kpis = [
-        ("A", "E", "TOTAL STUDENTS", tot_cnt, BLUE_KPI),
-        ("F", "J", "AVG SOLVED", avg_tot, GREEN_KPI),
-        ("K", "O", "AVG CONTEST RATING", avg_rat, AMBER_KPI),
-        ("P", "U", "AVG ACCEPTANCE RATE", f"{avg_acc}%", CYAN_KPI)
+        ("A", "E", 1, 5, "TOTAL STUDENTS", tot_cnt, False),
+        ("F", "J", 6, 10, "AVG SOLVED", avg_tot, False),
+        ("K", "O", 11, 15, "AVG CONTEST RATING", avg_rat, False),
+        ("P", "V", 16, 22, "AVG ACCEPTANCE RATE", avg_acc / 100.0 if avg_acc else 0.0, True)
     ]
 
-    for c_start, c_end, lbl, val, fill_style in kpis:
-        ws1.merge_cells(f"{c_start}5:{c_end}5")
-        cl = ws1[f"{c_start}5"]
-        cl.value = lbl; cl.font = Font(name="Times New Roman", size=8.5, bold=True, color="FFFFFF"); cl.alignment = ALIGN_CENTER; cl.fill = fill_style
+    for c_start, c_end, col_s_idx, col_e_idx, lbl, val, is_pct in kpis:
+        # Header Label (Row 7)
+        ws1.merge_cells(f"{c_start}7:{c_end}7")
+        for col_i in range(col_s_idx, col_e_idx + 1):
+            cell = ws1.cell(row=7, column=col_i)
+            cell.fill = KPI_HDR_FILL
+            cell.border = _THIN_BORDER
+        cl = ws1[f"{c_start}7"]
+        cl.value = lbl
+        cl.font = Font(name="Times New Roman", size=9, bold=True, color="FFFFFF")
+        cl.alignment = ALIGN_CENTER
 
-        ws1.merge_cells(f"{c_start}6:{c_end}6")
-        cv = ws1[f"{c_start}6"]
-        cv.value = val; cv.font = Font(name="Times New Roman", size=13, bold=True, color="FFFFFF"); cv.alignment = ALIGN_CENTER; cv.fill = fill_style
+        # Value Container (Row 8)
+        ws1.merge_cells(f"{c_start}8:{c_end}8")
+        for col_i in range(col_s_idx, col_e_idx + 1):
+            cell = ws1.cell(row=8, column=col_i)
+            cell.fill = KPI_VAL_FILL
+            cell.border = _THIN_BORDER
+        cv = ws1[f"{c_start}8"]
+        cv.value = val
+        cv.font = Font(name="Times New Roman", size=15, bold=True, color="1B365D")
+        cv.alignment = ALIGN_CENTER
+        if is_pct:
+            cv.number_format = '0.0%'
 
-    ws1.row_dimensions[5].height = 16
-    ws1.row_dimensions[6].height = 22
+    ws1.row_dimensions[7].height = 20
+    ws1.row_dimensions[8].height = 28
+    ws1.row_dimensions[9].height = 10
 
-    ws1.merge_cells("A8:H8")
-    ws1["A8"] = "APPLIED CRITERIA & FILTERS"
-    ws1["A8"].font = Font(name="Times New Roman", size=10, bold=True, color="1B365D")
-    ws1["A8"].fill = PatternFill(start_color="E2E8F0", end_color="E2E8F0", fill_type="solid")
+    ws1.merge_cells("A10:H10")
+    ws1["A10"] = "APPLIED CRITERIA & FILTERS"
+    ws1["A10"].font = Font(name="Times New Roman", size=10, bold=True, color="1B365D")
+    ws1["A10"].fill = PatternFill(start_color="E2E8F0", end_color="E2E8F0", fill_type="solid")
+    ws1["A10"].alignment = ALIGN_LEFT
+    ws1["A10"].border = _THIN_BORDER
+    for col_i in range(2, 9):
+        ws1.cell(row=10, column=col_i).border = _THIN_BORDER
 
     crit_list = [
         ("Applied Filter String", filters_desc),
         ("Total Exported Students", tot_cnt),
         ("Average Solved Count", avg_tot)
     ]
-    for idx, (lbl, val) in enumerate(crit_list, start=9):
+    for idx, (lbl, val) in enumerate(crit_list, start=11):
         ws1.cell(row=idx, column=1, value=lbl).font = FONT_DATA_BOLD
         ws1.cell(row=idx, column=1).border = _THIN_BORDER
         ws1.merge_cells(start_row=idx, start_column=2, end_row=idx, end_column=8)
@@ -1351,11 +1353,18 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     tot_med = sum(int(c.get("medium_solved", 0) or 0) for c in candidates)
     tot_hrd = sum(int(c.get("hard_solved", 0) or 0) for c in candidates)
 
-    ws1["T8"] = "Difficulty"; ws1["U8"] = "Problems"
-    ws1["T8"].font = FONT_DATA_BOLD; ws1["U8"].font = FONT_DATA_BOLD
-    ws1["T9"] = "Easy"; ws1["T9"].font = FONT_DATA; ws1["U9"] = tot_easy; ws1["U9"].font = FONT_DATA_BOLD
-    ws1["T10"] = "Medium"; ws1["T10"].font = FONT_DATA; ws1["U10"] = tot_med; ws1["U10"].font = FONT_DATA_BOLD
-    ws1["T11"] = "Hard"; ws1["T11"].font = FONT_DATA; ws1["U11"] = tot_hrd; ws1["U11"].font = FONT_DATA_BOLD
+    ws1["U10"] = "Difficulty"; ws1["V10"] = "Problems"
+    ws1["U10"].font = FONT_DATA_BOLD; ws1["V10"].font = FONT_DATA_BOLD
+    ws1["U10"].border = _THIN_BORDER; ws1["V10"].border = _THIN_BORDER
+
+    ws1["U11"] = "Easy"; ws1["U11"].font = FONT_DATA; ws1["U11"].border = _THIN_BORDER
+    ws1["V11"] = tot_easy; ws1["V11"].font = FONT_DATA_BOLD; ws1["V11"].border = _THIN_BORDER
+
+    ws1["U12"] = "Medium"; ws1["U12"].font = FONT_DATA; ws1["U12"].border = _THIN_BORDER
+    ws1["V12"] = tot_med; ws1["V12"].font = FONT_DATA_BOLD; ws1["V12"].border = _THIN_BORDER
+
+    ws1["U13"] = "Hard"; ws1["U13"].font = FONT_DATA; ws1["U13"].border = _THIN_BORDER
+    ws1["V13"] = tot_hrd; ws1["V13"].font = FONT_DATA_BOLD; ws1["V13"].border = _THIN_BORDER
 
     chart2 = BarChart()
     chart2.type = "col"
@@ -1363,21 +1372,23 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     chart2.title = "Problem Difficulty Breakdown"
     chart2.y_axis.title = "Total Solved"
     chart2.x_axis.title = "Difficulty"
-    data2 = Reference(ws1, min_col=21, min_row=8, max_row=11)
-    cats2 = Reference(ws1, min_col=20, min_row=9, max_row=11)
+    data2 = Reference(ws1, min_col=22, min_row=10, max_row=13)
+    cats2 = Reference(ws1, min_col=21, min_row=11, max_row=13)
     chart2.add_data(data2, titles_from_data=True)
     chart2.set_categories(cats2)
     chart2.width = 13; chart2.height = 7.5
-    ws1.add_chart(chart2, "I8")
+    ws1.add_chart(chart2, "W10")
 
-    ws1.merge_cells("A24:I24")
-    ws1["A24"] = "ACADEMIC & IDENTIFIER INFO"; ws1["A24"].font = FONT_HEADER; ws1["A24"].fill = GRP_ID_FILL; ws1["A24"].alignment = ALIGN_CENTER
-    ws1.merge_cells("J24:R24")
-    ws1["J24"] = "LEETCODE SOLVING & ACTIVITY"; ws1["J24"].font = FONT_HEADER; ws1["J24"].fill = GRP_SOLVE_FILL; ws1["J24"].alignment = ALIGN_CENTER
-    ws1.merge_cells("S24:V24")
-    ws1["S24"] = "CONTEST METRICS"; ws1["S24"].font = FONT_HEADER; ws1["S24"].fill = GRP_CONTEST_FILL; ws1["S24"].alignment = ALIGN_CENTER
+    ws1.row_dimensions[14].height = 10
 
-    ws1.row_dimensions[24].height = 20
+    ws1.merge_cells("A15:I15")
+    ws1["A15"] = "ACADEMIC & IDENTIFIER INFO"; ws1["A15"].font = FONT_HEADER; ws1["A15"].fill = GRP_ID_FILL; ws1["A15"].alignment = ALIGN_CENTER
+    ws1.merge_cells("J15:R15")
+    ws1["J15"] = "LEETCODE SOLVING & ACTIVITY"; ws1["J15"].font = FONT_HEADER; ws1["J15"].fill = GRP_SOLVE_FILL; ws1["J15"].alignment = ALIGN_CENTER
+    ws1.merge_cells("S15:V15")
+    ws1["S15"] = "CONTEST METRICS"; ws1["S15"].font = FONT_HEADER; ws1["S15"].fill = GRP_CONTEST_FILL; ws1["S15"].alignment = ALIGN_CENTER
+
+    ws1.row_dimensions[15].height = 20
 
     headers1 = [
         "Rank", "Student Name", "Register No", "Roll No", "Department", "Degree", "Batch", "Section", "12th Cutoff",
@@ -1386,19 +1397,34 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     ]
 
     for c_idx, h in enumerate(headers1, start=1):
-        cell = ws1.cell(row=25, column=c_idx, value=h)
+        cell = ws1.cell(row=16, column=c_idx, value=h)
         cell.font = FONT_HEADER; cell.fill = SUB_NAVY_FILL; cell.alignment = ALIGN_CENTER; cell.border = _THIN_BORDER
 
-    ws1.row_dimensions[25].height = 24
+    ws1.row_dimensions[16].height = 24
 
     for i, c in enumerate(candidates):
-        r_idx = 26 + i
+        r_idx = 17 + i
         tot = int(c.get("total_solved", 0) or 0)
         rat = float(c.get("contest_rating", 0) or 0)
 
-        rat_str = f"{rat:.2f}" if rat > 0 else "—"
+        rat_num = rat if rat > 0 else "—"
         rank_str = clean_cell_value(c.get("global_rank", "—"))
         if rank_str in ("0", "None", ""): rank_str = "—"
+
+        acc_val = c.get('acceptance_rate', 0)
+        try:
+            acc_num = float(acc_val) / 100.0 if float(acc_val) > 1.0 else float(acc_val)
+        except (ValueError, TypeError):
+            acc_num = 0.0
+
+        top_val = c.get('contest_top_pct')
+        if top_val is not None:
+            try:
+                top_num = float(top_val) / 100.0 if float(top_val) > 1.0 else float(top_val)
+            except (ValueError, TypeError):
+                top_num = "—"
+        else:
+            top_num = "—"
 
         row_vals = [
             i + 1,
@@ -1415,31 +1441,35 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
             int(c.get("easy_solved", 0) or 0),
             int(c.get("medium_solved", 0) or 0),
             int(c.get("hard_solved", 0) or 0),
-            f"{c.get('acceptance_rate', 0)}%",
+            acc_num,
             int(c.get("total_submissions", 0) or 0),
             int(c.get("current_streak", 0) or 0),
             int(c.get("active_days", 0) or 0),
-            rat_str,
+            rat_num,
             rank_str,
-            clean_cell_value(c.get("contests_attended", 0)),
-            f"{c.get('contest_top_pct', 0)}%" if c.get("contest_top_pct") is not None else "—"
+            int(c.get("contests_attended", 0) or 0),
+            top_num
         ]
 
         for col_idx, val in enumerate(row_vals, start=1):
             cell = ws1.cell(row=r_idx, column=col_idx, value=val)
             cell.font = FONT_DATA_BOLD if col_idx in (1, 2, 10) else FONT_DATA
             if col_idx == 2:  # Student Name column: LEFT ALIGNED
-                cell.alignment = ALIGN_LEFT
+                cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=False)
             else:
-                cell.alignment = ALIGN_CENTER
+                cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=False)
             cell.border = _THIN_BORDER
+
+            if col_idx == 15:  # Acceptance %
+                cell.number_format = '0.0%'
+            elif col_idx == 22 and isinstance(val, (int, float)):  # Top %
+                cell.number_format = '0.00%'
 
             if r_idx % 2 == 1: cell.fill = ALT_ROW_FILL
 
         ws1.row_dimensions[r_idx].height = 20
 
-    ws1.auto_filter.ref = f"A25:V{25 + tot_cnt}"
-    # Removed freeze_panes here so the user can scroll naturally without the massive header blocking the view
+    ws1.auto_filter.ref = f"A16:V{16 + tot_cnt}"
 
     min_widths_sheet1 = {
         "A": 7.5, # Rank / #
@@ -1484,15 +1514,15 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     ws2.page_setup.fitToWidth = 1
     ws2.page_setup.fitToHeight = 0
 
-    ws2.merge_cells("A1:N1")
-    ws2["A1"] = "MANAGEMENT REPORT — STUDENT OVERVIEW"
-    ws2["A1"].font = FONT_TITLE; ws2["A1"].fill = NAVY_FILL; ws2["A1"].alignment = ALIGN_CENTER
-    ws2.row_dimensions[1].height = 28
-
-    ws2.merge_cells("A2:N2")
-    ws2["A2"] = f"Generated: {date_str}   |   Total Students: {tot_cnt}   |   Filters: {filters_desc}"
-    ws2["A2"].font = FONT_META; ws2["A2"].fill = GRAY_META_FILL; ws2["A2"].alignment = ALIGN_CENTER
-    ws2.row_dimensions[2].height = 18
+    apply_master_college_identity(
+        ws=ws2,
+        report_title="MANAGEMENT REPORT — STUDENT OVERVIEW",
+        department="ALL",
+        year="ALL",
+        session_date=date_str,
+        total_roster=tot_cnt,
+        cols=14
+    )
 
     headers2 = [
         "Rank", "Student Name", "Register No", "Department", "Batch", "Section", "12th Cutoff", "Language",
@@ -1500,13 +1530,19 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     ]
 
     for c_idx, h in enumerate(headers2, start=1):
-        cell = ws2.cell(row=4, column=c_idx, value=h)
+        cell = ws2.cell(row=7, column=c_idx, value=h)
         cell.font = FONT_HEADER; cell.fill = SUB_NAVY_FILL; cell.alignment = ALIGN_CENTER; cell.border = _THIN_BORDER
 
-    ws2.row_dimensions[4].height = 24
+    ws2.row_dimensions[7].height = 24
 
     for i, c in enumerate(candidates):
-        r_idx = 5 + i
+        r_idx = 8 + i
+        acc_val = c.get('acceptance_rate', 0)
+        try:
+            acc_num = float(acc_val) / 100.0 if float(acc_val) > 1.0 else float(acc_val)
+        except (ValueError, TypeError):
+            acc_num = 0.0
+
         row_vals = [
             i + 1,
             clean_cell_value(c.get("name")),
@@ -1520,21 +1556,24 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
             int(c.get("easy_solved", 0) or 0),
             int(c.get("medium_solved", 0) or 0),
             int(c.get("hard_solved", 0) or 0),
-            f"{c.get('acceptance_rate', 0)}%",
+            acc_num,
             float(c.get("contest_rating", 0) or 0)
         ]
         for col_idx, val in enumerate(row_vals, start=1):
             cell = ws2.cell(row=r_idx, column=col_idx, value=val)
             cell.font = FONT_DATA_BOLD if col_idx in (1, 2, 8) else FONT_DATA
-            if col_idx == 2:  # Student Name column: LEFT ALIGNED
-                cell.alignment = ALIGN_LEFT
+            if col_idx == 2:
+                cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=False)
             else:
-                cell.alignment = ALIGN_CENTER
+                cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=False)
             cell.border = _THIN_BORDER
+            if col_idx == 13:
+                cell.number_format = '0.0%'
             if r_idx % 2 == 1: cell.fill = ALT_ROW_FILL
+        ws2.row_dimensions[r_idx].height = 20
 
-    ws2.auto_filter.ref = f"A4:N{4 + tot_cnt}"
-    ws2.freeze_panes = "A5"
+    ws2.auto_filter.ref = f"A7:N{7 + tot_cnt}"
+    ws2.freeze_panes = "A8"
     for col in ws2.columns:
         col_letter = get_column_letter(col[0].column)
         max_len = max(len(str(cell.value or '')) for cell in col)
@@ -1549,40 +1588,48 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     ws3 = wb.create_sheet(title="Difficulty Analysis")
     ws3.sheet_view.showGridLines = True
 
-    ws3.merge_cells("A1:E1")
-    ws3["A1"] = "CODING DIFFICULTY DISTRIBUTION ANALYSIS"
-    ws3["A1"].font = FONT_TITLE; ws3["A1"].fill = NAVY_FILL; ws3["A1"].alignment = ALIGN_CENTER
+    apply_master_college_identity(
+        ws=ws3,
+        report_title="MANAGEMENT REPORT — DIFFICULTY ANALYSIS",
+        department="ALL",
+        year="ALL",
+        session_date=date_str,
+        total_roster=tot_cnt,
+        cols=5
+    )
 
     headers3 = ["Difficulty Level", "Total Solved", "Percentage (%)", "Avg Solved / Student", "Target Benchmark"]
     for c_idx, h in enumerate(headers3, start=1):
-        cell = ws3.cell(row=3, column=c_idx, value=h)
+        cell = ws3.cell(row=7, column=c_idx, value=h)
         cell.font = FONT_HEADER; cell.fill = SUB_NAVY_FILL; cell.alignment = ALIGN_CENTER; cell.border = _THIN_BORDER
 
     tot_all = tot_easy + tot_med + tot_hrd
     diff_rows = [
-        ("Easy", tot_easy, round((tot_easy / tot_all) * 100, 1) if tot_all > 0 else 0, round(tot_easy / tot_cnt, 1) if tot_cnt > 0 else 0, "150+"),
-        ("Medium", tot_med, round((tot_med / tot_all) * 100, 1) if tot_all > 0 else 0, round(tot_med / tot_cnt, 1) if tot_cnt > 0 else 0, "100+"),
-        ("Hard", tot_hrd, round((tot_hrd / tot_all) * 100, 1) if tot_all > 0 else 0, round(tot_hrd / tot_cnt, 1) if tot_cnt > 0 else 0, "20+"),
-        ("Total Solved", tot_all, "100.0%", round(tot_all / tot_cnt, 1) if tot_cnt > 0 else 0, "270+")
+        ("Easy", tot_easy, (tot_easy / tot_all) if tot_all > 0 else 0.0, round(tot_easy / tot_cnt, 1) if tot_cnt > 0 else 0.0, "150+"),
+        ("Medium", tot_med, (tot_med / tot_all) if tot_all > 0 else 0.0, round(tot_med / tot_cnt, 1) if tot_cnt > 0 else 0.0, "100+"),
+        ("Hard", tot_hrd, (tot_hrd / tot_all) if tot_all > 0 else 0.0, round(tot_hrd / tot_cnt, 1) if tot_cnt > 0 else 0.0, "20+"),
+        ("Total Solved", tot_all, 1.0, round(tot_all / tot_cnt, 1) if tot_cnt > 0 else 0.0, "270+")
     ]
 
-    for r_i, r_data in enumerate(diff_rows, start=4):
+    for r_i, r_data in enumerate(diff_rows, start=8):
         for c_i, val in enumerate(r_data, start=1):
             cell = ws3.cell(row=r_i, column=c_i, value=val)
-            cell.font = FONT_DATA_BOLD if r_i == 7 or c_i == 1 else FONT_DATA
-            cell.alignment = ALIGN_CENTER
+            cell.font = FONT_DATA_BOLD if r_i == 11 or c_i == 1 else FONT_DATA
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=False)
             cell.border = _THIN_BORDER
-            if r_i == 7: cell.fill = GRAY_META_FILL
+            if c_i == 3:
+                cell.number_format = '0.0%'
+            if r_i == 11: cell.fill = GRAY_META_FILL
 
     chart3 = PieChart()
     chart3.title = "Problem Difficulty Proportions"
     chart3.style = 10
-    labels3 = Reference(ws3, min_col=1, min_row=4, max_row=6)
-    data3 = Reference(ws3, min_col=2, min_row=3, max_row=6)
+    labels3 = Reference(ws3, min_col=1, min_row=8, max_row=10)
+    data3 = Reference(ws3, min_col=2, min_row=7, max_row=10)
     chart3.add_data(data3, titles_from_data=True)
     chart3.set_categories(labels3)
     chart3.width = 12; chart3.height = 8
-    ws3.add_chart(chart3, "G3")
+    ws3.add_chart(chart3, "G7")
 
     for col in ws3.columns:
         col_letter = get_column_letter(col[0].column)
@@ -1595,9 +1642,15 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     ws4 = wb.create_sheet(title="Department Analysis")
     ws4.sheet_view.showGridLines = True
 
-    ws4.merge_cells("A1:E1")
-    ws4["A1"] = "DEPARTMENT-WISE PERFORMANCE SUMMARY"
-    ws4["A1"].font = FONT_TITLE; ws4["A1"].fill = NAVY_FILL; ws4["A1"].alignment = ALIGN_CENTER
+    apply_master_college_identity(
+        ws=ws4,
+        report_title="MANAGEMENT REPORT — DEPARTMENT ANALYSIS",
+        department="ALL",
+        year="ALL",
+        session_date=date_str,
+        total_roster=tot_cnt,
+        cols=5
+    )
 
     dept_map = {}
     for c in candidates:
@@ -1608,10 +1661,10 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
 
     headers4 = ["Department", "Students", "Total Solved", "Avg Solved", "Avg Rating"]
     for c_idx, h in enumerate(headers4, start=1):
-        cell = ws4.cell(row=3, column=c_idx, value=h)
+        cell = ws4.cell(row=7, column=c_idx, value=h)
         cell.font = FONT_HEADER; cell.fill = SUB_NAVY_FILL; cell.alignment = ALIGN_CENTER; cell.border = _THIN_BORDER
 
-    r_curr = 4
+    r_curr = 8
     for dept_code, d_cands in dept_map.items():
         cnt = len(d_cands)
         t_solv = sum(int(x.get("total_solved", 0) or 0) for x in d_cands)
@@ -1622,8 +1675,10 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         for c_i, val in enumerate(row_vals, start=1):
             cell = ws4.cell(row=r_curr, column=c_i, value=val)
             cell.font = FONT_DATA_BOLD if c_i in (1, 2, 4) else FONT_DATA
-            cell.alignment = ALIGN_CENTER
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=False)
             cell.border = _THIN_BORDER
+            if r_curr % 2 == 1: cell.fill = ALT_ROW_FILL
+        ws4.row_dimensions[r_curr].height = 20
         r_curr += 1
 
     chart4 = BarChart()
@@ -1631,12 +1686,12 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     chart4.title = "Average Solved Count by Department"
     chart4.x_axis.title = "Department"
     chart4.y_axis.title = "Avg Solved"
-    data4 = Reference(ws4, min_col=4, min_row=3, max_row=max(4, r_curr-1))
-    cats4 = Reference(ws4, min_col=1, min_row=4, max_row=max(4, r_curr-1))
+    data4 = Reference(ws4, min_col=4, min_row=7, max_row=max(8, r_curr-1))
+    cats4 = Reference(ws4, min_col=1, min_row=8, max_row=max(8, r_curr-1))
     chart4.add_data(data4, titles_from_data=True)
     chart4.set_categories(cats4)
     chart4.width = 12; chart4.height = 8
-    ws4.add_chart(chart4, "G3")
+    ws4.add_chart(chart4, "G7")
 
     for col in ws4.columns:
         col_letter = get_column_letter(col[0].column)

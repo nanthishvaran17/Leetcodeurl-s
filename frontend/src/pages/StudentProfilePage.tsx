@@ -608,7 +608,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               </div>
               <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform hover:scale-[1.02] shadow-2xs">
                 <p className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1">Virtual</p>
-                <h3 className="text-2xl font-black text-slate-950 dark:text-white">{detail?.stats?.virtual_contests || (detail?.has_virtual ? 1 : 0)}</h3>
+                <h3 className="text-2xl font-black text-slate-950 dark:text-white">{detail?.stats?.virtual_contests || 0}</h3>
               </div>
             </div>
           </div>

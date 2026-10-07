@@ -1276,7 +1276,8 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
             db, action="ADMIN_LOGIN", action_type="SECURITY",
             description=f"Admin {user.username} ({user.email}) logged in successfully with role {user.role}",
             current_user=user, target_type="User", target_id=str(user.id),
-            metadata_json=metadata, event_id=event_id
+            metadata_json=metadata, event_id=event_id,
+            ip_address=client_ip, user_agent=request.headers.get("User-Agent")
         )
     except Exception as e:
         logger.warning(f"[AUDIT_LOG_SKIP] Could not write audit log: {e}")
@@ -1559,11 +1560,13 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
             
         event_id = f"evt_logout_{session_id}" if session_id else None
         
+        client_ip = get_real_client_ip(request)
         log_admin_action(
             db, action="ADMIN_LOGOUT", action_type="SECURITY",
             description=f"Admin {user.username} ({user.email}) logged out",
             current_user=user, target_type="User", target_id=str(user.id),
-            metadata_json=metadata, event_id=event_id
+            metadata_json=metadata, event_id=event_id,
+            ip_address=client_ip, user_agent=request.headers.get("User-Agent")
         )
 
     return {"success": True, "message": "Logged out successfully."}

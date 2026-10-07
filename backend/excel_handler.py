@@ -650,19 +650,16 @@ def _create_dept_year_sheet(wb, dept, year_lvl: str, students_list, db: Session)
     left   = Alignment(horizontal="left",   vertical="center", wrap_text=True)
 
     # --- Title rows ---
-    ws.merge_cells("A1:K1")
-    ws["A1"] = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS), ERODE – 638 052"
-    ws["A1"].font = Font(name=TNR, size=13, bold=True, color="FFFFFF")
-    ws["A1"].alignment = center
-    ws["A1"].fill = navy_fill
-
-    from backend.time_utils import get_ist_date
-    dept_title = f"Department of {dept.name} | {year_display} | LeetCode Performance Report | {get_ist_date().strftime('%d.%m.%Y')}"
-    ws.merge_cells("A2:K2")
-    ws["A2"] = dept_title.upper()
-    ws["A2"].font = Font(name=TNR, size=10, bold=True, color="FFFFFF")
-    ws["A2"].alignment = center
-    ws["A2"].fill = header_fill
+    from backend.exporters.nec_master_excel_design import apply_master_college_identity
+    apply_master_college_identity(
+        ws=ws,
+        report_title=f"DEPARTMENT OF {dept.name} PERFORMANCE REPORT",
+        department=dept.name,
+        year=year_display,
+        session_date=get_ist_date().strftime('%d.%m.%Y'),
+        total_roster=len(students),
+        cols=11
+    )
 
     ws.row_dimensions[1].height = 28
     ws.row_dimensions[2].height = 22

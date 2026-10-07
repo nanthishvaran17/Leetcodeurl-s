@@ -1409,14 +1409,15 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 </div>
 
                 {/* Recipient Search Filter */}
-                <div className="relative">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <div className="relative flex items-center">
+                  <Search className="w-4 h-4 text-slate-400 dark:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
                   <input
                     type="text"
                     value={recipientSearchQuery}
                     onChange={(e) => setRecipientSearchQuery(e.target.value)}
                     placeholder="Filter recipients by name, email, role, or department..."
-                    className="w-full pl-10 pr-4 py-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 outline-none focus:border-brand-500 font-medium"
+                    className="w-full !pl-10 pr-4 py-2.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 outline-none focus:border-brand-500 font-medium transition-all"
+                    style={{ paddingLeft: '2.6rem' }}
                   />
                 </div>
 
@@ -1788,15 +1789,19 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
           {/* Filters Bar */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <div className="flex-1 min-w-0 relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <div className="flex-1 min-w-0 relative flex items-center">
               <input
                 type="text"
                 value={logSearchQuery}
                 onChange={(e) => setLogSearchQuery(e.target.value)}
+                autoComplete="off"
+                spellCheck={false}
                 placeholder="Search recipient, subject, or message ID..."
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl text-xs font-medium text-slate-900 dark:text-white"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl text-xs font-medium text-slate-900 dark:text-white text-left"
               />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
+                <Search className="w-4 h-4 stroke-[2.5]" />
+              </div>
             </div>
 
             <div className="flex items-center gap-2 justify-between sm:justify-start">

@@ -1043,20 +1043,27 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                       <div className="space-y-3">
                         <div className="space-y-1.5">
                           <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1">Initial Password *</label>
-                          <div className="relative">
+                          <div className="relative w-full h-12">
                             <input
                               type={showPassword ? "text" : "password"}
                               value={formData.password}
                               onChange={e => setFormData({ ...formData, password: e.target.value })}
                               placeholder="••••••••"
-                              className={`w-full h-12 pl-4 pr-10 rounded-2xl border ${formErrors.password ? 'border-rose-500 ring-2 ring-rose-500/10' : 'border-slate-300 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-white dark:bg-navy-950 text-xs font-extrabold text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 outline-none transition-all`}
+                              className={`w-full h-full leading-normal pl-4 pr-12 rounded-2xl border ${formErrors.password ? 'border-rose-500 ring-2 ring-rose-500/10' : 'border-slate-300 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-white dark:bg-navy-950 text-xs font-extrabold text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 outline-none transition-[border-color,box-shadow] box-border`}
                             />
                             <button
                               type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 hover:text-brand-500 p-1 cursor-pointer"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShowPassword(prev => !prev);
+                              }}
+                              className="absolute right-2.5 top-2 w-8 h-8 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:text-brand-500 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors z-20 cursor-pointer select-none"
+                              aria-label={showPassword ? "Hide password" : "Show password"}
+                              title={showPassword ? "Hide password" : "Show password"}
                             >
-                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              {showPassword ? <EyeOff size={16} className="text-brand-500 shrink-0" /> : <Eye size={16} className="shrink-0" />}
                             </button>
                           </div>
                           {formErrors.password && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.password}</p>}
@@ -1102,20 +1109,27 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                       <div className="space-y-3">
                         <div className="space-y-1.5">
                           <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1">Confirm Password *</label>
-                          <div className="relative">
+                          <div className="relative w-full h-12">
                             <input
                               type={showConfirmPassword ? "text" : "password"}
                               value={formData.confirm_password}
                               onChange={e => setFormData({ ...formData, confirm_password: e.target.value })}
                               placeholder="••••••••"
-                              className={`w-full h-12 pl-4 pr-10 rounded-2xl border ${formData.confirm_password && !passwordsMatch ? 'border-rose-500 ring-2 ring-rose-500/10' : 'border-slate-300 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-white dark:bg-navy-950 text-xs font-extrabold text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 outline-none transition-all`}
+                              className={`w-full h-full leading-normal pl-4 pr-12 rounded-2xl border ${formData.confirm_password && !passwordsMatch ? 'border-rose-500 ring-2 ring-rose-500/10' : 'border-slate-300 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-white dark:bg-navy-950 text-xs font-extrabold text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 outline-none transition-[border-color,box-shadow] box-border`}
                             />
                             <button
                               type="button"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 hover:text-brand-500 p-1 cursor-pointer"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShowConfirmPassword(prev => !prev);
+                              }}
+                              className="absolute right-2.5 top-2 w-8 h-8 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:text-brand-500 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors z-20 cursor-pointer select-none"
+                              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                              title={showConfirmPassword ? "Hide password" : "Show password"}
                             >
-                              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              {showConfirmPassword ? <EyeOff size={16} className="text-brand-500 shrink-0" /> : <Eye size={16} className="shrink-0" />}
                             </button>
                           </div>
                           {formErrors.confirm_password && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.confirm_password}</p>}

@@ -291,17 +291,25 @@ export const StudentAllocationCenter: React.FC = () => {
 
             {/* Search Input & Select All Controls */}
             <div className="flex items-center gap-2 pt-1">
-              <div className="relative flex-1">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <div className="relative flex-1 flex items-center">
                 <input
                   type="text"
                   placeholder="Search by name, roll no, or section..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-9 pl-9 pr-8 text-xs font-medium rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none"
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="w-full h-9 pl-9 pr-8 text-xs font-medium rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none text-left"
                 />
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
+                  <Search className="w-3.5 h-3.5" />
+                </div>
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer z-10 p-0.5"
+                  >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}

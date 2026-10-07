@@ -616,28 +616,25 @@ export const ReportsPage: React.FC = () => {
         <>
 
           {/* Universal Institutional Reports Section */}
-          <div className={`glass-card p-4 sm:p-6 md:p-8 rounded-3xl border border-brand-500/30 dark:border-brand-500/20 shadow-xl space-y-6 bg-gradient-to-r from-brand-500/5 via-cyan-500/5 to-transparent relative mt-2 ${rptTypeOpen || rptYearOpen || rptScopeOpen ? 'z-50' : 'z-10'}`}>
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-4">
-              <div className="flex items-start gap-3 sm:gap-3.5 min-w-0 w-full sm:flex-1">
-                <div className="w-10 h-10 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-brand-500/20 to-indigo-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/30 shadow-md shadow-brand-500/10 mt-0.5">
-                  <Layers className="w-5 h-5 sm:w-7 sm:h-7 text-brand-600 dark:text-brand-400" />
+          <div className={`glass-card p-4 sm:p-5 rounded-3xl border border-brand-500/30 dark:border-brand-500/20 shadow-lg space-y-4 bg-gradient-to-r from-brand-500/5 via-cyan-500/5 to-transparent relative mt-2 ${rptTypeOpen || rptYearOpen || rptScopeOpen ? 'z-50' : 'z-10'}`}>
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-800/80 pb-3">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-brand-500/20 to-indigo-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/30 shadow-xs">
+                  <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-brand-600 dark:text-brand-400" />
                 </div>
-                <div className="space-y-1 min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-base sm:text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-tight">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
                       Universal Reports & Analytics
                     </h2>
-                    <span className="inline-flex sm:hidden px-2.5 py-0.5 rounded-full bg-brand-500/15 text-brand-700 dark:text-brand-300 text-[10px] font-black border border-brand-500/30 whitespace-nowrap">
+                    <span className="inline-flex px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-700 dark:text-brand-300 text-[9px] sm:text-[10px] font-black border border-brand-500/30 whitespace-nowrap">
                       Institutional Engine
                     </span>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-                    Central Report Engine: Generate standardized datasets viewable via <span className="font-extrabold text-slate-900 dark:text-white">Preview</span>, <span className="font-extrabold text-brand-600 dark:text-brand-400">Excel (.xlsx)</span>, <span className="font-extrabold text-rose-600 dark:text-rose-400">PDF (.pdf)</span>, and <span className="font-extrabold text-indigo-600 dark:text-indigo-400">Word (.docx)</span>.
+                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium truncate sm:whitespace-normal">
+                    Standardized datasets viewable via <span className="font-extrabold text-slate-700 dark:text-slate-200">Preview</span>, <span className="font-extrabold text-brand-600 dark:text-brand-400">Excel (.xlsx)</span>, <span className="font-extrabold text-rose-600 dark:text-rose-400">PDF (.pdf)</span>, & <span className="font-extrabold text-indigo-600 dark:text-indigo-400">Word (.docx)</span>.
                   </p>
                 </div>
-              </div>
-              <div className="hidden sm:inline-flex px-3.5 py-1.5 rounded-full bg-brand-500/15 text-brand-700 dark:text-brand-300 text-xs font-black border border-brand-500/30 whitespace-nowrap shrink-0 shadow-xs self-start">
-                Institutional Report Engine
               </div>
             </div>
 

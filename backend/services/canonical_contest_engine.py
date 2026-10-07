@@ -555,7 +555,7 @@ def _build_canonical_contest_dataset_internal(
             latest_solves_10pm = latest_snap_10pm.total_solved
             latest_snap_time_10pm = latest_snap_10pm.captured_at
         else:
-            latest_snap_10pm = stat_obj.total_solved if stat_obj else None
+            latest_snap_10pm = None
             latest_solves_10pm = stat_obj.total_solved if stat_obj else None
             latest_snap_time_10pm = None
 
@@ -814,11 +814,11 @@ def _build_canonical_contest_dataset_internal(
             "twelfth_cutoff": float(student.twelfth_cutoff) if (hasattr(student, "twelfth_cutoff") and student.twelfth_cutoff is not None) else None,  # type: ignore
             "cutoff": float(student.twelfth_cutoff) if (hasattr(student, "twelfth_cutoff") and student.twelfth_cutoff is not None) else None,  # type: ignore
             "profile_url": profile_url,
-            "profile_rank": stat.contest_global_ranking if stat else None,
-            "profile_total_solved": stat.total_solved if stat else 0,
-            "easy_solved": stat.easy_solved if stat else None,
-            "medium_solved": stat.medium_solved if stat else None,
-            "hard_solved": stat.hard_solved if stat else None,
+            "profile_rank": (latest_snap_10pm.global_rank if latest_snap_10pm else None) or (stat.contest_global_ranking if stat else None),
+            "profile_total_solved": (latest_snap_10pm.total_solved if latest_snap_10pm else None) or (stat.total_solved if stat else 0),
+            "easy_solved": (latest_snap_10pm.easy_solved if latest_snap_10pm else None) or (stat.easy_solved if stat else None),
+            "medium_solved": (latest_snap_10pm.medium_solved if latest_snap_10pm else None) or (stat.medium_solved if stat else None),
+            "hard_solved": (latest_snap_10pm.hard_solved if latest_snap_10pm else None) or (stat.hard_solved if stat else None),
             "category": canon_status,
             "status": canon_status,
             "participation_status": canon_status,
@@ -839,10 +839,9 @@ def _build_canonical_contest_dataset_internal(
             "score": score_val,
             "contest_rank": rank_val,
             "rank": rank_val,
-            "global_rank": (stat.contest_global_ranking if stat else None) or (stat.public_profile_ranking if stat else None) or rank_val,
-            "profile_rank": stat.contest_global_ranking if stat else None,
-            "contest_rating": (stat.contest_rating if stat else None) or rating_val,
-            "rating": (stat.contest_rating if stat else None) or rating_val,
+            "global_rank": rank_val or (latest_snap_10pm.global_rank if latest_snap_10pm else None) or (stat.contest_global_ranking if stat else None) or (stat.public_profile_ranking if stat else None),
+            "contest_rating": rating_val or (latest_snap_10pm.contest_rating if latest_snap_10pm else None) or (stat.contest_rating if stat else None),
+            "rating": rating_val or (latest_snap_10pm.contest_rating if latest_snap_10pm else None) or (stat.contest_rating if stat else None),
             "data_source": "LeetCode GraphQL (userContestRankingHistory)",
             "verification_status": "VERIFIED" if is_participant or canon_status == "NOT_ATTENDED" else "DATA_ERROR",
             "evidence_status": "VERIFIED" if is_participant or canon_status == "NOT_ATTENDED" else "DATA_ERROR",

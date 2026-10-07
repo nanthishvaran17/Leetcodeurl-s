@@ -1027,24 +1027,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               Search Student Name
             </label>
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-700 dark:text-slate-300">
-                <Search className="w-4 h-4" />
-              </div>
               <input
                 id="landing-name-search"
                 type="text"
+                autoComplete="off"
+                spellCheck={false}
                 value={nameSearch}
                 onChange={(e) => {
                   setNameSearch(e.target.value);
                   setDisplayCount(32);
                 }}
                 placeholder="Search name, reg no..."
-                className="w-full h-11 min-h-[44px] bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold py-2 px-3.5 pl-9 pr-8 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 placeholder-slate-500 dark:placeholder-slate-400 truncate transition-all"
+                className="w-full h-11 min-h-[44px] bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold py-2 px-3.5 pl-9 pr-8 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 placeholder-slate-500 dark:placeholder-slate-400 truncate transition-all text-left"
               />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
+                <Search className="w-4 h-4 stroke-[2.5]" />
+              </div>
               {nameSearch && (
                 <button
+                  type="button"
                   onClick={() => { setNameSearch(''); setDisplayCount(32); }}
-                  className="absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                  className="absolute inset-y-0 right-0 flex items-center px-2.5 z-10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
                   title="Clear search"
                 >
                   <X className="w-3.5 h-3.5" />

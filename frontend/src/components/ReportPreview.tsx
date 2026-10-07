@@ -24,20 +24,22 @@ const formatStudentName = (name: string) => {
   }).join(' ');
 };
 
-const getContestDifficultyBreakdown = (s: any) => {
-  if (s.contest_easy !== undefined && s.contest_medium !== undefined && s.contest_hard !== undefined && s.contest_easy !== null) {
-    return {
-      easy: Number(s.contest_easy || 0),
-      medium: Number(s.contest_medium || 0),
-      hard: Number(s.contest_hard || 0),
-    };
-  }
-  if (s.contest_easy_solved !== undefined && s.contest_medium_solved !== undefined && s.contest_hard_solved !== undefined && s.contest_easy_solved !== null) {
-    return {
-      easy: Number(s.contest_easy_solved || 0),
-      medium: Number(s.contest_medium_solved || 0),
-      hard: Number(s.contest_hard_solved || 0),
-    };
+const getContestDifficultyBreakdown = (s: any, forceCurrentContestOnly: boolean = false) => {
+  if (!forceCurrentContestOnly) {
+    if (s.contest_easy !== undefined && s.contest_medium !== undefined && s.contest_hard !== undefined && s.contest_easy !== null) {
+      return {
+        easy: Number(s.contest_easy || 0),
+        medium: Number(s.contest_medium || 0),
+        hard: Number(s.contest_hard || 0),
+      };
+    }
+    if (s.contest_easy_solved !== undefined && s.contest_medium_solved !== undefined && s.contest_hard_solved !== undefined && s.contest_easy_solved !== null) {
+      return {
+        easy: Number(s.contest_easy_solved || 0),
+        medium: Number(s.contest_medium_solved || 0),
+        hard: Number(s.contest_hard_solved || 0),
+      };
+    }
   }
 
   let q1 = s.q1 !== undefined && s.q1 !== null ? (s.q1 === 1 || s.q1 === true || s.q1 === '1' ? 1 : 0) : null;
@@ -295,19 +297,21 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
   const cleanReportTitle = (rawTitle: any): string => {
     if (!rawTitle) return '';
     let t = String(rawTitle).trim();
-    // 1. Strip orphaned numbers standalone before hyphens without letters e.g. " 8 - " -> " " only if followed by another title
+    t = t.replace(/^NANDHA ENGINEERING COLLEGE \([^)]+\)\s*/i, '').trim();
+    t = t.replace(/^NANDHA ENGINEERING COLLEGE\s*/i, '').trim();
     t = t.replace(/\s+\b\d+\b\s*-\s*/, ' ').trim();
-    // 2. Replace (3 Year) or (2 Year) with (III Year) or (II Year)
     t = t.replace(/\(\s*(\d+|I+|IV|V|FINAL|1ST|2ND|3RD|4TH)\s*(?:Year|Yr)?\s*\)/gi, (_m, g1) => {
       const rY = toRomanYear(g1);
       return `(${rY} Year)`;
     });
-    // 3. Replace standalone "3 Year" or "3rd Year" with "III Year"
-    t = t.replace(/\b(\d+|1ST|2ND|3RD|4TH)\s*(?:Year|Yr)\b/gi, (_m, g1) => {
-      const rY = toRomanYear(g1);
-      return `${rY} Year`;
-    });
-    return t.trim();
+    const yBrackets = t.match(/\([I|V|X]+ Year\)/gi);
+    if (yBrackets && yBrackets.length > 1) {
+      const lastBracket = yBrackets[yBrackets.length - 1];
+      yBrackets.slice(0, yBrackets.length - 1).forEach(b => {
+        t = t.replace(b, '').trim();
+      });
+    }
+    return t.replace(/\s+/g, ' ').trim();
   };
 
   const getQVal = (q: any, qNum: number, solvedCount: any, isPart: boolean) => {
@@ -430,6 +434,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       if (activeFilter) queryParams.append('attendance', activeFilter);
       if (report?.department && report.department !== 'ALL') queryParams.append('department', report.department);
       if (report?.year && report.year !== 'ALL') queryParams.append('year', report.year);
+      if (report?.reportType || report?.report_type) queryParams.append('report_type', report.reportType || report.report_type);
       
       const qString = queryParams.toString();
       const url = `/reports/${reportId}/${format}${qString ? '?' + qString : ''}`;
@@ -1383,7 +1388,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               </div>
                             )}
                             {(() => {
-                              const cDiff = getContestDifficultyBreakdown(s);
+                              const cDiff = getContestDifficultyBreakdown(s, true);
                               return (
                                 <div className="flex flex-wrap items-center gap-1 mt-1 font-mono text-[10px] font-black">
                                   <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">Contest Easy: {cDiff.easy}</span>
@@ -1499,7 +1504,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         const isPart = ['PUBLIC_ATTENDED', 'VIRTUAL_ATTENDED', 'PUBLIC', 'VIRTUAL', 'PUBLIC_LIVE', 'VIRTUAL_PRACTICE', 'ATTENDED', 'VERIFIED', 'COMPLETED', 'ATTENDED_SOLVED', 'ATTENDED_ZERO'].includes(st) || (s.total_solved !== undefined && s.total_solved !== null);
                         const cSolved = s.contest_solved !== undefined && s.contest_solved !== null ? s.contest_solved : (s.total_solved !== undefined && s.total_solved !== null ? s.total_solved : (s.solved !== undefined && s.solved !== null ? s.solved : null));
                         const isContestView = s.q1 !== undefined || s.q2 !== undefined;
-                        const cDiff = getContestDifficultyBreakdown(s);
+                        const cDiff = getContestDifficultyBreakdown(s, isFridayOfficial || isSundayLive);
 
                         if (isFridayOfficial) {
                           return (
@@ -2226,16 +2231,20 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                 </div>
               )}
 
-              {/* Cutoff Band Intelligence Table (HOD Report) */}
-              {!isWeeklyPerformance && ['HOD_DEPARTMENT_INTELLIGENCE', 'PRINCIPAL_EXECUTIVE', 'MANAGEMENT_EXECUTIVE_SUMMARY'].includes(rType) && report.cutoffBandSummary && Array.isArray(report.cutoffBandSummary) && report.cutoffBandSummary.length > 0 && (
-                <div className="space-y-3">
+              {/* Cutoff Band Intelligence Table */}
+              {!isWeeklyPerformance && ['HOD_DEPARTMENT_INTELLIGENCE', 'PRINCIPAL_EXECUTIVE', 'MANAGEMENT_EXECUTIVE_SUMMARY', '12TH_TNEA_CUTOFF_ANALYSIS'].includes(rType) && report.cutoffBandSummary && Array.isArray(report.cutoffBandSummary) && report.cutoffBandSummary.length > 0 && (
+                <div className="space-y-3 pt-2">
                   <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
-                    <Target className="w-4 h-4 text-rose-500" />
-                    <span>12TH TNEA CUTOFF</span>
+                    <Award className="w-4 h-4 text-rose-500" />
+                    <span>12th TNEA Cutoff Band Intelligence Summary</span>
                   </h3>
-                  {/* Mobile Card View */}
+
+                  {/* Mobile Card View (Hidden on print) */}
                   <div className="block sm:hidden print:hidden space-y-2.5">
-                    {report.cutoffBandSummary.map((b: any, idx: number) => (
+                    {(report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0).length > 0
+                      ? report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0)
+                      : report.cutoffBandSummary
+                    ).map((b: any, idx: number) => (
                       <div key={idx} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-xs space-y-2">
                         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                           <h4 className="text-xs font-bold text-rose-700 dark:text-rose-300">{b.band}</h4>
@@ -2251,33 +2260,37 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       </div>
                     ))}
                   </div>
-                  {/* Desktop Table View */}
+
+                  {/* Desktop Table View (Clean modern layout matching HOD & Year summaries) */}
                   <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
                     <table className="w-full text-left text-xs min-w-[650px]">
-                      <thead className="bg-[#8A4054] text-white font-black uppercase tracking-wider text-[10px]">
+                      <thead className="bg-[#16324F] text-white font-black uppercase tracking-wider text-[10px]">
                         <tr>
                           <th className="px-4 py-3 text-center">S.No</th>
                           <th className="px-4 py-3">12th Cutoff Band</th>
                           <th className="px-4 py-3 text-center">Total Students</th>
-                          <th className="px-4 py-3 text-center">Attended (Active)</th>
+                          <th className="px-4 py-3 text-center">Attended</th>
                           <th className="px-4 py-3 text-center">Not Attended</th>
                           <th className="px-4 py-3 text-center">Participation %</th>
-                          <th className="px-4 py-3 text-right">Total Solved</th>
-                          <th className="px-4 py-3 text-right">Avg Solved</th>
+                          <th className="px-4 py-3 text-center">Total Solved</th>
+                          <th className="px-4 py-3 text-center">Avg Solved</th>
                           <th className="px-4 py-3 text-center">4/4 Solvers</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                        {report.cutoffBandSummary.map((b: any, idx: number) => (
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-navy-900 text-slate-900 dark:text-white">
+                        {(report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0).length > 0
+                          ? report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0)
+                          : report.cutoffBandSummary
+                        ).map((b: any, idx: number) => (
                           <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800 transition-colors">
-                            <td className="px-4 py-2.5 text-center font-mono text-[11px] font-black text-slate-900 dark:text-slate-100">{idx + 1}</td>
+                            <td className="px-4 py-2.5 text-center font-mono text-[11px] font-black">{idx + 1}</td>
                             <td className="px-4 py-2.5 font-black text-rose-700 dark:text-rose-300">{b.band}</td>
                             <td className="px-4 py-2.5 text-center font-black">{b.total}</td>
                             <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-400">{b.active_solvers}</td>
                             <td className="px-4 py-2.5 text-center font-black text-rose-600 dark:text-rose-400">{b.not_active}</td>
                             <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-400">{b.attendance_pct}%</td>
-                            <td className="px-4 py-2.5 text-right font-black text-slate-950 dark:text-white">{b.total_solved?.toLocaleString()}</td>
-                            <td className="px-4 py-2.5 text-right font-mono font-black">{b.avg_solved}</td>
+                            <td className="px-4 py-2.5 text-center font-black">{b.total_solved?.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-center font-mono font-black">{b.avg_solved}</td>
                             <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-400">{b.solvers_4}</td>
                           </tr>
                         ))}

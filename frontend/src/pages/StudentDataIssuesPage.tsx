@@ -731,23 +731,28 @@ export const StudentDataIssuesPage: React.FC = () => {
               <Search className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
               <span>Search Query</span>
             </label>
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3.5 top-3 text-slate-700 dark:text-slate-300" />
+            <div className="relative flex items-center">
               <input
                 ref={searchInputRef}
                 type="text"
                 placeholder="Search Name, Reg No (732224CC031)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 font-bold focus:ring-2 focus:ring-brand-500 transition-all shadow-2xs"
+                autoComplete="off"
+                spellCheck={false}
+                className="w-full h-11 min-h-[44px] pl-10 pr-9 bg-white dark:bg-navy-950 border-2 border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm text-left"
               />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
+                <Search className="w-4 h-4 stroke-[2.5]" />
+              </div>
               {searchQuery && (
                 <button
+                  type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-md text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                  className="absolute inset-y-0 right-0 z-10 flex items-center px-3 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
                   title="Clear Search"
                 >
-                  <XCircle className="w-3.5 h-3.5" />
+                  <XCircle className="w-4 h-4 stroke-[2]" />
                 </button>
               )}
             </div>

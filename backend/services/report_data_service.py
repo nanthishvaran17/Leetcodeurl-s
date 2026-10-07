@@ -197,15 +197,18 @@ def fetch_normalized_students(
     session_result_map = {}
     if session_id and str(session_id).lower() not in ("all", "none", "latest"):
         try:
-            sess_id_int = int(session_id)
-            from backend.models import WeeklyPublicResult, WeeklyVirtualResult
-            pub_recs = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == sess_id_int).all()
-            for pr in pub_recs:
-                session_result_map[pr.student_id] = pr
-            virt_recs = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == sess_id_int).all()
-            for vr in virt_recs:
-                if vr.student_id not in session_result_map:
-                    session_result_map[vr.student_id] = vr
+            from backend.services.weekly_session_resolver import resolve_target_weekly_session
+            target_ws = resolve_target_weekly_session(db, session_id)
+            sess_id_int = target_ws.id if target_ws else (int(session_id) if str(session_id).isdigit() else None)
+            if sess_id_int:
+                from backend.models import WeeklyPublicResult, WeeklyVirtualResult
+                pub_recs = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == sess_id_int).all()
+                for pr in pub_recs:
+                    session_result_map[pr.student_id] = pr
+                virt_recs = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == sess_id_int).all()
+                for vr in virt_recs:
+                    if vr.student_id not in session_result_map:
+                        session_result_map[vr.student_id] = vr
         except Exception as ex:
             logger.warning(f"[SESSION_RESULT_MAP_ERR] {ex}")
 
@@ -265,19 +268,36 @@ def fetch_normalized_students(
 
         # Session-specific historical contest rating & rank resolution
         sess_rec = session_result_map.get(s.id) if session_result_map else None
+        effective_rating = None
+        g_rank = None
+
         if sess_rec and getattr(sess_rec, "contest_rating", None) is not None and float(getattr(sess_rec, "contest_rating", 0) or 0) > 0:
             effective_rating = float(sess_rec.contest_rating)
-        elif st and st.contest_rating is not None and st.contest_rating != 1500:
-            effective_rating = st.contest_rating
-        else:
-            effective_rating = None
-
         if sess_rec and getattr(sess_rec, "contest_rank", None) is not None and int(getattr(sess_rec, "contest_rank", 0) or 0) > 0:
             g_rank = int(sess_rec.contest_rank)
-        elif is_verified and st and st.contest_global_ranking and st.contest_global_ranking != 5000001:
-            g_rank = st.contest_global_ranking
-        else:
-            g_rank = None
+
+        if (effective_rating is None or g_rank is None) and session_id and str(session_id).lower() not in ("all", "none", "latest"):
+            from backend.services.weekly_session_resolver import resolve_target_weekly_session
+            target_ws = resolve_target_weekly_session(db, session_id)
+            if target_ws:
+                from backend.models import LeetCodeContestRatingHistory
+                h_row = db.query(LeetCodeContestRatingHistory).filter(
+                    LeetCodeContestRatingHistory.student_id == s.id,
+                    LeetCodeContestRatingHistory.contest_name == target_ws.contest_name,
+                    LeetCodeContestRatingHistory.rating_after.isnot(None)
+                ).first()
+                if h_row:
+                    if effective_rating is None and h_row.rating_after is not None:
+                        effective_rating = round(float(h_row.rating_after), 1)
+                    if g_rank is None and h_row.contest_rank is not None:
+                        g_rank = int(h_row.contest_rank)
+
+        # Fallback to current live profile stats ONLY if no specific past session was requested
+        if not session_id or str(session_id).lower() in ("all", "none", "latest"):
+            if effective_rating is None and st and st.contest_rating is not None and st.contest_rating != 1500:
+                effective_rating = st.contest_rating
+            if g_rank is None and is_verified and st and st.contest_global_ranking and st.contest_global_ranking != 5000001:
+                g_rank = st.contest_global_ranking
 
         att_count = pub_att_map.get(s.id) or (getattr(st, 'attended_contests_count', None) if st else 0) or getattr(s, 'contests_attended', 0) or 0
 

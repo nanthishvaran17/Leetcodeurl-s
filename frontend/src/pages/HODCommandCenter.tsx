@@ -11,6 +11,7 @@ import {
  Sliders, User, CheckCircle, XCircle, ExternalLink, Calendar, Info,
  UserPlus, UserMinus, Shuffle, Printer, Share2, TrendingDown, Minus
 } from 'lucide-react';
+import { Mail, UserX, GraduationCap } from 'lucide-react';
 import { StaffDetailDrawer } from '../components/admin/StaffDetailDrawer';
 import { DepartmentDetailDrawer } from '../components/admin/DepartmentDetailDrawer';
 import { GlobalFilter } from '../components/GlobalFilter';
@@ -360,125 +361,254 @@ const StaffAllocationModal: React.FC<{
  )}
 
  {/* Quick Actions Bar */}
- <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-xs">
- <div className="flex items-center gap-2">
- <span className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide">Unassigned Students Queue:</span>
- <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 font-black text-xs uppercase tracking-wider">
- {unassignedStudents.length} Students Pending
- </span>
+ <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 dark:border-amber-500/30 flex items-center justify-between shadow-2xs">
+ <div className="flex items-center gap-3">
+ <div className="p-2.5 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0">
+ <UserX className="w-4 h-4" />
  </div>
+ <div>
+ <div className="font-black text-slate-900 dark:text-white text-xs uppercase tracking-wider font-display">Unassigned Students Queue</div>
+ <div className="text-xs text-slate-700 dark:text-slate-200 font-bold">Students waiting for faculty mentor allocation</div>
+ </div>
+ </div>
+ <span className="px-3.5 py-1.5 rounded-full bg-amber-500/15 text-amber-900 dark:text-amber-300 border border-amber-500/30 font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-2xs">
+ <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+ {unassignedStudents.length} Pending
+ </span>
  </div>
 
  {/* Faculty Workload Grid */}
- <div className="space-y-3">
- <h4 className="font-black text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center justify-between font-display">
+ <div className="space-y-4">
+ <div className="flex items-center justify-between">
+ <h4 className="font-black text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center gap-2 font-display">
+ <Users className="w-4 h-4 text-brand-500" />
  <span>Department Faculty Workload Matrix</span>
- <span className="text-xs text-slate-700 dark:text-slate-400 font-bold uppercase tracking-wider">1:20 Ideal Ratio</span>
  </h4>
- <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+ <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-800 dark:text-slate-200 font-extrabold text-[11px] uppercase tracking-wider border border-slate-300 dark:border-navy-600">
+ 1:20 Ideal Ratio Target
+ </span>
+ </div>
+
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  {workload.map(fac => {
  const count = fac.assigned_students || 0;
  const pct = Math.min(100, Math.round((count / 20) * 100));
+ const initials = (fac.faculty_name || 'FC')
+ .split(' ')
+ .filter(Boolean)
+ .map(n => n[0])
+ .join('')
+ .substring(0, 2)
+ .toUpperCase();
+
+ const isOverloaded = count > 20;
+ const isAtRatio = fac.workload_status === 'AT_RATIO';
+
+ const badgeStyle = isOverloaded
+ ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30'
+ : isAtRatio
+ ? 'bg-brand-500/10 text-brand-700 dark:text-brand-300 border-brand-500/30'
+ : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30';
+
+ const dotColor = isOverloaded ? 'bg-rose-500' : isAtRatio ? 'bg-brand-500' : 'bg-emerald-500';
+
+ const progressFillStyle = isOverloaded
+ ? 'bg-gradient-to-r from-rose-500 via-pink-500 to-rose-400 shadow-xs shadow-rose-500/20'
+ : count > 0
+ ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 shadow-xs shadow-emerald-500/20'
+ : 'bg-slate-300 dark:bg-navy-700';
+
  return (
- <div key={fac.faculty_id} className="p-4 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 space-y-3 shadow-xs">
- <div className="flex justify-between items-start">
- <div>
- <div className="font-black text-slate-900 dark:text-white font-display text-sm">{fac.faculty_name}</div>
- <div className="text-xs font-medium text-slate-700 dark:text-slate-400 mt-0.5">{fac.email}</div>
- </div>
- <span className={`px-2.5 py-1 rounded text-xs font-black border ${fac.workload_status === 'NORMAL' ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300' : fac.workload_status === 'AT_RATIO' ? 'bg-brand-100 text-brand-800 border-brand-300 dark:bg-brand-950 dark:text-brand-300' : 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300'}`}>
- {count}/20 ({pct}%)
- </span>
- </div>
-
- {/* Progress bar */}
- <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden border border-slate-200 dark:border-navy-700 shadow-inner">
- <div className={`h-full rounded-full transition-all duration-300 ${count <= 20 ? 'bg-emerald-500' : 'bg-rose-500'}`} style={{ width: `${pct}%` }} />
- </div>
-
- {/* Assigned Student Mini Tags */}
- {fac.students && fac.students.length > 0 && (
- <div className="space-y-1.5 pt-1">
- <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Assigned Mentees ({fac.students.length}):</div>
- <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
- {fac.students.map(s => (
- <span key={s.id} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-xs font-extrabold text-slate-800 dark:text-slate-200">
- <span>{s.name.split(' ')[0]}</span>
- <button onClick={() => handleUnassignStudent(fac.faculty_id, s.id)} className="text-slate-600 dark:text-slate-400 hover:text-rose-600 font-bold">×</button>
- </span>
- ))}
- </div>
- </div>
- )}
- </div>
- );
- })}
- </div>
- </div>
-
- {/* Unassigned Students Selection Box */}
- {unassignedStudents.length > 0 && (
- <div className="p-4 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 space-y-3 shadow-xs">
- <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-100 dark:border-navy-800 pb-2.5">
- <h4 className="font-black text-slate-900 dark:text-white text-sm font-display">
- Manual Student Allocation ({unassignedStudents.length} unassigned)
- </h4>
- <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
- <div className="flex-1 sm:flex-initial min-w-0 relative">
- <GlobalFilter
- value={targetFacultyId?.toString() || ""}
- onChange={val => setTargetFacultyId(Number(val))}
- dropdownWidth="w-full sm:w-64"
- align="right"
- options={[
- { value: "", label: "Select target faculty..." },
- ...workload.map((f: any) => ({ value: String(f.faculty_id), label: `${f.faculty_name} (${f.assigned_students}/20)` }))
- ]}
- icon={<User className="w-4 h-4" />}
- />
- </div>
- <button
- disabled={!targetFacultyId || selectedUnassigned.length === 0 || actionLoading}
- onClick={handleBatchAssign}
- className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs disabled:opacity-40 transition shadow-sm cursor-pointer"
+ <div
+ key={fac.faculty_id}
+ className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 bg-white/95 dark:bg-navy-900/95 shadow-2xs hover:shadow-md hover:border-slate-300 dark:hover:border-navy-600 transition-all duration-200 space-y-4 group relative overflow-hidden"
  >
- Assign ({selectedUnassigned.length})
- </button>
+ {/* Header: Avatar, Info & Status */}
+ <div className="flex items-start justify-between gap-3">
+ <div className="flex items-center gap-3 min-w-0">
+ <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 via-indigo-600 to-purple-600 text-white font-black text-xs flex items-center justify-center shadow-xs shrink-0 font-display group-hover:scale-105 transition-transform duration-200">
+ {initials}
  </div>
+ <div className="min-w-0">
+ <div className="font-black text-slate-900 dark:text-white font-display text-sm truncate leading-snug">
+ {fac.faculty_name}
  </div>
+                        <div className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate flex items-center gap-1 mt-0.5">
+                          <Mail className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
+                          <span className="truncate">{fac.email}</span>
+                        </div>
+                      </div>
+                    </div>
 
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-52 overflow-y-auto pt-1">
- {unassignedStudents.map(s => {
- const isChecked = selectedUnassigned.includes(s.id);
- return (
- <label key={s.id} className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition cursor-pointer ${isChecked ? 'bg-brand-50 dark:bg-brand-950/80 border-brand-400 dark:border-brand-700 shadow-xs' : 'border-slate-200 dark:border-navy-700 bg-slate-50/70 dark:bg-navy-950/50 hover:bg-slate-100 dark:hover:bg-navy-800'}`}>
- <input
- type="checkbox"
- checked={isChecked}
- onChange={e => {
- if (e.target.checked) setSelectedUnassigned(prev => [...prev, s.id]);
- else setSelectedUnassigned(prev => prev.filter(id => id !== s.id));
- }}
- className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 shrink-0"
- />
- <div className="truncate min-w-0">
- <div className="truncate text-slate-900 dark:text-white font-extrabold text-xs">{s.name}</div>
- <div className="text-xs font-bold text-amber-700 dark:text-amber-400 mt-0.5">{s.reg_no}</div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-black border flex items-center gap-1.5 shrink-0 shadow-2xs ${badgeStyle}`}>
+                      <span className={`w-2 h-2 rounded-full ${dotColor} ${isOverloaded ? 'animate-ping' : ''}`} />
+                      {count}/20 ({pct}%)
+                    </span>
+                  </div>
+
+                  {/* Workload Progress Bar */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center text-xs font-extrabold text-slate-800 dark:text-slate-100">
+                      <span className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-black text-slate-800 dark:text-slate-100">
+                        <Activity className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                        Mentorship Workload
+                      </span>
+                      <span className="font-mono font-black text-slate-900 dark:text-white text-xs">
+                        {count} <span className="text-slate-700 dark:text-slate-300 font-bold">/ 20 slots</span>
+                      </span>
+                    </div>
+
+                    <div className="w-full h-3 rounded-full bg-slate-200 dark:bg-navy-950 p-0.5 border border-slate-300/90 dark:border-navy-700 shadow-inner relative overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ease-out ${progressFillStyle}`}
+                        style={{ width: `${Math.max(count > 0 ? 4 : 0, pct)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Assigned Mentees Section */}
+                  <div className="pt-2.5 border-t border-slate-200 dark:border-navy-800 space-y-2">
+                    <div className="flex items-center justify-between text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">
+                      <span>Assigned Mentees ({fac.students?.length || 0})</span>
+                    </div>
+
+                    {fac.students && fac.students.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1 custom-scrollbar">
+                        {fac.students.map(s => (
+                          <span
+                            key={s.id}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 border border-slate-300 dark:border-navy-600 text-xs font-extrabold text-slate-900 dark:text-white shadow-2xs group/tag"
+                          >
+                            <span className="truncate max-w-[120px]">{s.name}</span>
+                            <button
+                              onClick={() => handleUnassignStudent(fac.faculty_id, s.id)}
+                              title="Unassign mentee"
+                              className="text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 p-0.5 rounded transition-colors font-bold"
+                            >
+                              <X size={13} />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2 py-2 px-3.5 rounded-xl border border-slate-300/80 dark:border-navy-700 bg-slate-100/90 dark:bg-navy-950/80 shadow-2xs">
+                        <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>No mentees assigned — ready for allocation</span>
+                      </div>
+                    )}
+                  </div>
  </div>
- </label>
  );
  })}
  </div>
  </div>
- )}
- </div>
 
- {/* Footer */}
- <div className="p-4 border-t border-slate-100 dark:border-navy-800 flex justify-end gap-2">
- <button onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 text-xs">
- Close Manager
- </button>
- </div>
+        {/* Unassigned Students Selection Box */}
+        {unassignedStudents.length > 0 && (
+          <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 bg-white/95 dark:bg-navy-900/95 space-y-4 shadow-2xs">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-100 dark:border-navy-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                  <UserCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-black text-slate-900 dark:text-white text-sm font-display leading-tight">
+                    Manual Student Allocation
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Select pending students to assign to a faculty mentor</p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full sm:w-auto">
+                <div className="flex-1 sm:flex-initial min-w-0 relative">
+                  <GlobalFilter
+                    value={targetFacultyId?.toString() || ""}
+                    onChange={val => setTargetFacultyId(Number(val))}
+                    dropdownWidth="w-full sm:w-64"
+                    align="right"
+                    options={[
+                      { value: "", label: "Select target faculty..." },
+                      ...workload.map((f: any) => ({ value: String(f.faculty_id), label: `${f.faculty_name} (${f.assigned_students}/20)` }))
+                    ]}
+                    icon={<User className="w-4 h-4" />}
+                  />
+                </div>
+                <button
+                  disabled={!targetFacultyId || selectedUnassigned.length === 0 || actionLoading}
+                  onClick={handleBatchAssign}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs disabled:opacity-40 transition shadow-sm cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                >
+                  <UserCheck size={14} />
+                  Assign ({selectedUnassigned.length})
+                </button>
+              </div>
+            </div>
+
+            {/* Select All Controls */}
+            <div className="flex items-center justify-between py-1">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={selectedUnassigned.length === unassignedStudents.length && unassignedStudents.length > 0}
+                  onChange={e => {
+                    if (e.target.checked) setSelectedUnassigned(unassignedStudents.map(s => s.id));
+                    else setSelectedUnassigned([]);
+                  }}
+                  className="w-4 h-4 rounded-md border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                />
+                <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300">
+                  Select All ({unassignedStudents.length} Students)
+                </span>
+              </label>
+              {selectedUnassigned.length > 0 && (
+                <span className="px-2.5 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 font-extrabold text-xs">
+                  {selectedUnassigned.length} selected
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto pt-1 pr-1 custom-scrollbar">
+              {unassignedStudents.map(s => {
+                const isChecked = selectedUnassigned.includes(s.id);
+                return (
+                  <label
+                    key={s.id}
+                    className={`p-3 rounded-xl border flex items-center gap-3 transition-all cursor-pointer select-none ${
+                      isChecked
+                        ? 'bg-brand-50/80 dark:bg-brand-950/80 border-brand-400 dark:border-brand-600 shadow-2xs ring-1 ring-brand-400/30'
+                        : 'border-slate-200/80 dark:border-navy-700/80 bg-slate-50/50 dark:bg-navy-950/40 hover:bg-slate-100 dark:hover:bg-navy-800/60'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={e => {
+                        if (e.target.checked) setSelectedUnassigned(prev => [...prev, s.id]);
+                        else setSelectedUnassigned(prev => prev.filter(id => id !== s.id));
+                      }}
+                      className="w-4 h-4 rounded-md border-slate-300 text-brand-600 focus:ring-brand-500 shrink-0 cursor-pointer"
+                    />
+                    <div className="truncate min-w-0 flex-1">
+                      <div className="truncate text-slate-900 dark:text-white font-extrabold text-xs leading-snug">
+                        {s.name}
+                      </div>
+                      <div className="text-[11px] font-bold text-amber-700 dark:text-amber-400 mt-0.5 font-mono">
+                        {s.reg_no}
+                      </div>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="p-4 border-t border-slate-100 dark:border-navy-800 flex justify-end gap-2">
+        <button onClick={onClose} className="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition shadow-2xs cursor-pointer">
+          Close Manager
+        </button>
+      </div>
  </div>
  </div>,
  document.body
@@ -494,7 +624,7 @@ const ReportHubModal: React.FC<{
  departments: DepartmentRecord[];
 }> = ({ isOpen, onClose, deptId, departments }) => {
  const [selectedReportType, setSelectedReportType] = useState<string>('EXECUTIVE');
- const [selectedDeptId, setSelectedDeptId] = useState<number | undefined>(deptId);
+ const [selectedDeptId, setSelectedDeptId] = useState<number | string | undefined>(deptId);
  const [selectedYear, setSelectedYear] = useState<string>('ALL');
  const [selectedSection, setSelectedSection] = useState<string>('ALL');
  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
@@ -504,26 +634,44 @@ const ReportHubModal: React.FC<{
  const [downloadingExcel, setDownloadingExcel] = useState(false);
  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
+ const currentDeptObj = useMemo(() => {
+   if (!selectedDeptId && selectedDeptId !== 0) return undefined;
+   return departments.find(d => String(d.id) === String(selectedDeptId) || d.code === String(selectedDeptId));
+ }, [selectedDeptId, departments]);
+
+ const isSingleCohortDept = useMemo(() => {
+   if (!currentDeptObj) return false;
+   const code = (currentDeptObj.code || '').toUpperCase();
+   const name = (currentDeptObj.name || '').toLowerCase();
+   return code.includes('CS') || code.includes('CYBER') || code.includes('IOT') || name.includes('cyber') || name.includes('iot');
+ }, [currentDeptObj]);
+
+ useEffect(() => {
+   if (isSingleCohortDept && selectedSection !== 'ALL') {
+     setSelectedSection('ALL');
+   }
+ }, [isSingleCohortDept, selectedSection]);
+
  // Canonical Single Source of Truth Report Scope Object
  const reportScope = useMemo(() => {
- const dept = departments.find(d => String(d.id) === String(selectedDeptId));
+ const dept = currentDeptObj;
  return {
  reportType: selectedReportType,
  departmentId: selectedDeptId,
  departmentCode: dept?.code || 'ALL',
  departmentName: dept?.name || 'All Institutional Departments',
  academicYear: selectedYear,
- section: selectedSection,
+ section: isSingleCohortDept ? 'ALL' : selectedSection,
  status: selectedStatus,
  };
- }, [selectedReportType, selectedDeptId, selectedYear, selectedSection, selectedStatus, departments]);
+ }, [selectedReportType, selectedDeptId, selectedYear, selectedSection, selectedStatus, currentDeptObj, isSingleCohortDept]);
 
  const loadReport = useCallback(async () => {
  setLoading(true);
  try {
  const data = await getReportData({
  report_type: selectedReportType,
- dept_id: selectedDeptId,
+ dept_id: (selectedDeptId !== undefined && selectedDeptId !== '') ? Number(selectedDeptId) : undefined,
  year_level: selectedYear !== 'ALL' ? selectedYear : undefined,
  section: selectedSection !== 'ALL' ? selectedSection : undefined,
  status_filter: selectedStatus !== 'ALL' ? selectedStatus : undefined,
@@ -560,7 +708,7 @@ const ReportHubModal: React.FC<{
  const deptSlug = reportScope.departmentCode !== 'ALL' ? `_${reportScope.departmentCode}` : '_ALL';
  const yearSlug = selectedYear !== 'ALL' ? `_Yr${selectedYear}` : '';
  const secSlug = selectedSection !== 'ALL' ? `_Sec${selectedSection}` : '';
- const filename = `NEC_${selectedReportType}_Report${deptSlug}${yearSlug}${secSlug}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+ const filename = `NEC_${selectedReportType}_Report_${currentDeptObj?.code || reportScope.departmentCode}${selectedYear !== 'ALL' ? `_Yr${selectedYear}` : ''}${selectedSection !== 'ALL' ? `_Sec${selectedSection}` : ''}_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
  const res = await downloadManager.download({
  endpoint: `/command-center/reports/export-excel?${qsParams.toString()}`,
@@ -619,16 +767,16 @@ const ReportHubModal: React.FC<{
  <div className="fixed inset-0 z-[100050] flex flex-col bg-slate-50 dark:bg-navy-950 animate-fade-in overflow-hidden" onClick={e => e.target === e.currentTarget && onClose()}>
  <div className="w-full h-full flex flex-col text-slate-900 dark:text-white antialiased bg-white dark:bg-navy-950">
  {/* Header */}
- <div className="px-6 py-4 bg-slate-50 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0">
+ <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-50 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0">
  <div className="flex items-center gap-3">
  <div className="p-2.5 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 shadow-xs">
  <FileSpreadsheet className="w-5 h-5" />
  </div>
  <div>
- <h3 className="font-display text-base sm:text-lg font-black text-slate-950 dark:text-white">
+ <h3 className="font-display text-sm sm:text-lg font-black text-slate-950 dark:text-white">
  Institutional Executive Report Generator
  </h3>
- <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">Dynamic filter-aware audit and accreditation reports</p>
+ <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 font-bold">Dynamic filter-aware audit and accreditation reports</p>
  </div>
  </div>
  <button
@@ -640,11 +788,33 @@ const ReportHubModal: React.FC<{
  </div>
 
  {/* Body */}
- <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1 min-h-0 text-xs custom-scrollbar">
+ <div className="p-3 sm:p-8 overflow-y-auto space-y-4 sm:space-y-7 flex-1 min-h-0 text-xs custom-scrollbar">
  {/* Controls Grid */}
- <div className="grid grid-cols-1 md:grid-cols-12 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-sm">
- <div className="md:col-span-4">
- <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Report Type</label>
+ <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-50 via-white to-slate-100/80 dark:from-navy-900 dark:via-navy-950 dark:to-navy-900 border border-slate-200/90 dark:border-navy-800 shadow-md p-3 sm:p-6 space-y-3 sm:space-y-4">
+ <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-500" />
+
+ <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-navy-800 pb-3 mb-1">
+ <div className="flex items-center gap-2.5">
+ <div className="p-2 rounded-xl bg-brand-50 dark:bg-brand-950/70 text-brand-600 dark:text-brand-400 border border-brand-200/60 dark:border-brand-800/40 shadow-xs">
+ <SlidersHorizontal className="w-4 h-4" />
+ </div>
+ <div>
+ <h4 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">Report Configuration & Scope Filters</h4>
+ <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Refine parameters to dynamically update institutional reports</p>
+ </div>
+ </div>
+ <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold border border-emerald-200 dark:border-emerald-800/40 shadow-xs">
+ <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+ <span>Live Scope Synced</span>
+ </div>
+ </div>
+
+ <div className="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-5">
+ <div className="md:col-span-4 bg-white/80 dark:bg-navy-950/60 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-navy-800/70 shadow-2xs hover:border-brand-300 dark:hover:border-brand-700 transition-colors">
+ <div className="flex items-center justify-between mb-1.5">
+ <label className="block text-[11px] font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Report Type</label>
+ <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 border border-brand-200/50 dark:border-brand-800/50">Primary</span>
+ </div>
  <GlobalFilter
  value={selectedReportType}
  onChange={val => setSelectedReportType(val)}
@@ -658,22 +828,28 @@ const ReportHubModal: React.FC<{
  />
  </div>
 
- <div className="md:col-span-4">
- <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Department Scope</label>
+ <div className="md:col-span-4 bg-white/80 dark:bg-navy-950/60 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-navy-800/70 shadow-2xs hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
+ <div className="flex items-center justify-between mb-1.5">
+ <label className="block text-[11px] font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Department Scope</label>
+ <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50">Scope</span>
+ </div>
  <GlobalFilter
  value={selectedDeptId?.toString() || ""}
- onChange={val => setSelectedDeptId(val ? Number(val) : undefined)}
+ onChange={val => setSelectedDeptId(val ? (isNaN(Number(val)) ? val : Number(val)) : undefined)}
  dropdownWidth="min-w-[460px]"
  options={[
  { value: "", label: "All Institutional Departments", pillText: "ALL" },
- ...departments.map((d: any) => ({ value: String(d.id), label: d.name, pillText: d.code }))
+ ...departments.map((d: any) => ({ value: String(d.id ?? d.code), label: d.name, pillText: d.code }))
  ]}
  icon={<Building2 className="w-4 h-4 text-indigo-500" />}
  />
  </div>
 
- <div className="md:col-span-2">
- <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Academic Year</label>
+ <div className={`bg-white/80 dark:bg-navy-950/60 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-navy-800/70 shadow-2xs hover:border-amber-300 dark:hover:border-amber-700 transition-colors ${isSingleCohortDept ? 'md:col-span-4' : 'md:col-span-2'}`}>
+ <div className="flex items-center justify-between mb-1.5">
+ <label className="block text-[11px] font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Academic Year</label>
+ <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50">Batch</span>
+ </div>
  <GlobalFilter
  value={selectedYear}
  onChange={val => setSelectedYear(val)}
@@ -690,42 +866,40 @@ const ReportHubModal: React.FC<{
  />
  </div>
 
- <div className="md:col-span-2">
- <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Section / Cohort</label>
+ {!isSingleCohortDept && (
+ <div className="md:col-span-2 bg-white/80 dark:bg-navy-950/60 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-navy-800/70 shadow-2xs hover:border-purple-300 dark:hover:border-purple-700 transition-colors">
+ <div className="flex items-center justify-between mb-1.5">
+ <label className="block text-[11px] font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Section / Cohort</label>
+ <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/50">
+   Cohort
+ </span>
+ </div>
  <GlobalFilter
  value={selectedSection}
  onChange={val => setSelectedSection(val)}
  dropdownWidth="min-w-[240px]"
  searchPlaceholder="Search section..."
  options={[
- { value: "ALL", label: "All Sections", pillText: "ALL" },
- { value: "A", label: "Section A", pillText: "A" },
- { value: "B", label: "Section B", pillText: "B" },
- { value: "C", label: "Section C", pillText: "C" }
+   { value: "ALL", label: "All Sections", pillText: "ALL" },
+   { value: "A", label: "Section A", pillText: "A" },
+   { value: "B", label: "Section B", pillText: "B" },
+   { value: "C", label: "Section C", pillText: "C" }
  ]}
  icon={<Layers className="w-4 h-4 text-purple-500" />}
  />
  </div>
+ )}
+ </div>
  </div>
 
- {/* Scope Indicator Bar */}
- <div className="px-3.5 py-2 rounded-xl bg-brand-50/80 dark:bg-brand-950/40 border border-brand-200/60 dark:border-brand-800/40 flex items-center justify-between flex-wrap gap-2 text-xs">
- <div className="font-bold text-brand-900 dark:text-brand-200 flex items-center gap-1.5">
- <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
- <span>Authoritative Scope:</span>
- <span className="font-extrabold text-brand-700 dark:text-brand-300">{reportData?.department_scope || reportScope.departmentName}</span>
- </div>
- <div className="text-slate-700 dark:text-slate-400 font-bold text-xs tracking-wide">
- Single Source of Truth • UI + Excel + PDF Synced
- </div>
- </div>
+
 
  {/* Live Preview Paper */}
  {loading ? (
  <div className="p-16 text-center text-slate-700 dark:text-slate-400 font-black text-sm">Loading live report data for selected scope...</div>
  ) : (
- <div className="p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-md space-y-4 text-slate-900 dark:text-white">
- <div className="border-b border-slate-200 dark:border-navy-800 pb-3 flex justify-between items-end flex-wrap gap-2">
+ <div className="mt-6 sm:mt-8 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-lg space-y-6 sm:space-y-7 text-slate-900 dark:text-white">
+ <div className="border-b border-slate-200 dark:border-navy-800 pb-4 sm:pb-5 mb-2 flex justify-between items-start flex-wrap gap-4">
  <div>
  <div className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-400 tracking-wider">INSTITUTIONAL AUDIT & PERFORMANCE REPORT</div>
  <h2 className="text-base sm:text-lg font-black text-slate-950 dark:text-white mt-0.5 tracking-tight">{reportData?.report_title}</h2>
@@ -738,11 +912,11 @@ const ReportHubModal: React.FC<{
  {/* Report Contents */}
  {selectedReportType === 'EXECUTIVE' && (
  <div className="space-y-4">
- <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+ <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-5">
  {Object.entries(reportData?.summary_metrics || {}).map(([k, v]: any) => (
- <div key={k} className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 shadow-xs">
- <div className="text-xs text-slate-700 dark:text-slate-400 font-extrabold uppercase tracking-wider">{k}</div>
- <div className="text-xl sm:text-2xl font-black text-brand-600 dark:text-brand-400 mt-1 tracking-tight">{String(v)}</div>
+ <div key={k} className="p-3 sm:p-5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200/90 dark:border-navy-800 shadow-xs">
+ <div className="text-[10px] sm:text-xs text-slate-700 dark:text-slate-400 font-extrabold uppercase tracking-wider leading-snug">{k}</div>
+ <div className="text-lg sm:text-2xl font-black text-brand-600 dark:text-brand-400 mt-1 sm:mt-1.5 tracking-tight">{String(v)}</div>
  </div>
  ))}
  </div>
@@ -837,7 +1011,7 @@ const ReportHubModal: React.FC<{
  </div>
 
  {/* Footer */}
- <div className="px-6 py-4 bg-slate-50 dark:bg-navy-900 border-t border-slate-200 dark:border-navy-800 flex justify-between items-center shrink-0 flex-wrap gap-2">
+ <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-50 dark:bg-navy-900 border-t border-slate-200 dark:border-navy-800 flex justify-between items-center shrink-0 flex-wrap gap-2">
  <button
  onClick={handleDownloadPdf}
  disabled={downloadingPdf}
@@ -1149,33 +1323,39 @@ export const HODCommandCenter: React.FC = () => {
  };
 
  const rawYearMatrix = summary?.benchmarks?.year_matrix || [];
- const yearMatrix = useMemo(() => {
- const map = new Map<string, YearBenchmark>();
- const canonicalOrder: Record<string, number> = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4 };
- for (const item of rawYearMatrix) {
- const raw = String(item.year_level || item.year || '').toUpperCase().trim();
- let code = 'I';
- if (raw.includes('IV') || raw.includes('4')) code = 'IV';
- else if (raw.includes('III') || raw.includes('3')) code = 'III';
- else if (raw.includes('II') || raw.includes('2')) code = 'II';
- else if (raw.includes('I') || raw.includes('1')) code = 'I';
+  const yearMatrix = useMemo(() => {
+    const map = new Map<string, YearBenchmark>();
+    const canonicalOrder: Record<string, number> = { 'II': 2, 'III': 3, 'IV': 4, 'I': 1 };
+    for (const item of rawYearMatrix) {
+      const raw = String(item.year_level || item.year || '').toUpperCase().trim();
+      let code = '';
+      if (raw.includes('IV') || raw.includes('4')) code = 'IV';
+      else if (raw.includes('III') || raw.includes('3')) code = 'III';
+      else if (raw.includes('II') || raw.includes('2')) code = 'II';
+      else if (raw.includes('I') || raw.includes('1')) code = 'I';
 
- if (!map.has(code)) {
- map.set(code, {
- ...item,
- year: `${code} Year`,
- year_level: code
- });
- } else {
- const existing = map.get(code)!;
- existing.student_count = (existing.student_count || 0) + (item.student_count || 0);
- existing.active_count = (existing.active_count || 0) + (item.active_count || 0);
- existing.health_score = Math.max(existing.health_score || 0, item.health_score || 0);
- existing.participation_pct = Math.round(((existing.active_count || 0) / Math.max(1, existing.student_count || 1)) * 100);
- }
- }
- return Array.from(map.values()).sort((a, b) => (canonicalOrder[a.year_level] || 99) - (canonicalOrder[b.year_level] || 99));
- }, [rawYearMatrix]);
+      if (!code || (!item.student_count || item.student_count === 0)) {
+        continue;
+      }
+
+      if (!map.has(code)) {
+        map.set(code, {
+          ...item,
+          year: `${code} Year`,
+          year_level: code
+        });
+      } else {
+        const existing = map.get(code)!;
+        existing.student_count = (existing.student_count || 0) + (item.student_count || 0);
+        existing.active_count = (existing.active_count || 0) + (item.active_count || 0);
+        existing.health_score = Math.max(existing.health_score || 0, item.health_score || 0);
+        existing.participation_pct = Math.round(((existing.active_count || 0) / Math.max(1, existing.student_count || 1)) * 100);
+      }
+    }
+    return Array.from(map.values())
+      .filter(y => (y.student_count || 0) > 0)
+      .sort((a, b) => (canonicalOrder[a.year_level] || 99) - (canonicalOrder[b.year_level] || 99));
+  }, [rawYearMatrix]);
 
  if (loading && !summary) {
  return (
@@ -1212,19 +1392,24 @@ export const HODCommandCenter: React.FC = () => {
  ];
 
  const yearOptions = [
- { value: 'ALL', label: 'All Years', badge: 'ALL', icon: Calendar },
- { value: '1', label: 'I Year', badge: '1st', icon: Calendar },
- { value: '2', label: 'II Year', badge: '2nd', icon: Calendar },
- { value: '3', label: 'III Year', badge: '3rd', icon: Calendar },
- { value: '4', label: 'IV Year', badge: '4th', icon: Calendar }
- ];
+    { value: 'ALL', label: 'All Cohorts', badge: 'ALL', icon: Calendar },
+    { value: '2', label: 'II Year', badge: '2nd', icon: Calendar },
+    { value: '3', label: 'III Year', badge: '3rd', icon: Calendar },
+    { value: '4', label: 'IV Year', badge: '4th', icon: Calendar }
+  ];
 
- const sectionOptions = [
- { value: 'ALL', label: 'All Sections', badge: 'ALL', icon: Layers },
- { value: 'A', label: 'Section A', badge: 'A', icon: Layers },
- { value: 'B', label: 'Section B', badge: 'B', icon: Layers },
- { value: 'C', label: 'Section C', badge: 'C', icon: Layers }
- ];
+ const isSingleIntakeDeptSelected = Boolean(
+   selectedDept && departments.some((d: any) => String(d.id) === String(selectedDept) && (d.code?.toUpperCase().includes('CS') || d.code?.toUpperCase().includes('CYBER') || d.code?.toUpperCase().includes('IOT') || d.name?.toLowerCase().includes('cyber') || d.name?.toLowerCase().includes('iot')))
+ );
+
+ const sectionOptions = isSingleIntakeDeptSelected
+   ? [{ value: 'ALL', label: 'Single Cohort (All Students)', badge: 'SINGLE', pillText: 'SINGLE', icon: Layers }]
+   : [
+       { value: 'ALL', label: 'All Sections', badge: 'ALL', icon: Layers },
+       { value: 'A', label: 'Section A', badge: 'A', icon: Layers },
+       { value: 'B', label: 'Section B', badge: 'B', icon: Layers },
+       { value: 'C', label: 'Section C', badge: 'C', icon: Layers }
+     ];
 
  const statusOptions = [
  { value: 'ALL', label: 'All Status', badge: 'ALL', icon: Activity },
@@ -1234,7 +1419,7 @@ export const HODCommandCenter: React.FC = () => {
  ];
 
  return (
- <div className="max-w-full pt-6 w-full box-border space-y-8 sm:space-y-10 md:space-y-12 pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
+ <div className="max-w-full pt-1 sm:pt-6 w-full box-border space-y-8 sm:space-y-10 md:space-y-12 pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
 
 
 
@@ -1244,7 +1429,11 @@ export const HODCommandCenter: React.FC = () => {
  <div className="space-y-3">
  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
  <span className="uppercase tracking-tight">
- {user?.role?.toLowerCase() === 'hod' ? `DEPARTMENT: ${departments[0]?.name || 'Loading...'}` : "EXECUTIVE OPERATIONS COMMAND"}
+ {user?.role?.toLowerCase() === 'hod'
+ ? `HOD DASHBOARD • ${departments[0]?.name || 'Loading...'}`
+ : ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())
+ ? 'FACULTY PORTAL'
+ : 'NANDHA INTELLIGENCE COMMAND'}
  </span>
  </div>
  <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white mt-1 uppercase">
@@ -1258,25 +1447,29 @@ export const HODCommandCenter: React.FC = () => {
  </>
  ) : (
  <>
- Executive Coding <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Operations Center</span>
+ INSTITUTIONAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">ANALYTICS DASHBOARD</span>
  </>
  )}
  </h1>
  <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium leading-relaxed mt-2">
- Real-time institutional performance analytics, automated student mentoring, and forensic integrity tracking.
+ {user?.role?.toLowerCase() === 'hod'
+ ? 'Department-scoped performance analytics, student cohort tracking, and faculty oversight for your HOD scope.'
+ : ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())
+ ? 'Track your assigned student cohort progress, submit mentoring actions, and manage student interventions.'
+ : 'Real-time institutional performance analytics, automated student mentoring, and forensic integrity tracking.'}
  </p>
  </div>
 
  <div className="flex items-center gap-2.5 flex-wrap">
  {/* Live Status Pill */}
  {wsConnected ? (
- <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 text-emerald-400 text-xs font-mono font-semibold border border-emerald-800/60 shadow-inner">
+ <div className="inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-emerald-950/60 text-emerald-400 text-xs font-mono font-bold border border-emerald-800/60 shadow-inner">
  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
  <span>LIVE • {lastLiveTimestamp}</span>
  </div>
  ) : (
- <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/60 text-amber-400 text-xs font-mono font-semibold border border-amber-800/60 shadow-inner">
- <AlertTriangle size={13} />
+ <div className="inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-amber-950/60 text-amber-400 text-xs font-mono font-bold border border-amber-800/60 shadow-inner">
+ <AlertTriangle size={14} />
  <span>RECONNECTING...</span>
  </div>
  )}
@@ -1284,26 +1477,27 @@ export const HODCommandCenter: React.FC = () => {
  {/* HOD Staff Allocation Manager Button */}
  <button
  onClick={() => setShowStaffAllocationModal(true)}
- className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 border border-purple-800/50 text-xs font-bold transition cursor-pointer shadow-sm"
+ className="inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 border border-purple-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
  >
- <Users size={13} />
+ <Users size={14} />
  <span>Staff Allocation</span>
  </button>
 
  {/* Dedicated Report Hub Button */}
  <button
  onClick={() => setShowReportHubModal(true)}
- className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-800/50 text-xs font-bold transition cursor-pointer shadow-sm"
+ className="inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
  >
- <FileSpreadsheet size={13} />
+ <FileSpreadsheet size={14} />
  <span>Dedicated Reports</span>
  </button>
 
+ {/* Refresh Button */}
  <button
  onClick={() => { setRefreshing(true); clearApiCache(); loadScopedData(false, true); loadStudents(); }}
- className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 text-xs font-bold transition cursor-pointer border border-slate-700/50"
+ className="inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 border border-slate-700/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
  >
- <RotateCcw size={13} className={refreshing ? 'animate-spin' : ''} />
+ <RotateCcw size={14} className={refreshing ? 'animate-spin' : ''} />
  <span>Refresh</span>
  </button>
  </div>
@@ -1539,70 +1733,8 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  </Card>
 
- {/* 6. YEAR / SECTION PERFORMANCE HEATMAP */}
- {summary?.heatmap_matrix && summary.heatmap_matrix.length > 0 && (
- <Card className="p-6 sm:p-7 my-8 sm:my-10 shadow-md">
- <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-navy-800">
- <div>
- <h3 className="font-display text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
- <Layers size={18} className="text-brand-500" />
- <span>Year / Section Performance Matrix (Heatmap)</span>
- </h3>
- <p className="text-xs text-slate-700 dark:text-slate-400 mt-0.5">Progress distribution across academic years and sections</p>
- </div>
- <div className="flex items-center gap-3 text-xs font-mono">
- <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> GOOD (≥80%)</span>
- <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> WATCH (60-79%)</span>
- <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-500" /> ACTION (&lt;60%)</span>
- </div>
- </div>
-
- <div className="mt-6">
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7 font-mono text-xs">
- {summary.heatmap_matrix.map((row) => (
- <div key={row.year_level} className="p-5 sm:p-6 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200/80 dark:border-navy-800 space-y-4 shadow-xs">
- <div className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm font-display flex justify-between items-center">
- <span>{row.year}</span>
- <span className="text-xs text-slate-600 dark:text-slate-400 font-normal">Level {row.year_level}</span>
- </div>
- <div className="grid grid-cols-3 gap-3">
- {row.sections.map((sec) => {
- const isSelectedSec = selectedYear === row.year_level && selectedSection === sec.section;
- return (
- <div
- key={sec.section}
- onClick={() => {
- setSelectedYear(row.year_level);
- setSelectedSection(sec.section);
- document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
- }}
- className={`p-3.5 rounded-xl border text-center cursor-pointer transition flex flex-col justify-between min-h-[98px] ${
- isSelectedSec ? 'ring-2 ring-brand-500 font-extrabold shadow-sm' : ''
- } ${
- sec.status === 'GREEN' ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300' :
- sec.status === 'AMBER' ? 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300' :
- sec.status === 'RED' ? 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300' :
- 'bg-slate-100 text-slate-600 dark:text-slate-400 border-slate-200'
- }`}
- >
- <div className="text-xs font-bold">Sec {sec.section}</div>
- <div className="font-mono font-extrabold text-sm my-0.5">
- {sec.progress_pct !== null ? `${sec.progress_pct}%` : '—'}
- </div>
- <div className="text-xs opacity-75">{sec.student_count} std</div>
- </div>
- );
- })}
- </div>
- </div>
- ))}
- </div>
- </div>
- </Card>
- )}
-
- {/* 7. DEPARTMENT PERFORMANCE & NEEDS ATTENTION */}
- <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+ {/* 6. DEPARTMENT PERFORMANCE & NEEDS ATTENTION */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
  {/* Left: Department Performance (Compact) */}
  <Card className="lg:col-span-6 p-6 space-y-5">
  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
@@ -1740,17 +1872,21 @@ export const HODCommandCenter: React.FC = () => {
  <p className="text-xs text-slate-700 dark:text-slate-400">Realtime problem solves and contest question completions</p>
  </div>
 
- <div className="flex items-center gap-2">
- <div className="relative min-w-[240px]">
- <Search size={14} className="absolute left-3 top-2.5 text-slate-600 dark:text-slate-400" />
- <input
- value={studentsSearch}
- onChange={e => setStudentsSearch(e.target.value)}
- placeholder="Search student, reg no, or LeetCode handle..."
- className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-slate-800 dark:text-slate-100 outline-none focus:border-brand-500"
- />
- </div>
- </div>
+          <div className="flex items-center gap-2">
+            <div className="relative min-w-[240px] flex items-center">
+              <input
+                value={studentsSearch}
+                onChange={e => setStudentsSearch(e.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="Search student, reg no, or LeetCode handle..."
+                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-slate-800 dark:text-slate-100 outline-none focus:border-brand-500 text-left transition-all"
+              />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 z-10 text-slate-500 dark:text-slate-400">
+                <Search size={14} />
+              </div>
+            </div>
+          </div>
  </div>
 
  {/* Batch Allocation Floating Bar */}
@@ -2275,17 +2411,26 @@ export const HODCommandCenter: React.FC = () => {
  <div className="col-span-2 p-6 text-center text-slate-600 dark:text-slate-400 font-mono text-xs">No year benchmark metrics recorded.</div>
  ) : (
  yearMatrix.map(y => (
- <div key={y.year_level} className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 font-mono flex items-center justify-between shadow-xs">
- <div>
- <div className="font-extrabold text-slate-900 dark:text-white text-xs">{y.year}</div>
- <div className="text-xs text-slate-700 dark:text-slate-400 font-sans mt-0.5">{y.student_count || 0} Students Tracked</div>
- </div>
- <div className="text-right">
- <div className="text-emerald-600 dark:text-emerald-400 font-extrabold text-xs">{y.participation_pct}% <span className="text-xs font-normal text-slate-600 dark:text-slate-400">Part</span></div>
- <div className="text-brand-600 dark:text-brand-400 font-extrabold text-xs">{y.health_score} <span className="text-xs font-normal text-slate-600 dark:text-slate-400">Health</span></div>
- </div>
- </div>
- ))
+                <div key={y.year_level} className="p-4 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 font-mono flex items-center justify-between shadow-xs hover:border-brand-500/40 transition">
+                  <div className="space-y-1">
+                    <div className="font-extrabold text-slate-900 dark:text-white text-sm font-display flex items-center gap-2">
+                      <span>{y.year}</span>
+                      <span className="text-[10px] font-sans px-2 py-0.5 rounded-full bg-slate-200 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-semibold">
+                        {y.student_count || 0} Students
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400 font-sans">
+                      Active: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{y.active_count || 0}</strong> • Inactive: <strong className="text-rose-600 dark:text-rose-400 font-bold">{y.inactive_count || 0}</strong>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-emerald-600 dark:text-emerald-400 font-extrabold text-base">{y.participation_pct}%</div>
+                    <div className="text-xs font-sans text-slate-500 dark:text-slate-400">
+                      Health: <span className="font-bold text-brand-600 dark:text-brand-400">{y.health_score}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
  )}
  </div>
  </Card>
@@ -2575,7 +2720,7 @@ export const HODCommandCenter: React.FC = () => {
  </p>
  </div>
  {/* Actions */}
- <div className="px-6 py-4 bg-slate-50 dark:bg-navy-950/50 border-t border-slate-100 dark:border-navy-800 flex items-center justify-end gap-3">
+ <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-50 dark:bg-navy-950/50 border-t border-slate-100 dark:border-navy-800 flex items-center justify-end gap-3">
  <button
  onClick={() => setConfirmUnassignTarget(null)}
  disabled={confirmUnassignLoading}

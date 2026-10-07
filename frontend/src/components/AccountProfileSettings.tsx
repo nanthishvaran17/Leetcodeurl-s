@@ -20,6 +20,7 @@ import { DynamicQRCode } from './DynamicQRCode';
 import Cropper from 'react-easy-crop';
 import 'react-easy-crop/react-easy-crop.css';
 import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser';
+import { Capacitor } from '@capacitor/core';
 
 const getCroppedImg = (imageSrc: string, pixelCrop: any): Promise<string> => {
   const canvas = document.createElement('canvas');
@@ -383,6 +384,75 @@ export const AccountProfileSettings: React.FC = () => {
   const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
   const [is2FAEnabled, setIs2FAEnabled] = useState<boolean>(() => localStorage.getItem('nec_2fa_enabled') === 'true' || Boolean((user as any)?.is_2fa_enabled));
   const [show2FASetupModal, setShow2FASetupModal] = useState<boolean>(false);
+
+  // Native Mobile Biometrics State (Capacitor Android / iOS)
+  const [isNativeMobile, setIsNativeMobile] = useState<boolean>(false);
+  const [nativeBiometricAvailable, setNativeBiometricAvailable] = useState<boolean | null>(null);
+  const [biometricTypeName, setBiometricTypeName] = useState<string>('Fingerprint / Face ID');
+  const [biometricAppLock, setBiometricAppLock] = useState<boolean>(() => {
+    return localStorage.getItem('biometric_app_lock') !== 'false';
+  });
+  const [isVerifyingBiometric, setIsVerifyingBiometric] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      const isNative = Capacitor.isNativePlatform();
+      setIsNativeMobile(isNative);
+      if (isNative) {
+        import('@capgo/capacitor-native-biometric').then(({ NativeBiometric }) => {
+          NativeBiometric.isAvailable().then(result => {
+            setNativeBiometricAvailable(Boolean(result.isAvailable));
+            if (result.isAvailable) {
+              const type = (result as any).biometryType;
+              if (type === 1 || type === 'fingerprint' || type === 'touchId') {
+                setBiometricTypeName('Fingerprint Sensor');
+              } else if (type === 2 || type === 'faceId') {
+                setBiometricTypeName('Face Unlock');
+              } else {
+                setBiometricTypeName('Device Biometrics (Fingerprint / Face)');
+              }
+            }
+          }).catch(() => {
+            setNativeBiometricAvailable(false);
+          });
+        }).catch(() => {
+          setNativeBiometricAvailable(false);
+        });
+      }
+    } catch {
+      setIsNativeMobile(false);
+    }
+  }, []);
+
+  const handleTestNativeBiometric = async () => {
+    try {
+      setIsVerifyingBiometric(true);
+      const { NativeBiometric } = await import('@capgo/capacitor-native-biometric');
+      await NativeBiometric.verifyIdentity({
+        reason: 'Verify biometric security for your college portal session',
+        title: 'Device Biometric Test',
+        subtitle: 'Touch fingerprint sensor or scan face'
+      });
+      notify.success('Biometric authentication verified successfully on this device!', '', { category: 'ADMIN' });
+    } catch (err: any) {
+      console.warn('Biometric test cancelled or failed:', err);
+      notify.error(err?.message || 'Biometric verification cancelled or not recognized.', '', { category: 'ADMIN' });
+    } finally {
+      setIsVerifyingBiometric(false);
+    }
+  };
+
+  const handleToggleBiometricLock = (enabled: boolean) => {
+    setBiometricAppLock(enabled);
+    localStorage.setItem('biometric_app_lock', enabled ? 'true' : 'false');
+    notify.success(
+      enabled 
+        ? 'Biometric app lock enabled! Your app will require fingerprint/face unlock when launched.' 
+        : 'Biometric app lock disabled.',
+      '',
+      { category: 'ADMIN' }
+    );
+  };
   const [totpCodeInput, setTotpCodeInput] = useState<string>('');
   const [totpSecret, setTotpSecret] = useState<string>('');
   const [totpUri, setTotpUri] = useState<string>('');
@@ -2397,53 +2467,130 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
                   <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Fingerprint className="w-4 h-4 text-cyan-600" /> Passkeys & Biometric Hardware Key
+                    <Fingerprint className="w-4 h-4 text-cyan-600" /> {isNativeMobile ? 'Device Biometrics & Security' : 'Passkeys & Biometric Hardware Key'}
                   </h3>
                   <span className="text-xs font-black px-2 py-0.5 rounded-md bg-cyan-100 text-cyan-800 dark:bg-cyan-950/80 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-700">
-                    FIDO2 / WebAuthn
+                    {isNativeMobile ? 'Android Biometrics' : 'FIDO2 / WebAuthn'}
                   </span>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="space-y-0.5">
-                    <h4 className="text-xs font-black text-slate-950 dark:text-white">Windows Hello / Touch ID / YubiKey</h4>
-                    <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Sign in instantly without passwords using cryptographic biometrics.</p>
-                  </div>
-                  {browserSupportsWebAuthn() ? (
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          const optionsRes = await api.get('/auth/passkey/register-options');
-                          const options = optionsRes.data?.options || optionsRes.data;
-                          if (!options || (!options.challenge && !options.rp)) {
-                            notify.error('Failed to get passkey options from server', '', { category: 'ADMIN' });
-                            return;
-                          }
-                          const attResp = await startRegistration(options);
-                          const verifyRes = await api.post('/auth/passkey/register-verify', attResp);
-                          if (verifyRes.data?.success) {
-                            notify.success('Passkey registered successfully! You can now use it to sign in.', '', { category: 'ADMIN' });
-                          } else {
-                            notify.error(verifyRes.data?.message || 'Failed to register passkey', '', { category: 'ADMIN' });
-                          }
-                        } catch (err: any) {
-                          console.error('Passkey registration error:', err);
-                          notify.error(err?.message || 'Passkey registration failed.', '', { category: 'ADMIN' });
-                        }
-                      }}
-                      className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0"
-                    >
-                      <Fingerprint className="w-3.5 h-3.5" />
-                      <span>Register Passkey</span>
-                    </button>
-                  ) : (
-                    <div className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-navy-800 text-slate-500 dark:text-slate-400 text-xs font-black inline-flex items-center gap-1.5 shrink-0 select-none">
-                      <ShieldAlert className="w-3.5 h-3.5" />
-                      <span>Not Supported on Device</span>
+                {isNativeMobile ? (
+                  /* Mobile APK View (Capacitor Native Biometrics) */
+                  <div className="space-y-3">
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs font-black text-slate-950 dark:text-white">{biometricTypeName}</h4>
+                          {nativeBiometricAvailable ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
+                              <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Supported & Ready
+                            </span>
+                          ) : nativeBiometricAvailable === false ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">
+                              <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400" /> Not Enrolled
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-cyan-100 text-cyan-800 dark:bg-cyan-950/80 dark:text-cyan-300">
+                              Detecting...
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                          {nativeBiometricAvailable 
+                            ? "Unlock app and secure your sessions instantly using your device's fingerprint or facial biometrics."
+                            : "No biometric sensor enrolled. Set up fingerprint or face unlock in Android Settings > Security."}
+                        </p>
+                      </div>
+
+                      {nativeBiometricAvailable ? (
+                        <button
+                          type="button"
+                          disabled={isVerifyingBiometric}
+                          onClick={handleTestNativeBiometric}
+                          className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0"
+                        >
+                          {isVerifyingBiometric ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Fingerprint className="w-3.5 h-3.5" />
+                          )}
+                          <span>Test Biometric</span>
+                        </button>
+                      ) : (
+                        <div className="px-4 py-2 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-xs font-black inline-flex items-center gap-1.5 shrink-0 select-none">
+                          <ShieldAlert className="w-3.5 h-3.5" />
+                          <span>Not Enrolled in Settings</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+
+                    {/* App Lock Toggle for Mobile APK */}
+                    {nativeBiometricAvailable && (
+                      <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 rounded-xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400">
+                            <Lock className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-black text-slate-900 dark:text-white">Require Biometrics on App Launch</p>
+                            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Lock the app screen when returning and unlock using your device fingerprint or face</p>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                          <input 
+                            type="checkbox" 
+                            checked={biometricAppLock} 
+                            onChange={(e) => handleToggleBiometricLock(e.target.checked)} 
+                            className="sr-only peer" 
+                          />
+                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-hidden rounded-full peer dark:bg-navy-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Web Browser View (FIDO2 / WebAuthn Passkeys) */
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <h4 className="text-xs font-black text-slate-950 dark:text-white">Windows Hello / Touch ID / YubiKey</h4>
+                      <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Sign in instantly without passwords using cryptographic biometrics.</p>
+                    </div>
+                    {browserSupportsWebAuthn() ? (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const optionsRes = await api.get('/auth/passkey/register-options');
+                            const options = optionsRes.data?.options || optionsRes.data;
+                            if (!options || (!options.challenge && !options.rp)) {
+                              notify.error('Failed to get passkey options from server', '', { category: 'ADMIN' });
+                              return;
+                            }
+                            const attResp = await startRegistration(options);
+                            const verifyRes = await api.post('/auth/passkey/register-verify', attResp);
+                            if (verifyRes.data?.success) {
+                              notify.success('Passkey registered successfully! You can now use it to sign in.', '', { category: 'ADMIN' });
+                            } else {
+                              notify.error(verifyRes.data?.message || 'Failed to register passkey', '', { category: 'ADMIN' });
+                            }
+                          } catch (err: any) {
+                            console.error('Passkey registration error:', err);
+                            notify.error(err?.message || 'Passkey registration failed.', '', { category: 'ADMIN' });
+                          }
+                        }}
+                        className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0"
+                      >
+                        <Fingerprint className="w-3.5 h-3.5" />
+                        <span>Register Passkey</span>
+                      </button>
+                    ) : (
+                      <div className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-navy-800 text-slate-500 dark:text-slate-400 text-xs font-black inline-flex items-center gap-1.5 shrink-0 select-none">
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                        <span>Not Supported on Device</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Two-Factor Authentication 2FA */}

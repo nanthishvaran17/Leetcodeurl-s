@@ -1128,15 +1128,29 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
       {/* Filter Toolbar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div className="relative w-full sm:max-w-md lg:max-w-lg shrink-0">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <div className="relative w-full sm:max-w-md lg:max-w-lg shrink-0 flex items-center">
           <input
             type="text"
             placeholder="Search student, reg no, or LeetCode username..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 text-xs font-bold rounded-xl bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-slate-700/60 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white dark:focus:bg-navy-900 transition-all shadow-inner"
+            autoComplete="off"
+            spellCheck={false}
+            className="w-full pl-10 pr-9 py-2.5 text-xs font-bold rounded-xl bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-slate-700/60 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white dark:focus:bg-navy-900 text-left transition-all shadow-inner"
           />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
+            <Search className="w-4 h-4 stroke-[2.5]" />
+          </div>
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm('')}
+              className="absolute inset-y-0 right-0 z-10 flex items-center px-3 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors"
+              title="Clear search"
+            >
+              <X className="w-4 h-4 stroke-[2.5]" />
+            </button>
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-2 flex-wrap flex-1 w-full">

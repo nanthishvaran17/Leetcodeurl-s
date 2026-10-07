@@ -103,7 +103,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
   });
 
   return (
-    <div className="space-y-8 animate-fade-in pb-12 font-sans">
+    <div className="space-y-6 sm:space-y-8 animate-fade-in pb-12 font-sans px-3.5 sm:px-6 md:px-8 max-w-full overflow-hidden">
       
       {/* Hero Banner with Rich Styling */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
@@ -154,14 +154,15 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
       </div>
 
       {/* Scope Filter Controls */}
-      <div className="bg-white dark:bg-navy-950 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-md flex flex-wrap items-end justify-between gap-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1 max-w-2xl">
+      <div className="bg-white dark:bg-navy-950 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-navy-800 shadow-md flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-4 w-full overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5 flex-1 w-full max-w-3xl min-w-0">
           {/* Department Filter */}
           <PremiumDepartmentSelect
             selectedDept={selectedDept}
             onChange={(val) => setSelectedDept(val)}
             useIdAsValue={false}
             label="Department Scope"
+            dropdownWidth="w-full max-w-xs sm:max-w-md min-w-0"
           />
 
           {/* Academic Year Filter */}
@@ -169,7 +170,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
             label="Academic Year"
             value={selectedYear}
             onChange={setSelectedYear}
-            dropdownWidth="min-w-[320px]"
+            dropdownWidth="w-full max-w-xs sm:max-w-md min-w-0"
             searchPlaceholder="Search academic year..."
             options={[
               { value: "ALL", label: "All Academic Years", pillText: "ALL" },
@@ -184,7 +185,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
         {(selectedDept !== 'ALL' || selectedYear !== 'ALL') && (
           <button
             onClick={() => { setSelectedDept('ALL'); setSelectedYear('ALL'); }}
-            className="text-xs font-bold text-rose-500 hover:text-rose-700 flex items-center space-x-1 cursor-pointer bg-rose-50 dark:bg-rose-950/40 px-3.5 py-2.5 rounded-2xl border border-rose-200 dark:border-rose-800 shadow-xs transition-all mb-0.5"
+            className="text-xs font-bold text-rose-500 hover:text-rose-700 flex items-center justify-center space-x-1 cursor-pointer bg-rose-50 dark:bg-rose-950/40 px-3.5 py-2.5 rounded-2xl border border-rose-200 dark:border-rose-800 shadow-xs transition-all shrink-0 self-start sm:self-end"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset Filters</span>
@@ -261,18 +262,32 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
 
           {/* Interactive Search & Filter Controls */}
           <div className="flex items-center gap-2 flex-wrap w-full xl:w-auto">
-            <div className="relative flex-1 sm:flex-initial">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <div className="relative flex-1 sm:flex-initial flex items-center">
               <input
                 type="text"
                 placeholder="Search name, reg no..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-950 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 w-full sm:w-56"
+                autoComplete="off"
+                spellCheck={false}
+                className="pl-9 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 w-full sm:w-60 shadow-sm text-left transition-all"
               />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
+                <Search className="w-3.5 h-3.5 stroke-[2.5]" />
+              </div>
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-0 z-10 flex items-center px-2.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors"
+                  title="Clear search"
+                >
+                  <XCircle className="w-3.5 h-3.5 stroke-[2]" />
+                </button>
+              )}
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-navy-950 p-1.5 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 text-[11px] font-bold overflow-x-auto max-w-full shadow-2xs">
+            <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-navy-950 p-1.5 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 text-[11px] font-bold overflow-x-auto max-w-full shadow-2xs scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-2 mb-1">
               <button
                 onClick={() => { setFilterCategory('ALL'); setPage(1); }}
                 className={`px-3 py-1.5 rounded-xl transition-all shrink-0 cursor-pointer ${filterCategory === 'ALL' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
@@ -315,12 +330,12 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
 
         {filteredIssues.length > 0 ? (
           <>
-            {/* Mobile Issue Cards (Compact, 100% width, No empty spaces) */}
-            <div className="block md:hidden space-y-2.5">
+            {/* Mobile Issue Cards (Spacious, 100% width, No empty spaces) */}
+            <div className="block md:hidden space-y-3.5 my-3">
               {filteredIssues.slice((page - 1) * pageSize, page * pageSize).map((item: any, idx: number) => (
                 <div
                   key={idx}
-                  className="rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 p-3.5 shadow-sm space-y-2"
+                  className="rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 p-4 pb-4.5 shadow-sm space-y-3"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -331,13 +346,13 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
                         {item.reg_no}
                       </div>
                     </div>
-                    <span className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 font-black text-xs shrink-0">
+                    <span className="px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 font-black text-xs shrink-0">
                       {item.dept}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800 text-xs">
-                    <span className={`px-2.5 py-0.5 rounded-full font-black text-[10px] truncate max-w-[55%] ${
+                  <div className="flex items-center justify-between gap-2 pt-3 pb-0.5 border-t border-slate-100 dark:border-slate-800 text-xs">
+                    <span className={`px-2.5 py-1 rounded-full font-black text-[10px] truncate max-w-[55%] ${
                       item.status === 'VALID_PROFILE'
                         ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30'
                         : item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL'
@@ -349,7 +364,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
                       {item.issue}
                     </span>
                     <span className="text-right font-bold text-slate-600 dark:text-slate-300 text-[11px] truncate">
-                      {item.action_required || (item.status === 'VALID_PROFILE' ? 'Verified Record' : item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL' ? 'Verify LeetCode URL' : 'Audit Profile')}
+                      {item.action_required || (item.status === 'VALID_PROFILE' ? 'Verified Record' : item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL' ? 'Assign LeetCode Handle' : 'Audit Profile')}
                     </span>
                   </div>
                 </div>

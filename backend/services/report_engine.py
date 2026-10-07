@@ -153,6 +153,14 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         res_data["deptFilter"] = config.department or "ALL"
         res_data["year"] = config.year or "ALL"
         res_data["yearFilter"] = config.year or "ALL"
+        
+        eff_sess = None
+        if config.filters and isinstance(config.filters, dict):
+            eff_sess = config.filters.get("session_id") or config.filters.get("session_date") or config.filters.get("report_date")
+        if eff_sess and str(eff_sess).strip().upper() not in ("LATEST", "NONE", "ALL"):
+            res_data["session_date"] = str(eff_sess).strip()
+            res_data["sessionDate"] = str(eff_sess).strip()
+            res_data["session_id"] = str(eff_sess).strip()
         try:
             existing = db.query(ReportHistory).filter(ReportHistory.report_id == final_rid).first()
             if existing:
@@ -203,13 +211,14 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
     if rtype_upper in WEEKLY_PERFORMANCE_TYPES:
         from backend.services.weekly_report_service import generate_weekly_performance_data
         cfg_flt = config.filters or {}
+        target_sess = cfg_flt.get("session_id") or cfg_flt.get("session_date") or cfg_flt.get("report_date") or cfg_flt.get("date")
         raw = generate_weekly_performance_data(
             db,
             current_user=current_user,
             dept_filter=config.department,
             year_filter=config.year,
             batch_filter=cfg_flt.get("batch") or cfg_flt.get("batch_filter"),
-            session_id=cfg_flt.get("session_id")
+            session_id=target_sess
         )
         # Sanitize non-serializable objects (WeeklySession ORM instances in session_resolution)
         sr = raw.get("session_resolution", {})
@@ -241,6 +250,7 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         return _save_and_return(raw)
 
     cfg_filters = config.filters or {}
+    target_sess = cfg_filters.get("session_id") or cfg_filters.get("session_date") or cfg_filters.get("report_date") or cfg_filters.get("date")
     students = fetch_normalized_students(
         db,
         dept_filter=config.department,
@@ -251,7 +261,7 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         search_query=cfg_filters.get("search") or cfg_filters.get("searchQuery") or cfg_filters.get("query"),
         performance_range=cfg_filters.get("performanceRange") or cfg_filters.get("range") or "ALL",
         current_user=current_user,
-        session_id=cfg_filters.get("session_id")
+        session_id=target_sess
     )
     data_quality = validate_data_quality(students)
 
@@ -471,9 +481,13 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         participations_dict = [c.model_dump() for c in contests]
 
 
-    from backend.services.weekly_session_resolver import resolve_weekly_sessions
-    resolved_info = resolve_weekly_sessions(db)
-    curr_sess = resolved_info.get("current_week_session")
+    from backend.services.weekly_session_resolver import resolve_weekly_sessions, resolve_target_weekly_session
+    if target_sess and str(target_sess).lower() not in ("latest", "all", "none", ""):
+        curr_sess = resolve_target_weekly_session(db, target_sess)
+    else:
+        resolved_info = resolve_weekly_sessions(db)
+        curr_sess = resolved_info.get("current_week_session")
+
     resolved_cname = curr_sess.contest_name if curr_sess else None
     resolved_cdate = curr_sess.session_date if curr_sess else None
 

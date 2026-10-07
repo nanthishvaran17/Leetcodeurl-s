@@ -10,7 +10,7 @@ import secrets
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, or_, and_
+from sqlalchemy import func, or_, and_, case
 from pydantic import BaseModel, Field
 
 from backend.database import get_db
@@ -23,6 +23,12 @@ from backend.websocket_manager import connection_manager
 from backend.security import require_role
 from backend.routes.auth import get_current_user
 from backend.logger import logger
+from backend.constants import is_production_department
+
+def _is_real_dept(dept_code: Optional[str]) -> bool:
+    if not dept_code:
+        return True
+    return is_production_department(dept_code)
 
 router = APIRouter(prefix="/command-center", tags=["Command Center Operations & Analytics"])
 
@@ -104,11 +110,11 @@ def get_command_center_summary(
     from backend.services.cache_service import cache_service
 
     uid = current_user.id if current_user else "anon"
-    role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
+    role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower() if current_user else "admin"
     is_global_admin = role_clean in ["admin", "super_admin", "super admin", "administrator"]
     
     # Strictly enforce server-side department isolation for non-admin HODs
-    if not is_global_admin and role_clean in ["hod", "head of department"] and current_user.department_id:
+    if current_user and not is_global_admin and role_clean in ["hod", "head of department"] and current_user.department_id:
         dept_id = current_user.department_id  # type: ignore
 
     scope_key = f"global" if is_global_admin else f"user_{uid}"
@@ -134,7 +140,7 @@ def get_command_center_summary(
         )
         brief = get_executive_brief(db, current_user, dept_id=dept_id, staff_id=staff_id)
         needs_att = get_needs_attention_metrics(db, current_user, dept_id=dept_id, staff_id=staff_id)
-        benchmarks = get_institutional_benchmarks(db, current_user)
+        benchmarks = get_institutional_benchmarks(db, current_user, dept_id=dept_id)
         
         kpi_summary = calculate_department_kpi_summary(
             db, current_user, dept_id=dept_id, staff_id=staff_id, year_level=year_level, section_id=section_id
@@ -150,17 +156,25 @@ def get_command_center_summary(
         dept_code = dept_obj.code if dept_obj else "CSE"
         hod_name = current_user.username if current_user else "Head of Department"
 
+        prod_dept_ids = [d.id for d in db.query(Department).all() if _is_real_dept(d.code)]
+
         # Active staff list for Scope Selector & Performance Table
         staff_users_q = db.query(User).options(joinedload(User.department)).filter(
-            User.role != "Student",
+            func.lower(User.role).in_(["faculty", "staff", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"]),
+            User.department_id.isnot(None),
+            ~User.username.ilike("test_%"),
+            ~User.username.ilike("dummy_%"),
+            ~User.username.ilike("sec_test_%"),
+            ~User.username.ilike("hardening_%"),
             User.is_active == True
         )
         if dept_id:
             staff_users_q = staff_users_q.filter(User.department_id == dept_id)
+        else:
+            staff_users_q = staff_users_q.filter(User.department_id.in_(prod_dept_ids))
         staff_users = staff_users_q.all()
         
         # Single efficient aggregation query for all staff assignments
-        from sqlalchemy import case, func, or_
         staff_assigned_stats_q = db.query(
             FacultyStudentAssignment.faculty_id.label("faculty_id"),
             func.count(Student.id).label("assigned_cnt"),
@@ -189,6 +203,8 @@ def get_command_center_summary(
         )
         if dept_id:
             staff_assigned_stats_q = staff_assigned_stats_q.filter(Student.department_id == dept_id)
+        else:
+            staff_assigned_stats_q = staff_assigned_stats_q.filter(Student.department_id.in_(prod_dept_ids))
         
         staff_assigned_rows = staff_assigned_stats_q.group_by(FacultyStudentAssignment.faculty_id).all()
         
@@ -247,6 +263,8 @@ def get_command_center_summary(
         )
         if dept_id:
             unassigned_q = unassigned_q.filter(Student.department_id == dept_id)
+        else:
+            unassigned_q = unassigned_q.filter(Student.department_id.in_(prod_dept_ids))
         unassigned_count = unassigned_q.count()
     
         return {
@@ -633,97 +651,168 @@ def export_command_center_report_excel(
     elif report_type == "EXECUTIVE":
         col_span = 5
 
-    # Setup Title Headers - Balanced, compact executive spacing
-    ws.row_dimensions[1].height = 46
-    ws.row_dimensions[2].height = 24
-    ws.row_dimensions[3].height = 20
+    # Setup Title Headers - Balanced, symmetrical executive header
+    ws.row_dimensions[1].height = 36
+    ws.row_dimensions[2].height = 22
+    ws.row_dimensions[3].height = 18
     ws.row_dimensions[4].height = 10
 
-    title = data.get("report_title", "Nandha Executive Institutional Coding Health Report")
-    
-    # 1. Main Title (Row 1)
-    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=col_span)
-    cell = ws.cell(row=1, column=1, value=title)
-    cell.font = title_font
-    cell.alignment = center_align
+    raw_title = data.get("report_title", "Nandha Executive Institutional Coding Health Report")
+    # Clean main title for single-line elegant presentation
+    if "(" in raw_title:
+        main_title = raw_title.split("(")[0].strip()
+    else:
+        main_title = raw_title
 
-    # 2. Subtitle (Row 2)
+    center_no_wrap = Alignment(horizontal="center", vertical="center", wrap_text=False)
+    
+    # 1. Main Title (Row 1, merged A1:E1 across full table width)
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=col_span)
+    cell = ws.cell(row=1, column=1, value=main_title)
+    cell.font = title_font
+    cell.alignment = center_no_wrap
+
+    # 2. Subtitle Scope (Row 2, merged A2:E2)
     ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=col_span)
     cell = ws.cell(row=2, column=1, value=data.get("department_scope", "All Departments"))
     cell.font = subtitle_font
-    cell.alignment = center_align
+    cell.alignment = center_no_wrap
 
-    # 3. Generated At (Row 3)
+    # 3. Generated At Timestamp (Row 3, merged A3:E3)
     ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=col_span)
     cell = ws.cell(row=3, column=1, value=f"Generated At: {data.get('generated_at', '')}")
     cell.font = cell_font
-    cell.alignment = center_align
+    cell.alignment = center_no_wrap
 
-    # IMAGES
+    # IMAGES (College emblem in top-left corner of Column A, sized cleanly)
     try:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         logo1_path = os.path.join(base_dir, "assets", "nandha_emblem.png")
-        logo2_path = os.path.join(base_dir, "assets", "nec_25_years_logo.png")
         
         if os.path.exists(logo1_path):
             img1 = ExcelImage(logo1_path)
-            # Resize appropriately
-            img1.width = 90
-            img1.height = 80
-            # Anchor to A1
+            img1.width = 65
+            img1.height = 54
+            # Anchor cleanly to top-left A1
             ws.add_image(img1, "A1")
-            
-        if os.path.exists(logo2_path):
-            img2 = ExcelImage(logo2_path)
-            img2.width = 120
-            img2.height = 80
-            last_col_letter = openpyxl.utils.get_column_letter(col_span)
-            ws.add_image(img2, f"{last_col_letter}1")
     except Exception as e:
         print("Image error:", e)
         pass
 
     ws.append([]) # Empty row
 
+    ws.append([]) # Empty row
+
     # DATA POPULATION
     if report_type == "EXECUTIVE":
+        # Section 1: Executive KPI Overview
+        kpi_banner = ws.cell(row=ws.max_row + 1, column=1, value="EXECUTIVE KEY PERFORMANCE INDICATORS")
+        ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=5)
+        for col_idx in range(1, 6):
+            c = ws.cell(row=ws.max_row, column=col_idx)
+            c.font = Font(name="Times New Roman", size=11.5, bold=True, color="FFFFFF")
+            c.fill = header_fill
+            c.alignment = center_align
+            c.border = thin_border
+        ws.row_dimensions[ws.max_row].height = 24
+
         metrics = data.get("summary_metrics", {})
         for k, v in metrics.items():
             ws.append([k, "", "", "", v])
             ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=4)
-            ws.cell(row=ws.max_row, column=1).font = bold_cell_font
-            ws.cell(row=ws.max_row, column=5).font = cell_font
-            ws.cell(row=ws.max_row, column=5).alignment = center_align
+            left_cell = ws.cell(row=ws.max_row, column=1)
+            left_cell.font = bold_cell_font
+            left_cell.alignment = left_align
             
-            # Apply borders
+            val_cell = ws.cell(row=ws.max_row, column=5)
+            val_cell.font = cell_font
+            val_cell.alignment = center_align
+            
             for c in range(1, 6):
                 ws.cell(row=ws.max_row, column=c).border = thin_border
                 if ws.max_row % 2 == 0:
                     ws.cell(row=ws.max_row, column=c).fill = alt_row_fill
 
-        ws.append([])
-        
-        headers = ["Dimension", "", "", "", "Score"]
-        ws.append(headers)
+        ws.append([]) # spacing
+
+        # Section 2: Dimension Breakdown Table
+        dim_banner = ws.cell(row=ws.max_row + 1, column=1, value="INSTITUTIONAL HEALTH DIMENSION BREAKDOWN")
+        ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=5)
+        for col_idx in range(1, 6):
+            c = ws.cell(row=ws.max_row, column=col_idx)
+            c.font = Font(name="Times New Roman", size=11.5, bold=True, color="FFFFFF")
+            c.fill = header_fill
+            c.alignment = center_align
+            c.border = thin_border
+        ws.row_dimensions[ws.max_row].height = 24
+
+        # Table Header
+        ws.append(["Evaluation Dimension & Weight Model", "", "", "", "Evaluated Score"])
         ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=4)
         for col_idx in range(1, 6):
             cell = ws.cell(row=ws.max_row, column=col_idx)
             cell.font = header_font
             cell.fill = header_fill
-            cell.alignment = center_align
+            cell.alignment = center_align if col_idx == 5 else left_align
             cell.border = thin_border
+        ws.row_dimensions[ws.max_row].height = 22
             
         for row in data.get("dimension_breakdown", []):
             ws.append([row.get("dimension"), "", "", "", row.get("score")])
             ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=4)
+            left_cell = ws.cell(row=ws.max_row, column=1)
+            left_cell.font = cell_font
+            left_cell.alignment = left_align
+            
+            val_cell = ws.cell(row=ws.max_row, column=5)
+            val_cell.font = bold_cell_font
+            val_cell.alignment = center_align
+            
             for col_idx in range(1, 6):
                 cell = ws.cell(row=ws.max_row, column=col_idx)
-                cell.font = cell_font
                 cell.border = thin_border
                 if ws.max_row % 2 == 0:
                     cell.fill = alt_row_fill
-                if col_idx == 5:
+
+        # Section 3: Departmental Performance Matrix
+        dept_benchmarks = data.get("department_benchmarks", [])
+        if dept_benchmarks:
+            ws.append([]) # spacing
+            matrix_banner = ws.cell(row=ws.max_row + 1, column=1, value="DEPARTMENTAL PERFORMANCE MATRIX & BENCHMARKS")
+            ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=5)
+            for col_idx in range(1, 6):
+                c = ws.cell(row=ws.max_row, column=col_idx)
+                c.font = Font(name="Times New Roman", size=11.5, bold=True, color="FFFFFF")
+                c.fill = header_fill
+                c.alignment = center_align
+                c.border = thin_border
+            ws.row_dimensions[ws.max_row].height = 24
+
+            headers = ["Department", "Total Students", "Active Solvers", "Participation %", "Health Index"]
+            ws.append(headers)
+            for col_idx in range(1, 6):
+                cell = ws.cell(row=ws.max_row, column=col_idx)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = center_align
+                cell.border = thin_border
+            ws.row_dimensions[ws.max_row].height = 22
+
+            for d_rec in dept_benchmarks:
+                d_code = d_rec.get("department_code") or d_rec.get("department_name") or "DEPT"
+                t_std = d_rec.get("student_count", 0)
+                a_std = d_rec.get("active_count", 0)
+                p_pct = f"{d_rec.get('participation_rate_pct', 0)}%"
+                h_score = f"{d_rec.get('health_score', 0)}/100"
+                
+                ws.append([d_code, t_std, a_std, p_pct, h_score])
+                for col_idx in range(1, 6):
+                    cell = ws.cell(row=ws.max_row, column=col_idx)
+                    cell.font = cell_font
+                    cell.border = thin_border
                     cell.alignment = center_align
+                    if ws.max_row % 2 == 0:
+                        cell.fill = alt_row_fill
 
     elif report_type == "FACULTY_ALLOCATION":
         headers = ["Faculty Mentor", "Dept", "Assigned", "Active Solvers", "Ratio Status"]
@@ -773,24 +862,25 @@ def export_command_center_report_excel(
                 if col_idx in [1, 3, 5]:
                     cell.alignment = center_align
 
-    # Format Column Widths Automatically based on content length
+    # Format Column Widths Generously to Guarantee Zero Text Truncation
     for col_idx_num, col in enumerate(ws.columns, 1):
         max_length = 0
         column = openpyxl.utils.get_column_letter(col_idx_num)
         for cell in col:
             try:
-                # Don't let the title row dictate the entire column width excessively
                 if cell.row > 4 and cell.value:
                     if len(str(cell.value)) > max_length:
                         max_length = len(str(cell.value))
             except:
                 pass
         
-        # Enforce minimums so logos fit
+        # Enforce generous minimum widths for flawless layout
         if column == "A":
-            max_length = max(max_length, 35)
-        elif column == openpyxl.utils.get_column_letter(col_span):
-            max_length = max(max_length, 25)
+            max_length = max(max_length, 48)
+        elif column in ["B", "C", "D"]:
+            max_length = max(max_length, 18)
+        elif column == "E":
+            max_length = max(max_length, 24)
             
         adjusted_width = (max_length + 4)
         ws.column_dimensions[column].width = adjusted_width
@@ -798,11 +888,30 @@ def export_command_center_report_excel(
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
+
+    # Dynamic filename construction based on input filters & IST timestamp
+    clean_dept_slug = "".join(c for c in data.get("department_scope", "").split("•")[0].replace("Dept:", "") if c.isalnum() or c in (" ", "_", "-")).strip().replace(" ", "_")
+    if not clean_dept_slug or clean_dept_slug == "All_Institutional_Departments":
+        clean_dept_slug = "All_Departments"
+
+    filter_slugs = [clean_dept_slug]
+    if year_level and year_level != "ALL":
+        filter_slugs.append(f"Yr{year_level}")
+    if section and section != "ALL":
+        filter_slugs.append(f"Sec{section}")
+    if status_filter and status_filter != "ALL":
+        filter_slugs.append(f"Status_{status_filter}")
+
+    ist_tz = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+    timestamp_slug = datetime.datetime.now(ist_tz).strftime("%Y%m%d_%H%M")
+    report_name_slug = report_type.title().replace("_", "")
     
+    dynamic_filename = f"NEC_{report_name_slug}_Report_{'_'.join(filter_slugs)}_{timestamp_slug}.xlsx"
+
     return Response(
         content=output.getvalue(),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f'attachment; filename="CommandCenter_{report_type}.xlsx"'}
+        headers={"Content-Disposition": f'attachment; filename="{dynamic_filename}"'}
     )
 
 @router.get("/reports/data")
@@ -867,7 +976,9 @@ def get_report_data(
     )
     benchmarks = get_institutional_benchmarks(db, current_user)
 
-    now_str = datetime.datetime.now(datetime.timezone.utc).strftime("%d %B %Y, %I:%M %p IST")
+    ist_tz = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+    now_ist = datetime.datetime.now(ist_tz)
+    now_str = now_ist.strftime("%d %B %Y, %I:%M %p IST")
 
     # Scope Summary Pills
     scope_details = [f"Dept: {dept_label}"]

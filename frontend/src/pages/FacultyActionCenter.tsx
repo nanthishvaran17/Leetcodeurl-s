@@ -95,10 +95,10 @@ const CustomSelect: React.FC<{
   }, [open]);
 
   return (
-    <div className="relative w-full sm:w-auto" ref={containerRef}>
+    <div className="relative flex-1 sm:flex-initial min-w-0" ref={containerRef}>
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center justify-between gap-2 w-full sm:w-auto sm:min-w-[150px] px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-xs ${
+        className={`flex items-center justify-between gap-2 w-full sm:w-auto sm:min-w-[140px] px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-xs ${
           open 
             ? 'border-indigo-500 bg-white dark:bg-navy-950 ring-4 ring-indigo-500/10' 
             : value 
@@ -106,7 +106,7 @@ const CustomSelect: React.FC<{
               : 'border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-800 dark:text-slate-200 hover:border-slate-400'
         }`}
       >
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className={value ? 'text-indigo-600 dark:text-indigo-400 shrink-0' : 'text-slate-400 shrink-0'}>{icon || selected?.icon}</span>
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
             {selected?.badge && (
@@ -114,14 +114,14 @@ const CustomSelect: React.FC<{
                 {selected.badge}
               </span>
             )}
-            <span className="truncate text-left text-xs sm:text-sm">{selected ? selected.label : placeholder}</span>
+            <span className="truncate text-left text-xs sm:text-sm whitespace-nowrap">{selected ? selected.label : placeholder}</span>
           </div>
         </div>
         <ChevronDown size={14} className={`transition-transform duration-300 shrink-0 ${open ? 'rotate-180 text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
       </button>
 
       {open && (
-        <div className={`absolute z-50 top-[110%] ${alignRight ? 'right-0' : 'left-0'} w-[240px] sm:min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up`}>
+        <div className={`absolute z-50 top-[110%] ${alignRight ? 'right-0' : 'left-0'} w-[240px] sm:min-w-[260px] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up`}>
           <button
             onClick={() => { onChange(''); setOpen(false); }}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
@@ -1064,9 +1064,9 @@ export const FacultyActionCenter: React.FC = () => {
       )}
 
       {/* Filters */}
-      <div className="relative z-20 flex flex-col md:flex-row flex-wrap gap-2.5 sm:gap-3 items-stretch md:items-center p-3.5 sm:p-4 rounded-3xl bg-white/80 dark:bg-navy-850/80 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm mb-6">
+      <div className="relative z-20 flex flex-col md:flex-row flex-wrap items-stretch md:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-3xl bg-white/80 dark:bg-navy-850/80 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm mb-6">
         {/* Search Bar Input */}
-        <div className="relative group flex-1 min-w-0 w-full md:w-auto">
+        <div className="relative group flex-1 min-w-[240px] w-full md:w-auto">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-brand-500 rounded-2xl md:rounded-full blur opacity-15 group-focus-within:opacity-60 transition duration-500"></div>
           <div className="relative flex items-center gap-2.5 bg-white dark:bg-navy-950 rounded-2xl md:rounded-full px-4 py-2 sm:py-2.5 border border-slate-300 dark:border-navy-700 focus-within:border-indigo-500 shadow-xs">
             <Search size={16} className="text-slate-400 group-focus-within:text-indigo-600 transition-colors shrink-0" />
@@ -1083,8 +1083,8 @@ export const FacultyActionCenter: React.FC = () => {
           </div>
         </div>
 
-        {/* Dropdown Filters (3-Column Grid on Mobile for Equal Fitting) */}
-        <div className="grid grid-cols-3 gap-2 w-full md:w-auto md:flex md:items-center md:gap-2.5">
+        {/* Dropdown Filters (Flex container with adequate spacing) */}
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full md:w-auto">
           <CustomSelect
             value={filterPriority}
             onChange={v => { 
@@ -1142,7 +1142,7 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
 
         {/* Count & Page Size Toggle */}
-        <div className="w-full flex flex-wrap items-center justify-between xl:w-auto xl:ml-auto gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-navy-800">
+        <div className="w-full flex items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-navy-800/80">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-xs font-bold text-slate-600 dark:text-navy-300 truncate">
               {filteredCount === totalCount ? (

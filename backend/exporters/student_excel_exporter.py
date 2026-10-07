@@ -3,7 +3,7 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-FONT_MAIN = "Arial"
+FONT_MAIN = "Times New Roman"
 
 def export_student_excel_from_dataset(dataset: dict, report_type: str = "STUDENT") -> bytes:
     """
@@ -11,6 +11,7 @@ def export_student_excel_from_dataset(dataset: dict, report_type: str = "STUDENT
     Creates dedicated multi-sheet analytical workbooks organized into distinct, separate sheets
     based on the selected report type (STUDENT, SUMMARY, MATRIX).
     """
+    from backend.exporters.nec_master_excel_design import apply_master_college_identity
     wb = openpyxl.Workbook()
     wb.remove(wb.active)  # Remove default blank sheet
     
@@ -28,7 +29,7 @@ def export_student_excel_from_dataset(dataset: dict, report_type: str = "STUDENT
     bold_font = Font(name=FONT_MAIN, size=10, bold=True, color="0F172A")
     normal_font = Font(name=FONT_MAIN, size=10, color="1E293B")
     
-    thin_side = Side(style='thin', color='CBD5E1')
+    thin_side = Side(style='thin', color='000000')
     thin_border = Border(left=thin_side, right=thin_side, top=thin_side, bottom=thin_side)
     
     left_align = Alignment(horizontal="left", vertical="center")
@@ -45,8 +46,15 @@ def export_student_excel_from_dataset(dataset: dict, report_type: str = "STUDENT
     # COMMON SHEET 1: 01_Student_Profile
     # ----------------------------------------------------
     ws1 = _create_sheet("01_Student_Profile")
-    ws1.cell(row=1, column=1, value="NANDHA ENGINEERING COLLEGE (AUTONOMOUS)").font = title_font
-    ws1.cell(row=2, column=1, value=f"STUDENT LEETCODE REPORT — {rpt} EDITION").font = section_font
+    apply_master_college_identity(
+        ws=ws1,
+        report_title=f"STUDENT LEETCODE INTELLIGENCE REPORT — {rpt}",
+        department=str(s.get("dept") or s.get("department") or "CSE(CS)"),
+        year=str(s.get("year") or s.get("year_level") or "III"),
+        session_date="",
+        total_roster=len(rows),
+        cols=6
+    )
     
     ws1.append([])
     ws1.append(["Attribute", "Value / Details"])

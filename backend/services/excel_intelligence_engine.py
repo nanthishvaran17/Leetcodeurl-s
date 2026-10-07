@@ -52,6 +52,62 @@ CANONICAL_FIELDS = {
     }
 }
 
+# --- Institutional Register Number Decoder ---
+
+def decode_reg_no_attributes(reg_no_val: Any) -> Dict[str, Optional[str]]:
+    """
+    Intelligently decodes Year, Batch, and Department from institutional Register Number.
+    Handles college pattern rules:
+      732223... -> IV Year (2023-2027)
+      732224... -> III Year (2024-2028)
+      732225... -> II Year (2025-2029)
+      732226... -> I Year (2026-2030)
+      CS/CC -> CSE(CS), CI/IOT -> CSE(IOT), IT -> IT, AI/AD/AIDS -> AIDS, EC/ECE -> ECE
+    """
+    if reg_no_val is None or pd.isna(reg_no_val):
+        return {"year": None, "batch": None, "department": None}
+
+    reg = str(reg_no_val).strip().upper()
+    result: Dict[str, Optional[str]] = {"year": None, "batch": None, "department": None}
+    if not reg:
+        return result
+
+    # 1. Decode Year and Batch from 7322YY pattern or starting digits 23/24/25/26
+    year_match = re.search(r'7322(\d{2})', reg)
+    if not year_match:
+        year_match = re.search(r'\b(23|24|25|26)\d{4,}', reg)
+
+    if year_match:
+        yr_code = year_match.group(1)
+        if yr_code == "23":
+            result["year"] = "IV Year"
+            result["batch"] = "2023-2027"
+        elif yr_code == "24":
+            result["year"] = "III Year"
+            result["batch"] = "2024-2028"
+        elif yr_code == "25":
+            result["year"] = "II Year"
+            result["batch"] = "2025-2029"
+        elif yr_code == "26":
+            result["year"] = "I Year"
+            result["batch"] = "2026-2030"
+
+    # 2. Decode Department branch from reg_no sub-string
+    if any(b in reg for b in ["CS", "CC", "CYBER"]):
+        result["department"] = "CSE(CS)"
+    elif any(b in reg for b in ["CI", "IOT"]):
+        result["department"] = "CSE(IOT)"
+    elif "IT" in reg:
+        result["department"] = "IT"
+    elif any(b in reg for b in ["AI", "AD", "AIDS"]):
+        result["department"] = "AIDS"
+    elif any(b in reg for b in ["EC", "ECE"]):
+        result["department"] = "ECE"
+    elif "CSE" in reg:
+        result["department"] = "CSE"
+
+    return result
+
 # --- Value Normalizers ---
 
 def normalize_year_value(val: Any) -> Tuple[str, str]:

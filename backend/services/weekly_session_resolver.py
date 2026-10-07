@@ -215,3 +215,63 @@ def resolve_weekly_sessions(
         "last_week_date": str(last_date) if last_date else None,
         "current_week_date": str(curr_date) if curr_date else None,
     }
+
+
+def resolve_target_weekly_session(db: Session, session_identifier: Any) -> Optional[WeeklySession]:
+    """
+    Robustly resolves a WeeklySession object from any session identifier:
+    - Integer / string contest number (e.g. 515, "515", "SESSION-515")
+    - Session date (e.g. "20.09.2026", "2026-09-20", "20-09-2026")
+    - Database Primary Key ID (e.g. 15, 16)
+    - Contest Slug / Contest Name (e.g. "weekly-contest-515", "Weekly Contest 515")
+    - "latest" -> returns latest finalized / completed session
+    """
+    if session_identifier is None:
+        return None
+
+    raw_str = str(session_identifier).strip()
+    if not raw_str:
+        return None
+
+    if raw_str.lower() in ("latest", "current", "active"):
+        from backend.routes.reports import _get_latest_completed_session
+        return _get_latest_completed_session(db) or db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+
+    clean_str = raw_str.replace("SESSION-", "").replace("session-", "").strip()
+    all_sessions = db.query(WeeklySession).all()
+
+    # 1. Match by extracted contest number (e.g. 515, 516, 522)
+    if clean_str.isdigit():
+        c_num = int(clean_str)
+        for s in all_sessions:
+            if extract_contest_number(s) == c_num or str(getattr(s, "contest_id", "")) == str(c_num):
+                return s
+
+    # 2. Match by exact date string or formatted date string
+    for s in all_sessions:
+        if s.session_date and s.session_date.strip() == clean_str:
+            return s
+        if hasattr(s, "session_code") and s.session_code and s.session_code.strip() == clean_str:
+            return s
+
+    # 3. Match by date interchange (DD.MM.YYYY <-> YYYY-MM-DD <-> DD-MM-YYYY)
+    if "." in clean_str or "-" in clean_str:
+        alt_str = clean_str.replace(".", "-") if "." in clean_str else clean_str.replace("-", ".")
+        for s in all_sessions:
+            if s.session_date and (s.session_date.strip() == alt_str or s.session_date.replace(".", "-") == alt_str.replace(".", "-")):
+                return s
+
+    # 4. Match by Primary Key ID
+    if clean_str.isdigit():
+        c_num = int(clean_str)
+        for s in all_sessions:
+            if s.id == c_num:
+                return s
+
+    # 5. Match by contest name / slug substring
+    for s in all_sessions:
+        if s.contest_name and clean_str.lower() in s.contest_name.lower():
+            return s
+
+    # Fallback to latest if nothing matched
+    return db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
