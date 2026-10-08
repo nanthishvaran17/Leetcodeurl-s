@@ -226,11 +226,7 @@ export const GrowthIntelligencePage: React.FC = () => {
         api.get(`/growth/college-delta?period=${period}&dept=${deptFilter}&year=${yearFilter}`)
       ]);
       const rawData = impRes.data || [];
-      const hasGrowth = rawData.some((imp: Improver) => imp.delta_solved > 0);
-      // If no one has growth (e.g. system just started), show top students by total solved anyway
-      const filteredData = hasGrowth 
-        ? rawData.filter((imp: Improver) => imp.delta_solved > 0 || period === 'all')
-        : rawData;
+      const filteredData = rawData;
         
       setImprovers(sortImprovers(filteredData));
       setCollegeDelta(deltaRes.data || null);
@@ -251,10 +247,7 @@ export const GrowthIntelligencePage: React.FC = () => {
         api.get(`/growth/college-delta?period=${period}&dept=${deptFilter}&year=${yearFilter}`)
       ]);
       const rawData = impRes.data || [];
-      const hasGrowth = rawData.some((imp: Improver) => imp.delta_solved > 0);
-      const filteredData = hasGrowth 
-        ? rawData.filter((imp: Improver) => imp.delta_solved > 0 || period === 'all')
-        : rawData;
+      const filteredData = rawData;
         
       setImprovers(sortImprovers(filteredData));
       setCollegeDelta(deltaRes.data || null);
