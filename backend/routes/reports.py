@@ -2315,7 +2315,8 @@ def download_universal_excel(
             "PROBLEM_DIFFICULTY_INTELLIGENCE",
             "FACULTY_CONSOLIDATED", "FACULTY_COORDINATOR_CONSOLIDATED",
             "HOD_DEPARTMENT_INTELLIGENCE", "PRINCIPAL_EXECUTIVE",
-            "MANAGEMENT_EXECUTIVE_SUMMARY", "COLLEGE_EXECUTIVE", "DEPARTMENT_PERFORMANCE"
+            "MANAGEMENT_EXECUTIVE_SUMMARY", "COLLEGE_EXECUTIVE", "DEPARTMENT_PERFORMANCE",
+            "WEEK_ON_WEEK_INTELLIGENCE", "HISTORICAL_CONTEST_INTELLIGENCE"
         ):
             from backend.services.pregenerated_report_service import generate_report_bytes
             filters = {

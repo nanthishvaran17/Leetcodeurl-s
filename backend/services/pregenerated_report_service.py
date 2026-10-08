@@ -521,7 +521,7 @@ def generate_report_bytes(
         return res["excel_bytes"]
 
     # 3. Master Institutional Workbook Engine (ONLY for Master 10-Sheet Workbook)
-    if fmt in ("excel", "xlsx") and rpt in ("MASTER_10_SHEET", "10_SHEET", "MASTER_WORKBOOK"):
+    if fmt in ("excel", "xlsx") and rpt in ("MASTER_10_SHEET", "10_SHEET", "MASTER_WORKBOOK", "WEEK_ON_WEEK_INTELLIGENCE", "HISTORICAL_CONTEST_INTELLIGENCE"):
         from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
         c_id = flt.get("session_id") or flt.get("contest_id")
         return generate_master_10_sheet_workbook(db, current_user=current_user, contest_id=c_id, department=dept, year=year, report_type=rpt)

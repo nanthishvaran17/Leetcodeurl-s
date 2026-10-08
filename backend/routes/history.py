@@ -30,18 +30,16 @@ IST_TZ = ZoneInfo("Asia/Kolkata")
 UTC_TZ = datetime.timezone.utc
 
 def _growth_cutoff(period: str) -> datetime.datetime:
-    now_utc = datetime.datetime.now(UTC_TZ)
+    now_ist = datetime.datetime.now(IST_TZ)
+    start_of_today_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
+    
     if period == "today":
-        now_ist = datetime.datetime.now(IST_TZ)
-        start_of_today_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
         return start_of_today_ist.astimezone(UTC_TZ)
     if period == "7d":
-        now_ist = datetime.datetime.now(IST_TZ)
-        start_of_7d = now_ist.replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=7)
+        start_of_7d = start_of_today_ist - datetime.timedelta(days=6)
         return start_of_7d.astimezone(UTC_TZ)
     if period == "30d":
-        now_ist = datetime.datetime.now(IST_TZ)
-        start_of_30d = now_ist.replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=30)
+        start_of_30d = start_of_today_ist - datetime.timedelta(days=29)
         return start_of_30d.astimezone(UTC_TZ)
     return datetime.datetime(2020, 1, 1, tzinfo=UTC_TZ)
 
@@ -112,18 +110,29 @@ def _derived_growth(db: Session, students: List[Student], cutoff: datetime.datet
         snaps = grouped.get(s_id, [])
         
         if not snaps:
-            # Baseline from single current stats
-            growth[s_id] = {
-                "total": cur_tot if period == "all" else 0,
-                "easy": cur_easy if period == "all" else 0,
-                "medium": cur_med if period == "all" else 0,
-                "hard": cur_hard if period == "all" else 0,
-                "rating": 0.0
-            }
+            if period == "all":
+                growth[s_id] = {
+                    "growth_status": "VERIFIED",
+                    "total": cur_tot,
+                    "easy": cur_easy,
+                    "medium": cur_med,
+                    "hard": cur_hard,
+                    "rating": cur_rat
+                }
+            else:
+                growth[s_id] = {
+                    "growth_status": "UNKNOWN",
+                    "total": None,
+                    "easy": None,
+                    "medium": None,
+                    "hard": None,
+                    "rating": None
+                }
             continue
 
         if period == "all":
             growth[s_id] = {
+                "growth_status": "VERIFIED",
                 "total": cur_tot,
                 "easy": cur_easy,
                 "medium": cur_med,
@@ -132,7 +141,7 @@ def _derived_growth(db: Session, students: List[Student], cutoff: datetime.datet
             }
             continue
 
-        # Find baseline snapshot closest to cutoff (must be AT or BEFORE the cutoff to accurately represent the start of the period)
+        # Find baseline snapshot closest to cutoff (must be AT or BEFORE the cutoff)
         baseline_snap: Optional[StudentStatSnapshot] = None
         for snap in snaps:
             c_at = snap.captured_at
@@ -142,65 +151,54 @@ def _derived_growth(db: Session, students: List[Student], cutoff: datetime.datet
             if c_at <= cutoff:
                 baseline_snap = snap
             else:
-                # Snaps are ordered by time ascending, so the first one > cutoff means we found our closest <= cutoff
                 break
-        
-        # Check if the baseline snapshot is too old to be considered for this period
-        # This prevents a snapshot from 3 months ago being used as the baseline for "Today"
-        if period == "today":
-            max_age_days = 7.0
-        elif period == "7d":
-            max_age_days = 14.0
-        elif period == "30d":
-            max_age_days = 60.0
-        else:
-            max_age_days = 365.0
-
-        if baseline_snap is not None:
-            b_at = baseline_snap.captured_at
-            if b_at.tzinfo is None:
-                b_at = b_at.replace(tzinfo=UTC_TZ)
-            age_days = (cutoff - b_at).total_seconds() / 86400.0
-            if age_days > max_age_days:
-                baseline_snap = None
 
         if baseline_snap is None:
-            # If there are no snapshots before the cutoff (or they are too old), 
-            # use the earliest available snapshot AFTER the cutoff
-            for snap in snaps:
-                c_at = snap.captured_at
-                if c_at.tzinfo is None:
-                    c_at = c_at.replace(tzinfo=UTC_TZ)
-                if c_at >= cutoff:
-                    baseline_snap = snap
-                    break
+            growth[s_id] = {
+                "growth_status": "UNKNOWN",
+                "total": None,
+                "easy": None,
+                "medium": None,
+                "hard": None,
+                "rating": None
+            }
+            continue
 
-        latest_snap = snaps[-1]
+        b_easy = baseline_snap.easy_solved or 0
+        b_med = baseline_snap.medium_solved or 0
+        b_hard = baseline_snap.hard_solved or 0
+        b_tot = baseline_snap.total_solved or 0
+        b_rat = baseline_snap.contest_rating or 1500.0
 
-        # Delta calculation between valid baseline and current stats
-        if baseline_snap is None:
-            # No valid baseline for this period means no known growth
-            d_tot = 0
-            d_easy = 0
-            d_med = 0
-            d_hard = 0
-            d_rat = 0.0
-        else:
-            b_easy = baseline_snap.easy_solved or 0
-            b_med = baseline_snap.medium_solved or 0
-            b_hard = baseline_snap.hard_solved or 0
-            b_rat = baseline_snap.contest_rating or cur_rat
+        if b_tot != (b_easy + b_med + b_hard):
+            growth[s_id] = {
+                "growth_status": "CONFLICT",
+                "total": None, "easy": None, "medium": None, "hard": None, "rating": None
+            }
+            continue
+            
+        if cur_tot != (cur_easy + cur_med + cur_hard):
+            growth[s_id] = {
+                "growth_status": "CONFLICT",
+                "total": None, "easy": None, "medium": None, "hard": None, "rating": None
+            }
+            continue
 
-            # Ensure we don't show negative growth if current drops due to scraper error
-            d_easy = max(0, cur_easy - b_easy)
-            d_med = max(0, cur_med - b_med)
-            d_hard = max(0, cur_hard - b_hard)
-            d_rat = round(cur_rat - b_rat, 1)
+        d_easy = cur_easy - b_easy
+        d_med = cur_med - b_med
+        d_hard = cur_hard - b_hard
+        d_tot = cur_tot - b_tot
+        d_rat = round(cur_rat - b_rat, 1)
 
-            # Enforce exact math match so the UI numbers add up perfectly
-            d_tot = d_easy + d_med + d_hard
+        if d_easy < 0 or d_med < 0 or d_hard < 0 or d_tot < 0 or d_tot != (d_easy + d_med + d_hard):
+            growth[s_id] = {
+                "growth_status": "CONFLICT",
+                "total": None, "easy": None, "medium": None, "hard": None, "rating": None
+            }
+            continue
 
         growth[s_id] = {
+            "growth_status": "VERIFIED",
             "total": d_tot,
             "easy": d_easy,
             "medium": d_med,
@@ -337,18 +335,9 @@ def get_top_improvers(
     
     results = []
     for student in students:
-        current = student.stats
-        cur_solved = (current.total_solved or 0) if current else 0
-        values = growth.get(getattr(student, "id"), {"total": 0, "easy": 0, "medium": 0, "hard": 0, "rating": 0.0})
-        
-        if period == "all":
-            values = {
-                "total": cur_solved, 
-                "easy": current.easy_solved or 0 if current else 0, 
-                "medium": current.medium_solved or 0 if current else 0, 
-                "hard": current.hard_solved or 0 if current else 0, 
-                "rating": current.contest_rating or 0.0 if current else 0.0
-            }
+        values = growth.get(getattr(student, "id"), {"growth_status": "UNKNOWN", "total": None, "easy": None, "medium": None, "hard": None, "rating": None})
+        if values.get("growth_status") != "VERIFIED":
+            continue
         results.append((student, values))
 
     # Sort descending by delta_solved, delta_hard, delta_medium, delta_easy, delta_rating
@@ -386,11 +375,12 @@ def get_top_improvers(
             easy_solved=st.stats.easy_solved or 0 if st.stats else 0,
             medium_solved=st.stats.medium_solved or 0 if st.stats else 0,
             hard_solved=st.stats.hard_solved or 0 if st.stats else 0,
-            delta_solved=int(values["total"]),
-            delta_easy=int(values["easy"]),
-            delta_medium=int(values["medium"]),
-            delta_hard=int(values["hard"]),
-            delta_rating=round(float(values["rating"]), 1),
+            delta_solved=values["total"],
+            delta_easy=values["easy"],
+            delta_medium=values["medium"],
+            delta_hard=values["hard"],
+            delta_rating=values["rating"],
+            growth_status=values["growth_status"],
             current_contest_rating=cur_rating
         ))
 
@@ -462,10 +452,16 @@ def get_college_delta(
     student_rows = _filtered_growth_students(db, dept, dept_id, year, year_level, current_user=current_user)
     growth = _derived_growth(db, student_rows, cutoff, period=period)
     
+    verified_growth = [values for values in growth.values() if values.get("growth_status") == "VERIFIED"]
+    
     period_totals = {
-        key: sum(values[key] for values in growth.values())
+        key: sum(values[key] for values in verified_growth)
         for key in ("total", "easy", "medium", "hard")
     }
+    
+    verified_students = len(verified_growth)
+    unknown_students = sum(1 for values in growth.values() if values.get("growth_status") == "UNKNOWN")
+    conflict_students = sum(1 for values in growth.values() if values.get("growth_status") == "CONFLICT")
     
     current_total = sum(
         ((student.stats.easy_solved or 0) + (student.stats.medium_solved or 0) + (student.stats.hard_solved or 0))
@@ -495,6 +491,9 @@ def get_college_delta(
         "delta_medium": period_totals["medium"],
         "delta_hard": period_totals["hard"],
         "total_students": len(student_rows),
+        "verified_students": verified_students,
+        "unknown_students": unknown_students,
+        "conflict_students": conflict_students,
         "active_students": active_students,
         "active_solvers": active_students,
         "total_solved": selected_total,

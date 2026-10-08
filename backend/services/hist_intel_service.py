@@ -89,7 +89,7 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
         from backend.services.authorization_service import apply_role_based_student_filter
         
         query = db.query(Student).options(joinedload(Student.department))
-        query = apply_role_based_student_filter(db, query, current_user)
+        query = apply_role_based_student_filter(query, current_user, db)
         all_stus = query.all()
         
         roster = [

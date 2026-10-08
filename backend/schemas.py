@@ -407,11 +407,12 @@ class StudentStatSnapshotOut(BaseModel):
     hard_solved: Optional[int] = None
     contest_rating: Optional[float] = None
     global_rank: Optional[int] = None
-    delta_total: Optional[int] = 0
-    delta_easy: Optional[int] = 0
-    delta_medium: Optional[int] = 0
-    delta_hard: Optional[int] = 0
-    delta_rating: Optional[float] = 0.0
+    delta_total: Optional[int] = None
+    delta_easy: Optional[int] = None
+    delta_medium: Optional[int] = None
+    delta_hard: Optional[int] = None
+    delta_rating: Optional[float] = None
+    growth_status: Optional[str] = "VERIFIED"
     captured_at: datetime.datetime
     sync_run_id: Optional[str] = None
     source: Optional[str] = "leetcode_public_profile"
@@ -428,11 +429,12 @@ class ImproverOut(BaseModel):
     easy_solved: int = 0
     medium_solved: int = 0
     hard_solved: int = 0
-    delta_solved: int
-    delta_easy: int
-    delta_medium: int
-    delta_hard: int
-    delta_rating: float
+    delta_solved: Optional[int] = None
+    delta_easy: Optional[int] = None
+    delta_medium: Optional[int] = None
+    delta_hard: Optional[int] = None
+    delta_rating: Optional[float] = None
+    growth_status: Optional[str] = "VERIFIED"
     current_contest_rating: Optional[float] = None
 
 class SendOtpRequest(BaseModel):
