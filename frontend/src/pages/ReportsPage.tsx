@@ -586,17 +586,17 @@ export const ReportsPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center space-x-3 flex-wrap gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto shrink-0 mt-2 sm:mt-0">
             <button
               onClick={handleTriggerSync}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-bold shadow-lg shadow-emerald-600/30 transition-all transform hover:scale-105 cursor-pointer"
+              className="flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-bold shadow-lg shadow-emerald-600/30 transition-all transform hover:scale-105 cursor-pointer w-full sm:w-auto shrink-0"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Live Sync</span>
             </button>
             <button
               onClick={() => setShowCertModal(true)}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all transform hover:scale-105 cursor-pointer"
+              className="flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all transform hover:scale-105 cursor-pointer w-full sm:w-auto shrink-0"
             >
               <Award className="w-4 h-4" />
               <span>Generate Merit Certificates</span>
