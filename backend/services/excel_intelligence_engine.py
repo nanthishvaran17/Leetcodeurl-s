@@ -186,27 +186,27 @@ def normalize_department_value(val: Any, existing_depts: Dict[str, Any]) -> Tupl
     for key, dept_obj in existing_depts.items():
         k_clean = str(key).upper().replace(".", "").replace(" ", "").replace("&", "")  # type: ignore
         if dept_upper == k_clean or (len(dept_upper) >= 4 and dept_upper in k_clean):
-            code = dept_obj.code if hasattr(dept_obj, 'code') else str(key)  # type: ignore
-            d_id = dept_obj.id if hasattr(dept_obj, 'id') else None
+            code = (getattr(dept_obj, 'code', None) or str(key))  # type: ignore
+            d_id = getattr(dept_obj, 'id', None)
             return (code, d_id, "HIGH", False)
 
     # Common synonym aliases
     if any(k in dept_upper for k in ["CYBER", "CSECS", "CS"]):
         for key, dept_obj in existing_depts.items():
             if "CS" in str(key).upper():  # type: ignore
-                return (dept_obj.code, dept_obj.id, "HIGH", False)
+                return (getattr(dept_obj, 'code', None) or str(key), getattr(dept_obj, 'id', None), "HIGH", False)
     elif any(k in dept_upper for k in ["IOT", "CSEIOT", "CI"]):
         for key, dept_obj in existing_depts.items():
             if "IOT" in str(key).upper() or "CI" in str(key).upper():  # type: ignore
-                return (dept_obj.code, dept_obj.id, "HIGH", False)
+                return (getattr(dept_obj, 'code', None) or str(key), getattr(dept_obj, 'id', None), "HIGH", False)
     elif any(k in dept_upper for k in ["IT", "INFORMATION"]):
         for key, dept_obj in existing_depts.items():
             if "IT" in str(key).upper():  # type: ignore
-                return (dept_obj.code, dept_obj.id, "HIGH", False)
+                return (getattr(dept_obj, 'code', None) or str(key), getattr(dept_obj, 'id', None), "HIGH", False)
     elif any(k in dept_upper for k in ["AIDS", "ARTIFICIAL"]):
         for key, dept_obj in existing_depts.items():
             if "AIDS" in str(key).upper():  # type: ignore
-                return (dept_obj.code, dept_obj.id, "HIGH", False)
+                return (getattr(dept_obj, 'code', None) or str(key), getattr(dept_obj, 'id', None), "HIGH", False)
 
     # Flag as newly discovered department
     return (raw_dept.upper(), None, "HIGH", True)
@@ -293,9 +293,21 @@ def find_best_header_row_and_dataframe(file_bytes: bytes) -> Tuple[pd.DataFrame,
         try:
             return pd.read_excel(io.BytesIO(file_bytes), header=header_arg)
         except Exception:
-            for enc in ['utf-8', 'utf-8-sig', 'latin1', 'cp1252']:
+            pass
+        try:
+            return pd.read_excel(io.BytesIO(file_bytes), header=header_arg, engine='openpyxl')
+        except Exception:
+            pass
+        try:
+            return pd.read_excel(io.BytesIO(file_bytes), header=header_arg, engine='xlrd')
+        except Exception:
+            pass
+        for enc in ['utf-8', 'utf-8-sig', 'latin1', 'cp1252', 'iso-8859-1']:
+            for sep in [',', '\t', ';']:
                 try:
-                    return pd.read_csv(io.BytesIO(file_bytes), header=header_arg, encoding=enc)
+                    df = pd.read_csv(io.BytesIO(file_bytes), header=header_arg, encoding=enc, sep=sep)
+                    if not df.empty and len(df.columns) > 1:
+                        return df
                 except Exception:
                     continue
         return None

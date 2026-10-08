@@ -275,7 +275,7 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
                 diffs = []
                 if existing_st.name and existing_st.name.strip().upper() != name.upper():
                     diffs.append(f"Name: '{existing_st.name}' → '{name}'")
-                if existing_st.department and existing_st.department.code.upper() != dept_code.upper():
+                if existing_st.department and getattr(existing_st.department, "code", None) and existing_st.department.code.upper() != dept_code.upper():
                     diffs.append(f"Department: '{existing_st.department.code}' → '{dept_code}'")
                 if existing_st.year_level and existing_st.year_level.strip().upper() != norm_year.upper():
                     diffs.append(f"Year: '{existing_st.year_level}' → '{norm_year}'")
