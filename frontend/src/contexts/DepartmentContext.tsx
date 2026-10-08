@@ -102,10 +102,7 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           }
         });
 
-        // Filter to only the 3 active institutional departments
-        const mappedDepts = Array.from(uniqueMap.values())
-          .filter(d => ACTIVE_DEPT_CODES.has(d.code));
-
+        const mappedDepts = Array.from(uniqueMap.values());
         setDepartments(mappedDepts.length > 0 ? mappedDepts : ALL_DEPARTMENTS_FALLBACK);
       } else {
         setDepartments(ALL_DEPARTMENTS_FALLBACK);

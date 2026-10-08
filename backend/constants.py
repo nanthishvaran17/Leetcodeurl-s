@@ -1,10 +1,7 @@
 """
 Centralized Production Department Constants and Helpers.
-Only the 3 active institutional departments are shown across all pages and filters.
+Includes all valid institutional departments across pages and filters.
 """
-
-# Exclusive whitelist — only these 3 department codes are active institution-wide.
-ACTIVE_DEPARTMENT_CODES = frozenset({"CSE(CS)", "CSE(IOT)", "IT"})
 
 EXCLUDED_DEPT_KEYWORDS = ["TEST", "DEMO", "DEV", "TEMP", "CSE-EDIT-TEST", "CSE_TEST"]
 
@@ -18,7 +15,6 @@ def is_production_department(code: str, name: str = "") -> bool:
         if kw in code_upper or kw in name_upper:
             return False
 
-    # Only allow the 3 officially active departments
-    return code_upper in {c.upper() for c in ACTIVE_DEPARTMENT_CODES}
+    return True
 
 
