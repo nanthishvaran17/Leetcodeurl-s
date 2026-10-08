@@ -510,12 +510,14 @@ def commit_smart_excel_import(
 ) -> Dict[str, Any]:
     """
     Executes the intelligent Excel import commit.
-    Registers new departments, updates existing student records without duplicating reg_no,
+    Registers new departments, updates existing student records without duplicating reg_no/username,
     creates new students, invalidates cache, logs audit events, and triggers background LeetCode sync.
     """
     import io
     import pandas as pd  # type: ignore
-    from backend.models import Student, Department
+    from sqlalchemy.exc import IntegrityError
+    from sqlalchemy import func
+    from backend.models import Student, Department, LeetCodeProfileStats
     from backend.services.excel_intelligence_engine import (
         detect_column_headers, find_best_header_row_and_dataframe,
         normalize_year_value, normalize_batch_value,
@@ -567,12 +569,24 @@ def commit_smart_excel_import(
             if d.code: dept_master[d.code.upper()] = d
             if d.name: dept_master[d.name.upper()] = d
 
-        # 2. Existing student index by reg_no
+        # Fallback department if none matched or created
+        fallback_dept = db.query(Department).first()
+        if not fallback_dept:
+            fallback_dept = Department(code="CSE", name="Computer Science and Engineering")
+            db.add(fallback_dept)
+            db.flush()
+            dept_master["CSE"] = fallback_dept
+
+        # 2. Existing student index by reg_no and existing usernames index
         existing_students_reg = {
             s.reg_no.strip().upper(): s for s in db.query(Student).all() if s.reg_no
         }
+        existing_students_username = {
+            s.username.lower(): s.reg_no.strip().upper() for s in db.query(Student).all() if s.username
+        }
 
         seen_reg_nos = set()
+        seen_usernames_in_import = set()
         created_count = 0
         updated_count = 0
         unchanged_count = 0
@@ -613,70 +627,128 @@ def commit_smart_excel_import(
             dept_code, dept_id, _, _ = normalize_department_value(raw_dept, dept_master)
             lc_url, lc_username = normalize_leetcode_url(raw_lc_url)
 
-            # Resolve department_id if missing
+            # Resolve department_id if missing to guarantee NOT NULL constraint
             if not dept_id and dept_code in dept_master:
                 dept_id = dept_master[dept_code].id
 
-            existing_st = existing_students_reg.get(reg_no)
-
-            if not existing_st:
-                # Parse secondary LC handle if present
-                sec_lc_url, sec_username = normalize_leetcode_url(raw_sec_lc) if raw_sec_lc else (None, None)
-
-                # CREATE
-                email_val = raw_email or f"{reg_no.lower()}@nandha.edu.in"
-                new_st = Student(
-                    reg_no=reg_no,
-                    name=name,
-                    department_id=dept_id,
-                    year_level=norm_year,
-                    email=email_val,
-                    username=lc_username,
-                    primary_leetcode_id=lc_username,
-                    secondary_leetcode_id=sec_username,
-                    secondary_status="approved" if sec_username else "none",
-                    leetcode_url=lc_url,
-                    batch=norm_batch,
-                    is_active=True
-                )
-                db.add(new_st)
-                db.flush()
-                created_count += 1
-                affected_student_ids.append(new_st.id)
-            else:
-                # UPDATE check
-                sec_lc_url, sec_username = normalize_leetcode_url(raw_sec_lc) if raw_sec_lc else (None, None)
-                has_changes = False
-                if name and str(getattr(existing_st, "name", "") or "") != name:
-                    setattr(existing_st, "name", name)
-                    has_changes = True
-                if dept_id and getattr(existing_st, "department_id", None) != dept_id:
-                    setattr(existing_st, "department_id", dept_id)
-                    has_changes = True
-                if norm_year and str(getattr(existing_st, "year_level", "") or "") != norm_year:
-                    setattr(existing_st, "year_level", norm_year)
-                    has_changes = True
-                if raw_email and str(getattr(existing_st, "email", "") or "") != raw_email:
-                    setattr(existing_st, "email", raw_email)
-                    has_changes = True
-                if lc_username and str(getattr(existing_st, "username", "") or "") != lc_username:
-                    setattr(existing_st, "username", lc_username)
-                    setattr(existing_st, "primary_leetcode_id", lc_username)
-                    setattr(existing_st, "leetcode_url", lc_url or "")
-                    has_changes = True
-                if sec_username and str(getattr(existing_st, "secondary_leetcode_id", "") or "") != sec_username:
-                    setattr(existing_st, "secondary_leetcode_id", sec_username)
-                    setattr(existing_st, "secondary_status", "approved")
-                    has_changes = True
-                if norm_batch and str(getattr(existing_st, "batch", "") or "") != norm_batch:
-                    setattr(existing_st, "batch", norm_batch)
-                    has_changes = True
-
-                if has_changes:
-                    updated_count += 1
-                    affected_student_ids.append(existing_st.id)
+            if not dept_id:
+                dept_key = (dept_code or raw_dept or "CSE").strip().upper()
+                if dept_key in dept_master:
+                    dept_id = dept_master[dept_key].id
                 else:
-                    unchanged_count += 1
+                    new_d = Department(code=dept_key, name=f"{dept_key} Department")
+                    db.add(new_d)
+                    db.flush()
+                    dept_master[dept_key] = new_d
+                    dept_master[new_d.name.upper()] = new_d
+                    dept_id = new_d.id
+                    if dept_key not in created_depts_list:
+                        created_depts_list.append(dept_key)
+
+            if not dept_id and fallback_dept:
+                dept_id = fallback_dept.id
+
+            # Username uniqueness check to prevent sqlite3.IntegrityError on students.username
+            lc_username_for_db = lc_username
+            if lc_username:
+                lc_user_lower = lc_username.lower()
+                existing_owner_reg = existing_students_username.get(lc_user_lower)
+                if (existing_owner_reg and existing_owner_reg != reg_no) or (lc_user_lower in seen_usernames_in_import):
+                    warning_rows.append({
+                        "row_num": row_num,
+                        "reg_no": reg_no,
+                        "warning": f"LeetCode handle '{lc_username}' is already linked to student '{existing_owner_reg or 'another row'}'. Maintained profile link, but omitted username index to prevent database constraint failure."
+                    })
+                    lc_username_for_db = None
+                else:
+                    seen_usernames_in_import.add(lc_user_lower)
+                    existing_students_username[lc_user_lower] = reg_no
+
+            try:
+                with db.begin_nested():
+                    existing_st = existing_students_reg.get(reg_no)
+
+                    if not existing_st:
+                        # Parse secondary LC handle if present
+                        sec_lc_url, sec_username = normalize_leetcode_url(raw_sec_lc) if raw_sec_lc else (None, None)
+
+                        # CREATE
+                        email_val = raw_email or f"{reg_no.lower()}@nandha.edu.in"
+                        new_st = Student(
+                            reg_no=reg_no,
+                            name=name,
+                            department_id=dept_id,
+                            year_level=norm_year or "I",
+                            email=email_val,
+                            username=lc_username_for_db,
+                            primary_leetcode_id=lc_username,
+                            secondary_leetcode_id=sec_username,
+                            secondary_status="approved" if sec_username else "none",
+                            leetcode_url=lc_url,
+                            batch=norm_batch,
+                            is_active=True
+                        )
+                        db.add(new_st)
+                        db.flush()
+
+                        # Ensure LeetCodeProfileStats is created for new student if missing
+                        existing_st_stats = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == new_st.id).first()
+                        if not existing_st_stats:
+                            new_stats = LeetCodeProfileStats(
+                                student_id=new_st.id,
+                                status="pending",
+                                sync_status="pending"
+                            )
+                            db.add(new_stats)
+                            db.flush()
+
+                        created_count += 1
+                        affected_student_ids.append(new_st.id)
+                        existing_students_reg[reg_no] = new_st
+                    else:
+                        # UPDATE check
+                        sec_lc_url, sec_username = normalize_leetcode_url(raw_sec_lc) if raw_sec_lc else (None, None)
+                        has_changes = False
+                        if name and str(getattr(existing_st, "name", "") or "") != name:
+                            setattr(existing_st, "name", name)
+                            has_changes = True
+                        if dept_id and getattr(existing_st, "department_id", None) != dept_id:
+                            setattr(existing_st, "department_id", dept_id)
+                            has_changes = True
+                        if norm_year and str(getattr(existing_st, "year_level", "") or "") != norm_year:
+                            setattr(existing_st, "year_level", norm_year)
+                            has_changes = True
+                        if raw_email and str(getattr(existing_st, "email", "") or "") != raw_email:
+                            setattr(existing_st, "email", raw_email)
+                            has_changes = True
+                        if lc_username:
+                            if lc_username_for_db and str(getattr(existing_st, "username", "") or "") != lc_username_for_db:
+                                setattr(existing_st, "username", lc_username_for_db)
+                                has_changes = True
+                            if str(getattr(existing_st, "primary_leetcode_id", "") or "") != lc_username:
+                                setattr(existing_st, "primary_leetcode_id", lc_username)
+                                setattr(existing_st, "leetcode_url", lc_url or getattr(existing_st, "leetcode_url", ""))
+                                has_changes = True
+                        if sec_username and str(getattr(existing_st, "secondary_leetcode_id", "") or "") != sec_username:
+                            setattr(existing_st, "secondary_leetcode_id", sec_username)
+                            setattr(existing_st, "secondary_status", "approved")
+                            has_changes = True
+                        if norm_batch and str(getattr(existing_st, "batch", "") or "") != norm_batch:
+                            setattr(existing_st, "batch", norm_batch)
+                            has_changes = True
+
+                        if has_changes:
+                            db.flush()
+                            updated_count += 1
+                            affected_student_ids.append(existing_st.id)
+                        else:
+                            unchanged_count += 1
+            except IntegrityError as ie:
+                error_rows.append({"row_num": row_num, "reg_no": reg_no, "error": f"Database constraint violation: {str(ie.orig or ie)}"})
+                logger.warning(f"[SMART_EXCEL_IMPORT] Row {row_num} ({reg_no}) skipped due to IntegrityError: {ie}")
+            except Exception as ex:
+                error_rows.append({"row_num": row_num, "reg_no": reg_no, "error": f"Save failed: {str(ex)}"})
+                logger.warning(f"[SMART_EXCEL_IMPORT] Row {row_num} ({reg_no}) skipped due to Exception: {ex}")
 
         db.commit()
 

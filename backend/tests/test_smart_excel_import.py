@@ -2,7 +2,7 @@ import io
 import pandas as pd  # type: ignore
 import pytest
 from backend.database import SessionLocal
-from backend.models import Student, Department, User
+from backend.models import Student, Department, User, LeetCodeProfileStats
 from backend.services.excel_intelligence_engine import (
     detect_column_headers,
     find_best_header_row_and_dataframe,
@@ -105,9 +105,18 @@ def test_analyze_and_commit_import_flow():
     """Test full analyze and commit flow with CREATE, UPDATE, UNCHANGED, and new department registration."""
     db = SessionLocal()
     try:
-        db.query(Student).filter(Student.reg_no.in_(["TEST99901", "TEST99902"])).delete(synchronize_session=False)
-        db.query(Department).filter(Department.code == "EEE").delete(synchronize_session=False)
-        db.commit()
+        def _cleanup():
+            import sqlalchemy
+            db.execute(sqlalchemy.text("PRAGMA foreign_keys=OFF"))
+            test_sts = db.query(Student).filter(Student.reg_no.in_(["TEST99901", "TEST99902"])).all()
+            if test_sts:
+                st_ids = [s.id for s in test_sts]
+                db.query(Student).filter(Student.id.in_(st_ids)).delete(synchronize_session=False)
+            db.query(Department).filter(Department.code == "EEE").delete(synchronize_session=False)
+            db.commit()
+            db.execute(sqlalchemy.text("PRAGMA foreign_keys=ON"))
+
+        _cleanup()
 
         # Create test Excel file in-memory
         df_data = pd.DataFrame([
@@ -184,10 +193,7 @@ def test_analyze_and_commit_import_flow():
         st1_updated = db.query(Student).filter(Student.reg_no == "TEST99901").first()
         assert st1_updated.name == "Test Student Alpha Updated"  # type: ignore
 
-        # Clean up test records
-        db.query(Student).filter(Student.reg_no.in_(["TEST99901", "TEST99902"])).delete(synchronize_session=False)
-        db.query(Department).filter(Department.code == "EEE").delete(synchronize_session=False)
-        db.commit()
+        _cleanup()
 
     finally:
         db.close()
