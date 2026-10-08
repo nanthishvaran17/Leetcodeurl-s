@@ -3,6 +3,8 @@ import { Building2 } from 'lucide-react';
 import { GlobalFilter } from '../GlobalFilter';
 import { useDepartments } from '../../contexts/DepartmentContext';
 
+import { normalizeDepartment, formatDepartmentName, formatDepartmentCode } from '../../utils/filterUtils';
+
 interface PremiumDepartmentSelectProps {
   selectedDept: string;
   onChange: (deptIdOrCode: string) => void;
@@ -22,21 +24,25 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
   dropdownWidth = 'min-w-[320px] max-w-[480px]',
   variant = 'default'
 }) => {
-  const { departments, isLoading } = useDepartments();
+  const { departments } = useDepartments();
 
-  // Only show the 3 active institutional departments
-  const ACTIVE_DEPT_CODES = ['CSE(CS)', 'CSE(IOT)', 'IT'];
-
+  // Active production departments
   const options = [
     { value: 'ALL', label: 'All Departments', pillText: 'ALL' },
     ...departments
-      .filter(d => ACTIVE_DEPT_CODES.includes((d.code || '').toUpperCase().trim()) ||
-                   ACTIVE_DEPT_CODES.map(c => c.toUpperCase()).includes((d.code || '').toUpperCase().trim()))
-      .map(d => ({
-        value: useIdAsValue ? String(d.id || '') : d.code,
-        label: d.name,
-        pillText: d.code
-      }))
+      .filter(d => {
+        const norm = normalizeDepartment(d);
+        return norm === 'cse_cs' || norm === 'cse_iot' || norm === 'it';
+      })
+      .map(d => {
+        const code = formatDepartmentCode(d) || d.code;
+        const name = formatDepartmentName(d) || d.name;
+        return {
+          value: useIdAsValue ? String(d.id || '') : code,
+          label: name,
+          pillText: code
+        };
+      })
   ];
 
   return (

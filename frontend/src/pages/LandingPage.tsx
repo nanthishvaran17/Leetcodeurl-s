@@ -986,7 +986,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               label="Mentee Scope"
               options={[
                 { value: 'all', label: 'My Allocated Mentees' },
-                { value: 'CSE(CS)', label: 'CSE (Cyber Security)' }
+                { value: 'CSE(CS)', label: 'Computer Science & Engineering (Cyber Security)' },
+                { value: 'CSE(IOT)', label: 'Computer Science & Engineering (IoT)' },
+                { value: 'IT', label: 'Information Technology' }
               ]}
               value={selectedDept}
               onChange={(val) => {

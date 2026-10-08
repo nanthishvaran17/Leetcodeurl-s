@@ -33,7 +33,7 @@ export function normalizeDepartment(dept: any): string {
     if (dept.id === 2 || combined.includes('IOT') || combined.includes('CSE(IOT)') || combined.includes('CSE-IOT') || combined.includes('CSE (IOT)') || combined.includes('INTERNET')) {
       return 'cse_iot';
     }
-    if (dept.id === 7 || code === 'IT' || combined.includes('INFORMATION TECHNOLOGY') || combined.includes('INFO TECH') || combined.includes('B.TECH IT') || combined.includes('B.TECH (IT)')) {
+    if (dept.id === 4 || dept.id === 7 || code === 'IT' || combined.includes('INFORMATION TECHNOLOGY') || combined.includes('INFO TECH') || combined.includes('B.TECH IT') || combined.includes('B.TECH (IT)')) {
       return 'it';
     }
 
@@ -42,12 +42,12 @@ export function normalizeDepartment(dept: any): string {
     if (dept.id) return String(dept.id);
   }
 
-  // If numeric ID (1 = Cyber Security, 2 = IoT, 7 = Information Technology)
+  // If numeric ID (1 = Cyber Security, 2 = IoT, 4/7 = Information Technology)
   if (typeof dept === 'number' || (!isNaN(Number(dept)) && String(dept).trim() !== '')) {
     const numId = Number(dept);
     if (numId === 1) return 'cse_cs';
     if (numId === 2) return 'cse_iot';
-    if (numId === 7) return 'it';
+    if (numId === 4 || numId === 7) return 'it';
     return String(dept);
   }
 
@@ -62,7 +62,7 @@ export function normalizeDepartment(dept: any): string {
     if (clean.includes('IOT') || clean.includes('CSE(IOT)') || clean.includes('CSE-IOT') || clean.includes('CSE (IOT)') || clean.includes('INTERNET')) {
       return 'cse_iot';
     }
-    if (clean === 'IT' || clean === '7' || clean.includes('INFORMATION TECHNOLOGY') || clean.includes('INFO TECH') || clean.includes('B.TECH IT') || clean.includes('B.TECH (IT)')) {
+    if (clean === 'IT' || clean === '4' || clean === '7' || clean.includes('INFORMATION TECHNOLOGY') || clean.includes('INFO TECH') || clean.includes('B.TECH IT') || clean.includes('B.TECH (IT)')) {
       return 'it';
     }
 
@@ -77,6 +77,7 @@ export function normalizeDepartment(dept: any): string {
  */
 export function formatDepartmentName(dept: any): string {
   const norm = normalizeDepartment(dept);
+  if (norm === 'all') return 'All Departments';
   if (norm === 'cse_cs') return 'Computer Science and Engineering (Cyber Security)';
   if (norm === 'cse_iot') return 'Computer Science and Engineering (IoT)';
   if (norm === 'it') return 'Information Technology';
@@ -106,6 +107,7 @@ export function formatDepartmentName(dept: any): string {
  */
 export function formatDepartmentCode(dept: any): string {
   const norm = normalizeDepartment(dept);
+  if (norm === 'all') return 'ALL';
   if (norm === 'cse_cs') return 'CSE(CS)';
   if (norm === 'cse_iot') return 'CSE(IOT)';
   if (norm === 'it') return 'IT';

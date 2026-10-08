@@ -1720,8 +1720,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       const isNotAttended = r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED' || (!isAttended && !isError);
 
       if (selectedDeptFilter !== 'ALL') {
-        const d = (r.dept || r.department || r.department_code || '').toString().toUpperCase();
-        if (!d.includes(selectedDeptFilter.toUpperCase())) return false;
+        const filterNorm = normalizeDepartment(selectedDeptFilter);
+        const studentNorm = normalizeDepartment(r.dept || r.department || r.department_code || r.department_id);
+        if (filterNorm !== studentNorm && !(r.dept || r.department || '').toString().toUpperCase().includes(selectedDeptFilter.toUpperCase())) return false;
       }
       if (selectedYearFilter !== 'ALL') {
         const y = (r.year || r.year_level || '').toString().toUpperCase();
