@@ -674,6 +674,14 @@ def commit_smart_excel_import(
 
                         # CREATE
                         email_val = raw_email or f"{reg_no.lower()}@nandha.edu.in"
+                        if not dept_id:
+                            d_fallback = fallback_dept or db.query(Department).first()
+                            if not d_fallback:
+                                d_fallback = Department(code="CSE", name="Computer Science and Engineering")
+                                db.add(d_fallback)
+                                db.flush()
+                            dept_id = d_fallback.id
+
                         new_st = Student(
                             reg_no=reg_no,
                             name=name,
