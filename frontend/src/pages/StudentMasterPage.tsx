@@ -13,6 +13,7 @@ import { StudentFlipCard } from '../components/StudentFlipCard';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { studentLiveStore } from '../stores/studentLiveStore';
+import { useDepartments } from '../contexts/DepartmentContext';
 import { useDepartmentsQuery } from '../hooks/useDashboardQueries';
 import { useFilters } from '../context/FilterContext';
 
@@ -239,10 +240,13 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   }, [filters.department, filters.academicYear, filters.searchQuery]);
 
 
-  // Load departments via global data (if not available, fallback to api)
+  const { departments: ctxDepts = [] } = useDepartments();
+
+  // Load departments via context / global data
   useEffect(() => {
-    if (globalDepts && globalDepts.length > 0) {
-      const mapped = globalDepts.map((d: any) => ({
+    const list = ctxDepts.length > 0 ? ctxDepts : globalDepts;
+    if (list && list.length > 0) {
+      const mapped = list.map((d: any) => ({
         id: d.id || d.department_id,
         name: d.name || d.department_name,
         code: d.code || d.department_code
@@ -250,7 +254,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       setDepartments(mapped);
       if (!deptId) setDeptId(mapped[0].id);
     }
-  }, [globalDepts, deptId]);
+  }, [ctxDepts, globalDepts, deptId]);
 
   // LeetCode URL validation (debounced, 900ms) 
   const validateLcUrl = useCallback(async (url: string) => {

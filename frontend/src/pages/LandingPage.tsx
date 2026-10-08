@@ -419,18 +419,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
   }, [fetchFilteredStudents]);
 
-  const ACTIVE_DEPT_CODES = ['CSE(CS)', 'CSE(IOT)', 'IT'];
-
   const fetchDepartments = async () => {
     try {
       const res = await api.get('/departments');
       if (res.data && Array.isArray(res.data) && res.data.length >= 1) {
-        // Only allow the 3 active institutional departments
-        const filtered = res.data.filter((d: any) =>
-          ACTIVE_DEPT_CODES.includes((d.code || '').trim().toUpperCase()) ||
-          ACTIVE_DEPT_CODES.map(c => c.toUpperCase()).includes((d.code || '').trim().toUpperCase())
-        );
-        setDepartments(filtered.length > 0 ? filtered : res.data);
+        setDepartments(res.data);
       }
     } catch (err) {
       console.warn("Failed to fetch departments:", err);
@@ -986,9 +979,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               label="Mentee Scope"
               options={[
                 { value: 'all', label: 'My Allocated Mentees' },
-                { value: 'CSE(CS)', label: 'Computer Science & Engineering (Cyber Security)' },
-                { value: 'CSE(IOT)', label: 'Computer Science & Engineering (IoT)' },
-                { value: 'IT', label: 'Information Technology' }
+                ...departments.map((d: any) => ({
+                  value: d.code || d.name,
+                  label: d.name || d.code
+                }))
               ]}
               value={selectedDept}
               onChange={(val) => {

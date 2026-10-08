@@ -81,22 +81,28 @@ export function formatDepartmentName(dept: any): string {
   if (norm === 'cse_cs') return 'Computer Science and Engineering (Cyber Security)';
   if (norm === 'cse_iot') return 'Computer Science and Engineering (IoT)';
   if (norm === 'it') return 'Information Technology';
+  if (norm === 'cse') return 'Computer Science and Engineering';
   if (norm === 'eee') return 'Electrical and Electronics Engineering';
   if (norm === 'ece') return 'Electronics and Communication Engineering';
   if (norm === 'mech') return 'Mechanical Engineering';
   if (norm === 'civil') return 'Civil Engineering';
   if (norm === 'aids') return 'Artificial Intelligence and Data Science';
+  if (norm === 'aiml') return 'Artificial Intelligence and Machine Learning';
+  if (norm === 'agri') return 'Agricultural Engineering';
   if (typeof dept === 'object' && dept) {
     return dept.name || dept.code || String(dept);
   }
   if (typeof dept === 'string' && dept.trim()) {
     const clean = dept.trim().toUpperCase();
     if (clean === 'IT') return 'Information Technology';
+    if (clean === 'CSE') return 'Computer Science and Engineering';
     if (clean === 'EEE') return 'Electrical and Electronics Engineering';
     if (clean === 'ECE') return 'Electronics and Communication Engineering';
     if (clean === 'MECH') return 'Mechanical Engineering';
     if (clean === 'CIVIL') return 'Civil Engineering';
     if (clean === 'AIDS') return 'Artificial Intelligence and Data Science';
+    if (clean === 'AIML') return 'Artificial Intelligence and Machine Learning';
+    if (clean === 'AGRI') return 'Agricultural Engineering';
     return dept;
   }
   return String(dept || '');
@@ -111,6 +117,14 @@ export function formatDepartmentCode(dept: any): string {
   if (norm === 'cse_cs') return 'CSE(CS)';
   if (norm === 'cse_iot') return 'CSE(IOT)';
   if (norm === 'it') return 'IT';
+  if (norm === 'cse') return 'CSE';
+  if (norm === 'ece') return 'ECE';
+  if (norm === 'eee') return 'EEE';
+  if (norm === 'mech') return 'MECH';
+  if (norm === 'civil') return 'CIVIL';
+  if (norm === 'aids') return 'AIDS';
+  if (norm === 'aiml') return 'AIML';
+  if (norm === 'agri') return 'AGRI';
   if (typeof dept === 'object' && dept) {
     return dept.code || dept.name || String(dept);
   }

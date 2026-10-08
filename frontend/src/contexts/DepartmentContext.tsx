@@ -22,12 +22,15 @@ interface DepartmentContextType {
 const DepartmentContext = createContext<DepartmentContextType | undefined>(undefined);
 
 // Only these 3 departments are active institution-wide
-const ACTIVE_DEPT_CODES = new Set(['CSE(CS)', 'CSE(IOT)', 'IT']);
-
 const ALL_DEPARTMENTS_FALLBACK: Department[] = [
   { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
   { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' },
   { id: 4, code: 'IT', name: 'Information Technology', pillText: 'IT' },
+  { id: 3, code: 'CSE', name: 'Computer Science and Engineering', pillText: 'CSE' },
+  { id: 5, code: 'ECE', name: 'Electronics and Communication Engineering', pillText: 'ECE' },
+  { id: 6, code: 'EEE', name: 'Electrical and Electronics Engineering', pillText: 'EEE' },
+  { id: 7, code: 'AGRI', name: 'Agricultural Engineering', pillText: 'AGRI' },
+  { id: 8, code: 'AIDS', name: 'Artificial Intelligence and Data Science', pillText: 'AIDS' },
 ];
 
 export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -90,6 +93,15 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           } else if (upperCode === 'CSE' || upperName === 'COMPUTER SCIENCE AND ENGINEERING') {
             finalCode = 'CSE';
             finalName = 'Computer Science and Engineering';
+          } else if (upperCode === 'MECH' || upperName.includes('MECHANICAL')) {
+            finalCode = 'MECH';
+            finalName = 'Mechanical Engineering';
+          } else if (upperCode === 'CIVIL' || upperName.includes('CIVIL')) {
+            finalCode = 'CIVIL';
+            finalName = 'Civil Engineering';
+          } else if (upperCode === 'AIML' || upperName.includes('MACHINE LEARNING')) {
+            finalCode = 'AIML';
+            finalName = 'Artificial Intelligence and Machine Learning';
           }
 
           if (!uniqueMap.has(finalCode)) {
@@ -118,28 +130,37 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch (err: any) {
       console.error('[DepartmentContext] Failed to fetch departments:', err);
       setError(err.message || 'Failed to fetch departments');
-      // On error, fallback to 3-department list
       setDepartments(ALL_DEPARTMENTS_FALLBACK);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-
   // Initial fetch
   useEffect(() => {
     fetchDepartments();
   }, [fetchDepartments]);
 
-  // Re-fetch when user identity or role changes (prevents stale cross-user department list)
+  // Re-fetch when user identity, role, or department creation events fire
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'user') {
+      if (e.key === 'user' || e.key === 'department_update') {
         fetchDepartments();
       }
     };
+    const handleCustomDeptUpdate = () => {
+      fetchDepartments();
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('department_updated', handleCustomDeptUpdate);
+    window.addEventListener('departments_changed', handleCustomDeptUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('department_updated', handleCustomDeptUpdate);
+      window.removeEventListener('departments_changed', handleCustomDeptUpdate);
+    };
   }, [fetchDepartments]);
 
   return (

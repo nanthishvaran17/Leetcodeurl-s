@@ -26,23 +26,18 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
 }) => {
   const { departments } = useDepartments();
 
-  // Active production departments
+  // All active production departments (including dynamic/imported departments)
   const options = [
     { value: 'ALL', label: 'All Departments', pillText: 'ALL' },
-    ...departments
-      .filter(d => {
-        const norm = normalizeDepartment(d);
-        return norm === 'cse_cs' || norm === 'cse_iot' || norm === 'it';
-      })
-      .map(d => {
-        const code = formatDepartmentCode(d) || d.code;
-        const name = formatDepartmentName(d) || d.name;
-        return {
-          value: useIdAsValue ? String(d.id || '') : code,
-          label: name,
-          pillText: code
-        };
-      })
+    ...departments.map(d => {
+      const code = formatDepartmentCode(d) || d.code;
+      const name = formatDepartmentName(d) || d.name;
+      return {
+        value: useIdAsValue ? String(d.id || '') : code,
+        label: name,
+        pillText: code
+      };
+    })
   ];
 
   return (
