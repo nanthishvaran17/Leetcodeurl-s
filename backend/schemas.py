@@ -413,9 +413,10 @@ class StudentStatSnapshotOut(BaseModel):
     delta_hard: Optional[int] = None
     delta_rating: Optional[float] = None
     growth_status: Optional[str] = "VERIFIED"
-    captured_at: datetime.datetime
+    captured_at: Optional[datetime.datetime] = None
     sync_run_id: Optional[str] = None
-    source: Optional[str] = "leetcode_public_profile"
+    source: Optional[str] = "sync"
+    is_verified: Optional[bool] = True
     model_config = ConfigDict(from_attributes=True)
 
 class ImproverOut(BaseModel):
@@ -435,6 +436,10 @@ class ImproverOut(BaseModel):
     delta_hard: Optional[int] = None
     delta_rating: Optional[float] = None
     growth_status: Optional[str] = "VERIFIED"
+    current_status: Optional[str] = None
+    conflict_reason: Optional[str] = None
+    baseline: Optional[Dict[str, Any]] = None
+    current: Optional[Dict[str, Any]] = None
     current_contest_rating: Optional[float] = None
 
 class SendOtpRequest(BaseModel):

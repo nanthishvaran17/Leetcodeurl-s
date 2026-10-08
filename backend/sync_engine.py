@@ -204,7 +204,8 @@ def capture_student_snapshot(student: Student, db: Session, run_id: Optional[str
             delta_rating=delta_rating,
             captured_at=datetime.datetime.now(datetime.timezone.utc),
             sync_run_id=run_id,
-            source=student.stats.source or "leetcode_public_profile"
+            source="sync",
+            is_verified=True
         )
         db.add(snapshot)
         if commit:

@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime, Date, Float, ForeignKey, Text, JSON, UniqueConstraint, Index, CheckConstraint
+from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime, Date, Float, ForeignKey, Text, JSON, UniqueConstraint, Index, CheckConstraint, text
 from sqlalchemy.orm import relationship, backref, validates
 from backend.database import Base
 
@@ -897,6 +897,12 @@ class StudentStatSnapshot(Base):
     __tablename__ = "student_stat_snapshots"
     __table_args__ = (
         Index("ix_student_stat_snapshots_student_captured", "student_id", "captured_at"),
+        Index(
+            "idx_snapshots_eligible",
+            "student_id",
+            "captured_at",
+            sqlite_where=text("source IN ('sync', 'backfill', 'manual_override') AND is_verified = 1")
+        ),
     )
     
     id = Column(Integer, primary_key=True, index=True)
@@ -917,7 +923,8 @@ class StudentStatSnapshot(Base):
     
     captured_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False, index=True)
     sync_run_id = Column(String(100), nullable=True)
-    source = Column(String(50), default="leetcode_public_profile")
+    source = Column(String(50), default="sync")
+    is_verified = Column(Boolean, default=True, nullable=False)
     
     student = relationship("Student", back_populates="stat_snapshots")
 
