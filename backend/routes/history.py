@@ -13,7 +13,7 @@ Provides high-performance, accurate endpoints for:
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, cast
 import datetime
 from zoneinfo import ZoneInfo
 from collections import defaultdict
@@ -90,7 +90,7 @@ MAX_BASELINE_STALENESS = {
 
 MAX_CURRENT_AGE = datetime.timedelta(hours=48)
 
-def _derived_growth(db: Session, students: List[Student], cutoff: datetime.datetime, period: str = "7d", now_utc: Optional[datetime.datetime] = None) -> Dict[int, Dict[str, Any]]:
+def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datetime.datetime], period: str = "7d", now_utc: Optional[datetime.datetime] = None) -> Dict[int, Dict[str, Any]]:
     if not students:
         return {}
     
@@ -168,17 +168,18 @@ def _derived_growth(db: Session, students: List[Student], cutoff: datetime.datet
             continue
 
         baseline_snap: Optional[StudentStatSnapshot] = None
-        for snap in snaps:
-            c_at = snap.captured_at
-            if c_at.tzinfo is None:
-                c_at = c_at.replace(tzinfo=UTC_TZ)
-            
-            if c_at <= cutoff:
-                baseline_snap = snap
-            else:
-                break
+        if cutoff is not None:
+            for snap in snaps:
+                c_at = snap.captured_at
+                if c_at.tzinfo is None:
+                    c_at = c_at.replace(tzinfo=UTC_TZ)
+                
+                if c_at <= cutoff:
+                    baseline_snap = snap
+                else:
+                    break
 
-        if baseline_snap is None:
+        if baseline_snap is None or cutoff is None:
             growth[s_id] = {
                 "growth_status": "UNKNOWN",
                 "delta_total": None, "delta_easy": None, "delta_medium": None, "delta_hard": None, "delta_rating": None,
@@ -232,7 +233,9 @@ def _derived_growth(db: Session, students: List[Student], cutoff: datetime.datet
         
         d_rat = None
         if c_rat is not None and b_rat is not None:
-            d_rat = round(c_rat - b_rat, 1)
+            c_r_val = float(cast(Any, c_rat))
+            b_r_val = float(cast(Any, b_rat))
+            d_rat = round(c_r_val - b_r_val, 1)
 
         if d_easy < 0:
             growth[s_id] = _conflict(baseline_snap, current_snap, "negative_delta:easy")
@@ -261,7 +264,7 @@ def _derived_growth(db: Session, students: List[Student], cutoff: datetime.datet
 
     return growth
 
-def _serialize_snap(snap: StudentStatSnapshot) -> Dict[str, Any]:
+def _serialize_snap(snap: Optional[StudentStatSnapshot]) -> Optional[Dict[str, Any]]:
     if not snap:
         return None
     c_at = snap.captured_at
@@ -366,42 +369,55 @@ def get_student_history(
     growth_available = len(snapshots) >= 2
     if len(snapshots) == 1:
         # Only one eligible snapshot exists
-        snapshots[0].delta_total = None
-        snapshots[0].delta_easy = None
-        snapshots[0].delta_medium = None
-        snapshots[0].delta_hard = None
-        snapshots[0].delta_rating = None
+        s0 = cast(Any, snapshots[0])
+        s0.delta_total = None
+        s0.delta_easy = None
+        s0.delta_medium = None
+        s0.delta_hard = None
+        s0.delta_rating = None
     elif len(snapshots) >= 2:
         # Calculate dynamic deltas between adjacent time series points
         for i in range(len(snapshots)):
+            s_curr = cast(Any, snapshots[i])
             if i < len(snapshots) - 1:
-                older_snap = snapshots[i + 1]
-                newer_snap = snapshots[i]
+                s_prev = cast(Any, snapshots[i + 1])
                 
                 # Check for reconciliation
-                if (newer_snap.total_solved != (newer_snap.easy_solved or 0) + (newer_snap.medium_solved or 0) + (newer_snap.hard_solved or 0)) or \
-                   (older_snap.total_solved != (older_snap.easy_solved or 0) + (older_snap.medium_solved or 0) + (older_snap.hard_solved or 0)):
-                    newer_snap.delta_total = None
-                    newer_snap.delta_easy = None
-                    newer_snap.delta_medium = None
-                    newer_snap.delta_hard = None
-                    newer_snap.delta_rating = None
+                c_ez = s_curr.easy_solved or 0
+                c_med = s_curr.medium_solved or 0
+                c_hd = s_curr.hard_solved or 0
+                c_tot = s_curr.total_solved or 0
+                
+                p_ez = s_prev.easy_solved or 0
+                p_med = s_prev.medium_solved or 0
+                p_hd = s_prev.hard_solved or 0
+                p_tot = s_prev.total_solved or 0
+                
+                if (c_tot != (c_ez + c_med + c_hd)) or (p_tot != (p_ez + p_med + p_hd)):
+                    s_curr.delta_total = None
+                    s_curr.delta_easy = None
+                    s_curr.delta_medium = None
+                    s_curr.delta_hard = None
+                    s_curr.delta_rating = None
                 else:
-                    newer_snap.delta_easy = (newer_snap.easy_solved or 0) - (older_snap.easy_solved or 0)
-                    newer_snap.delta_medium = (newer_snap.medium_solved or 0) - (older_snap.medium_solved or 0)
-                    newer_snap.delta_hard = (newer_snap.hard_solved or 0) - (older_snap.hard_solved or 0)
-                    newer_snap.delta_total = (newer_snap.delta_easy or 0) + (newer_snap.delta_medium or 0) + (newer_snap.delta_hard or 0)
+                    d_ez = c_ez - p_ez
+                    d_med = c_med - p_med
+                    d_hd = c_hd - p_hd
+                    s_curr.delta_easy = d_ez
+                    s_curr.delta_medium = d_med
+                    s_curr.delta_hard = d_hd
+                    s_curr.delta_total = d_ez + d_med + d_hd
                     
-                    if newer_snap.contest_rating is not None and older_snap.contest_rating is not None:
-                        newer_snap.delta_rating = round(newer_snap.contest_rating - older_snap.contest_rating, 1)
+                    if s_curr.contest_rating is not None and s_prev.contest_rating is not None:
+                        s_curr.delta_rating = round(float(s_curr.contest_rating) - float(s_prev.contest_rating), 1)
                     else:
-                        newer_snap.delta_rating = None
+                        s_curr.delta_rating = None
             else:
-                snapshots[i].delta_total = None
-                snapshots[i].delta_easy = None
-                snapshots[i].delta_medium = None
-                snapshots[i].delta_hard = None
-                snapshots[i].delta_rating = None
+                s_curr.delta_total = None
+                s_curr.delta_easy = None
+                s_curr.delta_medium = None
+                s_curr.delta_hard = None
+                s_curr.delta_rating = None
 
     # Return enriched response containing student info + snapshots
     return {
@@ -517,7 +533,7 @@ def get_growth_options(db: Session = Depends(get_db), current_user: Optional[Use
     role_clean = _normalize_role(current_user)
     if current_user and role_clean in _STAFF_ROLES:
         from backend.services.faculty_assignment_service import FacultyAssignmentService
-        assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, current_user.id)
+        assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(cast(Any, current_user).id))
         if assigned_ids:
             departments_query = departments_query.filter(Student.id.in_(assigned_ids))
         else:

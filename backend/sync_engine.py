@@ -2,7 +2,7 @@ import os
 import time
 import datetime
 import asyncio
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, cast
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
@@ -164,18 +164,18 @@ def capture_student_snapshot(student: Student, db: Session, run_id: Optional[str
             StudentStatSnapshot.student_id == student.id
         ).order_by(StudentStatSnapshot.captured_at.desc()).first()
 
-        cur_tot = student.stats.total_solved or 0
-        cur_ez  = student.stats.easy_solved or 0
-        cur_med = student.stats.medium_solved or 0
-        cur_hd  = student.stats.hard_solved or 0
-        cur_rat = student.stats.contest_rating or 0.0
+        cur_tot = int(cast(Any, student.stats).total_solved or 0)
+        cur_ez  = int(cast(Any, student.stats).easy_solved or 0)
+        cur_med = int(cast(Any, student.stats).medium_solved or 0)
+        cur_hd  = int(cast(Any, student.stats).hard_solved or 0)
+        cur_rat = float(cast(Any, student.stats).contest_rating or 0.0)
 
         if prev:
-            prev_tot = prev.total_solved or 0
-            prev_ez  = prev.easy_solved or 0
-            prev_med = prev.medium_solved or 0
-            prev_hd  = prev.hard_solved or 0
-            prev_rat = prev.contest_rating or 0.0
+            prev_tot = int(cast(Any, prev).total_solved or 0)
+            prev_ez  = int(cast(Any, prev).easy_solved or 0)
+            prev_med = int(cast(Any, prev).medium_solved or 0)
+            prev_hd  = int(cast(Any, prev).hard_solved or 0)
+            prev_rat = float(cast(Any, prev).contest_rating or 0.0)
 
             delta_total  = max(0, cur_tot - prev_tot)
             delta_easy   = max(0, cur_ez - prev_ez)
@@ -190,13 +190,13 @@ def capture_student_snapshot(student: Student, db: Session, run_id: Optional[str
             delta_rating = 0.0
 
         snapshot = StudentStatSnapshot(
-            student_id=student.id,
-            total_solved=student.stats.total_solved,
-            easy_solved=student.stats.easy_solved,
-            medium_solved=student.stats.medium_solved,
-            hard_solved=student.stats.hard_solved,
-            contest_rating=student.stats.contest_rating,
-            global_rank=student.stats.public_profile_ranking,
+            student_id=int(cast(Any, student).id),
+            total_solved=cast(Any, student.stats).total_solved,
+            easy_solved=cast(Any, student.stats).easy_solved,
+            medium_solved=cast(Any, student.stats).medium_solved,
+            hard_solved=cast(Any, student.stats).hard_solved,
+            contest_rating=cast(Any, student.stats).contest_rating,
+            global_rank=cast(Any, student.stats).public_profile_ranking,
             delta_total=delta_total,
             delta_easy=delta_easy,
             delta_medium=delta_medium,
@@ -226,26 +226,28 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         raise ValueError(f"Student with ID {student_id} not found.")
 
     if not student.stats:
-        student.stats = LeetCodeProfileStats(student_id=student.id)
+        student.stats = LeetCodeProfileStats(student_id=int(cast(Any, student).id))
         db.add(student.stats)
+
+    st_stats = cast(Any, student.stats)
 
     # Always record this attempt timestamp
     now_utc = datetime.datetime.now(datetime.timezone.utc)
-    student.stats.last_attempt_at = now_utc
-    student.stats.retry_count = (student.stats.retry_count or 0)
+    st_stats.last_attempt_at = now_utc
+    st_stats.retry_count = (st_stats.retry_count or 0)
 
     # Handle empty/missing username explicitly
     if not student.username or not str(student.username).strip():
-        student.stats.status = "PENDING_USERNAME"
-        student.stats.sync_status = "pending_username"
-        student.stats.validation_status = "pending_username"
-        student.stats.total_solved = None
-        student.stats.easy_solved = None
-        student.stats.medium_solved = None
-        student.stats.hard_solved = None
-        student.stats.contest_rating = None
-        student.stats.error_message = "Awaiting valid LeetCode username assignment"
-        student.stats.error_code = "PENDING_USERNAME"
+        st_stats.status = "PENDING_USERNAME"
+        st_stats.sync_status = "pending_username"
+        st_stats.validation_status = "pending_username"
+        st_stats.total_solved = None
+        st_stats.easy_solved = None
+        st_stats.medium_solved = None
+        st_stats.hard_solved = None
+        st_stats.contest_rating = None
+        st_stats.error_message = "Awaiting valid LeetCode username assignment"
+        st_stats.error_code = "PENDING_USERNAME"
         if commit:
             db.commit()
             db.refresh(student)
@@ -257,12 +259,12 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
     if expected_username and fetched_username and expected_username.strip().lower() != fetched_username.strip().lower():
         err_msg = f"CRITICAL IDENTITY MISMATCH: Fetched username '{fetched_username}' does not match expected student username '{expected_username}' for Reg {student.reg_no}"
         logger.error(err_msg)
-        student.stats.sync_status = "mismatch"
-        student.stats.validation_status = "identity_mismatch"
-        student.stats.status = "MISMATCH"
-        student.stats.error_message = err_msg
-        student.stats.error_code = "IDENTITY_MISMATCH"
-        student.stats.retry_count += 1
+        st_stats.sync_status = "mismatch"
+        st_stats.validation_status = "identity_mismatch"
+        st_stats.status = "MISMATCH"
+        st_stats.error_message = err_msg
+        st_stats.error_code = "IDENTITY_MISMATCH"
+        st_stats.retry_count += 1
         if commit:
             db.commit()
             db.refresh(student)
@@ -277,7 +279,7 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
     med = stats_dict.get("medium_solved")
     hd  = stats_dict.get("hard_solved")
 
-    if is_success and all(v is not None for v in [tot, ez, med, hd]):
+    if is_success and tot is not None and ez is not None and med is not None and hd is not None:
         tot_int, ez_int, med_int, hd_int = int(tot), int(ez), int(med), int(hd)
         sum_solved = ez_int + med_int + hd_int
         if sum_solved > 0 and tot_int == 0:
@@ -294,52 +296,52 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         new_streak = stats_dict.get("max_streak")
 
         is_unchanged = (
-            student.stats.total_solved == tot and
-            student.stats.easy_solved == ez and
-            student.stats.medium_solved == med and
-            student.stats.hard_solved == hd and
-            student.stats.contest_rating == new_rating and
-            student.stats.contest_global_ranking == new_grank and
-            student.stats.public_profile_ranking == new_prank and
-            student.stats.active_days == new_act and
-            student.stats.max_streak == new_streak
+            st_stats.total_solved == tot and
+            st_stats.easy_solved == ez and
+            st_stats.medium_solved == med and
+            st_stats.hard_solved == hd and
+            st_stats.contest_rating == new_rating and
+            st_stats.contest_global_ranking == new_grank and
+            st_stats.public_profile_ranking == new_prank and
+            st_stats.active_days == new_act and
+            st_stats.max_streak == new_streak
         )
 
-        if is_unchanged and student.stats.sync_status == "success":
+        if is_unchanged and st_stats.sync_status == "success":
             now_utc = datetime.datetime.now(datetime.timezone.utc)
-            student.stats.last_verified_at = now_utc
-            student.stats.last_updated = now_utc
-            student.stats.fetch_duration = stats_dict.get("fetch_duration")
+            st_stats.last_verified_at = now_utc
+            st_stats.last_updated = now_utc
+            st_stats.fetch_duration = stats_dict.get("fetch_duration")
             if commit:
                 db.commit()
                 db.refresh(student)
             return student
 
-        student.stats.total_solved = tot
-        student.stats.easy_solved = ez
-        student.stats.medium_solved = med
-        student.stats.hard_solved = hd
-        student.stats.contest_rating = new_rating
-        student.stats.contest_global_ranking = new_grank
-        student.stats.public_profile_ranking = new_prank
+        st_stats.total_solved = tot
+        st_stats.easy_solved = ez
+        st_stats.medium_solved = med
+        st_stats.hard_solved = hd
+        st_stats.contest_rating = new_rating
+        st_stats.contest_global_ranking = new_grank
+        st_stats.public_profile_ranking = new_prank
         
-        student.stats.active_days = stats_dict.get("active_days")
-        student.stats.max_streak = stats_dict.get("max_streak")
-        student.stats.recent_accepted = stats_dict.get("recent_accepted") or tot
-        student.stats.recent_contest_name = stats_dict.get("recent_contest_name")
-        student.stats.recent_contest_score = stats_dict.get("recent_contest_score")
+        st_stats.active_days = stats_dict.get("active_days")
+        st_stats.max_streak = stats_dict.get("max_streak")
+        st_stats.recent_accepted = stats_dict.get("recent_accepted") or tot
+        st_stats.recent_contest_name = stats_dict.get("recent_contest_name")
+        st_stats.recent_contest_score = stats_dict.get("recent_contest_score")
         
-        student.stats.status = "verified"
-        student.stats.sync_status = "success"
-        student.stats.validation_status = "verified"
-        student.stats.source = "leetcode_public_profile"
-        student.stats.error_message = None
-        student.stats.error_code = None
-        student.stats.retry_count = 0  # Reset on success
+        st_stats.status = "verified"
+        st_stats.sync_status = "success"
+        st_stats.validation_status = "verified"
+        st_stats.source = "leetcode_public_profile"
+        st_stats.error_message = None
+        st_stats.error_code = None
+        st_stats.retry_count = 0  # Reset on success
         now_utc = datetime.datetime.now(datetime.timezone.utc)
-        student.stats.last_successful_sync = now_utc
-        student.stats.last_verified_at = now_utc
-        student.stats.fetch_duration = stats_dict.get("fetch_duration")
+        st_stats.last_successful_sync = now_utc
+        st_stats.last_verified_at = now_utc
+        st_stats.fetch_duration = stats_dict.get("fetch_duration")
 
         # Process Contest Participations (OFFICIAL vs VIRTUAL)
         raw_parts = stats_dict.get("contest_participations") or []
@@ -365,59 +367,60 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
                 )
                 db.add(existing_p)
 
-            existing_p.contest_date = p.get("contest_date")
-            existing_p.registered = p.get("registered", True)
-            existing_p.started = p.get("started", True)
-            existing_p.submitted = p.get("submitted", True)
-            existing_p.problems_solved = p.get("problems_solved", 0)
-            existing_p.total_problems = p.get("total_problems", 4)
-            existing_p.contest_rank = p.get("contest_rank")
-            existing_p.contest_rating_after = p.get("contest_rating_after")
-            existing_p.verified_at = now_utc
-            existing_p.source = p.get("source", "leetcode_api")
+            p_obj = cast(Any, existing_p)
+            p_obj.contest_date = p.get("contest_date")
+            p_obj.registered = p.get("registered", True)
+            p_obj.started = p.get("started", True)
+            p_obj.submitted = p.get("submitted", True)
+            p_obj.problems_solved = p.get("problems_solved", 0)
+            p_obj.total_problems = p.get("total_problems", 4)
+            p_obj.contest_rank = p.get("contest_rank")
+            p_obj.contest_rating_after = p.get("contest_rating_after")
+            p_obj.verified_at = now_utc
+            p_obj.source = p.get("source", "leetcode_api")
             try:
-                existing_p.source_username = fetched_username
+                p_obj.source_username = fetched_username
             except AttributeError:
                 pass
 
     else:
         # Check if student previously had verified stats
-        has_prev_verified = bool(student.stats.last_successful_sync and student.stats.total_solved is not None)
+        has_prev_verified = bool(st_stats.last_successful_sync and st_stats.total_solved is not None)
         raw_status = stats_dict.get("status", "")
         err_detail = stats_dict.get("error") or stats_dict.get("error_message") or "Sync failed"
 
         if has_prev_verified:
             # Stale record: Preserve previous verified numbers!
-            student.stats.status = "STALE"
-            student.stats.sync_status = "stale"
-            student.stats.validation_status = "stale"
-            student.stats.error_message = f"Refresh failed: {err_detail}"
+            st_stats.status = "STALE"
+            st_stats.sync_status = "stale"
+            st_stats.validation_status = "stale"
+            st_stats.error_message = f"Refresh failed: {err_detail}"
         else:
             # Genuinely unverified / failed record: Never invent zero!
-            student.stats.status = status or "failed"
-            student.stats.sync_status = "failed"
-            student.stats.validation_status = "failed"
-            student.stats.total_solved = None
-            student.stats.easy_solved = None
-            student.stats.medium_solved = None
-            student.stats.hard_solved = None
-            student.stats.contest_rating = None
-            student.stats.error_message = err_detail
+            st_stats.status = status or "failed"
+            st_stats.sync_status = "failed"
+            st_stats.validation_status = "failed"
+            st_stats.total_solved = None
+            st_stats.easy_solved = None
+            st_stats.medium_solved = None
+            st_stats.hard_solved = None
+            st_stats.contest_rating = None
+            st_stats.error_message = err_detail
 
         # Determine error_code from status
         if "timeout" in str(err_detail).lower():
-            student.stats.error_code = "NETWORK_TIMEOUT"
+            st_stats.error_code = "NETWORK_TIMEOUT"
         elif raw_status == "PROFILE NOT FOUND" or "404" in str(err_detail):
-            student.stats.error_code = "PROFILE_NOT_FOUND"
+            st_stats.error_code = "PROFILE_NOT_FOUND"
         elif raw_status in ("MISSING LINK", "INVALID LINK"):
-            student.stats.error_code = raw_status.replace(" ", "_")
+            st_stats.error_code = raw_status.replace(" ", "_")
         else:
-            student.stats.error_code = "FETCH_FAILED"
+            st_stats.error_code = "FETCH_FAILED"
 
-        student.stats.retry_count = (student.stats.retry_count or 0) + 1
-        student.stats.fetch_duration = stats_dict.get("fetch_duration")
+        st_stats.retry_count = (st_stats.retry_count or 0) + 1
+        st_stats.fetch_duration = stats_dict.get("fetch_duration")
 
-    student.stats.last_updated = datetime.datetime.now(datetime.timezone.utc)
+    st_stats.last_updated = datetime.datetime.now(datetime.timezone.utc)
     if commit:
         db.commit()
         db.refresh(student)
@@ -439,7 +442,7 @@ async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> D
         if not student:
             return {"status": "failed", "error": f"Student ID {student_id} not found."}
 
-        url_or_username = student.leetcode_url or student.username
+        url_or_username = str(student.leetcode_url or student.username or "")
         logger.info(f"[INFO] Syncing single student (Timeout <= 30s): {student.reg_no} ({student.name}) - {url_or_username}")
 
         try:
@@ -447,7 +450,7 @@ async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> D
                 fetch_leetcode_profile(url_or_username, force_refresh=True, timeout=12.0),
                 timeout=timeout
             )
-            updated_student = sync_single_student_db(student.id, stats_dict, db)
+            updated_student = sync_single_student_db(int(cast(Any, student).id), stats_dict, db)
             try:
                 from backend.cache import cache
                 cache.clear()
@@ -586,16 +589,16 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 100, pe
                         if not st:
                             break
 
-                        url_or_username = st.leetcode_url or st.username
-                        
-                        logger.info(f"[INFO] Fetching Reg: {st.reg_no} | Username: {st.username or url_or_username} (Attempt {attempt}/{max_retries})")
+        url_or_username = str(st.leetcode_url or st.username or "")
+        
+        logger.info(f"[INFO] Fetching Reg: {st.reg_no} | Username: {st.username or url_or_username} (Attempt {attempt}/{max_retries})")
 
-                        stats = await fetch_leetcode_profile(url_or_username, force_refresh=True)
-                        is_ok = stats.get("status") in ["success", "OK"]
-                        is_mismatch = stats.get("status") == "MISMATCH"
+        stats = await fetch_leetcode_profile(url_or_username, force_refresh=True)
+        is_ok = stats.get("status") in ["success", "OK"]
+        is_mismatch = stats.get("status") == "MISMATCH"
 
-                        # Update student DB with Old Data Fallback rule (Deferred commit)
-                        updated_st = sync_single_student_db(st.id, stats, w_db, commit=False)
+        # Update student DB with Old Data Fallback rule (Deferred commit)
+        updated_st = sync_single_student_db(int(cast(Any, st).id), stats, w_db, commit=False)
 
                         if is_ok:
                             w_db.commit() # Commit the successful sync
