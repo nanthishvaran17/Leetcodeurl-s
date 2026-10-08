@@ -1430,7 +1430,7 @@ export const AccountProfileSettings: React.FC = () => {
                 text-transform: uppercase; letter-spacing: 0.5px; }
     .seal-ok  { font-size: 11px; font-weight: 800; color: #15803d; margin-top: 4px; }
 
-    /* â”€â”€ Mobile Responsive Rules â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Mobile Responsive Rules ───────── */
     @media (max-width: 768px) {
       .action-bar { padding: 12px; height: auto; flex-direction: column; align-items: stretch; gap: 12px; }
       .bar-btns { justify-content: space-between; }
@@ -1446,7 +1446,7 @@ export const AccountProfileSettings: React.FC = () => {
       .sec-head { flex-direction: column; align-items: flex-start; gap: 6px; }
     }
 
-    /* â”€â”€ Print: hide bar, collapse padding â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Print: hide bar, collapse padding ───────── */
     @media print {
       @page { size: A4 portrait; margin: 12mm; }
       body { background: #fff; }
@@ -1465,11 +1465,11 @@ export const AccountProfileSettings: React.FC = () => {
       <div class="bar-left-sub">${institutionalId} &bull; ${fullName || user?.username} &bull; ${nowShort} IST</div>
     </div>
     <div class="bar-btns">
-      <button class="btn-print" onclick="window.print()">
+      <button id="btnPrintReport" type="button" class="btn-print" onclick="window.print()">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm1-4h.01M12 12h.01" /></svg>
         Print / Save as PDF
       </button>
-      <button class="btn-close" onclick="window.close()">&#10005; Close</button>
+      <button id="btnCloseReport" type="button" class="btn-close" onclick="window.close()">&#10005; Close</button>
     </div>
   </div>
 
@@ -1487,7 +1487,7 @@ export const AccountProfileSettings: React.FC = () => {
           <div>
             <div class="hdr-h1">Nandha Engineering College</div>
             <div class="hdr-sub">Autonomous Institution &bull; Approved by AICTE &bull; NBA &amp; NAAC A+ Grade Accredited</div>
-            <div class="hdr-aff">Affiliated to Anna University Chennai &bull; Erodeâ€“Perundurai Road, Tamil Nadu &ndash; 638 052</div>
+            <div class="hdr-aff">Affiliated to Anna University Chennai &bull; Erode–Perundurai Road, Tamil Nadu &ndash; 638 052</div>
           </div>
         </div>
         <div class="hdr-tag">
@@ -1567,11 +1567,52 @@ export const AccountProfileSettings: React.FC = () => {
     </div><!-- /.a4-card -->
   </div><!-- /.page-wrap -->
 
+  <script>
+    function triggerPrint() {
+      try {
+        window.print();
+      } catch (err) {
+        console.error('Print failed:', err);
+      }
+    }
+
+    function triggerClose() {
+      try {
+        window.close();
+      } catch (err) {
+        console.error('Close failed:', err);
+      }
+      try {
+        self.close();
+      } catch (err) {}
+    }
+
+    function bindEvents() {
+      var printBtn = document.getElementById('btnPrintReport');
+      var closeBtn = document.getElementById('btnCloseReport');
+      if (printBtn) {
+        printBtn.onclick = triggerPrint;
+        printBtn.addEventListener('click', triggerPrint);
+      }
+      if (closeBtn) {
+        closeBtn.onclick = triggerClose;
+        closeBtn.addEventListener('click', triggerClose);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bindEvents);
+    } else {
+      bindEvents();
+    }
+    setTimeout(bindEvents, 300);
+  </script>
 </body>
 </html>`;
 
     const printWin = window.open('', '_blank', 'width=1140,height=880,scrollbars=yes,resizable=yes');
     if (printWin) {
+      printWin.document.open();
       printWin.document.write(reportHtml);
       printWin.document.close();
       printWin.focus();

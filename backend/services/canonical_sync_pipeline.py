@@ -713,6 +713,7 @@ async def run_full_pipeline(
                     fresh_student_ids: Set[int] = set()
 
                     if not is_explicit_targeted:
+                        now_dt = datetime.datetime.now(datetime.timezone.utc)
                         _db_stale = SessionLocal()
                         try:
                             student_ids_in_chunk = [s.id for s in chunk]
