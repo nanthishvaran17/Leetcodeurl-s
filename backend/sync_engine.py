@@ -589,16 +589,16 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 100, pe
                         if not st:
                             break
 
-        url_or_username = str(st.leetcode_url or st.username or "")
-        
-        logger.info(f"[INFO] Fetching Reg: {st.reg_no} | Username: {st.username or url_or_username} (Attempt {attempt}/{max_retries})")
+                        url_or_username = str(st.leetcode_url or st.username or "")
+                        
+                        logger.info(f"[INFO] Fetching Reg: {st.reg_no} | Username: {st.username or url_or_username} (Attempt {attempt}/{max_retries})")
 
-        stats = await fetch_leetcode_profile(url_or_username, force_refresh=True)
-        is_ok = stats.get("status") in ["success", "OK"]
-        is_mismatch = stats.get("status") == "MISMATCH"
+                        stats = await fetch_leetcode_profile(url_or_username, force_refresh=True)
+                        is_ok = stats.get("status") in ["success", "OK"]
+                        is_mismatch = stats.get("status") == "MISMATCH"
 
-        # Update student DB with Old Data Fallback rule (Deferred commit)
-        updated_st = sync_single_student_db(int(cast(Any, st).id), stats, w_db, commit=False)
+                        # Update student DB with Old Data Fallback rule (Deferred commit)
+                        updated_st = sync_single_student_db(int(cast(Any, st).id), stats, w_db, commit=False)
 
                         if is_ok:
                             w_db.commit() # Commit the successful sync
