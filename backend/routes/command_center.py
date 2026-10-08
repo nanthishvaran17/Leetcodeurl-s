@@ -235,6 +235,7 @@ def get_command_center_summary(
             staff_list.append({
                 "id": u.id,
                 "username": u.username,
+                "full_name": u.full_name,
                 "email": u.email,
                 "department_id": u.department_id,
                 "department_code": d_code,
@@ -249,7 +250,7 @@ def get_command_center_summary(
                 "role": u.role or "Faculty",
                 "is_active": u.is_active,
                 "joined_date": u.created_at.strftime("%Y-%m-%d") if u.created_at else "N/A",
-                "last_active": u.last_activity.strftime("%Y-%m-%d") if u.last_activity else "N/A",
+                "last_active": u.last_login.strftime("%Y-%m-%d") if getattr(u, 'last_login', None) else "N/A",
                 "coding_activity": coding_act
             })
     
@@ -414,11 +415,13 @@ def get_students(
 
     contest_map = {}
     if student_ids:
-        pub_results = db.query(WeeklyPublicResult).filter(
-            WeeklyPublicResult.student_id.in_(student_ids)
-        ).order_by(WeeklyPublicResult.id.desc()).all()
-        for pr in pub_results:
-            if pr.student_id not in contest_map:
+        latest_session_id = db.query(func.max(WeeklyPublicResult.session_id)).scalar()
+        if latest_session_id:
+            pub_results = db.query(WeeklyPublicResult).filter(
+                WeeklyPublicResult.student_id.in_(student_ids),
+                WeeklyPublicResult.session_id == latest_session_id
+            ).all()
+            for pr in pub_results:
                 contest_map[pr.student_id] = f"{pr.total_contest_solved}/4" if pr.total_contest_solved is not None else "—"
 
     results = []

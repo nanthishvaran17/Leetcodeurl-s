@@ -36,7 +36,7 @@ def get_httpx_client(req_timeout: float = 10.0) -> httpx.AsyncClient:
             pool=settings.LEETCODE_CONNECT_TIMEOUT
         )
         limits_cfg = httpx.Limits(max_keepalive_connections=settings.LEETCODE_MAX_CONCURRENCY, max_connections=settings.LEETCODE_MAX_CONCURRENCY * 2)
-        client = httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False)
+        client = httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=True)
         _client_local.client = client
         _client_local.loop = current_loop
     return client
@@ -385,7 +385,11 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Content-Type": "application/json",
         "Accept": "*/*",
-        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Language": "en-US,en;q=0.9,en;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin",
         "Origin": "https://leetcode.com",
         "Referer": f"https://leetcode.com/u/{username}/"
     }
@@ -422,17 +426,18 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
                         else:
                             last_error_detail = f"User '{username}' does not exist on LeetCode (matchedUser is null)"
                             break
-                elif res.status_code == 429:
-                    await circuit_breaker.record_failure()
-                    adaptive_batch_controller.report_failure(429)
+                elif res.status_code in [429, 403]:
+                    if res.status_code != 403:
+                        await circuit_breaker.record_failure()
+                    adaptive_batch_controller.report_failure(res.status_code)
                     retry_after = res.headers.get("Retry-After")
                     import random
                     if retry_after and retry_after.isdigit():
                         backoff_sec = min(30.0, float(retry_after) + random.uniform(0.1, 0.5))
                     else:
-                        backoff_sec = min(30.0, (2.0 ** attempt) + random.uniform(0.2, 0.8))
-                    last_error_detail = f"HTTP 429 Rate Limited (Backoff {round(backoff_sec, 2)}s)"
-                    logger.warning(f"LeetCode 429 Rate Limit for '{username}' (Attempt {attempt}/{retries}). Backoff {round(backoff_sec, 2)}s")
+                        backoff_sec = min(30.0, (2.0 ** attempt) + random.uniform(1.0, 3.0))
+                    last_error_detail = f"HTTP {res.status_code} Blocked (Backoff {round(backoff_sec, 2)}s)"
+                    logger.warning(f"LeetCode {res.status_code} Block for '{username}' (Attempt {attempt}/{retries}). Backoff {round(backoff_sec, 2)}s")
                     if attempt < retries:
                         await asyncio.sleep(backoff_sec)
                         continue

@@ -473,19 +473,19 @@ const StaffAllocationModal: React.FC<{
                     </div>
 
                     {fac.students && fac.students.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1 custom-scrollbar">
+                      <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1 custom-scrollbar content-start">
                         {fac.students.map(s => (
                           <span
                             key={s.id}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 border border-slate-300 dark:border-navy-600 text-xs font-extrabold text-slate-900 dark:text-white shadow-2xs group/tag"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 shadow-xs group/tag"
                           >
-                            <span className="truncate max-w-[120px]">{s.name}</span>
+                            <span className="truncate max-w-[100px]">{s.name}</span>
                             <button
                               onClick={() => handleUnassignStudent(fac.faculty_id, s.id)}
                               title="Unassign mentee"
-                              className="text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 p-0.5 rounded transition-colors font-bold"
+                              className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-0.5 rounded-sm transition-colors flex items-center justify-center hover:bg-rose-50 dark:hover:bg-rose-500/10"
                             >
-                              <X size={13} />
+                              <X size={12} strokeWidth={2.5} />
                             </button>
                           </span>
                         ))}

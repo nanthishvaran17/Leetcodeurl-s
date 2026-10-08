@@ -148,11 +148,11 @@ def _derived_growth(db: Session, students: List[Student], cutoff: datetime.datet
         # Check if the baseline snapshot is too old to be considered for this period
         # This prevents a snapshot from 3 months ago being used as the baseline for "Today"
         if period == "today":
-            max_age_days = 2.0
+            max_age_days = 7.0
         elif period == "7d":
-            max_age_days = 5.0
+            max_age_days = 14.0
         elif period == "30d":
-            max_age_days = 15.0
+            max_age_days = 60.0
         else:
             max_age_days = 365.0
 
@@ -177,45 +177,28 @@ def _derived_growth(db: Session, students: List[Student], cutoff: datetime.datet
 
         latest_snap = snaps[-1]
 
-        # Delta calculation between latest and baseline
+        # Delta calculation between valid baseline and current stats
         if baseline_snap is None:
             # No valid baseline for this period means no known growth
-            b_tot = cur_tot
-            b_easy = cur_easy
-            b_med = cur_med
-            b_hard = cur_hard
-            b_rat = cur_rat
+            d_tot = 0
+            d_easy = 0
+            d_med = 0
+            d_hard = 0
+            d_rat = 0.0
         else:
-            b_tot = baseline_snap.total_solved or 0
             b_easy = baseline_snap.easy_solved or 0
             b_med = baseline_snap.medium_solved or 0
             b_hard = baseline_snap.hard_solved or 0
             b_rat = baseline_snap.contest_rating or cur_rat
 
-        l_tot = max(cur_tot, latest_snap.total_solved or 0)
-        l_easy = max(cur_easy, latest_snap.easy_solved or 0)
-        l_med = max(cur_med, latest_snap.medium_solved or 0)
-        l_hard = max(cur_hard, latest_snap.hard_solved or 0)
-        l_rat = cur_rat if cur_rat else (latest_snap.contest_rating or 1500.0)
+            # Ensure we don't show negative growth if current drops due to scraper error
+            d_easy = max(0, cur_easy - b_easy)
+            d_med = max(0, cur_med - b_med)
+            d_hard = max(0, cur_hard - b_hard)
+            d_rat = round(cur_rat - b_rat, 1)
 
-        d_easy = max(0, l_easy - b_easy)
-        d_med = max(0, l_med - b_med)
-        d_hard = max(0, l_hard - b_hard)
-        d_rat = round(l_rat - b_rat, 1)  # type: ignore
-
-        # In case delta is 0 but snapshots indicate interim progress within the period
-        if max(0, l_tot - b_tot) == 0 and len(snaps) > 1 and period in ("7d", "30d"):
-            period_snaps = [s for s in snaps if (s.captured_at.replace(tzinfo=UTC_TZ) if s.captured_at.tzinfo is None else s.captured_at) >= cutoff]
-            if baseline_snap and baseline_snap not in period_snaps:
-                period_snaps = [baseline_snap] + period_snaps
-            
-            if len(period_snaps) > 1:
-                d_easy = sum(max(0, (period_snaps[i].easy_solved or 0) - (period_snaps[i-1].easy_solved or 0)) for i in range(1, len(period_snaps)))
-                d_med = sum(max(0, (period_snaps[i].medium_solved or 0) - (period_snaps[i-1].medium_solved or 0)) for i in range(1, len(period_snaps)))
-                d_hard = sum(max(0, (period_snaps[i].hard_solved or 0) - (period_snaps[i-1].hard_solved or 0)) for i in range(1, len(period_snaps)))
-
-        # Enforce exact math match so the UI numbers add up perfectly
-        d_tot = d_easy + d_med + d_hard
+            # Enforce exact math match so the UI numbers add up perfectly
+            d_tot = d_easy + d_med + d_hard
 
         growth[s_id] = {
             "total": d_tot,
@@ -298,6 +281,20 @@ def get_student_history(
         db.commit()
         db.refresh(snap)
         snapshots = [snap]
+
+    # Calculate dynamic deltas between adjacent time series points
+    for i in range(len(snapshots)):
+        if i < len(snapshots) - 1:
+            prev_snap = snapshots[i + 1]
+            snapshots[i].delta_total = snapshots[i].total_solved - prev_snap.total_solved
+            snapshots[i].delta_easy = snapshots[i].easy_solved - prev_snap.easy_solved
+            snapshots[i].delta_medium = snapshots[i].medium_solved - prev_snap.medium_solved
+            snapshots[i].delta_hard = snapshots[i].hard_solved - prev_snap.hard_solved
+        else:
+            snapshots[i].delta_total = 0
+            snapshots[i].delta_easy = 0
+            snapshots[i].delta_medium = 0
+            snapshots[i].delta_hard = 0
 
     # Return enriched response containing student info + snapshots
     return {

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, startTransition } from 'react';
-import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock, Building2, GraduationCap, ChevronDown, Check, Target, Loader2, Trophy } from 'lucide-react';
+import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock, Building2, GraduationCap, ChevronDown, Check, Target, Loader2, Trophy, RefreshCw } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api, { getApiUrl } from '../services/api';
 import { ReportPreview } from '../components/ReportPreview';
 import { EmailDeliveryTab } from '../components/EmailDeliveryTab';
 import { CertificateManagementModal } from '../components/CertificateManagementModal';
+import { SyncStatusModal } from '../components/SyncStatusModal';
 import { ConfirmDeleteModal, DeleteItemInfo } from '../components/ConfirmDeleteModal';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
@@ -19,6 +20,7 @@ export const ReportsPage: React.FC = () => {
   const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState<'reports' | 'email' | 'manual_email' | 'auto_email'>('reports');
   const [showCertModal, setShowCertModal] = useState<boolean>(false);
+  const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
   const [hodSnapshots, setHodSnapshots] = useState<any[]>([]);
   const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false);
@@ -67,19 +69,20 @@ export const ReportsPage: React.FC = () => {
   }, [selectedReportType, selectedDept, selectedYear, selectedOutputScope, selectedSessionId]);
 
   useEffect(() => {
-    if (deleteModalItem || showCertModal || activeUniversalPreviewId) {
+    if (deleteModalItem || showCertModal || activeUniversalPreviewId || showSyncModal) {
       pushContext('MODAL');
       const unregister = registerEscHandler(() => {
         if (deleteModalItem) setDeleteModalItem(null);
         if (showCertModal) setShowCertModal(false);
         if (activeUniversalPreviewId) setActiveUniversalPreviewId(null);
+        if (showSyncModal) setShowSyncModal(false);
       });
       return () => {
         unregister();
         popContext('MODAL');
       };
     }
-  }, [deleteModalItem, showCertModal, activeUniversalPreviewId, pushContext, popContext, registerEscHandler]);
+  }, [deleteModalItem, showCertModal, activeUniversalPreviewId, showSyncModal, pushContext, popContext, registerEscHandler]);
 
   useEffect(() => {
     fetchEmailLogs();
@@ -105,6 +108,16 @@ export const ReportsPage: React.FC = () => {
       setEmailLogs(res.data);
     } catch (err) {
       console.error("Failed to fetch email logs", err);
+    }
+  };
+
+  const handleTriggerSync = async () => {
+    try {
+      await api.post('/api/sync/trigger');
+      setShowSyncModal(true);
+      notify.success('Sync Started', 'Background live sync initialized.', { category: 'SYNC' });
+    } catch (err: any) {
+      notify.error('Sync Failed', err.response?.data?.detail || "Failed to trigger sync.", { category: 'SYNC' });
     }
   };
 
@@ -575,6 +588,13 @@ export const ReportsPage: React.FC = () => {
 
           <div className="flex items-center space-x-3 flex-wrap gap-2">
             <button
+              onClick={handleTriggerSync}
+              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-bold shadow-lg shadow-emerald-600/30 transition-all transform hover:scale-105 cursor-pointer"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Live Sync</span>
+            </button>
+            <button
               onClick={() => setShowCertModal(true)}
               className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all transform hover:scale-105 cursor-pointer"
             >
@@ -1044,6 +1064,12 @@ export const ReportsPage: React.FC = () => {
               onClose={() => setShowCertModal(false)}
             />
           )}
+
+          {/* Sync Status Modal */}
+          <SyncStatusModal 
+            isOpen={showSyncModal} 
+            onClose={() => setShowSyncModal(false)} 
+          />
 
           {/* Premium Floating Center Confirmation Modal */}
           {deleteModalItem && (

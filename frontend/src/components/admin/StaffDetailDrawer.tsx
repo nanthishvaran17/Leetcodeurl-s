@@ -62,7 +62,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   const totalProblemsSolved = loadingMentees ? (staff.coding_activity || 0) : mentees.reduce((acc, m) => acc + (m.total_solved || 0), 0);
   const targetCompletedCount = mentees.filter(m => (m.total_solved || 0) >= 10).length;
   
-  const recentContestAttendedCount = mentees.filter(m => m.contest_standing && m.contest_standing !== '—' && !m.contest_standing.startsWith('0/')).length;
+  const recentContestAttendedCount = mentees.filter(m => m.contest_standing && m.contest_standing !== '—').length;
   const contestAttendanceRate = assignedCount > 0 ? Math.round((recentContestAttendedCount / assignedCount) * 100) : 0;
 
 
@@ -71,7 +71,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
       <div className="w-full max-w-xl h-[85vh] sm:h-[100dvh] bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden flex flex-col rounded-t-3xl sm:rounded-none">
 
         {/* Hero Header Profile Section */}
-        <div className="relative bg-gradient-to-br from-[#0a1628] via-[#0f2244] to-[#1a1040] text-white overflow-hidden shrink-0">
+        <div className="relative bg-gradient-to-br from-brand-700 via-indigo-800 to-purple-900 text-white overflow-hidden shrink-0">
           {/* Decorative blobs */}
           <div className="absolute -top-10 -right-10 w-56 h-56 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
@@ -109,11 +109,9 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
 
             <div className="min-w-0 flex-1 pb-1">
               {/* Full name (large) */}
-              {staff.full_name && (
-                <div className="text-xl font-black text-white leading-tight truncate" title={staff.full_name}>
-                  {staff.full_name}
-                </div>
-              )}
+              <div className="text-xl font-black text-white leading-tight truncate" title={staff.full_name || staff.username}>
+                {staff.full_name || staff.username}
+              </div>
               {/* Username */}
               <div className="text-xs text-slate-300 font-mono truncate mt-0.5" title={staff.username}>
                 @{staff.username}
@@ -267,13 +265,13 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
               ) : (
                 <div className="max-h-72 overflow-y-auto">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead className="bg-slate-100 dark:bg-navy-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 sticky top-0 border-b border-slate-200 dark:border-navy-700">
+                    <thead className="bg-slate-100 dark:bg-navy-800 text-[9px] sm:text-[10px] font-bold text-slate-700 dark:text-slate-300 sticky top-0 border-b border-slate-200 dark:border-navy-700">
                       <tr>
-                        <th className="py-2.5 px-3">Student Info</th>
-                        <th className="py-2.5 px-3 text-center">Year / Sec</th>
-                        <th className="py-2.5 px-3 text-right">Solved</th>
-                        <th className="py-2.5 px-3 text-center">Status</th>
-                        {onSelectStudent && <th className="py-2.5 px-3 text-center">Action</th>}
+                        <th className="py-2 px-1.5 sm:px-3 text-left">Student Info</th>
+                        <th className="py-2 px-1.5 sm:px-3 text-center">Year / Sec</th>
+                        <th className="py-2 px-1.5 sm:px-3 text-right">Solved</th>
+                        <th className="py-2 px-1.5 sm:px-3 text-center">Status</th>
+                        {onSelectStudent && <th className="py-2 px-1.5 sm:px-3 text-center">Action</th>}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
@@ -281,37 +279,38 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                         const isStudentActive = (s.total_solved || 0) > 0 || s.is_active || s.status === 'ACTIVE';
                         return (
                           <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/80 transition">
-                            <td className="py-2.5 px-3">
-                              <div className="font-extrabold text-slate-900 dark:text-white text-xs">{s.name}</div>
-                              <div className="text-[10px] text-amber-700 dark:text-amber-400 font-bold">{s.reg_no}</div>
+                            <td className="py-2.5 px-1.5 sm:px-3">
+                              <div className="font-extrabold text-slate-900 dark:text-white text-[11px] sm:text-xs leading-tight break-words min-w-[70px]">{s.name}</div>
+                              <div className="text-[9px] sm:text-[10px] text-amber-700 dark:text-amber-400 font-bold mt-0.5">{s.reg_no}</div>
                             </td>
-                            <td className="py-2.5 px-3 text-center font-bold text-slate-700 dark:text-slate-300 text-[11px]">
-                              {s.year_level || 'Yr-N/A'} {s.department_code ? `(${s.department_code})` : ''}
+                            <td className="py-2.5 px-1.5 sm:px-3 text-center font-bold text-slate-700 dark:text-slate-300 text-[10px] sm:text-[11px] min-w-[60px]">
+                              <div>{s.year_level || 'Yr-N/A'}</div>
+                              <div className="text-[9px] opacity-80">{s.department_code ? `(${s.department_code})` : ''}</div>
                             </td>
-                            <td className="py-2.5 px-3 text-right font-extrabold text-slate-900 dark:text-white text-xs">
+                            <td className="py-2.5 px-1.5 sm:px-3 text-right font-extrabold text-slate-900 dark:text-white text-[11px] sm:text-xs whitespace-nowrap">
                               {s.total_solved || 0}
                               {s.easy_solved !== undefined && (
-                                <div className="text-[9px] text-slate-500 font-normal">
+                                <div className="text-[8px] sm:text-[9px] text-slate-500 font-normal">
                                   {s.easy_solved}E / {s.medium_solved || 0}M / {s.hard_solved || 0}H
                                 </div>
                               )}
                             </td>
-                            <td className="py-2.5 px-3 text-center">
+                            <td className="py-2.5 px-1.5 sm:px-3 text-center">
                               {isStudentActive ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-300 dark:border-emerald-800">
-                                  <CheckCircle size={11} className="text-emerald-600 dark:text-emerald-400" /> Active
+                                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] sm:text-[10px] font-extrabold border border-emerald-300 dark:border-emerald-800 whitespace-nowrap">
+                                  <CheckCircle size={10} className="text-emerald-600 dark:text-emerald-400 shrink-0" /> Active
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold border border-slate-300 dark:border-navy-700">
+                                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-400 text-[9px] sm:text-[10px] font-bold border border-slate-300 dark:border-navy-700 whitespace-nowrap">
                                   Inactive
                                 </span>
                               )}
                             </td>
                             {onSelectStudent && (
-                              <td className="py-2.5 px-3 text-center">
+                              <td className="py-2.5 px-1.5 sm:px-3 text-center">
                                 <button
                                   onClick={() => onSelectStudent(s)}
-                                  className="px-2.5 py-1 rounded-full bg-brand-50 hover:bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 font-bold text-[10px] transition cursor-pointer border border-brand-200"
+                                  className="px-2 py-1 rounded-full bg-brand-50 hover:bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 font-bold text-[9px] sm:text-[10px] transition cursor-pointer border border-brand-200 whitespace-nowrap"
                                 >
                                   Inspect →
                                 </button>

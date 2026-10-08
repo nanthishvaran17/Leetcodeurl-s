@@ -588,8 +588,8 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={twMerge(
-            "relative w-full flex items-center justify-between px-3.5 py-2 h-11 min-h-[44px]",
-            "border-2 transition-all duration-200 outline-none select-none rounded-2xl cursor-pointer shadow-sm text-left group",
+            "relative w-full flex items-center justify-between px-3 py-1.5 h-10 min-h-[40px] sm:px-3.5 sm:py-2 sm:h-11 sm:min-h-[44px]",
+            "border-2 transition-all duration-200 outline-none select-none rounded-xl sm:rounded-2xl cursor-pointer shadow-sm text-left group",
             variant === 'dark'
               ? "bg-navy-900/90 text-white border-slate-700 hover:border-brand-500/60 shadow-inner backdrop-blur-md"
               : variant === 'glass'

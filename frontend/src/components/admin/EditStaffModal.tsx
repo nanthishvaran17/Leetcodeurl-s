@@ -781,8 +781,8 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                             <button
                               type="button"
                               onClick={() => setRoleOpen(o => !o)}
-                              className={`w-full flex items-center justify-between px-4 py-2.5 rounded-2xl border-2 transition-all text-left cursor-pointer shadow-2xs ${
-                                roleOpen ? `${rc.bgColor} ${rc.borderColor} ring-2 ring-indigo-500/20` : 'bg-white dark:bg-navy-950 border-slate-300 dark:border-navy-700'
+                              className={`w-full flex items-center justify-between px-4 py-2.5 rounded-2xl border transition-all text-left cursor-pointer shadow-2xs ${
+                                roleOpen ? `${rc.bgColor} ${rc.borderColor} ring-2 ring-brand-500/20 shadow-md` : `${rc.bgColor} border-slate-300 dark:border-navy-700 hover:${rc.borderColor}`
                               }`}
                             >
                               <div className="flex items-center gap-3">
@@ -852,28 +852,28 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                           <button
                             type="button"
                             onClick={() => setHodDeptOpen(!hodDeptOpen)}
-                            className={`flex items-center justify-between flex-nowrap space-x-2 transition-all duration-200 text-left cursor-pointer group shadow-sm box-border w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-white dark:bg-slate-800/90 border-slate-300 dark:border-slate-700 hover:border-brand-500/60 ${hodDeptOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10' : ''}`}
+                            className={`flex items-center justify-between flex-nowrap space-x-2 transition-all duration-200 text-left cursor-pointer group shadow-sm box-border w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/50 ${hodDeptOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10 bg-indigo-50' : ''}`}
                           >
                             <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden pr-1.5">
                               <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-colors ${
                                 hodDeptOpen
-                                  ? 'bg-brand-50 dark:bg-brand-950/80 border-brand-300 text-brand-600 dark:text-brand-400'
-                                  : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 group-hover:text-brand-600 group-hover:border-brand-500/50'
+                                  ? 'bg-brand-500 border-brand-600 text-white'
+                                  : 'bg-indigo-100 dark:bg-indigo-800 border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-300 group-hover:text-indigo-700 group-hover:border-indigo-300'
                               }`}>
                                 <Building2 className="w-3.5 h-3.5 shrink-0" />
                               </div>
                               <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden">
                                 {formData.hod_department_ids.length > 0 && (
-                                  <span className="shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border bg-brand-100 dark:bg-brand-900/80 text-brand-900 dark:text-brand-200 border-brand-300 dark:border-brand-800">
+                                  <span className="shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border bg-indigo-200 dark:bg-indigo-800 text-indigo-900 dark:text-indigo-100 border-indigo-300 dark:border-indigo-700">
                                     {formData.hod_department_ids.length}
                                   </span>
                                 )}
-                                <span className={`text-xs font-black truncate block min-w-0 flex-1 ${formData.hod_department_ids.length > 0 ? 'text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'}`}>
+                                <span className={`text-xs font-black truncate block min-w-0 flex-1 ${formData.hod_department_ids.length > 0 ? 'text-indigo-950 dark:text-indigo-100' : 'text-indigo-800 dark:text-indigo-300'}`}>
                                   {formData.hod_department_ids.length === 0 ? 'Select Departments...' : `Selected`}
                                 </span>
                               </div>
                             </div>
-                            <ChevronDown className={`w-4 h-4 shrink-0 text-slate-700 dark:text-slate-300 transition-transform duration-200 ${hodDeptOpen ? 'rotate-180 text-brand-600 dark:text-brand-400' : 'group-hover:text-slate-900 dark:group-hover:text-white'}`} />
+                            <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${hodDeptOpen ? 'rotate-180 text-brand-600 dark:text-brand-400' : 'text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800'}`} />
                           </button>
                           {hodDeptOpen && (
                             <div className="absolute left-0 right-0 z-[9999] mt-2 max-h-64 overflow-y-auto rounded-2xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl p-1.5 space-y-0.5">
@@ -889,14 +889,14 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                                         : [...formData.hod_department_ids, opt.value];
                                       setFormData({ ...formData, hod_department_ids: newIds, department_id: newIds.length > 0 ? newIds[0] : '0' });
                                     }}
-                                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer ${isSel ? `bg-brand-50 dark:bg-brand-500/10` : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer ${isSel ? `bg-indigo-50 dark:bg-indigo-900/30` : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
                                   >
                                     <div className="flex items-center space-x-2 flex-1 pr-2">
-                                      <span className={`text-[11px] leading-snug font-black whitespace-normal break-words ${isSel ? 'text-brand-700 dark:text-brand-300' : 'text-slate-700 dark:text-slate-300'}`}>
+                                      <span className={`text-[11px] leading-snug font-black whitespace-normal break-words ${isSel ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300'}`}>
                                         {opt.label}
                                       </span>
                                     </div>
-                                    <div className={`w-4 h-4 shrink-0 rounded flex items-center justify-center border transition-colors ${isSel ? 'bg-brand-500 border-brand-600 text-white' : 'border-slate-300 dark:border-slate-600'}`}>
+                                    <div className={`w-4 h-4 shrink-0 rounded flex items-center justify-center border transition-colors ${isSel ? 'bg-indigo-500 border-indigo-600 text-white' : 'border-slate-300 dark:border-slate-600'}`}>
                                       {isSel && <Check className="w-3 h-3 stroke-[3]" />}
                                     </div>
                                   </button>
@@ -913,6 +913,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                           onChange={(val) => setFormData({...formData, department_id: val, hod_department_ids: [val]})}
                           placeholder="Select Department..."
                           icon={Building2}
+                          triggerClassName="w-full h-11 min-h-[44px] py-2 rounded-2xl border bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/50 text-indigo-900"
                         />
                       )}
                     </div>
@@ -932,6 +933,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                           onChange={(val) => setFormData({...formData, academic_year: val})}
                           placeholder="Select Year Cohort..."
                           icon={GraduationCap}
+                          triggerClassName="w-full h-11 min-h-[44px] py-2 rounded-2xl border bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700/50 hover:border-emerald-300 dark:hover:border-emerald-500/50 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/50 text-emerald-900"
                         />
                       )}
                     </div>
