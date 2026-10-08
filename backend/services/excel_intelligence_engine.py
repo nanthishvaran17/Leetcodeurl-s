@@ -289,21 +289,24 @@ def find_best_header_row_and_dataframe(file_bytes: bytes) -> Tuple[pd.DataFrame,
     """
     import io
 
-    df_raw = None
-    try:
-        df_raw = pd.read_excel(io.BytesIO(file_bytes), header=None)
-    except Exception:
+    def _safe_read_df(header_arg=None):
         try:
-            df_raw = pd.read_csv(io.BytesIO(file_bytes), header=None)
+            return pd.read_excel(io.BytesIO(file_bytes), header=header_arg)
         except Exception:
-            pass
+            for enc in ['utf-8', 'utf-8-sig', 'latin1', 'cp1252']:
+                try:
+                    return pd.read_csv(io.BytesIO(file_bytes), header=header_arg, encoding=enc)
+                except Exception:
+                    continue
+        return None
+
+    df_raw = _safe_read_df(header_arg=None)
 
     if df_raw is None or df_raw.empty:
-        try:
-            df_std = pd.read_excel(io.BytesIO(file_bytes))
-        except Exception:
-            df_std = pd.read_csv(io.BytesIO(file_bytes))
-        return df_std, [str(c).strip() for c in df_std.columns]  # type: ignore
+        df_std = _safe_read_df(header_arg=0)
+        if df_std is not None and not df_std.empty:
+            return df_std, [str(c).strip() for c in df_std.columns]  # type: ignore
+        return pd.DataFrame(), []
 
     header_keywords = {
         "reg", "roll", "register", "reg_no", "regno", "roll_no", "rollno",
@@ -342,10 +345,9 @@ def find_best_header_row_and_dataframe(file_bytes: bytes) -> Tuple[pd.DataFrame,
         data_df = data_df.dropna(how="all")
         return data_df, headers
 
-    try:
-        df_std = pd.read_excel(io.BytesIO(file_bytes))
-    except Exception:
-        df_std = pd.read_csv(io.BytesIO(file_bytes))
-    
-    return df_std, [str(c).strip() for c in df_std.columns]  # type: ignore
+    df_std = _safe_read_df(header_arg=0)
+    if df_std is not None and not df_std.empty:
+        return df_std, [str(c).strip() for c in df_std.columns]  # type: ignore
+
+    return pd.DataFrame(), []
 

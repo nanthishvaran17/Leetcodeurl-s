@@ -233,9 +233,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
       formData.append('file', selected);
 
       try {
-        const res = await api.post('/students/analyze-import', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        const res = await api.post('/students/analyze-import', formData);
 
         if (res.data && res.data.success) {
           setAnalysisData(res.data);
@@ -263,9 +261,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
     formData.append('custom_mapping', JSON.stringify(customMapping));
 
     try {
-      const res = await api.post('/students/analyze-import', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await api.post('/students/analyze-import', formData);
 
       if (res.data && res.data.success) {
         setAnalysisData(res.data);
@@ -294,9 +290,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
     formData.append('confirmed_new_departments', JSON.stringify(confirmedNewDepts));
 
     try {
-      const res = await api.post('/students/commit-import', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await api.post('/students/commit-import', formData);
 
       if (res.data && res.data.success) {
         setCommitSummary(res.data.summary);

@@ -337,7 +337,8 @@ def build_certificate_pdf_from_record(
     """
     dept_code = cert.department or "CSE(CS)"
     dept_name = cert.department_name or resolve_department_name(dept_code)
-    ver_url = cert.verification_url or f"https://leetcode-student-data.web.app/verify/{cert.verification_id}"
+    frontend_url = os.getenv("FRONTEND_URL", "https://leetcode-student-data.web.app").rstrip("/")
+    ver_url = cert.verification_url or f"{frontend_url}/verify/{cert.verification_id}"
 
     if not target_path and cert.pdf_path:
         target_path = cert.pdf_path
@@ -396,7 +397,8 @@ def generate_student_certificate(
     else:
         cert_id = candidate_id
         
-    verification_url = f"https://leetcode-student-data.web.app/verify/{cert_id}"
+    frontend_url = os.getenv("FRONTEND_URL", "https://leetcode-student-data.web.app").rstrip("/")
+    verification_url = f"{frontend_url}/verify/{cert_id}"
     
     # Date Display
     today_dt = datetime.date.today()

@@ -128,6 +128,14 @@ api.interceptors.request.use(async (config) => {
     config.url = config.url.substring(4);
   }
 
+  // If request data is FormData, delete fixed Content-Type header so Axios/browser sets boundary automatically
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    if (config.headers) {
+      delete config.headers['Content-Type'];
+      delete config.headers['content-type'];
+    }
+  }
+
   // Fix: Provide the actual Origin header for Capacitor requests to pass backend CSRF validation.
   // CapacitorHttp native fetch drops the Origin header in some WebView versions.
   // We use window.location.origin to supply the real origin (not hardcoded).

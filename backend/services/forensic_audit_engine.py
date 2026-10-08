@@ -1,3 +1,4 @@
+import os
 import hashlib
 import datetime
 import re
@@ -273,7 +274,8 @@ def build_normalized_forensic_report(
     # Sync / Provision CertificateRecord in Database for public resolver consistency
     try:
         existing_cert: Any = db.query(CertificateRecord).filter(CertificateRecord.verification_id == final_trace_id).first()
-        ver_url = f"https://leetcode-student-data.web.app/verify/{final_trace_id}"
+        frontend_url = os.getenv("FRONTEND_URL", "https://leetcode-student-data.web.app").rstrip("/")
+        ver_url = f"{frontend_url}/verify/{final_trace_id}"
 
         if existing_cert:
             existing_cert.student_name = student.name

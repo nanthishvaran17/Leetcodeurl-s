@@ -192,7 +192,7 @@ def resolve_certificate_record(
             recognition=f"Official Contest Forensic Verification: {contest_name}",
             issue_date=contest_date,
             status="VALID",
-            verification_url=f"https://leetcode-student-data.web.app/verify/{target_v_id}",
+            verification_url=f"{os.getenv('FRONTEND_URL', 'https://leetcode-student-data.web.app').rstrip('/')}/verify/{target_v_id}",
             created_by="Automated Forensic Engine"
         )
     else:
@@ -212,7 +212,7 @@ def resolve_certificate_record(
             recognition="Top Performer",
             issue_date=datetime.date.today().strftime("%b %d, %Y"),
             status="VALID",
-            verification_url=f"https://leetcode-student-data.web.app/verify/{target_v_id}",
+            verification_url=f"{os.getenv('FRONTEND_URL', 'https://leetcode-student-data.web.app').rstrip('/')}/verify/{target_v_id}",
             created_by="Institutional Certificate Engine"
         )
 
