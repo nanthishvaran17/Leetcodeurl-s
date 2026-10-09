@@ -2249,4 +2249,3 @@ def request_secondary_account(
     db.commit()
 
     return {"status": "success", "message": "Secondary account requested and is pending approval."}
-
