@@ -166,6 +166,7 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
     }
     return { text: ' Sync Engine Ready', color: 'text-brand-600 dark:text-brand-400 bg-brand-500/10 border-brand-500/30' };
   };
+  const workerBadge = getWorkerStatusBadge();
 
   const getInitiatedByDisplay = () => {
     const raw = syncStatus?.triggered_by || syncStatus?.last_triggered_by;
