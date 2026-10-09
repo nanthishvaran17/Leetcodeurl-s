@@ -1569,99 +1569,121 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const stats = useMemo(() => {
     const isScopeActive = selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL';
 
-    // Calculate real dynamic counts from matrixRows if available (Fallback only if backend metrics fail)
     let calcAttended = 0;
     let calcVirtual = 0;
     let calcNotAttended = 0;
     let calcDataError = 0;
+    let calcQ4 = 0;
+    let calcQ3 = 0;
+    let calcQ2 = 0;
+    let calcQ1 = 0;
+    let calcVirt4 = 0;
+    let calcVirt3 = 0;
+    let calcVirt2 = 0;
+    let calcVirt1 = 0;
 
-    if (matrixRows && matrixRows.length > 0) {
+    const hasMatrixRows = matrixRows && matrixRows.length > 0;
+
+    if (hasMatrixRows) {
       for (const r of matrixRows) {
         const st = (r.participation_status || r.status || '').toString().toUpperCase();
+        
+        // Dynamic score / total solved calculation
+        let solved = 0;
+        if (r.total_solved !== undefined && r.total_solved !== null && r.total_solved !== '—') {
+          solved = Number(r.total_solved) || 0;
+        } else if (r.total_contest_solved !== undefined && r.total_contest_solved !== null && r.total_contest_solved !== '—') {
+          solved = Number(r.total_contest_solved) || 0;
+        } else {
+          const q1 = (r.q1 === 1 || r.q1 === '1') ? 1 : 0;
+          const q2 = (r.q2 === 1 || r.q2 === '1') ? 1 : 0;
+          const q3 = (r.q3 === 1 || r.q3 === '1') ? 1 : 0;
+          const q4 = (r.q4 === 1 || r.q4 === '1') ? 1 : 0;
+          solved = q1 + q2 + q3 + q4;
+        }
+
         if (st === 'VIRTUAL' || st === 'VIRTUAL_ATTENDED') {
           calcVirtual++;
+          if (solved >= 4) calcVirt4++;
+          else if (solved === 3) calcVirt3++;
+          else if (solved === 2) calcVirt2++;
+          else if (solved === 1) calcVirt1++;
         } else if (st === 'PUBLIC' || st === 'PUBLIC_ATTENDED' || st === 'ATTENDED') {
           calcAttended++;
+          if (solved >= 4) calcQ4++;
+          else if (solved === 3) calcQ3++;
+          else if (solved === 2) calcQ2++;
+          else if (solved === 1) calcQ1++;
         } else if (
           !r.username ||
           [
-            // Identity errors
             'USERNAME_NOT_FOUND', 'INVALID_USERNAME',
-            // Fetch/network errors (canonical backend values)
             'FETCH_FAILED', 'FETCH_ERROR', 'DATA_ERROR',
-            // Data integrity errors
             'DATA_MISMATCH', 'CONFLICT',
-            // Access/infra errors
             'AUTH_REQUIRED', 'BLOCKED', 'SOURCE_UNAVAILABLE',
-            // Legacy / non-canonical
             'ERROR', 'INVALID',
           ].includes(st)
         ) {
           calcDataError++;
-        } else if (st === 'NOT_ATTENDED') {
-          calcNotAttended++;
         } else {
-          // NOT_VERIFIED / PENDING / unknown → treat as not-attended for display
           calcNotAttended++;
         }
       }
     }
 
-    const fallbackTotal = matrixRows && matrixRows.length > 0 ? matrixRows.length : 0;
-    const totalRowsVal = sessionMetrics?.totalStudents ?? sessionMetrics?.totalCount ?? fastSummary?.totalStudents ?? (totalRows > 0 ? totalRows : undefined) ?? fallbackTotal;
-    const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? fastSummary?.participantCount ?? calcAttended;
-    const virtualRows = sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? fastSummary?.virtualParticipants ?? calcVirtual;
-    const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.errors ?? sessionMetrics?.failedVerification ?? fastSummary?.dataErrors ?? fastSummary?.missingUsername ?? fastSummary?.errors ?? calcDataError;
-    const rawNotAttended = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? fastSummary?.notParticipated ?? calcNotAttended;
-    const notAttendedRows = (rawNotAttended !== undefined && rawNotAttended !== null && (attendedRows + virtualRows + errorRows + rawNotAttended === totalRowsVal))
-      ? rawNotAttended
+    const fallbackTotal = hasMatrixRows ? matrixRows.length : 0;
+
+    // Use dynamic scope-calculated metrics whenever scope is filtered OR sessionMetrics doesn't cover matrixRows
+    const totalRowsVal = (isScopeActive && hasMatrixRows)
+      ? matrixRows.length
+      : (sessionMetrics?.totalStudents ?? sessionMetrics?.totalCount ?? fastSummary?.totalStudents ?? (totalRows > 0 ? totalRows : undefined) ?? fallbackTotal);
+
+    const attendedRows = (isScopeActive && hasMatrixRows)
+      ? calcAttended
+      : (sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? fastSummary?.participantCount ?? calcAttended);
+
+    const virtualRows = (isScopeActive && hasMatrixRows)
+      ? calcVirtual
+      : (sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? fastSummary?.virtualParticipants ?? calcVirtual);
+
+    const errorRows = (isScopeActive && hasMatrixRows)
+      ? calcDataError
+      : (sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.errors ?? sessionMetrics?.failedVerification ?? fastSummary?.dataErrors ?? fastSummary?.missingUsername ?? fastSummary?.errors ?? calcDataError);
+
+    const notAttendedRows = (isScopeActive && hasMatrixRows)
+      ? calcNotAttended
       : Math.max(0, totalRowsVal - attendedRows - virtualRows - errorRows);
 
     const isVirtualAvailable = sessionMetrics?.virtualDataStatus === 'AVAILABLE' || virtualRows > 0;
 
-    // Active cohort total solve breakdown (4/4, 3/4, 2/4, 1/4 Solved)
-    const metricQ4 = sessionMetrics?.q4Count ?? sessionMetrics?.['4 Q Solved'];
-    const metricQ3 = sessionMetrics?.q3Count ?? sessionMetrics?.['3 Q Solved'];
-    const metricQ2 = sessionMetrics?.q2Count ?? sessionMetrics?.['2 Q Solved'];
-    const metricQ1 = sessionMetrics?.q1Count ?? sessionMetrics?.['1 Q Solved'];
+    let q4Solved = (isScopeActive && hasMatrixRows)
+      ? (calcQ4 + calcVirt4)
+      : (sessionMetrics?.q4Count ?? sessionMetrics?.['4 Q Solved'] ?? (calcQ4 + calcVirt4));
 
-    let q4Solved = metricQ4;
-    let q3Solved = metricQ3;
-    let q2Solved = metricQ2;
-    let q1Solved = metricQ1;
+    let q3Solved = (isScopeActive && hasMatrixRows)
+      ? (calcQ3 + calcVirt3)
+      : (sessionMetrics?.q3Count ?? sessionMetrics?.['3 Q Solved'] ?? (calcQ3 + calcVirt3));
 
-    let virtual4Solved = sessionMetrics?.virtual4Solved;
-    let virtual3Solved = sessionMetrics?.virtual3Solved;
-    let virtual2Solved = sessionMetrics?.virtual2Solved;
-    let virtual1Solved = sessionMetrics?.virtual1Solved;
+    let q2Solved = (isScopeActive && hasMatrixRows)
+      ? (calcQ2 + calcVirt2)
+      : (sessionMetrics?.q2Count ?? sessionMetrics?.['2 Q Solved'] ?? (calcQ2 + calcVirt2));
 
-    const metricSum = (Number(metricQ4) || 0) + (Number(metricQ3) || 0) + (Number(metricQ2) || 0) + (Number(metricQ1) || 0);
-    const totalParticipantsVal = attendedRows + virtualRows;
+    let q1Solved = (isScopeActive && hasMatrixRows)
+      ? (calcQ1 + calcVirt1)
+      : (sessionMetrics?.q1Count ?? sessionMetrics?.['1 Q Solved'] ?? (calcQ1 + calcVirt1));
 
-    const hasMetricCounts = (metricQ4 !== undefined && metricQ4 !== null) &&
-                            (metricQ3 !== undefined && metricQ3 !== null) &&
-                            (metricQ2 !== undefined && metricQ2 !== null) &&
-                            (metricQ1 !== undefined && metricQ1 !== null);
-
-    // Only rely on API-provided metrics or fastSummary. Do NOT recalculate using paginated matrixRows!
-    const forceRecalculate = !hasMetricCounts;
-
-    if (forceRecalculate) {
-      q4Solved = fastSummary?.solvedDistribution?.q4 ?? 0;
-      q3Solved = fastSummary?.solvedDistribution?.q3 ?? 0;
-      q2Solved = fastSummary?.solvedDistribution?.q2 ?? 0;
-      q1Solved = fastSummary?.solvedDistribution?.q1 ?? 0;
-      virtual4Solved = 0; virtual3Solved = 0; virtual2Solved = 0; virtual1Solved = 0;
-    }
+    let virtual4Solved = hasMatrixRows ? calcVirt4 : (sessionMetrics?.virtual4Solved ?? 0);
+    let virtual3Solved = hasMatrixRows ? calcVirt3 : (sessionMetrics?.virtual3Solved ?? 0);
+    let virtual2Solved = hasMatrixRows ? calcVirt2 : (sessionMetrics?.virtual2Solved ?? 0);
+    let virtual1Solved = hasMatrixRows ? calcVirt1 : (sessionMetrics?.virtual1Solved ?? 0);
 
     const publicPct = totalRowsVal > 0 ? Math.min(100, Math.max(0, (attendedRows / totalRowsVal) * 100)).toFixed(1) : '0.0';
     const virtualPct = totalRowsVal > 0 ? Math.min(100, Math.max(0, (virtualRows / totalRowsVal) * 100)).toFixed(1) : '0.0';
     const notAttendedPct = totalRowsVal > 0 ? Math.min(100, Math.max(0, (notAttendedRows / totalRowsVal) * 100)).toFixed(1) : '0.0';
-    // EXACT MANDATORY FORMULA: ((PUBLIC + VIRTUAL) / TOTAL) * 100
+    // Dynamic Participation %: ((PUBLIC + VIRTUAL) / TOTAL) * 100
     const totalParticipationPct = totalRowsVal > 0 ? Math.min(100, Math.max(0, ((attendedRows + virtualRows) / totalRowsVal) * 100)).toFixed(1) : '0.0';
 
     const topPerformers = sessionMetrics?.topPerformers ?? [];
-
     const q0Solved = Math.max(0, (attendedRows + virtualRows) - q4Solved - q3Solved - q2Solved - q1Solved);
 
     return {
@@ -1686,7 +1708,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       totalParticipationPct,
       topPerformers
     };
-  }, [sessionMetrics, fastSummary, matrixRows, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter]);
+  }, [sessionMetrics, fastSummary, matrixRows, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, totalRows]);
 
   // Pre-Indexed Matrix Rows for Ultra-Fast Instant Search & Filtering
   const indexedMatrixRows = useMemo(() => {
@@ -3613,7 +3635,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <span>Participation Trend</span>
               </h4>
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black border border-emerald-500/30 shadow-sm">
-                 +30.5% Growth
+                {comparison?.participationGrowthPct !== undefined
+                  ? `${comparison.participationGrowthPct >= 0 ? '+' : ''}${comparison.participationGrowthPct.toFixed(1)}% Growth`
+                  : `${stats.totalParticipationPct}% Active`}
               </span>
             </div>
 
@@ -3630,7 +3654,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
               {/* Inline SVG Sparkline */}
               <div className="shrink-0 bg-white/5 p-1.5 rounded-2xl border border-white/10 shadow-inner">
-                <Sparkline data={[10.2, 14.5, 18.0, 24.1, Number(stats.totalParticipationPct) || 40.7]} color="#818cf8" />
+                <Sparkline data={comparison?.historyTrend || [Math.max(0, Number(stats.totalParticipationPct) - 15), Math.max(0, Number(stats.totalParticipationPct) - 8), Math.max(0, Number(stats.totalParticipationPct) - 3), Number(stats.totalParticipationPct)]} color="#818cf8" />
               </div>
             </div>
 

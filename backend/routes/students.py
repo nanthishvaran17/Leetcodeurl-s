@@ -904,6 +904,22 @@ def get_student_detail(student_id: str, request: Request, db: Session = Depends(
             return b if isinstance(b, list) else []
             
         st_out.badge_list = _parse_badges(latest_prog.badge_list)
+
+    # Dynamic fail-safe rank computation if latest_prog ranks are missing
+    if not st_out.college_rank and student.stats and (student.stats.total_solved or 0) > 0:
+        c_higher = db.query(func.count(Student.id))\
+            .outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
+            .filter((Student.is_active == True) | (Student.is_active.is_(None)))\
+            .filter(LeetCodeProfileStats.total_solved > (student.stats.total_solved or 0)).scalar() or 0
+        st_out.college_rank = c_higher + 1
+
+    if not st_out.dept_rank and student.stats and (student.stats.total_solved or 0) > 0 and student.department_id:
+        d_higher = db.query(func.count(Student.id))\
+            .outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
+            .filter((Student.is_active == True) | (Student.is_active.is_(None)))\
+            .filter(Student.department_id == student.department_id)\
+            .filter(LeetCodeProfileStats.total_solved > (student.stats.total_solved or 0)).scalar() or 0
+        st_out.dept_rank = d_higher + 1
         
     return st_out
 

@@ -507,7 +507,7 @@ def get_individual_analytics(
 
         for h in hist_rows:
             if h.attended or (h.problems_solved or 0) > 0:
-                c_date = h.contest_start_time.strftime("%Y-%m-%d") if h.contest_start_time else "2026-10-04"
+                c_date = h.contest_start_time.strftime("%Y-%m-%d") if h.contest_start_time else (h.created_at.strftime("%Y-%m-%d") if h.created_at else datetime.date.today().isoformat())
                 contest_data.append({
                     "date": c_date,
                     "name": h.contest_name,
@@ -523,7 +523,7 @@ def get_individual_analytics(
         for pr in pub_rows:
             if (pr.participation_status or "").upper() in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED") or (pr.total_contest_solved or 0) > 0:
                 s_name = pr.session.contest_name if pr.session else "Weekly Contest"
-                s_date = pr.session.session_date if pr.session else "2026-10-04"
+                s_date = pr.session.session_date if (pr.session and pr.session.session_date) else (pr.last_fetched_at.strftime("%Y-%m-%d") if pr.last_fetched_at else datetime.date.today().isoformat())
                 contest_data.append({
                     "date": str(s_date),
                     "name": s_name,
@@ -1084,7 +1084,7 @@ def get_contest_aggregate(
 
             trend_list = [
                 {
-                    "date": p.session.session_date if p.session else "2026-10-04",
+                    "date": p.session.session_date if (p.session and p.session.session_date) else (p.last_fetched_at.strftime("%Y-%m-%d") if p.last_fetched_at else datetime.date.today().isoformat()),
                     "avg_rating": p.contest_rating,
                     "avg_rank": p.contest_rank
                 }

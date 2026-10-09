@@ -1019,15 +1019,40 @@ def start_scheduler():
     )
 
     # ── FRIDAY WEEKLY INTELLIGENCE PIPELINE ─────────────────────────────────────
+    # Thursday 23:30 IST — Pre-Friday LeetCode Rating & Rank Sync
+    scheduler.add_job(
+        friday_0400_rating_rank_sync_job,
+        CronTrigger(day_of_week='thu', hour=23, minute=30, timezone=IST),
+        id='thursday_2330_rating_rank_sync',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
+
     # Friday 04:00 AM IST — Automatic LeetCode Contest Rating & Global Rank Sync
     scheduler.add_job(
         friday_0400_rating_rank_sync_job,
         CronTrigger(day_of_week='fri', hour=4, minute=0, timezone=IST),
         id='friday_0400_rating_rank_sync',
         replace_existing=True,
-        max_instances=1,
-        coalesce=True,
-        misfire_grace_time=3600
+        max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
+
+    # Friday 07:00 AM IST — Morning LeetCode Rating Sync Check
+    scheduler.add_job(
+        friday_0400_rating_rank_sync_job,
+        CronTrigger(day_of_week='fri', hour=7, minute=0, timezone=IST),
+        id='friday_0700_rating_rank_sync',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
+
+    # Friday 08:00 AM IST — Full LeetCode Rating & Contest Rank Sync for All Active Students
+    scheduler.add_job(
+        friday_0400_rating_rank_sync_job,
+        CronTrigger(day_of_week='fri', hour=8, minute=0, timezone=IST),
+        id='friday_0800_rating_rank_sync',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
     )
 
     # Friday Window Polling: Every 30 mins from 08:00 to 10:00 IST on Fridays
