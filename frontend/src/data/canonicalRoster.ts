@@ -19817,11 +19817,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "732224TEST01",
     "username": null,
     "year_level": "III",
-    "department_id": 13,
+    "department_id": 5,
     "department": {
-      "id": 13,
-      "name": "Computer Science Test",
-      "code": "CSE_TEST"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -19852,11 +19852,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "NOTIF_STU_01",
     "username": null,
     "year_level": "III",
-    "department_id": 1,
+    "department_id": 5,
     "department": {
-      "id": 1,
-      "name": "Computer Science and Engineering (Cyber Security)",
-      "code": "CSE(CS)"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -19887,11 +19887,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST001",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -19922,11 +19922,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST002",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -19957,11 +19957,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST003",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -19992,11 +19992,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST004",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20027,11 +20027,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST005",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20062,11 +20062,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST006",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20097,11 +20097,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST007",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20132,11 +20132,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST008",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20167,11 +20167,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST009",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20202,11 +20202,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST010",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20237,11 +20237,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST011",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20272,11 +20272,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST012",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20307,11 +20307,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST013",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20342,11 +20342,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST014",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20377,11 +20377,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST015",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20412,11 +20412,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST016",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20447,11 +20447,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST017",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20482,11 +20482,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST018",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20517,11 +20517,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST019",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20552,11 +20552,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST020",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20587,11 +20587,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST021",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20622,11 +20622,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST022",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20657,11 +20657,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST023",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20692,11 +20692,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST024",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20727,11 +20727,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST025",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20762,11 +20762,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST026",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20797,11 +20797,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST027",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20832,11 +20832,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST028",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20867,11 +20867,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST029",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20902,11 +20902,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST030",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20937,11 +20937,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST031",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -20972,11 +20972,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST032",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -21007,11 +21007,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST033",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -21042,11 +21042,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST034",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
@@ -21077,11 +21077,11 @@ export const CANONICAL_ROSTER: any[] = [
     "reg_no": "7322TEST035",
     "username": null,
     "year_level": "III",
-    "department_id": 7,
+    "department_id": 5,
     "department": {
-      "id": 7,
-      "name": "Test Department",
-      "code": "TEST_DEPT"
+      "id": 5,
+      "name": "Computer Science and Engineering",
+      "code": "CSE"
     },
     "sync_state": "MISSING LINK",
     "profile_url": null,
