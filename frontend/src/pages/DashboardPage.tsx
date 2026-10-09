@@ -27,6 +27,7 @@ import {
 } from '../hooks/useDashboardQueries';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { useFilteredStudents, useFilters } from '../context/FilterContext';
+import { studentLiveStore } from '../stores/studentLiveStore';
 
 interface DashboardPageProps {
   onSelectStudent: (student: StudentData) => void;
@@ -1021,7 +1022,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <LeaderboardTable
           students={filteredStudents.slice(0, 10) as any}
           onSelectStudent={onSelectStudent}
-          onRefreshStudent={() => refreshAllData()}
+          onRefreshStudent={async (studentId) => {
+            if (studentId) {
+              try {
+                const res = await api.post(`/students/${studentId}/refresh`);
+                if (res.data?.stats) {
+                  studentLiveStore.updateStudent(studentId, {
+                    stats: res.data.stats,
+                  } as any);
+                }
+                notify.success('Profile Synced', res.data?.message || 'Student profile refreshed!', { category: 'SYNC ENGINE' });
+              } catch (err: any) {
+                notify.error('Sync Failed', err?.response?.data?.detail || err?.message || 'Failed to refresh student stats.', { category: 'SYNC ENGINE' });
+              }
+            }
+            refreshAllData();
+          }}
         />
         
         <div className="text-center pt-2">

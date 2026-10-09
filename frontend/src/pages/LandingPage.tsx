@@ -13,6 +13,7 @@ import { filterAndSortStudents, formatDepartmentName, normalizeDepartment } from
 import { getCachedStudents, saveCachedStudents } from '../utils/rosterCache';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
 import { useAuth } from '../context/AuthContext';
+import { studentLiveStore } from '../stores/studentLiveStore';
 
 function parseUtcTime(ts?: string): number {
   if (!ts) return Date.now();
@@ -410,7 +411,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const handleRefreshStudent = useCallback(async (studentId: number) => {
     setRefreshingId(studentId);
     try {
-      await api.post(`/students/${studentId}/refresh`);
+      const res = await api.post(`/students/${studentId}/refresh`);
+      if (res.data?.stats) {
+        studentLiveStore.updateStudent(studentId, {
+          stats: res.data.stats,
+        } as any);
+      }
       await fetchFilteredStudents();
     } catch (err) {
       console.error(err);

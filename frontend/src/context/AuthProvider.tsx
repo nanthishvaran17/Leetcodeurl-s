@@ -120,7 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthState('AUTH_UNAUTHENTICATED');
   }, [clearAuthError]);
 
-  // Handle global events: auth_logout and profile updates
+  // Handle global events: auth_logout, profile updates, and token refresh
   useEffect(() => {
     const handleGlobalLogout = () => {
       logout();
@@ -137,12 +137,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
+    const handleTokenRefreshed = (e: any) => {
+      if (e.detail) {
+        setToken(e.detail);
+        localStorage.setItem('token', e.detail);
+      }
+    };
+
     window.addEventListener('auth_logout', handleGlobalLogout);
     window.addEventListener('nec_user_profile_updated', handleProfileUpdate);
+    window.addEventListener('nec_token_refreshed', handleTokenRefreshed);
     
     return () => {
       window.removeEventListener('auth_logout', handleGlobalLogout);
       window.removeEventListener('nec_user_profile_updated', handleProfileUpdate);
+      window.removeEventListener('nec_token_refreshed', handleTokenRefreshed);
     };
   }, [logout]);
 

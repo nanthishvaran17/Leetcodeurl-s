@@ -12,6 +12,7 @@ import { GlobalFilter } from '../components/GlobalFilter';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { useDepartments } from '../contexts/DepartmentContext';
+import { studentLiveStore } from '../stores/studentLiveStore';
 
 interface DepartmentDashboardProps {
   onSelectStudent: (student: StudentData) => void;
@@ -419,7 +420,22 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           <LeaderboardTable
             students={finalStudentList}
             onSelectStudent={onSelectStudent}
-            onRefreshStudent={() => refreshAllData()}
+            onRefreshStudent={async (studentId) => {
+              if (studentId) {
+                try {
+                  const res = await api.post(`/students/${studentId}/refresh`);
+                  if (res.data?.stats) {
+                    studentLiveStore.updateStudent(studentId, {
+                      stats: res.data.stats,
+                    } as any);
+                  }
+                  notify.success('Profile Synced', res.data?.message || 'Student profile refreshed!', { category: 'SYNC ENGINE' });
+                } catch (err: any) {
+                  notify.error('Sync Failed', err?.response?.data?.detail || err?.message || 'Failed to refresh student stats.', { category: 'SYNC ENGINE' });
+                }
+              }
+              refreshAllData();
+            }}
             onDeleteStudent={handleDeleteStudent}
           />
         ) : (

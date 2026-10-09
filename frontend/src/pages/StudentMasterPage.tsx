@@ -381,7 +381,9 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       setEmail(''); setInstitutionalEmail(''); setCutOffScore('');
       setAccommodationType('DAY SCHOLAR');
       setLcValidation({ status: 'idle' });
+      queryClient.invalidateQueries({ queryKey: ['students-master'] });
       queryClient.invalidateQueries({ queryKey: ['students'] });
+      refetchStudents();
     } catch (err: any) {
       notify.error('Failed to Add Student', err.response?.data?.detail || "Failed to add student.", { category: 'STUDENT REPOSITORY' });
     } finally {
@@ -402,7 +404,9 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     try {
       await api.delete(`/students/${student.id}`);
       notify.success('Student Record Deleted', `Student "${student.name}" deleted successfully.`, { category: 'STUDENT REPOSITORY' });
+      queryClient.invalidateQueries({ queryKey: ['students-master'] });
       queryClient.invalidateQueries({ queryKey: ['students'] });
+      refetchStudents();
     } catch (err: any) {
       notify.error('Delete Failed', err.response?.data?.detail || "Failed to delete student record.", { category: 'STUDENT REPOSITORY' });
     }
@@ -421,7 +425,9 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     try {
       const res = await api.post('/students/bulk-delete', { student_ids: studentIds });
       notify.success('Bulk Delete Successful', `Successfully deleted ${res.data.count || studentIds.length} student records.`, { category: 'STUDENT REPOSITORY' });
+      queryClient.invalidateQueries({ queryKey: ['students-master'] });
       queryClient.invalidateQueries({ queryKey: ['students'] });
+      refetchStudents();
     } catch (err: any) {
       notify.error('Bulk Delete Failed', err.response?.data?.detail || "Failed to bulk delete student records.", { category: 'STUDENT REPOSITORY' });
     }
@@ -430,8 +436,15 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const handleSyncSingleStudent = async (studentId: number) => {
     try {
       const res = await api.post(`/students/${studentId}/refresh`);
+      if (res.data?.stats) {
+        studentLiveStore.updateStudent(studentId, {
+          stats: res.data.stats,
+        } as any);
+      }
       notify.success('Profile Synced', res.data?.message || 'Student profile synced successfully!', { category: 'SYNC ENGINE' });
+      queryClient.invalidateQueries({ queryKey: ['students-master'] });
       queryClient.invalidateQueries({ queryKey: ['students'] });
+      refetchStudents();
     } catch (err: any) {
       notify.error('Sync Failed', err.response?.data?.detail || err.message || 'Unable to fetch LeetCode profile statistics.', { category: 'SYNC ENGINE' });
     }

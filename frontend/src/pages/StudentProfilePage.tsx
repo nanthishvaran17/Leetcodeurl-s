@@ -590,12 +590,18 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                 <p className="text-[11px] font-black text-white uppercase tracking-wider">Global Rating</p>
                 <Award className="w-4 h-4 text-white" />
               </div>
-              <h3 className="text-3xl sm:text-4xl font-black text-white">
+              <h3 
+                className="text-3xl sm:text-4xl font-black text-white cursor-pointer" 
+                title={(() => {
+                  const r = detail?.stats?.contest_rating ?? detail?.lc_contest_standing?.contest_rating ?? (detail as any)?.contest_rating;
+                  return r != null && !isNaN(Number(r)) ? `Exact Rating: ${Number(r).toFixed(3)}` : undefined;
+                })()}
+              >
                 {(() => {
                   const r = detail?.stats?.contest_rating ?? detail?.lc_contest_standing?.contest_rating ?? (detail as any)?.contest_rating;
                   const attended = detail?.lc_contest_standing?.attended_count ?? detail?.stats?.official_contests ?? 0;
                   if (r == null || (Number(r) === 1500 && attended === 0)) return 'Unrated';
-                  return Number(r).toLocaleString('en-US', { minimumFractionDigits: 1 });
+                  return Math.round(Number(r)).toLocaleString('en-US');
                 })()}
               </h3>
             </div>

@@ -107,7 +107,8 @@ export const FastStudentRow = memo(({
   onView, 
   onEdit, 
   onRefresh, 
-  onDelete 
+  onDelete,
+  isRefreshing
 }: any) => {
   const liveStudent = useStudentEntity(studentId);
   const student = liveStudent || initialStudent;
@@ -118,7 +119,7 @@ export const FastStudentRow = memo(({
   const isSolver = isVerified && (totalSolved ?? 0) > 0;
   
   const effectiveCollegeRank = isSolver ? index + 1 : undefined;
-  const isSyncing = syncState === 'fetching';
+  const isSyncing = syncState === 'fetching' || Boolean(isRefreshing);
 
   const [flashSolved, setFlashSolved] = React.useState(false);
   const prevSolvedRef = React.useRef(totalSolved);
@@ -215,6 +216,9 @@ export const FastStudentRow = memo(({
           <div className="flex items-center gap-2 shrink-0 ml-auto" onClick={(e) => e.stopPropagation()}>
             <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} className="w-[32px] h-[32px] rounded-[10px] text-slate-500 hover:text-brand-600 bg-white dark:bg-navy-900 hover:bg-brand-50 flex items-center justify-center cursor-pointer transition-all border border-slate-200 dark:border-navy-700 shadow-[0_1px_3px_rgba(0,0,0,0.05)] active:scale-95" title="View"><Eye className="w-[15px] h-[15px]" /></button>
             <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }} className="w-[32px] h-[32px] rounded-[10px] text-slate-500 hover:text-amber-600 bg-white dark:bg-navy-900 hover:bg-amber-50 flex items-center justify-center cursor-pointer transition-all border border-slate-200 dark:border-navy-700 shadow-[0_1px_3px_rgba(0,0,0,0.05)] active:scale-95" title="Edit"><Edit3 className="w-[15px] h-[15px]" /></button>
+            {onRefresh && (
+              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRefresh(student.id); }} disabled={isSyncing} className={`w-[32px] h-[32px] rounded-[10px] bg-white dark:bg-navy-900 flex items-center justify-center cursor-pointer transition-all border border-slate-200 dark:border-navy-700 shadow-[0_1px_3px_rgba(0,0,0,0.05)] active:scale-95 ${isSyncing ? 'text-brand-500' : 'text-slate-500 hover:text-emerald-600 hover:bg-emerald-50'}`} title="Refresh Stats"><RefreshCw className={`w-[15px] h-[15px] ${isSyncing ? 'animate-spin' : ''}`} /></button>
+            )}
             {onDelete && (
               <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(student, e); }} className="w-[32px] h-[32px] rounded-[10px] text-slate-500 hover:text-rose-600 bg-white dark:bg-navy-900 hover:bg-rose-50 flex items-center justify-center cursor-pointer transition-all border border-slate-200 dark:border-navy-700 shadow-[0_1px_3px_rgba(0,0,0,0.05)] active:scale-95" title="Delete"><Trash2 className="w-[15px] h-[15px]" /></button>
             )}
@@ -333,7 +337,7 @@ export const FastStudentRow = memo(({
         <div className="flex items-center justify-center gap-1 transition-opacity">
           <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} className="p-1.5 rounded-xl text-brand-600 hover:bg-brand-50" title="View"><Eye className="w-4 h-4" /></button>
           <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }} className="p-1.5 rounded-xl text-amber-600 hover:bg-amber-50" title="Edit"><Edit3 className="w-4 h-4" /></button>
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRefresh(student.id); }} disabled={isSyncing} className={`p-1.5 rounded-xl ${isSyncing ? 'text-brand-500 animate-spin' : 'text-emerald-600 hover:bg-emerald-50'}`}><RefreshCw className="w-4 h-4" /></button>
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRefresh(student.id); }} disabled={isSyncing} className={`p-1.5 rounded-xl ${isSyncing ? 'text-brand-500 animate-spin' : 'text-emerald-600 hover:bg-emerald-50'}`} title="Refresh Stats"><RefreshCw className="w-4 h-4" /></button>
           <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(student, e); }} className="p-1.5 rounded-xl text-rose-600 hover:bg-rose-50" title="Delete"><Trash2 className="w-4 h-4" /></button>
         </div>
       </div>

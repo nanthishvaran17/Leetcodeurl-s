@@ -90,12 +90,12 @@ import { useAuth } from '../context/AuthContext';
 export const GrowthIntelligencePage: React.FC = () => {
   const { notify } = useNotification();
   const { user } = useAuth();
-  const [period, setPeriod] = useState<'today' | '7d' | '30d' | 'all'>('7d');
+  const [period, setPeriod] = useState<'today' | '7d' | '30d' | 'all'>('today');
   const [deptFilter, setDeptFilter] = useState<string>('ALL');
   const [yearFilter, setYearFilter] = useState<string>('ALL');
   const [displayLimit, setDisplayLimit] = useState<number | 'ALL'>(10);
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 768);
-  const [sortMode, setSortMode] = useState<'total' | 'growth'>('total');
+  const [sortMode, setSortMode] = useState<'total' | 'growth'>('growth');
   const [deptOpen, setDeptOpen] = useState<boolean>(false);
   const [yearOpen, setYearOpen] = useState<boolean>(false);
   const [improvers, setImprovers] = useState<Improver[]>([]);

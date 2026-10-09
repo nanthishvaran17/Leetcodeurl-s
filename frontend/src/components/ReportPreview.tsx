@@ -2734,11 +2734,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+          <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-2 w-full md:w-auto justify-end">
             <button
               onClick={() => window.print()}
               type="button"
-              className="flex items-center justify-center space-x-1.5 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105"
+              className="hidden sm:flex items-center justify-center space-x-1.5 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105"
               title="Print / Save as PDF from browser"
             >
               <Printer className="w-3.5 h-3.5 shrink-0" />
@@ -2748,28 +2748,28 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               onClick={() => downloadFile('excel')}
               type="button"
               disabled={isDownloading}
-              className="flex items-center justify-center space-x-1.5 px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 disabled:opacity-50"
+              className="flex items-center justify-center space-x-1 sm:space-x-1.5 px-2 sm:px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] sm:text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 disabled:opacity-50 min-w-0"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
-              <span>Excel (.xlsx)</span>
+              <span className="truncate">Excel (.xlsx)</span>
             </button>
             <button
               onClick={() => downloadFile('pdf')}
               type="button"
               disabled={isDownloading}
-              className="flex items-center justify-center space-x-1.5 px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 disabled:opacity-50"
+              className="flex items-center justify-center space-x-1 sm:space-x-1.5 px-2 sm:px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[11px] sm:text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 disabled:opacity-50 min-w-0"
             >
               <FileText className="w-3.5 h-3.5 shrink-0" />
-              <span>PDF (.pdf)</span>
+              <span className="truncate">PDF (.pdf)</span>
             </button>
             <button
               onClick={() => downloadFile('word')}
               type="button"
               disabled={isDownloading}
-              className="flex items-center justify-center space-x-1.5 px-3.5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 disabled:opacity-50"
+              className="flex items-center justify-center space-x-1 sm:space-x-1.5 px-2 sm:px-3.5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-[11px] sm:text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 disabled:opacity-50 min-w-0"
             >
               <FileText className="w-3.5 h-3.5 shrink-0" />
-              <span>Word (.docx)</span>
+              <span className="truncate">Word (.docx)</span>
             </button>
           </div>
         </div>

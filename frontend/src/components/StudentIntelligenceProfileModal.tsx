@@ -166,10 +166,13 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
   const sub30d = activity.sub_30d ?? Math.min(sub90d, Math.round(sub365d * 0.62));
   const sub7d = activity.sub_7d ?? Math.min(sub30d, Math.round(sub365d * 0.13));
 
-  const contestRatingVal =
-    contests.contest_rating && contests.contest_rating !== 'N/A' && contests.contest_rating !== '0' && contests.contest_rating !== '—'
-      ? contests.contest_rating
-      : st.contest_rating ?? initialStudent?.contest_rating ?? st.rating ?? initialStudent?.rating ?? 'Unrated';
+  const rawRatingVal = contests.contest_rating && contests.contest_rating !== 'N/A' && contests.contest_rating !== '0' && contests.contest_rating !== '—'
+    ? contests.contest_rating
+    : st.contest_rating ?? initialStudent?.contest_rating ?? st.rating ?? initialStudent?.rating ?? null;
+
+  const contestRatingVal = rawRatingVal != null && rawRatingVal !== 'Unrated'
+    ? (!isNaN(Number(rawRatingVal)) ? Math.round(Number(rawRatingVal)).toLocaleString('en-US') : rawRatingVal)
+    : 'Unrated';
 
   const globalRankVal =
     contests.global_rank && contests.global_rank !== 'N/A' && contests.global_rank !== '—'
@@ -846,7 +849,10 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         </div>
 
                         {/* KPI 3: Contest Rating */}
-                        <div className="col-span-2 bg-purple-50/60 p-4 sm:p-5 rounded-3xl border border-purple-200/80 shadow-sm hover:shadow-md hover:border-purple-300 transition-all flex flex-col items-center text-center">
+                        <div 
+                          className="col-span-2 bg-purple-50/60 p-4 sm:p-5 rounded-3xl border border-purple-200/80 shadow-sm hover:shadow-md hover:border-purple-300 transition-all flex flex-col items-center text-center cursor-pointer"
+                          title={rawRatingVal && !isNaN(Number(rawRatingVal)) ? `Exact Rating: ${Number(rawRatingVal).toFixed(3)}` : undefined}
+                        >
                           <span className="text-[10px] font-black text-purple-700 uppercase tracking-wider block">Contest Rating</span>
                           <div className="text-2xl sm:text-3xl font-black text-purple-950 font-mono">
                             {contestRatingVal}

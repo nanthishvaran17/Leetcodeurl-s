@@ -507,12 +507,38 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
     setEditLeetCodeUrl(s.leetcode_url || '');
     setEditUsername(s.username || '');
   }, []);
+  const [syncingIds, setSyncingIds] = useState<Record<string, boolean>>({});
+
   const memoizedHandleDelete = useCallback((s: any, e: any) => {
     setDeletingStudent(s);
   }, []);
-  const memoizedHandleRefresh = useCallback((id: number) => {
-    onRefreshStudent?.(id);
-  }, [onRefreshStudent]);
+
+  const memoizedHandleRefresh = useCallback(async (id: number | string) => {
+    const idStr = String(id);
+    setSyncingIds(prev => ({ ...prev, [idStr]: true }));
+    try {
+      if (onRefreshStudent) {
+        await onRefreshStudent(Number(id) || (id as any));
+      } else {
+        const res = await api.post(`/students/${id}/refresh`);
+        if (res.data?.stats) {
+          studentLiveStore.updateStudent(idStr, {
+            stats: res.data.stats,
+          });
+        }
+        notify.success('Profile Synced', res.data?.message || 'Student profile refreshed!', { category: 'SYNC ENGINE' });
+        queryClient.invalidateQueries();
+      }
+    } catch (err: any) {
+      notify.error('Refresh Failed', err?.response?.data?.detail || err?.message || 'Failed to refresh student stats.', { category: 'SYNC ENGINE' });
+    } finally {
+      setSyncingIds(prev => {
+        const copy = { ...prev };
+        delete copy[idStr];
+        return copy;
+      });
+    }
+  }, [onRefreshStudent, notify, queryClient]);
 
 
   return (
@@ -611,6 +637,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                       onEdit={memoizedHandleEdit}
                       onRefresh={memoizedHandleRefresh}
                       onDelete={memoizedHandleDelete}
+                      isRefreshing={Boolean(syncingIds[String(student.id)])}
                     />
                   );
                 }}
@@ -630,6 +657,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                     onEdit={memoizedHandleEdit}
                     onRefresh={memoizedHandleRefresh}
                     onDelete={memoizedHandleDelete}
+                    isRefreshing={Boolean(syncingIds[String(student.id)])}
                   />
                 ))}
               </div>
@@ -936,11 +964,17 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                   </div>
                   <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-slate-800 text-center">
                     <span className="text-[10px] font-bold text-slate-500 block">Contest Rating</span>
-                    <p className="text-sm sm:text-base font-black text-amber-500 mt-0.5">
+                    <p 
+                      className="text-sm sm:text-base font-black text-amber-500 mt-0.5 cursor-pointer"
+                      title={(() => {
+                        const r = viewingStudent.public_contest_result?.contest_rating || viewingStudent.stats?.contest_rating;
+                        return r && !isNaN(Number(r)) ? `Exact Rating: ${Number(r).toFixed(3)}` : undefined;
+                      })()}
+                    >
                       {(() => {
                         const r = viewingStudent.public_contest_result?.contest_rating || viewingStudent.stats?.contest_rating;
-                        if (!r || r === 1500 || r === 1500.0) return '0';
-                        return r.toLocaleString('en-US', { minimumFractionDigits: 1 });
+                        if (!r || Number(r) === 1500) return '0';
+                        return Math.round(Number(r)).toLocaleString('en-US');
                       })()}
                     </p>
                   </div>

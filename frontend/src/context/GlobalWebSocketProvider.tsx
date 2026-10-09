@@ -22,6 +22,7 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
   
   const workerRef = useRef<Worker | null>(null);
   const gracePeriodTimerRef = useRef<any>(null);
+  const authFailedRef = useRef<boolean>(false);
   const queryClient = useQueryClient();
   const eventRouter = useMemo(() => new LiveEventRouter(queryClient), [queryClient]);
   const { token, isAuthenticated } = useAuth();
@@ -51,6 +52,7 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
   useEffect(() => {
     let isMounted = true;
     let worker: Worker | null = null;
+    authFailedRef.current = false;
 
     // If user is logged out, cleanly terminate any running socket worker
     if (!isAuthenticated) {
@@ -104,12 +106,17 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
 
       worker.onmessage = (event) => {
         if (!isMounted) return;
-        const { type, connected, updates, data } = event.data;
+        const { type, connected, code, updates, data } = event.data;
 
         if (type === 'WS_STATUS') {
           setIsConnected(connected);
 
+          if (code === 1008) {
+            authFailedRef.current = true;
+          }
+
           if (connected) {
+            authFailedRef.current = false;
             // Connection is healthy: cancel any pending disconnect grace timer immediately
             if (gracePeriodTimerRef.current) {
               clearTimeout(gracePeriodTimerRef.current);
@@ -150,10 +157,10 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
 
       let resumeDebounceTimer: any = null;
       const handleResume = () => {
-        if (document.visibilityState !== 'visible' || !workerRef.current) return;
+        if (document.visibilityState !== 'visible' || !workerRef.current || authFailedRef.current) return;
         if (resumeDebounceTimer) clearTimeout(resumeDebounceTimer);
         resumeDebounceTimer = setTimeout(() => {
-          if (document.visibilityState === 'visible' && workerRef.current && !isConnected) {
+          if (document.visibilityState === 'visible' && workerRef.current && !isConnected && !authFailedRef.current) {
             workerRef.current.postMessage({ type: 'CONNECT', payload: { wsUrl } });
           }
         }, 150);

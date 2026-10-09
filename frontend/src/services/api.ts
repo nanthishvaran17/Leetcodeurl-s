@@ -264,6 +264,10 @@ api.interceptors.response.use(
           }
           auth.currentUser.getIdToken(true)
             .then((newToken: string) => {
+              try {
+                localStorage.setItem('token', newToken);
+                window.dispatchEvent(new CustomEvent('nec_token_refreshed', { detail: newToken }));
+              } catch (_) {}
               config.headers['Authorization'] = 'Bearer ' + newToken;
               processQueue(null, newToken);
               resolve(api(config));
