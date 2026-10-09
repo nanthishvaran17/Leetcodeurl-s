@@ -1647,9 +1647,10 @@ def dispatch_notification_email(
     message_body: str,
     action_route: Optional[str] = None
 ) -> bool:
-    """Dispatches a transactional notification email to a single recipient."""
-    if not to_email or "@" not in to_email:
-        return False
+    """Dispatches a transactional notification email — DISABLED by user policy (App notifications only)."""
+    # 100% Guarantee: Bypassed by system policy — No emails sent for notifications
+    logger.info(f"[EMAIL_BYPASS] Suppressed notification email to {to_email} subject='{subject}'")
+    return False
 
     base_url = getattr(settings, "FRONTEND_ORIGIN", "https://leetcodeurl-s-roan.vercel.app").rstrip("/")
     if action_route:

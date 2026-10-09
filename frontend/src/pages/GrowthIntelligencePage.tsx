@@ -40,6 +40,8 @@ interface Improver {
   department_code: string;
   year_level: string;
   section_name?: string;
+  username?: string;
+  profile_url?: string;
   total_solved: number;
   easy_solved: number;
   medium_solved: number;
@@ -99,6 +101,19 @@ export const GrowthIntelligencePage: React.FC = () => {
   const [deptOpen, setDeptOpen] = useState<boolean>(false);
   const [yearOpen, setYearOpen] = useState<boolean>(false);
   const [improvers, setImprovers] = useState<Improver[]>([]);
+  const [leaderboardSearch, setLeaderboardSearch] = useState<string>('');
+
+  const filteredImprovers = useMemo(() => {
+    if (!leaderboardSearch.trim()) return improvers;
+    const q = leaderboardSearch.trim().toLowerCase();
+    return improvers.filter((imp) => {
+      const nameMatch = (imp.name || '').toLowerCase().includes(q);
+      const regMatch = (imp.reg_no || '').toLowerCase().includes(q);
+      const userMatch = (imp.username || '').toLowerCase().includes(q);
+      const deptMatch = (imp.department_code || '').toLowerCase().includes(q);
+      return nameMatch || regMatch || userMatch || deptMatch;
+    });
+  }, [improvers, leaderboardSearch]);
   const [collegeDelta, setCollegeDelta] = useState<CollegeDelta | null>(null);
   const [departments, setDepartments] = useState<Array<{ id: number; code: string; name: string }>>([]);
   const [availableYears, setAvailableYears] = useState<string[]>([]);
@@ -198,20 +213,20 @@ export const GrowthIntelligencePage: React.FC = () => {
   const sortImprovers = (data: Improver[], mode = sortMode): Improver[] => [...data].sort((left, right) => {
     if (mode === 'total') {
       return (
-        right.total_solved - left.total_solved ||
-        right.delta_solved - left.delta_solved ||
-        right.delta_hard - left.delta_hard ||
-        right.delta_medium - left.delta_medium ||
+        (right.total_solved || 0) - (left.total_solved || 0) ||
+        (right.delta_solved || 0) - (left.delta_solved || 0) ||
+        (right.delta_hard || 0) - (left.delta_hard || 0) ||
+        (right.delta_medium || 0) - (left.delta_medium || 0) ||
         left.name.localeCompare(right.name)
       );
     }
     return (
-      right.delta_solved - left.delta_solved ||
-      right.delta_hard - left.delta_hard ||
-      right.delta_medium - left.delta_medium ||
-      right.delta_easy - left.delta_easy ||
-      right.delta_rating - left.delta_rating ||
-      right.total_solved - left.total_solved ||
+      (right.delta_solved || 0) - (left.delta_solved || 0) ||
+      (right.delta_hard || 0) - (left.delta_hard || 0) ||
+      (right.delta_medium || 0) - (left.delta_medium || 0) ||
+      (right.delta_easy || 0) - (left.delta_easy || 0) ||
+      (right.delta_rating || 0) - (left.delta_rating || 0) ||
+      (right.total_solved || 0) - (left.total_solved || 0) ||
       left.name.localeCompare(right.name)
     );
   });
@@ -221,7 +236,7 @@ export const GrowthIntelligencePage: React.FC = () => {
     setError(null);
     try {
       const [impRes, deltaRes] = await Promise.all([
-        api.get(`/growth/improvers?period=${period}&limit=200&dept=${deptFilter}&year=${yearFilter}`),
+        api.get(`/growth/improvers?period=${period}&limit=1000&dept=${deptFilter}&year=${yearFilter}`),
         api.get(`/growth/college-delta?period=${period}&dept=${deptFilter}&year=${yearFilter}`)
       ]);
       const rawData = impRes.data || [];
@@ -242,7 +257,7 @@ export const GrowthIntelligencePage: React.FC = () => {
     setError(null);
     try {
       const [impRes, deltaRes] = await Promise.all([
-        api.get(`/growth/improvers?period=${period}&limit=200&dept=${deptFilter}&year=${yearFilter}`),
+        api.get(`/growth/improvers?period=${period}&limit=1000&dept=${deptFilter}&year=${yearFilter}`),
         api.get(`/growth/college-delta?period=${period}&dept=${deptFilter}&year=${yearFilter}`)
       ]);
       const rawData = impRes.data || [];
@@ -485,6 +500,28 @@ export const GrowthIntelligencePage: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 self-stretch md:self-auto">
+            {/* Live Leaderboard Search Box */}
+            <div className="relative flex items-center shrink-0 w-full sm:w-auto min-w-[260px] sm:min-w-[300px]">
+              <Search className="w-4 h-4 text-brand-600 dark:text-brand-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10 stroke-[2.5]" />
+              <input
+                type="text"
+                value={leaderboardSearch}
+                onChange={(e) => setLeaderboardSearch(e.target.value)}
+                placeholder="Search solver, reg no, username..."
+                style={{ textAlign: 'left', paddingLeft: '2.5rem' }}
+                className="w-full text-left pl-10 pr-8 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-900/60 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-xs"
+              />
+              {leaderboardSearch && (
+                <button
+                  type="button"
+                  onClick={() => setLeaderboardSearch('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded-md cursor-pointer z-10"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
             {/* Rank By Sort Mode Toggle */}
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-1 bg-slate-50 dark:bg-navy-900/60 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2">Rank By</span>
@@ -540,15 +577,24 @@ export const GrowthIntelligencePage: React.FC = () => {
             <BarChart2 className="w-8 h-8 mx-auto text-brand-500 animate-bounce" />
             <p>Calculating growth metrics & delta velocity...</p>
           </div>
-        ) : improvers.length === 0 ? (
-          <div className="text-center py-16 text-slate-500 dark:text-slate-400 text-xs font-semibold bg-slate-50 dark:bg-navy-950/40 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800">
-            No activity found for the selected filters.
+        ) : filteredImprovers.length === 0 ? (
+          <div className="text-center py-16 text-slate-500 dark:text-slate-400 text-xs font-semibold bg-slate-50 dark:bg-navy-950/40 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 space-y-2">
+            <p>{leaderboardSearch ? `No solvers matching "${leaderboardSearch}" found.` : 'No activity found for the selected filters.'}</p>
+            {leaderboardSearch && (
+              <button
+                type="button"
+                onClick={() => setLeaderboardSearch('')}
+                className="px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold text-xs border border-brand-200 dark:border-brand-800 hover:bg-brand-100 transition-colors cursor-pointer"
+              >
+                Clear Search Filter
+              </button>
+            )}
           </div>
         ) : (
           <>
             {/* Mobile Leaderboard Cards (Compact, Full-width, Low Vertical Scroll) */}
             <div className="block md:hidden space-y-3">
-              {(displayLimit === 'ALL' ? improvers : improvers.slice(0, Number(displayLimit))).map((imp, idx) => {
+              {(displayLimit === 'ALL' ? filteredImprovers : filteredImprovers.slice(0, Number(displayLimit))).map((imp, idx) => {
                 const isExpanded = String(expandedStudentId) === String(imp.student_id);
                 return (
                   <div
@@ -582,11 +628,32 @@ export const GrowthIntelligencePage: React.FC = () => {
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
-                            {imp.name}
-                          </h4>
-                          <div className="text-[11px] font-mono font-bold text-brand-600 dark:text-brand-400 truncate">
-                            {imp.reg_no}
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
+                              {imp.name}
+                            </h4>
+                            {imp.profile_url && (
+                              <a
+                                href={imp.profile_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                title="Open LeetCode Profile"
+                                className="text-slate-400 hover:text-amber-500 shrink-0"
+                              >
+                                <ArrowUpRight className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[11px] font-mono">
+                            <span className="font-bold text-brand-600 dark:text-brand-400 truncate">
+                              {imp.reg_no}
+                            </span>
+                            {imp.username && (
+                              <span className="text-slate-400 dark:text-slate-500 truncate">
+                                @{imp.username}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -728,7 +795,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                       <td className="py-2.5 px-2 text-center font-black text-emerald-600 dark:text-emerald-400">
                                         {snap.delta_total > 0 ? `+${snap.delta_total}` : snap.delta_total === snap.total_solved ? 'Base' : '0'}
                                       </td>
-                                      <td className="py-2.5 px-3 text-right text-slate-700 dark:text-slate-300 font-bold truncate">{snap.contest_rating ? Math.round(snap.contest_rating) : '—'}</td>
+                                      <td className="py-2.5 px-3 text-right text-slate-700 dark:text-slate-300 font-bold truncate">{snap.contest_rating && Math.round(Number(snap.contest_rating)) !== 1500 && Number(snap.contest_rating) > 0 ? Math.round(Number(snap.contest_rating)) : '—'}</td>
                                     </tr>
                                   ))}
                                 </tbody>
@@ -763,7 +830,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:border-slate-800 dark:divide-gray-800/80 bg-white dark:bg-navy-950 font-medium">
-                  {(displayLimit === 'ALL' ? improvers : improvers.slice(0, Number(displayLimit))).map((imp, idx) => {
+                  {(displayLimit === 'ALL' ? filteredImprovers : filteredImprovers.slice(0, Number(displayLimit))).map((imp, idx) => {
                     const isExpanded = String(expandedStudentId) === String(imp.student_id);
                     return (
                       <React.Fragment key={imp.student_id}>
@@ -798,11 +865,32 @@ export const GrowthIntelligencePage: React.FC = () => {
 
                           {/* Student Info */}
                           <td className="py-4 px-4 text-left">
-                            <div className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
-                              {imp.name}
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                                {imp.name}
+                              </span>
+                              {imp.profile_url && (
+                                <a
+                                  href={imp.profile_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  title={`Open ${imp.username || imp.name}'s LeetCode Profile`}
+                                  className="text-slate-400 hover:text-amber-500 transition-colors p-0.5 rounded hover:bg-slate-100 dark:hover:bg-navy-800 inline-flex items-center"
+                                >
+                                  <ArrowUpRight className="w-3.5 h-3.5" />
+                                </a>
+                              )}
                             </div>
-                            <div className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 mt-0.5">
-                              {imp.reg_no}
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400">
+                                {imp.reg_no}
+                              </span>
+                              {imp.username && (
+                                <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
+                                  @{imp.username}
+                                </span>
+                              )}
                             </div>
                           </td>
 
@@ -1018,7 +1106,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                               <td className="py-2.5 px-3.5 font-bold text-emerald-600 dark:text-emerald-400">{snap.easy_solved}</td>
                                               <td className="py-2.5 px-3.5 font-bold text-amber-600 dark:text-amber-400">{snap.medium_solved}</td>
                                               <td className="py-2.5 px-3.5 font-bold text-rose-600 dark:text-rose-400">{snap.hard_solved}</td>
-                                              <td className="py-2.5 px-3.5 font-bold text-slate-700 dark:text-slate-300">{snap.contest_rating ? Math.round(snap.contest_rating) : '—'}</td>
+                                              <td className="py-2.5 px-3.5 font-bold text-slate-700 dark:text-slate-300">{snap.contest_rating && Math.round(Number(snap.contest_rating)) !== 1500 && Number(snap.contest_rating) > 0 ? Math.round(Number(snap.contest_rating)) : '—'}</td>
                                               <td className="py-2.5 px-3.5">
                                                 {snap.delta_total === snap.total_solved ? (
                                                   <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-400 font-black text-[11px]" title="Initial Baseline Snapshot">

@@ -39,7 +39,7 @@ export const normalizeCategory = (catOrType?: string): string => {
   if (c === 'attendance' || c.includes('attendance')) return 'attendance';
   if (c === 'exams' || c === 'exam' || c === 'marks' || c === 'mark' || c.includes('exam') || c.includes('mark') || c.includes('result') || c.includes('cat1') || c.includes('cat2')) return 'exams';
   if (c === 'reports' || c === 'report' || c === 'files' || c === 'file' || c.includes('report') || c.includes('file') || c.includes('document')) return 'reports';
-  if (c === 'contests' || c === 'contest' || c === 'achievements' || c === 'achievement' || c.includes('contest') || c.includes('rank') || c.includes('achieve') || c.includes('milestone')) return 'contests';
+  if (c === 'contests' || c === 'contest' || c === 'achievements' || c === 'achievement' || c.includes('contest') || c.includes('rank') || c.includes('achieve') || c.includes('milestone') || c.includes('surge') || c.includes('solved') || c.includes('delta')) return 'contests';
   return 'announcements';
 };
 

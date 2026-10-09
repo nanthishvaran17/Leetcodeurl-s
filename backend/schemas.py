@@ -421,6 +421,17 @@ class StudentStatSnapshotOut(BaseModel):
     is_verified: Optional[bool] = True
     model_config = ConfigDict(from_attributes=True)
 
+    @field_validator('contest_rating', mode='before')
+    @classmethod
+    def clean_unrated_1500(cls, v):
+        if v is not None:
+            try:
+                if float(v) == 1500.0 or float(v) == 0:
+                    return None
+            except (ValueError, TypeError):
+                return None
+        return v
+
 class ImproverOut(BaseModel):
     student_id: int
     reg_no: str
@@ -428,6 +439,8 @@ class ImproverOut(BaseModel):
     department_code: str
     year_level: str
     section_name: Optional[str] = "A"
+    username: Optional[str] = None
+    profile_url: Optional[str] = None
     total_solved: Optional[int] = 0
     easy_solved: int = 0
     medium_solved: int = 0
@@ -443,6 +456,17 @@ class ImproverOut(BaseModel):
     baseline: Optional[Dict[str, Any]] = None
     current: Optional[Dict[str, Any]] = None
     current_contest_rating: Optional[float] = None
+
+    @field_validator('current_contest_rating', mode='before')
+    @classmethod
+    def clean_improver_unrated_1500(cls, v):
+        if v is not None:
+            try:
+                if float(v) == 1500.0 or float(v) == 0:
+                    return None
+            except (ValueError, TypeError):
+                return None
+        return v
 
 class SendOtpRequest(BaseModel):
     email: str

@@ -10,10 +10,11 @@ from pydantic import BaseModel
 
 from backend.database import get_db
 from backend.models import (
-    User, NotificationRecord, NotificationPreference, NotificationFile
+    User, Student, WeeklySession, FacultyStudentAssignment, NotificationRecord, NotificationPreference, NotificationFile
 )
 from backend.routes.auth import get_current_user as get_current_active_user
 from backend.services.notification_service import NotificationService
+from backend.time_utils import IST
 
 router = APIRouter(prefix="/api/notifications", tags=["Notifications Engine"])
 
@@ -761,6 +762,284 @@ def trigger_daily_principal_digest_endpoint(
     from backend.services.automatic_notification_engine import AutomaticNotificationEngine
     res = AutomaticNotificationEngine.run_daily_principal_executive_job(db)
     return {"success": True, "result": res}
+
+
+class SimulateSingleDaySurgeRequest(BaseModel):
+    student_id: Optional[int] = None
+    student_name: Optional[str] = "Raj"
+    reg_no: Optional[str] = "732224CS101"
+    solved_today: int = 100
+    total_solved: int = 250
+
+
+@router.post("/simulate-single-day-surge")
+def simulate_single_day_surge_endpoint(
+    req: SimulateSingleDaySurgeRequest,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """
+    Simulates / triggers the high single-day milestone notification (e.g., student solving 100 on the same day).
+    Emits personalized 'Dear Sir/Ma'am' alerts to mentors, staff, and the student.
+    """
+    from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+    target_student = None
+    if req.student_id:
+        target_student = db.query(Student).filter_by(id=req.student_id).first()
+    if not target_student and req.reg_no:
+        target_student = db.query(Student).filter(Student.reg_no.ilike(req.reg_no)).first()
+    if not target_student:
+        target_student = db.query(Student).filter(Student.is_active == True).first()
+
+    student_id = target_student.id if target_student else 1
+    # Use existing or override name
+    if target_student and req.student_name != "Raj":
+        s_name = target_student.name
+        s_reg = target_student.reg_no
+    else:
+        s_name = req.student_name or "Raj"
+        s_reg = req.reg_no or "732224CS101"
+
+    now_ist = datetime.datetime.now(tz=IST)
+    today_ist_str = now_ist.strftime("%d-%b-%Y")
+    time_ist_str = now_ist.strftime("%I:%M %p IST")
+    dept_name = target_student.department.name if target_student and target_student.department else "Computer Science and Engineering"
+
+    staff_title = f"100 Solved in a Single Day: {s_name} ({s_reg})"
+    staff_body = (
+        f"Dear Sir/Ma'am,\n\n"
+        f"Your student / mentee {s_name} (Roll No: {s_reg}) has achieved a remarkable milestone "
+        f"of solving {req.solved_today} LeetCode problems on the same day today ({today_ist_str})!\n\n"
+        f"Student Details:\n"
+        f"• Student Name: {s_name}\n"
+        f"• Roll Number: {s_reg}\n"
+        f"• Department: {dept_name}\n"
+        f"• Problems Solved Today: {req.solved_today}\n"
+        f"• Cumulative Total Solved: {req.total_solved}\n"
+        f"• Recorded At: {time_ist_str}\n\n"
+        f"This unique dedication demonstrates top problem-solving performance. "
+        f"Please appreciate and mentor them to maintain this exceptional momentum!"
+    )
+
+    idempotency_key = f"manual_sim_single_day_{student_id}_{int(now_ist.timestamp())}"
+
+    # Emit to staff role
+    res_staff = NotificationService.emit_event(
+        event_type="STUDENT_DAILY_SURGE_MILESTONE",
+        title=staff_title,
+        body=staff_body,
+        priority="high",
+        recipient_scope="ROLE",
+        recipient_target="STAFF",
+        entity_type="student",
+        entity_id=str(student_id),
+        route=f"/student/{student_id}",
+        event_id=f"{idempotency_key}_staff"
+    )
+
+    # Emit to current logged-in user so they instantly see it
+    current_uid = get_primary_user_id(current_user)
+    res_user = NotificationService.emit_event(
+        event_type="STUDENT_DAILY_SURGE_MILESTONE",
+        title=staff_title,
+        body=staff_body,
+        priority="high",
+        recipient_scope="USER",
+        recipient_target=current_uid,
+        entity_type="student",
+        entity_id=str(student_id),
+        route=f"/student/{student_id}",
+        event_id=f"{idempotency_key}_caller"
+    )
+
+    return {
+        "success": True,
+        "message": f"Single-day surge notification for {s_name} ({req.solved_today} solved) dispatched successfully!",
+        "staff_result": res_staff,
+        "user_result": res_user
+    }
+
+
+class SimulateFetchSurgeRequest(BaseModel):
+    student_id: Optional[int] = None
+    student_name: Optional[str] = "Sanjay"
+    reg_no: Optional[str] = "732224IT055"
+    previous_solved: int = 150
+    current_solved: int = 201
+    delta_easy: int = 25
+    delta_medium: int = 20
+    delta_hard: int = 6
+
+
+@router.post("/simulate-fetch-surge")
+def simulate_fetch_surge_endpoint(
+    req: SimulateFetchSurgeRequest,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """
+    Simulates / triggers the high problem surge alert when a student's total solved jumps >= 50 between fetch cycles.
+    Example: Sanjay had 150 at last fetch, now 201 (+51 delta).
+    """
+    target_student = None
+    if req.student_id:
+        target_student = db.query(Student).filter_by(id=req.student_id).first()
+    if not target_student and req.reg_no:
+        target_student = db.query(Student).filter(Student.reg_no.ilike(req.reg_no)).first()
+    if not target_student:
+        target_student = db.query(Student).filter(Student.is_active == True).first()
+
+    student_id = target_student.id if target_student else 1
+    s_name = req.student_name or (target_student.name if target_student else "Sanjay")
+    s_reg = req.reg_no or (target_student.reg_no if target_student else "732224IT055")
+    dept_name = target_student.department.name if target_student and target_student.department else "Information Technology"
+
+    delta = max(0, req.current_solved - req.previous_solved)
+    now_ist = datetime.datetime.now(tz=IST)
+    curr_time_str = now_ist.strftime("%d-%b-%Y %I:%M %p IST")
+    prev_time = now_ist - datetime.timedelta(hours=6)
+    prev_time_str = prev_time.strftime("%d-%b-%Y %I:%M %p IST")
+
+    title = f"High Problem Surge Alert: {s_name} (+{delta} Solved)"
+    body = (
+        f"Dear Sir/Ma'am,\n\n"
+        f"Significant problem-solving growth detected for {s_name} ({s_reg}) between sync cycles!\n\n"
+        f"• Student Name: {s_name}\n"
+        f"• Roll Number: {s_reg}\n"
+        f"• Department: {dept_name}\n"
+        f"• Previous Solved: {req.previous_solved} (Recorded: {prev_time_str})\n"
+        f"• Current Solved: {req.current_solved} (Recorded: {curr_time_str})\n"
+        f"• Net Delta Increase: +{delta} problems solved\n"
+        f"  [Breakdown: Easy +{req.delta_easy} | Medium +{req.delta_medium} | Hard +{req.delta_hard}]\n\n"
+        f"Sync Interval: From {prev_time_str} to {curr_time_str}\n\n"
+        f"This substantial surge has been verified and synchronized to the live database."
+    )
+
+    idempotency_key = f"manual_sim_fetch_surge_{student_id}_{int(now_ist.timestamp())}"
+
+    res_staff = NotificationService.emit_event(
+        event_type="STUDENT_FETCH_SURGE_DELTA",
+        title=title,
+        body=body,
+        priority="high",
+        recipient_scope="ROLE",
+        recipient_target="STAFF",
+        entity_type="student",
+        entity_id=str(student_id),
+        route=f"/student/{student_id}",
+        event_id=f"{idempotency_key}_staff"
+    )
+
+    current_uid = get_primary_user_id(current_user)
+    res_user = NotificationService.emit_event(
+        event_type="STUDENT_FETCH_SURGE_DELTA",
+        title=title,
+        body=body,
+        priority="high",
+        recipient_scope="USER",
+        recipient_target=current_uid,
+        entity_type="student",
+        entity_id=str(student_id),
+        route=f"/student/{student_id}",
+        event_id=f"{idempotency_key}_caller"
+    )
+
+    return {
+        "success": True,
+        "message": f"Fetch surge alert for {s_name} (+{delta} solved) dispatched successfully!",
+        "staff_result": res_staff,
+        "user_result": res_user
+    }
+
+
+class SimulateContestSyncRequest(BaseModel):
+    session_id: Optional[int] = None
+    contest_name: Optional[str] = "Weekly Contest 438"
+
+
+@router.post("/simulate-contest-sync-broadcast")
+def simulate_contest_sync_broadcast_endpoint(
+    req: SimulateContestSyncRequest,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """
+    Simulates / triggers the 'Contest Results Published & Web/App Synced' notification to staff and mentors.
+    """
+    from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+    res = AutomaticNotificationEngine.emit_contest_finalized_sync_broadcast(db, req.session_id)
+    
+    # Also emit directly to current user
+    session = db.query(WeeklySession).filter_by(id=req.session_id).first() if req.session_id else db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+    contest_name = (session.contest_name if session else None) or req.contest_name or "Weekly Contest"
+    current_uid = get_primary_user_id(current_user)
+
+    now_ts = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+    NotificationService.emit_event(
+        event_type="CONTEST_RESULTS_SYNCED",
+        title=f"Contest Results Published & Web/App Synced — {contest_name}",
+        body=(
+            f"Dear Faculty & Staff,\n\n"
+            f"Official results and attendance datasets for {contest_name} have been finalized and published!\n\n"
+            f"• All leaderboards, ratings, streaks, and attendance records are fully synchronized!\n"
+            f"• Web Portal & Mobile App: Data is live and up-to-date.\n\n"
+            f"Tap to view the updated leaderboards and download the finalized contest report."
+        ),
+        priority="high",
+        recipient_scope="USER",
+        recipient_target=current_uid,
+        route="/weekly-contest",
+        event_id=f"sim_contest_synced_user_{now_ts}"
+    )
+
+    return {
+        "success": True,
+        "message": f"Contest results & web/app sync broadcast for {contest_name} dispatched!",
+        "details": res
+    }
+
+
+@router.post("/simulate-contest-attendance")
+def simulate_contest_attendance_endpoint(
+    req: SimulateContestSyncRequest,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """
+    Simulates / triggers the Sunday contest attendance & absentee list report for staff and mentors.
+    """
+    from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+    res = AutomaticNotificationEngine.emit_sunday_contest_role_summaries(db, req.session_id)
+
+    session = db.query(WeeklySession).filter_by(id=req.session_id).first() if req.session_id else db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+    contest_name = (session.contest_name if session else None) or req.contest_name or "Weekly Contest"
+    current_uid = get_primary_user_id(current_user)
+    now_ts = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+
+    # Emit attendance overview to current user
+    NotificationService.emit_event(
+        event_type="SUNDAY_CONTEST_ATTENDANCE_REPORT",
+        title=f"Sunday Contest Attendance & Absentee Report — {contest_name}",
+        body=(
+            f"Dear Sir/Ma'am,\n\n"
+            f"Sunday Contest Attendance Report for {contest_name} has been published!\n\n"
+            f"• Attended Students List: Verified and updated on the leaderboard.\n"
+            f"• Absent Students (Not Attended): Flagged for mentor follow-up.\n"
+            f"• All attendance records and penalty scores are synchronized with the mobile app.\n\n"
+            f"Tap to view the complete attendance roster and student records."
+        ),
+        priority="high",
+        recipient_scope="USER",
+        recipient_target=current_uid,
+        route="/weekly-contest",
+        event_id=f"sim_contest_attendance_user_{now_ts}"
+    )
+
+    return {
+        "success": True,
+        "message": f"Sunday contest attendance notification dispatched!",
+        "details": res
+    }
 
 
 # 5. SECURE FILE ACCESS & PREVIEW / DOWNLOAD 

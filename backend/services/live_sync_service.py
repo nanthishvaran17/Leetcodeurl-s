@@ -672,8 +672,22 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
             from backend.cache import cache
             cache.clear()
             logger.info("[SYNC] Application cache invalidated post-sync.")
-        except Exception as c_err:
-            logger.warning(f"[SYNC] Cache invalidation note: {c_err}")
+        except Exception as _c_err:
+            logger.warning(f"[SYNC] Cache clear failed post-sync: {_c_err}")
+        # Emit sync completion notification to admins
+        try:
+            _db_notif = SessionLocal()
+            try:
+                from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+                AutomaticNotificationEngine.check_and_emit_sync_completed_summary(
+                    db=_db_notif,
+                    job_id=job_id,
+                    summary_data=summary
+                )
+            finally:
+                _db_notif.close()
+        except Exception as n_err:
+            logger.warning(f"[WORKER] Failed to emit sync completion notification: {n_err}")
 
         await broadcast_sync_event({
             "type": "SYNC_COMPLETED",
@@ -688,6 +702,22 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
             sync_tracker.finish("FAILED", str(exc))
         except Exception:
             pass
+        # Emit sync failed notification to admins
+        try:
+            _db_err_notif = SessionLocal()
+            try:
+                from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+                AutomaticNotificationEngine.check_and_emit_sync_failed_summary(
+                    db=_db_err_notif,
+                    job_id=job_id,
+                    error_message=str(exc),
+                    affected_count=sync_tracker.total
+                )
+            finally:
+                _db_err_notif.close()
+        except Exception as nf_err:
+            logger.warning(f"[WORKER] Failed to emit sync failed notification: {nf_err}")
+
         for _attempt in range(3):
             _db = SessionLocal()
             try:
@@ -988,17 +1018,44 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         delta_hard = max(0, (st.hard_solved or 0) - previous_hard)
         delta_rating = round((st.contest_rating or 0.0) - previous_rating, 1)  # type: ignore
 
-        # Check and emit student milestone notifications
+        # Check and emit student milestone, growth, rating, and surge notifications
         try:
             from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+            # Student Growth (Type 1)
+            if old_total > 0 and (st.total_solved or 0) != old_total:
+                AutomaticNotificationEngine.check_and_emit_student_growth(
+                    db=db,
+                    student_id=student.id,  # type: ignore
+                    old_total=old_total,
+                    new_total=st.total_solved or 0,  # type: ignore
+                    old_timestamp=previous_snapshot.captured_at if previous_snapshot else None,
+                    delta_easy=delta_easy,
+                    delta_medium=delta_medium,
+                    delta_hard=delta_hard
+                )
+            # Student Milestones (Type 9)
             AutomaticNotificationEngine.check_and_emit_student_milestones(
                 db=db,
                 student_id=student.id,  # type: ignore
                 old_solved=old_total or 0,  # type: ignore
                 new_solved=st.total_solved or 0  # type: ignore
             )
+            # Single Day Surge 100+ (Type 2)
+            AutomaticNotificationEngine.check_and_emit_single_day_surge(
+                db=db,
+                student_id=student.id,  # type: ignore
+                current_total=st.total_solved or 0  # type: ignore
+            )
+            # Contest Rating Improvement (Type 10)
+            if delta_rating > 0 and previous_snapshot and previous_snapshot.contest_rating:
+                AutomaticNotificationEngine.check_and_emit_rating_improvement(
+                    db=db,
+                    student_id=student.id,  # type: ignore
+                    old_rating=previous_snapshot.contest_rating,
+                    new_rating=st.contest_rating or 0.0  # type: ignore
+                )
         except Exception as m_err:
-            logger.warning(f"[MILESTONE_ENGINE] Milestone check notice for student {student.id}: {m_err}")
+            logger.warning(f"[MILESTONE_ENGINE] Notification check notice for student {student.id}: {m_err}")
 
         # Create a NEW immutable historical snapshot record for every successful fetch
         snapshot = StudentStatSnapshot(

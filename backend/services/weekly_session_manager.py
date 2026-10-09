@@ -403,6 +403,15 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
         setattr(session, "status", "FINALIZED")
         db.commit()
         logger.info(f"09:30 AM Official Weekly Snapshot locked for Session ID {session_id} (Session Hash: {session_data_hash[:16]})")
+
+        # Automatically broadcast Contest Results Published & Web/App Synced to Staff + Mentors
+        try:
+            from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+            AutomaticNotificationEngine.emit_contest_finalized_sync_broadcast(db, session.id)
+            AutomaticNotificationEngine.emit_sunday_contest_role_summaries(db, session.id)
+        except Exception as notif_err:
+            logger.warning(f"[AUTO_NOTIF] Contest finalization notification dispatch notice: {notif_err}")
+
         return inner_snapshot
         
     return await asyncio.to_thread(_do)

@@ -88,6 +88,9 @@ EVENT_CATEGORY_MAP = {
     "CONTEST_REMINDER": "contests", "CONTEST_ENDING": "contests", "CONTEST_RESULT": "contests",
     "RANK_UPDATED": "contests", "ACHIEVEMENT_UNLOCKED": "contests",
     "STUDENT_MILESTONE": "contests", "SUNDAY_CONTEST_SUMMARY": "contests", "CONTEST_FINALIZED": "contests",
+    "STUDENT_DAILY_SURGE_MILESTONE": "contests", "STUDENT_FETCH_SURGE_DELTA": "contests",
+    "CONTEST_RESULTS_SYNCED": "contests", "SUNDAY_CONTEST_ATTENDANCE_REPORT": "attendance",
+    "SUNDAY_CONTEST_FACULTY_SUMMARY": "attendance", "DAILY_FACULTY_SUMMARY": "reports",
     
     "PLACEMENT_DRIVE_CREATED": "announcements", "PLACEMENT_DRIVE_UPDATED": "announcements",
     "INTERVIEW_SCHEDULED": "announcements", "SELECTION_RESULT": "announcements",
@@ -106,7 +109,12 @@ EVENT_DESTINATION_MAP = {
     "CONTEST_REMINDER": {"route": "/weekly-contest", "priority": "high", "entity_type": "CONTEST"},
     "MARKS_PUBLISHED": {"route": "/reports", "priority": "high", "entity_type": "MARK"},
     "ASSIGNMENT_CREATED": {"route": "/faculty-action-center", "priority": "normal", "entity_type": "ASSIGNMENT"},
-    "ATTENDANCE_UPDATED": {"route": "/students", "priority": "normal", "entity_type": "ATTENDANCE"}
+    "ATTENDANCE_UPDATED": {"route": "/students", "priority": "normal", "entity_type": "ATTENDANCE"},
+    "STUDENT_DAILY_SURGE_MILESTONE": {"route": "/students", "priority": "high", "entity_type": "STUDENT"},
+    "STUDENT_FETCH_SURGE_DELTA": {"route": "/students", "priority": "high", "entity_type": "STUDENT"},
+    "CONTEST_RESULTS_SYNCED": {"route": "/weekly-contest", "priority": "high", "entity_type": "CONTEST"},
+    "SUNDAY_CONTEST_ATTENDANCE_REPORT": {"route": "/weekly-contest", "priority": "high", "entity_type": "CONTEST"},
+    "SUNDAY_CONTEST_FACULTY_SUMMARY": {"route": "/weekly-contest", "priority": "high", "entity_type": "CONTEST"},
 }
 
 
@@ -178,7 +186,17 @@ class NotificationService:
             target_role = (recipient_target or "").strip()
             query = db.query(User).filter(User.is_active == True)
             if target_role and target_role.upper() != "ALL":
-                query = query.filter(User.role.ilike(f"%{target_role}%"))
+                if target_role.upper() in ("STAFF", "FACULTY", "MENTOR"):
+                    query = query.filter(or_(
+                        User.role.ilike("%staff%"),
+                        User.role.ilike("%faculty%"),
+                        User.role.ilike("%mentor%"),
+                        User.role.ilike("%instructor%"),
+                        User.role.ilike("%hod%"),
+                        User.role.ilike("%admin%")
+                    ))
+                else:
+                    query = query.filter(User.role.ilike(f"%{target_role}%"))
             for u in query.all():
                 recipients.append({"user_id": u.email or f"STAFF_{u.id}", "email": u.email, "user_type": "STAFF"})
 
@@ -256,7 +274,7 @@ class NotificationService:
         event_id: Optional[str] = None,
         expires_at: Optional[datetime.datetime] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        send_email_notification: bool = True
+        send_email_notification: bool = False
     ) -> Dict[str, Any]:
         """
         MASTER CENTRAL NOTIFICATION ENGINE ENTRY POINT
@@ -533,7 +551,8 @@ class NotificationService:
                     logger.info(f"[NOTIF_ENGINE] Deactivated {len(stale_tokens)} stale FCM tokens.")
 
 
-            # 4. Optional Email Dispatch
+            # 4. Email Dispatch Bypassed — App Notifications Only (FCM Push & WebSocket)
+            send_email_notification = False
             if send_email_notification:
                 try:
                     from backend.services.email_service import dispatch_notification_email
@@ -554,6 +573,7 @@ class NotificationService:
             return {
                 "success": True,
                 "event_id": eff_event_id,
+                "event_type": event_type,
                 "created_count": len(recipients),
                 "fcm_dispatched": fcm_dispatched
             }
@@ -689,7 +709,7 @@ class NotificationService:
         priority: str = 'normal',
         action_route: Optional[str] = None,
         created_by: str = 'System',
-        send_email_notification: bool = True
+        send_email_notification: bool = False
     ) -> Dict[str, Any]:
         """Direct notification caller for specific recipient list with strict deduplication per target user."""
         created_count = 0

@@ -40,7 +40,7 @@ export function resolveNotificationDestination(notification: Notification): Noti
     };
   }
 
-  if (entityType === 'CONTEST' || type === 'CONTEST_RESULT' || type === 'WEEKLY_CONTEST') {
+  if (entityType === 'CONTEST' || type === 'CONTEST_RESULT' || type === 'WEEKLY_CONTEST' || type === 'CONTEST_RESULTS_SYNCED' || type === 'SUNDAY_CONTEST_ATTENDANCE_REPORT' || type === 'SUNDAY_CONTEST_FACULTY_SUMMARY') {
     const contestId = entityId || (actionRoute?.match(/\d+/)?.[0]);
     return {
       path: 'weekly-contest',
@@ -52,7 +52,7 @@ export function resolveNotificationDestination(notification: Notification): Noti
     };
   }
 
-  if (entityType === 'STUDENT' || type === 'STUDENT_ACTIVITY' || type === 'ACHIEVEMENT') {
+  if (entityType === 'STUDENT' || type === 'STUDENT_ACTIVITY' || type === 'ACHIEVEMENT' || type === 'STUDENT_DAILY_SURGE_MILESTONE' || type === 'STUDENT_FETCH_SURGE_DELTA') {
     return {
       path: 'students',
       entityId: entityId,

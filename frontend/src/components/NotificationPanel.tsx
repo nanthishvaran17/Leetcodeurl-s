@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { resolveNotificationDestination } from '../utils/notificationNavigation';
-import { Bell, Check, Archive, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, Sparkles } from 'lucide-react';
+import { Bell, Check, Archive, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, Sparkles, Flame, Zap, Trophy, Users, Wrench } from 'lucide-react';
 import { useGlobalNotifications, normalizeCategory, type Notification } from '../context/GlobalNotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { requestPushPermissionAndGetToken } from '../services/firebasePush';
@@ -133,9 +133,40 @@ const NotificationItem = ({ n, handleNotificationClick, deleteNotification, arch
             </span>
           </div>
 
-          <p className={`text-xs leading-relaxed ${!n.isRead ? 'text-slate-700 dark:text-slate-200 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
+          {/* Badges for Surge, Milestone, Results, Attendance */}
+          <div className="flex items-center gap-1.5 flex-wrap my-1">
+            {(n.type === 'STUDENT_DAILY_SURGE_MILESTONE' || (n.title && (n.title.includes('100 Solved') || n.title.includes('Single Day')))) && (
+              <span className="inline-flex items-center text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+                100 Solved Today
+              </span>
+            )}
+            {(n.type === 'STUDENT_FETCH_SURGE_DELTA' || (n.title && (n.title.includes('Surge Alert') || n.title.includes('Growth')))) && (
+              <span className="inline-flex items-center text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 dark:bg-indigo-950/70 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700">
+                Verified Growth
+              </span>
+            )}
+            {(n.type === 'CONTEST_RESULTS_SYNCED' || (n.title && n.title.includes('Results Published'))) && (
+              <span className="inline-flex items-center text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                Web & App Synced
+              </span>
+            )}
+            {(n.type === 'SUNDAY_CONTEST_ATTENDANCE_REPORT' || n.type === 'SUNDAY_CONTEST_FACULTY_SUMMARY' || (n.title && n.title.includes('Attendance Report'))) && (
+              <span className="inline-flex items-center text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-300 dark:border-blue-700">
+                Attendance Roster
+              </span>
+            )}
+          </div>
+
+          <p className={`text-xs leading-relaxed whitespace-pre-line ${!n.isRead ? 'text-slate-700 dark:text-slate-200 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
             {n.message}
           </p>
+
+          {(n.actionRoute || n.entityId) && (
+            <div className="mt-2 flex items-center gap-1 text-[11px] font-extrabold text-brand-600 dark:text-brand-400 hover:text-brand-700">
+              <span>View details & actions</span>
+              <ChevronRight size={13} />
+            </div>
+          )}
 
           {n.fileId && (
             <div className="mt-2.5 flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
@@ -166,10 +197,11 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
     markAllAsRead,
     deleteNotification,
     archiveNotification,
-    registerFCMDeviceToken
+    registerFCMDeviceToken,
+    refreshNotifications
   } = useGlobalNotifications();
 
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const panelRef = useRef<HTMLDivElement>(null);
   const [activeFileModal, setActiveFileModal] = useState<{ fileId: string; title: string; filename?: string } | null>(null);
   const [pushPermState, setPushPermState] = useState<string>('default');
@@ -177,6 +209,35 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
   const [isSendingTestPush, setIsSendingTestPush] = useState(false);
   const [testPushStatus, setTestPushStatus] = useState<string | null>(null);
   const [pushErrorMessage, setPushErrorMessage] = useState<string | null>(null);
+  const [showStaffTools, setShowStaffTools] = useState(false);
+  const [isSimulating, setIsSimulating] = useState<string | null>(null);
+
+  const handleSimulateAlert = async (endpoint: string, payload: any = {}) => {
+    if (!token) return;
+    setIsSimulating(endpoint);
+    try {
+      const res = await fetch(`${API_BASE_URL}/notifications${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        setTestPushStatus(' Alert successfully generated and dispatched!');
+        if (refreshNotifications) await refreshNotifications();
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        setTestPushStatus(`Notice: ${errJson.detail || 'Dispatched'}`);
+      }
+    } catch (e: any) {
+      setTestPushStatus(`Notice: ${e.message || 'Dispatched'}`);
+    } finally {
+      setIsSimulating(null);
+      setTimeout(() => setTestPushStatus(null), 4000);
+    }
+  };
 
   const checkInitialPushPermission = async () => {
     if (Capacitor.isNativePlatform()) {
@@ -399,8 +460,12 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
   }, [isOpen, onClose]);
 
   const getIcon = (type: string, priority: string) => {
-    if (priority === 'high' || priority === 'critical') return <AlertTriangle className="text-rose-500" size={18} />;
     const t = (type || '').toLowerCase();
+    if (t.includes('daily_surge') || t.includes('100') || t.includes('single_day')) return <Flame className="text-amber-500" size={18} />;
+    if (t.includes('fetch_surge') || t.includes('delta')) return <Zap className="text-indigo-500" size={18} />;
+    if (t.includes('synced') || t.includes('finalized')) return <Trophy className="text-amber-500" size={18} />;
+    if (t.includes('attendance')) return <Users className="text-blue-500" size={18} />;
+    if (priority === 'high' || priority === 'critical') return <AlertTriangle className="text-rose-500" size={18} />;
     if (t.includes('assignment')) return <Calendar className="text-emerald-500" size={18} />;
     if (t.includes('report') || t.includes('file')) return <FileText className="text-cyan-500" size={18} />;
     if (t.includes('alert')) return <AlertCircle className="text-amber-500" size={18} />;
@@ -471,17 +536,102 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                   </span>
                 )}
               </div>
-              {unreadCount > 0 && (
+              <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"
-                  onClick={markAllAsRead}
-                  className="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-bold flex items-center gap-1 transition-colors cursor-pointer min-h-[44px] px-2.5 rounded-xl hover:bg-brand-50 dark:hover:bg-navy-800 shrink-0"
+                  onClick={() => setShowStaffTools(!showStaffTools)}
+                  className={`p-2 rounded-xl transition-colors cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px] ${
+                    showStaffTools
+                      ? 'bg-brand-500 text-white shadow-xs'
+                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-navy-800'
+                  }`}
+                  title="Staff & Mentor Simulation Tools"
                 >
-                  <Check size={15} />
-                  <span className="hidden xs:inline">Mark all read</span>
+                  <Sparkles size={16} />
                 </button>
-              )}
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={markAllAsRead}
+                    className="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-bold flex items-center gap-1 transition-colors cursor-pointer min-h-[36px] px-2 rounded-xl hover:bg-brand-50 dark:hover:bg-navy-800 shrink-0"
+                  >
+                    <Check size={15} />
+                    <span className="hidden xs:inline">Mark all</span>
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* Quick Staff & Mentor Simulation Drawer */}
+            {showStaffTools && (
+              <div className="bg-slate-50 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 p-3 space-y-2 text-xs shrink-0 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-[11px] uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                    <Sparkles size={13} className="text-brand-500" />
+                    Staff Intelligence & Alert Dispatcher
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold">1-Click Test</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    disabled={!!isSimulating}
+                    onClick={() => handleSimulateAlert('/simulate-single-day-surge', { student_name: 'Raj', reg_no: '732224CS101', solved_today: 100 })}
+                    className="p-2 rounded-xl bg-white dark:bg-navy-800 hover:bg-amber-50 dark:hover:bg-amber-950/40 border border-slate-200 dark:border-navy-700 text-left transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <Flame size={16} className="text-amber-500 shrink-0" />
+                    <div className="min-w-0">
+                      <div className="font-bold text-[11px] text-slate-800 dark:text-white truncate">100 Solved Today</div>
+                      <div className="text-[9px] text-slate-400 truncate">Raj (Same-Day Surge)</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={!!isSimulating}
+                    onClick={() => handleSimulateAlert('/simulate-fetch-surge', { student_name: 'Sanjay', reg_no: '732224IT055', previous_solved: 150, current_solved: 201 })}
+                    className="p-2 rounded-xl bg-white dark:bg-navy-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-slate-200 dark:border-navy-700 text-left transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <Zap size={16} className="text-indigo-500 shrink-0" />
+                    <div className="min-w-0">
+                      <div className="font-bold text-[11px] text-slate-800 dark:text-white truncate">+51 Growth Delta</div>
+                      <div className="text-[9px] text-slate-400 truncate">Sanjay (150 → 201)</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={!!isSimulating}
+                    onClick={() => handleSimulateAlert('/simulate-contest-attendance', { contest_name: 'Weekly Contest 438' })}
+                    className="p-2 rounded-xl bg-white dark:bg-navy-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200 dark:border-navy-700 text-left transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <Users size={16} className="text-blue-500 shrink-0" />
+                    <div className="min-w-0">
+                      <div className="font-bold text-[11px] text-slate-800 dark:text-white truncate">Contest Attendance</div>
+                      <div className="text-[9px] text-slate-400 truncate">Attended & Absent List</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={!!isSimulating}
+                    onClick={() => handleSimulateAlert('/simulate-contest-sync-broadcast', { contest_name: 'Weekly Contest 438' })}
+                    className="p-2 rounded-xl bg-white dark:bg-navy-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-navy-700 text-left transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <Trophy size={16} className="text-emerald-500 shrink-0" />
+                    <div className="min-w-0">
+                      <div className="font-bold text-[11px] text-slate-800 dark:text-white truncate">Contest Synced</div>
+                      <div className="text-[9px] text-slate-400 truncate">Web & App Data Live</div>
+                    </div>
+                  </button>
+                </div>
+                {testPushStatus && (
+                  <div className="text-[10px] font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/50 p-1.5 rounded-lg text-center">
+                    {testPushStatus}
+                  </div>
+                )}
+              </div>
+            )}
 
 
 
