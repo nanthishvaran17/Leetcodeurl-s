@@ -87,6 +87,8 @@ class LeetCodeStatsOut(BaseModel):
     retry_count: Optional[int] = 0
     fetch_duration: Optional[float] = None
     last_updated: Optional[datetime.datetime] = None
+    official_contests: Optional[int] = 0
+    virtual_contests: Optional[int] = 0
     model_config = ConfigDict(from_attributes=True)
 
 class ContestResultOut(BaseModel):

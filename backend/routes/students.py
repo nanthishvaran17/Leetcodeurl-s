@@ -920,7 +920,59 @@ def get_student_detail(student_id: str, request: Request, db: Session = Depends(
             .filter(Student.department_id == student.department_id)\
             .filter(LeetCodeProfileStats.total_solved > (student.stats.total_solved or 0)).scalar() or 0
         st_out.dept_rank = d_higher + 1
-        
+
+    # Attach contest standings and problem stats
+    from backend.models import WeeklyPublicResult, WeeklyVirtualResult, ContestParticipation
+    from backend.schemas import CanonicalContestOut, CanonicalProblemStatsOut
+
+    pub_count = db.query(func.count(WeeklyPublicResult.id)).filter(
+        WeeklyPublicResult.student_id == student.id,
+        WeeklyPublicResult.participation_status.in_(["PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "PUBLIC_LIVE", "PUBLIC_ATTENDED_SOLVED", "PUBLIC_ATTENDED_ZERO"])
+    ).scalar() or 0
+
+    virt_count = db.query(func.count(WeeklyVirtualResult.id)).filter(
+        WeeklyVirtualResult.student_id == student.id,
+        WeeklyVirtualResult.participation_status.in_(["VIRTUAL", "VIRTUAL_ATTENDED", "VIRTUAL_PRACTICE"])
+    ).scalar() or 0
+
+    cp_official = db.query(func.count(ContestParticipation.id)).filter(
+        ContestParticipation.student_id == student.id,
+        ContestParticipation.participation_type == "OFFICIAL",
+        ContestParticipation.started == True
+    ).scalar() or 0
+
+    cp_virtual = db.query(func.count(ContestParticipation.id)).filter(
+        ContestParticipation.student_id == student.id,
+        ContestParticipation.participation_type == "VIRTUAL",
+        ContestParticipation.started == True
+    ).scalar() or 0
+
+    official_total = max(pub_count, cp_official)
+    virtual_total = max(virt_count, cp_virtual)
+
+    rating = student.stats.contest_rating if student.stats else None
+    global_rank = student.stats.contest_global_ranking if student.stats else None
+    recent_name = student.stats.recent_contest_name if student.stats else None
+
+    st_out.lc_contest_standing = CanonicalContestOut(
+        contest_rating=rating,
+        contest_global_ranking=global_rank,
+        attended_count=official_total,
+        most_recent_contest_name=recent_name
+    )
+
+    if student.stats:
+        st_out.lc_problem_stats = CanonicalProblemStatsOut(
+            total_solved=student.stats.total_solved,
+            easy_solved=student.stats.easy_solved,
+            medium_solved=student.stats.medium_solved,
+            hard_solved=student.stats.hard_solved,
+            profile_global_ranking=student.stats.public_profile_ranking
+        )
+        if st_out.stats:
+            st_out.stats.official_contests = official_total
+            st_out.stats.virtual_contests = virtual_total
+
     return st_out
 
 @router.post("", response_model=StudentOut)
@@ -1843,14 +1895,14 @@ async def refresh_single_student(
             "easy_solved": st.easy_solved if st else None,
             "medium_solved": st.medium_solved if st else None,
             "hard_solved": st.hard_solved if st else None,
-            "contest_rating": int(round(st.contest_rating)) if (st and st.contest_rating is not None) else None,
+            "contest_rating": st.contest_rating if (st and st.contest_rating is not None) else None,
             "contest_global_ranking": st.contest_global_ranking if st else None,
             "stats": {
                 "total_solved": st.total_solved if st else None,
                 "easy_solved": st.easy_solved if st else None,
                 "medium_solved": st.medium_solved if st else None,
                 "hard_solved": st.hard_solved if st else None,
-                "contest_rating": int(round(st.contest_rating)) if (st and st.contest_rating is not None) else None,
+                "contest_rating": st.contest_rating if (st and st.contest_rating is not None) else None,
                 "contest_global_ranking": st.contest_global_ranking if st else None,
                 "sync_status": st.sync_status if st else "failed",
                 "status": st.status if st else "pending",
