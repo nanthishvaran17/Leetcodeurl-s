@@ -18,7 +18,7 @@ from functools import lru_cache
 from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, Request, Response, Depends, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse
 ORJSONResponse = JSONResponse  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -787,6 +787,33 @@ async def root_page():
     </html>
     """
     return HTMLResponse(content=html_content)
+
+@app.get("/api/download/apk", include_in_schema=False)
+@app.get("/api/download/latest-apk", include_in_schema=False)
+@app.get("/download/apk", include_in_schema=False)
+def direct_download_latest_apk():
+    """Direct alias endpoint to download the latest compiled Android APK package."""
+    import glob
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    apk_files = glob.glob(os.path.join(root_dir, "Nandha_LeetCode_Intelligence_*.apk"))
+    if not apk_files:
+        apk_files = glob.glob("Nandha_LeetCode_Intelligence_*.apk")
+    if not apk_files:
+        return JSONResponse(status_code=404, content={"error": "APK package file not found on server."})
+
+    apk_files.sort(key=lambda f: os.path.getmtime(f), reverse=True)
+    latest_apk = apk_files[0]
+    filename = os.path.basename(latest_apk)
+
+    return FileResponse(
+        path=latest_apk,
+        filename=filename,
+        media_type="application/vnd.android.package-archive",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "public, max-age=3600",
+        }
+    )
 
 @app.api_route("/ready", methods=["GET"], operation_id="readiness_check")
 @app.api_route("/api/ready", methods=["GET"], include_in_schema=False)

@@ -198,6 +198,34 @@ def execute_secure_download(
         }
     )
 
+@router.get("/apk")
+@router.get("/latest-apk")
+def download_latest_apk():
+    """
+    Public direct download endpoint for the latest Android APK package.
+    """
+    import glob
+    root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    apk_files = glob.glob(os.path.join(root_dir, "Nandha_LeetCode_Intelligence_*.apk"))
+    if not apk_files:
+        apk_files = glob.glob("Nandha_LeetCode_Intelligence_*.apk")
+    if not apk_files:
+        raise HTTPException(status_code=404, detail="APK package file not found on server.")
+
+    apk_files.sort(key=lambda f: os.path.getmtime(f), reverse=True)
+    latest_apk = apk_files[0]
+    filename = os.path.basename(latest_apk)
+
+    return FileResponse(
+        path=latest_apk,
+        filename=filename,
+        media_type="application/vnd.android.package-archive",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "public, max-age=3600",
+        }
+    )
+
 @router.get("/reports/{filename}")
 def download_direct_report(filename: str, db: Session = Depends(get_db)):
     """
