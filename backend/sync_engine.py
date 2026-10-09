@@ -168,20 +168,25 @@ def capture_student_snapshot(student: Student, db: Session, run_id: Optional[str
         cur_ez  = int(cast(Any, student.stats).easy_solved or 0)
         cur_med = int(cast(Any, student.stats).medium_solved or 0)
         cur_hd  = int(cast(Any, student.stats).hard_solved or 0)
-        cur_rat = float(cast(Any, student.stats).contest_rating or 0.0)
+        raw_cur_rat = cast(Any, student.stats).contest_rating
+        cur_rat = float(raw_cur_rat) if raw_cur_rat is not None else None
 
         if prev:
             prev_tot = int(cast(Any, prev).total_solved or 0)
             prev_ez  = int(cast(Any, prev).easy_solved or 0)
             prev_med = int(cast(Any, prev).medium_solved or 0)
             prev_hd  = int(cast(Any, prev).hard_solved or 0)
-            prev_rat = float(cast(Any, prev).contest_rating or 0.0)
+            raw_prev_rat = cast(Any, prev).contest_rating
+            prev_rat = float(raw_prev_rat) if raw_prev_rat is not None else None
 
             delta_total  = max(0, cur_tot - prev_tot)
             delta_easy   = max(0, cur_ez - prev_ez)
             delta_medium = max(0, cur_med - prev_med)
             delta_hard   = max(0, cur_hd - prev_hd)
-            delta_rating = round(cur_rat - prev_rat, 1)
+            if cur_rat is not None and prev_rat is not None:
+                delta_rating = round(cur_rat - prev_rat, 1)
+            else:
+                delta_rating = 0.0
         else:
             delta_total = 0
             delta_easy = 0
@@ -195,8 +200,9 @@ def capture_student_snapshot(student: Student, db: Session, run_id: Optional[str
             easy_solved=cast(Any, student.stats).easy_solved,
             medium_solved=cast(Any, student.stats).medium_solved,
             hard_solved=cast(Any, student.stats).hard_solved,
-            contest_rating=cast(Any, student.stats).contest_rating,
+            contest_rating=cur_rat,
             global_rank=cast(Any, student.stats).public_profile_ranking,
+            contest_global_ranking=getattr(student.stats, "contest_global_ranking", None),
             delta_total=delta_total,
             delta_easy=delta_easy,
             delta_medium=delta_medium,
@@ -289,9 +295,30 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         logger.info(f"Reconciled stats for {student.reg_no}: Easy({ez_int}) + Med({med_int}) + Hard({hd_int}) vs Total({stats_dict.get('total_solved')})")
 
     if is_success:
-        new_rating = stats_dict.get("contest_rating")
-        new_grank = stats_dict.get("contest_global_rank") or stats_dict.get("contest_global_ranking")
-        new_prank = stats_dict.get("leetcode_global_rank") or stats_dict.get("public_profile_ranking")
+        contest_status = stats_dict.get("contest_status", "failed")
+
+        # Determine contest fields based on explicit contest_status (§5)
+        if contest_status == "failed":
+            # PRESERVE verified values. Never overwrite with None on failed contest fetch!
+            logger.warning(f"[CONTEST_STALE] {student.reg_no}: Preserving last verified contest rating & rank.")
+            new_rating = st_stats.contest_rating
+            new_grank = st_stats.contest_global_ranking
+            st_stats.contest_sync_status = "failed"
+        elif contest_status == "unrated":
+            # NOTE: "unrated" means the user exists and the API returned a 200 OK without errors,
+            # but userContestRanking was null (student never took part in rated contests).
+            # When no ranking object is provided by the API, preserve previous verified values.
+            new_rating = st_stats.contest_rating
+            new_grank = st_stats.contest_global_ranking
+            st_stats.contest_sync_status = "unrated"
+        else:  # contest_status == "ok"
+            raw_r = stats_dict.get("contest_rating")
+            new_rating = round(float(raw_r), 1) if raw_r is not None else None
+            new_grank = stats_dict.get("contest_global_ranking") if stats_dict.get("contest_global_ranking") is not None else stats_dict.get("contest_global_rank")
+            st_stats.contest_sync_status = "ok"
+
+        raw_prank = stats_dict.get("public_profile_ranking")
+        new_prank = raw_prank if raw_prank is not None else stats_dict.get("leetcode_global_rank")
         new_act = stats_dict.get("active_days")
         new_streak = stats_dict.get("max_streak")
 
@@ -307,11 +334,14 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
             st_stats.max_streak == new_streak
         )
 
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+
         if is_unchanged and st_stats.sync_status == "success":
-            now_utc = datetime.datetime.now(datetime.timezone.utc)
             st_stats.last_verified_at = now_utc
             st_stats.last_updated = now_utc
             st_stats.fetch_duration = stats_dict.get("fetch_duration")
+            if contest_status == "ok":
+                st_stats.contest_last_verified_at = now_utc
             if commit:
                 db.commit()
                 db.refresh(student)
@@ -328,8 +358,9 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         st_stats.active_days = stats_dict.get("active_days")
         st_stats.max_streak = stats_dict.get("max_streak")
         st_stats.recent_accepted = stats_dict.get("recent_accepted") or tot
-        st_stats.recent_contest_name = stats_dict.get("recent_contest_name")
-        st_stats.recent_contest_score = stats_dict.get("recent_contest_score")
+        if contest_status == "ok":
+            st_stats.recent_contest_name = stats_dict.get("recent_contest_name")
+            st_stats.recent_contest_score = stats_dict.get("recent_contest_score")
         
         st_stats.status = "verified"
         st_stats.sync_status = "success"
@@ -338,50 +369,97 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         st_stats.error_message = None
         st_stats.error_code = None
         st_stats.retry_count = 0  # Reset on success
-        now_utc = datetime.datetime.now(datetime.timezone.utc)
         st_stats.last_successful_sync = now_utc
-        st_stats.last_verified_at = now_utc
+        st_stats.last_verified_at = now_utc  # Profile-level verified timestamp updated on every profile success
+        if contest_status == "ok":
+            st_stats.contest_last_verified_at = now_utc
         st_stats.fetch_duration = stats_dict.get("fetch_duration")
 
-        # Process Contest Participations (OFFICIAL vs VIRTUAL)
+        # Process Contest Participations ONLY if contest call succeeded (§5)
         raw_parts = stats_dict.get("contest_participations") or []
-        fetched_username = stats_dict.get("username") or student.username  # for audit trail
-        from backend.models import ContestParticipation
-        for p in raw_parts:
-            c_name = p.get("contest_name")
-            p_type = p.get("participation_type", "UNKNOWN")
-            if not c_name:
-                continue
+        fetched_username = stats_dict.get("username") or student.username
+        if contest_status != "failed":
+            from backend.models import ContestParticipation
+            for p in raw_parts:
+                c_name = p.get("contest_name")
+                p_type = p.get("participation_type", "UNKNOWN")
+                if not c_name:
+                    continue
 
-            existing_p = db.query(ContestParticipation).filter(
-                ContestParticipation.student_id == student.id,
-                ContestParticipation.contest_name == c_name,
-                ContestParticipation.participation_type == p_type
-            ).first()
+                existing_p = db.query(ContestParticipation).filter(
+                    ContestParticipation.student_id == student.id,
+                    ContestParticipation.contest_name == c_name,
+                    ContestParticipation.participation_type == p_type
+                ).first()
 
-            if not existing_p:
-                existing_p = ContestParticipation(
-                    student_id=student.id,
-                    contest_name=c_name,
-                    participation_type=p_type
-                )
-                db.add(existing_p)
+                if not existing_p:
+                    existing_p = ContestParticipation(
+                        student_id=student.id,
+                        contest_name=c_name,
+                        participation_type=p_type
+                    )
+                    db.add(existing_p)
 
-            p_obj = cast(Any, existing_p)
-            p_obj.contest_date = p.get("contest_date")
-            p_obj.registered = p.get("registered", True)
-            p_obj.started = p.get("started", True)
-            p_obj.submitted = p.get("submitted", True)
-            p_obj.problems_solved = p.get("problems_solved", 0)
-            p_obj.total_problems = p.get("total_problems", 4)
-            p_obj.contest_rank = p.get("contest_rank")
-            p_obj.contest_rating_after = p.get("contest_rating_after")
-            p_obj.verified_at = now_utc
-            p_obj.source = p.get("source", "leetcode_api")
-            try:
-                p_obj.source_username = fetched_username
-            except AttributeError:
-                pass
+                p_obj = cast(Any, existing_p)
+                p_obj.contest_date = p.get("contest_date")
+                p_obj.registered = p.get("registered", True)
+                p_obj.started = p.get("started", True)
+                p_obj.submitted = p.get("submitted", True)
+                p_obj.problems_solved = p.get("problems_solved", 0)
+                p_obj.total_problems = p.get("total_problems", 4)
+                p_obj.contest_rank = p.get("contest_rank")
+                p_obj.contest_rating_after = p.get("contest_rating_after")
+                p_obj.verified_at = now_utc
+                p_obj.source = p.get("source", "leetcode_api")
+                try:
+                    p_obj.source_username = fetched_username
+                except AttributeError:
+                    pass
+
+        # Sync LeetCodeActivity model ALWAYS on profile success (streak, active days, calendar)
+        from backend.models import LeetCodeActivity, LeetCodeContestRatingHistory
+        lc_act = db.query(LeetCodeActivity).filter(LeetCodeActivity.student_id == student.id).first()
+        if not lc_act:
+            lc_act = LeetCodeActivity(student_id=student.id)
+            db.add(lc_act)
+        
+        streak_val = stats_dict.get("max_streak")
+        act_days_val = stats_dict.get("active_days")
+        sub_cal_json = stats_dict.get("submission_calendar_json")
+
+        if streak_val is not None:
+            lc_act.current_streak = streak_val
+            lc_act.longest_streak = max(getattr(lc_act, "longest_streak", 0) or 0, streak_val)
+        if act_days_val is not None:
+            lc_act.total_active_days = act_days_val
+        if sub_cal_json:
+            lc_act.submission_calendar_json = sub_cal_json
+        lc_act.fetched_at = now_utc
+
+        # Sync LeetCodeContestRatingHistory ONLY if contest call succeeded (§5)
+        if contest_status != "failed":
+            for p in raw_parts:
+                c_name = p.get("contest_name")
+                if not c_name:
+                    continue
+                is_att = (p.get("participation_type") == "OFFICIAL") or p.get("attended", False)
+                existing_hist = db.query(LeetCodeContestRatingHistory).filter(
+                    LeetCodeContestRatingHistory.student_id == student.id,
+                    LeetCodeContestRatingHistory.contest_name == c_name
+                ).first()
+                if not existing_hist:
+                    existing_hist = LeetCodeContestRatingHistory(
+                        student_id=student.id,
+                        contest_name=c_name,
+                        attended=is_att
+                    )
+                    db.add(existing_hist)
+                if p.get("contest_rating_after") is not None:
+                    existing_hist.rating_after = p.get("contest_rating_after")
+                if p.get("contest_rank") is not None:
+                    existing_hist.ranking = p.get("contest_rank")
+                if p.get("problems_solved") is not None:
+                    existing_hist.problems_solved = p.get("problems_solved")
 
     else:
         # Check if student previously had verified stats
@@ -532,7 +610,7 @@ async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> D
     finally:
         db.close()
 
-async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 100, per_worker_delay: float = 0.0, pre_run_id: Optional[str] = None) -> Dict[str, Any]:
+async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 15, per_worker_delay: float = 0.0, pre_run_id: Optional[str] = None) -> Dict[str, Any]:
     """
     Executes extremely fast controlled queue sync for active students.
     Respects SYNC_LIMIT and LEETCODE_SYNC_CONCURRENCY env variables.

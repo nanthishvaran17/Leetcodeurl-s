@@ -87,17 +87,20 @@ def generate_student_report(
                           else (stats.contest_rating if stats else 0.0))
         contest_rating = round(raw_rating) if raw_rating else 0
 
-        # 1. Global Rank Resolution
-        raw_global_rank = None
+        # 1. Global Rank Resolution (Disentangled Site Rank vs Contest Rank)
+        raw_site_rank = None
+        raw_contest_rank = None
         if rt_stats:
-            raw_global_rank = rt_stats.public_profile_ranking or rt_stats.contest_global_ranking
-        if not raw_global_rank and stats:
-            raw_global_rank = getattr(stats, "public_profile_ranking", None) or getattr(stats, "contest_global_ranking", None)
-            
-        if raw_global_rank and str(raw_global_rank).strip() not in ("0", "N/A", "None"):
-            global_rank = f"#{int(raw_global_rank):,}"
-        else:
-            global_rank = "N/A"
+            raw_site_rank = rt_stats.public_profile_ranking
+            raw_contest_rank = rt_stats.contest_global_ranking
+        if raw_site_rank is None and stats:
+            raw_site_rank = getattr(stats, "public_profile_ranking", None)
+        if raw_contest_rank is None and stats:
+            raw_contest_rank = getattr(stats, "contest_global_ranking", None)
+
+        site_rank = f"#{int(raw_site_rank):,}" if (raw_site_rank is not None and str(raw_site_rank).strip() not in ("0", "N/A", "None")) else "N/A"
+        contest_rank = f"#{int(raw_contest_rank):,}" if (raw_contest_rank is not None and str(raw_contest_rank).strip() not in ("0", "N/A", "None")) else "N/A"
+        global_rank = site_rank
 
         # 2. College Rank Resolution
         raw_college_rank = None
@@ -221,6 +224,8 @@ def generate_student_report(
             "hard": hard_solved,
             "contest_rating": int(round(contest_rating)) if contest_rating else 0,  # type: ignore
             "global_rank": global_rank,
+            "site_rank": site_rank,
+            "contest_rank": contest_rank,
             "college_rank": college_rank,
             "active_streak": active_streak,
             "active_days": active_days,

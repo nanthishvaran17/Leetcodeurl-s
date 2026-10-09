@@ -281,7 +281,7 @@ async def _sync_single_student_canonical_impl(
                     # Preserve last known good data (Data Integrity Axiom)
                     original_status_code = status_code
                     if shim_stats.total_solved is not None and shim_stats.total_solved > 0:
-                        status_code = "SUCCESS"  # Treat as success for pipeline progress
+                        status_code = "PRESERVED_SUCCESS"  # Treat as success for pipeline progress (preserved data)
                         sync_status_str = "verified"
                         total_solved = shim_stats.total_solved
                         easy_solved = shim_stats.easy_solved
@@ -308,9 +308,10 @@ async def _sync_single_student_canonical_impl(
                             logger.warning(f"[TIMEOUT] student={st.id} username={c_username} endpoint=profile — no prior data exists")
                 elif status_code == "SUCCESS" and phase_a_res and phase_a_res.get("data"):
                     data = phase_a_res["data"]
-                    c_user = data["canonical_username"]
+                    c_user = data.get("canonical_username") or data.get("username") or c_username
+                    p_url = data.get("profile_url") or f"https://leetcode.com/u/{c_user}/"
                     lc_prof.canonical_username = c_user
-                    lc_prof.profile_url = data["profile_url"]
+                    lc_prof.profile_url = p_url
                     lc_prof.real_name = data.get("real_name")
                     lc_prof.avatar_url = data.get("avatar_url")
                     lc_prof.about_me = data.get("about_me")
@@ -326,7 +327,7 @@ async def _sync_single_student_canonical_impl(
                     setattr(lc_prof, "error_message", None)
     
                     st.username = c_user
-                    st.leetcode_url = data["profile_url"]
+                    st.leetcode_url = p_url
     
                     total_solved = data.get("total_solved")
                     easy_solved = data.get("easy_solved")
@@ -789,28 +790,28 @@ async def run_full_pipeline(
 
                     if sync_mode == "LIVE_MONITOR":
                         if all_valid_usernames:
-                            b_res = await fetch_contest_data_batched(all_valid_usernames, client)
+                            # In live monitor mode, profile existence can be inferred from cached profiles
+                            prof_statuses = {u: ("ok" if u in cached_profile_a else "unknown") for u in all_valid_usernames}
+                            b_res = await fetch_contest_data_batched(all_valid_usernames, client, profile_statuses=prof_statuses)
                             if isinstance(b_res, dict): batched_b = b_res
                     else:
-                        async def _empty_a():
-                            return {}
-                        async def _empty_b():
-                            return {}
-
-                        fetch_tasks = []
                         if valid_usernames:
-                            fetch_tasks.append(fetch_profile_and_stats_batched(valid_usernames, client))
-                        else:
-                            fetch_tasks.append(_empty_a())
+                            res_a = await fetch_profile_and_stats_batched(valid_usernames, client)
+                            if isinstance(res_a, dict): batched_a = res_a
+                        
+                        merged_a_lookup = {**cached_profile_a, **batched_a}
+                        prof_statuses = {}
+                        for u in all_valid_usernames:
+                            if u in batched_a:
+                                prof_statuses[u] = batched_a[u].get("status", "unknown")
+                            elif u in cached_profile_a:
+                                prof_statuses[u] = "ok"
+                            else:
+                                prof_statuses[u] = "unknown"
 
                         if all_valid_usernames:
-                            fetch_tasks.append(fetch_contest_data_batched(all_valid_usernames, client))
-                        else:
-                            fetch_tasks.append(_empty_b())
-
-                        res_a, res_b = await asyncio.gather(*fetch_tasks, return_exceptions=True)
-                        if isinstance(res_a, dict): batched_a = res_a
-                        if isinstance(res_b, dict): batched_b = res_b
+                            b_res = await fetch_contest_data_batched(all_valid_usernames, client, profile_statuses=prof_statuses)
+                            if isinstance(b_res, dict): batched_b = b_res
 
                     # Merge cached (DB) Phase-A results with live-fetched ones
                     # Live fetch wins if both exist for same username

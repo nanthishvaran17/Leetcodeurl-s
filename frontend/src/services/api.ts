@@ -390,13 +390,27 @@ api.get = async function (url: string, config?: any) {
 };
 
 
-export const triggerFullSync = async (triggeredBy = 'admin') => {
-  const res = await api.post(`/sync/full?triggered_by=${encodeURIComponent(triggeredBy)}`);
+const getActiveUserTriggerTag = (fallback = 'admin'): string => {
+  try {
+    const raw = localStorage.getItem('user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      const name = u.full_name || u.name || u.displayName || u.username || (u.email ? u.email.split('@')[0] : null);
+      if (name) return name;
+    }
+  } catch (e) {}
+  return fallback;
+};
+
+export const triggerFullSync = async (triggeredBy?: string) => {
+  const tag = triggeredBy || getActiveUserTriggerTag('admin');
+  const res = await api.post(`/sync/full?triggered_by=${encodeURIComponent(tag)}`);
   return res.data;
 };
 
-export const triggerTargetedSync = async (studentIds: number[], triggeredBy = 'admin') => {
-  const res = await api.post('/sync/targeted', { student_ids: studentIds, triggered_by: triggeredBy });
+export const triggerTargetedSync = async (studentIds: number[], triggeredBy?: string) => {
+  const tag = triggeredBy || getActiveUserTriggerTag('admin');
+  const res = await api.post('/sync/targeted', { student_ids: studentIds, triggered_by: tag });
   return res.data;
 };
 

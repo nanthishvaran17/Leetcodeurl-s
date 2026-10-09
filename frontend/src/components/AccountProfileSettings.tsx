@@ -21,6 +21,7 @@ import Cropper from 'react-easy-crop';
 import 'react-easy-crop/react-easy-crop.css';
 import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import { Capacitor } from '@capacitor/core';
+import { downloadManager } from '../services/download/downloadManager';
 
 const getCroppedImg = (imageSrc: string, pixelCrop: any): Promise<string> => {
   const canvas = document.createElement('canvas');
@@ -962,16 +963,19 @@ export const AccountProfileSettings: React.FC = () => {
     }
   };
 
-  const handleOpen2FASetup = async () => {
+  const handleOpen2FASetup = async (forceRegen: boolean = false) => {
     if (isGenerating2FA) return;
     setIsGenerating2FA(true);
     try {
-      const res = await api.post('/auth/2fa/generate');
+      const res = await api.post(`/auth/2fa/generate${forceRegen ? '?force=true' : ''}`);
       if (res.data?.secret && res.data?.uri) {
         setTotpSecret(res.data.secret);
         setTotpUri(res.data.uri);
         setTotpCodeInput('');
         setShow2FASetupModal(true);
+        if (forceRegen) {
+          notify.success('New 2FA QR code generated', '', { category: 'ADMIN' });
+        }
       }
     } catch (err) {
       notify.error('Failed to generate 2FA secret', '', { category: 'ADMIN' });
@@ -1115,8 +1119,9 @@ export const AccountProfileSettings: React.FC = () => {
 
   // Export Security Audit Log Excel with perfect alignment, styles, and logo using exceljs
   const handleExportSecurityAuditExcel = async () => {
+    let notifyToast: any = null;
     try {
-      const notifyToast = notify.loading('Generating perfect Excel report...', '', { duration: 10000, category: 'ADMIN' });
+      notifyToast = notify.loading('Generating perfect Excel report...', '', { duration: 10000, category: 'ADMIN' });
       // Dynamic import of exceljs for client-side workbook generation
       // @ts-ignore
       const excelMod: any = await import('exceljs');
@@ -1253,45 +1258,35 @@ export const AccountProfileSettings: React.FC = () => {
         }
       }
 
-      // Export
+      // Export Excel via universal downloadManager (Web, Mobile WebView, Capacitor APK)
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const url = URL.createObjectURL(blob);
+      const filename = `NEC_Security_Audit_${institutionalId}_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-      if (isMobile) {
-        // Fallback for Mobile WebViews / APKs where blob URLs are blocked
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const dataUrl = reader.result as string;
-          const a = document.createElement('a');
-          a.href = dataUrl;
-          a.download = `NEC_Security_Audit_${institutionalId}_${new Date().toISOString().split('T')[0]}.xlsx`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          notify.dismiss(notifyToast);
-          notify.success('Security audit report downloaded with perfect alignment!', '', { category: 'ADMIN' });
-        };
-        reader.readAsDataURL(blob);
-        return;
-      }
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `NEC_Security_Audit_${institutionalId}_${new Date().toISOString().split('T')[0]}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      await downloadManager.downloadBlob(blob, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       
-      notify.dismiss(notifyToast);
-      notify.success('Security audit report downloaded with perfect alignment!', '', { category: 'ADMIN' });
+      if (notifyToast) notify.dismiss(notifyToast);
+      notify.success('Security audit report downloaded successfully!', '', { category: 'ADMIN' });
     } catch (err: any) {
-      console.error('Failed to generate Excel report', err);
-      notify.error(`Failed to generate Excel report: ${err?.message || err}`, '', { category: 'ADMIN' });
+      console.error('Failed to generate Excel report, attempting CSV fallback', err);
+      try {
+        const rows = [
+          ['Event ID', 'Date', 'Time (IST)', 'IP Address', 'Access Network', 'Authentication Method', 'Security Status']
+        ];
+        loginHistory.forEach(h => {
+          rows.push([h.id, h.date, h.time, h.ip, h.network, h.method, h.status]);
+        });
+        const csvContent = rows.map(r => r.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const filename = `NEC_Security_Audit_${institutionalId}_${new Date().toISOString().split('T')[0]}.csv`;
+        await downloadManager.downloadBlob(blob, filename, 'text/csv;charset=utf-8;');
+        
+        if (notifyToast) notify.dismiss(notifyToast);
+        notify.success('Security audit log exported as CSV successfully!', '', { category: 'ADMIN' });
+      } catch (fallbackErr: any) {
+        if (notifyToast) notify.dismiss(notifyToast);
+        notify.error(`Failed to export audit report: ${err?.message || err}`, '', { category: 'ADMIN' });
+      }
     }
   };
 
@@ -2689,7 +2684,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   {!is2FAEnabled ? (
                     <button
                       type="button"
-                      onClick={handleOpen2FASetup}
+                      onClick={() => handleOpen2FASetup()}
                       disabled={isGenerating2FA}
                       className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -3582,10 +3577,19 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       navigator.clipboard.writeText(totpSecret);
                       notify.success('Secret key copied to clipboard', '', { category: 'ADMIN' });
                     }}
-                    className="p-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-navy-800 dark:hover:bg-navy-700 transition-colors cursor-pointer"
+                    className="p-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-navy-800 dark:hover:bg-navy-700 transition-colors cursor-pointer shrink-0"
                     title="Copy Secret"
                   >
                     <Copy className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpen2FASetup(true)}
+                    disabled={isGenerating2FA}
+                    className="p-2.5 rounded-xl bg-indigo-100 hover:bg-indigo-200 text-indigo-700 dark:bg-indigo-900/50 dark:hover:bg-indigo-900 dark:text-indigo-300 transition-colors cursor-pointer shrink-0"
+                    title="Regenerate New QR Code"
+                  >
+                    <RefreshCcw className={`w-4 h-4 ${isGenerating2FA ? 'animate-spin' : ''}`} />
                   </button>
                 </div>
               </div>

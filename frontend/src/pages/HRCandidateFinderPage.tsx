@@ -2519,8 +2519,11 @@ export const HRCandidateFinderPage: React.FC = () => {
                         <td className="py-3.5 px-2 text-center font-bold text-emerald-600 dark:text-emerald-400 text-xs font-mono w-[5%]">{c.easy_solved}</td>
                         <td className="py-3.5 px-2 text-center font-bold text-amber-600 dark:text-amber-400 text-xs font-mono w-[5%]">{c.medium_solved}</td>
                         <td className="py-3.5 px-2 text-center font-bold text-rose-600 dark:text-rose-400 text-xs font-mono w-[5%]">{c.hard_solved}</td>
-                        <td className="py-3.5 px-2 text-center font-extrabold text-purple-600 dark:text-purple-400 text-xs font-mono w-[8%]">
-                          {c.contest_rating > 0 ? c.contest_rating.toLocaleString() : "0"}
+                        <td 
+                          className="py-3.5 px-2 text-center font-extrabold text-purple-600 dark:text-purple-400 text-xs font-mono w-[8%] cursor-pointer"
+                          title={c.contest_rating > 0 ? `Exact Rating: ${Number(c.contest_rating).toFixed(3)}` : undefined}
+                        >
+                          {c.contest_rating > 0 ? Math.round(c.contest_rating).toLocaleString() : "0"}
                         </td>
                         <td className="py-3.5 px-3 text-center w-[15%]">
                           <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -2649,10 +2652,13 @@ export const HRCandidateFinderPage: React.FC = () => {
                         </span>
                       </div>
 
-                      <div className="bg-purple-50/70 dark:bg-purple-950/40 p-2 rounded-xl border border-purple-100 dark:border-purple-900/50">
+                      <div 
+                        className="bg-purple-50/70 dark:bg-purple-950/40 p-2 rounded-xl border border-purple-100 dark:border-purple-900/50 cursor-pointer"
+                        title={c.contest_rating > 0 ? `Exact Rating: ${Number(c.contest_rating).toFixed(3)}` : undefined}
+                      >
                         <span className="text-[10px] font-extrabold text-purple-600 dark:text-purple-400 block uppercase">Contest Rating</span>
                         <span className="font-mono font-black text-xs text-purple-700 dark:text-purple-300 mt-0.5 block">
-                          {c.contest_rating > 0 ? c.contest_rating.toLocaleString() : "—"}
+                          {c.contest_rating > 0 ? Math.round(c.contest_rating).toLocaleString() : "—"}
                         </span>
                       </div>
                     </div>

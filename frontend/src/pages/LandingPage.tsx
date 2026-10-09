@@ -230,14 +230,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   useEffect(() => {
     if (user) {
-      let userDeptCode: string | null = null;
-      if (user.authorized_department_codes && user.authorized_department_codes.length > 0) {
-        userDeptCode = user.authorized_department_codes[0];
-      } else if (user.department) {
-        userDeptCode = user.department;
-      }
-      if (userDeptCode && selectedDept === 'all') {
-        setSelectedDept(userDeptCode);
+      const roleClean = (user.role || '').trim().toLowerCase();
+      const isAdmin = ['admin', 'administrator', 'superadmin', 'super_admin', 'super admin'].includes(roleClean);
+      if (!isAdmin) {
+        let userDeptCode: string | null = null;
+        if (user.authorized_department_codes && user.authorized_department_codes.length > 0) {
+          userDeptCode = user.authorized_department_codes[0];
+        } else if (user.department) {
+          userDeptCode = user.department;
+        }
+        if (userDeptCode && selectedDept === 'all') {
+          setSelectedDept(userDeptCode);
+        }
       }
     }
   }, [user]);

@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, or_, and_, desc
 from typing import List, Optional, Dict, Any, Tuple
 import datetime
+import asyncio
 from zoneinfo import ZoneInfo
 from collections import defaultdict
 import json
@@ -315,7 +316,9 @@ def get_analytics_compare_students(
                 "medium_solved": medium_solved,
                 "hard_solved": hard_solved,
                 "contest_rating": contest_rating,
-                "global_rank": (getattr(stats, "contest_global_ranking", None) or getattr(stats, "public_profile_ranking", None)) if stats else None
+                "contest_rank": getattr(stats, "contest_global_ranking", None) if stats else None,
+                "site_rank": getattr(stats, "public_profile_ranking", None) if stats else None,
+                "global_rank": getattr(stats, "contest_global_ranking", None) if (stats and stats.contest_global_ranking is not None) else (getattr(stats, "public_profile_ranking", None) if stats else None)
             },
             "insights": {
                 "trajectory": trajectory,
@@ -982,7 +985,97 @@ def get_contest_aggregate(
     if not student_count or student_count == 0:
         return {"error": "No students found in scope", "data": None}
 
-    # Aggregate stats
+    # For single-student queries (e.g. Student Profile modal Contests tab), prioritize exact LeetCodeContestRatingHistory ground-truth
+    if student_id:
+        hist_rows = db.query(LeetCodeContestRatingHistory).filter(
+            LeetCodeContestRatingHistory.student_id == student_id,
+            or_(LeetCodeContestRatingHistory.attended == True, LeetCodeContestRatingHistory.problems_solved > 0)
+        ).all()
+
+        if not hist_rows:
+            student_obj = db.query(Student).filter(Student.id == student_id).first()
+            if student_obj and student_obj.username:
+                try:
+                    from backend.leetcode_fetcher import fetch_leetcode_profile
+                    res_lc = asyncio.run(fetch_leetcode_profile(student_obj.username, force_refresh=False))
+                    participations = res_lc.get("contest_participations") or []
+                    for p in participations:
+                        c_name = p.get("contest_name")
+                        if not c_name:
+                            continue
+                        is_att = (p.get("participation_type") == "OFFICIAL") or p.get("attended", False)
+                        rec = db.query(LeetCodeContestRatingHistory).filter(
+                            LeetCodeContestRatingHistory.student_id == student_obj.id,
+                            LeetCodeContestRatingHistory.contest_name == c_name
+                        ).first()
+                        if not rec:
+                            rec = LeetCodeContestRatingHistory(student_id=student_obj.id, contest_name=c_name)
+                            db.add(rec)
+                        rec.attended = is_att
+                        if p.get("contest_date"):
+                            try:
+                                c_date_dt = datetime.datetime.strptime(p.get("contest_date"), "%Y-%m-%d")
+                                rec.contest_start_time = c_date_dt
+                            except Exception:
+                                pass
+                        rec.problems_solved = p.get("problems_solved", 0)
+                        rec.total_problems = p.get("total_problems", 4)
+                        if p.get("contest_rank") is not None:
+                            rec.contest_rank = p.get("contest_rank")
+                        if p.get("contest_rating_after") is not None:
+                            rec.rating_after = p.get("contest_rating_after")
+                    db.commit()
+                    hist_rows = db.query(LeetCodeContestRatingHistory).filter(
+                        LeetCodeContestRatingHistory.student_id == student_id,
+                        or_(LeetCodeContestRatingHistory.attended == True, LeetCodeContestRatingHistory.problems_solved > 0)
+                    ).all()
+                except Exception as ex:
+                    pass
+
+        if hist_rows:
+            import re
+            def _sort_contest_key(h):
+                if h.contest_start_time:
+                    return (0, h.contest_start_time.timestamp())
+                c_name = h.contest_name or ""
+                m = re.search(r'\d+', c_name)
+                num = int(m.group(0)) if m else 0
+                return (1, num)
+
+            hist_rows.sort(key=_sort_contest_key)
+
+            total_c = len(hist_rows)
+            ranks = [h.contest_rank for h in hist_rows if h.contest_rank and h.contest_rank > 0]
+            solved_list = [h.problems_solved or 0 for h in hist_rows]
+            best_r = min(ranks) if ranks else None
+            avg_r = round(sum(ranks) / len(ranks), 1) if ranks else None
+            tot_p = sum(solved_list)
+            avg_s = round(tot_p / total_c, 1) if total_c > 0 else 0
+
+            trend_list = [
+                {
+                    "date": h.contest_name or (h.contest_start_time.strftime("%Y-%m-%d") if h.contest_start_time else f"Contest {i+1}"),
+                    "avg_rating": round(h.rating_after, 1) if h.rating_after else None,
+                    "avg_rank": h.contest_rank
+                }
+                for i, h in enumerate(hist_rows)
+            ]
+
+            return {
+                "summary": {
+                    "total_contests": total_c,
+                    "participations": total_c,
+                    "participation_rate": 100.0,
+                    "best_rank": best_r,
+                    "avg_rank": avg_r,
+                    "problems_solved": tot_p,
+                    "avg_solved": avg_s,
+                },
+                "trend": trend_list,
+                "top_performers": []
+            }
+
+    # Aggregate stats for multi-student / department / college queries
     contests_query = db.query(StudentContestSnapshot).filter(
         StudentContestSnapshot.student_id.in_(db.query(student_subquery.c.id)),
         StudentContestSnapshot.captured_at >= start_dt,

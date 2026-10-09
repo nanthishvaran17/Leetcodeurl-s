@@ -98,7 +98,9 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
           </div>
           <div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Contests</p>
-            <p className="text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5">{summary.total_contests}</p>
+            <p className="text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5">
+              {summary.total_contests ? Number(summary.total_contests).toLocaleString('en-US') : '0'}
+            </p>
           </div>
         </div>
         <div className="bg-white dark:bg-navy-900 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
@@ -107,7 +109,12 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
           </div>
           <div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Avg Rank</p>
-            <p className="text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5">{summary.avg_rank ? Number(summary.avg_rank).toFixed(1) : '-'}</p>
+            <p 
+              className="text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 cursor-pointer"
+              title={summary.avg_rank ? `Exact Avg Rank: #${Number(summary.avg_rank).toFixed(1)}` : undefined}
+            >
+              {summary.avg_rank && !isNaN(Number(summary.avg_rank)) ? `#${Math.round(Number(summary.avg_rank)).toLocaleString('en-US')}` : '-'}
+            </p>
           </div>
         </div>
         <div className="bg-white dark:bg-navy-900 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
@@ -116,7 +123,9 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
           </div>
           <div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Best Rank</p>
-            <p className="text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5">{summary.best_rank || '-'}</p>
+            <p className="text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5">
+              {summary.best_rank && !isNaN(Number(summary.best_rank)) ? `#${Number(summary.best_rank).toLocaleString('en-US')}` : summary.best_rank || '-'}
+            </p>
           </div>
         </div>
         <div className="bg-white dark:bg-navy-900 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
@@ -125,7 +134,9 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
           </div>
           <div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Avg Solved</p>
-            <p className="text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5">{summary.avg_solved ? Number(summary.avg_solved).toFixed(1) : 0}</p>
+            <p className="text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5">
+              {summary.avg_solved ? Number(summary.avg_solved).toFixed(1) : 0}
+            </p>
           </div>
         </div>
       </div>
@@ -178,7 +189,9 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
                           <p className="text-xs text-slate-500">{p.reg_no}</p>
                         </td>
                         <td className="py-3 px-2 text-right font-medium text-brand-600">{p.rating ? Math.round(p.rating) : '-'}</td>
-                        <td className="py-3 px-2 text-right font-medium text-slate-600 dark:text-slate-300">{p.best_rank || '-'}</td>
+                        <td className="py-3 px-2 text-right font-medium text-slate-600 dark:text-slate-300">
+                          {p.best_rank && !isNaN(Number(p.best_rank)) ? `#${Number(p.best_rank).toLocaleString('en-US')}` : p.best_rank || '-'}
+                        </td>
                       </tr>
                     ))
                   ) : (

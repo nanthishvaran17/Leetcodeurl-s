@@ -138,7 +138,9 @@ def run_db_migrations():
             ("leetcode_profile_stats", "last_verified_at", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS last_verified_at TIMESTAMP"),
             ("leetcode_profile_stats", "last_attempt_at", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS last_attempt_at TIMESTAMP"),
             ("leetcode_profile_stats", "retry_count", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS retry_count INTEGER DEFAULT 0"),
-            ("leetcode_profile_stats", "fetch_duration", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS fetch_duration FLOAT"),
+            ("leetcode_profile_stats", "contest_sync_status", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS contest_sync_status VARCHAR(50)"),
+            ("leetcode_profile_stats", "contest_last_verified_at", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS contest_last_verified_at TIMESTAMP"),
+            ("student_stat_snapshots", "contest_global_ranking", "ALTER TABLE student_stat_snapshots ADD COLUMN IF NOT EXISTS contest_global_ranking INTEGER"),
             # weekly_public_results 
             ("weekly_public_results", "state", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS state VARCHAR(30) DEFAULT 'PENDING'"),
             ("weekly_public_results", "previous_state", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS previous_state VARCHAR(30)"),
@@ -617,8 +619,25 @@ def run_db_migrations():
             ("recent_accepted",      "INTEGER"),
             ("source_total_solved",  "INTEGER"),
             ("derived_total_solved", "INTEGER"),
+            ("contest_sync_status",  "VARCHAR(50)"),
+            ("contest_last_verified_at", "DATETIME"),
         ]
         for col_name, col_type in columns_to_add:
+            try:
+                cursor.execute(f"ALTER TABLE leetcode_profile_stats ADD COLUMN {col_name} {col_type};")
+                print(f"Added column '{col_name}' to leetcode_profile_stats.")
+            except Exception:
+                pass  # Column already exists — safe to ignore
+
+        snapshot_cols_to_add = [
+            ("contest_global_ranking", "INTEGER"),
+        ]
+        for col_name, col_type in snapshot_cols_to_add:
+            try:
+                cursor.execute(f"ALTER TABLE student_stat_snapshots ADD COLUMN {col_name} {col_type};")
+                print(f"Added column '{col_name}' to student_stat_snapshots.")
+            except Exception:
+                pass
             try:
                 cursor.execute(f"ALTER TABLE leetcode_profile_stats ADD COLUMN {col_name} {col_type};")
                 print(f"Added column '{col_name}' to leetcode_profile_stats.")

@@ -49,8 +49,9 @@ def seed_snapshots():
             cur_easy = stats.easy_solved or 0
             cur_medium = stats.medium_solved or 0
             cur_hard = stats.hard_solved or 0
-            cur_rating = stats.contest_rating or 1500.0
-            cur_rank = stats.public_profile_ranking or stats.contest_global_ranking
+            cur_rating = stats.contest_rating
+            cur_rank = stats.public_profile_ranking
+            cur_contest_rank = stats.contest_global_ranking
 
             # Check contest 516 solved today
             p_res = public_results.get(student.id)
@@ -80,8 +81,9 @@ def seed_snapshots():
                 easy_solved=e_30d,
                 medium_solved=m_30d,
                 hard_solved=h_30d,
-                contest_rating=round(r_30d, 1),
+                contest_rating=round(r_30d, 1) if cur_rating is not None else None,
                 global_rank=cur_rank + 850 if cur_rank else None,
+                contest_global_ranking=cur_contest_rank + 850 if cur_contest_rank else None,
                 delta_total=0,
                 delta_easy=0,
                 delta_medium=0,
@@ -97,7 +99,7 @@ def seed_snapshots():
             e_14d = max(0, int(cur_easy * (tot_14d / max(cur_total, 1))))
             m_14d = max(0, int(cur_medium * (tot_14d / max(cur_total, 1))))
             h_14d = max(0, tot_14d - e_14d - m_14d)
-            r_14d = max(1200.0, cur_rating - 25.0)
+            r_14d = max(1200.0, cur_rating - 25.0) if cur_rating is not None else 1200.0
 
             snapshots_to_insert.append(StudentStatSnapshot(
                 student_id=student.id,
@@ -105,13 +107,14 @@ def seed_snapshots():
                 easy_solved=e_14d,
                 medium_solved=m_14d,
                 hard_solved=h_14d,
-                contest_rating=round(r_14d, 1),
+                contest_rating=round(r_14d, 1) if cur_rating is not None else None,
                 global_rank=cur_rank + 420 if cur_rank else None,
+                contest_global_ranking=cur_contest_rank + 420 if cur_contest_rank else None,
                 delta_total=tot_14d - tot_30d,
                 delta_easy=e_14d - e_30d,
                 delta_medium=m_14d - m_30d,
                 delta_hard=h_14d - h_30d,
-                delta_rating=round(r_14d - r_30d, 1),
+                delta_rating=round(r_14d - r_30d, 1) if cur_rating is not None else 0.0,
                 captured_at=t_14d,
                 sync_run_id="SYNC-20260809-WEEKLY",
                 source="leetcode_public_profile"
@@ -122,7 +125,7 @@ def seed_snapshots():
             e_7d = max(0, int(cur_easy * (tot_7d / max(cur_total, 1))))
             m_7d = max(0, int(cur_medium * (tot_7d / max(cur_total, 1))))
             h_7d = max(0, tot_7d - e_7d - m_7d)
-            r_7d = max(1200.0, cur_rating - 15.0)
+            r_7d = max(1200.0, cur_rating - 15.0) if cur_rating is not None else 1200.0
 
             snapshots_to_insert.append(StudentStatSnapshot(
                 student_id=student.id,
@@ -130,13 +133,14 @@ def seed_snapshots():
                 easy_solved=e_7d,
                 medium_solved=m_7d,
                 hard_solved=h_7d,
-                contest_rating=round(r_7d, 1),
+                contest_rating=round(r_7d, 1) if cur_rating is not None else None,
                 global_rank=cur_rank + 180 if cur_rank else None,
+                contest_global_ranking=cur_contest_rank + 180 if cur_contest_rank else None,
                 delta_total=tot_7d - tot_14d,
                 delta_easy=e_7d - e_14d,
                 delta_medium=m_7d - m_14d,
                 delta_hard=h_7d - h_14d,
-                delta_rating=round(r_7d - r_14d, 1),
+                delta_rating=round(r_7d - r_14d, 1) if cur_rating is not None else 0.0,
                 captured_at=t_7d,
                 sync_run_id="SYNC-20260816-WEEKLY",
                 source="leetcode_public_profile"
@@ -147,7 +151,7 @@ def seed_snapshots():
             e_1d = max(0, cur_easy - (1 if contest_solved_today >= 1 else 0))
             m_1d = max(0, cur_medium - (1 if contest_solved_today >= 2 else 0) - (1 if contest_solved_today >= 3 else 0))
             h_1d = max(0, cur_hard - (1 if contest_solved_today >= 4 else 0))
-            r_1d = max(1200.0, cur_rating - (8.5 if contest_solved_today > 0 else 0.0))
+            r_1d = max(1200.0, cur_rating - (8.5 if contest_solved_today > 0 else 0.0)) if cur_rating is not None else 1200.0
 
             snapshots_to_insert.append(StudentStatSnapshot(
                 student_id=student.id,
@@ -155,13 +159,14 @@ def seed_snapshots():
                 easy_solved=e_1d,
                 medium_solved=m_1d,
                 hard_solved=h_1d,
-                contest_rating=round(r_1d, 1),
+                contest_rating=round(r_1d, 1) if cur_rating is not None else None,
                 global_rank=cur_rank + 30 if cur_rank else None,
+                contest_global_ranking=cur_contest_rank + 30 if cur_contest_rank else None,
                 delta_total=tot_1d - tot_7d,
                 delta_easy=e_1d - e_7d,
                 delta_medium=m_1d - m_7d,
                 delta_hard=h_1d - h_7d,
-                delta_rating=round(r_1d - r_7d, 1),
+                delta_rating=round(r_1d - r_7d, 1) if cur_rating is not None else 0.0,
                 captured_at=t_1d,
                 sync_run_id="SYNC-20260822-DAILY",
                 source="leetcode_public_profile"
@@ -174,8 +179,9 @@ def seed_snapshots():
                 easy_solved=cur_easy,
                 medium_solved=cur_medium,
                 hard_solved=cur_hard,
-                contest_rating=round(cur_rating, 1),
+                contest_rating=round(cur_rating, 1) if cur_rating is not None else None,
                 global_rank=cur_rank,
+                contest_global_ranking=cur_contest_rank,
                 delta_total=cur_total - tot_1d,
                 delta_easy=cur_easy - e_1d,
                 delta_medium=cur_medium - m_1d,

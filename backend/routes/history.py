@@ -90,6 +90,23 @@ MAX_BASELINE_STALENESS = {
 
 MAX_CURRENT_AGE = datetime.timedelta(hours=48)
 
+def _clean_snaps(snaps: List[StudentStatSnapshot]) -> List[StudentStatSnapshot]:
+    """Keep only consistent, non-regressing, real snapshots."""
+    out, run_max = [], 0
+    for sn in snaps:
+        if getattr(sn, "source", None) in ("on_demand", "unverified"):
+            continue
+        ez, md, hd = sn.easy_solved or 0, sn.medium_solved or 0, sn.hard_solved or 0
+        tot = sn.total_solved or 0
+        if tot != ez + md + hd:  # inconsistent
+            continue
+        if tot < run_max:  # regression = bad fetch
+            continue
+        run_max = tot
+        out.append(sn)
+    return out
+
+
 def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datetime.datetime], period: str = "7d", now_utc: Optional[datetime.datetime] = None) -> Dict[int, Dict[str, Any]]:
     if not students:
         return {}
@@ -113,7 +130,7 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
     
     for s in students:
         s_id = getattr(s, "id")
-        snaps = grouped.get(s_id, [])
+        snaps = _clean_snaps(grouped.get(s_id, []))
         st = s.stats
         
         # Determine Current State from live stats or latest snapshot
@@ -148,7 +165,7 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
             growth[s_id] = {
                 "growth_status": "UNKNOWN",
                 "delta_total": None, "delta_easy": None, "delta_medium": None, "delta_hard": None, "delta_rating": None,
-                "conflict_reason": None,
+                "conflict_reason": "NO_SNAPSHOTS",
                 "baseline": None,
                 "current": None
             }
@@ -164,7 +181,9 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
                 "medium_solved": cur_med,
                 "hard_solved": cur_hd,
                 "contest_rating": cur_rat,
-                "global_rank": getattr(st, "public_profile_ranking", None) or getattr(st, "contest_global_ranking", None) if st else None,
+                "site_rank": getattr(st, "public_profile_ranking", None) if st else None,
+                "contest_rank": getattr(st, "contest_global_ranking", None) if st else None,
+                "global_rank": getattr(st, "public_profile_ranking", None) if st else None,
                 "captured_at": current_dict.get("captured_at") if current_dict else None,
                 "source": current_dict.get("source") if current_dict else None
             }
@@ -181,33 +200,47 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
                 else:
                     break
 
-        if baseline_snap is None:
-            if snaps:
-                baseline_snap = snaps[0]
-            else:
-                baseline_dict = {
-                    "captured_at": cutoff.isoformat() if cutoff else None,
-                    "source": "initial_zero",
-                    "total_solved": 0, "easy_solved": 0, "medium_solved": 0, "hard_solved": 0,
-                    "contest_rating": None
-                }
-                b_ez, b_med, b_hd, b_tot, b_rat = 0, 0, 0, 0, None
+        # No baseline, or baseline too old -> UNKNOWN (never fallback to 0 / snaps[0])
+        stale = False
+        if baseline_snap is not None:
+            b_at = baseline_snap.captured_at
+            if b_at.tzinfo is None:
+                b_at = b_at.replace(tzinfo=UTC_TZ)
+            stale = (cutoff - b_at) > MAX_BASELINE_STALENESS.get(period, datetime.timedelta(hours=48))
 
-        if baseline_snap:
-            baseline_dict = _serialize_snap(baseline_snap)
-            b_ez = baseline_snap.easy_solved or 0
-            b_med = baseline_snap.medium_solved or 0
-            b_hd = baseline_snap.hard_solved or 0
-            b_tot = max(baseline_snap.total_solved or 0, b_ez + b_med + b_hd)
-            b_rat = baseline_snap.contest_rating
+        if baseline_snap is None or stale:
+            growth[s_id] = {
+                "growth_status": "UNKNOWN",
+                "delta_total": None, "delta_easy": None, "delta_medium": None, "delta_hard": None, "delta_rating": None,
+                "conflict_reason": "NO_FRESH_BASELINE",
+                "baseline": _serialize_snap(baseline_snap),
+                "current": current_dict
+            }
+            continue
 
-        d_ez = max(0, cur_ez - b_ez)
-        d_med = max(0, cur_med - b_med)
-        d_hd = max(0, cur_hd - b_hd)
-        d_tot = max(0, cur_tot - b_tot)
-        if (d_ez + d_med + d_hd) > d_tot:
-            d_tot = d_ez + d_med + d_hd
-        
+        baseline_dict = _serialize_snap(baseline_snap)
+        b_ez = baseline_snap.easy_solved or 0
+        b_med = baseline_snap.medium_solved or 0
+        b_hd = baseline_snap.hard_solved or 0
+        b_tot = b_ez + b_med + b_hd
+        b_rat = baseline_snap.contest_rating
+
+        # Live went DOWN vs baseline -> conflict, don't clamp silently
+        if cur_ez < b_ez or cur_med < b_med or cur_hd < b_hd:
+            growth[s_id] = {
+                "growth_status": "CONFLICT",
+                "delta_total": None, "delta_easy": None, "delta_medium": None, "delta_hard": None, "delta_rating": None,
+                "conflict_reason": "LIVE_BELOW_BASELINE",
+                "baseline": baseline_dict,
+                "current": current_dict
+            }
+            continue
+
+        d_ez = cur_ez - b_ez
+        d_med = cur_med - b_med
+        d_hd = cur_hd - b_hd
+        d_tot = d_ez + d_med + d_hd  # total ALWAYS = sum
+
         d_rat = None
         if cur_rat is not None and b_rat is not None:
             d_rat = round(float(cur_rat) - float(b_rat), 1)
@@ -296,7 +329,8 @@ def get_student_history(
         except ValueError:
             pass
 
-    snapshots = query.order_by(StudentStatSnapshot.captured_at.desc()).limit(limit).all()
+    effective_limit = limit if isinstance(limit, int) else 50
+    snapshots = query.order_by(StudentStatSnapshot.captured_at.desc()).limit(effective_limit).all()
     
     ui_snapshots = []
     
@@ -310,8 +344,9 @@ def get_student_history(
             easy_solved=st.easy_solved or 0,
             medium_solved=st.medium_solved or 0,
             hard_solved=st.hard_solved or 0,
-            contest_rating=st.contest_rating or 1500.0,
-            global_rank=st.public_profile_ranking or st.contest_global_ranking,
+            contest_rating=st.contest_rating,
+            global_rank=st.public_profile_ranking,
+            contest_global_ranking=st.contest_global_ranking,
             delta_total=None,
             delta_easy=None,
             delta_medium=None,

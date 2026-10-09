@@ -130,7 +130,6 @@ export const GrowthIntelligencePage: React.FC = () => {
       const codeUp = (d.code || '').toUpperCase().trim();
       const nameUp = (d.name || '').toUpperCase().trim();
       if (
-        codeUp === 'CSE' ||
         codeUp.startsWith('TEST') ||
         codeUp.includes('_TEST') ||
         codeUp.includes('-TEST') ||

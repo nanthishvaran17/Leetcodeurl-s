@@ -153,11 +153,15 @@ export const StudentDeepDiveDrawer: React.FC<StudentDeepDiveDrawerProps> = ({ st
                   </div>
                   <div className="p-2 rounded-xl bg-black/30">
                     <span className="text-slate-500 block">LC Rank</span>
-                    <span className="text-lg font-mono font-black text-amber-400">{rank ? `#${rank}` : '—'}</span>
+                    <span className="text-lg font-mono font-black text-amber-400">
+                      {rank && !isNaN(Number(rank)) ? `#${Number(rank).toLocaleString('en-US')}` : rank ? `#${rank}` : '—'}
+                    </span>
                   </div>
-                  <div className="p-2 rounded-xl bg-black/30">
+                  <div className="p-2 rounded-xl bg-black/30 cursor-pointer" title={rating && !isNaN(Number(rating)) ? `Exact Rating: ${Number(rating).toFixed(3)}` : undefined}>
                     <span className="text-slate-500 block">Rating</span>
-                    <span className="text-lg font-mono font-black text-indigo-400">{rating || '—'}</span>
+                    <span className="text-lg font-mono font-black text-indigo-400">
+                      {rating && !isNaN(Number(rating)) ? Math.round(Number(rating)).toLocaleString('en-US') : rating || '—'}
+                    </span>
                   </div>
                 </div>
               </>

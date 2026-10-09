@@ -137,6 +137,8 @@ class LeetCodeProfileStats(Base):
     status = Column(String(50), default="pending") # OK, MISSING LINK, INVALID LINK, PROFILE NOT FOUND, pending
     sync_status = Column(String(50), default="not_started", index=True) # success, failed, mismatch, not_started, pending
     validation_status = Column(String(50), nullable=True)  # verified, mismatch, pending, identity_mismatch
+    contest_sync_status = Column(String(50), nullable=True)  # ok, unrated, failed, stale
+    contest_last_verified_at = Column(DateTime(timezone=True), nullable=True)
     source = Column(String(100), nullable=True)  # leetcode_public_profile — only set after real fetch
     error_message = Column(Text, nullable=True)
     error_code = Column(String(50), nullable=True)  # NETWORK_TIMEOUT, PROFILE_NOT_FOUND, MISMATCH, IDENTITY_MISMATCH
@@ -914,6 +916,7 @@ class StudentStatSnapshot(Base):
     hard_solved = Column(Integer, nullable=True)
     contest_rating = Column(Float, nullable=True)
     global_rank = Column(Integer, nullable=True)
+    contest_global_ranking = Column(Integer, nullable=True)
     
     delta_total = Column(Integer, nullable=True, default=0)
     delta_easy = Column(Integer, nullable=True, default=0)

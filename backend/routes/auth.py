@@ -1947,18 +1947,25 @@ def admin_terminate_staff_sessions(
 
 
 @router.post("/2fa/generate")
-def generate_2fa_secret(request: Request, db: Session = Depends(get_db)):
+def generate_2fa_secret(request: Request, force: bool = False, db: Session = Depends(get_db)):
     user = get_current_user_from_request(request, db)
     if not user:
         raise HTTPException(status_code=401, detail="Unauthenticated")
     
-    secret = pyotp.random_base32()
-    user.totp_secret = secret  # type: ignore
-    db.commit()
+    existing_secret = getattr(user, 'totp_secret', None)
+    is_enabled = getattr(user, 'is_2fa_enabled', False)
+
+    # Re-use existing unverified secret so scanned QR code doesn't get invalidated on re-opening setup modal
+    if existing_secret and not is_enabled and not force:
+        secret = existing_secret
+    else:
+        secret = pyotp.random_base32()
+        setattr(user, 'totp_secret', secret)
+        db.commit()
     
-    # Generate provision URI
-    username = getattr(user, 'email', user.username)
-    uri = pyotp.TOTP(secret).provisioning_uri(name=username, issuer_name="College Portal")  # type: ignore
+    # Generate provision URI with official issuer name
+    account_label = getattr(user, 'email', None) or getattr(user, 'username', None) or f"user_{user.id}"
+    uri = pyotp.TOTP(secret).provisioning_uri(name=account_label, issuer_name="Nandha Engineering College")  # type: ignore
     
     return {"secret": secret, "uri": uri}
 
@@ -1973,16 +1980,24 @@ def verify_2fa_code(payload: Verify2FARequest, request: Request, db: Session = D
     if not user:
         raise HTTPException(status_code=401, detail="Unauthenticated")
     
-    if not getattr(user, 'totp_secret', None):
-        raise HTTPException(status_code=400, detail="2FA secret not found. Please generate one first.")
+    totp_secret = getattr(user, 'totp_secret', None)
+    if not totp_secret:
+        raise HTTPException(status_code=400, detail="2FA secret not found. Please click 'Enable 2FA Protection' again to generate a setup QR code.")
         
-    totp = pyotp.TOTP(user.totp_secret)  # type: ignore
-    if totp.verify(payload.code, valid_window=2):
-        user.is_2fa_enabled = True  # type: ignore
+    clean_code = str(payload.code or "").strip().replace(" ", "").replace("-", "")
+    if len(clean_code) != 6 or not clean_code.isdigit():
+        raise HTTPException(status_code=400, detail="Please enter a valid 6-digit numeric code from your authenticator app.")
+
+    totp = pyotp.TOTP(totp_secret)  # type: ignore
+    if totp.verify(clean_code, valid_window=2):
+        setattr(user, 'is_2fa_enabled', True)
         db.commit()
         return {"success": True, "message": "2FA successfully enabled."}
     else:
-        raise HTTPException(status_code=400, detail="Invalid verification code.")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid 2FA verification code. Ensure your device time is set to Automatic and enter the latest 6-digit code shown in Google Authenticator or Microsoft Authenticator."
+        )
 
 
 # =========================================================================

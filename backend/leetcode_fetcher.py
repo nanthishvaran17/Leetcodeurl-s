@@ -1,6 +1,7 @@
 import re
 import time
 import json
+import hashlib
 import datetime
 import asyncio
 import httpx
@@ -9,6 +10,42 @@ from backend.config import settings
 from backend.logger import logger
 
 import threading
+import random
+
+# ============================================================================
+# ARCHITECTURAL CLARITY: RANKING FIELDS DISTINCTION (§7)
+# - public_profile_ranking / profile.ranking:
+#     Represents the user's GLOBAL PROBLEM-SOLVING RANK on the LeetCode platform
+#     (based on problem difficulty and count).
+# - contest_global_ranking / userContestRanking.globalRanking:
+#     Represents the user's CONTEST RATING RANK among all rated contest participants.
+# No code path should assign or fall back between these two independent metrics!
+# ============================================================================
+
+_LEETCODE_MAX_CONCURRENCY = settings.LEETCODE_MAX_CONCURRENCY
+_GQL_SEMAPHORES: Dict[int, asyncio.Semaphore] = {}
+
+def _get_gql_semaphore() -> asyncio.Semaphore:
+    try:
+        loop = asyncio.get_running_loop()
+        loop_id = id(loop)
+        if loop_id not in _GQL_SEMAPHORES or _GQL_SEMAPHORES[loop_id]._loop != loop:
+            _GQL_SEMAPHORES[loop_id] = asyncio.Semaphore(_LEETCODE_MAX_CONCURRENCY)
+        return _GQL_SEMAPHORES[loop_id]
+    except RuntimeError:
+        return asyncio.Semaphore(_LEETCODE_MAX_CONCURRENCY)
+
+class _LazyGQLSemaphore:
+    """Proxy object for backward-compatibility with code referencing _GQL_SEMAPHORE."""
+    async def __aenter__(self):
+        sem = _get_gql_semaphore()
+        return await sem.__aenter__()
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        sem = _get_gql_semaphore()
+        return await sem.__aexit__(exc_type, exc_val, exc_tb)
+
+_GQL_SEMAPHORE = _LazyGQLSemaphore()
 
 # In-memory cache: username -> { "timestamp": float, "data": dict }
 _profile_cache: Dict[str, Dict[str, Any]] = {}
@@ -410,7 +447,8 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
 
         for attempt in range(1, retries + 1):
             try:
-                res = await client.post(GRAPHQL_URL, json=payload_profile, headers=headers)
+                async with _GQL_SEMAPHORE:
+                    res = await client.post(GRAPHQL_URL, json=payload_profile, headers=headers)
                 if res.status_code == 200:
                     data = res.json()
                     gql_errors = data.get("errors")
@@ -431,7 +469,6 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
                         await circuit_breaker.record_failure()
                     adaptive_batch_controller.report_failure(res.status_code)
                     retry_after = res.headers.get("Retry-After")
-                    import random
                     if retry_after and retry_after.isdigit():
                         backoff_sec = min(30.0, float(retry_after) + random.uniform(0.1, 0.5))
                     else:
@@ -462,7 +499,6 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
                 logger.warning(f"Error fetching profile for '{username}' (Attempt {attempt}/{retries}): {last_error_detail}")
 
             if attempt < retries and matched_user is None and "matchedUser is null" not in last_error_detail:
-                import random
                 jitter = random.uniform(0.1, 0.5)
                 await asyncio.sleep((1.5 ** attempt) + jitter)
 
@@ -485,6 +521,7 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
                 "contest_rating": None,
                 "contest_global_rank": None,
                 "contest_global_ranking": None,
+                "contest_status": "failed",
                 "leetcode_global_rank": None,
                 "public_profile_ranking": None,
                 "active_days": None,
@@ -501,7 +538,8 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
                 "error_message": err_msg,
                 "fetch_duration": duration
             }
-            _profile_cache[username] = {"timestamp": now, "data": result}
+            if is_404:
+                _profile_cache[username] = {"timestamp": now, "data": result}
             return result
 
         # Rule 4: IDENTITY MATCHING — CRITICAL
@@ -520,6 +558,7 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
                 "contest_rating": None,
                 "contest_global_rank": None,
                 "contest_global_ranking": None,
+                "contest_status": "failed",
                 "leetcode_global_rank": None,
                 "public_profile_ranking": None,
                 "active_days": None,
@@ -559,6 +598,13 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
         user_calendar = matched_user.get("userCalendar") or {}
         active_days = user_calendar.get("totalActiveDays")
         max_streak = user_calendar.get("streak")
+        raw_calendar = user_calendar.get("submissionCalendar")
+        if isinstance(raw_calendar, dict):
+            submission_calendar_json = json.dumps(raw_calendar)
+        elif isinstance(raw_calendar, str):
+            submission_calendar_json = raw_calendar
+        else:
+            submission_calendar_json = None
 
         # 2. Fetch Contest Ranking & History (Phase B)
         contest_rating = None
@@ -566,83 +612,135 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
         recent_contest_name = None
         recent_contest_score = None
         recent_contest_type = "UNKNOWN"
+        contest_status = "failed"
         contest_participations = []
 
-        try:
-            payload_contest = {
-                "query": USER_CONTEST_QUERY,
-                "variables": {"username": username},
-                "operationName": "userContestRankingInfo"
-            }
-            res_contest = await client.post(GRAPHQL_URL, json=payload_contest, headers=headers)
-            contest_history = []
-            if res_contest.status_code == 200:
-                await circuit_breaker.record_success()
-                c_data = res_contest.json()
-                contest_info = c_data.get("data", {}).get("userContestRanking")
-                if isinstance(contest_info, dict):
-                    c_rating = contest_info.get("rating")
-                    if c_rating is not None:
-                        contest_rating = round(float(c_rating), 1)
-                    contest_global_ranking = contest_info.get("globalRanking")
-                
-                # Fetch recent contest history and separate OFFICIAL vs VIRTUAL
-                contest_history = c_data.get("data", {}).get("userContestRankingHistory") or []
-            elif res_contest.status_code == 429 or res_contest.status_code >= 500:
+        payload_contest = {
+            "query": USER_CONTEST_QUERY,
+            "variables": {"username": canonical_username},
+            "operationName": "userContestRankingInfo"
+        }
+        contest_history = []
+        contest_retries = 2
+
+        for c_attempt in range(1, contest_retries + 1):
+            try:
+                async with _GQL_SEMAPHORE:
+                    res_contest = await client.post(GRAPHQL_URL, json=payload_contest, headers=headers)
+
+                if res_contest.status_code == 200:
+                    c_data = res_contest.json()
+                    gql_errors = c_data.get("errors")
+                    gql_data = c_data.get("data")
+
+                    if gql_errors and not gql_data:
+                        logger.warning(f"[CONTEST_GQL_ERROR] '{canonical_username}': {gql_errors[0].get('message')}")
+                        contest_status = "failed"
+                        break
+
+                    await circuit_breaker.record_success()
+                    adaptive_batch_controller.report_success()
+                    contest_info = (gql_data or {}).get("userContestRanking")
+                    contest_history = (gql_data or {}).get("userContestRankingHistory") or []
+
+                    if contest_info is not None and isinstance(contest_info, dict):
+                        contest_status = "ok"
+                        c_rating = contest_info.get("rating")
+                        if c_rating is not None:
+                            contest_rating = round(float(c_rating), 1)
+                        c_grank = contest_info.get("globalRanking")
+                        if c_grank is not None:
+                            contest_global_ranking = c_grank
+                    else:
+                        contest_status = "unrated"
+                    break
+
+                elif res_contest.status_code in [429, 403]:
+                    if res_contest.status_code == 429:
+                        await circuit_breaker.record_failure()
+                    adaptive_batch_controller.report_failure(res_contest.status_code)
+                    backoff_sec = min(30.0, (2.0 ** c_attempt) + random.uniform(0.5, 1.5))
+                    logger.warning(f"LeetCode Contest {res_contest.status_code} for '{canonical_username}' (Attempt {c_attempt}/{contest_retries}). Backoff {round(backoff_sec, 2)}s")
+                    if c_attempt < contest_retries:
+                        await asyncio.sleep(backoff_sec)
+                        continue
+                    contest_status = "failed"
+                    break
+                else:
+                    await circuit_breaker.record_failure()
+                    adaptive_batch_controller.report_failure(res_contest.status_code)
+                    backoff_sec = min(30.0, (2.0 ** c_attempt) + random.uniform(0.5, 1.5))
+                    logger.warning(f"LeetCode Contest HTTP {res_contest.status_code} for '{canonical_username}' (Attempt {c_attempt}/{contest_retries}). Backoff {round(backoff_sec, 2)}s")
+                    if c_attempt < contest_retries:
+                        await asyncio.sleep(backoff_sec)
+                        continue
+                    contest_status = "failed"
+                    break
+            except (httpx.TimeoutException, httpx.RemoteProtocolError, httpx.ConnectError, httpx.NetworkError) as net_err:
                 await circuit_breaker.record_failure()
-            
-            if isinstance(contest_history, list):
-                # Extract recent contest info once (outside loop)
-                attended_contests = [c for c in contest_history if isinstance(c, dict) and (c.get("attended") or c.get("problemsSolved", 0) > 0)]
+                adaptive_batch_controller.report_failure(503)
+                logger.warning(f"Network error fetching contest data for '{canonical_username}' (Attempt {c_attempt}/{contest_retries}): {net_err}")
+                if c_attempt < contest_retries:
+                    await asyncio.sleep((1.5 ** c_attempt) + random.uniform(0.1, 0.5))
+                    continue
+                contest_status = "failed"
+                break
+            except Exception as c_exc:
+                logger.warning(f"Error fetching contest data for '{canonical_username}' (Attempt {c_attempt}/{contest_retries}): {c_exc}")
+                if c_attempt < contest_retries:
+                    await asyncio.sleep((1.5 ** c_attempt) + random.uniform(0.1, 0.5))
+                    continue
+                contest_status = "failed"
+                break
+
+        if contest_status != "failed" and isinstance(contest_history, list):
+            try:
+                attended_contests = [c for c in contest_history if isinstance(c, dict) and (c.get("attended") or ((c.get("problemsSolved") or 0) > 0))]
                 if attended_contests:
                     latest = attended_contests[-1]
                     recent_contest_name = latest.get("contest", {}).get("title")
-                    solved = latest.get("problemsSolved", 0)
+                    solved = latest.get("problemsSolved") or 0
                     total = latest.get("totalProblems", 4)
                     recent_contest_score = f"{solved} / {total}"
                     recent_contest_type = "OFFICIAL" if latest.get("attended") else "VIRTUAL"
-                    # FIX: Do NOT overwrite contest_global_ranking or contest_rating from a history entry.
-                    # userContestRanking.globalRanking (set above ~line 582) = overall global rating rank (e.g. 44158).
-                    # History entry "ranking" = finish rank in that single specific contest (e.g. 982) — NOT overall global rank.
 
                 for item in contest_history:
                     if not isinstance(item, dict):
                         continue
+                    try:
+                        c_title = item.get("contest", {}).get("title") or "Weekly Contest"
+                        c_start = item.get("contest", {}).get("startTime")
+                        c_solved = item.get("problemsSolved") or 0
+                        c_total = item.get("totalProblems", 4)
+                        c_rank = item.get("ranking")
+                        c_entry_rating = item.get("rating")
+                        is_attended = bool(item.get("attended", False))
 
-                    c_title = item.get("contest", {}).get("title") or "Weekly Contest"
-                    c_start = item.get("contest", {}).get("startTime")
-                    c_solved = item.get("problemsSolved", 0)
-                    c_total = item.get("totalProblems", 4)
-                    c_rank = item.get("ranking")
-                    c_entry_rating = item.get("rating")
-                    is_attended = item.get("attended", False)
+                        if is_attended:
+                            part_type = "OFFICIAL"
+                        elif c_solved > 0:
+                            part_type = "VIRTUAL"
+                        else:
+                            part_type = "UNKNOWN"
 
-                    # Determine participation type strictly:
-                    # OFFICIAL: attended == True with official rank/rating entry
-                    # VIRTUAL: attended == False but problemsSolved > 0
-                    if is_attended:
-                        part_type = "OFFICIAL"
-                    elif c_solved > 0:
-                        part_type = "VIRTUAL"
-                    else:
-                        part_type = "UNKNOWN"
-
-                    if part_type != "UNKNOWN":
-                        contest_participations.append({
-                            "contest_name": c_title,
-                            "contest_date": datetime.datetime.fromtimestamp(c_start).strftime("%Y-%m-%d") if c_start else None,
-                            "participation_type": part_type,
-                            "registered": True,
-                            "started": True,
-                            "submitted": True if c_solved > 0 else False,
-                            "problems_solved": c_solved,
-                            "total_problems": c_total,
-                            "contest_rank": c_rank if part_type == "OFFICIAL" else None,
-                            "contest_rating_after": c_entry_rating if part_type == "OFFICIAL" else None,
-                            "source": "leetcode_graphql"
-                        })
-        except Exception as e:
-            logger.info(f"Contest stats skipped for '{username}': {e}")
+                        if part_type != "UNKNOWN":
+                            contest_participations.append({
+                                "contest_name": c_title,
+                                "contest_date": datetime.datetime.fromtimestamp(c_start).strftime("%Y-%m-%d") if c_start else None,
+                                "participation_type": part_type,
+                                "registered": True,
+                                "started": True,
+                                "submitted": True if c_solved > 0 else False,
+                                "problems_solved": c_solved,
+                                "total_problems": c_total,
+                                "contest_rank": c_rank if (part_type == "OFFICIAL" and c_rank is not None) else None,
+                                "contest_rating_after": round(float(c_entry_rating), 1) if (part_type == "OFFICIAL" and c_entry_rating is not None) else None,
+                                "source": "leetcode_graphql"
+                            })
+                    except Exception as item_err:
+                        logger.warning(f"Skipping malformed contest history item: {item_err}")
+            except Exception as e:
+                logger.info(f"Contest participations skipped for '{canonical_username}': {e}")
 
         # Statistics Validation: easy + medium + hard == total_solved
         calculated_total = easy_solved + medium_solved + hard_solved
@@ -668,10 +766,12 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
             "contest_rating": contest_rating,
             "contest_global_rank": contest_global_ranking,
             "contest_global_ranking": contest_global_ranking,
+            "contest_status": contest_status,
             "leetcode_global_rank": profile_ranking,
             "public_profile_ranking": profile_ranking,
             "active_days": active_days,
             "max_streak": max_streak,
+            "submission_calendar_json": submission_calendar_json,
             "recent_accepted": total_solved,
             "recent_contest_name": recent_contest_name,
             "recent_contest_score": recent_contest_score,
@@ -687,7 +787,9 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
             "fetch_duration": duration
         }
 
-        _profile_cache[username] = {"timestamp": now, "data": result}
+        # Do not cache failed contest results so subsequent calls can retry (§6)
+        if contest_status != "failed":
+            _profile_cache[username] = {"timestamp": now, "data": result}
         return result
 
     except Exception as exc:
@@ -766,11 +868,6 @@ def _make_headers(username: str) -> dict:
 
 import random
 
-import time
-
-_LEETCODE_MAX_CONCURRENCY = settings.LEETCODE_MAX_CONCURRENCY
-_GQL_SEMAPHORE = asyncio.Semaphore(_LEETCODE_MAX_CONCURRENCY)
-
 _GQL_CACHE: Dict[str, Any] = {}
 _GQL_CACHE_TTL = 5.0
 
@@ -789,7 +886,8 @@ async def _gql_post(
     Handles 429 (rate limit), 5xx (server error), timeouts.
     Returns canonical result dict — never raises.
     """
-    cache_key = f"{username}:{operation}"
+    var_hash = hashlib.md5((query + json.dumps(variables or {}, sort_keys=True)).encode()).hexdigest()
+    cache_key = f"{username}:{operation}:{var_hash}"
     now = time.monotonic()
     if cache_key in _GQL_CACHE:
         cached_time, cached_result = _GQL_CACHE[cache_key]
@@ -992,7 +1090,7 @@ async def fetch_contest_data(
             "contest_type":        c_type,
             "contest_start_time":  datetime.datetime.fromtimestamp(c_start, datetime.timezone.utc) if c_start else None,
             "attended":            attended,
-            "problems_solved":     item.get("problemsSolved", 0),
+            "problems_solved":     item.get("problemsSolved") or 0,
             "total_problems":      item.get("totalProblems", 4),
             "finish_time_seconds": item.get("finishTimeInSeconds"),
             "contest_rank":        item.get("ranking") if attended else None,
@@ -1009,17 +1107,18 @@ async def fetch_contest_data(
     raw_attended = ranking_info.get("attendedContestsCount")
     actual_attended = sum(1 for item in history if item.get("attended"))
     final_attended = max(raw_attended or 0, actual_attended)
-    if final_attended == 0 and c_rating and float(c_rating) > 0:
+    if final_attended == 0 and c_rating is not None and float(c_rating) > 0:
         final_attended = max(1, len(history))
 
     raw_top_pct = ranking_info.get("topPercentage")
-    if raw_top_pct is None and c_global_rank and isinstance(c_global_rank, int) and c_global_rank > 0:
-        raw_top_pct = round((c_global_rank / 800000.0) * 100, 1)
+    total_participants = ranking_info.get("totalParticipants")
+    if raw_top_pct is None and c_global_rank is not None and isinstance(c_global_rank, int) and c_global_rank > 0 and total_participants is not None and total_participants > 0:
+        raw_top_pct = round((c_global_rank / float(total_participants)) * 100, 1)
 
     return {
         "status": "ok",
         "data": {
-            "contest_rating":           round(float(c_rating), 1) if c_rating else None,
+            "contest_rating":           round(float(c_rating), 1) if c_rating is not None else None,
             "contest_global_ranking":   c_global_rank,
             "attended_count":           final_attended if final_attended > 0 else (raw_attended or None),
             "top_percentage":           round(float(raw_top_pct), 1) if raw_top_pct is not None else None,
@@ -1517,7 +1616,7 @@ async def fetch_profile_and_stats_batched(
     
     query_body = "query userPublicProfileBatched {\n"
     for i, user in enumerate(usernames):
-        query_body += f'  u{i}: matchedUser(username: "{user}") {{ {PROFILE_FIELDS} }}\n'
+        query_body += f'  u{i}: matchedUser(username: {json.dumps(user)}) {{ {PROFILE_FIELDS} }}\n'
     query_body += "}"
     
     result = await _gql_post(
@@ -1545,6 +1644,7 @@ async def fetch_profile_and_stats_batched(
             
         profile = matched.get("profile") or {}
         submit_stats = (
+            matched.get("submitStatsGlobal", {}).get("acSubmissionNum") or
             matched.get("submitStats", {}).get("acSubmissionNum") or []
         )
         solved_map = {item["difficulty"]: item["count"] for item in submit_stats if isinstance(item, dict)}
@@ -1566,7 +1666,6 @@ async def fetch_profile_and_stats_batched(
             for lp in languages_raw if isinstance(lp, dict)
         ]
         
-        import json
         user_cal = matched.get("userCalendar") or {}
         cal_streak = user_cal.get("streak")
         cal_active_days = user_cal.get("totalActiveDays")
@@ -1603,6 +1702,7 @@ async def fetch_profile_and_stats_batched(
 async def fetch_contest_data_batched(
     usernames: List[str],
     client: Any,
+    profile_statuses: Optional[Dict[str, str]] = None,
     retries: int = 3,
     backoff_base: float = 1.5,
 ) -> Dict[str, Dict[str, Any]]:
@@ -1619,8 +1719,8 @@ async def fetch_contest_data_batched(
     
     query_body = "query userContestRankingBatched {\n"
     for i, user in enumerate(usernames):
-        query_body += f'  u{i}_ranking: userContestRanking(username: "{user}") {{ {CONTEST_RANKING_FIELDS} }}\n'
-        query_body += f'  u{i}_history: userContestRankingHistory(username: "{user}") {{ {CONTEST_HISTORY_FIELDS} }}\n'
+        query_body += f'  u{i}_ranking: userContestRanking(username: {json.dumps(user)}) {{ {CONTEST_RANKING_FIELDS} }}\n'
+        query_body += f'  u{i}_history: userContestRankingHistory(username: {json.dumps(user)}) {{ {CONTEST_HISTORY_FIELDS} }}\n'
     query_body += "}"
     
     result = await _gql_post(
@@ -1629,18 +1729,24 @@ async def fetch_contest_data_batched(
     )
     
     if result["status"] != "ok":
-        return {u: {"status": result["status"], "detail": result.get("detail"), "data": None} for u in usernames}
+        return {u: {"status": "failed", "contest_status": "failed", "detail": result.get("detail"), "data": None} for u in usernames}
         
     data = result["data"]
     results_map = {}
     
     for i, req_user in enumerate(usernames):
-        ranking_info = data.get(f"u{i}_ranking") or {}
+        ranking_info = data.get(f"u{i}_ranking")
         history_raw  = data.get(f"u{i}_history") or []
+        prof_status = (profile_statuses or {}).get(req_user, "unknown")
         
-        if data.get(f"u{i}_ranking") is None and data.get(f"u{i}_history") is None:
-             results_map[req_user] = {"status": "not_found", "data": None}
-             continue
+        if ranking_info is None and not history_raw:
+            if prof_status == "not_found":
+                results_map[req_user] = {"status": "not_found", "contest_status": "failed", "data": None}
+            elif prof_status == "ok":
+                results_map[req_user] = {"status": "ok", "contest_status": "unrated", "data": None}
+            else:
+                results_map[req_user] = {"status": "failed", "contest_status": "failed", "data": None}
+            continue
              
         history = []
         most_recent_name = None
@@ -1664,7 +1770,7 @@ async def fetch_contest_data_batched(
                 "contest_type":        c_type,
                 "contest_start_time":  datetime.datetime.fromtimestamp(c_start, datetime.timezone.utc) if c_start else None,
                 "attended":            attended,
-                "problems_solved":     item.get("problemsSolved", 0),
+                "problems_solved":     item.get("problemsSolved") or 0,
                 "total_problems":      item.get("totalProblems", 4),
                 "finish_time_seconds": item.get("finishTimeInSeconds"),
                 "contest_rank":        item.get("ranking") if attended else None,
@@ -1676,14 +1782,16 @@ async def fetch_contest_data_batched(
                 most_recent_name = c_title
                 most_recent_type = c_type
 
-        c_rating = ranking_info.get("rating")
+        c_rating = ranking_info.get("rating") if ranking_info else None
+        c_status = "ok" if ranking_info is not None else "unrated"
         results_map[req_user] = {
             "status": "ok",
+            "contest_status": c_status,
             "data": {
-                "contest_rating":           round(float(c_rating), 1) if c_rating else None,
-                "contest_global_ranking":   ranking_info.get("globalRanking"),
-                "attended_count":           ranking_info.get("attendedContestsCount"),
-                "top_percentage":           ranking_info.get("topPercentage"),
+                "contest_rating":           round(float(c_rating), 1) if c_rating is not None else None,
+                "contest_global_ranking":   ranking_info.get("globalRanking") if ranking_info else None,
+                "attended_count":           ranking_info.get("attendedContestsCount") if ranking_info else None,
+                "top_percentage":           ranking_info.get("topPercentage") if ranking_info else None,
                 "most_recent_contest_name": most_recent_name,
                 "most_recent_contest_type": most_recent_type,
                 "history":                  history,

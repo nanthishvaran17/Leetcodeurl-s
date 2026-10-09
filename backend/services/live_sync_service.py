@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
-from backend.models import Student, LeetCodeProfileStats, SyncJob, SyncJobItem, WeeklySession, StudentStatSnapshot, StudentContestSnapshot, GlobalSyncLock
+from backend.models import Student, LeetCodeProfileStats, SyncJob, SyncJobItem, WeeklySession, StudentStatSnapshot, StudentContestSnapshot, LeetCodeContestRatingHistory, GlobalSyncLock
 from sqlalchemy import update, or_, and_
 from backend.leetcode_fetcher import fetch_leetcode_profile
 from backend.ranking import update_all_rankings_and_badges
@@ -887,6 +887,41 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
             lc_act.submission_calendar_json = res.get("submission_calendar_json")
         lc_act.fetched_at = now  # type: ignore
 
+        # Update / Insert official contest rating history records if available
+        participations = res.get("contest_participations") or []
+        recent_contest_rank_val = None
+        for p in participations:
+            c_name = p.get("contest_name")
+            if not c_name:
+                continue
+            is_att = (p.get("participation_type") == "OFFICIAL") or p.get("attended", False)
+            if c_name == res.get("recent_contest_name"):
+                recent_contest_rank_val = p.get("contest_rank")
+            existing_hist = db.query(LeetCodeContestRatingHistory).filter(
+                LeetCodeContestRatingHistory.student_id == student.id,
+                LeetCodeContestRatingHistory.contest_name == c_name
+            ).first()
+            if not existing_hist:
+                existing_hist = LeetCodeContestRatingHistory(
+                    student_id=student.id,
+                    contest_name=c_name,
+                    attended=is_att
+                )
+                db.add(existing_hist)
+            existing_hist.attended = is_att
+            if p.get("contest_date"):
+                try:
+                    c_date_dt = datetime.datetime.strptime(p.get("contest_date"), "%Y-%m-%d")
+                    existing_hist.contest_start_time = c_date_dt
+                except Exception:
+                    pass
+            existing_hist.problems_solved = p.get("problems_solved", 0)
+            existing_hist.total_problems = p.get("total_problems", 4)
+            if p.get("contest_rank") is not None:
+                existing_hist.contest_rank = p.get("contest_rank")
+            if p.get("contest_rating_after") is not None:
+                existing_hist.rating_after = p.get("contest_rating_after")
+
         # Create historical StudentContestSnapshot if contest data is present
         if res.get("recent_contest_name"):
             q_solved_int = 0
@@ -903,7 +938,7 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
                 contest_name=res.get("recent_contest_name"),
                 questions_solved=q_solved_int,  # type: ignore
                 questions_total=q_total_int,  # type: ignore
-                contest_rank=st.contest_global_ranking,  # type: ignore
+                contest_rank=recent_contest_rank_val,  # type: ignore
                 contest_rating=st.contest_rating,  # type: ignore
                 top_percentage=res.get("top_percentage"),  # type: ignore
                 attended=True,  # type: ignore

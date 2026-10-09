@@ -602,8 +602,11 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 return "—"
 
         st_profile = getattr(s, "stats", None)
+        c_global_rank = getattr(st_profile, "contest_global_ranking", None) if st_profile else None
+        s_global_rank = getattr(st_profile, "public_profile_ranking", None) if st_profile else None
+
         if rank_val is None and st_profile:
-            rank_val = getattr(st_profile, "contest_global_ranking", None) or getattr(st_profile, "public_profile_ranking", None)
+            rank_val = c_global_rank
 
         if (rating_val is None or (isinstance(rating_val, (int, float)) and rating_val <= 0)) and st_profile:
             r_st = getattr(st_profile, "contest_rating", None)
@@ -612,6 +615,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
 
         disp_rank = _clean_rank_val(rank_val)
         disp_rating = _clean_rating_val(rating_val)
+        disp_site_rank = _clean_rank_val(s_global_rank)
+        disp_contest_rank = _clean_rank_val(c_global_rank)
 
         is_virt = status in (ContestStatus.VIRTUAL_PRACTICE.value, ContestStatus.VIRTUAL_ATTENDED.value, "VIRTUAL")
         is_live = is_att and not is_virt
@@ -675,6 +680,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             "score": (solved_val * 3) if (is_att and solved_val is not None) else "—",
             "rank": disp_rank,
             "global_rank": disp_rank,
+            "contest_rank": disp_contest_rank,
+            "site_rank": disp_site_rank,
             "rating": disp_rating,
             "contest_rating": disp_rating
         })

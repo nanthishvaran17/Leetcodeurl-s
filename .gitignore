@@ -119,6 +119,7 @@ query_*.py
 scan_*.py
 inspect_*.py
 test_*.py
+!backend/tests/test_*.py
 1234.pdf
 all_codes.txt
 *.apk

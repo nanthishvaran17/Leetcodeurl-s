@@ -167,7 +167,32 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
     return { text: ' Sync Engine Ready', color: 'text-brand-600 dark:text-brand-400 bg-brand-500/10 border-brand-500/30' };
   };
 
-  const workerBadge = getWorkerStatusBadge();
+  const getInitiatedByDisplay = () => {
+    const raw = syncStatus?.triggered_by || syncStatus?.last_triggered_by;
+    if (!raw) return 'System Auto-Sync';
+
+    let activeUser = '';
+    try {
+      const uStr = localStorage.getItem('user');
+      if (uStr) {
+        const u = JSON.parse(uStr);
+        activeUser = u.full_name || u.name || u.displayName || u.username || (u.email ? u.email.split('@')[0] : '');
+      }
+    } catch (e) {}
+
+    const lower = raw.toLowerCase();
+    if (lower === 'admin' || lower === 'system') {
+      return activeUser ? `${activeUser} (Admin)` : 'Administrator';
+    }
+    if (raw.startsWith('scheduler_')) {
+      const jobName = raw.replace('scheduler_', '').replace(/_/g, ' ');
+      return `Auto-Scheduler (${jobName})`;
+    }
+    if (raw.startsWith('excel_import')) {
+      return `Excel Import (${raw.replace('excel_import_', '')})`;
+    }
+    return activeUser && !lower.includes(activeUser.toLowerCase()) ? `${activeUser} (${raw})` : raw;
+  };
 
   const modalContent = (
     <div
@@ -207,7 +232,7 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
         </div>
 
         {/* Modal Body */}
-        <div className="overflow-y-auto flex-1 min-h-0 p-6 space-y-4 text-xs">
+        <div className="overflow-y-auto flex-1 min-h-0 p-5 sm:p-6 flex flex-col gap-5 sm:gap-6 text-xs">
           
           {loading ? (
             <div className="py-12 text-center space-y-3">
@@ -236,13 +261,13 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
           ) : (
             <>
               {/* Progress Bar & Header Banner */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-2.5">
-                <div className="flex items-center justify-between text-xs font-black">
-                  <div className={`px-2.5 py-1 rounded-lg border flex items-center space-x-1.5 ${workerBadge.color}`}>
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 shadow-sm flex flex-col gap-3.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-black">
+                  <div className={`px-3 py-1.5 rounded-xl border flex items-center space-x-2 shrink-0 ${workerBadge.color}`}>
                     <span className={`w-2 h-2 rounded-full ${isRunning ? 'bg-amber-500 animate-ping' : 'bg-emerald-500'}`} />
-                    <span>{workerBadge.text}</span>
+                    <span className="font-black tracking-tight">{workerBadge.text}</span>
                   </div>
-                  <div className="font-mono text-sm text-slate-900 dark:text-white">
+                  <div className="font-mono text-xs sm:text-sm text-slate-900 dark:text-white shrink-0 ml-auto bg-white dark:bg-navy-900 px-3 py-1 rounded-xl border border-slate-200/60 dark:border-navy-800 shadow-2xs">
                     <span>{processed}</span> <span className="text-slate-400">/ {totalStudents}</span>
                     <span className="ml-2 text-brand-600 dark:text-brand-400 font-bold">({progressPercent}%)</span>
                   </div>
@@ -258,21 +283,21 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
 
                 {/* Currently Processing Student Indicator */}
                 {isRunning && (
-                  <div className="pt-2 border-t border-slate-200/60 dark:border-navy-800 flex items-center justify-between text-[11px]">
-                    <div className="flex items-center space-x-2 truncate">
+                  <div className="pt-2.5 border-t border-slate-200/60 dark:border-navy-800 flex items-center justify-between text-[11px] gap-2">
+                    <div className="flex items-center space-x-2 truncate min-w-0">
                       <RefreshCw className="w-3.5 h-3.5 text-brand-500 animate-spin flex-shrink-0" />
-                      <span className="text-slate-500 dark:text-slate-400 font-semibold">Processing:</span>
+                      <span className="text-slate-500 dark:text-slate-400 font-semibold shrink-0">Processing:</span>
                       <span className="font-black text-slate-900 dark:text-white truncate">
                         {currentStudent || 'Connecting...'}
                       </span>
                       {currentUsername && (
-                        <span className="text-slate-400 font-mono text-[10px] truncate">
+                        <span className="text-slate-400 font-mono text-[10px] truncate shrink-0">
                           @{currentUsername}
                         </span>
                       )}
                     </div>
                     {currentStatus && (
-                      <span className={`px-2 py-0.5 rounded text-[9.5px] font-black uppercase font-mono ${
+                      <span className={`px-2 py-0.5 rounded text-[9.5px] font-black uppercase font-mono shrink-0 ${
                         currentStatus === 'SUCCESS' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
                         currentStatus === 'PENDING_USERNAME' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
                         'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
@@ -285,51 +310,51 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
               </div>
 
               {/* 3-Column Real-Time Metrics Counters */}
-              <div className="grid grid-cols-3 gap-2.5">
-                <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-center">
+              <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 text-center shadow-2xs">
                   <div className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400 tracking-wider">
                     Successful
                   </div>
-                  <div className="text-lg font-black text-emerald-600 dark:text-emerald-300 font-mono mt-0.5">
+                  <div className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-300 font-mono mt-1">
                     {successful}
                   </div>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-center">
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 text-center shadow-2xs">
                   <div className="text-[10px] font-black uppercase text-amber-700 dark:text-amber-400 tracking-wider">
                     Pending
                   </div>
-                  <div className="text-lg font-black text-amber-600 dark:text-amber-300 font-mono mt-0.5">
+                  <div className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-300 font-mono mt-1">
                     {pending}
                   </div>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-center">
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/60 text-center shadow-2xs">
                   <div className="text-[10px] font-black uppercase text-rose-700 dark:text-rose-400 tracking-wider">
                     Failed / Invalid
                   </div>
-                  <div className="text-lg font-black text-rose-600 dark:text-rose-300 font-mono mt-0.5">
+                  <div className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-300 font-mono mt-1">
                     {failed + invalid}
                   </div>
                 </div>
               </div>
 
               {/* Real "Recently Synced" Live Stream */}
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-2.5">
                 <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 px-1">
-                  <span>RECENTLY SYNCHRONIZED PROFILES</span>
-                  <span className="text-[10px] font-mono">{recentCompleted.length} recorded</span>
+                  <span className="tracking-wider text-[10.5px]">RECENTLY SYNCHRONIZED PROFILES</span>
+                  <span className="text-[10px] font-mono bg-slate-100 dark:bg-navy-900 px-2 py-0.5 rounded-md border border-slate-200/60 dark:border-navy-800">{recentCompleted.length} recorded</span>
                 </div>
                 
-                <div className="p-2.5 rounded-2xl bg-slate-900 text-slate-200 font-mono text-[11px] max-h-36 overflow-y-auto space-y-1.5 border border-slate-800">
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-900 text-slate-200 font-mono text-[11px] max-h-40 overflow-y-auto space-y-2 border border-slate-800 shadow-inner">
                   {recentCompleted.length > 0 ? (
                     recentCompleted.map((rec: any, idx: number) => {
                       const isOk = rec.status === 'SUCCESS' || rec.status === 'VERIFIED' || rec.status === 'PROFILE_VERIFIED';
                       return (
-                        <div key={idx} className="flex items-center justify-between text-[10.5px] py-0.5 border-b border-slate-800/60 last:border-0">
+                        <div key={idx} className="flex items-center justify-between text-[10.5px] py-1 border-b border-slate-800/60 last:border-0">
                           <div className="flex items-center space-x-2 truncate">
                             <span className={isOk ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
-                              {isOk ? '' : ''}
+                              {isOk ? '✓' : '✗'}
                             </span>
                             <span className="text-slate-100 font-sans font-bold truncate">{rec.student_name}</span>
                             {rec.username && (
@@ -348,10 +373,10 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
                     })
                   ) : syncStatus?.recent_logs && syncStatus.recent_logs.length > 0 ? (
                     syncStatus.recent_logs.slice(-6).map((log: string, idx: number) => (
-                      <div key={idx} className="truncate text-slate-300 text-[10.5px]">{log}</div>
+                      <div key={idx} className="truncate text-slate-300 text-[10.5px] leading-relaxed py-0.5">{log}</div>
                     ))
                   ) : (
-                    <div className="text-slate-500 py-2 text-center text-xs">
+                    <div className="text-slate-500 py-3 text-center text-xs">
                       {isRunning ? 'Listening for per-student sync events...' : `Synchronization engine ready (${successful} verified profiles).`}
                     </div>
                   )}
@@ -359,16 +384,22 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
               </div>
 
               {/* Timestamp Footer Info */}
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-1.5 text-[11px]">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-500 uppercase tracking-wider">Last Successful Sync</span>
-                  <span className="font-black text-slate-900 dark:text-white font-mono">{lastSyncTime}</span>
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 shadow-sm flex flex-col gap-3 text-xs">
+                <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-3">
+                  <span className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] shrink-0">
+                    Last Successful Sync
+                  </span>
+                  <span className="font-black text-slate-900 dark:text-white font-mono text-right whitespace-nowrap text-xs sm:text-sm">
+                    {lastSyncTime}
+                  </span>
                 </div>
                 {(syncStatus?.triggered_by || syncStatus?.last_triggered_by) && (
-                  <div className="flex justify-between items-center pt-1 border-t border-slate-200/60 dark:border-navy-800">
-                    <span className="font-bold text-slate-500 uppercase tracking-wider">Initiated By / Device</span>
-                    <span className="font-extrabold text-brand-600 dark:text-brand-400 font-mono truncate max-w-[200px]">
-                      {syncStatus?.triggered_by || syncStatus?.last_triggered_by}
+                  <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-3 pt-3 border-t border-slate-200/70 dark:border-navy-800">
+                    <span className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] shrink-0">
+                      Initiated By / Device
+                    </span>
+                    <span className="font-extrabold text-brand-600 dark:text-brand-400 font-mono text-right truncate max-w-[240px] text-xs sm:text-sm">
+                      {getInitiatedByDisplay()}
                     </span>
                   </div>
                 )}
@@ -384,10 +415,10 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
             type="button"
             onClick={() => fetchStatus(true)}
             disabled={refreshing}
-            className="px-4 py-2 bg-brand-50 dark:bg-brand-950/50 hover:bg-brand-100 dark:hover:bg-brand-900/60 text-brand-700 dark:text-brand-300 rounded-xl text-xs font-bold transition-all border border-brand-200 dark:border-brand-800 flex items-center space-x-1.5 cursor-pointer"
+            className="px-4 py-2 bg-brand-50 dark:bg-brand-950/50 hover:bg-brand-100 dark:hover:bg-brand-900/60 text-brand-700 dark:text-brand-300 rounded-xl text-xs font-bold transition-all border border-brand-200 dark:border-brand-800 flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>{refreshBadge || (refreshing ? 'Refreshing...' : '↻ Refresh Status')}</span>
+            <span>{refreshBadge || (refreshing ? 'Refreshing...' : 'Refresh Status')}</span>
           </button>
 
           <button

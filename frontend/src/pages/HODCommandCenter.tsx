@@ -120,8 +120,11 @@ const StudentDetailDrawer: React.FC<{
  </div>
  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
  <div className="text-xs font-extrabold uppercase text-slate-600 dark:text-slate-300 tracking-wider">Contest Rating</div>
- <div className="font-display text-2xl font-black text-brand-600 mt-0.5">
- {student.contest_rating || '—'}
+ <div 
+ className="font-display text-2xl font-black text-brand-600 mt-0.5 cursor-pointer"
+ title={student.contest_rating && !isNaN(Number(student.contest_rating)) ? `Exact Rating: ${Number(student.contest_rating).toFixed(3)}` : undefined}
+ >
+ {student.contest_rating && !isNaN(Number(student.contest_rating)) ? Math.round(Number(student.contest_rating)).toLocaleString('en-US') : student.contest_rating || '—'}
  </div>
  <div className="text-xs text-slate-700 dark:text-slate-400">Contest: {student.contest_standing || '—'}</div>
  </div>
