@@ -1,7 +1,7 @@
 {
   "name": "college-leetcode-tracker-frontend",
   "private": true,
-  "version": "2.6.6",
+  "version": "2.6.7",
   "type": "module",
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite",
