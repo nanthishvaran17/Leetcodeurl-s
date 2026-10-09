@@ -156,7 +156,7 @@ def get_command_center_summary(
         dept_code = dept_obj.code if dept_obj else "CSE"
         hod_name = current_user.username if current_user else "Head of Department"
 
-        prod_dept_ids = [d.id for d in db.query(Department).all() if _is_real_dept(d.code)]
+        prod_dept_ids = [d.id for d in db.query(Department).all() if _is_real_dept(str(d.code))]
 
         # Active staff list for Scope Selector & Performance Table
         staff_users_q = db.query(User).options(joinedload(User.department)).filter(
@@ -629,7 +629,7 @@ def export_command_center_report_excel(
     wb = openpyxl.Workbook()
     ws = wb.active # type: ignore
     assert ws is not None
-    ws.title = str(report_type)[:31]
+    ws.title = report_type[:31]
 
     # STYLES
     title_font = Font(name="Times New Roman", size=18, bold=True, color="000080")
@@ -871,7 +871,7 @@ def export_command_center_report_excel(
         column = openpyxl.utils.get_column_letter(col_idx_num)
         for cell in col:
             try:
-                if cell.row > 4 and cell.value:
+                if cell.row is not None and cell.row > 4 and cell.value:
                     if len(str(cell.value)) > max_length:
                         max_length = len(str(cell.value))
             except:

@@ -374,13 +374,13 @@ def download_contest_single_sheet_excel(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Download Single Sheet Excel", dept_scoped=True))
 ):
-    eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
-    eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
-    eff_att = attendance if attendance != "ALL" else "ALL"
+    eff_dept = (department or "ALL") if (department and department != "ALL") else ((dept or "ALL") if (dept and dept != "ALL") else "ALL")
+    eff_year = (year_level or "ALL") if (year_level and year_level != "ALL") else ((year or "ALL") if (year and year != "ALL") else "ALL")
+    eff_att = attendance if attendance and attendance != "ALL" else "ALL"
+    eff_session_id = session_id or "latest"
 
-    from backend.routes.reports import _get_dataset_for_id
     dataset, r_filename = _get_dataset_for_id(
-        report_id=session_id,
+        report_id=eff_session_id,
         db=db,
         dept=eff_dept,
         year=eff_year,
@@ -393,17 +393,17 @@ def download_contest_single_sheet_excel(
     )
 
     from backend.exporters.single_sheet_generator import generate_single_sheet_contest_excel
-    excel_bytes = generate_single_sheet_contest_excel(db, dataset, session_id)
+    excel_bytes = generate_single_sheet_contest_excel(db, dataset, eff_session_id)
     
     contest_name = str(dataset.get("contest_name") or dataset.get("contestName") or dataset.get("title") or "Weekly Contest")
     import re
     match = re.search(r'\d+', contest_name)
     c_num = match.group(0) if match else "XX"
-    d_str = eff_dept.replace(" ", "_") if eff_dept != "ALL" else "All_Depts"
-    y_str = eff_year if eff_year != "ALL" else "All_Years"
+    d_str = eff_dept.replace(" ", "_") if eff_dept and eff_dept != "ALL" else "All_Depts"
+    y_str = eff_year if eff_year and eff_year != "ALL" else "All_Years"
     from backend.services.weekly_session_resolver import resolve_target_weekly_session
-    t_session = resolve_target_weekly_session(db, session_id)
-    date_str = t_session.session_date.replace(".", "-") if t_session and getattr(t_session, 'session_date', None) else ""
+    t_session = resolve_target_weekly_session(db, eff_session_id)
+    date_str = str(t_session.session_date).replace(".", "-") if t_session and getattr(t_session, 'session_date', None) else ""
     out_filename = f"NEC_W{c_num}_{d_str}_{y_str}_{date_str}.xlsx" if date_str else f"NEC_W{c_num}_{d_str}_{y_str}.xlsx"
     return Response(
         content=excel_bytes,

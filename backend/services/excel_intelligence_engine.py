@@ -202,19 +202,19 @@ def normalize_department_value(val: Any, existing_depts: Dict[str, Any]) -> Tupl
     if any(k in dept_upper for k in ["CYBER", "CSECS", "CS"]):
         for key, dept_obj in existing_depts.items():
             if "CS" in str(key).upper():  # type: ignore
-                return (getattr(dept_obj, 'code', None) or str(key), getattr(dept_obj, 'id', None), "HIGH", False)
+                return (getattr(dept_obj, 'code', None) or key, getattr(dept_obj, 'id', None), "HIGH", False)
     elif any(k in dept_upper for k in ["IOT", "CSEIOT", "CI"]):
         for key, dept_obj in existing_depts.items():
             if "IOT" in str(key).upper() or "CI" in str(key).upper():  # type: ignore
-                return (getattr(dept_obj, 'code', None) or str(key), getattr(dept_obj, 'id', None), "HIGH", False)
+                return (getattr(dept_obj, 'code', None) or key, getattr(dept_obj, 'id', None), "HIGH", False)
     elif any(k in dept_upper for k in ["IT", "INFORMATION"]):
         for key, dept_obj in existing_depts.items():
             if "IT" in str(key).upper():  # type: ignore
-                return (getattr(dept_obj, 'code', None) or str(key), getattr(dept_obj, 'id', None), "HIGH", False)
+                return (getattr(dept_obj, 'code', None) or key, getattr(dept_obj, 'id', None), "HIGH", False)
     elif any(k in dept_upper for k in ["AIDS", "ARTIFICIAL"]):
         for key, dept_obj in existing_depts.items():
             if "AIDS" in str(key).upper():  # type: ignore
-                return (getattr(dept_obj, 'code', None) or str(key), getattr(dept_obj, 'id', None), "HIGH", False)
+                return (getattr(dept_obj, 'code', None) or key, getattr(dept_obj, 'id', None), "HIGH", False)
 
     # Flag as newly discovered department
     return (raw_dept.upper(), None, "HIGH", True)

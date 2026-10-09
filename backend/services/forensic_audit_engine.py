@@ -203,13 +203,14 @@ def build_normalized_forensic_report(
     has_valid_prev = prev_record and getattr(prev_record, 'is_active_version', False)
     has_valid_pub = contest_result and getattr(contest_result, 'fetch_status', '') == 'SUCCESS' and not ('ConnectTimeout' in str(getattr(contest_result, 'verification_evidence', '')))
 
-    if has_valid_prev:
+    if prev_record is not None and has_valid_prev:
         q1_val = 1 if prev_record.q1 else 0
         q2_val = 1 if prev_record.q2 else 0
         q3_val = 1 if prev_record.q3 else 0
         q4_val = 1 if prev_record.q4 else 0
         total_solved = prev_record.problems_solved if prev_record.problems_solved is not None else (q1_val + q2_val + q3_val + q4_val)
-        score_val = prev_record.official_score if prev_record.official_score is not None and prev_record.official_score > 0 else (q1_val*3 + q2_val*4 + q3_val*5 + q4_val*6)
+        score_raw = getattr(prev_record, 'official_score', None)
+        score_val = int(score_raw) if (score_raw is not None and int(score_raw) > 0) else (q1_val*3 + q2_val*4 + q3_val*5 + q4_val*6)
     elif contest_result:
         q1_val = 1 if contest_result.q1 else 0
         q2_val = 1 if contest_result.q2 else 0

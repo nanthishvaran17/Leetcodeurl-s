@@ -324,7 +324,7 @@ def verify_certificate_public(
                     search=str(cert.verification_id),
                     session_id=sess_id_target,
                     trace_id=str(cert.verification_id),
-                    student_id=int(cert.student_id) if cert.student_id is not None else None
+                    student_id=int(getattr(cert, "student_id")) if cert.student_id is not None else None
                 )
                 resp_content = {
                     "verified": True,
@@ -448,7 +448,7 @@ def list_certificates(
 
     if current_user and getattr(current_user, "role", "").lower() in ("staff", "faculty"):
         from backend.services.faculty_assignment_service import faculty_assignment_service
-        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(getattr(current_user, "id")))
         query = query.filter(CertificateRecord.student_id.in_(assigned_ids))
 
     if department:
@@ -567,7 +567,7 @@ def download_certificate_pdf(
                 session_id = int(clean_c)
 
         try:
-            pdf_bytes = generate_forensic_audit_pdf(db, student_id=int(cert.student_id) if cert.student_id is not None else None, session_id=session_id, trace_id=str(cert.verification_id))
+            pdf_bytes = generate_forensic_audit_pdf(db, student_id=int(getattr(cert, "student_id")) if cert.student_id is not None else None, session_id=session_id, trace_id=str(cert.verification_id))
             logger.info(f"[forensic_pdf_generated] Successfully generated {len(pdf_bytes)} bytes for {cert.verification_id}")
         except Exception as gen_err:
             logger.error(f"[forensic_pdf_generation_failed] Exception generating forensic PDF for {cert.verification_id}: {gen_err}", exc_info=True)
@@ -683,7 +683,7 @@ def download_forensic_contest_pdf(
                 (WeeklySession.contest_name.ilike(f"%{clean_c}%"))
             ).first()
             if sess:
-                session_id_val = sess.id
+                session_id_val = int(getattr(sess, "id"))
 
     if not session_id_val and raw_id:
         cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == raw_id).first()
@@ -694,7 +694,7 @@ def download_forensic_contest_pdf(
 
     clean_reg = re.sub(r'[^A-Za-z0-9]+', '', str(student.reg_no or "")).strip().upper()
     trace_id = raw_id if (raw_id and (raw_id.startswith("CERT-") or raw_id.startswith("trace_"))) else f"CERT-{clean_reg}-FORENSIC"
-    pdf_bytes = generate_forensic_audit_pdf(db, int(student.id), session_id=session_id_val, trace_id=trace_id)
+    pdf_bytes = generate_forensic_audit_pdf(db, int(getattr(student, "id")), session_id=session_id_val, trace_id=trace_id)
 
     clean_name = re.sub(r'[^A-Za-z0-9]+', '_', (student.name or "STUDENT").strip().upper()).strip('_')
     f_parts = [clean_name, clean_reg, "Forensic_Audit_Report.pdf"]

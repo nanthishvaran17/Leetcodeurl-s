@@ -108,9 +108,9 @@ def _load_signature_cell(sig: Optional[AuthorizedSignature]):
     """Loads signature image from disk or base64 image_data fallback."""
     if not sig:
         return Spacer(1, 0.55 * inch)
-    if sig.image_path and os.path.exists(sig.image_path):
+    if sig.image_path and os.path.exists(str(sig.image_path)):
         try:
-            img = Image(sig.image_path, width=1.6 * inch, height=0.55 * inch, kind='proportional')
+            img = Image(str(sig.image_path), width=1.6 * inch, height=0.55 * inch, kind='proportional')
             img.hAlign = 'CENTER'
             return img
         except Exception as e:
@@ -162,7 +162,7 @@ def render_certificate_pdf_bytes(
     qr_img = qr.make_image(fill_color="#0B192C", back_color="white")
 
     qr_buf = io.BytesIO()
-    qr_img.save(qr_buf, format="PNG")
+    qr_img.save(qr_buf)
     qr_buf.seek(0)
     qr_img_cell = Image(qr_buf, width=0.85 * inch, height=0.85 * inch)
     qr_img_cell.hAlign = 'CENTER'
@@ -171,7 +171,8 @@ def render_certificate_pdf_bytes(
     try:
         qr_filename = f"{verification_id}_qr.png"
         qr_path = os.path.join(CERT_DIR, qr_filename)
-        qr_img.save(qr_path)
+        with open(qr_path, "wb") as f:
+            qr_img.save(f)
     except Exception:
         pass
 
@@ -335,32 +336,32 @@ def build_certificate_pdf_from_record(
     Generates authoritative PDF bytes for an existing verified CertificateRecord.
     Guarantees that missing disk PDFs are instantly reconstructed from verified DB records.
     """
-    dept_code = cert.department or "CSE(CS)"
-    dept_name = cert.department_name or resolve_department_name(dept_code)
+    dept_code = str(cert.department) if cert.department else "CSE(CS)"
+    dept_name = str(cert.department_name) if cert.department_name else resolve_department_name(dept_code)
     frontend_url = os.getenv("FRONTEND_URL", "https://leetcode-student-data.web.app").rstrip("/")
-    ver_url = cert.verification_url or f"{frontend_url}/verify/{cert.verification_id}"
+    ver_url = str(cert.verification_url) if cert.verification_url else f"{frontend_url}/verify/{cert.verification_id}"
 
     if not target_path and cert.pdf_path:
-        target_path = cert.pdf_path
+        target_path = str(cert.pdf_path)
     elif not target_path:
         target_path = os.path.join(CERT_DIR, f"{cert.register_no}_{cert.verification_id}.pdf")
 
     pdf_bytes = render_certificate_pdf_bytes(
-        student_name=cert.student_name,
-        register_no=cert.register_no,
+        student_name=str(cert.student_name),
+        register_no=str(cert.register_no),
         department_code=dept_code,
         department_name=dept_name,
-        program=cert.program or "Institutional LeetCode Continuous Performance Tracking System",
-        recognition=cert.recognition or "Top Performer",
-        issue_date_display=cert.issue_date or datetime.date.today().strftime("%b %d, %Y"),
-        verification_id=cert.verification_id,
+        program=str(cert.program) if cert.program else "Institutional LeetCode Continuous Performance Tracking System",
+        recognition=str(cert.recognition) if cert.recognition else "Top Performer",
+        issue_date_display=str(cert.issue_date) if cert.issue_date else datetime.date.today().strftime("%b %d, %Y"),
+        verification_id=str(cert.verification_id),
         verification_url=ver_url,
         db=db,
         target_path=target_path
     )
 
     if cert.pdf_path != target_path:
-        cert.pdf_path = target_path
+        setattr(cert, "pdf_path", target_path)
         try:
             db.commit()
         except Exception:
@@ -385,7 +386,8 @@ def generate_student_certificate(
     dept_full_title = resolve_department_name(raw_dept)
     
     # 2. Unique Verification ID & Production Verification URL
-    clean_reg = re.sub(r'[^A-Za-z0-9]+', '', student.reg_no or "").strip().upper()
+    reg_no_str = str(student.reg_no) if student.reg_no else ""
+    clean_reg = re.sub(r'[^A-Za-z0-9]+', '', reg_no_str).strip().upper()
     candidate_id = f"CERT-{clean_reg}-EXCELLENCE"
     
     # Check if candidate_id already exists for this student
@@ -421,11 +423,11 @@ def generate_student_certificate(
     # 4. Persist Certificate Record in Database
     if existing and existing.student_id == student.id:
         cert_record = existing
-        cert_record.issue_date = issue_date_display
-        cert_record.document_type = "CERTIFICATE_OF_EXCELLENCE"
-        cert_record.certificate_type = cert_type or "Certificate of Excellence"
-        cert_record.status = "VALID"
-        cert_record.verification_url = verification_url
+        setattr(cert_record, "issue_date", issue_date_display)
+        setattr(cert_record, "document_type", "CERTIFICATE_OF_EXCELLENCE")
+        setattr(cert_record, "certificate_type", cert_type or "Certificate of Excellence")
+        setattr(cert_record, "status", "VALID")
+        setattr(cert_record, "verification_url", verification_url)
     else:
         cert_record = CertificateRecord(
             verification_id=cert_id,
@@ -454,8 +456,8 @@ def generate_student_certificate(
 
     # 5. Render Document and Cache to Disk
     render_certificate_pdf_bytes(
-        student_name=student.name,
-        register_no=student.reg_no,
+        student_name=str(student.name),
+        register_no=str(student.reg_no),
         department_code=raw_dept,
         department_name=dept_full_title,
         program="Institutional LeetCode Continuous Performance Tracking System",

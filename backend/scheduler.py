@@ -630,6 +630,25 @@ async def submission_sweep_job():
         logger.error(f"[SCHEDULER] Error in submission_sweep_job: {e}", exc_info=True)
 
 
+@with_global_lock('friday_0400_rating_rank_sync_job', timeout_minutes=45)
+async def friday_0400_rating_rank_sync_job():
+    """
+    Scheduled for every Friday at 04:00 AM IST (Asia/Kolkata):
+    Automated full synchronization of LeetCode contest ratings, global rankings,
+    contest ranks, and solved metrics for all active students immediately following
+    LeetCode's weekly contest rating update window.
+    """
+    logger.info("[SCHEDULER] Friday 04:00 AM IST: Automated LeetCode Rating & Rank Sync STARTING...")
+    db = SessionLocal()
+    try:
+        res = start_full_sync_job(db, triggered_by="scheduler_friday_0400_rating_rank_sync")
+        logger.info(f"[SCHEDULER] Friday 04:00 AM Rating & Rank Sync Triggered: {res}")
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Error in friday_0400_rating_rank_sync_job: {e}", exc_info=True)
+    finally:
+        db.close()
+
+
 @with_global_lock('friday_weekly_window_polling_job', timeout_minutes=30)
 async def friday_weekly_window_polling_job():
     """
@@ -1000,6 +1019,17 @@ def start_scheduler():
     )
 
     # ── FRIDAY WEEKLY INTELLIGENCE PIPELINE ─────────────────────────────────────
+    # Friday 04:00 AM IST — Automatic LeetCode Contest Rating & Global Rank Sync
+    scheduler.add_job(
+        friday_0400_rating_rank_sync_job,
+        CronTrigger(day_of_week='fri', hour=4, minute=0, timezone=IST),
+        id='friday_0400_rating_rank_sync',
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=3600
+    )
+
     # Friday Window Polling: Every 30 mins from 08:00 to 10:00 IST on Fridays
     scheduler.add_job(
         friday_weekly_window_polling_job,

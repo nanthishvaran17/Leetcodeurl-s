@@ -12,8 +12,9 @@ True Real-Time Per-Student Streaming Pipeline:
 import asyncio
 import datetime
 import httpx
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set
 import sqlalchemy
+import sqlalchemy.exc
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
@@ -109,6 +110,7 @@ async def _sync_single_student_canonical_impl(
         error_msg = None
         phase_a_res: Optional[Dict[str, Any]] = None
         phase_b_res: Optional[Dict[str, Any]] = None
+        phase_e_res: Optional[Dict[str, Any]] = None
 
         if u_status == "OK" and c_username:
             if pre_fetched_a is not None or pre_fetched_b is not None:
@@ -196,7 +198,8 @@ async def _sync_single_student_canonical_impl(
         # PHASE 2: DATABASE — Short-lived session, NO network calls inside 
         async with lock:
             is_custom_session = bool(db_session and getattr(db_session, "is_active", True))
-            db_student = db_session if is_custom_session else SessionLocal()
+            db_student: Session = db_session if (is_custom_session and db_session is not None) else SessionLocal()
+            assert db_student is not None
             try:
                 st = db_student.query(Student).filter(Student.id == student.id).first()
                 if not st:
@@ -222,7 +225,7 @@ async def _sync_single_student_canonical_impl(
                     shim_stats = LeetCodeProfileStats(student_id=st.id)
                     db_student.add(shim_stats)
     
-                lc_prof.last_attempted_at = now_dt
+                setattr(lc_prof, "last_attempted_at", now_dt)
     
                 total_solved = None
                 easy_solved = None
@@ -232,21 +235,21 @@ async def _sync_single_student_canonical_impl(
     
                 # Apply network results to DB objects 
                 if status_code == "PENDING_USERNAME":
-                    lc_prof.verification_status = "PENDING_USERNAME"
-                    lc_prof.sync_state = "PENDING_USERNAME"
-                    lc_prof.canonical_username = None
-                    lc_prof.profile_url = None
-                    shim_stats.status = "MISSING LINK"
-                    shim_stats.sync_status = "pending"
+                    setattr(lc_prof, "verification_status", "PENDING_USERNAME")
+                    setattr(lc_prof, "sync_state", "PENDING_USERNAME")
+                    setattr(lc_prof, "canonical_username", None)
+                    setattr(lc_prof, "profile_url", None)
+                    setattr(shim_stats, "status", "MISSING LINK")
+                    setattr(shim_stats, "sync_status", "pending")
                     sync_status_str = "pending"
                 elif status_code == "IDENTITY_MISMATCH":
-                    lc_prof.verification_status = "IDENTITY_MISMATCH"
-                    lc_prof.sync_state = "IDENTITY_MISMATCH"
-                    lc_prof.error_code = "IDENTITY_MISMATCH"
-                    lc_prof.error_message = error_msg
-                    shim_stats.status = "IDENTITY_MISMATCH"
-                    shim_stats.sync_status = "mismatch"
-                    shim_stats.error_code = "MISMATCH"
+                    setattr(lc_prof, "verification_status", "IDENTITY_MISMATCH")
+                    setattr(lc_prof, "sync_state", "IDENTITY_MISMATCH")
+                    setattr(lc_prof, "error_code", "IDENTITY_MISMATCH")
+                    setattr(lc_prof, "error_message", str(error_msg) if error_msg else "")
+                    setattr(shim_stats, "status", "IDENTITY_MISMATCH")
+                    setattr(shim_stats, "sync_status", "mismatch")
+                    setattr(shim_stats, "error_code", "MISMATCH")
                     sync_status_str = "mismatch"
                 elif status_code in ("PROFILE_NOT_FOUND",):
                     # Check if student was previously verified (Old Data Fallback Protection)
@@ -258,19 +261,19 @@ async def _sync_single_student_canonical_impl(
                         medium_solved = shim_stats.medium_solved
                         hard_solved = shim_stats.hard_solved
                         contest_rating = shim_stats.contest_rating
-                        shim_stats.status = "verified"
-                        shim_stats.sync_status = "success"
-                        shim_stats.validation_status = "verified"
-                        lc_prof.verification_status = "PROFILE_VERIFIED"
-                        lc_prof.sync_state = "SYNCED"
+                        setattr(shim_stats, "status", "verified")
+                        setattr(shim_stats, "sync_status", "success")
+                        setattr(shim_stats, "validation_status", "verified")
+                        setattr(lc_prof, "verification_status", "PROFILE_VERIFIED")
+                        setattr(lc_prof, "sync_state", "SYNCED")
                     else:
-                        lc_prof.verification_status = "INVALID_USERNAME"
-                        lc_prof.sync_state = "INVALID_USERNAME"
-                        lc_prof.error_code = "404_NOT_FOUND"
-                        lc_prof.error_message = "LeetCode username does not resolve to a public profile"
-                        shim_stats.status = "INVALID_USERNAME"
-                        shim_stats.sync_status = "failed"
-                        shim_stats.error_code = "PROFILE_NOT_FOUND"
+                        setattr(lc_prof, "verification_status", "INVALID_USERNAME")
+                        setattr(lc_prof, "sync_state", "INVALID_USERNAME")
+                        setattr(lc_prof, "error_code", "404_NOT_FOUND")
+                        setattr(lc_prof, "error_message", "LeetCode username does not resolve to a public profile")
+                        setattr(shim_stats, "status", "INVALID_USERNAME")
+                        setattr(shim_stats, "sync_status", "failed")
+                        setattr(shim_stats, "error_code", "PROFILE_NOT_FOUND")
                         status_code = "INVALID_USERNAME"
                         sync_status_str = "failed"
                         error_msg = "Profile not found (404)"
@@ -285,21 +288,21 @@ async def _sync_single_student_canonical_impl(
                         medium_solved = shim_stats.medium_solved
                         hard_solved = shim_stats.hard_solved
                         contest_rating = shim_stats.contest_rating
-                        shim_stats.status = "verified"
-                        shim_stats.sync_status = "success"
-                        shim_stats.validation_status = "verified"
-                        lc_prof.verification_status = "PROFILE_VERIFIED"
-                        lc_prof.sync_state = "SYNCED"
+                        setattr(shim_stats, "status", "verified")
+                        setattr(shim_stats, "sync_status", "success")
+                        setattr(shim_stats, "validation_status", "verified")
+                        setattr(lc_prof, "verification_status", "PROFILE_VERIFIED")
+                        setattr(lc_prof, "sync_state", "SYNCED")
                         
                         if original_status_code == "TIMEOUT":
                             logger.warning(f"[TIMEOUT] student={st.id} username={c_username} endpoint=profile — preserving known good data")
                     else:
-                        lc_prof.sync_state = "TIMEOUT" if status_code == "TIMEOUT" else "FETCH_FAILED"
-                        lc_prof.error_code = "TIMEOUT" if status_code == "TIMEOUT" else "FETCH_FAILED"
-                        lc_prof.error_message = error_msg or ("LeetCode upstream timeout" if status_code == "TIMEOUT" else "Fetch failed during Phase A")
-                        shim_stats.status = "TIMEOUT" if status_code == "TIMEOUT" else "FETCH_FAILED"
-                        shim_stats.sync_status = "failed"
-                        shim_stats.error_code = "TIMEOUT" if status_code == "TIMEOUT" else "NETWORK_ERROR"
+                        setattr(lc_prof, "sync_state", "TIMEOUT" if status_code == "TIMEOUT" else "FETCH_FAILED")
+                        setattr(lc_prof, "error_code", "TIMEOUT" if status_code == "TIMEOUT" else "FETCH_FAILED")
+                        setattr(lc_prof, "error_message", str(error_msg) if error_msg else ("LeetCode upstream timeout" if status_code == "TIMEOUT" else "Fetch failed during Phase A"))
+                        setattr(shim_stats, "status", "TIMEOUT" if status_code == "TIMEOUT" else "FETCH_FAILED")
+                        setattr(shim_stats, "sync_status", "failed")
+                        setattr(shim_stats, "error_code", "TIMEOUT" if status_code == "TIMEOUT" else "NETWORK_ERROR")
                         sync_status_str = "failed"
                         if status_code == "TIMEOUT":
                             logger.warning(f"[TIMEOUT] student={st.id} username={c_username} endpoint=profile — no prior data exists")
@@ -315,12 +318,12 @@ async def _sync_single_student_canonical_impl(
                     lc_prof.company = data.get("company")
                     lc_prof.country = data.get("country")
                     lc_prof.reputation = data.get("reputation")
-                    lc_prof.verification_status = "PROFILE_VERIFIED"
-                    lc_prof.sync_state = "SYNCED"
-                    lc_prof.last_verified_at = now_dt
-                    lc_prof.last_synced_at = now_dt
-                    lc_prof.error_code = None
-                    lc_prof.error_message = None
+                    setattr(lc_prof, "verification_status", "PROFILE_VERIFIED")
+                    setattr(lc_prof, "sync_state", "SYNCED")
+                    setattr(lc_prof, "last_verified_at", now_dt)
+                    setattr(lc_prof, "last_synced_at", now_dt)
+                    setattr(lc_prof, "error_code", None)
+                    setattr(lc_prof, "error_message", None)
     
                     st.username = c_user
                     st.leetcode_url = data["profile_url"]
@@ -335,18 +338,18 @@ async def _sync_single_student_canonical_impl(
                     lc_stats.medium_solved = medium_solved
                     lc_stats.hard_solved = hard_solved
                     lc_stats.profile_global_ranking = data.get("profile_global_ranking")
-                    lc_stats.fetched_at = now_dt
+                    setattr(lc_stats, "fetched_at", now_dt)
     
                     shim_stats.total_solved = total_solved
                     shim_stats.easy_solved = easy_solved
                     shim_stats.medium_solved = medium_solved
                     shim_stats.hard_solved = hard_solved
                     shim_stats.public_profile_ranking = data.get("profile_global_ranking")
-                    shim_stats.status = "verified"
-                    shim_stats.sync_status = "success"
-                    shim_stats.validation_status = "verified"
-                    shim_stats.last_successful_sync = now_dt
-                    shim_stats.last_verified_at = now_dt
+                    setattr(shim_stats, "status", "verified")
+                    setattr(shim_stats, "sync_status", "success")
+                    setattr(shim_stats, "validation_status", "verified")
+                    setattr(shim_stats, "last_successful_sync", now_dt)
+                    setattr(shim_stats, "last_verified_at", now_dt)
     
                     streak_count = data.get("streak")
                     total_active_days = data.get("total_active_days")
@@ -359,14 +362,14 @@ async def _sync_single_student_canonical_impl(
     
                     if streak_count is not None:
                         lc_activity.current_streak = streak_count
-                        lc_activity.longest_streak = max(lc_activity.longest_streak or 0, streak_count)
+                        setattr(lc_activity, "longest_streak", max(int(getattr(lc_activity, "longest_streak") or 0), streak_count))
                         shim_stats.max_streak = streak_count
                     if total_active_days is not None:
                         lc_activity.total_active_days = total_active_days
                         shim_stats.active_days = total_active_days
                     if cal_json:
                         lc_activity.submission_calendar_json = cal_json
-                    lc_activity.fetched_at = now_dt
+                    setattr(lc_activity, "fetched_at", now_dt)
     
                     for b in data.get("badges", []):
                         badge_id = b.get("badge_id")
@@ -390,7 +393,7 @@ async def _sync_single_student_canonical_impl(
                                 existing_l = LeetCodeLanguageStats(student_id=st.id, language_name=l_name)
                                 db_student.add(existing_l)
                             existing_l.problems_solved = lang.get("problems_solved", 0)
-                            existing_l.fetched_at = now_dt
+                            setattr(existing_l, "fetched_at", now_dt)
 
                     # Phase E recent submissions
                     if 'phase_e_res' in locals() and phase_e_res and isinstance(phase_e_res, dict) and phase_e_res.get("status") == "ok":
@@ -436,7 +439,7 @@ async def _sync_single_student_canonical_impl(
                         lc_contest.top_percentage = c_data.get("top_percentage")
                         lc_contest.most_recent_contest_name = c_data.get("most_recent_contest_name")
                         lc_contest.most_recent_contest_type = c_data.get("most_recent_contest_type")
-                        lc_contest.fetched_at = now_dt
+                        setattr(lc_contest, "fetched_at", now_dt)
     
                         shim_stats.contest_rating = contest_rating
                         shim_stats.contest_global_ranking = c_data.get("contest_global_ranking")
@@ -735,8 +738,8 @@ async def run_full_pipeline(
                                 uname, _, u_ok = extract_leetcode_username(str(uname_raw))
                                 if u_ok != "OK" or not uname:
                                     continue
-                                fs.last_verified_at = now_dt
-                                fs.last_successful_sync = now_dt
+                                setattr(fs, "last_verified_at", now_dt)
+                                setattr(fs, "last_successful_sync", now_dt)
                                 cached_profile_a[uname] = {
                                     "status": "ok",
                                     "source": "db_cache",

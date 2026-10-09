@@ -225,11 +225,34 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30',
         sublabel: 'Full Department Cohort Scope'
       },
-      ...sortedYears.map(y => ({
-        value: y,
-        label: y.length <= 4 ? `${y} Year` : y,
-        badge: y.substring(0, 5)
-      }))
+      ...sortedYears.map(y => {
+        const str = y.trim();
+        const badgeStr = str.includes('-') ? `${str.split('-')[0]}-${str.split('-')[1].slice(-2)}` : str;
+        let badgeColor = 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30';
+        let sublabel = `Academic Cohort (${str})`;
+
+        if (str.includes('2023') || str.includes('2027') || /\b(4|iv)\b/i.test(str)) {
+          badgeColor = 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30';
+          sublabel = `IV Year Cohort (${str})`;
+        } else if (str.includes('2024') || str.includes('2028') || /\b(3|iii)\b/i.test(str)) {
+          badgeColor = 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30';
+          sublabel = `III Year Cohort (${str})`;
+        } else if (str.includes('2025') || str.includes('2029') || /\b(2|ii)\b/i.test(str)) {
+          badgeColor = 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border border-sky-200 dark:border-sky-500/30';
+          sublabel = `II Year Cohort (${str})`;
+        } else if (str.includes('2026') || str.includes('2030') || /\b(1|i)\b/i.test(str)) {
+          badgeColor = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30';
+          sublabel = `I Year Cohort (${str})`;
+        }
+
+        return {
+          value: y,
+          label: y.length <= 4 ? `${y} Year` : y,
+          badge: badgeStr,
+          badgeColor: badgeColor,
+          sublabel: sublabel
+        };
+      })
     ];
     return options;
   }, [storeVersion]);
