@@ -93,17 +93,25 @@ def decode_reg_no_attributes(reg_no_val: Any) -> Dict[str, Optional[str]]:
             result["batch"] = "2026-2030"
 
     # 2. Decode Department branch from reg_no sub-string
-    if any(b in reg for b in ["CS", "CC", "CYBER"]):
+    if any(b in reg for b in ["CC", "CYBER"]):
         result["department"] = "CSE(CS)"
     elif any(b in reg for b in ["CI", "IOT"]):
         result["department"] = "CSE(IOT)"
     elif "IT" in reg:
         result["department"] = "IT"
-    elif any(b in reg for b in ["AI", "AD", "AIDS"]):
+    elif any(b in reg for b in ["AIDS", "AI", "AD"]):
         result["department"] = "AIDS"
-    elif any(b in reg for b in ["EC", "ECE"]):
+    elif any(b in reg for b in ["ECE", "EC"]):
         result["department"] = "ECE"
-    elif "CSE" in reg:
+    elif any(b in reg for b in ["EEE", "EE"]):
+        result["department"] = "EEE"
+    elif any(b in reg for b in ["AGRI", "AG"]):
+        result["department"] = "AGRI"
+    elif any(b in reg for b in ["MECH", "ME"]):
+        result["department"] = "MECH"
+    elif any(b in reg for b in ["CIVIL", "CE"]):
+        result["department"] = "CIVIL"
+    elif any(b in reg for b in ["CSE", "CS"]):
         result["department"] = "CSE"
 
     return result

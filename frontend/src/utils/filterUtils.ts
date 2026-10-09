@@ -36,6 +36,27 @@ export function normalizeDepartment(dept: any): string {
     if (dept.id === 4 || dept.id === 7 || code === 'IT' || combined.includes('INFORMATION TECHNOLOGY') || combined.includes('INFO TECH') || combined.includes('B.TECH IT') || combined.includes('B.TECH (IT)')) {
       return 'it';
     }
+    if (code === 'AIDS' || combined.includes('ARTIFICIAL') || combined.includes('DATA SCIENCE')) {
+      return 'aids';
+    }
+    if (code === 'ECE' || combined.includes('ELECTRONICS AND COMM')) {
+      return 'ece';
+    }
+    if (code === 'EEE' || combined.includes('ELECTRICAL AND ELEC')) {
+      return 'eee';
+    }
+    if (code === 'AGRI' || combined.includes('AGRICULTUR')) {
+      return 'agri';
+    }
+    if (code === 'MECH' || combined.includes('MECHANICAL')) {
+      return 'mech';
+    }
+    if (code === 'CIVIL' || combined.includes('CIVIL')) {
+      return 'civil';
+    }
+    if (code === 'CSE' || combined.includes('COMPUTER SCIENCE AND ENGINEERING')) {
+      return 'cse';
+    }
 
     if (code) return code.toLowerCase().replace(/[^a-z0-9]/g, '_');
     if (name) return name.toLowerCase().replace(/[^a-z0-9]/g, '_');
@@ -65,11 +86,53 @@ export function normalizeDepartment(dept: any): string {
     if (clean === 'IT' || clean === '4' || clean === '7' || clean.includes('INFORMATION TECHNOLOGY') || clean.includes('INFO TECH') || clean.includes('B.TECH IT') || clean.includes('B.TECH (IT)')) {
       return 'it';
     }
+    if (clean === 'AIDS' || clean.includes('DATA SCIENCE') || clean.includes('ARTIFICIAL')) {
+      return 'aids';
+    }
+    if (clean === 'ECE' || clean.includes('ELECTRONICS AND COMM')) {
+      return 'ece';
+    }
+    if (clean === 'EEE' || clean.includes('ELECTRICAL AND ELEC')) {
+      return 'eee';
+    }
+    if (clean === 'AGRI' || clean.includes('AGRICULTUR')) {
+      return 'agri';
+    }
+    if (clean === 'MECH' || clean.includes('MECHANICAL')) {
+      return 'mech';
+    }
+    if (clean === 'CIVIL' || clean.includes('CIVIL')) {
+      return 'civil';
+    }
+    if (clean === 'CSE' || clean.includes('COMPUTER SCIENCE AND ENGINEERING')) {
+      return 'cse';
+    }
 
     return clean.toLowerCase().replace(/[^a-z0-9]/g, '_');
   }
 
   return 'unknown';
+}
+
+/**
+ * Derives canonical department code from student register number
+ */
+export function deriveDepartmentFromRegNo(regNoStr?: string): string | null {
+  const norm = (regNoStr || '').trim().toUpperCase();
+  if (!norm) return null;
+
+  if (norm.includes('CC') || norm.includes('CYBER')) return 'CSE(CS)';
+  if (norm.includes('CI') || norm.includes('IOT')) return 'CSE(IOT)';
+  if (norm.includes('IT')) return 'IT';
+  if (norm.includes('AIDS') || norm.includes('AI') || norm.includes('AD')) return 'AIDS';
+  if (norm.includes('ECE') || norm.includes('EC')) return 'ECE';
+  if (norm.includes('EEE') || norm.includes('EE')) return 'EEE';
+  if (norm.includes('AGRI') || norm.includes('AG')) return 'AGRI';
+  if (norm.includes('MECH') || norm.includes('ME')) return 'MECH';
+  if (norm.includes('CIVIL') || norm.includes('CE')) return 'CIVIL';
+  if (norm.includes('CSE') || norm.includes('CS')) return 'CSE';
+
+  return null;
 }
 
 /**
@@ -239,6 +302,11 @@ export function matchesDepartment(student: StudentData, selectedDept: string | a
 
   const studentNorm = normalizeDepartment(student.department ?? student.department_id);
   if (studentNorm === targetNorm) return true;
+
+  const derivedDeptFromReg = deriveDepartmentFromRegNo(student.reg_no);
+  if (derivedDeptFromReg && normalizeDepartment(derivedDeptFromReg) === targetNorm) {
+    return true;
+  }
 
   const deptStr = typeof student.department === 'string' ? student.department : (student.department?.name || student.department?.code || '');
   const selStr = typeof selectedDept === 'string' ? selectedDept : (selectedDept?.name || selectedDept?.code || '');
