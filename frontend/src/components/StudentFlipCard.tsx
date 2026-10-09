@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, Trophy, CheckCircle2, User, Trash2, ShieldCheck, Clock, AlertCircle, Loader, Crown, Award } from 'lucide-react';
 import { StudentData } from './LeaderboardTable';
 import { useStudentEntity } from '../stores/studentLiveStore';
-import { formatStudentYearBadge } from '../utils/filterUtils';
+import { formatStudentYearBadge, formatDepartmentCode, deriveDepartmentFromRegNo } from '../utils/filterUtils';
 
 interface StudentFlipCardProps {
   student: StudentData;
@@ -187,7 +187,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
               )}
             </span>
             <span className="font-extrabold text-[11px] tracking-wider uppercase text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-navy-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-navy-700 shadow-2xs">
-              {student.department?.code || student.department || 'DEPT'}
+              {formatDepartmentCode(student.department) || deriveDepartmentFromRegNo(student.reg_no) || (typeof student.department === 'string' ? student.department : student.department?.code) || 'DEPT'}
             </span>
           </div>
 
