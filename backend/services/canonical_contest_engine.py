@@ -665,6 +665,11 @@ def _build_canonical_contest_dataset_internal(
             solved_val = min(4, q1_val + q2_val + q3_val + q4_val)
             if solved_val == 0 and p_sol_cnt > 0:
                 solved_val = min(4, p_sol_cnt)
+            if (q1_val + q2_val + q3_val + q4_val == 0) and solved_val > 0:
+                q1_val = 1 if solved_val >= 1 else 0
+                q2_val = 1 if solved_val >= 2 else 0
+                q3_val = 1 if solved_val >= 3 else 0
+                q4_val = 1 if solved_val >= 4 else 0
             score_val = p_res.contest_score or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
             rank_val = p_res.contest_rank
             rating_val = p_res.contest_rating
@@ -685,6 +690,11 @@ def _build_canonical_contest_dataset_internal(
                 solved_val = min(4, q1_val + q2_val + q3_val + q4_val)
                 if solved_val == 0 and v_res.total_contest_solved:
                     solved_val = min(4, v_res.total_contest_solved)
+                if (q1_val + q2_val + q3_val + q4_val == 0) and solved_val > 0:
+                    q1_val = 1 if solved_val >= 1 else 0
+                    q2_val = 1 if solved_val >= 2 else 0
+                    q3_val = 1 if solved_val >= 3 else 0
+                    q4_val = 1 if solved_val >= 4 else 0
                 score_val = getattr(v_res, "contest_score", None) or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
             elif post_ev is not None:
                 q_num = getattr(post_ev, "question_number", 1) or 1

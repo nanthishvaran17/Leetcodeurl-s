@@ -1057,6 +1057,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
     selectedSessionIdRef.current = sessionId;
     setSelectedSessionId(sessionId);
+    setSelectedAttendanceFilter('ALL');
   };
 
   const abortControllerRef = React.useRef<AbortController | null>(null);
