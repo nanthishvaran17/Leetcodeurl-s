@@ -17,22 +17,13 @@ let isPinging = false;
 import { PRODUCTION_BACKEND_URL, isCapacitorNative } from '../config/apiConfig';
 
 const getHealthUrl = (): string => {
-  const origin = PRODUCTION_BACKEND_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '');
-
   if (isCapacitorNative()) {
+    const origin = PRODUCTION_BACKEND_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '');
     return `${origin}/health`;
   }
 
-  // Local dev: use relative path (proxied by Vite)
-  if (
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
-    (window.location.port === '3000' || window.location.port === '5173')
-  ) {
-    return '/api/system/health';
-  }
-
-  return `${origin}/health`;
+  // Web Browser environment (Vercel & local dev): relative /health proxied securely over HTTPS
+  return '/health';
 };
 
 const sendPing = async () => {
