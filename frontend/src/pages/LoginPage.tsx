@@ -612,15 +612,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
 
           <motion.div
             className="left-panel-content"
-            initial="hidden"
+            initial={false}
             animate="visible"
             variants={{
-              hidden: { opacity: 0 },
+              hidden: { opacity: 1 },
               visible: {
                 opacity: 1,
                 transition: {
                   staggerChildren: 0.12,
-                  delayChildren: 0.1
+                  delayChildren: 0
                 }
               }
             }}

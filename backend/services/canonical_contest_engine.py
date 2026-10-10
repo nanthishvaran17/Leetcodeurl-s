@@ -76,6 +76,11 @@ def invalidate_canonical_cache(session_id: Optional[int] = None):
     """Invalidates the in-memory cache for a specific session or globally."""
     from backend.cache import cache
     cache.invalidate_tag("contests")
+    try:
+        from backend.routes.weekly_contests import _CONTEST_RAM_CACHE
+        _CONTEST_RAM_CACHE.clear()
+    except Exception:
+        pass
 
 
 def normalize_year_param(year: Optional[str]) -> str:
@@ -540,23 +545,25 @@ def _build_canonical_contest_dataset_internal(
         locked_sol = locked_snapshot_map.get(reg_upper)
         student_snaps = snaps_by_student.get(s_id, [])
 
+        # Strict Contest-Day Window: Baseline within 24h prior to 09:30 AM IST on contest day
+        window_start_utc = lock_0930_utc - datetime.timedelta(hours=24)
+        pre_930_snaps = [sn for sn in student_snaps if window_start_utc <= sn.captured_at <= lock_0930_utc]
+        practice_window_snaps = [sn for sn in student_snaps if lock_0930_utc < sn.captured_at <= cutoff_1000pm_utc]
+
         if locked_sol is not None:
             baseline_solves = locked_sol
+        elif pre_930_snaps:
+            baseline_solves = pre_930_snaps[-1].total_solved
         else:
-            pre_930_snaps = [sn for sn in student_snaps if sn.captured_at <= lock_0930_utc]
-            if pre_930_snaps:
-                baseline_solves = pre_930_snaps[-1].total_solved
-            else:
-                baseline_solves = stat_obj.total_solved if stat_obj else None
+            baseline_solves = None
 
-        # 10:00 PM IST Practice Window Cutoff Snapshot
-        if student_snaps:
-            latest_snap_10pm = student_snaps[-1]
+        if practice_window_snaps:
+            latest_snap_10pm = practice_window_snaps[-1]
             latest_solves_10pm = latest_snap_10pm.total_solved
             latest_snap_time_10pm = latest_snap_10pm.captured_at
         else:
             latest_snap_10pm = None
-            latest_solves_10pm = stat_obj.total_solved if stat_obj else None
+            latest_solves_10pm = None
             latest_snap_time_10pm = None
 
         if latest_solves_10pm is not None and baseline_solves is not None and latest_solves_10pm > baseline_solves:
