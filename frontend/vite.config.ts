@@ -65,7 +65,6 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     modulePreload: {
       polyfill: false,
-      resolveDependencies: () => [],
     },
     // Disable sourcemaps in production for smaller output & faster builds
     sourcemap: false,
