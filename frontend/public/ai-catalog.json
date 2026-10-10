@@ -1,0 +1,33 @@
+{
+  "$schema": "https://agenticresourcediscovery.org/spec/v1/schema.json",
+  "name": "Nandha Engineering College LeetCode Intelligence Platform",
+  "description": "Official LeetCode tracking, student performance analytics, leaderboards, and institutional reporting for Nandha Engineering College.",
+  "publisher": {
+    "name": "Nandha Engineering College (Autonomous)",
+    "url": "https://nandhaengg.org"
+  },
+  "version": "2.6.7",
+  "resources": [
+    {
+      "id": "public-leaderboard",
+      "name": "Public Coding Leaderboard",
+      "description": "Live real-time student competitive programming leaderboard filtered by department and year.",
+      "type": "webpage",
+      "url": "/public-leaderboard"
+    },
+    {
+      "id": "llms-txt",
+      "name": "LLMs.txt Documentation",
+      "description": "AI agent documentation and machine-readable sitemap overview.",
+      "type": "documentation",
+      "url": "/llms.txt"
+    },
+    {
+      "id": "openapi-spec",
+      "name": "API OpenAPI Specification",
+      "description": "REST API documentation and endpoints for student metrics, contest verification, and reports.",
+      "type": "api",
+      "url": "/docs"
+    }
+  ]
+}
