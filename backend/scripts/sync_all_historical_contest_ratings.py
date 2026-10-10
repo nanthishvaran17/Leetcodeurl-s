@@ -128,13 +128,20 @@ async def run_sync():
                                 wpr.contest_rating = float(rating)  # type: ignore
                                 if ranking and int(ranking) > 0:
                                     wpr.contest_rank = int(ranking)  # type: ignore
-                                if attended and (wpr.total_contest_solved is None or wpr.total_contest_solved == 0) and solved > 0:
-                                    wpr.total_contest_solved = solved  # type: ignore
+                                if attended or (solved and int(solved) > 0) or (ranking and int(ranking) > 0):
+                                    wpr.participation_status = "PUBLIC_ATTENDED"
+                                    wpr.fetch_status = "SUCCESS"
+                                if solved is not None:
+                                    wpr.total_contest_solved = int(solved)  # type: ignore
                                 total_ratings_synced += 1
 
-                db.commit()
+                try:
+                    db.commit()
+                except Exception as ex:
+                    db.rollback()
+                    print(f"Batch commit warning: {ex}")
                 processed = min(b_idx + batch_size, len(target_students))
-                print(f"Progress: [{processed}/{len(target_students)}] processed | {total_ratings_synced} ratings synced and committed.", flush=True)
+                print(f"Progress: [{processed}/{len(target_students)}] processed | {total_ratings_synced} ratings synced.", flush=True)
 
         print("\n" + "=" * 80, flush=True)
         print(f"HISTORICAL CONTEST RATING SYNC COMPLETE: {total_ratings_synced} ratings updated across all sessions.", flush=True)
