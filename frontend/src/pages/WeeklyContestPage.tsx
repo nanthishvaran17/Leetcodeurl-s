@@ -2642,7 +2642,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       )}
 
       {/* PRIMARY VIEW TAB SWITCHER */}
-      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 mb-6 sm:mb-8">
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 mb-8 sm:mb-10 shadow-sm">
         <button
           onClick={() => startTransition(() => setActiveTab('previous_week'))}
           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-xs font-black transition-all cursor-pointer ${
@@ -2670,7 +2670,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       {/* PREVIOUS WEEK CONTEST ANALYZER TAB */}
       {activeTab === 'previous_week' && (
-        <div className="mt-2 sm:mt-4">
+        <div className="mt-4 sm:mt-6">
           <PreviousWeekContestPanel sessionId={selectedSessionId || currentSession?.sessionId || 18} onStudentClick={onSelectStudent} />
         </div>
       )}
@@ -2679,7 +2679,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {activeTab === 'matrix' && (
         <>
           {/* 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR */}
-          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 no-print mb-10">
+          <div className="mt-2 sm:mt-4 p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-xl space-y-5 no-print mb-10 sm:mb-12">
         {/* Row 1: Full Consolidated Action Toolbar */}
         <div className="flex items-center justify-end flex-wrap gap-3">
           {/* Consolidated Action Toolbar */}
@@ -2973,7 +2973,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </div>
 
         {/* Row 2: Clean 3-Column Dropdowns + 1-Click Reset Control */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 pt-4 sm:pt-5 border-t border-slate-100 dark:border-slate-800">
           {/* Department Select — Premium Custom Dropdown */}
           {(() => {
             const getDeptColor = (deptCode: string) => {
