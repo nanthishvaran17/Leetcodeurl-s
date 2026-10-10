@@ -74,14 +74,14 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
 
   // Display verified stats
   const totalSolved = isVerified ? (rawTotal ?? 0) : null;
-  const easy        = isVerified ? (student.stats?.easy_solved   ?? 0) : null;
-  const medium      = isVerified ? (student.stats?.medium_solved ?? 0) : null;
-  const hard        = isVerified ? (student.stats?.hard_solved   ?? 0) : null;
-  const isSolver    = (totalSolved ?? 0) > 0;
+  const easy = isVerified ? (student.stats?.easy_solved ?? 0) : null;
+  const medium = isVerified ? (student.stats?.medium_solved ?? 0) : null;
+  const hard = isVerified ? (student.stats?.hard_solved ?? 0) : null;
+  const isSolver = (totalSolved ?? 0) > 0;
 
-  const rank          = student.college_rank;
+  const rank = student.college_rank;
   const effectiveRank = isSolver ? rank : undefined;
-  const verifiedAgo   = formatVerifiedAgo(lastVerifiedAt);
+  const verifiedAgo = formatVerifiedAgo(lastVerifiedAt);
 
   const getRankBadgeStyle = (r?: number) => {
     if (!isSolver || !r) return 'bg-slate-100 dark:bg-navy-900 text-slate-800 dark:text-slate-200 font-extrabold border border-slate-200 dark:border-navy-700';
@@ -144,8 +144,8 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
   };
 
   const auraClass = effectiveRank === 1 ? 'gold-aura ring-2 ring-amber-400/50' :
-                    effectiveRank === 2 ? 'silver-aura ring-2 ring-slate-300/50' :
-                    effectiveRank === 3 ? 'bronze-aura ring-2 ring-amber-600/50' : '';
+    effectiveRank === 2 ? 'silver-aura ring-2 ring-slate-300/50' :
+      effectiveRank === 3 ? 'bronze-aura ring-2 ring-amber-600/50' : '';
 
   return (
     <motion.div
@@ -155,13 +155,12 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
       onClick={() => setIsFlipped(!isFlipped)}
     >
       <div
-        className={`relative w-full h-full min-h-[360px] flex flex-col duration-500 transform-style-3d transition-transform ease-out-expo ${
-          isFlipped ? 'rotate-y-180' : ''
-        }`}
+        className={`relative w-full h-full min-h-[360px] flex flex-col duration-500 transform-style-3d transition-transform ease-out-expo ${isFlipped ? 'rotate-y-180' : ''
+          }`}
       >
         {/* FRONT SIDE */}
         <div className="absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-navy-800 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.3)] backface-hidden flex flex-col justify-between bg-white dark:bg-navy-950/90 backdrop-blur-xl transform translate-z-0 will-change-transform">
-          
+
           {/* Card Top: Rank & Department Pill */}
           <div className="flex items-center justify-between gap-2">
             <span className={`px-3 py-1.5 rounded-full text-[11px] uppercase tracking-wider flex items-center space-x-1.5 whitespace-nowrap shadow-2xs ${getRankBadgeStyle(effectiveRank)}`}>
@@ -193,7 +192,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
 
           {/* Card Center: Avatar & Student Details */}
           <div className="text-center space-y-3 py-2 flex-1 flex flex-col justify-center min-w-0">
-            <motion.div 
+            <motion.div
               whileHover={{ scale: 1.1, rotate: 5 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
               className="relative w-24 h-24 mx-auto shrink-0"
@@ -203,7 +202,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 {student.name ? student.name.split(' ').map(n => n[0]).join('').slice(0, 2) : <User className="w-10 h-10" />}
               </div>
             </motion.div>
-            
+
             <div className="min-w-0 px-1 pt-1">
               <h3 className="font-black text-lg text-slate-900 dark:text-white truncate max-w-full tracking-tight" title={student.name}>
                 {student.name}
@@ -236,7 +235,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 <span className="text-xs font-bold text-slate-400">Stats Unavailable</span>
               </div>
             )}
-            
+
             <div className="mt-3 flex items-center justify-center">
               <SyncBadge />
             </div>
@@ -253,9 +252,9 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
               <ShieldCheck className="w-5 h-5 text-brand-500 shrink-0" />
               <span className="font-extrabold text-sm text-slate-900 dark:text-white truncate tracking-tight" title={student.name}>{student.name}</span>
             </div>
-            <a 
-              href={student.username ? `https://leetcode.com/u/${student.username}/` : '#'} 
-              target="_blank" 
+            <a
+              href={student.username ? `https://leetcode.com/u/${student.username}/` : '#'}
+              target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               className="text-slate-400 hover:text-brand-500 transition-colors shrink-0"
@@ -270,14 +269,14 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
 
           {/* Stats Breakdown Container - Clean Typography */}
           <div className="flex-1 flex flex-col justify-center py-2 min-w-0">
-            
+
             {!isVerified ? (
               <div className="text-center space-y-2">
                 <AlertCircle className="w-8 h-8 mx-auto text-slate-300 dark:text-navy-600 mb-3" />
                 <p className="font-extrabold text-sm text-slate-700 dark:text-slate-300">
                   {state === 'pending_username' ? 'Pending LeetCode Username' :
-                   state === 'pending' ? 'Awaiting Scheduled Sync' :
-                   state === 'mismatch' ? 'Data Mismatch Detected' : 'Stats Unavailable'}
+                    state === 'pending' ? 'Awaiting Scheduled Sync' :
+                      state === 'mismatch' ? 'Data Mismatch Detected' : 'Stats Unavailable'}
                 </p>
                 <p className="text-xs font-medium text-slate-500">
                   {state === 'pending_username' && 'Awaiting valid LeetCode profile assignment'}
@@ -291,7 +290,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
               </div>
             ) : (
               <div className="space-y-3.5">
-                
+
                 {/* Total & Difficulty */}
                 <div className="text-center">
                   <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">

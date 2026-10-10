@@ -36,7 +36,7 @@ def get_admin_user_or_default(request: Request, db: Session = Depends(get_db)) -
         admin_user = db.query(User).filter(User.role.in_(["admin", "super admin", "ADMIN"])).first()
         if admin_user:
             return admin_user
-        return User(id=1, username="admin", email="admin.leetcode@nandhaengg.org", role="admin")
+        return User(id=1, username="admin", email="nanthishvaran17@gmail.com", role="admin")
     return user
 
 # Schema definitions

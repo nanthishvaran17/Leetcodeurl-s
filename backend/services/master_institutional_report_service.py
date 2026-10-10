@@ -629,30 +629,27 @@ def generate_master_10_sheet_workbook(
 
         snp = snapshot_map.get(s.id)
         if target_session and (is_historical or snp):
-            c_rating = (getattr(snp, "end_rating", None) if snp else None) or \
-                       (getattr(p_res, "contest_rating", None) if p_res else None) or \
-                       (getattr(v_res, "contest_rating", None) if v_res else None) or \
-                       (st_stats.contest_rating if st_stats and getattr(st_stats, "contest_rating", None) else None)
-            g_rank = (getattr(snp, "global_rank", None) if snp else None) or \
-                     (getattr(p_res, "contest_rank", None) if p_res else None) or \
-                     (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
-                     (st_stats.public_profile_ranking if st_stats and getattr(st_stats, "public_profile_ranking", None) else None) or \
+            c_rating = (st_stats.contest_rating if (st_stats and getattr(st_stats, "contest_rating", None) and float(st_stats.contest_rating) > 0 and float(st_stats.contest_rating) != 1500.0) else None) or \
+                       (getattr(snp, "end_rating", None) if (snp and float(getattr(snp, "end_rating", 0) or 0) > 0) else None) or \
+                       (getattr(p_res, "contest_rating", None) if (p_res and float(getattr(p_res, "contest_rating", 0) or 0) > 0) else None) or \
+                       (getattr(v_res, "contest_rating", None) if (v_res and float(getattr(v_res, "contest_rating", 0) or 0) > 0) else None)
+            g_rank = (st_stats.contest_global_ranking if (st_stats and getattr(st_stats, "contest_global_ranking", None) and int(st_stats.contest_global_ranking) > 0) else None) or \
+                     (getattr(snp, "global_rank", None) if snp else None) or \
+                     (st_stats.public_profile_ranking if (st_stats and getattr(st_stats, "public_profile_ranking", None)) else None) or \
                      getattr(s, "global_rank", None)
         elif report_type == "FRIDAY_OFFICIAL_CONTEST":
-            c_rating = (st_stats.contest_rating if st_stats and getattr(st_stats, "contest_rating", None) else None) or \
-                       (getattr(p_res, "contest_rating", None) if p_res else None) or \
-                       (getattr(v_res, "contest_rating", None) if v_res else None)
-            g_rank = (getattr(p_res, "contest_rank", None) if p_res else None) or \
-                     (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
-                     (st_stats.public_profile_ranking if st_stats and getattr(st_stats, "public_profile_ranking", None) else None) or \
+            c_rating = (st_stats.contest_rating if (st_stats and getattr(st_stats, "contest_rating", None) and float(st_stats.contest_rating) > 0 and float(st_stats.contest_rating) != 1500.0) else None) or \
+                       (getattr(p_res, "contest_rating", None) if (p_res and float(getattr(p_res, "contest_rating", 0) or 0) > 0) else None) or \
+                       (getattr(v_res, "contest_rating", None) if (v_res and float(getattr(v_res, "contest_rating", 0) or 0) > 0) else None)
+            g_rank = (st_stats.contest_global_ranking if (st_stats and getattr(st_stats, "contest_global_ranking", None) and int(st_stats.contest_global_ranking) > 0) else None) or \
+                     (st_stats.public_profile_ranking if (st_stats and getattr(st_stats, "public_profile_ranking", None)) else None) or \
                      getattr(s, "global_rank", None)
         else:
-            c_rating = (getattr(p_res, "contest_rating", None) if p_res else None) or \
-                       (getattr(v_res, "contest_rating", None) if v_res else None) or \
-                       (st_stats.contest_rating if st_stats and getattr(st_stats, "contest_rating", None) else None)
-            g_rank = (getattr(p_res, "contest_rank", None) if p_res else None) or \
-                     (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
-                     (st_stats.public_profile_ranking if st_stats and getattr(st_stats, "public_profile_ranking", None) else None) or \
+            c_rating = (st_stats.contest_rating if (st_stats and getattr(st_stats, "contest_rating", None) and float(st_stats.contest_rating) > 0 and float(st_stats.contest_rating) != 1500.0) else None) or \
+                       (getattr(p_res, "contest_rating", None) if (p_res and float(getattr(p_res, "contest_rating", 0) or 0) > 0) else None) or \
+                       (getattr(v_res, "contest_rating", None) if (v_res and float(getattr(v_res, "contest_rating", 0) or 0) > 0) else None)
+            g_rank = (st_stats.contest_global_ranking if (st_stats and getattr(st_stats, "contest_global_ranking", None) and int(st_stats.contest_global_ranking) > 0) else None) or \
+                     (st_stats.public_profile_ranking if (st_stats and getattr(st_stats, "public_profile_ranking", None)) else None) or \
                      getattr(s, "global_rank", None)
         easy_s = st_stats.easy_solved if (st_stats and st_stats.easy_solved is not None) else 0
         med_s = st_stats.medium_solved if (st_stats and st_stats.medium_solved is not None) else 0

@@ -63,9 +63,15 @@ async def get_leaderboard_fast(
                 if not d_str:
                     return datetime.date.min
                 try:
-                    parts = str(d_str).strip().split('.')
-                    if len(parts) == 3:
-                        return datetime.date(int(parts[2]), int(parts[1]), int(parts[0]))
+                    d_str = str(d_str).strip()
+                    if '.' in d_str:
+                        parts = d_str.split('.')
+                        if len(parts) == 3:
+                            return datetime.date(int(parts[2]), int(parts[1]), int(parts[0]))
+                    elif '-' in d_str:
+                        parts = d_str.split('-')
+                        if len(parts) == 3:
+                            return datetime.date(int(parts[0]), int(parts[1]), int(parts[2]))
                 except Exception:
                     pass
                 return datetime.date.min
@@ -75,9 +81,8 @@ async def get_leaderboard_fast(
             eligible = []
             for s in sessions:
                 s_date = _parse_session_date(s.session_date)
-                if s_date <= today:
-                    if s.status in ["FINALIZED", "COMPLETED", "LIVE", "ACTIVE"]:
-                        eligible.append((s, s_date))
+                if s.status in ["FINALIZED", "COMPLETED"] or (s_date <= today and s.status in ["LIVE", "ACTIVE"]):
+                    eligible.append((s, s_date))
 
             def _get_c_num(item):
                 s = item[0]
@@ -452,9 +457,15 @@ async def get_students(
                 if not d_str:
                     return datetime.date.min
                 try:
-                    parts = str(d_str).strip().split('.')
-                    if len(parts) == 3:
-                        return datetime.date(int(parts[2]), int(parts[1]), int(parts[0]))
+                    d_str = str(d_str).strip()
+                    if '.' in d_str:
+                        parts = d_str.split('.')
+                        if len(parts) == 3:
+                            return datetime.date(int(parts[2]), int(parts[1]), int(parts[0]))
+                    elif '-' in d_str:
+                        parts = d_str.split('-')
+                        if len(parts) == 3:
+                            return datetime.date(int(parts[0]), int(parts[1]), int(parts[2]))
                 except Exception:
                     pass
                 return datetime.date.min
@@ -464,9 +475,8 @@ async def get_students(
             eligible = []
             for s in sessions:
                 s_date = _parse_session_date(s.session_date)
-                if s_date <= today:
-                    if s.status in ["FINALIZED", "COMPLETED", "LIVE", "ACTIVE"]:
-                        eligible.append((s, s_date))
+                if s.status in ["FINALIZED", "COMPLETED"] or (s_date <= today and s.status in ["LIVE", "ACTIVE"]):
+                    eligible.append((s, s_date))
 
             def _get_c_num(item):
                 s = item[0]

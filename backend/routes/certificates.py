@@ -99,23 +99,33 @@ def resolve_certificate_record(
 
         return cert
 
-    # 2. Forensic Trace IDs without reg/name parameter MUST exist in database
-    if (is_forensic_request or raw_id.lower().startswith("trace_")) and not reg and not name:
+    # 2. Extract candidate register number and session ID from verification_id string
+    # e.g. CERT-732224CC031-S27-FORENSIC -> candidate_reg = 732224CC031, session_id = 27
+    candidate_reg = re.sub(r'CERT-|-EXCELLENCE|-FORENSIC|-S\d+|TRACE_', '', clean_id, flags=re.IGNORECASE).strip('-').strip()
+    session_id_from_id = None
+    s_match = re.search(r'-S(\d+)-', clean_id, re.IGNORECASE)
+    if s_match:
+        session_id_from_id = s_match.group(1)
+
+    # 2b. Only reject if trace ID is non-CERT / random hash WITHOUT embedded reg_no AND reg/name are missing
+    if (is_forensic_request or raw_id.lower().startswith("trace_")) and not reg and not name and (not candidate_reg or len(candidate_reg) < 4):
         logger.warning(f"[CERT_RESOLVE_FAILED] No forensic record found for trace_id={raw_id}")
         return None
 
-    # 3. Dynamic lookup for student by register number only for standard certificates
+    # 3. Dynamic lookup for student by register number
     student_obj = None
     if reg:
         student_obj = db.query(Student).filter(Student.reg_no.ilike(f"%{reg.strip()}%")).first()
 
-    if not student_obj:
-        candidate_reg = clean_id.replace("CERT-", "").replace("-EXCELLENCE", "").replace("-FORENSIC", "").strip()
-        if candidate_reg and len(candidate_reg) >= 6:
-            student_obj = db.query(Student).filter(Student.reg_no.ilike(f"%{candidate_reg}%")).first()
+    if not student_obj and candidate_reg and len(candidate_reg) >= 4:
+        student_obj = db.query(Student).filter(
+            (Student.reg_no.ilike(candidate_reg)) |
+            (Student.reg_no.ilike(f"%{candidate_reg}%")) |
+            (Student.username.ilike(candidate_reg))
+        ).first()
 
     if not student_obj:
-        logger.warning(f"[CERT_RESOLVE_FAILED] No student found for id={raw_id}, reg={reg}")
+        logger.warning(f"[CERT_RESOLVE_FAILED] No student found for id={raw_id}, reg={reg}, candidate_reg={candidate_reg}")
         return None
 
     dept_code = student_obj.department.code if student_obj.department else "CSE(CS)"
@@ -124,9 +134,23 @@ def resolve_certificate_record(
 
     if is_forensic_request:
         # Resolve Forensic Contest Audit Record 
+        eff_contest = contest or session_id_from_id
+        session_obj = None
+
+        if session_id_from_id:
+            try:
+                s_id_int = int(session_id_from_id)
+                session_obj = db.query(WeeklySession).filter(
+                    (WeeklySession.id == s_id_int) |
+                    (WeeklySession.contest_id == f"weekly-contest-{s_id_int}") |
+                    (WeeklySession.contest_id == str(s_id_int))
+                ).first()
+            except Exception:
+                session_obj = None
+
         q_p = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.student_id == student_obj.id)
-        if contest:
-            clean_c = contest.strip()
+        if eff_contest:
+            clean_c = str(eff_contest).strip()
             c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
             q_p = q_p.join(WeeklySession, WeeklyPublicResult.session_id == WeeklySession.id).filter(
                 (WeeklySession.contest_id == c_slug) |
@@ -137,8 +161,8 @@ def resolve_certificate_record(
         v_res = None
         if not p_res:
             q_v = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.student_id == student_obj.id)
-            if contest:
-                clean_c = contest.strip()
+            if eff_contest:
+                clean_c = str(eff_contest).strip()
                 c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
                 q_v = q_v.join(WeeklySession, WeeklyVirtualResult.session_id == WeeklySession.id).filter(
                     (WeeklySession.contest_id == c_slug) |
@@ -147,22 +171,22 @@ def resolve_certificate_record(
             v_res = q_v.order_by(WeeklyVirtualResult.id.desc()).first()
 
         if contest and not p_res and not v_res:
-            # Requested contest was not participated in by student -> do NOT fabricate
+            # Explicitly requested contest parameter was not participated in by student -> do NOT fabricate
             logger.warning(f"[CERT_CONTEST_NOT_FOUND] Student {student_obj.reg_no} did not participate in contest {contest}.")
             return None
 
-        session_obj = None
-        if p_res and p_res.session:
-            session_obj = p_res.session
-        elif v_res and v_res.session:
-            session_obj = v_res.session
-        elif contest:
-            clean_c = contest.strip()
-            c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
-            session_obj = db.query(WeeklySession).filter(
-                (WeeklySession.contest_id == c_slug) |
-                (WeeklySession.contest_name.ilike(f"%{clean_c}%"))
-            ).first()
+        if not session_obj:
+            if p_res and p_res.session:
+                session_obj = p_res.session
+            elif v_res and v_res.session:
+                session_obj = v_res.session
+            elif eff_contest:
+                clean_c = str(eff_contest).strip()
+                c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
+                session_obj = db.query(WeeklySession).filter(
+                    (WeeklySession.contest_id == c_slug) |
+                    (WeeklySession.contest_name.ilike(f"%{clean_c}%"))
+                ).first()
 
         if not session_obj:
             session_obj = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
@@ -171,7 +195,7 @@ def resolve_certificate_record(
 
         contest_name = session_obj.contest_name if session_obj else "Weekly Contest"
         contest_date = session_obj.session_date if (session_obj and session_obj.session_date) else "16.08.2026"
-        target_v_id = raw_id if raw_id.lower().startswith("trace_") else f"CERT-{clean_reg_str}-FORENSIC"
+        target_v_id = raw_id
 
         tot_solved_tmp = p_res.total_contest_solved if p_res else (v_res.total_contest_solved if v_res else 0)
         sha_hash = hashlib.sha256(f"{target_v_id}:{student_obj.reg_no}:{session_obj.id if session_obj else 0}:{tot_solved_tmp}".encode()).hexdigest()
@@ -197,7 +221,7 @@ def resolve_certificate_record(
         )
     else:
         # Resolve Certificate of Excellence Record 
-        target_v_id = f"CERT-{clean_reg_str}-EXCELLENCE"
+        target_v_id = raw_id if raw_id.startswith("CERT-") else f"CERT-{clean_reg_str}-EXCELLENCE"
         cert = CertificateRecord(
             verification_id=target_v_id,
             certificate_code=target_v_id,
@@ -636,7 +660,7 @@ def download_forensic_contest_pdf(
     if real_student_id:
         student = db.query(Student).filter(Student.id == real_student_id).first()
 
-    if not student and reg:
+    if not student and reg and isinstance(reg, str):
         clean_reg_param = reg.strip()
         student = db.query(Student).filter(
             (Student.reg_no.ilike(clean_reg_param)) |
@@ -647,7 +671,7 @@ def download_forensic_contest_pdf(
         student = db.query(Student).filter(Student.id == int(raw_id)).first()
 
     if not student and raw_id:
-        clean_raw = raw_id.replace("CERT-", "").replace("-FORENSIC", "").replace("-EXCELLENCE", "").replace("trace_", "").strip()
+        clean_raw = re.sub(r'CERT-|-EXCELLENCE|-FORENSIC|-S\d+|TRACE_', '', raw_id, flags=re.IGNORECASE).strip('-').strip()
         student = db.query(Student).filter(
             (Student.reg_no.ilike(raw_id)) |
             (Student.reg_no.ilike(clean_raw)) |
@@ -672,7 +696,7 @@ def download_forensic_contest_pdf(
         raise HTTPException(status_code=404, detail="Student record not found for the requested forensic report.")
 
     session_id_val = None
-    if contest:
+    if contest and isinstance(contest, str):
         clean_c = contest.replace("weekly-contest-", "").strip()
         if clean_c.isdigit():
             session_id_val = int(clean_c)

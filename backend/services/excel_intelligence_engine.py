@@ -49,6 +49,11 @@ CANONICAL_FIELDS = {
         "label": "ACADEMIC BATCH",
         "required": False,
         "synonyms": ["batch", "academic_batch", "passing_batch", "batch_year", "grad_year", "graduation_year"]
+    },
+    "twelfth_cutoff": {
+        "label": "12TH CUT-OFF",
+        "required": False,
+        "synonyms": ["cut_off", "cutoff", "twelfth_cutoff", "cut_off_marks", "cutoff_marks", "cutoff_mark", "12th_cutoff", "12th_cut_off", "cut_off_score", "12th_cutoff_mark", "12th_mark", "hsc_cutoff", "tnea_cutoff"]
     }
 }
 

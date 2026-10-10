@@ -27,7 +27,7 @@ def purge_fake_test_data():
             "nanthishvaran117@gmail.com",
             "msanthoshkumar@nandhaengg.org",
             "santhoshkumar@nandhaengg.org",
-            "admin.leetcode@nandhaengg.org"
+            "nanthishvaran17@gmail.com"
         }
 
         # 1. PURGE TEST / FAKE USERS (STAFF & ADMIN)

@@ -842,16 +842,16 @@ def get_sunday_live_report(
     Enforces strict role-based access control, department scoping, and data-driven calculations.
     Returns real student attendance, Q1-Q4 solve status + question times, contest solved, and total time.
     """
-    effective_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
-    effective_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+    raw_d = str(department) if (department and not hasattr(department, "default")) else (str(dept) if (dept and not hasattr(dept, "default")) else "ALL")
+    raw_y = str(year_level) if (year_level and not hasattr(year_level, "default")) else (str(year) if (year and not hasattr(year, "default")) else "ALL")
 
     from backend.services.report_models import ReportConfig
     from backend.services.contest_performance_service import build_contest_performance_report
 
     config = ReportConfig(
         report_type="SUNDAY_LIVE_CONTEST",
-        department=effective_dept or "ALL",
-        year=effective_year or "ALL",
+        department=raw_d if raw_d != "ALL" else "ALL",
+        year=raw_y if raw_y != "ALL" else "ALL",
         output_scope="COLLEGE",
         filters={"session_id": session_id} if session_id else {}
     )
@@ -877,16 +877,16 @@ def get_friday_official_report(
     Returns real student participation, binary Q1-Q4 solve status, official score, rank, rating,
     question-wise result, solve distribution, official leaderboard, top performers, and department results.
     """
-    effective_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
-    effective_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+    raw_d = str(department) if (department and not hasattr(department, "default")) else (str(dept) if (dept and not hasattr(dept, "default")) else "ALL")
+    raw_y = str(year_level) if (year_level and not hasattr(year_level, "default")) else (str(year) if (year and not hasattr(year, "default")) else "ALL")
 
     from backend.services.report_models import ReportConfig
     from backend.services.contest_performance_service import build_contest_performance_report
 
     config = ReportConfig(
         report_type="FRIDAY_OFFICIAL_CONTEST",
-        department=effective_dept or "ALL",
-        year=effective_year or "ALL",
+        department=raw_d if raw_d != "ALL" else "ALL",
+        year=raw_y if raw_y != "ALL" else "ALL",
         output_scope="COLLEGE",
         filters={"session_id": session_id} if session_id else {}
     )

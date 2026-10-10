@@ -31,7 +31,7 @@ export const useStudentsQuery = () => {
       if (isFaculty && data.length === 0) {
         return [];
       }
-      
+
       const currentCache = queryClient.getQueryData<StudentEntity[]>(queryKey) || [];
       const cacheMap = new Map(currentCache.map(s => [String(s.id), s]));
 
@@ -61,7 +61,7 @@ export const useStudentsQuery = () => {
         // Fallback to timestamp comparison if version is missing
         const serverTime = parseUtcTime(serverStudent.stats?.last_verified_at);
         const cachedTime = parseUtcTime(cachedStudent.stats?.last_verified_at);
-        
+
         if (cachedTime > serverTime) {
           return {
             ...serverStudent,
@@ -72,7 +72,7 @@ export const useStudentsQuery = () => {
             }
           }; // Keep our newer live patched version but preserve schema from server
         }
-        
+
         return serverStudent;
       });
 

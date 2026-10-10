@@ -116,6 +116,14 @@ const MAPPING_DROPDOWN_OPTIONS: DropdownOption[] = [
     icon: Calendar
   },
   {
+    value: 'twelfth_cutoff',
+    label: '12TH CUT-OFF',
+    sublabel: '12th standard TNEA cutoff mark e.g. 187.0, 178.5',
+    badge: 'OPTIONAL',
+    badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+    icon: FileSpreadsheet
+  },
+  {
     value: 'exclude',
     label: 'Exclude Column',
     sublabel: 'Explicitly mark column as excluded',

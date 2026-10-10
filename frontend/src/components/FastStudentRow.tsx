@@ -59,9 +59,9 @@ function getDeptCode(st: any): string {
 
 function getContestRatingDisplay(st: any): string {
   if (!st) return '—';
-  const rawRating = st.stats?.contest_rating 
-    ?? st.contest_rating 
-    ?? st.public_contest_result?.contest_rating 
+  const rawRating = st.stats?.contest_rating
+    ?? st.contest_rating
+    ?? st.public_contest_result?.contest_rating
     ?? st.lc_contest_standing?.contest_rating;
   if (rawRating == null || Number(rawRating) <= 0 || Number(rawRating) === 1500) return '—';
   return Math.round(Number(rawRating)).toLocaleString();
@@ -69,13 +69,13 @@ function getContestRatingDisplay(st: any): string {
 
 function getContestRankDisplay(st: any): string {
   if (!st) return '—';
-  const rawRank = st.stats?.contest_global_ranking 
-    ?? st.stats?.global_rank 
-    ?? st.stats?.contest_rank 
-    ?? st.contest_global_ranking 
-    ?? st.global_rank 
-    ?? st.contest_rank 
-    ?? st.public_contest_result?.contest_rank 
+  const rawRank = st.stats?.contest_global_ranking
+    ?? st.stats?.global_rank
+    ?? st.stats?.contest_rank
+    ?? st.contest_global_ranking
+    ?? st.global_rank
+    ?? st.contest_rank
+    ?? st.public_contest_result?.contest_rank
     ?? st.lc_contest_standing?.contest_global_ranking;
   if (rawRank == null || Number(rawRank) <= 0 || Number(rawRank) === 50000) return '—';
   return `#${Number(rawRank).toLocaleString()}`;
@@ -83,30 +83,30 @@ function getContestRankDisplay(st: any): string {
 
 function getProfileRankDisplay(st: any): string {
   if (!st) return '—';
-  const rawProfileRank = st.stats?.public_profile_ranking 
-    ?? st.stats?.profile_global_ranking 
-    ?? st.stats?.profile_rank 
-    ?? st.stats?.ranking 
-    ?? st.public_profile_ranking 
-    ?? st.profile_rank 
-    ?? st.profile_global_ranking 
-    ?? st.ranking 
+  const rawProfileRank = st.stats?.public_profile_ranking
+    ?? st.stats?.profile_global_ranking
+    ?? st.stats?.profile_rank
+    ?? st.stats?.ranking
+    ?? st.public_profile_ranking
+    ?? st.profile_rank
+    ?? st.profile_global_ranking
+    ?? st.ranking
     ?? st.lc_problem_stats?.profile_global_ranking;
   if (!rawProfileRank || Number(rawProfileRank) <= 0 || Number(rawProfileRank) >= 5000000) return '—';
   return `#${Number(rawProfileRank).toLocaleString()}`;
 }
 
 // million-ignore
-export const FastStudentRow = memo(({ 
+export const FastStudentRow = memo(({
   studentId,
   initialStudent,
-  index, 
-  style, 
-  isSelected, 
-  toggleStudent, 
-  onView, 
-  onEdit, 
-  onRefresh, 
+  index,
+  style,
+  isSelected,
+  toggleStudent,
+  onView,
+  onEdit,
+  onRefresh,
   onDelete,
   isRefreshing
 }: any) => {
@@ -117,13 +117,13 @@ export const FastStudentRow = memo(({
   const isVerified = syncState === 'verified' || syncState === 'stale';
   const totalSolved = (student && isVerified) ? (student.stats?.total_solved ?? 0) : null;
   const isSolver = isVerified && (totalSolved ?? 0) > 0;
-  
+
   const effectiveCollegeRank = isSolver ? index + 1 : undefined;
   const isSyncing = syncState === 'fetching' || Boolean(isRefreshing);
 
   const [flashSolved, setFlashSolved] = React.useState(false);
   const prevSolvedRef = React.useRef(totalSolved);
-  
+
   React.useEffect(() => {
     if (totalSolved !== null && prevSolvedRef.current !== null && totalSolved !== prevSolvedRef.current) {
       setFlashSolved(true);
@@ -137,8 +137,8 @@ export const FastStudentRow = memo(({
   if (!student) return null;
 
   return (
-    <div 
-      style={style} 
+    <div
+      style={style}
       onClick={(e) => {
         if (
           (e.target as HTMLElement).closest('button') ||
@@ -153,16 +153,16 @@ export const FastStudentRow = memo(({
     >
       {/* MOBILE LAYOUT (SLEEK & PREMIUM CARD DESIGN) */}
       <div className="flex md:hidden flex-col w-full bg-white dark:bg-navy-900/90 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-md transition-all duration-200 relative overflow-hidden backdrop-blur-md">
-        
+
         {/* Main Content Row */}
         <div className="flex items-start gap-3 p-3.5">
           <div className="flex flex-col items-center justify-center h-12">
-            <input 
-              type="checkbox" 
-              checked={isSelected} 
-              onChange={() => toggleStudent(student.id)} 
-              className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-[18px] h-[18px] cursor-pointer" 
-              onClick={(e) => e.stopPropagation()} 
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => toggleStudent(student.id)}
+              className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-[18px] h-[18px] cursor-pointer"
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
 

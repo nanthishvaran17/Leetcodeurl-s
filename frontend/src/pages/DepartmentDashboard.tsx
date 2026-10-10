@@ -33,7 +33,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const [solvedFilter, setSolvedFilter] = useState<string>('all');
 
   const solvedParams = useMemo(() => {
-    switch(solvedFilter) {
+    switch (solvedFilter) {
       case '500_plus': return { min_solved: 500, max_solved: undefined };
       case '251_500': return { min_solved: 251, max_solved: 500 };
       case '101_250': return { min_solved: 101, max_solved: 250 };
@@ -44,7 +44,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   }, [solvedFilter]);
 
   const sortParam = useMemo(() => {
-    switch(sortBy) {
+    switch (sortBy) {
       case 'top_solved': return 'solved_desc';
       case 'low_solved': return 'solved_asc';
       case 'name_asc': return 'name_asc';
@@ -154,7 +154,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
   return (
     <div className="space-y-8 pb-10 animate-fade-in">
-      
+
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
         {/* Animated Decorative Ambient Light Beams */}
@@ -194,7 +194,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
       {/* Filter Tabs Bar */}
       <div className="glass-card p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 relative z-30 overflow-visible">
-        
+
         {/* Header with Title & Controls */}
         <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="space-y-1">
@@ -235,7 +235,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
         {/* 5 Filter & Search Controls — Auto-Fitting Responsive Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4 items-start">
-          
+
           {/* 1. Department Filter */}
           <PremiumDepartmentSelect
             selectedDept={selectedDept === 'all' ? 'ALL' : selectedDept}
@@ -342,9 +342,9 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   : (departments.find(d => String(d.id) === String(selectedDept))?.name || selectedDept)}
               </span>
             </div>
-            
+
             <span className="text-slate-300 dark:text-navy-600 font-bold px-0.5">•</span>
-            
+
             <div className="flex items-center space-x-1.5 text-slate-700 dark:text-slate-200">
               <GraduationCap className="w-4 h-4 text-indigo-500" />
               <span className="font-black text-xs sm:text-sm tracking-tight">
@@ -353,7 +353,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   : `${yearLevel} Year`}
               </span>
             </div>
-            
+
             {nameSearch.trim() && (
               <>
                 <span className="text-slate-300 dark:text-navy-600 font-bold px-0.5">•</span>
@@ -365,7 +365,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 </div>
               </>
             )}
-            
+
             {solvedFilter !== 'all' && solvedFilter !== 'ALL' && (
               <>
                 <span className="text-slate-300 dark:text-navy-600 font-bold px-0.5">•</span>
@@ -387,7 +387,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               </>
             )}
           </div>
-          
+
           {/* Total Count Premium Pill */}
           <div className="inline-flex items-center space-x-2 px-4 py-2 bg-brand-50 dark:bg-brand-500/10 border border-brand-200 dark:border-brand-500/20 rounded-2xl shadow-sm">
             <Users className="w-4 h-4 text-brand-600 dark:text-brand-400" />

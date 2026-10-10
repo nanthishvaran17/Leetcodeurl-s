@@ -19,7 +19,7 @@ def clean_test_staff_users():
             'nanthishvaran0106@gmail.com',
             'msanthoshkumar@nandhaengg.org',
             'santhoshkumar@nandhaengg.org',
-            'admin.leetcode@nandhaengg.org'
+            'nanthishvaran17@gmail.com'
         }
         
         admin_usernames = {'admin', 'administrator', 'nanthishvaran'}

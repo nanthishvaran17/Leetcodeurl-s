@@ -172,7 +172,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
     list.sort((a, b) => {
       let valA: any = 0;
       let valB: any = 0;
-      
+
       if (sortConfig.key === 'solved') {
         valA = a.stats?.total_solved || 0;
         valB = b.stats?.total_solved || 0;
@@ -209,7 +209,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   const [modalTopY, setModalTopY] = useState<number | null>(null);
 
   const isServerPaginated = serverTotalCount !== undefined && !isFilteringActive;
-  
+
   // Ultra-Fast Paginated Table Viewport Rendering
   const [currentPage, setCurrentPage] = useState(serverPage || 1);
   const [pageSize, setPageSize] = useState<'25' | '50' | '100' | '200'>(serverPageSize ? String(serverPageSize) as any : '50');
@@ -242,7 +242,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
   const paginatedStudents = useMemo(() => {
     if (isServerPaginated) return effectiveStudents; // The server already paginated them!
-    
+
     const size = Number(pageSize);
     const start = (currentPage - 1) * size;
     return deferredSortedStudents.slice(start, start + size);
@@ -466,7 +466,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   const handleToggleStudent = useCallback((id: number) => {
     toggleStudent(id);
   }, []); // toggleStudent is defined outside of useCallback but updates via setState natively, wait - it depends on setSelectedIds which is stable, but toggleStudent itself is not memoized.
-  
+
   // It's safer to just define the body of toggleStudent inside useCallback
   const handleToggleStudentAction = useCallback((id: number) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -479,7 +479,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   const handleEditStudentAction = useCallback((s: any) => {
     handleOpenEdit(s);
   }, [/* dependencies of handleOpenEdit if any, but let's just destructure it */]);
-  
+
   // Wait, handleOpenEdit uses setModalTopY, setEditingStudent, etc. which are stable.
   // We can just redefine them or wrap them. Let's just use useCallback wrapping the state setters.
   const memoizedHandleView = useCallback((s: any, e?: any) => {
@@ -582,7 +582,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         {/* Table Header Wrapper (Sticky) */}
         <div className="hidden md:flex bg-slate-100/90 dark:bg-navy-900 text-slate-800 dark:text-slate-100 font-extrabold border-b border-slate-300 dark:border-navy-700 uppercase tracking-wider text-xs w-full min-w-full md:min-w-[1100px] items-center py-3.5">
           <div className="flex-none w-10 px-3 text-center">
-             <input type="checkbox" checked={deferredSortedStudents.length > 0 && selectedIds.length === deferredSortedStudents.length} onChange={toggleAll} className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
+            <input type="checkbox" checked={deferredSortedStudents.length > 0 && selectedIds.length === deferredSortedStudents.length} onChange={toggleAll} className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
           </div>
           <div className="flex-none w-24 px-3 text-left">Rank</div>
           <div className="flex-none w-32 px-3 text-left">Register No</div>
@@ -599,7 +599,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
           <div className="flex-none w-28 px-3 text-center">Profile Rank</div>
           <div className="flex-none w-32 px-3 text-center">Actions</div>
         </div>
-        
+
         {/* Virtualized Body */}
         <div className="flex-1 w-full min-w-full md:min-w-[1100px]">
           {loading ? (
@@ -684,11 +684,10 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                       key={size}
                       type="button"
                       onClick={() => handlePageSizeChange(size)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        pageSize === size
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${pageSize === size
                           ? 'bg-brand-600 text-white shadow-sm'
                           : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-700'
-                      }`}
+                        }`}
                     >
                       {size}
                     </button>
@@ -759,7 +758,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               items: oldData.items.map((s: any) => s.id === updated.id ? { ...s, ...updated } : s)
             };
           });
-          
+
           if (onUpdateStudent) {
             onUpdateStudent(updated);
           }
@@ -964,7 +963,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                   </div>
                   <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-slate-800 text-center">
                     <span className="text-[10px] font-bold text-slate-500 block">Contest Rating</span>
-                    <p 
+                    <p
                       className="text-sm sm:text-base font-black text-amber-500 mt-0.5 cursor-pointer"
                       title={(() => {
                         const r = viewingStudent.public_contest_result?.contest_rating || viewingStudent.stats?.contest_rating;

@@ -1095,7 +1095,11 @@ def search_candidates(
         if tot_subs is None:
             tot_subs = tot
 
-        c_rating = contest.contest_rating if contest and contest.contest_rating is not None else (getattr(stats, "contest_rating", None) if stats else getattr(st, "contest_rating", 0.0)) or 0.0
+        c_rating = (
+            contest.contest_rating if contest and contest.contest_rating is not None and contest.contest_rating > 0
+            else (getattr(stats, "contest_rating", None) if stats and getattr(stats, "contest_rating", None) is not None
+            else getattr(st, "contest_rating", 0.0))
+        ) or 0.0
         c_rank = (
             (contest.contest_global_ranking if contest and contest.contest_global_ranking else None)
             or (stats.contest_global_ranking if stats and stats.contest_global_ranking else None)

@@ -205,6 +205,13 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
             raw_sec_lc = _get_val("sec_leetcode_url")
             raw_section = _get_val("section")
             raw_batch = _get_val("batch")
+            raw_cutoff = _get_val("twelfth_cutoff") or _get_val("cutoff")
+            norm_cutoff = None
+            if raw_cutoff:
+                try:
+                    norm_cutoff = round(float(raw_cutoff), 2)
+                except Exception:
+                    norm_cutoff = None
 
             if not reg_no or not name:
                 error_rows.append({
@@ -264,6 +271,7 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
                 "leetcode_username": lc_username,
                 "section": raw_section or None,
                 "batch": norm_batch,
+                "twelfth_cutoff": norm_cutoff,
                 "is_new_dept": is_new_dept
             }
 
@@ -612,6 +620,13 @@ def commit_smart_excel_import(
             raw_sec_lc = _get_val("sec_leetcode_url")
             raw_section = _get_val("section")
             raw_batch = _get_val("batch")
+            raw_cutoff = _get_val("twelfth_cutoff") or _get_val("cutoff")
+            norm_cutoff = None
+            if raw_cutoff:
+                try:
+                    norm_cutoff = round(float(raw_cutoff), 2)
+                except Exception:
+                    norm_cutoff = None
 
             if not reg_no or not name:
                 error_rows.append({"row_num": row_num, "reg_no": reg_no or "N/A", "error": "Missing Reg No or Name"})
@@ -694,6 +709,7 @@ def commit_smart_excel_import(
                             secondary_status="approved" if sec_username else "none",
                             leetcode_url=lc_url,
                             batch=norm_batch,
+                            twelfth_cutoff=norm_cutoff,
                             is_active=True
                         )
                         db.add(new_st)
@@ -743,6 +759,9 @@ def commit_smart_excel_import(
                             has_changes = True
                         if norm_batch and str(getattr(existing_st, "batch", "") or "") != norm_batch:
                             setattr(existing_st, "batch", norm_batch)
+                            has_changes = True
+                        if norm_cutoff is not None and getattr(existing_st, "twelfth_cutoff", None) != norm_cutoff:
+                            setattr(existing_st, "twelfth_cutoff", norm_cutoff)
                             has_changes = True
 
                         if has_changes:
