@@ -266,8 +266,8 @@ async def get_leaderboard_fast(
                 sec_id = getattr(st, "secondary_leetcode_id", None)
                 sec_url = f"https://leetcode.com/u/{sec_id}/" if sec_id else None
 
-                # Clean public_profile_ranking if it has artificial > 5M value
-                clean_pub_rank = s.public_profile_ranking if (s and s.public_profile_ranking and s.public_profile_ranking < 5000000) else None
+                # Clean public_profile_ranking if it has artificial negative or invalid value
+                clean_pub_rank = s.public_profile_ranking if (s and s.public_profile_ranking and s.public_profile_ranking > 0) else None
 
                 results.append({
                     "id": st.id,

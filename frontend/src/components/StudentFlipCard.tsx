@@ -4,6 +4,7 @@ import { ExternalLink, Trophy, CheckCircle2, User, Trash2, ShieldCheck, Clock, A
 import { StudentData } from './LeaderboardTable';
 import { useStudentEntity } from '../stores/studentLiveStore';
 import { formatStudentYearBadge, formatDepartmentCode, deriveDepartmentFromRegNo } from '../utils/filterUtils';
+import { getContestRatingDisplay, getContestRankDisplay, getProfileRankDisplay } from './FastStudentRow';
 
 interface StudentFlipCardProps {
   student: StudentData;
@@ -322,25 +323,23 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 <div className="h-px w-2/3 mx-auto bg-gradient-to-r from-transparent via-slate-200 dark:via-navy-700 to-transparent" />
 
                 {/* Additional Stats */}
-                <div className="grid grid-cols-2 gap-3 text-center px-2">
-                  <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 p-2 rounded-xl border border-slate-200/80 dark:border-navy-800">
-                    <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-100 tracking-wider mb-0.5">Contest Rank</span>
-                    <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 truncate max-w-full">
-                      {(() => {
-                        const rawRank = student.stats?.contest_global_ranking ?? (student as any).contest_global_ranking ?? (student as any).global_rank ?? (student as any).contest_rank;
-                        if (!rawRank || Number(rawRank) <= 0 || Number(rawRank) === 50000) return '—';
-                        return `#${Number(rawRank).toLocaleString('en-US')}`;
-                      })()}
+                <div className="grid grid-cols-3 gap-1.5 text-center px-1">
+                  <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 p-1.5 rounded-xl border border-slate-200/80 dark:border-navy-800">
+                    <span className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider mb-0.5">Rating</span>
+                    <span className="text-xs font-black text-amber-600 dark:text-amber-400 truncate max-w-full">
+                      {getContestRatingDisplay(student)}
                     </span>
                   </div>
-                  <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 p-2 rounded-xl border border-slate-200/80 dark:border-navy-800">
-                    <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-100 tracking-wider mb-0.5">Global Rank</span>
-                    <span className="text-sm font-black text-slate-900 dark:text-slate-100 truncate max-w-full">
-                      {(() => {
-                        const rawProfileRank = student.stats?.public_profile_ranking ?? (student as any).public_profile_ranking ?? (student as any).profile_rank ?? (student as any).ranking;
-                        if (!rawProfileRank || Number(rawProfileRank) >= 5000000 || Number(rawProfileRank) <= 0) return '—';
-                        return `#${Number(rawProfileRank).toLocaleString('en-US')}`;
-                      })()}
+                  <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 p-1.5 rounded-xl border border-slate-200/80 dark:border-navy-800">
+                    <span className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider mb-0.5">Contest Rank</span>
+                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 truncate max-w-full">
+                      {getContestRankDisplay(student)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 p-1.5 rounded-xl border border-slate-200/80 dark:border-navy-800">
+                    <span className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider mb-0.5">Profile Rank</span>
+                    <span className="text-xs font-black text-slate-900 dark:text-slate-100 truncate max-w-full">
+                      {getProfileRankDisplay(student)}
                     </span>
                   </div>
                 </div>

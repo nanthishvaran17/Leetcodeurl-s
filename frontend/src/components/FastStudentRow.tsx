@@ -57,17 +57,17 @@ function getDeptCode(st: any): string {
   return '—';
 }
 
-function getContestRatingDisplay(st: any): string {
+export function getContestRatingDisplay(st: any): string {
   if (!st) return '—';
   const rawRating = st.stats?.contest_rating
     ?? st.contest_rating
     ?? st.public_contest_result?.contest_rating
     ?? st.lc_contest_standing?.contest_rating;
-  if (rawRating == null || Number(rawRating) <= 0 || Number(rawRating) === 1500) return '—';
+  if (rawRating == null || Number(rawRating) <= 0) return '—';
   return Math.round(Number(rawRating)).toLocaleString();
 }
 
-function getContestRankDisplay(st: any): string {
+export function getContestRankDisplay(st: any): string {
   if (!st) return '—';
   const rawRank = st.stats?.contest_global_ranking
     ?? st.stats?.global_rank
@@ -81,7 +81,7 @@ function getContestRankDisplay(st: any): string {
   return `#${Number(rawRank).toLocaleString()}`;
 }
 
-function getProfileRankDisplay(st: any): string {
+export function getProfileRankDisplay(st: any): string {
   if (!st) return '—';
   const rawProfileRank = st.stats?.public_profile_ranking
     ?? st.stats?.profile_global_ranking
@@ -92,8 +92,10 @@ function getProfileRankDisplay(st: any): string {
     ?? st.profile_global_ranking
     ?? st.ranking
     ?? st.lc_problem_stats?.profile_global_ranking;
-  if (!rawProfileRank || Number(rawProfileRank) <= 0 || Number(rawProfileRank) >= 5000000) return '—';
-  return `#${Number(rawProfileRank).toLocaleString()}`;
+  if (!rawProfileRank || Number(rawProfileRank) <= 0) return '—';
+  const val = Number(rawProfileRank);
+  if (val >= 5000000) return '~5,000,000';
+  return `#${val.toLocaleString()}`;
 }
 
 // million-ignore
