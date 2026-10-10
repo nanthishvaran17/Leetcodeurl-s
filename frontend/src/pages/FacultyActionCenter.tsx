@@ -95,10 +95,10 @@ const CustomSelect: React.FC<{
   }, [open]);
 
   return (
-    <div className="relative flex-1 sm:flex-initial min-w-0" ref={containerRef}>
+    <div className="relative flex-1 w-full md:w-auto md:flex-initial min-w-0 md:min-w-[102px]" ref={containerRef}>
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center justify-between gap-2 w-full sm:w-auto sm:min-w-[140px] px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-xs ${
+        className={`flex items-center justify-between gap-2 w-full sm:w-auto sm:min-w-[140px] px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-xs ${
           open 
             ? 'border-indigo-500 bg-white dark:bg-navy-950 ring-4 ring-indigo-500/10' 
             : value 
@@ -114,7 +114,7 @@ const CustomSelect: React.FC<{
                 {selected.badge}
               </span>
             )}
-            <span className="truncate text-left text-xs sm:text-sm whitespace-nowrap">{selected ? selected.label : placeholder}</span>
+            <span className="truncate text-left text-[11px] sm:text-sm whitespace-nowrap">{selected ? selected.label : placeholder}</span>
           </div>
         </div>
         <ChevronDown size={14} className={`transition-transform duration-300 shrink-0 ${open ? 'rotate-180 text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
@@ -284,7 +284,7 @@ const KPICard: React.FC<{
   return (
     <button
       onClick={onClick}
-      className={`flex-1 min-w-[130px] sm:min-w-[145px] text-left rounded-2xl p-4 border transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer relative overflow-hidden group shadow-xs ${
+      className={`flex-1 min-w-[130px] sm:min-w-[145px] text-left rounded-2xl p-3 sm:p-4 border transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer relative overflow-hidden group shadow-xs ${
         theme.cardBg
       } ${
         active
@@ -292,26 +292,26 @@ const KPICard: React.FC<{
           : `${theme.cardBorder} ${theme.hoverBorder}`
       }`}
     >
-      <div className="flex items-center justify-between gap-2 mb-2">
+      <div className="flex items-center justify-between gap-2 mb-1.5 sm:mb-2">
         <div className="flex items-center gap-1.5">
-          <span className={`p-1.5 rounded-xl ${theme.iconBg} ${theme.iconText} transition-colors shrink-0 shadow-xs`}>
-            {icon}
+          <span className={`p-1 rounded-lg sm:p-1.5 sm:rounded-xl ${theme.iconBg} ${theme.iconText} transition-colors shrink-0 shadow-xs`}>
+            {React.cloneElement(icon as React.ReactElement, { size: 13 })}
           </span>
-          <span className={`text-[11px] font-black uppercase tracking-wider ${theme.labelText} transition-colors truncate`}>
+          <span className={`text-[10px] sm:text-[11px] font-black uppercase tracking-wider ${theme.labelText} transition-colors truncate`}>
             {label}
           </span>
         </div>
         {active && <span className="w-2.5 h-2.5 rounded-full bg-current animate-ping opacity-75 shrink-0" />}
       </div>
-      <div className={`text-3xl font-black tracking-tight leading-none ${theme.numText}`}>
+      <div className={`text-2xl sm:text-3xl font-black tracking-tight leading-none ${theme.numText}`}>
         {value}
       </div>
       {subtitle ? (
-        <div className={`text-[10.5px] font-extrabold mt-2.5 truncate ${theme.subText}`}>
+        <div className={`text-[9.5px] sm:text-[10.5px] font-extrabold mt-1.5 sm:mt-2.5 truncate ${theme.subText}`}>
           {subtitle}
         </div>
       ) : (
-        <div className="h-4 mt-2.5" />
+        <div className="h-3 sm:h-4 mt-1.5 sm:mt-2.5" />
       )}
     </button>
   );
@@ -1084,7 +1084,7 @@ export const FacultyActionCenter: React.FC = () => {
               className="flex-1 bg-transparent border-none focus:ring-0 focus:border-transparent focus:outline-none !outline-none !ring-0 !border-none text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 placeholder:font-medium p-0 m-0"
             />
             {search && (
-              <button onClick={() => { setSearch(''); setPage(1); }} className="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-navy-800">
+              <button aria-label="Clear search" title="Clear search" onClick={() => { setSearch(''); setPage(1); }} className="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-navy-800">
                 <X size={14} />
               </button>
             )}
@@ -1092,7 +1092,8 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
 
         {/* Dropdown Filters (Flex container with adequate spacing) */}
-        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full md:w-auto">
+        <div className="grid grid-cols-2 md:flex md:flex-row items-stretch md:items-center gap-2.5 sm:gap-3 w-full md:w-auto">
+          <div className="col-span-1 min-w-0 w-full">
           <CustomSelect
             value={filterPriority}
             onChange={v => { 
@@ -1112,7 +1113,9 @@ export const FacultyActionCenter: React.FC = () => {
               { label: 'Low', value: 'Low', icon: <Activity size={14} />, badge: 'P4', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' }
             ]}
           />
+          </div>
           
+          <div className="col-span-1 min-w-0 w-full">
           <CustomSelect
             value={filterStatus}
             onChange={v => { 
@@ -1133,7 +1136,9 @@ export const FacultyActionCenter: React.FC = () => {
               { label: 'Resolved', value: 'Resolved', icon: <CheckCircle2 size={14} />, badge: 'RES', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' }
             ]}
           />
+          </div>
 
+          <div className="col-span-2 min-w-0 w-1/2 justify-self-center md:col-auto md:w-auto md:justify-self-auto">
           <CustomSelect
             value={filterYear}
             onChange={v => { setFilterYear(v); setPage(1); }}
@@ -1147,6 +1152,7 @@ export const FacultyActionCenter: React.FC = () => {
               { label: 'IV Year', value: 'IV Year', icon: <User size={14} />, badge: 'Y4', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' }
             ]}
           />
+          </div>
         </div>
 
         {/* Count & Page Size Toggle */}
@@ -1231,21 +1237,16 @@ export const FacultyActionCenter: React.FC = () => {
           </div>
         </div>
       ) : items.length === 0 ? (
-        <div className="relative overflow-hidden rounded-3xl bg-white/70 dark:bg-navy-950/70 border border-emerald-500/20 dark:border-emerald-500/30 p-8 sm:p-12 text-center shadow-xl backdrop-blur-xl transition-all duration-300">
-          {/* Decorative Ambient Radial Glow */}
-          <div className="absolute -top-24 -left-24 w-72 h-72 bg-emerald-400/20 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-brand-400/20 dark:bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 p-8 sm:p-12 text-center shadow-sm transition-all duration-300">
 
           <div className="relative z-10 max-w-md mx-auto flex flex-col items-center">
-            {/* Animated Icon Ring */}
+            {/* Static status icon */}
             <div className="relative mb-6">
-              <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-emerald-400 to-teal-400 opacity-30 dark:opacity-25 blur-lg animate-pulse" />
-              <div className="relative w-24 h-24 rounded-3xl bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 border border-emerald-200 dark:border-emerald-700/50 shadow-xl flex items-center justify-center overflow-hidden">
-                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/10 to-transparent" />
+              <div className="relative w-24 h-24 rounded-3xl bg-slate-100 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 flex items-center justify-center overflow-hidden">
                  {hasFilters || kpiFilter ? (
                     <Search className="w-10 h-10 text-slate-400 dark:text-slate-300 relative z-10" />
                   ) : (
-                    <CheckCircle2 className="w-12 h-12 text-emerald-500 dark:text-emerald-400 animate-bounce-slow relative z-10" />
+                    <CheckCircle2 className="w-12 h-12 text-emerald-500 dark:text-emerald-400 relative z-10" />
                   )}
               </div>
             </div>

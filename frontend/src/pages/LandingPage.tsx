@@ -741,7 +741,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <p className="text-xs md:text-sm text-slate-100 dark:text-slate-100 font-bold max-w-3xl leading-relaxed drop-shadow-sm">
-              Institutional competitive programming intelligence {activeDepartmentDescription} with verified Sunday contest forensics and automated reporting.
+              <span className="sm:hidden">Institutional programming intelligence across all departments, with verified Sunday contests and automated reporting.</span>
+              <span className="hidden sm:inline">Institutional competitive programming intelligence {activeDepartmentDescription} with verified Sunday contest forensics and automated reporting.</span>
             </p>
           </motion.div>
 
@@ -750,13 +751,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
-            className="flex flex-wrap items-center gap-4 pt-2"
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2"
           >
             <motion.button
-              whileHover={{ scale: 1.04 }}
+              whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={onViewDashboard}
-              className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-sm shadow-xl shadow-emerald-500/40 flex items-center space-x-2 transition-all cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-sm shadow-xl shadow-emerald-500/40 flex items-center justify-center space-x-2 transition-all cursor-pointer min-h-[48px]"
             >
               <span>View Executive Dashboard</span>
               <ArrowRight className="w-4 h-4 text-slate-950 stroke-[3]" />
@@ -770,18 +771,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
               return (
                 <motion.button
-                  whileHover={{ scale: 1.04 }}
+                  whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={handleRefreshAll}
                   disabled={refreshing || syncProgress?.is_running}
-                  className="px-5 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-black text-sm backdrop-blur-md shadow-xl flex items-center space-x-2 transition-all cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-black text-sm backdrop-blur-md shadow-xl flex items-center justify-center space-x-2 transition-all cursor-pointer min-h-[48px]"
                   title="Perform live synchronization for active student roster"
                 >
                   <RefreshCw className={`w-4 h-4 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
                   <span>
                     {refreshing || syncProgress?.is_running
-                      ? ` FETCHING ${processedCount} / ${totalProgress !== null ? totalProgress : '...'}`
-                      : ' FETCH LIVE DATA'}
+                      ? `FETCHING ${processedCount} / ${totalProgress !== null ? totalProgress : '...'}`
+                      : 'FETCH LIVE DATA'}
                   </span>
                 </motion.button>
               );
@@ -840,7 +841,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </motion.div>
 
       {/* Stat Cards Grid — Data-quality-aware with Framer Motion hover & AnimatedNumber */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-5">
         {(() => {
           const activeCohort = (selectedDept !== 'all' || isFiltered) ? sortedList : students;
           const totalStudents = activeCohort.length;
@@ -867,15 +868,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <motion.div
                 whileHover={{ y: -5, scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                className="glass-card p-6 sm:p-7 rounded-3xl space-y-2 border border-slate-200/80 dark:border-slate-800/80 shadow-lg relative overflow-hidden group cursor-default"
+                className="glass-card min-w-0 p-3 sm:p-7 rounded-2xl sm:rounded-3xl space-y-2 border border-slate-200/80 dark:border-slate-800/80 shadow-lg relative overflow-hidden group cursor-default"
               >
-                <div className="p-3 w-fit rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform">
-                  <Users className="w-7 h-7" />
+                <div className="p-2 sm:p-3 w-fit rounded-xl sm:rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform">
+                  <Users className="w-5 h-5 sm:w-7 sm:h-7" />
                 </div>
-                <h4 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                <h4 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none break-words">
                   <AnimatedNumber value={totalStudents} />
                 </h4>
-                <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100">
+                <p className="text-xs sm:text-base font-extrabold text-slate-800 dark:text-slate-100 leading-snug">
                   {isFacultyRole ? 'Allocated Mentees' : (selectedDept !== 'all' ? 'Department Enrolled Students' : 'Total Enrolled Students')}
                 </p>
               </motion.div>
@@ -883,20 +884,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <motion.div
                 whileHover={{ y: -5, scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                className="glass-card p-6 sm:p-7 rounded-3xl space-y-2 border border-slate-200/80 dark:border-slate-800/80 shadow-lg relative overflow-hidden group cursor-default"
+                className="glass-card min-w-0 p-3 sm:p-7 rounded-2xl sm:rounded-3xl space-y-2 border border-slate-200/80 dark:border-slate-800/80 shadow-lg relative overflow-hidden group cursor-default"
               >
-                <div className="p-3 w-fit rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
-                  <CheckCircle2 className="w-6 h-6" />
+                <div className="p-2 sm:p-3 w-fit rounded-xl sm:rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                  <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
-                <h4 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                <h4 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none break-words">
                   <AnimatedNumber value={verified} />
                 </h4>
-                <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100">Verified Profiles</p>
+                <p className="text-xs sm:text-base font-extrabold text-slate-800 dark:text-slate-100 leading-snug">Verified Profiles</p>
                 {(pending > 0 || failed > 0 || noUsername > 0) && (
-                  <div className="text-xs font-bold text-slate-600 dark:text-slate-300 flex flex-wrap items-center gap-1.5 pt-1">
-                    {pending > 0 && <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/50">{pending} Pending</span>}
-                    {noUsername > 0 && <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">{noUsername} No Username</span>}
-                    {failed > 0 && <span className="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/50">{failed} Failed</span>}
+                  <div className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 flex flex-wrap items-center gap-1 pt-1 leading-4">
+                    {pending > 0 && <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/50 whitespace-nowrap">{pending} Pending</span>}
+                    {noUsername > 0 && <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 whitespace-nowrap">{noUsername} No Username</span>}
+                    {failed > 0 && <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/50 whitespace-nowrap">{failed} Failed</span>}
                   </div>
                 )}
               </motion.div>
@@ -904,16 +905,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <motion.div
                 whileHover={{ y: -5, scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                className="glass-card p-6 sm:p-7 rounded-3xl space-y-2 border border-slate-200/80 dark:border-slate-800/80 shadow-lg relative overflow-hidden group cursor-default"
+                className="glass-card min-w-0 p-3 sm:p-7 rounded-2xl sm:rounded-3xl space-y-2 border border-slate-200/80 dark:border-slate-800/80 shadow-lg relative overflow-hidden group cursor-default"
               >
-                <div className="p-3 w-fit rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
-                  <Trophy className="w-6 h-6" />
+                <div className="p-2 sm:p-3 w-fit rounded-xl sm:rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
+                  <Trophy className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
-                <h4 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                <h4 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none break-words">
                   <AnimatedNumber value={verifiedProblems} />
                 </h4>
-                <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100">Verified Problems Solved</p>
-                <p className="text-xs sm:text-sm font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/50 px-2.5 py-1 rounded-lg border border-purple-200/60 dark:border-purple-800/40 w-fit">
+                <p className="text-xs sm:text-base font-extrabold text-slate-800 dark:text-slate-100 leading-snug">Verified Problems Solved</p>
+                <p className="max-w-full text-[10px] sm:text-sm font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/50 px-1.5 sm:px-2.5 py-1 rounded-lg border border-purple-200/60 dark:border-purple-800/40 w-fit leading-4 sm:leading-5">
                   from <span className="font-extrabold">{activeSolvers.toLocaleString()}</span> active solvers
                 </p>
               </motion.div>
@@ -921,15 +922,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <motion.div
                 whileHover={{ y: -5, scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                className="glass-card p-6 sm:p-7 rounded-3xl space-y-2 border border-amber-200/80 dark:border-amber-900/40 shadow-lg relative overflow-hidden group cursor-default gold-aura"
+                className="glass-card min-w-0 p-3 sm:p-7 rounded-2xl sm:rounded-3xl space-y-2 border border-amber-200/80 dark:border-amber-900/40 shadow-lg relative overflow-hidden group cursor-default gold-aura"
               >
-                <div className="p-3 w-fit rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
-                  <Trophy className="w-6 h-6 fill-amber-500" />
+                <div className="p-2 sm:p-3 w-fit rounded-xl sm:rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
+                  <Trophy className="w-5 h-5 sm:w-6 sm:h-6 fill-amber-500" />
                 </div>
-                <h4 className="text-2xl sm:text-3xl font-black text-amber-500 truncate" title={activeCohort.length > 0 ? activeCohort[0].name : (summaryData?.top_college_ranker || 'Top Ranker')}>
+                <h4 className="text-lg sm:text-3xl font-black text-amber-500 break-words leading-tight" title={activeCohort.length > 0 ? activeCohort[0].name : (summaryData?.top_college_ranker || 'Top Ranker')}>
                   {activeCohort.length > 0 ? activeCohort[0].name : (summaryData?.top_college_ranker || 'Top Ranker')}
                 </h4>
-                <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100">
+                <p className="text-xs sm:text-base font-extrabold text-slate-800 dark:text-slate-100 leading-snug">
                   {isFacultyRole ? 'Top Mentee Ranker (#1)' : (selectedDept !== 'all' ? 'Top Department Ranker (#1)' : 'Top College Ranker (#1)')}
                 </p>
               </motion.div>
@@ -939,10 +940,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </div>
 
       {/* Filters Control Bar */}
-      <div className="glass-card p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 relative z-30 overflow-visible">
+      <div className="glass-card p-4 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 sm:space-y-6 relative z-30 overflow-visible">
 
         {/* Header with Title & Controls */}
-        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div className="flex items-center justify-between flex-wrap gap-3 sm:gap-4 border-b border-slate-100 dark:border-slate-800 pb-3 sm:pb-4">
           <div className="space-y-1">
             <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center space-x-2">
               <Filter className="w-4 h-4 text-brand-500" />
@@ -980,7 +981,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
 
         {/* 5 Filter & Search Controls — Pixel-Perfect Uniform Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5 sm:gap-4">
 
           {/* 1. Department Filter */}
           {isFacultyRole ? (
@@ -1028,7 +1029,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           />
 
           {/* 3. Name Search */}
-          <div className="flex flex-col space-y-1.5 min-w-0 w-full">
+          <div className="col-span-2 sm:col-span-1 flex flex-col space-y-1.5 min-w-0 w-full">
             <label htmlFor="landing-name-search" className="block text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider truncate flex items-center h-4 leading-4 m-0 p-0">
               Search Student Name
             </label>

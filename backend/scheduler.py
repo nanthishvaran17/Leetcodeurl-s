@@ -543,6 +543,25 @@ async def daily_rating_update_job():
     finally:
         db.close()
 
+@with_global_lock('notification_outbox_worker', timeout_minutes=5)
+async def notification_outbox_worker_job():
+    """Drain pending notification deliveries and retry transient provider failures."""
+    db = SessionLocal()
+    try:
+        from backend.services.notification_outbox_worker import NotificationOutboxWorker
+        result = NotificationOutboxWorker.process_outbox_queue(db, limit=50)
+        if result.get("processed") or result.get("failed"):
+            logger.info(
+                "[NOTIFICATION_OUTBOX] processed=%s success=%s failed=%s",
+                result.get("processed", 0),
+                result.get("success", 0),
+                result.get("failed", 0),
+            )
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Notification outbox worker error: {e}", exc_info=True)
+    finally:
+        db.close()
+
 async def tracker_dual_sync_morning():
     """Sunday 10:00 AM IST: Post-official contest mass scrape & GREEN/YELLOW/RED classification."""
     logger.info("[TRACKER] Dual-Sync Job 1: Sunday 10:00 AM IST — Official Contest Batch Scrape starting...")
@@ -1020,6 +1039,18 @@ def start_scheduler():
         replace_existing=True,
         max_instances=1, coalesce=True, misfire_grace_time=3600
     )
+
+    # Job: Transactional notification outbox drain and retry worker (every minute)
+    scheduler.add_job(
+        notification_outbox_worker_job,
+        IntervalTrigger(minutes=1, timezone=IST),
+        id='notification_outbox_worker',
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=120
+    )
+    logger.info("[NOTIFICATION_OUTBOX] worker_registered interval=1m")
 
     # DAILY AUTOMATIC NOTIFICATION ENGINE JOBS (Asia/Kolkata IST) 
     # Job: Daily 10:00 AM IST Faculty Performance Analysis & Digest

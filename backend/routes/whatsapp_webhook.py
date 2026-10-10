@@ -211,16 +211,17 @@ def link_whatsapp_number(
 @router.get("/status")
 def get_whatsapp_production_status():
     """Returns Meta WhatsApp Cloud API production status & configuration."""
+    live_configured = meta_whatsapp_client.is_live_configured()
     return {
-        "status": "OPERATIONAL",
+        "status": "OPERATIONAL" if live_configured else "NOT_CONFIGURED",
         "service": "Nandha LeetCode WhatsApp Agent",
         "api_version": meta_whatsapp_client.api_version,
         "production_callback_url": meta_whatsapp_client.production_webhook_url,
-        "is_live_configured": meta_whatsapp_client.is_live_configured(),
-        "phone_number_id_configured": bool(meta_whatsapp_client.phone_number_id),
-        "waba_id_configured": bool(meta_whatsapp_client.business_account_id),
-        "verify_token_configured": bool(meta_whatsapp_client.verify_token),
-        "app_secret_configured": bool(meta_whatsapp_client.app_secret),
+        "is_live_configured": live_configured,
+        "phone_number_id_configured": bool(meta_whatsapp_client.phone_number_id and meta_whatsapp_client.phone_number_id != "mock_phone_number_id"),
+        "waba_id_configured": bool(meta_whatsapp_client.business_account_id and meta_whatsapp_client.business_account_id != "mock_waba_id"),
+        "verify_token_configured": bool(os.environ.get("WHATSAPP_WEBHOOK_VERIFY_TOKEN") or os.environ.get("WHATSAPP_VERIFY_TOKEN")),
+        "app_secret_configured": bool(os.environ.get("WHATSAPP_APP_SECRET")),
         "subscribed_webhook_fields": ["messages", "statuses", "message_template_status_update"],
         "rate_limiting_active": True,
         "deduplication_active": True,

@@ -156,7 +156,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     <div className="space-y-8 pb-10 animate-fade-in">
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
         {/* Animated Decorative Ambient Light Beams */}
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl animate-pulse pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl animate-pulse pointer-events-none delay-1000" />
@@ -171,7 +171,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
             <div className="space-y-1.5">
               <h1 className="text-3xl md:text-4xl font-display font-black tracking-tight leading-tight">
-                Department & Academic <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-300 via-teal-200 to-indigo-300 animate-pulse">Year Dashboard</span>
+                Department & Academic <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400">Year Dashboard</span>
               </h1>
               <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide leading-relaxed">
                 Filter students by Department, Academic Year, Name & Performance side-by-side

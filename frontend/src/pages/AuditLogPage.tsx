@@ -198,7 +198,15 @@ export const AuditLogPage: React.FC = () => {
   };
 
   const handlePrintAuditLogReport = () => {
-    window.print();
+    if (typeof window === 'undefined' || typeof window.print !== 'function') {
+      notify.error('Print unavailable', 'This browser does not support printing. Open the page in a browser to print the audit report.', { category: 'ADMIN' });
+      return;
+    }
+
+    // Let the mobile browser finish the click event before opening its print dialog.
+    requestAnimationFrame(() => {
+      window.setTimeout(() => window.print(), 50);
+    });
   };
 
   const roleOptions: DropdownOption[] = useMemo(() => [
@@ -207,6 +215,7 @@ export const AuditLogPage: React.FC = () => {
     { value: 'Super Admin', label: 'Super Admin', badge: 'SUPER', badgeColor: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-300 dark:border-purple-700' },
     { value: 'MANAGEMENT', label: 'MANAGEMENT', badge: 'MGMT', badgeColor: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 dark:border-blue-700' },
     { value: 'HOD', label: 'HOD', badge: 'DEPT', badgeColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700' },
+    { value: 'STAFF', label: 'STAFF', badge: 'TEAM', badgeColor: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 border-cyan-300 dark:border-cyan-700' },
     { value: 'SYSTEM', label: 'SYSTEM', badge: 'AUTO', badgeColor: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-700' },
   ], []);
 
@@ -275,28 +284,28 @@ export const AuditLogPage: React.FC = () => {
     <div className="space-y-6 pt-2 pb-16 animate-slideUp">
       
       {/* HEADER */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-6 md:p-8 shadow-2xl border border-indigo-500/20">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-5 sm:p-6 md:p-8 shadow-2xl border border-indigo-500/20">
         <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
           <div className="absolute top-0 right-0 -mt-16 -mr-16 w-96 h-96 bg-indigo-500/8 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-72 h-72 bg-brand-500/6 rounded-full blur-3xl"></div>
         </div>
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-indigo-500/15 border border-indigo-400/25 text-indigo-300 text-xs font-black">
+          <div className="space-y-3 max-w-2xl min-w-0">
+            <div className="inline-flex max-w-full items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-400/25 text-indigo-300 text-[10px] sm:text-xs font-black">
               <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-              <span>ADMIN IDENTITY & AUDIT TRAIL</span>
+              <span className="truncate">ADMIN IDENTITY & AUDIT TRAIL</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white leading-tight break-words">
               Admin Identity & <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-sky-300 to-violet-400">Audit Log</span>
             </h1>
             <p className="text-xs md:text-sm text-slate-300 font-semibold leading-relaxed">
               Real-time database audit log recording administrator identity, logins, page visits, report generation, email dispatches & setting modifications. Click any log entry to inspect full event telemetry.
             </p>
           </div>
-          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0 self-start xl:self-center">
+          <div className="grid grid-cols-2 gap-2.5 w-full xl:w-auto shrink-0 self-start xl:self-center">
             <button
               onClick={handlePrintAuditLogReport}
-              className="inline-flex items-center justify-center space-x-2 px-5 py-2.5 h-11 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-2xl text-xs font-black transition-all cursor-pointer backdrop-blur-md border border-white/15 shadow-sm whitespace-nowrap"
+              className="inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-2 sm:px-5 py-2.5 h-11 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-2xl text-[11px] sm:text-xs font-black transition-all cursor-pointer backdrop-blur-md border border-white/15 shadow-sm whitespace-nowrap"
               title="Print Audit Log Report"
             >
               <Printer className="w-4 h-4 text-amber-300" />
@@ -304,7 +313,7 @@ export const AuditLogPage: React.FC = () => {
             </button>
             <button
               onClick={handleExportAuditLogsExcel}
-              className="inline-flex items-center justify-center space-x-2 px-5 py-2.5 h-11 bg-emerald-600/80 hover:bg-emerald-500 active:scale-95 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-600/20 transition-all cursor-pointer border border-emerald-400/30 whitespace-nowrap"
+              className="inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-2 sm:px-5 py-2.5 h-11 bg-emerald-600/80 hover:bg-emerald-500 active:scale-95 text-white rounded-2xl text-[11px] sm:text-xs font-black shadow-lg shadow-emerald-600/20 transition-all cursor-pointer border border-emerald-400/30 whitespace-nowrap"
               title="Export formatted Excel report with clean column widths"
             >
               <Download className="w-4 h-4 text-emerald-200" />
@@ -313,7 +322,7 @@ export const AuditLogPage: React.FC = () => {
             <button
               onClick={() => fetchLogs()}
               disabled={loading}
-              className="inline-flex items-center justify-center space-x-2 px-5 py-2.5 h-11 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-indigo-600/25 transition-all cursor-pointer active:scale-95 border border-indigo-400/30 whitespace-nowrap"
+              className="col-span-2 inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-3 sm:px-5 py-2.5 h-11 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white rounded-2xl text-[11px] sm:text-xs font-black shadow-lg shadow-indigo-600/25 transition-all cursor-pointer active:scale-95 border border-indigo-400/30 whitespace-nowrap"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               <span>{loading ? 'Refreshing...' : 'Refresh Logs'}</span>
@@ -552,12 +561,12 @@ export const AuditLogPage: React.FC = () => {
                     }`}
                   >
                     {/* Row 1: Audit ID + Action + Status */}
-                    <div className="flex items-center justify-between gap-2 mb-2.5">
+                    <div className="flex flex-col items-stretch gap-2 mb-2.5">
                       <div className="flex items-center space-x-1.5 min-w-0">
                         <Eye className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                         <span className="font-mono font-extrabold text-indigo-600 dark:text-indigo-400 text-[11px] truncate">{log.audit_id}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase font-mono border ${actionStyle.bg}`}>
                           {actionStyle.icon}
                           {log.action}

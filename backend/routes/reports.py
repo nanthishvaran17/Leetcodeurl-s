@@ -669,6 +669,8 @@ def download_pdf_report(
     status: Optional[str] = Query("ALL"),
     search: Optional[str] = Query(""),
     session_id: Optional[str] = Query("latest"),
+    report_type: Optional[str] = Query(None),
+    title: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user_optional)
 ):
@@ -684,12 +686,105 @@ def download_pdf_report(
             if d_obj:
                 eff_dept = getattr(d_obj, "code", None) or getattr(d_obj, "name", None)
 
-        pdf_bytes = generate_pdf_report(
-            db=db,
-            department=eff_dept if eff_dept != "ALL" else None,
-            year=eff_year if eff_year != "ALL" else None,
-            current_user=current_user
+        eff_report_type = (report_type or "").upper()
+        eff_title = (title or "").lower()
+
+        is_top_performers = (
+            "TOP" in eff_report_type or "PERFORMER" in eff_report_type or "STUDENT_PERFORMANCE" in eff_report_type or "top" in eff_title
         )
+
+        if is_top_performers:
+            from backend.exporters.dynamic_pdf_exporter import export_dynamic_pdf
+            from backend.models import Student, Department, LeetCodeProfileStats, LanguageStats
+            from sqlalchemy.orm import joinedload
+            from sqlalchemy import desc, func
+
+            export_rows = []
+            scope_dept = eff_dept if eff_dept != "ALL" else "Institutional"
+            scope_year = f"{eff_year} Year" if eff_year != "ALL" else "All Years"
+            
+            eff_lang = (language or "").strip()
+            
+            if eff_lang and eff_lang.upper() != "ALL":
+                lang_stats = (
+                    db.query(LanguageStats, Student, LeetCodeProfileStats)
+                    .join(Student, LanguageStats.student_id == Student.id)
+                    .outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)
+                    .filter(Student.status == 'VERIFIED')
+                    .filter(func.lower(LanguageStats.language_name) == eff_lang.lower())
+                )
+                if eff_dept and eff_dept != "ALL":
+                    lang_stats = lang_stats.join(Department, Student.department_id == Department.id)
+                    lang_stats = lang_stats.filter(Department.code.ilike(f"%{eff_dept}%"))
+                if eff_year and eff_year != "ALL":
+                    lang_stats = lang_stats.filter(Student.year_level.ilike(f"%{eff_year}%"))
+                
+                top_students = (
+                    lang_stats.order_by(desc(func.coalesce(LanguageStats.problems_solved, 0)))
+                    .limit(50)
+                    .all()
+                )
+                
+                for idx, (l_stat, s, p_stat) in enumerate(top_students):
+                    export_rows.append({
+                        "Rank": f"#{idx + 1}",
+                        "Register Number": s.reg_no or "",
+                        "Student Name": s.name or "",
+                        "Department": (s.department.code if s.department else "") or "",
+                        "Year": s.year_level or "",
+                        f"{eff_lang} Solved": l_stat.problems_solved or 0,
+                        "Total Solved": p_stat.total_solved if p_stat else 0,
+                        "Contest Rating": round(float(p_stat.contest_rating or 0), 1) if p_stat and p_stat.contest_rating else "Unrated"
+                    })
+                pdf_dataset = {
+                    "reportTitle": f"Top Performers Leaderboard in {eff_lang} ({scope_dept} • {scope_year})",
+                    "rows": export_rows,
+                    "reportType": "TOP_PERFORMERS"
+                }
+            else:
+                top_stats = (
+                    db.query(LeetCodeProfileStats, Student)
+                    .join(Student, LeetCodeProfileStats.student_id == Student.id)
+                    .filter(Student.status == 'VERIFIED')
+                )
+                if eff_dept and eff_dept != "ALL":
+                    top_stats = top_stats.join(Department, Student.department_id == Department.id)
+                    top_stats = top_stats.filter(Department.code.ilike(f"%{eff_dept}%"))
+                if eff_year and eff_year != "ALL":
+                    top_stats = top_stats.filter(Student.year_level.ilike(f"%{eff_year}%"))
+                
+                top_students = (
+                    top_stats.order_by(desc(func.coalesce(LeetCodeProfileStats.total_solved, 0)))
+                    .limit(50)
+                    .all()
+                )
+
+                for idx, (p_stat, s) in enumerate(top_students):
+                    export_rows.append({
+                        "Rank": f"#{idx + 1}",
+                        "Register Number": s.reg_no or "",
+                        "Student Name": s.name or "",
+                        "Department": (s.department.code if s.department else "") or "",
+                        "Year": s.year_level or "",
+                        "Easy Solved": p_stat.easy_solved if p_stat else 0,
+                        "Medium Solved": p_stat.medium_solved if p_stat else 0,
+                        "Hard Solved": p_stat.hard_solved if p_stat else 0,
+                        "Total Solved": p_stat.total_solved if p_stat else 0,
+                        "Contest Rating": round(float(p_stat.contest_rating or 0), 1) if p_stat and p_stat.contest_rating else "Unrated"
+                    })
+                pdf_dataset = {
+                    "reportTitle": f"Top Performers Leaderboard ({scope_dept} • {scope_year})",
+                    "rows": export_rows,
+                    "reportType": "TOP_PERFORMERS"
+                }
+            pdf_bytes = export_dynamic_pdf(pdf_dataset)
+        else:
+            pdf_bytes = generate_pdf_report(
+                db=db,
+                department=eff_dept if eff_dept != "ALL" else None,
+                year=eff_year if eff_year != "ALL" else None,
+                current_user=current_user
+            )
 
         # Dynamic filename: pull latest contest number from DB
         today_str = get_ist_date().strftime("%d-%m-%Y")

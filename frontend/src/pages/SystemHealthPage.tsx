@@ -1012,17 +1012,17 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       {activeOpsTab === 'overview' && (
         <div className="space-y-6">
           {/* Institutional Configuration Banner Card */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
               <div>
                 <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
                   Admin System Control Center
                 </h3>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold mt-1 leading-relaxed">
                   Institutional Configuration • Automation • Integrity • Recovery • Nandha Engineering College
                 </p>
               </div>
-              <span className="text-[10px] font-mono text-slate-400 self-start sm:self-center">
+              <span className="inline-flex w-fit px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-[10px] font-mono font-bold text-slate-600 dark:text-slate-300 self-start sm:self-center">
                 Last configuration update: 2026-08-15 15:37:34 IST
               </span>
             </div>
@@ -1077,8 +1077,8 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           </div>
 
           {/* Admin Identity & Audit Log Card Box */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <Fingerprint className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -1086,14 +1086,14 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                     Admin Identity & Audit Log
                   </h4>
                 </div>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed max-w-2xl">
                   Real-time database audit log recording administrator identity, logins, report generation, email
                   dispatches & setting modifications.
                 </p>
               </div>
               <button
                 onClick={() => setActiveOpsTab('audit')}
-                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline self-start sm:self-center cursor-pointer"
+                className="min-h-[40px] px-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-xs font-extrabold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors self-start sm:self-center cursor-pointer whitespace-nowrap"
               >
                 View Full Audit Stream →
               </button>

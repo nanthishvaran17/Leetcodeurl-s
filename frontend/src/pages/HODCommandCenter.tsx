@@ -395,7 +395,8 @@ const StaffAllocationModal: React.FC<{
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  {workload.map(fac => {
  const count = fac.assigned_students || 0;
- const pct = Math.min(100, Math.round((count / 20) * 100));
+ const maxCapacity = fac.max_capacity || 20;
+ const pct = Math.min(100, Math.round((count / maxCapacity) * 100));
  const initials = (fac.faculty_name || 'FC')
  .split(' ')
  .filter(Boolean)
@@ -404,7 +405,7 @@ const StaffAllocationModal: React.FC<{
  .substring(0, 2)
  .toUpperCase();
 
- const isOverloaded = count > 20;
+ const isOverloaded = count > maxCapacity;
  const isAtRatio = fac.workload_status === 'AT_RATIO';
 
  const badgeStyle = isOverloaded
@@ -446,16 +447,16 @@ const StaffAllocationModal: React.FC<{
                     <span className={`px-2.5 py-1 rounded-full text-xs font-black border flex items-center gap-1.5 shrink-0 shadow-2xs ${
                       isOverloaded
                         ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30'
-                        : count === 20
+                        : count === maxCapacity
                         ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
                         : count > 0
                         ? 'bg-brand-500/10 text-brand-700 dark:text-brand-300 border-brand-500/30'
                         : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
                     }`}>
                       <span className={`w-2 h-2 rounded-full ${
-                        isOverloaded ? 'bg-rose-500 animate-ping' : count === 20 ? 'bg-amber-500' : count > 0 ? 'bg-brand-500' : 'bg-emerald-500'
+                        isOverloaded ? 'bg-rose-500 animate-ping' : count === maxCapacity ? 'bg-amber-500' : count > 0 ? 'bg-brand-500' : 'bg-emerald-500'
                       }`} />
-                      {count}/20 ({pct}%)
+                      {count}/{maxCapacity} ({pct}%)
                     </span>
                   </div>
 
@@ -467,20 +468,20 @@ const StaffAllocationModal: React.FC<{
                         Mentorship Workload
                       </span>
                       <span className="font-mono font-black text-xs text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                        <span className="text-brand-600 dark:text-brand-400">{count}</span> / 20 slots
+                        <span className="text-brand-600 dark:text-brand-400">{count}</span> / {maxCapacity} slots
                         <span className={`text-[10px] font-sans font-extrabold px-1.5 py-0.5 rounded ${
-                          20 - count > 0 
+                          maxCapacity - count > 0 
                             ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                             : 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
                         }`}>
-                          {20 - count > 0 ? `${20 - count} free` : 'Full'}
+                          {maxCapacity - count > 0 ? `${maxCapacity - count} free` : 'Full'}
                         </span>
                       </span>
                     </div>
 
                     {/* 20 Segmented Slot Blocks Indicator */}
                     <div className="flex gap-1 h-3.5 items-center">
-                      {Array.from({ length: 20 }).map((_, idx) => {
+                      {Array.from({ length: maxCapacity }).map((_, idx) => {
                         const isSlotFilled = idx < count;
                         return (
                           <div
@@ -490,7 +491,7 @@ const StaffAllocationModal: React.FC<{
                               isSlotFilled
                                 ? isOverloaded
                                   ? 'bg-rose-500 shadow-xs shadow-rose-500/30'
-                                  : count === 20
+                                  : count === maxCapacity
                                   ? 'bg-amber-500 shadow-xs shadow-amber-500/30'
                                   : 'bg-gradient-to-t from-emerald-600 to-teal-400 dark:from-emerald-500 dark:to-teal-300 shadow-xs shadow-emerald-500/30'
                                 : 'bg-slate-200/80 dark:bg-navy-800/80 border border-slate-300/50 dark:border-navy-700/50 hover:bg-slate-300 dark:hover:bg-navy-700'
@@ -506,7 +507,7 @@ const StaffAllocationModal: React.FC<{
                         className={`h-full rounded-full transition-all duration-500 ease-out ${
                           isOverloaded
                             ? 'bg-gradient-to-r from-rose-500 via-pink-500 to-red-600'
-                            : count === 20
+                            : count === maxCapacity
                             ? 'bg-gradient-to-r from-amber-500 to-orange-400'
                             : count > 0
                             ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-brand-500'
@@ -523,17 +524,17 @@ const StaffAllocationModal: React.FC<{
                       <span>Assigned Mentees ({fac.students?.length || 0})</span>
                       {fac.students && fac.students.length > 0 && (
                         <span className="text-[10px] text-slate-700 dark:text-slate-200 font-extrabold">
-                          {20 - count} slots available
+                          {Math.max(0, maxCapacity - count)} slots available
                         </span>
                       )}
                     </div>
 
                     {fac.students && fac.students.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1 custom-scrollbar content-start">
+                      <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-1 custom-scrollbar content-start">
                         {fac.students.map(s => (
                           <span
                             key={s.id}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-[11px] font-bold text-slate-700 dark:text-slate-300 shadow-2xs group/tag hover:border-rose-300 dark:hover:border-rose-800 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-navy-800 border border-slate-200/90 dark:border-navy-700 text-[11px] font-bold text-slate-700 dark:text-slate-300 shadow-sm group/tag hover:-translate-y-0.5 hover:border-rose-300 dark:hover:border-rose-800 hover:shadow-md transition-all"
                           >
                             <span className="w-4 h-4 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-[9px] font-black flex items-center justify-center shrink-0">
                               {s.name ? s.name.charAt(0).toUpperCase() : 'S'}
@@ -542,7 +543,7 @@ const StaffAllocationModal: React.FC<{
                             <button
                               onClick={() => handleUnassignStudent(fac.faculty_id, s.id)}
                               title="Unassign mentee"
-                              className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-0.5 rounded transition-colors flex items-center justify-center hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                              className="!min-h-0 !min-w-0 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 rounded-lg transition-colors flex items-center justify-center hover:bg-rose-50 dark:hover:bg-rose-500/10"
                             >
                               <X size={12} strokeWidth={2.5} />
                             </button>
@@ -552,7 +553,7 @@ const StaffAllocationModal: React.FC<{
                     ) : (
                       <div className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2 py-2.5 px-3.5 rounded-xl border border-emerald-200/80 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-2xs">
                         <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                        <span>No mentees assigned — 20 slots ready for allocation</span>
+                        <span>No mentees assigned — {maxCapacity} slots ready for allocation</span>
                       </div>
                     )}
                   </div>
@@ -1483,7 +1484,7 @@ export const HODCommandCenter: React.FC = () => {
 
 
  {/* 1. HEADER */}
- <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
+ <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 shadow-lg border border-brand-500/30">
  <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
  <div className="space-y-3">
  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
@@ -1495,7 +1496,7 @@ export const HODCommandCenter: React.FC = () => {
  : 'NANDHA INTELLIGENCE COMMAND'}
  </span>
  </div>
- <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white mt-1 uppercase">
+ <h1 className="text-[2rem] leading-[1.05] md:text-4xl font-black tracking-tight text-white mt-1 uppercase max-w-xl">
  {['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? (
  <>
  MY FACULTY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">ACTION CENTER</span>
@@ -1519,15 +1520,15 @@ export const HODCommandCenter: React.FC = () => {
  </p>
  </div>
 
- <div className="flex items-center gap-2.5 flex-wrap">
+ <div className="grid grid-cols-2 items-center gap-2.5 w-full sm:w-auto sm:flex sm:flex-wrap sm:justify-end">
  {/* Live Status Pill */}
  {wsConnected ? (
- <div className="inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-emerald-950/60 text-emerald-400 text-xs font-mono font-bold border border-emerald-800/60 shadow-inner">
+ <div className="col-span-2 inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-emerald-950/60 text-emerald-400 text-xs font-mono font-bold border border-emerald-800/60 shadow-inner sm:col-span-auto">
  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
  <span>LIVE • {lastLiveTimestamp}</span>
  </div>
  ) : (
- <div className="inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-amber-950/60 text-amber-400 text-xs font-mono font-bold border border-amber-800/60 shadow-inner">
+ <div className="col-span-2 inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-amber-950/60 text-amber-400 text-xs font-mono font-bold border border-amber-800/60 shadow-inner sm:col-span-auto">
  <AlertTriangle size={14} />
  <span>RECONNECTING...</span>
  </div>
@@ -1536,7 +1537,7 @@ export const HODCommandCenter: React.FC = () => {
  {/* HOD Staff Allocation Manager Button */}
  <button
  onClick={() => setShowStaffAllocationModal(true)}
- className="inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 border border-purple-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+ className="inline-flex min-w-0 items-center justify-center gap-2 h-9 px-2.5 sm:px-3.5 rounded-xl bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 border border-purple-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
  >
  <Users size={14} />
  <span>Staff Allocation</span>
@@ -1545,7 +1546,7 @@ export const HODCommandCenter: React.FC = () => {
  {/* Dedicated Report Hub Button */}
  <button
  onClick={() => setShowReportHubModal(true)}
- className="inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+ className="inline-flex min-w-0 items-center justify-center gap-2 h-9 px-2.5 sm:px-3.5 rounded-xl bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
  >
  <FileSpreadsheet size={14} />
  <span>Dedicated Reports</span>
@@ -1554,7 +1555,7 @@ export const HODCommandCenter: React.FC = () => {
  {/* Refresh Button */}
  <button
  onClick={() => { setRefreshing(true); clearApiCache(); loadScopedData(false, true); loadStudents(); }}
- className="inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 border border-slate-700/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+ className="col-span-2 inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 border border-slate-700/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95 sm:col-span-auto"
  >
  <RotateCcw size={14} className={refreshing ? 'animate-spin' : ''} />
  <span>Refresh</span>
@@ -2247,15 +2248,15 @@ export const HODCommandCenter: React.FC = () => {
  setSelectedDept(String(d.department_id));
  setSelectedDeptIntelligence(d);
  }}
- className={`p-3.5 rounded-xl border transition cursor-pointer space-y-2.5 ${
+ className={`p-3.5 rounded-2xl border transition cursor-pointer space-y-3 ${
  isSelected 
  ? 'bg-brand-50/70 dark:bg-brand-900/30 border-brand-500 shadow-md ring-1 ring-brand-500/50' 
  : 'bg-slate-50/70 dark:bg-navy-950/70 border-slate-200 dark:border-navy-800'
  }`}
  >
  {/* Top Bar */}
- <div className="flex items-center justify-between">
- <div className="flex items-center space-x-2">
+ <div className="flex items-start justify-between gap-2">
+ <div className="flex items-center gap-2 min-w-0 flex-wrap">
  {d.rank === 1 ? (
  <span className="px-1.5 py-0.5 rounded text-xs font-black bg-amber-400/20 text-amber-700 dark:text-amber-300 border border-amber-400/40">#1</span>
  ) : d.rank === 2 ? (
@@ -2270,8 +2271,8 @@ export const HODCommandCenter: React.FC = () => {
  </span>
  </div>
 
- <div className="flex items-center space-x-2">
- <span className={`px-2 py-0.5 rounded text-xs font-black border ${
+ <div className="flex items-center gap-1.5 shrink-0">
+ <span className={`px-2 py-1 rounded-lg text-[10px] leading-tight text-center font-black border max-w-[94px] ${
  d.health_status === 'Excellent' || d.health_status === 'Healthy' ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30' :
  d.health_status === 'Needs Attention' ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/40' :
  'bg-rose-500/15 text-rose-800 dark:text-rose-300 border-rose-500/40'
@@ -2280,7 +2281,7 @@ export const HODCommandCenter: React.FC = () => {
  </span>
  <button
  onClick={(e) => { e.stopPropagation(); setSelectedDeptIntelligence(d); }}
- className="px-2 py-0.5 rounded text-xs font-bold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-brand-300 dark:border-navy-700 inline-flex items-center gap-1"
+ className="!min-h-0 px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-brand-300 dark:border-navy-700 inline-flex items-center gap-1"
  >
  <Activity size={11} />
  <span>Inspect</span>
@@ -2290,13 +2291,13 @@ export const HODCommandCenter: React.FC = () => {
 
  {/* Metrics 3-Col Grid */}
  <div className="grid grid-cols-3 gap-2 pt-1 font-mono text-xs">
- <div className="p-2 rounded-lg bg-white dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
+ <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-slate-100 dark:border-navy-800 shadow-sm">
  <div className="text-xs text-slate-600 dark:text-slate-400 font-semibold uppercase">Roster</div>
  <div className="font-extrabold text-slate-900 dark:text-white mt-0.5">{d.student_count}</div>
  <div className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">{d.active_count} active</div>
  </div>
 
- <div className="p-2 rounded-lg bg-white dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
+ <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-slate-100 dark:border-navy-800 shadow-sm">
  <div className="text-xs text-slate-600 dark:text-slate-400 font-semibold uppercase">Avg Solved</div>
  <div className="font-extrabold text-slate-900 dark:text-white mt-0.5 flex items-center justify-between">
  <span>{d.avg_solved}</span>
@@ -2307,7 +2308,7 @@ export const HODCommandCenter: React.FC = () => {
  <div className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">{d.completion_rate || 0}% comp</div>
  </div>
 
- <div className="p-2 rounded-lg bg-white dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
+ <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-slate-100 dark:border-navy-800 shadow-sm">
  <div className="text-xs text-slate-600 dark:text-slate-400 font-semibold uppercase">Mentors</div>
  <div className="font-extrabold text-slate-900 dark:text-white mt-0.5">{d.faculty_mentors || 0}</div>
  <div className="text-xs text-slate-700 dark:text-slate-400 font-bold">
@@ -2505,15 +2506,15 @@ export const HODCommandCenter: React.FC = () => {
 
  {/* Top Coding Skill Gaps Card */}
  <Card className="p-5 space-y-4">
- <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
- <div>
- <h4 className="font-display text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono flex items-center gap-2">
+ <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 pb-2 border-b border-slate-100 dark:border-navy-800">
+ <div className="min-w-0">
+ <h4 className="font-display text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono flex items-start gap-2 leading-tight">
  <Target size={16} className="text-rose-500" />
- <span>Top Institutional Skill Gaps & Focus Areas</span>
+ <span className="break-words">Top Institutional Skill Gaps & Focus Areas</span>
  </h4>
- <p className="text-xs text-slate-700 dark:text-slate-400 font-sans mt-0.5">Key problem topics requiring targeted mentor-led lab sprints.</p>
+ <p className="text-xs text-slate-700 dark:text-slate-400 font-sans mt-0.5 leading-relaxed">Key problem topics requiring targeted mentor-led lab sprints.</p>
  </div>
- <span className="text-xs font-mono text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800 font-bold">
+ <span className="self-start shrink-0 text-xs font-mono text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300 px-2 py-1 rounded border border-rose-200 dark:border-rose-800 font-bold whitespace-nowrap">
  Priority Action
  </span>
  </div>
@@ -2524,22 +2525,22 @@ export const HODCommandCenter: React.FC = () => {
  { name: 'Graph BFS/DFS & Shortest Path', solve: '42.0%', target: '65.0%', status: 'Attention Needed', color: 'amber' },
  { name: 'Binary Search & Two Pointers', solve: '58.4%', target: '75.0%', status: 'Improving', color: 'blue' }
  ].map((s, i) => (
- <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 flex items-center justify-between">
- <div className="space-y-1">
- <div className="font-extrabold text-slate-900 dark:text-white text-xs font-sans">{s.name}</div>
- <div className="text-xs text-slate-700 dark:text-slate-400">
+ <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+ <div className="space-y-1 min-w-0">
+ <div className="font-extrabold text-slate-900 dark:text-white text-xs font-sans leading-snug break-words">{s.name}</div>
+ <div className="text-xs text-slate-700 dark:text-slate-400 leading-relaxed">
  Benchmark Target: <strong className="text-slate-700 dark:text-slate-300 font-bold">{s.target}</strong>
  </div>
  </div>
- <div className="text-right flex flex-col items-end gap-1">
- <span className={`px-2.5 py-0.5 rounded-full text-xs font-extrabold border ${
+ <div className="text-left sm:text-right flex flex-col items-start sm:items-end gap-1 min-w-0">
+ <span className={`max-w-full px-2.5 py-0.5 rounded-full text-xs font-extrabold border whitespace-normal leading-tight ${
  s.color === 'rose' ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800' :
  s.color === 'amber' ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800' :
  'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800'
  }`}>
  {s.solve} solve rate
  </span>
- <span className="text-xs text-slate-700 dark:text-slate-400 font-bold uppercase tracking-tight">{s.status}</span>
+ <span className="text-xs text-slate-700 dark:text-slate-400 font-bold uppercase tracking-tight leading-tight">{s.status}</span>
  </div>
  </div>
  ))}
@@ -2655,13 +2656,14 @@ export const HODCommandCenter: React.FC = () => {
  <td className="flex items-center justify-between py-2.5 md:py-3 md:px-3 text-right font-mono border-b border-slate-50 dark:border-navy-800/50 md:border-none md:table-cell">
  <span className="md:hidden text-xs font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">Completion</span>
  <div className="flex items-center justify-end gap-2 w-1/2 md:w-auto">
- <div className="w-20 h-2 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden border border-slate-200 dark:border-navy-700 shadow-inner">
+ <div className="relative w-20 h-2.5 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden border border-slate-200 dark:border-navy-700 shadow-inner">
  <div 
  className={`h-full rounded-full transition-all duration-300 ${completionRate >= 80 ? 'bg-emerald-500' : completionRate >= 50 ? 'bg-amber-500' : completionRate > 0 ? 'bg-amber-400' : 'bg-slate-300'}`} 
  style={{ width: `${completionRate}%` }} 
  />
+ {completionRate === 0 && <span className="absolute left-0.5 top-0.5 w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500" />}
  </div>
- <span className="font-extrabold text-slate-900 dark:text-white text-xs">{completionRate}%</span>
+ <span className={`font-extrabold text-xs ${completionRate === 0 ? 'text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-white'}`}>{completionRate}%</span>
  </div>
  </td>
 

@@ -2031,21 +2031,14 @@ def get_active_sessions(request: Request, db: Session = Depends(get_db)):
     for s in active_sessions:
         is_current = (s.token_hash == current_token_hash)
         
-        # Simple device parser
-        device_str = "Unknown Device"
-        if s.user_agent_hash:
-            # We can't decode hash, but if we stored user agent in future we could parse it.
-            # We will use the last_login_device from User if it's the current session, else fallback.
-            if is_current:
-                device_str = getattr(user, "last_login_device", "Current Device") or "Current Device"
-            else:
-                device_str = "Authenticated Device"
-                
-        ip_str = "Unknown IP"
-        if is_current:
-            ip_str = getattr(user, "last_login_ip", "Current IP") or "Current IP"
-        else:
-            ip_str = "Unknown IP Location"
+        # Use the per-session values captured at login. Older sessions may not
+        # have these columns populated, so keep the fallback explicit.
+        device_str = getattr(s, "device_name", None) or (
+            getattr(user, "last_login_device", None) if is_current else None
+        ) or "Device details unavailable"
+        ip_str = getattr(s, "ip_address", None) or (
+            getattr(user, "last_login_ip", None) if is_current else None
+        ) or "IP unavailable"
             
         # Format time
         time_diff = now - (s.last_used_at or s.created_at)

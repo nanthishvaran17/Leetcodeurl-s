@@ -475,7 +475,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-2 pb-2 animate-page-enter w-full">
       
       {/* 1. INSTITUTIONAL PERFORMANCE OVERVIEW */}
-      <div className="stagger-1 relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900/95 to-indigo-950/90 text-white p-5 sm:p-7 lg:p-8 shadow-2xl border border-slate-700/80 dark:border-brand-500/30">
+      <div className="stagger-1 relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900/95 to-indigo-950/90 text-white p-4 sm:p-7 lg:p-8 shadow-2xl border border-slate-700/80 dark:border-brand-500/30">
         
         {/* Subtle decorative background glow */}
         <div className="absolute -top-24 -left-24 w-72 h-72 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -505,26 +505,32 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </p>
 
             {/* Embedded Live Metric Pills */}
-            <div className="pt-1 flex flex-wrap items-center gap-2 text-xs font-bold">
-              <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">
-                <Users className="w-3.5 h-3.5 text-brand-400" />
-                <span className="text-slate-300">Enrolled:</span>
-                <span className="text-white font-extrabold">{fmtCount(canonicalTotal ?? totalStudents)}</span>
+            <div className="pt-1 flex flex-col gap-2 text-xs font-bold">
+              {/* Row 1: Enrolled + Active Profiles */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="min-w-0 px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">
+                  <Users className="w-3.5 h-3.5 text-brand-400" />
+                  <span className="text-slate-300 whitespace-nowrap">Enrolled:</span>
+                  <span className="text-white font-extrabold">{fmtCount(canonicalTotal ?? totalStudents)}</span>
+                </div>
+                <div className="min-w-0 px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-slate-300 whitespace-nowrap">Active Profiles:</span>
+                  <span className="text-emerald-400 font-extrabold">{fmtCount(activeStudents)}</span>
+                </div>
               </div>
-              <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-slate-300">Active Profiles:</span>
-                <span className="text-emerald-400 font-extrabold">{fmtCount(activeStudents)}</span>
-              </div>
-              <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-slate-300">Post-9:30 AM Solvers:</span>
-                <span className="text-amber-400 font-extrabold">{fmtCount(actualContestSolvers)}</span>
-              </div>
-              <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">
-                <PieChart className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="text-slate-300">Contest Participation:</span>
-                <span className="text-indigo-300 font-extrabold">{contestParticipationRate}%</span>
+              {/* Row 2: Post-9:30 Solvers + Contest Rate */}
+              <div className="flex items-center gap-1.5">
+                <div className="min-w-0 px-2 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="text-slate-300 whitespace-nowrap">Post-9:30 Solvers:</span>
+                  <span className="text-amber-400 font-extrabold">{fmtCount(actualContestSolvers)}</span>
+                </div>
+                <div className="min-w-0 px-2 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-1.5">
+                  <PieChart className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <span className="text-slate-300 whitespace-nowrap">Contest Rate:</span>
+                  <span className="text-indigo-300 font-extrabold">{contestParticipationRate}%</span>
+                </div>
               </div>
             </div>
           </div>
@@ -544,11 +550,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 </button>
               </div>
             )}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 items-center">
+            <div className="grid w-full grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 items-center">
               <button
                 onClick={handleStartSync}
                 disabled={isSyncing}
-                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md border border-blue-400/40 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-blue-500 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
+                className="relative min-w-0 w-full overflow-hidden min-h-[44px] px-2.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md border border-blue-400/40 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-blue-500 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
                 aria-label="Fetch live LeetCode statistics"
                 title="Synchronize live profile statistics for all students"
               >
@@ -558,7 +564,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
               <button
                 onClick={onOpenImport}
-                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs shadow-md border border-slate-600 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer focus:ring-2 focus:ring-brand-500 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
+                className="relative min-w-0 w-full overflow-hidden min-h-[44px] px-2.5 sm:px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs shadow-md border border-slate-600 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer focus:ring-2 focus:ring-brand-500 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
                 aria-label="Import student roster from Excel"
                 title="Upload Excel roster (.xlsx) to parse, validate, and update student profiles"
               >
@@ -569,7 +575,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <button
                 onClick={handleExportExcel}
                 disabled={isExportingExcel}
-                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md border border-emerald-400/40 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-emerald-400 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
+                className="relative min-w-0 w-full overflow-hidden min-h-[44px] px-2.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md border border-emerald-400/40 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-emerald-400 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
                 aria-label="Export raw student roster to Excel"
                 title="Export current active student roster & raw LeetCode statistics to Excel workbook (.xlsx)"
               >
@@ -593,7 +599,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <button
                 onClick={handleGenerateReport}
                 disabled={generatingReport}
-                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-white font-extrabold text-xs shadow-md border border-amber-300/40 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-amber-400 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
+                className="relative min-w-0 w-full overflow-hidden min-h-[44px] px-2.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-white font-extrabold text-xs shadow-md border border-amber-300/40 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-amber-400 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
                 aria-label="Generate official weekly institutional report"
                 title="Instant download of pre-generated 8-sheet weekly performance tracker & PDF summary"
               >

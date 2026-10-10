@@ -58,25 +58,26 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
           className="relative w-full max-w-2xl bg-white dark:bg-navy-950 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-navy-700"
         >
           {/* Header */}
-          <div className="relative p-6 border-b border-indigo-200/50 dark:border-indigo-900/50 flex items-start justify-between bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-navy-900 dark:via-navy-950 dark:to-indigo-950 overflow-hidden">
+          <div className="relative p-4 sm:p-6 border-b border-indigo-200/50 dark:border-indigo-900/50 flex items-start justify-between bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-navy-900 dark:via-navy-950 dark:to-indigo-950 overflow-hidden">
             {/* Background elements */}
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-10 left-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
             
-            <div className="flex items-start gap-4 relative z-10 w-full pr-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
-                <Building2 size={28} />
+            <div className="flex items-start gap-3 sm:gap-4 relative z-10 w-full pr-2 sm:pr-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+                <Building2 size={24} className="sm:hidden" />
+                <Building2 size={28} className="hidden sm:block" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-xl sm:text-2xl font-display font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-300 dark:to-purple-300">
+                  <h2 className="text-lg sm:text-2xl font-display font-black leading-tight break-words bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-300 dark:to-purple-300">
                     {department.department_name}
                   </h2>
                   <span className="px-2.5 py-1 text-[10px] font-black font-mono rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50 shadow-sm shrink-0">
                     {department.department_code}
                   </span>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 mt-2 text-sm">
+                <div className="flex flex-wrap items-center gap-2 mt-2 text-sm">
                   <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase shadow-sm border ${
                     department.health_status === 'Excellent' ? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800' :
                     department.health_status === 'Healthy' ? 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800' :
@@ -99,7 +100,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-8 stylish-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 sm:space-y-8 stylish-scrollbar">
             {/* KPI Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-4 rounded-2xl bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 shadow-sm">
@@ -177,8 +178,8 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                       No top performer data available.
                     </div>
                   ) : (
-                    <div className="bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-hidden">
-                      <table className="w-full text-left border-collapse">
+                    <div className="bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-x-auto">
+                      <table className="w-full min-w-[540px] text-left border-collapse">
                         <thead>
                           <tr className="bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
                             <th className="p-3">Rank</th>
@@ -219,8 +220,8 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                       No high-risk students detected.
                     </div>
                   ) : (
-                    <div className="bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-hidden">
-                      <table className="w-full text-left border-collapse">
+                    <div className="bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-x-auto">
+                      <table className="w-full min-w-[620px] text-left border-collapse">
                         <thead>
                           <tr className="bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
                             <th className="p-3">Student</th>

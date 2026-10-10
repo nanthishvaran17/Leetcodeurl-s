@@ -36,6 +36,33 @@ interface PerformanceChartProps {
   className?: string;
 }
 
+const normalizeChartPoints = (points: DataPoint[]): DataPoint[] => {
+  const sortedPoints = [...points]
+    .filter(point => point?.date)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  let lastVerifiedPoint: DataPoint | null = null;
+  return sortedPoints.map(point => {
+    const problemsSolved = Number.isFinite(Number(point.problemsSolved)) ? Number(point.problemsSolved) : 0;
+    const activeStudents = Number.isFinite(Number(point.activeStudents)) ? Number(point.activeStudents) : 0;
+    const isMissingSnapshot = problemsSolved === 0 && activeStudents === 0 && lastVerifiedPoint !== null;
+
+    if (isMissingSnapshot) {
+      return {
+        ...point,
+        problemsSolved: lastVerifiedPoint.problemsSolved,
+        activeStudents: lastVerifiedPoint.activeStudents
+      };
+    }
+
+    const normalizedPoint = { ...point, problemsSolved, activeStudents };
+    if (problemsSolved > 0 || activeStudents > 0) {
+      lastVerifiedPoint = normalizedPoint;
+    }
+    return normalizedPoint;
+  });
+};
+
 const TIMEFRAME_OPTIONS: { value: Timeframe; label: string }[] = [
   { value: 'this_week', label: 'This Week' },
   { value: 'last_week', label: 'Last Week' },
@@ -100,7 +127,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
       });
 
       const resData = response.data;
-      const chartPoints: DataPoint[] = resData.data || [];
+      const chartPoints = normalizeChartPoints(resData.data || []);
       const apiMetrics: PerformanceMetrics = resData.metrics || {
         peak_solved: chartPoints.length ? Math.max(...chartPoints.map(d => d.problemsSolved)) : 0,
         peak_active: chartPoints.length ? Math.max(...chartPoints.map(d => d.activeStudents)) : 0,

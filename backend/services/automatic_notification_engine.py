@@ -213,6 +213,8 @@ class AutomaticNotificationEngine:
                         f"Attention Needed: {attention_today} vs Yesterday: {attention_yesterday} ({fmt_diff(diff_attention)})"
                     )
                     BotNotificationService.send_telegram_message(f"tg_fac_{faculty.id}", bot_msg)
+                    if getattr(faculty, "phone_number", None) and getattr(faculty, "whatsapp_verified", False):
+                        BotNotificationService.send_whatsapp_message(faculty.phone_number, bot_msg)
                 except Exception as b_err:
                     logger.debug(f"[AUTO_NOTIF] Bot notification dispatch note: {b_err}")
 

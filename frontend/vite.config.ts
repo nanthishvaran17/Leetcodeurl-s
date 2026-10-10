@@ -6,7 +6,6 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [
-    million.vite({ auto: { rsc: true, skip: ['usePortal', 'createPortal', 'GlobalFilter', 'StudentProfilePage', 'StudentEditOverlay', 'StudentAuditModal', 'StatusNotificationModal', 'ConfirmDeleteModal', 'EmailDeliveryTab', 'ChatWindow', 'MessagesPage', 'ConversationList', 'RecipientSelector'] } }),
     react()
   ],
   resolve: {

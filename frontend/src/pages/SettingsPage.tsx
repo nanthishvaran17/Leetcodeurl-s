@@ -701,15 +701,19 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
           {/* Right: Badges + Actions */}
           <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full lg:w-auto">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1.5 rounded-full font-black text-xs border flex items-center space-x-1.5 whitespace-nowrap flex-shrink-0"
-                style={{ background: 'rgba(16,185,129,0.15)', borderColor: 'rgba(16,185,129,0.3)', color: '#34d399' }}>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+              <span
+                className="h-7 px-3 rounded-full font-bold text-xs border inline-flex items-center justify-center space-x-1.5 whitespace-nowrap shrink-0 leading-none"
+                style={{ background: 'rgba(16,185,129,0.15)', borderColor: 'rgba(16,185,129,0.3)', color: '#34d399' }}
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                 <span>{currentUser?.role ? currentUser.role.toUpperCase() : 'ACTIVE'}</span>
               </span>
 
-              <span className="px-3 py-1.5 rounded-full font-bold text-xs border flex items-center space-x-1.5 whitespace-nowrap flex-shrink-0"
-                style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)', color: '#cbd5e1' }}>
-                <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+              <span
+                className="h-7 px-3 rounded-full font-bold text-xs border inline-flex items-center justify-center space-x-1.5 whitespace-nowrap shrink-0 leading-none"
+                style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)', color: '#cbd5e1' }}
+              >
+                <Clock className="w-3.5 h-3.5 shrink-0 text-slate-400" />
                 <span>Asia/Kolkata (IST)</span>
               </span>
             </div>

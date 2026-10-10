@@ -637,9 +637,16 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           yearLevel={detail?.year_level || 'III'}
           totalSolved={detail?.stats?.total_solved || 0}
           collegeRank={detail?.college_rank || 1}
-          streakCount={detail?.streak_count || 0}
+          streakCount={detail?.lc_activity?.current_streak ?? detail?.streak_count ?? 0}
           leetcodeUsername={detail?.username || detail?.leetcode_username || ''}
           contestRating={detail?.stats?.contest_rating || 0}
+          easySolved={detail?.stats?.easy_solved || 0}
+          mediumSolved={detail?.stats?.medium_solved || 0}
+          hardSolved={detail?.stats?.hard_solved || 0}
+          lastVerifiedAt={detail?.stats?.last_verified_at || detail?.last_verified_at || null}
+          officialContests={detail?.lc_contest_standing?.attended_count ?? detail?.stats?.official_contests ?? 0}
+          virtualContests={detail?.stats?.virtual_contests ?? 0}
+          verificationSource="LEETCODE API"
         />
       </div>
 

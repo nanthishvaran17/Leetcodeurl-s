@@ -944,7 +944,17 @@ I can show specific student progress assigned to any faculty member."""
                 "query": query,
                 "answer": markdown_resp,
                 "evidence": [f"Ranked top {len(top_list)} solvers in {d_txt or 'Institutional'} scope."],
-                "actions": [{"label": "Export Top Performers PDF", "action": "DOWNLOAD_PDF", "params": {"title": "Top Performers"}}],
+                "actions": [{
+                    "label": "Export Top Performers PDF",
+                    "action": "DOWNLOAD_PDF",
+                    "params": {
+                        "title": "Top Performers",
+                        "report_type": "STUDENT_PERFORMANCE",
+                        "department": dept_match or "ALL",
+                        "year": year_match or "ALL",
+                        "language": lang_match or "ALL"
+                    }
+                }],
                 "dataConfidence": "HIGH_VERIFIED"
             }
 

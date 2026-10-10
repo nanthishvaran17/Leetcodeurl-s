@@ -103,7 +103,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
   });
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fade-in pb-12 font-sans px-3.5 sm:px-6 md:px-8 max-w-full overflow-hidden">
+    <div className="w-full space-y-6 sm:space-y-8 animate-fade-in pb-12 font-sans px-0 max-w-full overflow-hidden">
       
       {/* Hero Banner with Rich Styling */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">

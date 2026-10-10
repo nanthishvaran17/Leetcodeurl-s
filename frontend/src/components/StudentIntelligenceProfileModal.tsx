@@ -698,7 +698,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                     </div>
 
                     {/* Line 2: Department, Batch, Section, Cutoff */}
-                    <div className="text-xs text-slate-200 font-semibold flex items-center gap-1.5 flex-wrap leading-tight">
+                    <div className="text-[11px] sm:text-xs text-slate-200 font-semibold flex items-center gap-1.5 flex-wrap leading-snug min-w-0">
                       {(() => {
                         const dept = st.department || st.dept_code || initialStudent?.department?.name || initialStudent?.department?.code || initialStudent?.dept;
                         const rawBatch = st.batch || st.year_level || initialStudent?.batch || initialStudent?.year_level;
@@ -709,15 +709,15 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         const cutoffStr = cutoffVal !== null && cutoffVal !== undefined && cutoffVal !== '' && !isNaN(Number(cutoffVal)) ? `Cutoff: ${Number(cutoffVal).toFixed(1)}` : null;
 
                         const metaParts = [
-                          dept ? <span key="dept" className="text-white font-bold">{dept}</span> : null,
-                          batchStr ? <span key="batch" className="text-slate-200 font-medium">{batchStr}</span> : null,
-                          secStr ? <span key="sec" className="text-slate-200 font-medium">{secStr}</span> : null,
+                          dept ? <span key="dept" className="text-white font-bold max-w-full sm:max-w-[230px]">{dept}</span> : null,
+                          batchStr ? <span key="batch" className="text-slate-200 font-medium bg-white/5 px-1.5 py-0.5 rounded">{batchStr}</span> : null,
+                          secStr ? <span key="sec" className="text-slate-200 font-medium bg-white/5 px-1.5 py-0.5 rounded">{secStr}</span> : null,
                           cutoffStr ? <span key="cutoff" className="text-cyan-300 font-mono font-bold bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/30">{cutoffStr}</span> : null
                         ].filter(Boolean);
 
                         return metaParts.map((part, idx) => (
                           <React.Fragment key={idx}>
-                            {idx > 0 && <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-400 align-middle mx-0.5 shrink-0" />}
+                            {idx > 0 && <span className="hidden sm:inline-block w-1.5 h-1.5 rounded-full bg-slate-400 align-middle mx-0.5 shrink-0" />}
                             {part}
                           </React.Fragment>
                         ));
@@ -1246,32 +1246,34 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                             Most active day: {activity.most_active_day || 'Sunday, Aug 23, 2026'}
                           </span>
                         </div>
-                        <div className="grid grid-cols-12 sm:grid-cols-24 gap-1.5 pt-1">
-                          {(activity.heatmap && activity.heatmap.length > 0 ? activity.heatmap.slice(-60) : (
-                            Array.from({ length: 60 }).map((_, idx) => {
-                              const cnt = ((idx * 7 + (studentId || 1) * 13) % 11) > 2 ? (((idx + (studentId || 1)) % 15) + 1) : 0;
-                              return { date: `Day ${60 - idx}`, count: cnt };
-                            })
-                          )).map((h: any, idx: number) => {
-                            const cnt = h.count || 0;
-                            const bg =
-                              cnt === 0
-                                ? 'bg-slate-200/80 border border-slate-300/40'
-                                : cnt < 3
-                                ? 'bg-emerald-400 text-slate-950 font-black'
-                                : cnt < 6
-                                ? 'bg-emerald-600 text-white font-black'
-                                : 'bg-emerald-700 text-white font-black';
-                            return (
-                              <div
-                                key={idx}
-                                className={`h-7 rounded-xl ${bg} flex items-center justify-center text-[10px] font-black shadow-2xs transition-all hover:scale-115 hover:shadow-md hover:z-10 cursor-pointer`}
-                                title={`${h.date}: ${cnt} submissions`}
-                              >
-                                {cnt > 0 ? cnt : ''}
-                              </div>
-                            );
-                          })}
+                        <div className="overflow-x-auto overscroll-x-contain pb-1">
+                          <div className="grid grid-flow-row grid-cols-7 sm:grid-cols-14 gap-1.5 pt-1 min-w-0">
+                            {(activity.heatmap && activity.heatmap.length > 0 ? activity.heatmap : (
+                              Array.from({ length: 365 }).map((_, idx) => {
+                                const cnt = ((idx * 7 + (studentId || 1) * 13) % 11) > 2 ? (((idx + (studentId || 1)) % 15) + 1) : 0;
+                                return { date: `Day ${365 - idx}`, count: cnt };
+                              })
+                            )).map((h: any, idx: number) => {
+                              const cnt = h.count || 0;
+                              const bg =
+                                cnt === 0
+                                  ? 'bg-slate-200/80 border border-slate-300/40'
+                                  : cnt < 3
+                                  ? 'bg-emerald-400 text-slate-950 font-black'
+                                  : cnt < 6
+                                  ? 'bg-emerald-600 text-white font-black'
+                                  : 'bg-emerald-700 text-white font-black';
+                              return (
+                                <div
+                                  key={`${h.date}-${idx}`}
+                                  className={`h-7 rounded-xl ${bg} flex items-center justify-center text-[9px] sm:text-[10px] font-black shadow-2xs transition-all hover:scale-115 hover:shadow-md hover:z-10 cursor-pointer`}
+                                  title={`${h.date}: ${cnt} submissions`}
+                                >
+                                  {cnt > 0 ? cnt : ''}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>

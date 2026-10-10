@@ -23,6 +23,7 @@ from sqlalchemy import func
 
 from backend.models import User, Student, LeetCodeProfileStats, FacultyStudentAssignment
 from backend.logger import logger
+from backend.services.meta_whatsapp_client import meta_whatsapp_client
 
 
 class BotNotificationService:
@@ -94,20 +95,29 @@ class BotNotificationService:
 
     @classmethod
     def send_whatsapp_message(cls, phone_number: str, text: str) -> Dict[str, Any]:
-        """Dispatches WhatsApp message via Cloud API / Twilio or sandbox logger."""
+        """Dispatch a WhatsApp message through the verified Meta Cloud API client."""
+        if not phone_number or not meta_whatsapp_client.is_live_configured():
+            logger.warning("[WHATSAPP_BOT] Skipped: live Meta WhatsApp credentials or recipient phone is missing.")
+            return {
+                "channel": "WHATSAPP",
+                "status": "NOT_CONFIGURED",
+                "recipient": phone_number,
+                "success": False,
+            }
+
+        result = meta_whatsapp_client.send_text_message(phone_number, text)
         entry = {
             "channel": "WHATSAPP",
             "recipient": phone_number,
             "text": text,
-            "status": "DELIVERED",
+            "status": result.get("status", "UNKNOWN"),
             "sent_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         }
         with cls._lock:
             cls._message_log.append(entry)
             if len(cls._message_log) > 500:
                 cls._message_log.pop(0)
-        logger.info(f"[WHATSAPP_BOT] Dispatched to {phone_number}: {text[:60]}...")
-        return {"channel": "WHATSAPP", "status": "DELIVERED", "recipient": phone_number}
+        return {"channel": "WHATSAPP", **result}
 
     @classmethod
     def send_telegram_message(cls, chat_id: str, text: str) -> Dict[str, Any]:
@@ -142,9 +152,9 @@ class BotNotificationService:
                 total_students=total_students,
                 solved=min(4, max(1, (solved or 2) % 5))
             )
-            # Send simulated WhatsApp / Telegram
-            cls.send_whatsapp_message(f"+91{st.reg_no[-10:]}", msg)
-            dispatched += 1
+            if getattr(st, "phone_number", None) and getattr(st, "whatsapp_verified", False):
+                result = cls.send_whatsapp_message(st.phone_number, msg)
+                dispatched += 1 if result.get("success") else 0
 
         return {
             "success": True,
@@ -166,8 +176,9 @@ class BotNotificationService:
                 student_name=st.name,
                 current_streak=st.stats.max_streak or 5
             )
-            cls.send_whatsapp_message(f"+91{st.reg_no[-10:]}", msg)
-            dispatched += 1
+            if getattr(st, "phone_number", None) and getattr(st, "whatsapp_verified", False):
+                result = cls.send_whatsapp_message(st.phone_number, msg)
+                dispatched += 1 if result.get("success") else 0
 
         return {
             "success": True,
@@ -205,7 +216,8 @@ class BotNotificationService:
                 at_risk_names=at_risk
             )
             cls.send_telegram_message(f"tg_fac_{fac.id}", msg)
-            cls.send_whatsapp_message(f"+9198765{fac.id:05d}", msg)
+            if getattr(fac, "phone_number", None) and getattr(fac, "whatsapp_verified", False):
+                cls.send_whatsapp_message(fac.phone_number, msg)
             dispatched += 1
 
         return {

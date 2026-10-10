@@ -905,7 +905,7 @@ export const App: React.FC = () => {
 
       <div className={`flex-1 w-full mx-auto relative ${
         activeTab === 'messages'
-          ? 'pt-0 pb-0 px-0 max-w-full'
+          ? 'pt-0 pb-0 px-0 max-w-full overflow-hidden h-[calc(100dvh-56px)] sm:h-[calc(100dvh-60px)]'
           : 'pt-1 sm:pt-2 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 px-2 sm:px-3 max-w-full'
       }`}>
         
@@ -926,7 +926,7 @@ export const App: React.FC = () => {
         <main
           id="main-content"
           key={activeTab}
-          className="min-w-0 w-full animate-fade-in"
+          className={`min-w-0 w-full animate-fade-in ${activeTab === 'messages' ? 'h-full overflow-hidden' : ''}`}
         >
 
             <ErrorBoundary>
@@ -1135,7 +1135,7 @@ export const App: React.FC = () => {
       {/* Viewport-Centered Student Profile Modal */}
       {selectedStudent && activeTab !== 'profile' && typeof document !== 'undefined' && (
         <div
-          className="fixed inset-0 z-[999999] flex items-start justify-center p-2 sm:p-4 pt-16 sm:pt-20 pb-16 sm:pb-6 overflow-y-auto bg-slate-950/85 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[999999] flex items-start justify-center p-3 sm:p-4 pt-3 sm:pt-20 pb-3 sm:pb-6 overflow-y-auto bg-slate-950/85 backdrop-blur-md animate-fade-in"
           style={{ zIndex: 999999 }}
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
         >
@@ -1143,7 +1143,7 @@ export const App: React.FC = () => {
             role="dialog"
             aria-modal="true"
             aria-label={`Student profile for ${selectedStudent.name}`}
-            className="w-full max-w-5xl rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden my-0 sm:my-auto max-h-[calc(100vh-5rem)] text-slate-900 dark:text-slate-100 animate-modal-content isolate"
+            className="w-full max-w-6xl rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden my-0 sm:my-auto h-[calc(100dvh-1.5rem)] sm:h-auto max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100vh-5rem)] text-slate-900 dark:text-slate-100 animate-modal-content isolate"
           >
             <Suspense fallback={<StudentProfileSkeleton studentName={selectedStudent.name} />}>
               <StudentProfilePage

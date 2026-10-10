@@ -466,21 +466,21 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-0 animate-fade-in font-sans pb-12">
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
         {/* Animated Decorative Ambient Light Beams */}
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl animate-pulse pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl animate-pulse pointer-events-none delay-1000" />
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-brand-400/50 to-transparent" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-3.5 max-w-2xl">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8">
+          <div className="space-y-4 max-w-2xl">
             {/* Live Pulsing Badge */}
             <div className="inline-flex items-center px-3 sm:px-3.5 py-1 rounded-xl sm:rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[9px] sm:text-xs font-black uppercase tracking-wider backdrop-blur-md shadow-xs max-w-full">
               <span className="whitespace-normal sm:whitespace-nowrap leading-tight">STUDENT DIRECTORY — {globalTotalCount || serverTotalCount} ENROLLED</span>
             </div>
 
             <div className="space-y-1.5">
-              <h1 className="text-3xl md:text-4xl font-display font-black tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black tracking-tight leading-tight">
                 Student Master <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-300 via-teal-200 to-indigo-300 animate-pulse">Directory</span>
               </h1>
               <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide leading-relaxed">
@@ -491,7 +491,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
           <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 lg:justify-end mt-4 lg:mt-0 w-full lg:w-auto">
             {/* View Mode Toggle */}
-            <div className="grid grid-cols-2 sm:flex items-center gap-1 p-1 bg-white/10 dark:bg-black/30 rounded-xl border border-white/15 shadow-inner backdrop-blur-md w-full sm:w-auto">
+            <div className="grid grid-cols-2 sm:flex items-center gap-2 p-1.5 bg-white/10 dark:bg-black/30 rounded-xl border border-white/15 shadow-inner backdrop-blur-md w-full sm:w-auto">
               <button
                 onClick={() => setViewMode('table')}
                 className={`flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
@@ -516,7 +516,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               </button>
             </div>
             
-            <div className="grid grid-cols-2 sm:flex items-center gap-2.5 w-full sm:w-auto">
+            <div className="grid grid-cols-2 sm:flex items-center gap-3 w-full sm:w-auto">
               <button
                 onClick={onOpenImport}
                 className="px-3.5 sm:px-4 py-2.5 sm:py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md"
@@ -538,7 +538,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       </div>
 
       {/* Search Bar - Redesigned */}
-      <div className="bg-white dark:bg-navy-950 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-navy-700 space-y-4 mb-6 sm:mb-8">
+      <div className="bg-white dark:bg-navy-950 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-navy-700 space-y-4 sm:space-y-5 mb-6 sm:mb-10">
         <div className="relative flex items-center">
           <input
             type="text"
@@ -546,7 +546,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             onChange={(e) => setLocalSearch(e.target.value)}
             placeholder="Search students by name, reg no..."
             autoComplete="off"
-            className="w-full pl-11 pr-10 py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all text-ellipsis"
+            className="w-full pl-11 pr-10 py-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all text-ellipsis"
           />
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 z-10 text-slate-500 dark:text-slate-400">
             <Search className="w-5 h-5" />
@@ -577,7 +577,12 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         </div>
       </div>
 
-      {serverTotalCount === 0 && filters.isFilteringActive && (
+      {isTableLoading ? (
+        <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-3xl border border-slate-200 bg-white dark:border-navy-700 dark:bg-navy-950">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">Loading student directory...</p>
+        </div>
+      ) : serverTotalCount === 0 && filters.isFilteringActive && (
         <div className="text-center py-16 px-6 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-sm space-y-4">
           <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
             <AlertTriangle className="w-6 h-6" />
@@ -596,22 +601,24 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       )}
 
       {/* Leaderboard / Student Master Table / Flip Cards */}
-      {serverTotalCount > 0 && (viewMode === 'table' ? (
-        <LeaderboardTable
-          students={displayedStudents}
-          onSelectStudent={onSelectStudent}
-          onRefreshStudent={handleSyncSingleStudent}
-          onDeleteStudent={handleDeleteStudent}
-          onBulkDeleteStudents={handleBulkDeleteStudents}
-          serverTotalCount={serverTotalCount}
-          serverPage={serverPage}
-          serverPageSize={serverPageSize}
-          onServerPageChange={(page, size) => {
-            setServerPage(page);
-            if (size !== serverPageSize) setServerPageSize(size);
-          }}
-        />
-      ) : (
+      {serverTotalCount > 0 && (
+        <div className="pt-4 sm:pt-5">
+          {viewMode === 'table' ? (
+            <LeaderboardTable
+              students={displayedStudents}
+              onSelectStudent={onSelectStudent}
+              onRefreshStudent={handleSyncSingleStudent}
+              onDeleteStudent={handleDeleteStudent}
+              onBulkDeleteStudents={handleBulkDeleteStudents}
+              serverTotalCount={serverTotalCount}
+              serverPage={serverPage}
+              serverPageSize={serverPageSize}
+              onServerPageChange={(page, size) => {
+                setServerPage(page);
+                if (size !== serverPageSize) setServerPageSize(size);
+              }}
+            />
+          ) : (
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {displayedStudents.map((st) => (
@@ -670,7 +677,9 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             </div>
           )}
         </div>
-      ))}
+          )}
+        </div>
+      )}
 
       {/* Add Student Modal */}
       {showAddModal && typeof document !== 'undefined' && createPortal(

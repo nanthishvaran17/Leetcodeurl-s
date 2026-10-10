@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StaffRecord, StudentRecord, getCommandCenterStudents } from '../../services/commandCenterService';
-import { Users, X, Code, CheckCircle, Clock, Calendar, Mail, Briefcase, Activity, ExternalLink, RefreshCw } from 'lucide-react';
+import { Users, X, Code, CheckCircle, Clock, Calendar, Mail, Briefcase, Activity, RefreshCw, Gauge, Trophy, Sparkles } from 'lucide-react';
 
 interface StaffDetailDrawerProps {
   staff: StaffRecord | null;
@@ -71,15 +71,13 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
       <div className="w-full max-w-xl h-[85vh] sm:h-[100dvh] bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden flex flex-col rounded-t-3xl sm:rounded-none">
 
         {/* Hero Header Profile Section */}
-        <div className="relative bg-gradient-to-br from-brand-700 via-indigo-800 to-purple-900 text-white overflow-hidden shrink-0">
-          {/* Decorative blobs */}
-          <div className="absolute -top-10 -right-10 w-56 h-56 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="relative bg-gradient-to-br from-slate-950 via-blue-950 to-brand-900 text-white overflow-hidden shrink-0 border-b border-white/10">
+          <div className="absolute inset-0 opacity-20 pointer-events-none [background-image:linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.16)_48%,transparent_49%),linear-gradient(30deg,transparent_0%,rgba(56,189,248,0.18)_48%,transparent_49%)] [background-size:180px_180px]" />
 
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white rounded-xl backdrop-blur-md transition cursor-pointer z-20"
+            className="absolute top-4 right-4 w-10 h-10 p-2.5 bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white rounded-xl backdrop-blur-md transition cursor-pointer z-20 border border-white/10"
           >
             <X size={18} />
           </button>
@@ -95,10 +93,10 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                 <img
                   src={staff.profile_photo}
                   alt={staff.full_name || staff.username}
-                  className="w-20 h-20 rounded-xl object-cover border-2 border-white/30 shadow-2xl"
+                  className="w-20 h-20 rounded-2xl object-cover border-2 border-white/40 shadow-2xl"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-xl bg-white/15 backdrop-blur-md text-white font-black flex items-center justify-center text-3xl shadow-2xl border border-white/20">
+                <div className="w-20 h-20 rounded-2xl bg-white/15 backdrop-blur-md text-white font-black flex items-center justify-center text-3xl shadow-2xl border border-white/20">
                   {staff.username ? staff.username.charAt(0).toUpperCase() : 'S'}
                 </div>
               )}
@@ -148,7 +146,8 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
           <div className="space-y-3">
             <h4 className="font-display text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <Users size={15} className="text-brand-500" /> Mentorship Performance Summary
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-300"><Users size={14} /></span>
+                Mentorship Performance Summary
               </span>
               <span className="text-[11px] text-slate-500 font-semibold">
                 Scope: {staff.department_code || 'Dept'}
@@ -156,7 +155,8 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
             </h4>
             <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
               {/* Assigned Capacity */}
-              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
+              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm shadow-slate-200/50 dark:shadow-black/10 relative overflow-hidden">
+                <Gauge className="absolute -right-2 -top-2 text-blue-50 dark:text-navy-800" size={58} />
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Assigned Capacity</div>
                 <div className="text-xl font-black text-slate-900 dark:text-white">
                   {assignedCount} <span className="text-xs text-slate-400 font-normal">/ {staff.max_allowed || 30}</span>
@@ -173,7 +173,8 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
               </div>
 
               {/* Active Solvers */}
-              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
+              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm shadow-slate-200/50 dark:shadow-black/10 relative overflow-hidden">
+                <Sparkles className="absolute -right-2 -top-2 text-emerald-50 dark:text-navy-800" size={58} />
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Active Solvers</div>
                 <div className="flex items-baseline gap-1">
                   <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">
@@ -188,7 +189,8 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
               </div>
 
               {/* Problems Solved */}
-              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
+              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm shadow-slate-200/50 dark:shadow-black/10 relative overflow-hidden">
+                <Activity className="absolute -right-2 -top-2 text-blue-50 dark:text-navy-800" size={58} />
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Total Solved</div>
                 <div className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                   <Activity size={16} className="text-brand-500" />
@@ -200,7 +202,8 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
               </div>
 
               {/* Recent Contest Attendance */}
-              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
+              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm shadow-slate-200/50 dark:shadow-black/10 relative overflow-hidden">
+                <Trophy className="absolute -right-2 -top-2 text-amber-50 dark:text-navy-800" size={58} />
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Sunday Contest</div>
                 <div className="flex items-baseline gap-1">
                   <div className="text-xl font-black text-blue-600 dark:text-blue-400">
@@ -328,16 +331,16 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-slate-200 dark:border-navy-700 bg-slate-100 dark:bg-navy-950 flex justify-between items-center shrink-0">
+        <div className="p-4 border-t border-slate-200 dark:border-navy-700 bg-white/95 dark:bg-navy-950/95 backdrop-blur-md flex justify-between items-center gap-3 shrink-0 safe-area-pb">
           <button 
             onClick={onClose}
-            className="px-4 py-2 bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 rounded-2xl text-xs font-bold transition cursor-pointer"
+            className="px-4 py-2 bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition cursor-pointer border border-slate-200 dark:border-navy-700"
           >
             Close Drawer
           </button>
           <button 
             onClick={onManageAllocation}
-            className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-xs font-extrabold transition shadow-md shadow-brand-600/20 cursor-pointer flex items-center gap-1.5"
+            className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-extrabold transition shadow-lg shadow-brand-600/25 cursor-pointer flex items-center gap-1.5"
           >
             <Users size={14} />
             <span>Manage Allocation</span>

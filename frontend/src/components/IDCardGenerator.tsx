@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Download, CheckCircle2, ShieldCheck, Sparkles, Image as ImageIcon } from 'lucide-react';
+import { Download, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { triggerDownload } from '../utils/mobileDownload';
+import { QRCodeCanvas } from 'qrcode.react';
 
 interface IDCardGeneratorProps {
   studentName: string;
@@ -12,6 +13,14 @@ interface IDCardGeneratorProps {
   streakCount?: number;
   leetcodeUsername?: string;
   contestRating?: number;
+  easySolved?: number;
+  mediumSolved?: number;
+  hardSolved?: number;
+  lastVerifiedAt?: string | null;
+  officialContests?: number;
+  virtualContests?: number;
+  verificationSource?: string;
+  credentialStatus?: string;
 }
 
 export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
@@ -23,11 +32,22 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
   collegeRank = 1,
   streakCount = 0,
   leetcodeUsername,
-  contestRating
+  contestRating,
+  easySolved = 0,
+  mediumSolved = 0,
+  hardSolved = 0,
+  lastVerifiedAt,
+  officialContests = 0,
+  virtualContests = 0,
+  verificationSource = 'LEETCODE API',
+  credentialStatus = 'PENDING AUTHORIZATION'
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const qrCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const logoImageRef = useRef<HTMLImageElement | null>(null);
+  const secondaryLogoImageRef = useRef<HTMLImageElement | null>(null);
   const [logoLoaded, setLogoLoaded] = useState(false);
+  const [secondaryLogoLoaded, setSecondaryLogoLoaded] = useState(false);
 
   useEffect(() => {
     const img = new Image();
@@ -51,6 +71,15 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
           setLogoLoaded(true);
         };
       };
+    };
+  }, []);
+
+  useEffect(() => {
+    const emblem = new Image();
+    emblem.src = '/nandha_emblem_white_transparent.png';
+    emblem.onload = () => {
+      secondaryLogoImageRef.current = emblem;
+      setSecondaryLogoLoaded(true);
     };
   }, []);
 
@@ -180,8 +209,40 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     ctx.font = '900 44px "Courier New", monospace';
     ctx.fillText('OFFICIAL LEETCODE INTELLIGENCE PLATFORM • ACADEMIC CREDENTIAL', textLeft, headerY + 390);
 
-    // Top-Right Motto (LEARN | SERVE | SUCCEED)
+    // Secondary institutional emblem balances the primary logo in the header.
     const rightMottoX = headerX + headerW - 100;
+    const secondaryLogoSize = 190;
+    const secondaryLogoX = rightMottoX - 520;
+    const secondaryLogoY = headerY + (headerH - secondaryLogoSize) / 2 - 8;
+
+    if (secondaryLogoImageRef.current) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(
+        secondaryLogoX + secondaryLogoSize / 2,
+        secondaryLogoY + secondaryLogoSize / 2,
+        secondaryLogoSize / 2,
+        0,
+        Math.PI * 2
+      );
+      ctx.clip();
+      ctx.drawImage(secondaryLogoImageRef.current, secondaryLogoX, secondaryLogoY, secondaryLogoSize, secondaryLogoSize);
+      ctx.restore();
+
+      ctx.strokeStyle = '#D4AF37';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(
+        secondaryLogoX + secondaryLogoSize / 2,
+        secondaryLogoY + secondaryLogoSize / 2,
+        secondaryLogoSize / 2,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+    }
+
+    // Top-Right Motto (LEARN | SERVE | SUCCEED)
     ctx.textAlign = 'right';
     ctx.fillStyle = '#D4AF37';
     ctx.font = '900 48px "Inter", sans-serif';
@@ -193,7 +254,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     const colY = headerY + headerH + 56;
     const leftX = pad + 48;
     const leftW = 3620;
-    const colH = 2080;
+    const colH = 2320;
 
     // LEFT COLUMN: STUDENT IDENTIFICATION & ACADEMIC PROFILE
     ctx.fillStyle = '#FFFFFF';
@@ -344,6 +405,108 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     ctx.font = '900 48px "Courier New", monospace';
     ctx.fillText(`CREDENTIAL PASS ID: NEC-PASS-2026-${regNo || '732225CC018'}`, box1X + 60, stripY + 108);
 
+    // Additional credential details use the open space below the pass ID.
+    const detailY = stripY + 270;
+    const detailGap = 32;
+    const detailW = (stripW - detailGap * 2) / 3;
+    const detailH = 230;
+    const issuedDate = new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    }).format(new Date()).toUpperCase();
+
+    const drawDetailBox = (x: number, label: string, value: string, valueColor = '#1B365D') => {
+      ctx.fillStyle = '#F8FAFC';
+      ctx.fillRect(x, detailY, detailW, detailH);
+      ctx.strokeStyle = '#CBD5E1';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(x, detailY, detailW, detailH);
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#64748B';
+      ctx.font = '900 30px "Inter", sans-serif';
+      ctx.fillText(label, x + 32, detailY + 68);
+      ctx.fillStyle = valueColor;
+      ctx.font = value.length > 18 ? '900 34px "Inter", sans-serif' : '900 42px "Inter", sans-serif';
+      ctx.fillText(value, x + 32, detailY + 150);
+    };
+
+    drawDetailBox(box1X, 'LEETCODE ID', leetcodeUsername ? `@${leetcodeUsername.replace(/^@/, '')}` : 'NOT LINKED');
+    drawDetailBox(box1X + detailW + detailGap, 'PROFILE STATUS', 'VERIFIED', '#059669');
+    drawDetailBox(box1X + (detailW + detailGap) * 2, 'PASS ISSUED', issuedDate);
+
+    const problemY = detailY + 255;
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#64748B';
+    ctx.font = '900 30px "Inter", sans-serif';
+    ctx.fillText('VERIFIED PROBLEM PROFILE', box1X, problemY);
+
+    const problemBoxY = problemY + 34;
+    const problemBoxH = 145;
+    const drawProblemBox = (x: number, label: string, value: number, color: string) => {
+      ctx.fillStyle = '#F8FAFC';
+      ctx.fillRect(x, problemBoxY, detailW, problemBoxH);
+      ctx.strokeStyle = '#CBD5E1';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(x, problemBoxY, detailW, problemBoxH);
+      ctx.fillStyle = color;
+      ctx.font = '900 52px "Inter", sans-serif';
+      ctx.fillText(String(value), x + 30, problemBoxY + 82);
+      ctx.fillStyle = '#64748B';
+      ctx.font = '900 28px "Inter", sans-serif';
+      ctx.fillText(label, x + 30, problemBoxY + 122);
+    };
+
+    drawProblemBox(box1X, 'EASY', easySolved, '#059669');
+    drawProblemBox(box1X + detailW + detailGap, 'MEDIUM', mediumSolved, '#D97706');
+    drawProblemBox(box1X + (detailW + detailGap) * 2, 'HARD', hardSolved, '#DC2626');
+
+    const evidenceY = problemBoxY + problemBoxH + 24;
+    const evidenceH = 135;
+    const formatVerifiedAt = (value?: string | null) => {
+      if (!value) return 'NOT AVAILABLE';
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) return 'NOT AVAILABLE';
+      return parsed.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+    };
+    const drawEvidenceBox = (x: number, label: string, value: string, color = '#1B365D') => {
+      ctx.fillStyle = '#F8FAFC';
+      ctx.fillRect(x, evidenceY, detailW, evidenceH);
+      ctx.strokeStyle = '#CBD5E1';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(x, evidenceY, detailW, evidenceH);
+      ctx.fillStyle = '#64748B';
+      ctx.font = '900 25px "Inter", sans-serif';
+      ctx.fillText(label, x + 30, evidenceY + 50);
+      ctx.fillStyle = color;
+      ctx.font = '900 31px "Inter", sans-serif';
+      ctx.fillText(value, x + 30, evidenceY + 99);
+    };
+
+    drawEvidenceBox(box1X, 'CREDENTIAL STATUS', credentialStatus, credentialStatus === 'VALID' ? '#059669' : '#B45309');
+    drawEvidenceBox(box1X + detailW + detailGap, 'LAST DATA VERIFIED', formatVerifiedAt(lastVerifiedAt));
+    drawEvidenceBox(box1X + (detailW + detailGap) * 2, 'CONTEST EVIDENCE', `${officialContests} ACTUAL / ${virtualContests} VIRTUAL`);
+
+    const credentialMetaY = problemBoxY + problemBoxH + 28;
+    const drawCredentialMetaBox = (x: number, label: string, value: string, valueColor = '#1B365D') => {
+      ctx.fillStyle = '#F8FAFC';
+      ctx.fillRect(x, credentialMetaY, detailW, problemBoxH);
+      ctx.strokeStyle = '#CBD5E1';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(x, credentialMetaY, detailW, problemBoxH);
+      ctx.fillStyle = '#64748B';
+      ctx.font = '900 28px "Inter", sans-serif';
+      ctx.fillText(label, x + 30, credentialMetaY + 58);
+      ctx.fillStyle = valueColor;
+      ctx.font = value.length > 20 ? '900 30px "Inter", sans-serif' : '900 38px "Inter", sans-serif';
+      ctx.fillText(value, x + 30, credentialMetaY + 118);
+    };
+
+    drawCredentialMetaBox(box1X, 'CONTEST RATING', contestRating && contestRating > 0 ? String(Math.round(contestRating)) : 'NOT AVAILABLE', '#1E3A8A');
+    drawCredentialMetaBox(box1X + detailW + detailGap, 'ACTIVE STREAK', `${streakCount} DAYS`, '#0F172A');
+    drawCredentialMetaBox(box1X + (detailW + detailGap) * 2, 'VERIFICATION SOURCE', verificationSource, '#059669');
+
     // RIGHT COLUMN: INSTITUTIONAL PERFORMANCE METRICS & STANDING
     const rightX = leftX + leftW + 72;
     const rightW = innerW - leftW - 168;
@@ -484,25 +647,9 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     ctx.lineWidth = 6;
     ctx.strokeRect(qrX, qrY, qrS, qrS);
 
-    // Precise high-quality QR pattern
-    ctx.fillStyle = '#0F172A';
-    const drawQRFinder = (fx: number, fy: number) => {
-      ctx.fillRect(fx, fy, 88, 88);
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(fx + 12, fy + 12, 64, 64);
-      ctx.fillStyle = '#0F172A';
-      ctx.fillRect(fx + 24, fy + 24, 40, 40);
-    };
-    drawQRFinder(qrX + 20, qrY + 20);
-    drawQRFinder(qrX + qrS - 108, qrY + 20);
-    drawQRFinder(qrX + 20, qrY + qrS - 108);
-
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
-        if ((r * 3 + c * 7) % 5 < 3 && !(r < 3 && c < 3) && !(r < 3 && c > 5) && !(r > 5 && c < 3)) {
-          ctx.fillRect(qrX + 120 + c * 26, qrY + 120 + r * 26, 16, 16);
-        }
-      }
+    // Use the same real QR source for the preview and exported credential.
+    if (qrCanvasRef.current) {
+      ctx.drawImage(qrCanvasRef.current, qrX, qrY, qrS, qrS);
     }
 
     ctx.fillStyle = '#1B365D';
@@ -584,11 +731,15 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, [studentName, regNo, deptName, yearLevel, totalSolved, collegeRank, streakCount, leetcodeUsername, contestRating, logoLoaded]);
+  }, [studentName, regNo, deptName, yearLevel, totalSolved, collegeRank, streakCount, leetcodeUsername, contestRating, easySolved, mediumSolved, hardSolved, lastVerifiedAt, officialContests, virtualContests, verificationSource, credentialStatus, logoLoaded, secondaryLogoLoaded]);
 
+  const credentialId = `NEC-PASS-2026-${regNo || '732225CC018'}`;
+  const verificationUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/verify/${encodeURIComponent(credentialId)}`
+    : `https://nandha-engineering-college.example/verify/${encodeURIComponent(credentialId)}`;
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateAndDownloadPass = (format: 'png' | 'jpg' = 'png') => {
+  const generateAndDownloadPass = () => {
     if (isGenerating) return;
     setIsGenerating(true);
     const canvas = canvasRef.current;
@@ -599,11 +750,9 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     drawCardOnCanvas(canvas);
 
     const cleanReg = (regNo || 'download').replace(/[^A-Za-z0-9_-]+/g, '_');
-    const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-    const ext = format === 'png' ? 'png' : 'jpg';
-    const filename = `Nandha_Executive_Student_Pass_8K_${cleanReg}.${ext}`;
+    const mimeType = 'image/png';
+    const filename = `Nandha_Executive_Student_Pass_8K_${cleanReg}.png`;
 
-    // Lossless 8K PNG / Maximum Quality JPG
     canvas.toBlob((blob) => {
       if (blob) {
         triggerDownload(blob, filename, mimeType);
@@ -625,38 +774,22 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
       {/* Top Bar */}
       <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div className="space-y-1">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-black uppercase tracking-wider border border-emerald-300 dark:border-emerald-700/60 shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>High-Quality Digital Pass</span>
-          </div>
           <h3 className="font-black text-xl text-slate-900 dark:text-white tracking-tight flex items-center space-x-2">
             <span>Executive Digital Student Pass</span>
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">
-            Ultra-HD Certified Pass with Dual Institutional Signatures (Principal & HOD).
-          </p>
         </div>
 
         <div className="flex items-center space-x-2 flex-wrap gap-2">
           <button
-            onClick={() => generateAndDownloadPass('png')}
+            onClick={generateAndDownloadPass}
             disabled={isGenerating}
             className="flex items-center space-x-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-lg shadow-emerald-500/25 transition-transform transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
-            title="Download Lossless 8K Crystal Clear PNG Image"
+            title="Download PNG"
           >
             <Download className="w-4 h-4" />
-            <span>{isGenerating ? 'Exporting 8K...' : 'Download 8K PNG (Crystal Clear)'}</span>
+            <span>{isGenerating ? 'Exporting...' : 'Download PNG'}</span>
           </button>
 
-          <button
-            onClick={() => generateAndDownloadPass('jpg')}
-            disabled={isGenerating}
-            className="flex items-center space-x-2 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-900 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-200 rounded-xl text-xs font-bold border border-slate-700 transition-transform transform hover:scale-105 disabled:opacity-50 cursor-pointer"
-            title="Download Ultra-HD JPG Image"
-          >
-            <ImageIcon className="w-3.5 h-3.5" />
-            <span>.JPG</span>
-          </button>
         </div>
       </div>
 
@@ -666,6 +799,18 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
           ref={canvasRef}
           className="rounded-2xl shadow-xl max-w-full h-auto border border-slate-300 dark:border-navy-700"
           style={{ width: '100%', maxWidth: '850px', imageRendering: 'crisp-edges' }}
+        />
+      </div>
+
+      <div className="sr-only" aria-hidden="true">
+        <QRCodeCanvas
+          ref={qrCanvasRef}
+          value={verificationUrl}
+          size={400}
+          level="H"
+          includeMargin
+          bgColor="#ffffff"
+          fgColor="#0F172A"
         />
       </div>
 

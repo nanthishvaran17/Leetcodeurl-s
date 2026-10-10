@@ -582,24 +582,24 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
       <div className="responsive-table-container w-full min-w-0 overflow-x-auto md:rounded-2xl md:border md:border-slate-200 md:dark:border-navy-800 md:shadow-sm md:bg-white md:dark:bg-navy-950 flex flex-col space-y-4 md:space-y-0">
         {/* Table Header Wrapper (Sticky) */}
-        <div className="hidden md:flex bg-slate-100/90 dark:bg-navy-900 text-slate-800 dark:text-slate-100 font-extrabold border-b border-slate-300 dark:border-navy-700 uppercase tracking-wider text-xs w-full min-w-full md:min-w-[1100px] items-center py-3.5">
+        <div className="hidden md:flex bg-slate-100/90 dark:bg-navy-900 text-slate-800 dark:text-slate-100 font-extrabold border-b border-slate-300 dark:border-navy-700 uppercase tracking-wider text-xs w-full min-w-full md:min-w-[1100px] items-center py-4">
           <div className="flex-none w-10 px-3 text-center">
             <input type="checkbox" checked={deferredSortedStudents.length > 0 && selectedIds.length === deferredSortedStudents.length} onChange={toggleAll} className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
           </div>
-          <div className="flex-none w-24 px-3 text-left">Rank</div>
-          <div className="flex-none w-32 px-3 text-left">Register No</div>
-          <div className="flex-1 min-w-[200px] px-3 flex items-center space-x-3 text-left">
+          <div className="flex-none w-24 px-4 text-left">Rank</div>
+          <div className="flex-none w-32 px-4 text-left">Register No</div>
+          <div className="flex-1 min-w-[200px] px-4 flex items-center space-x-3 text-left">
             <div className="w-8 shrink-0"></div>
             <span>Student</span>
           </div>
-          <div className="flex-none w-36 px-3 text-left">Dept / Year</div>
-          <div className="flex-1 min-w-[160px] px-3 text-left">LeetCode Handle</div>
-          <div className="flex-none w-24 px-3 text-center">Solved</div>
-          <div className="flex-none w-32 px-3 text-center">Contest</div>
-          <div className="flex-none w-24 px-3 text-center">Rating</div>
-          <div className="flex-none w-28 px-3 text-center">Contest Rank</div>
-          <div className="flex-none w-28 px-3 text-center">Profile Rank</div>
-          <div className="flex-none w-32 px-3 text-center">Actions</div>
+          <div className="flex-none w-36 px-4 text-left">Dept / Year</div>
+          <div className="flex-1 min-w-[160px] px-4 text-left">LeetCode Handle</div>
+          <div className="flex-none w-24 px-4 text-center">Solved</div>
+          <div className="flex-none w-32 px-4 text-center">Contest</div>
+          <div className="flex-none w-24 px-4 text-center">Rating</div>
+          <div className="flex-none w-28 px-4 text-center">Contest Rank</div>
+          <div className="flex-none w-28 px-4 text-center">Profile Rank</div>
+          <div className="flex-none w-32 px-4 text-center">Actions</div>
         </div>
 
         {/* Virtualized Body */}
@@ -788,11 +788,8 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
             </div>
             <div className="text-center space-y-2">
               <h3 className="text-lg font-black text-slate-900 dark:text-white">Deactivate Student?</h3>
-              <p className="text-xs text-slate-600 dark:text-slate-400">
+              <p className="text-sm text-slate-700 dark:text-slate-200 font-medium leading-relaxed">
                 Are you sure you want to deactivate <strong className="text-slate-900 dark:text-white">{deletingStudent.name}</strong> ({deletingStudent.reg_no})?
-              </p>
-              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold bg-amber-50 dark:bg-amber-950/40 p-2 rounded-xl border border-amber-200 dark:border-amber-900/40">
-                Soft Delete: Record will be hidden from public leaderboard but preserved in audit logs.
               </p>
             </div>
             <div className="flex items-center space-x-3 pt-2">

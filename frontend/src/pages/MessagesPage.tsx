@@ -75,6 +75,9 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
   }, []);
 
   const fetchMessages = useCallback(async (conversationId: string) => {
+    if (!conversationId || conversationId.startsWith('system-')) {
+      return;
+    }
     try {
       const res = await axios.get(getApiUrl(`/messaging/conversations/${conversationId}/messages`), {
         headers: await getAuthHeaders()
@@ -136,7 +139,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
   useEffect(() => {
     if (isConnected) {
       fetchConversations();
-      if (activeConversationId) {
+      if (activeConversationId && !activeConversationId.startsWith('system-')) {
         fetchMessages(activeConversationId);
         viewConversation(activeConversationId);
       } else {
@@ -264,9 +267,11 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
 
   const handleSelectConversation = async (id: string) => {
     setActiveConversationId(id);
-    setIsMessagesLoading(true);
-    await fetchMessages(id);
-    setIsMessagesLoading(false);
+    if (!id.startsWith('system-')) {
+      setIsMessagesLoading(true);
+      await fetchMessages(id);
+      setIsMessagesLoading(false);
+    }
   };
 
   const handleSendMessage = (content: string, attachmentFile?: File, replyToMessageId?: string) => {
@@ -585,16 +590,45 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
   };
 
   const handleActionTrigger = (act: any) => {
+    if (!act) return;
     if (act.action === 'CREATE_GROUP') {
       setIsGroupModalOpen(true);
     } else if (act.action === 'VIEW_TRANSPARENCY') {
       setActiveConversationId('system-transparency-agent');
+    } else if (['VIEW_STUDENTS', 'VIEW_INACTIVE_STUDENTS', 'VIEW_STUDENT_PROFILE'].includes(act.action)) {
+      setActiveConversationId(null);
+      onNavigateTab?.('students');
+    } else if (act.action === 'NAVIGATE' || act.action === 'NAVIGATE_TAB') {
+      const targetTab = act.params?.tab || act.params?.targetTab || 'dashboard';
+      setActiveConversationId(null);
+      onNavigateTab?.(targetTab);
+    } else if (act.action === 'VIEW_MY_PROGRESS') {
+      setActiveConversationId(null);
+      onNavigateTab?.('growth');
+    } else if (['VIEW_CONTEST', 'CONTEST_LEADERBOARD'].includes(act.action)) {
+      setActiveConversationId(null);
+      onNavigateTab?.('contests');
+    } else if (act.action === 'VIEW_STAFF_ALLOCATIONS') {
+      setActiveConversationId(null);
+      onNavigateTab?.('departments');
     } else if (['DOWNLOAD_PDF', 'EXPORT_PDF', 'EXPORT_STUDENT_PDF'].includes(act.action)) {
+      const token = localStorage.getItem('token') || '';
+      const reportParams = new URLSearchParams({ token });
+      Object.entries(act.params || {}).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          reportParams.set(key, String(value));
+        }
+      });
+      const downloadUrl = `/reports/export-pdf?${reportParams.toString()}`;
+      
       downloadManager.download({
-        endpoint: '/reports/export-pdf',
+        endpoint: downloadUrl,
         filename: 'Executive_PDF_Summary.pdf',
         mimeType: 'application/pdf',
       });
+    } else if (act.params?.tab) {
+      setActiveConversationId(null);
+      onNavigateTab?.(act.params.tab);
     }
   };
 
@@ -645,7 +679,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
   const isSystemActive = isAiAgentActive || isTransparencyActive;
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-56px)] sm:h-[calc(100dvh-68px)] bg-white dark:bg-[#0B1120] text-slate-900 dark:text-slate-200 w-full overflow-hidden border-0 rounded-none shadow-none">
+    <div className="flex flex-col h-full bg-white dark:bg-[#0B1120] text-slate-900 dark:text-slate-200 w-full overflow-hidden border-0 rounded-none shadow-none">
       
       {/* Top Institutional Intelligence Hub Header */}
       <div className={`m-2.5 sm:m-4 p-4 sm:p-5 rounded-2xl sm:rounded-3xl relative overflow-hidden bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white flex-wrap items-center justify-between gap-4 shrink-0 shadow-xl border border-indigo-500/30 dark:border-indigo-500/40 z-20 backdrop-blur-md ${
@@ -695,9 +729,9 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
       {/* ALWAYS RENDER THE LAYOUT FRAME */}
       <div className="flex-1 min-h-0 flex overflow-hidden">
         
-        {/* ZONE 1: Smart Inbox (Always visible on desktop, conditionally hidden on mobile if in chat) */}
+        {/* ZONE 1: Smart Inbox (Hidden when AI Agent is active to give full screen width to AskInstitutionPanel) */}
         <div className={`w-full md:w-[320px] lg:w-[380px] shrink-0 border-r border-slate-200 dark:border-slate-800 ${
-          activeConversationId ? 'hidden md:block' : 'block'
+          isAiAgentActive ? 'hidden' : (activeConversationId ? 'hidden md:block' : 'block')
         }`}>
           <ConversationList 
             conversations={conversationsWithTyping} 

@@ -290,6 +290,26 @@ export const AccountProfileSettings: React.FC = () => {
   const [mentees, setMentees] = useState<any[]>([]);
   const [menteesLoading, setMenteesLoading] = useState(false);
 
+  // Dynamic Mentorship Metrics
+  const dynamicAssignedMentees = mentees.length;
+  const dynamicPendingInterventions = mentees.filter(
+    m => m.status_code === 'CRITICAL' || m.status_code === 'WARNING'
+  ).length;
+
+  const dynamicAvgAttendance = useMemo(() => {
+    if (mentees.length === 0) return 0;
+    const totalAtt = mentees.reduce((sum, m) => {
+      const attVal =
+        m.attendance_pct ??
+        m.attendance_rate ??
+        m.attendance ??
+        (m.status_code === 'CRITICAL' ? 60 : m.status_code === 'WARNING' ? 74 : 92);
+      const parsed = typeof attVal === 'string' ? parseFloat(attVal.replace('%', '')) : Number(attVal);
+      return sum + (isNaN(parsed) ? 90 : parsed);
+    }, 0);
+    return Math.round(totalAtt / mentees.length);
+  }, [mentees]);
+
   // Photo Crop State
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -482,6 +502,7 @@ export const AccountProfileSettings: React.FC = () => {
   // Active Sessions
   const [sessions, setSessions] = useState<any[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState<boolean>(true);
+  const [selectedLoginEvent, setSelectedLoginEvent] = useState<any | null>(null);
 
   // Security Login History Audit
   const [loginHistory, setLoginHistory] = useState<any[]>([]);
@@ -1263,7 +1284,15 @@ export const AccountProfileSettings: React.FC = () => {
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const filename = `NEC_Security_Audit_${institutionalId}_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-      await downloadManager.downloadBlob(blob, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      const downloadResult = await downloadManager.downloadBlob(blob, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      if (!downloadResult.success) {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = filename;
+        anchor.click();
+        URL.revokeObjectURL(url);
+      }
       
       if (notifyToast) notify.dismiss(notifyToast);
       notify.success('Security audit report downloaded successfully!', '', { category: 'ADMIN' });
@@ -1611,6 +1640,32 @@ export const AccountProfileSettings: React.FC = () => {
       printWin.document.write(reportHtml);
       printWin.document.close();
       printWin.focus();
+      notify.success('Print report opened', 'Use the Print button in the report window to print or save as PDF.', { category: 'ADMIN' });
+      return;
+    }
+
+    // Popup blockers can reject window.open; print through an invisible same-page iframe instead.
+    const printFrame = document.createElement('iframe');
+    printFrame.style.position = 'fixed';
+    printFrame.style.right = '0';
+    printFrame.style.bottom = '0';
+    printFrame.style.width = '0';
+    printFrame.style.height = '0';
+    printFrame.style.border = '0';
+    document.body.appendChild(printFrame);
+    const frameDocument = printFrame.contentWindow?.document;
+    if (frameDocument && printFrame.contentWindow) {
+      frameDocument.open();
+      frameDocument.write(reportHtml);
+      frameDocument.close();
+      printFrame.onload = () => {
+        printFrame.contentWindow?.focus();
+        printFrame.contentWindow?.print();
+        setTimeout(() => printFrame.remove(), 1000);
+      };
+    } else {
+      printFrame.remove();
+      notify.error('Print report could not be opened', 'Please allow popups for this site and try again.', { category: 'ADMIN' });
     }
   };
 
@@ -1855,13 +1910,13 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
       </div>
 
       {/* 3. RESPONSIVE 5-TAB NAVIGATION — ULTRA PREMIUM DESIGN */}
-      <div className="flex flex-wrap gap-2 p-2 rounded-[20px] bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-white/10 shadow-[inset_0_1px_4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_4px_rgba(255,255,255,0.02)] relative">
+      <div className="grid grid-cols-6 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 p-1.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/60 dark:border-white/10 shadow-sm relative">
         
         {/* Tab 1: Personal & Academic Profile */}
         <button
           type="button"
           onClick={() => setActiveTab('profile')}
-          className={`flex-1 min-w-[140px] lg:min-w-0 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
+          className={`w-full min-w-0 col-span-2 sm:col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
             activeTab === 'profile'
               ? 'text-white bg-gradient-to-r from-brand-600 to-indigo-600 shadow-[0_4px_12px_rgba(79,70,229,0.3)]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
@@ -1876,7 +1931,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         <button
           type="button"
           onClick={() => setActiveTab('security')}
-          className={`flex-1 min-w-[140px] lg:min-w-0 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
+          className={`w-full min-w-0 col-span-2 sm:col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
             activeTab === 'security'
               ? 'text-white bg-gradient-to-r from-emerald-500 to-teal-600 shadow-[0_4px_12px_rgba(16,185,129,0.3)]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
@@ -1891,7 +1946,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         <button
           type="button"
           onClick={() => setActiveTab('preferences')}
-          className={`flex-1 min-w-[140px] lg:min-w-0 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
+          className={`w-full min-w-0 col-span-2 sm:col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
             activeTab === 'preferences'
               ? 'text-white bg-gradient-to-r from-purple-500 to-pink-600 shadow-[0_4px_12px_rgba(168,85,247,0.3)]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
@@ -1906,7 +1961,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         <button
           type="button"
           onClick={() => setActiveTab('id_card')}
-          className={`flex-1 min-w-[140px] lg:min-w-0 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
+          className={`w-full min-w-0 col-span-3 sm:col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
             activeTab === 'id_card'
               ? 'text-white bg-gradient-to-r from-sky-500 to-blue-600 shadow-[0_4px_12px_rgba(14,165,233,0.3)]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
@@ -1921,7 +1976,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         <button
           type="button"
           onClick={() => setActiveTab('mentorship')}
-          className={`flex-1 min-w-[140px] lg:min-w-0 py-3 px-4 rounded-2xl text-[11px] uppercase tracking-wide font-black transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer relative group ${
+          className={`col-span-3 min-w-0 sm:col-span-1 w-full py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
             activeTab === 'mentorship'
               ? 'text-white bg-gradient-to-r from-amber-500 to-orange-600 shadow-[0_4px_12px_rgba(245,158,11,0.3)]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
@@ -1961,7 +2016,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             <div className="lg:col-span-7 space-y-6">
               
               {/* Photo & Avatar Customizer */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
+              <div className="bg-white/95 dark:bg-navy-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-5">
                 <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
                   <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
                     <Camera className="w-4 h-4 text-brand-600 dark:text-brand-400" /> Profile Picture & Avatar
@@ -2053,7 +2108,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               </div>
 
               {/* Personal Details Inputs */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
+              <div className="bg-white/95 dark:bg-navy-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-5">
                 <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
                   <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
                     <User className="w-4 h-4 text-brand-600 dark:text-brand-400" /> Identity & Contact Information
@@ -2260,7 +2315,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             <div className="lg:col-span-5 space-y-6">
               
               {/* Institutional Scope */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
+              <div className="bg-white/95 dark:bg-navy-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-5">
                 <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
                   <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
                     <Shield className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> Institutional Scope
@@ -2317,7 +2372,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               </div>
 
               {/* Academic Social & Research Links */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
+              <div className="bg-white/95 dark:bg-navy-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4">
                 <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
                   <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
                     <Globe className="w-4 h-4 text-brand-600 dark:text-brand-400" /> Academic & Portfolio Links
@@ -2818,22 +2873,39 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     </div>
                   ) : (
                     loginHistory.map(lh => (
-                      <div key={lh.id} className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 flex items-center justify-between gap-3 text-xs">
-                        <div className="min-w-0 space-y-0.5">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-black text-[11px] text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 px-1.5 py-0.5 rounded border border-brand-200 dark:border-brand-800">
+                      <button
+                        key={lh.id}
+                        type="button"
+                        onClick={() => setSelectedLoginEvent(lh)}
+                        className="w-full text-left p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 space-y-2.5 shadow-sm hover:border-brand-300 dark:hover:border-brand-800 hover:shadow-md transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+                        aria-label={`View security event ${lh.id}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex items-center gap-2">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-100 text-brand-700 dark:bg-brand-950/70 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                              <ShieldCheck className="w-3.5 h-3.5" />
+                            </span>
+                            <span className="font-mono font-black text-[10px] sm:text-[11px] text-brand-700 dark:text-brand-300 break-all leading-tight" title={lh.id}>
                               {lh.id}
                             </span>
-                            <span className="font-black text-slate-950 dark:text-white truncate">{lh.date}, {lh.time}</span>
                           </div>
-                          <p className="text-[11px] font-mono text-slate-600 dark:text-slate-400 font-bold truncate">
-                            {lh.ip} • <span className="text-slate-800 dark:text-slate-300">{lh.network}</span> • {lh.method}
-                          </p>
+                          <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shrink-0">
+                            {lh.status}
+                          </span>
                         </div>
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shrink-0">
-                          {lh.status}
-                        </span>
-                      </div>
+                        <div className="pl-9 space-y-1.5 min-w-0">
+                          <p className="text-[11px] font-black text-slate-950 dark:text-white">{lh.date} <span className="text-slate-400 dark:text-slate-500">at</span> {lh.time}</p>
+                          <div className="text-[10px] sm:text-[11px] font-mono text-slate-600 dark:text-slate-400 font-bold leading-relaxed break-words">
+                            <span className={lh.ip === '127.0.0.1' ? 'text-amber-700 dark:text-amber-300' : ''}>
+                              {lh.ip === '127.0.0.1' ? 'Local development (127.0.0.1)' : lh.ip}
+                            </span>
+                            <span className="text-slate-400 dark:text-slate-600"> • </span>
+                            <span className="text-slate-800 dark:text-slate-300">{lh.network}</span>
+                            <span className="text-slate-400 dark:text-slate-600"> • </span>
+                            <span>{lh.method}</span>
+                          </div>
+                        </div>
+                      </button>
                     ))
                   )}
                 </div>
@@ -3294,18 +3366,30 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800/30 flex flex-col items-center justify-center text-center">
-                  <span className="text-3xl font-black text-blue-700 dark:text-blue-400">24</span>
-                  <span className="text-[10px] font-bold text-blue-600/80 dark:text-blue-400/80 uppercase tracking-wider mt-1">Assigned Mentees</span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                <div className="p-3 sm:p-4 min-h-[104px] rounded-2xl bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800/30 flex flex-col items-center justify-center text-center">
+                  <span className="text-2xl sm:text-3xl font-black text-blue-700 dark:text-blue-400 leading-none">
+                    {menteesLoading ? '...' : dynamicAssignedMentees}
+                  </span>
+                  <span className="max-w-full text-[10px] font-bold text-blue-600/80 dark:text-blue-400/80 uppercase tracking-wider leading-tight mt-2 whitespace-normal break-words">
+                    Assigned Mentees
+                  </span>
                 </div>
-                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800/30 flex flex-col items-center justify-center text-center">
-                  <span className="text-3xl font-black text-emerald-700 dark:text-emerald-400">92%</span>
-                  <span className="text-[10px] font-bold text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider mt-1">Avg Attendance</span>
+                <div className="p-3 sm:p-4 min-h-[104px] rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800/30 flex flex-col items-center justify-center text-center">
+                  <span className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 leading-none">
+                    {menteesLoading ? '...' : `${dynamicAvgAttendance}%`}
+                  </span>
+                  <span className="max-w-full text-[10px] font-bold text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider leading-tight mt-2 whitespace-normal break-words">
+                    Avg Attendance
+                  </span>
                 </div>
-                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800/30 flex flex-col items-center justify-center text-center">
-                  <span className="text-3xl font-black text-amber-700 dark:text-amber-400">3</span>
-                  <span className="text-[10px] font-bold text-amber-600/80 dark:text-amber-400/80 uppercase tracking-wider mt-1">Pending Interventions</span>
+                <div className="col-span-2 sm:col-span-1 p-3 sm:p-4 min-h-[104px] rounded-2xl bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800/30 flex flex-col items-center justify-center text-center">
+                  <span className="text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-400 leading-none">
+                    {menteesLoading ? '...' : dynamicPendingInterventions}
+                  </span>
+                  <span className="max-w-full text-[10px] font-bold text-amber-600/80 dark:text-amber-400/80 uppercase tracking-wider leading-tight mt-2 whitespace-normal break-words">
+                    Pending Interventions
+                  </span>
                 </div>
               </div>
 
@@ -3673,6 +3757,51 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   {code}
                 </div>
               ))}
+
+              {/* MODAL: LOGIN SECURITY EVENT DETAILS */}
+              {selectedLoginEvent && (
+                <GlobalModalBackdrop isOpen={!!selectedLoginEvent} onClose={() => setSelectedLoginEvent(null)} className="flex items-center justify-center p-4">
+                  <div className="relative max-w-lg w-full bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-700 shadow-2xl space-y-5 animate-scale-up text-slate-900 dark:text-slate-100">
+                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 pb-3">
+                      <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2">
+                        <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> Security Event Details
+                      </h3>
+                      <button type="button" onClick={() => setSelectedLoginEvent(null)} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 cursor-pointer" aria-label="Close event details">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div className="sm:col-span-2 p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
+                        <span className="block text-[10px] font-black uppercase text-slate-500 mb-1">Event ID</span>
+                        <span className="font-mono font-black text-brand-700 dark:text-brand-300 break-all">{selectedLoginEvent.id}</span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
+                        <span className="block text-[10px] font-black uppercase text-slate-500 mb-1">Status</span>
+                        <span className="font-black text-emerald-700 dark:text-emerald-300">{selectedLoginEvent.status}</span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
+                        <span className="block text-[10px] font-black uppercase text-slate-500 mb-1">Authentication</span>
+                        <span className="font-bold text-slate-900 dark:text-white">{selectedLoginEvent.method}</span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
+                        <span className="block text-[10px] font-black uppercase text-slate-500 mb-1">Date & Time</span>
+                        <span className="font-bold text-slate-900 dark:text-white">{selectedLoginEvent.date} at {selectedLoginEvent.time}</span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
+                        <span className="block text-[10px] font-black uppercase text-slate-500 mb-1">IP Address</span>
+                        <span className="font-mono font-bold text-slate-900 dark:text-white">{selectedLoginEvent.ip}</span>
+                      </div>
+                      <div className="sm:col-span-2 p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
+                        <span className="block text-[10px] font-black uppercase text-slate-500 mb-1">Browser / Device</span>
+                        <span className="font-mono text-[11px] font-bold break-words text-slate-700 dark:text-slate-200">{selectedLoginEvent.network}</span>
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => setSelectedLoginEvent(null)} className="w-full px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-black cursor-pointer shadow-lg shadow-brand-500/20">
+                      Close
+                    </button>
+                  </div>
+                </GlobalModalBackdrop>
+              )}
             </div>
 
             <div className="flex items-center justify-between gap-3 pt-2">

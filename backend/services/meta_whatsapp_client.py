@@ -156,19 +156,21 @@ class MetaWhatsAppClient:
                         continue
                     break
 
-        # 2. High-Performance Sandbox Simulation Mode
+        # 2. Do not report delivery when Meta credentials are missing.
+        # A sandbox result must never look like a real WhatsApp delivery.
         elapsed_ms = (time.perf_counter() - start_time) * 1000
-        wamid = f"wamid.sandbox.{corr_id}.{hashlib.md5(text[:20].encode()).hexdigest()[:8]}"
-        self._record_outbound(to_phone, text, "DELIVERED", corr_id, wamid, elapsed_ms)
+        wamid = f"sandbox.{corr_id}"
+        self._record_outbound(to_phone, text, "NOT_CONFIGURED", corr_id, wamid, elapsed_ms)
 
-        logger.info(f"[{corr_id}] [WHATSAPP_SENT_SANDBOX] To: {to_phone} | Msg: {text[:50]}... | {elapsed_ms:.2f}ms")
+        logger.warning(f"[{corr_id}] [WHATSAPP_NOT_CONFIGURED] Live Meta credentials are missing; no message sent to {to_phone}.")
 
         return {
-            "success": True,
-            "mode": "SANDBOX_VERIFIED",
-            "status": "DELIVERED",
+            "success": False,
+            "mode": "NOT_CONFIGURED",
+            "status": "NOT_SENT",
             "message_id": wamid,
             "correlation_id": corr_id,
+            "error": "WhatsApp Cloud API credentials are not configured.",
             "recipient": to_phone,
             "latency_ms": elapsed_ms
         }

@@ -803,8 +803,8 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       
       {/* 1. PROVIDER STATUS BAR (Admins Only) */}
       {!isStaff && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-sm mb-8 sm:mb-10">
-          <div className="flex items-center gap-3">
+        <div className="flex items-start sm:items-center justify-between gap-3 sm:gap-4 p-5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-sm mb-8 sm:mb-10">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 dark:text-emerald-400">
               <CheckCircle2 className="w-5 h-5" />
             </div>
@@ -818,7 +818,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex shrink-0 items-center gap-6">
             <div className="hidden md:flex items-center gap-6 text-xs">
               <div className="flex flex-col">
                 <span className="text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px]">Timeout</span>

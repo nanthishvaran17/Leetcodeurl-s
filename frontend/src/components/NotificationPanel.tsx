@@ -1,13 +1,14 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { resolveNotificationDestination } from '../utils/notificationNavigation';
-import { Bell, Check, Archive, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, Sparkles, Flame, Zap, Trophy, Users, Wrench } from 'lucide-react';
+import { Bell, Check, Archive, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, RefreshCw, Flame, Zap, Trophy, Users } from 'lucide-react';
 import { useGlobalNotifications, normalizeCategory, type Notification } from '../context/GlobalNotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { requestPushPermissionAndGetToken } from '../services/firebasePush';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { downloadManager } from '../services/download/downloadManager';
+import { useNotification } from '../context/NotificationContext';
 
 import { API_BASE_URL } from '../config/apiConfig';
 
@@ -58,7 +59,7 @@ const CATEGORIES = [
   { id: 'announcements', label: 'Announcements' },
 ];
 
-const NotificationItem = ({ n, handleNotificationClick, deleteNotification, archiveNotification, markAsRead, setActiveFileModal, getIcon }: any) => {
+const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotification, confirmArchiveNotification, markAsRead, setActiveFileModal, getIcon }: any) => {
   const [swipeX, setSwipeX] = useState(0);
   const THRESHOLD = 70;
 
@@ -69,11 +70,11 @@ const NotificationItem = ({ n, handleNotificationClick, deleteNotification, arch
     if (offset < -THRESHOLD || velocity < -400) {
       // Swiped LEFT → Delete
       setSwipeX(-120);
-      setTimeout(() => deleteNotification(n.id), 280);
+      setTimeout(() => confirmDeleteNotification(n), 280);
     } else if (offset > THRESHOLD || velocity > 400) {
       // Swiped RIGHT → Archive (hide)
       setSwipeX(120);
-      setTimeout(() => archiveNotification(n.id), 280);
+      setTimeout(() => confirmArchiveNotification(n), 280);
     } else {
       setSwipeX(0);
     }
@@ -125,7 +126,7 @@ const NotificationItem = ({ n, handleNotificationClick, deleteNotification, arch
 
         <div className={`flex-1 min-w-0 pr-2 ${n.isRead ? 'opacity-75' : ''}`}>
           <div className="flex items-center justify-between gap-2 mb-0.5">
-            <h4 className={`text-xs sm:text-sm truncate ${!n.isRead ? 'text-slate-900 dark:text-white font-extrabold' : 'text-slate-600 dark:text-slate-300 font-bold'}`}>
+            <h4 className={`text-xs sm:text-sm line-clamp-2 leading-snug ${!n.isRead ? 'text-slate-900 dark:text-white font-extrabold' : 'text-slate-600 dark:text-slate-300 font-bold'}`}>
               {n.title}
             </h4>
             <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 font-semibold">
@@ -157,7 +158,7 @@ const NotificationItem = ({ n, handleNotificationClick, deleteNotification, arch
             )}
           </div>
 
-          <p className={`text-xs leading-relaxed whitespace-pre-line ${!n.isRead ? 'text-slate-700 dark:text-slate-200 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
+          <p className={`text-xs leading-relaxed whitespace-pre-line line-clamp-6 ${!n.isRead ? 'text-slate-700 dark:text-slate-200 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
             {n.message}
           </p>
 
@@ -202,43 +203,39 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
   } = useGlobalNotifications();
 
   const { token, user } = useAuth();
+  const { confirmAction } = useNotification();
   const panelRef = useRef<HTMLDivElement>(null);
   const [activeFileModal, setActiveFileModal] = useState<{ fileId: string; title: string; filename?: string } | null>(null);
   const [pushPermState, setPushPermState] = useState<string>('default');
   const [isEnablingPush, setIsEnablingPush] = useState(false);
   const [isSendingTestPush, setIsSendingTestPush] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [testPushStatus, setTestPushStatus] = useState<string | null>(null);
   const [pushErrorMessage, setPushErrorMessage] = useState<string | null>(null);
-  const [showStaffTools, setShowStaffTools] = useState(false);
-  const [isSimulating, setIsSimulating] = useState<string | null>(null);
 
-  const handleSimulateAlert = async (endpoint: string, payload: any = {}) => {
-    if (!token) return;
-    setIsSimulating(endpoint);
-    try {
-      if (setSelectedCategory) {
-        setSelectedCategory('all');
-      }
-      const res = await fetch(`${API_BASE_URL}/notifications${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        setTestPushStatus('✓ In-App Alert dispatched & live in notification center!');
-        if (refreshNotifications) await refreshNotifications();
-      } else {
-        const errJson = await res.json().catch(() => ({}));
-        setTestPushStatus(`Notice: ${errJson.detail || 'Dispatched'}`);
-      }
-    } catch (e: any) {
-      setTestPushStatus(`Notice: ${e.message || 'Dispatched'}`);
-    } finally {
-      setIsSimulating(null);
-      setTimeout(() => setTestPushStatus(null), 4000);
+  const confirmDeleteNotification = async (notification: Notification) => {
+    const confirmed = await confirmAction({
+      title: 'Delete Notification?',
+      message: `Are you sure you want to permanently delete "${notification.title}"? This action cannot be undone.`,
+      confirmLabel: 'Delete Notification',
+      category: 'NOTIFICATIONS',
+      variant: 'danger',
+    });
+    if (confirmed) {
+      await deleteNotification(notification.id);
+    }
+  };
+
+  const confirmArchiveNotification = async (notification: Notification) => {
+    const confirmed = await confirmAction({
+      title: 'Archive Notification?',
+      message: `Move "${notification.title}" to Archived? You can still find it in the Archived tab.`,
+      confirmLabel: 'Archive Notification',
+      category: 'NOTIFICATIONS',
+      variant: 'info',
+    });
+    if (confirmed) {
+      await archiveNotification(notification.id);
     }
   };
 
@@ -441,6 +438,16 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
     }
   };
 
+  const handleRefreshNotifications = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await refreshNotifications();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (window.innerWidth >= 640 && panelRef.current && !panelRef.current.contains(event.target as Node)) {
@@ -518,7 +525,10 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.98 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="fixed inset-0 sm:inset-auto sm:absolute sm:right-0 sm:top-12 sm:mt-2 w-full sm:w-96 max-w-[100vw] sm:max-w-sm bg-white dark:bg-navy-950 sm:rounded-2xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-800 z-[100050] overflow-hidden flex flex-col h-dvh sm:h-auto sm:max-h-[580px] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,12px)]"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Notifications"
+            className="fixed inset-0 sm:inset-auto sm:absolute sm:right-0 sm:top-12 sm:mt-2 w-full sm:w-96 max-w-[100vw] sm:max-w-sm bg-white dark:bg-navy-950 sm:rounded-2xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-800 z-[100050] overflow-hidden flex flex-col h-dvh sm:h-auto sm:max-h-[680px] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,12px)]"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-slate-100 dark:border-navy-800 bg-slate-50/90 dark:bg-navy-950/90 shrink-0">
@@ -542,15 +552,13 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"
-                  onClick={() => setShowStaffTools(!showStaffTools)}
-                  className={`p-2 rounded-xl transition-colors cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px] ${
-                    showStaffTools
-                      ? 'bg-brand-500 text-white shadow-xs'
-                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-navy-800'
-                  }`}
-                  title="Staff & Mentor Simulation Tools"
+                  onClick={() => void handleRefreshNotifications()}
+                  disabled={isRefreshing}
+                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-200/60 dark:hover:bg-navy-800 rounded-xl transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center disabled:opacity-50 disabled:cursor-wait"
+                  title="Refresh notifications"
+                  aria-label="Refresh notifications"
                 >
-                  <Sparkles size={16} />
+                  <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
                 </button>
                 {unreadCount > 0 && (
                   <button
@@ -564,79 +572,6 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                 )}
               </div>
             </div>
-
-            {/* Quick Staff & Mentor Simulation Drawer */}
-            {showStaffTools && (
-              <div className="bg-slate-50 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 p-3 space-y-2 text-xs shrink-0 animate-fade-in">
-                <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-[11px] uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                    <Sparkles size={13} className="text-brand-500" />
-                    Staff Intelligence & Alert Dispatcher
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-bold">1-Click Test</span>
-                </div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    type="button"
-                    disabled={!!isSimulating}
-                    onClick={() => handleSimulateAlert('/simulate-single-day-surge', { student_name: 'Raj', reg_no: '732224CS101', solved_today: 100 })}
-                    className="p-2 rounded-xl bg-white dark:bg-navy-800 hover:bg-amber-50 dark:hover:bg-amber-950/40 border border-slate-200 dark:border-navy-700 text-left transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <Flame size={16} className="text-amber-500 shrink-0" />
-                    <div className="min-w-0">
-                      <div className="font-bold text-[11px] text-slate-800 dark:text-white truncate">100 Solved Today</div>
-                      <div className="text-[9px] text-slate-400 truncate">Raj (Same-Day Surge)</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={!!isSimulating}
-                    onClick={() => handleSimulateAlert('/simulate-fetch-surge', { student_name: 'Sanjay', reg_no: '732224IT055', previous_solved: 150, current_solved: 201 })}
-                    className="p-2 rounded-xl bg-white dark:bg-navy-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-slate-200 dark:border-navy-700 text-left transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <Zap size={16} className="text-indigo-500 shrink-0" />
-                    <div className="min-w-0">
-                      <div className="font-bold text-[11px] text-slate-800 dark:text-white truncate">+51 Growth Delta</div>
-                      <div className="text-[9px] text-slate-400 truncate">Sanjay (150 → 201)</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={!!isSimulating}
-                    onClick={() => handleSimulateAlert('/simulate-contest-attendance', { contest_name: 'Weekly Contest 438' })}
-                    className="p-2 rounded-xl bg-white dark:bg-navy-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200 dark:border-navy-700 text-left transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <Users size={16} className="text-blue-500 shrink-0" />
-                    <div className="min-w-0">
-                      <div className="font-bold text-[11px] text-slate-800 dark:text-white truncate">Contest Attendance</div>
-                      <div className="text-[9px] text-slate-400 truncate">Attended & Absent List</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={!!isSimulating}
-                    onClick={() => handleSimulateAlert('/simulate-contest-sync-broadcast', { contest_name: 'Weekly Contest 438' })}
-                    className="p-2 rounded-xl bg-white dark:bg-navy-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-navy-700 text-left transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <Trophy size={16} className="text-emerald-500 shrink-0" />
-                    <div className="min-w-0">
-                      <div className="font-bold text-[11px] text-slate-800 dark:text-white truncate">Contest Synced</div>
-                      <div className="text-[9px] text-slate-400 truncate">Web & App Data Live</div>
-                    </div>
-                  </button>
-                </div>
-                {testPushStatus && (
-                  <div className="text-[10px] font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/50 p-1.5 rounded-lg text-center">
-                    {testPushStatus}
-                  </div>
-                )}
-              </div>
-            )}
-
-
 
             {/* Category Filter Pills */}
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-navy-800 overflow-x-auto overflow-y-hidden whitespace-nowrap shrink-0 bg-white dark:bg-navy-950 touch-pan-x snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -718,13 +653,14 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100 dark:divide-navy-800/60">
+                <div className="divide-y divide-slate-100 dark:divide-navy-800/60 pb-3 sm:pb-0">
                   {notifications.map((n) => (
                     <NotificationItem
                       key={n.id}
                       n={n}
                       handleNotificationClick={handleNotificationClick}
-                      deleteNotification={deleteNotification}
+                      confirmDeleteNotification={confirmDeleteNotification}
+                      confirmArchiveNotification={confirmArchiveNotification}
                       archiveNotification={archiveNotification}
                       markAsRead={markAsRead}
                       setActiveFileModal={setActiveFileModal}

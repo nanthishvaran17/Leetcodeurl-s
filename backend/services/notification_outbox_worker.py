@@ -5,6 +5,7 @@ from backend.logger import logger
 from backend.models import NotificationEvent, AuditLogRecord
 from backend.services.email_service import send_email
 from backend.services.notification_service import NotificationService
+from backend.services.bot_notification_service import BotNotificationService
 
 class NotificationOutboxWorker:
     """
@@ -98,9 +99,23 @@ class NotificationOutboxWorker:
                         created_by="CONTEST_INTEGRITY_ENGINE",
                         action_route=evt.payload.get("action_route")
                     )
+                    if res.get("success") is False:
+                        raise RuntimeError(res.get("error") or "Push provider rejected notification")
                     evt.status = "SENT"
                     evt.sent_at = datetime.datetime.now(datetime.timezone.utc)
-                    evt.provider_message_id = f"FIRESTORE-{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}"
+                    evt.provider_message_id = str(res.get("message_id") or f"PUSH-{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}")
+                    success_count += 1
+
+                elif evt.channel == "WHATSAPP":
+                    res = BotNotificationService.send_whatsapp_message(
+                        phone_number=evt.recipient_target,
+                        text=evt.payload.get("message", "")
+                    )
+                    if not res.get("success"):
+                        raise RuntimeError(res.get("error") or "WhatsApp provider rejected notification")
+                    evt.status = "SENT"
+                    evt.sent_at = datetime.datetime.now(datetime.timezone.utc)
+                    evt.provider_message_id = str(res.get("message_id") or "WHATSAPP_ACCEPTED")
                     success_count += 1
 
                 # Record Audit Log

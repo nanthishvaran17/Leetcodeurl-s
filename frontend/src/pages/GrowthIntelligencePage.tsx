@@ -328,23 +328,23 @@ export const GrowthIntelligencePage: React.FC = () => {
     <div className="space-y-8 py-2 pb-16 animate-slideUp">
 
       {/* Executive Header Banner */}
-      <div className="relative rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-7 md:p-8 shadow-xl border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-7 md:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
         <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-1/3 -mb-10 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-1/3 -mb-10 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl"></div>
         </div>
 
         <div className="relative z-10 space-y-6">
           {/* Header Title Section */}
           <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
-            <div className="p-2.5 sm:p-3 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0 shadow-lg shadow-emerald-500/10 mt-0.5 sm:mt-0">
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0 shadow-lg shadow-amber-500/10 mt-0.5 sm:mt-0">
               <TrendingUp className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex flex-wrap items-center gap-x-2.5 leading-tight">
                 <span className="whitespace-nowrap">Growth Intelligence</span>
-                <span className="text-emerald-400 font-extrabold">&amp;</span>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300 whitespace-nowrap">
+                <span className="text-amber-300 font-extrabold">&amp;</span>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 whitespace-nowrap">
                   Time Machine
                 </span>
               </h1>
@@ -355,7 +355,7 @@ export const GrowthIntelligencePage: React.FC = () => {
           </div>
 
           {/* Filters, Timeframe Selector Pills & Live Refresh Button */}
-          <div className="pt-4 border-t border-slate-800/80 flex flex-col xl:flex-row xl:items-center justify-between gap-3 sm:gap-4">
+          <div className="pt-4 border-t border-brand-400/20 flex flex-col xl:flex-row xl:items-center justify-between gap-3 sm:gap-4">
             
             {/* Department & Academic Year Filters - Side-by-side on mobile */}
             <div className="flex flex-row items-center gap-2 sm:gap-3 flex-1 min-w-0">
@@ -412,7 +412,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                 className="inline-flex items-center justify-center shrink-0 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
               >
                 <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline ml-1.5 font-bold">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+                <span className="hidden sm:inline ml-1.5 font-bold">{isRefreshing ? 'Syncing Live Stats...' : 'Sync Live Stats'}</span>
               </button>
             </div>
 
