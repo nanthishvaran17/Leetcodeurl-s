@@ -27,6 +27,7 @@ REPORT_COLORS = {
     "FACULTY_COORDINATOR_CONSOLIDATED": {"primary": "D27A35", "light": "FCF1E8"},
     "HOD_DEPARTMENT_INTELLIGENCE": {"primary": "8A4054", "light": "F7EEF1"},
     "WEEK_ON_WEEK_INTELLIGENCE": {"primary": "317B78", "light": "EAF5F4"},
+    "SATURDAY_BIWEEKLY_CONTEST": {"primary": "6B21A8", "light": "F3E8FF"},
     "HISTORICAL_CONTEST_INTELLIGENCE": {"primary": "4C8DBB", "light": "EDF5FA"},
     "12TH_TNEA_CUTOFF_ANALYSIS": {"primary": "16324F", "light": "EEF3F7"},
 }
@@ -35,6 +36,18 @@ REPORT_COLORS = {
 # 2. AUTHORITATIVE REPORT REGISTRY (SECTION 3)
 # ==========================================
 REPORT_REGISTRY: Dict[str, Dict[str, Any]] = {
+    "SATURDAY_BIWEEKLY_CONTEST": {
+        "code": "SATURDAY_BIWEEKLY_CONTEST",
+        "category": "A. Contest Reports",
+        "name": "Saturday Biweekly Contest Result",
+        "description": "Official Saturday Biweekly LeetCode contest result with attendance, binary Q1-Q4 solve status, score, global rank, rating, solve distribution, and department results.",
+        "allowed_roles": ["PRINCIPAL", "HOD", "STAFF", "FACULTY_COORDINATOR", "MANAGEMENT", "ADMINISTRATOR"],
+        "primary_color": "6B21A8",
+        "light_color": "F3E8FF",
+        "resolver": "build_contest_performance_report",
+        "has_historical_requirement": False,
+        "empty_state_msg": "No validated biweekly contest data available for this reporting period."
+    },
     "FRIDAY_OFFICIAL_CONTEST": {
         "code": "FRIDAY_OFFICIAL_CONTEST",
         "category": "A. Contest Reports",

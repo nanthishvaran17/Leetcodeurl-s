@@ -575,6 +575,17 @@ def seed_institutional_historical_sessions(db: Session):
 
     for sess in all_sessions:
         c_num = None
+        is_biweekly = "biweekly" in str(sess.contest_name or "").lower() or "biweekly" in str(sess.contest_id or "").lower()
+        
+        if is_biweekly:
+            match = re.search(r'Biweekly\s+Contest\s+(\d+)', str(sess.contest_name), re.IGNORECASE)
+            if not match:
+                match = re.search(r'\d+', str(sess.contest_name or sess.contest_id))
+            if match:
+                c_num = int(match.group(1) if match.lastindex else match.group(0))
+                logger.info(f"Preserving canonical Biweekly session ID {sess.id} ('{sess.contest_name}')")
+                continue
+        
         # 1. Try extracting contest number from contest_name e.g. "Weekly Contest 511" -> 511
         if sess.contest_name:
             match = re.search(r'Weekly\s+Contest\s+(\d+)', str(sess.contest_name), re.IGNORECASE)
@@ -602,7 +613,7 @@ def seed_institutional_historical_sessions(db: Session):
             sessions_by_num[c_num].append((res_count, sess))
             continue
 
-        # If not a valid Sunday contest session, purge it safely!
+        # If not a valid Sunday or Biweekly contest session, purge it safely!
         logger.info(f"Purging non-canonical session ID {sess.id} ('{sess.contest_name}', date {sess.session_date})")
         _safe_purge_or_merge_session(db, int(sess.id))
 

@@ -205,13 +205,100 @@ def fetch_leetcode_contest_questions(title_slug: str) -> list:
         logger.warning(f"[CONTEST_DISCOVERY] Live LeetCode questions fetch failed for {title_slug}: {e}")
         return []
 
-def discover_contest_metadata(target_date: datetime.date = None, override_contest_num: int = None) -> Dict[str, Any]:  # type: ignore
+def calculate_biweekly_contest_number(contest_date: datetime.date) -> int:
     """
-    Dynamic LeetCode Weekly Contest Discovery Engine.
+    Calculates Biweekly Contest number dynamically based on contest date in IST.
+    Authoritative reference: Biweekly Contest 190 on 2026-08-29.
+    """
+    ref_date = datetime.date(2026, 8, 29)
+    ref_contest = 190
+    days_diff = (contest_date - ref_date).days
+    fortnights_diff = days_diff // 14
+    return ref_contest + fortnights_diff
+
+def get_most_recent_saturday_date(target_dt: datetime.datetime = None) -> datetime.date:  # type: ignore
+    """
+    Returns the date of the current/most recent Saturday in IST.
+    """
+    if target_dt is None:
+        target_dt = get_current_ist_datetime()
+    
+    # Python weekday(): Monday=0, ..., Saturday=5, Sunday=6
+    days_since_saturday = (target_dt.weekday() - 5) % 7
+    saturday_dt = target_dt - datetime.timedelta(days=days_since_saturday)
+    return saturday_dt.date()
+
+def discover_biweekly_contest_metadata(target_date: datetime.date = None, override_contest_num: int = None) -> Dict[str, Any]:  # type: ignore
+    """
+    Dynamic LeetCode Biweekly Contest Discovery Engine.
+    Discovers contest ID, title, date, start time (20:00 IST), end time (21:30 IST), and problem list.
+    """
+    if target_date is None:
+        target_date = get_most_recent_saturday_date()
+
+    date_str = target_date.strftime("%Y-%m-%d")
+    formatted_date = target_date.strftime("%d.%m.%Y")
+    session_code = f"BIWEEK-{date_str}"
+
+    start_dt = datetime.datetime.combine(target_date, datetime.time(20, 0, 0), tzinfo=IST_TZ)
+    end_dt = datetime.datetime.combine(target_date, datetime.time(21, 30, 0), tzinfo=IST_TZ)
+
+    discovery_source = "CALCULATED_DATE_ARITHMETIC"
+
+    if override_contest_num:
+        contest_num = override_contest_num
+        discovery_source = "EXPLICIT_OVERRIDE"
+    else:
+        contest_num = calculate_biweekly_contest_number(target_date)
+
+    contest_id = f"biweekly-contest-{contest_num}"
+    contest_name = f"Biweekly Contest {contest_num}"
+    status = calculate_contest_status(target_date)
+
+    raw_questions = fetch_leetcode_contest_questions(contest_id)
+    if raw_questions and len(raw_questions) >= 4:
+        problems = [
+            {"problem_index": 1, "title": raw_questions[0].get("title", "Q1 (Easy)"), "difficulty": "Easy", "max_score": raw_questions[0].get("credit", 3)},
+            {"problem_index": 2, "title": raw_questions[1].get("title", "Q2 (Medium)"), "difficulty": "Medium", "max_score": raw_questions[1].get("credit", 4)},
+            {"problem_index": 3, "title": raw_questions[2].get("title", "Q3 (Medium/Hard)"), "difficulty": "Medium", "max_score": raw_questions[2].get("credit", 5)},
+            {"problem_index": 4, "title": raw_questions[3].get("title", "Q4 (Hard)"), "difficulty": "Hard", "max_score": raw_questions[3].get("credit", 6)}
+        ]
+        discovery_source = "CALCULATED_DATE_ARITHMETIC_WITH_LIVE_QUESTIONS"
+    else:
+        problems = [
+            {"problem_index": 1, "title": "Q1 (Easy)", "difficulty": "Easy", "max_score": 3},
+            {"problem_index": 2, "title": "Q2 (Medium)", "difficulty": "Medium", "max_score": 4},
+            {"problem_index": 3, "title": "Q3 (Medium/Hard)", "difficulty": "Medium", "max_score": 5},
+            {"problem_index": 4, "title": "Q4 (Hard)", "difficulty": "Hard", "max_score": 6}
+        ]
+
+    return {
+        "session_code": session_code,
+        "contest_id": contest_id,
+        "contest_name": contest_name,
+        "contest_number": contest_num,
+        "session_date": formatted_date,
+        "raw_date": date_str,
+        "status": status,
+        "discovery_source": discovery_source,
+        "start_time_ist": "08:00 PM IST",
+        "end_time_ist": "09:30 PM IST",
+        "start_iso": start_dt.isoformat(),
+        "end_iso": end_dt.isoformat(),
+        "start_epoch_ms": int(start_dt.timestamp() * 1000),
+        "end_epoch_ms": int(end_dt.timestamp() * 1000),
+        "problems": problems
+    }
+
+def discover_contest_metadata(target_date: datetime.date = None, override_contest_num: int = None, contest_type: str = "weekly") -> Dict[str, Any]:  # type: ignore
+    """
+    Dynamic LeetCode Contest Discovery Engine (Supports both Weekly and Biweekly contests).
     Discovers contest ID, title, date, start time, end time, and dynamic problem list.
     Evaluates real-time contest status (SCHEDULED, LIVE, FINALIZED) dynamically based on Asia/Kolkata IST.
-    Supports audit tags: LEETCODE_API_DISCOVERED, CALCULATED_DATE_ARITHMETIC, EXPLICIT_OVERRIDE.
     """
+    if contest_type.lower() == "biweekly":
+        return discover_biweekly_contest_metadata(target_date=target_date, override_contest_num=override_contest_num)
+
     if target_date is None:
         target_date = get_most_recent_sunday_date()
 
@@ -274,4 +361,5 @@ def discover_contest_metadata(target_date: datetime.date = None, override_contes
         "end_epoch_ms": int(end_dt.timestamp() * 1000),
         "problems": problems
     }
+
 

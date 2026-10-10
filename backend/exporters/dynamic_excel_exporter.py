@@ -365,7 +365,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
         # 4. Global Rank & Contest Rating ALWAYS AT THE VERY END
         FINAL_METRICS = [
-            ("Global Rank", ["global_rank", "contest_global_ranking", "profile_rank", "rank", "rank_val"]),
+            ("Global Rank", ["global_rank", "contest_global_ranking", "profile_rank", "profile_global_ranking", "public_profile_ranking"]),
             ("Contest Rating", ["contest_rating", "rating", "rating_val", "contest_rating_after"])
         ]
         for title, candidates in FINAL_METRICS:
@@ -958,6 +958,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     ws.auto_filter.ref = f"A{header_row_idx}:{last_col}{len(rows) + start_row - 1}"
 
     # Generate Extra Sheet: 12th Cutoff Band Intelligence (ONLY for TNEA report)
+    from backend.exporters.nec_master_excel_design import apply_master_college_identity, apply_master_table_headers, apply_master_data_row
     cutoff_summary = dataset.get("cutoffBandSummary") or dataset.get("cutoff_band_summary")
     if not cutoff_summary and rows and report_type == "12TH_TNEA_CUTOFF_ANALYSIS":
         # Compute it on the fly from rows

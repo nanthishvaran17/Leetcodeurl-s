@@ -199,19 +199,33 @@ def contest_number_from_id(contest_id: str) -> Optional[int]:
 
 def get_contest_utc_window(contest_id: str) -> Tuple[datetime.datetime, datetime.datetime]:
     """
-    Calculates exact timezone-aware UTC start and end times for a weekly contest.
-    Official Contest Window: Sunday 08:00 AM IST -> 09:30 AM IST.
-    Reference Anchor: Weekly Contest 514 on 2026-08-09 08:00 AM IST (02:30:00 UTC).
+    Calculates exact timezone-aware UTC start and end times for a contest.
+    - Weekly Contest: Sunday 08:00 AM IST -> 09:30 AM IST (02:30 UTC -> 04:00 UTC).
+      Reference Anchor: Weekly Contest 514 on 2026-08-09 08:00 AM IST (02:30 UTC).
+    - Biweekly Contest: Saturday 08:00 PM IST -> 09:30 PM IST (14:30 UTC -> 16:00 UTC).
+      Reference Anchor: Biweekly Contest 190 on 2026-08-29 08:00 PM IST (14:30 UTC).
     Duration: 90 minutes (5400 seconds).
     """
     canonical_id = normalize_contest_id(contest_id)
-    num = contest_number_from_id(canonical_id) or 514
-    ref_num = 514
-    ref_start_utc = datetime.datetime(2026, 8, 9, 2, 30, 0, tzinfo=datetime.timezone.utc)
-    weeks_delta = num - ref_num
-    start_utc = ref_start_utc + datetime.timedelta(weeks=weeks_delta)
+    is_biweekly = "biweekly" in canonical_id.lower()
+    num = contest_number_from_id(canonical_id)
+
+    if is_biweekly:
+        ref_num = num if num is not None else 190
+        ref_num_anchor = 190
+        ref_start_utc = datetime.datetime(2026, 8, 29, 14, 30, 0, tzinfo=datetime.timezone.utc)
+        fortnights_delta = ref_num - ref_num_anchor
+        start_utc = ref_start_utc + datetime.timedelta(weeks=2 * fortnights_delta)
+    else:
+        ref_num = num if num is not None else 514
+        ref_num_anchor = 514
+        ref_start_utc = datetime.datetime(2026, 8, 9, 2, 30, 0, tzinfo=datetime.timezone.utc)
+        weeks_delta = ref_num - ref_num_anchor
+        start_utc = ref_start_utc + datetime.timedelta(weeks=weeks_delta)
+
     end_utc = start_utc + datetime.timedelta(minutes=90)
     return start_utc, end_utc
+
 
 
 def get_official_contest_problems(contest_id: str) -> List[Dict[str, Any]]:

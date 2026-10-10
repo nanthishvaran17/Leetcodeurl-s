@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import io
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -17,6 +17,11 @@ from backend.models import (
     Student,
     WeeklyPublicResult,
     WeeklySession,
+)
+from backend.services.contest_problem_accuracy_engine import (
+    ContestProblemAccuracyEngine,
+    is_accepted_submission,
+    normalize_slug,
 )
 
 router = APIRouter(prefix="/tracker", tags=["LeetCode Sunday Automated Tracker & HOD Reports"])
@@ -212,12 +217,13 @@ def classify_student_contest_performance(
     # 1. Evaluate Rule A (Official Participant)
     official_match = None
     target_clean = session_title.lower().replace("-", " ").strip()
-    
+    c_num = "".join(filter(str.isdigit, session_title))
     for item in contest_history:
         if not isinstance(item, dict):
             continue
         c_title = (item.get("contest", {}).get("title") or "").lower().replace("-", " ").strip()
-        if target_clean in c_title or c_title in target_clean or "weekly contest" in c_title:
+        item_c_num = "".join(filter(str.isdigit, c_title))
+        if (target_clean and (target_clean in c_title or c_title in target_clean)) or (c_num and item_c_num and c_num == item_c_num):
             if item.get("attended"):
                 official_match = item
                 break
@@ -232,7 +238,6 @@ def classify_student_contest_performance(
         # EXACT SLUG-BASED Q1-Q4 MAPPING via ContestProblemAccuracyEngine
         # Never assume sequential order — match each submission titleSlug to official contest problem slugs.
         try:
-            from backend.services.contest_problem_accuracy_engine import ContestProblemAccuracyEngine, normalize_slug, is_accepted_submission
             c_num = ContestProblemAccuracyEngine.get_contest_number_from_name_or_id(session_title)
             problem_set = ContestProblemAccuracyEngine.resolve_official_problem_set(contest_number=c_num, contest_name=session_title)
             slug_to_q = {normalize_slug(p.title_slug): p.index for p in problem_set.problems} if problem_set.is_valid else {}
@@ -245,7 +250,7 @@ def classify_student_contest_performance(
             ist_tz = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
             try:
                 import re as _re
-                parts = [int(p) for p in _re.findall(r'\d+', str(contest_date_str or ""))]
+                parts = [int(p) for p in _re.findall(r'\d+', contest_date_str or "")]
                 if len(parts) >= 3:
                     y, m, d = (parts[0], parts[1], parts[2]) if parts[0] > 1000 else (parts[2], parts[1], parts[0])
                     _target_date = datetime.date(y, m, d)
@@ -300,7 +305,7 @@ def classify_student_contest_performance(
     
     if contest_date_str:
         try:
-            parts = [int(p) for p in re.findall(r'\d+', str(contest_date_str))]
+            parts = [int(p) for p in re.findall(r'\d+', contest_date_str)]
             if len(parts) >= 3:
                 if parts[0] > 1000:
                     y, m, d = parts[0], parts[1], parts[2]
@@ -330,7 +335,6 @@ def classify_student_contest_performance(
 
     # Load slug registry for this contest (for exact Q-matching in virtual window too)
     try:
-        from backend.services.contest_problem_accuracy_engine import ContestProblemAccuracyEngine, normalize_slug, is_accepted_submission
         _c_num = ContestProblemAccuracyEngine.get_contest_number_from_name_or_id(session_title)
         _problem_set = ContestProblemAccuracyEngine.resolve_official_problem_set(contest_number=_c_num, contest_name=session_title)
         _slug_to_q = {normalize_slug(p.title_slug): p.index for p in _problem_set.problems} if _problem_set.is_valid else {}
@@ -423,9 +427,17 @@ async def get_or_force_sync_single_student(identifier: str, db: Session = Depend
     if not username:
         raise HTTPException(status_code=400, detail=f"Student {student.name} ({student.reg_no}) does not have a LeetCode username registered.")
 
-    # Execute GraphQL fetch
-    gql_data = await fetch_leetcode_contest_and_submissions(username)
-    classification = classify_student_contest_performance(gql_data)
+    # Save / Update DB Record & Active Session Resolution
+    from backend.services.weekly_session_resolver import resolve_target_weekly_session
+    active_session = resolve_target_weekly_session(db, "522") or resolve_target_weekly_session(db, None) or db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+    target_title = active_session.contest_name if (active_session and active_session.contest_name) else "Weekly Contest 522"
+    target_date = active_session.session_date if active_session else None
+
+    # Execute GraphQL fetch with active session context
+    target_title_str = str(target_title)
+    target_date_str = str(target_date) if target_date else None
+    gql_data = await fetch_leetcode_contest_and_submissions(str(username))
+    classification = classify_student_contest_performance(gql_data, session_title=target_title_str, contest_date_str=target_date_str)
 
     # Compute department and year ranks
     dept_name = student.department.name if student.department else "CSE-CS"
@@ -453,8 +465,6 @@ async def get_or_force_sync_single_student(identifier: str, db: Session = Depend
             {"contest": "WC 515", "rating": classification["contest_rating"] or 1535, "solved": classification["solved_count"]}
         ]
 
-    # Save / Update DB Record
-    active_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
     if active_session:
         pub_result = db.query(WeeklyPublicResult).filter(
             WeeklyPublicResult.session_id == active_session.id,
@@ -472,16 +482,27 @@ async def get_or_force_sync_single_student(identifier: str, db: Session = Depend
             )
             db.add(pub_result)
 
+        # If existing DB record is already reconciled/verified, preserve existing q1-q4 and total_solved if GQL returned 0
+        existing_solved = (pub_result.q1 or 0) + (pub_result.q2 or 0) + (pub_result.q3 or 0) + (pub_result.q4 or 0)
+        if classification["solved_count"] == 0 and (pub_result.total_contest_solved or 0) > 0 and existing_solved > 0:
+            # Keep DB verified flags
+            classification["solved_count"] = pub_result.total_contest_solved or existing_solved
+            classification["score"] = pub_result.contest_score or (classification["solved_count"] * 25)
+            classification["q1"] = pub_result.q1 or 0
+            classification["q2"] = pub_result.q2 or 0
+            classification["q3"] = pub_result.q3 or 0
+            classification["q4"] = pub_result.q4 or 0
+
         pub_result.participation_status = classification["attendance_status"]
-        pub_result.state = "CLASSIFIED"
+        setattr(pub_result, "state", "CLASSIFIED")
         pub_result.total_contest_solved = classification["solved_count"]
         pub_result.contest_score = classification["score"]
         pub_result.q1 = classification["q1"]
         pub_result.q2 = classification["q2"]
         pub_result.q3 = classification["q3"]
         pub_result.q4 = classification["q4"]
-        pub_result.contest_rating = classification["contest_rating"]
-        pub_result.last_fetched_at = datetime.datetime.now(datetime.timezone.utc)
+        pub_result.contest_rating = classification["contest_rating"] or pub_result.contest_rating
+        setattr(pub_result, "last_fetched_at", datetime.datetime.now(datetime.timezone.utc))
         db.commit()
 
     return {
@@ -534,8 +555,8 @@ async def execute_dual_sync_job(job_type: str = Query("morning", enum=["morning"
             absent_cnt += 1
             continue
 
-        gql_data = await fetch_leetcode_contest_and_submissions(s.username)
-        res = classify_student_contest_performance(gql_data, active_session.contest_name)
+        gql_data = await fetch_leetcode_contest_and_submissions(str(s.username))
+        res = classify_student_contest_performance(gql_data, str(active_session.contest_name or "Weekly Contest 515"))
 
         dept_name = s.department.name if s.department else "CSE-CS"
         rec = db.query(WeeklyPublicResult).filter(
@@ -564,10 +585,10 @@ async def execute_dual_sync_job(job_type: str = Query("morning", enum=["morning"
         elif res["badge_type"] == "YELLOW": virtual_cnt += 1
         else: absent_cnt += 1
 
-    active_session.official_participants = official_cnt
-    active_session.virtual_participants = virtual_cnt
-    active_session.not_participated = absent_cnt
-    active_session.status = "FINALIZED" if job_type == "evening" else "LIVE"
+    setattr(active_session, "official_participants", official_cnt)
+    setattr(active_session, "virtual_participants", virtual_cnt)
+    setattr(active_session, "not_participated", absent_cnt)
+    setattr(active_session, "status", "FINALIZED" if job_type == "evening" else "LIVE")
     db.commit()
 
     return {
@@ -599,7 +620,10 @@ def export_monday_hod_master_excel(
 
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "HOD Executive Performance Report"
+    if ws is None:
+        ws = wb.create_sheet(title="HOD Executive Performance Report")
+    else:
+        ws.title = "HOD Executive Performance Report"
     ws.views.sheetView[0].showGridLines = True
 
     # Dark Navy Header Fill
@@ -660,19 +684,19 @@ def export_monday_hod_master_excel(
     ws.merge_cells('C4:D4')
     ws['C4'] = "OFFICIAL ATTENDED (8:00-9:30 AM)"
     ws['C4'].font = font_bold
-    ws['C5'] = active_session.official_participants if active_session else 184
+    ws['C5'] = int(active_session.official_participants) if (active_session and active_session.official_participants is not None) else 184
     ws['C5'].font = Font(name="Calibri", size=18, bold=True, color="059669")
 
     ws.merge_cells('E4:F4')
     ws['E4'] = "VIRTUAL ATTENDED (9:30 AM-10:00 PM)"
     ws['E4'].font = font_bold
-    ws['E5'] = active_session.virtual_participants if active_session else 72
+    ws['E5'] = int(active_session.virtual_participants) if (active_session and active_session.virtual_participants is not None) else 72
     ws['E5'].font = Font(name="Calibri", size=18, bold=True, color="D97706")
 
     ws.merge_cells('G4:H4')
     ws['G4'] = "ABSENT / INACTIVE"
     ws['G4'].font = font_bold
-    ws['G5'] = active_session.not_participated if active_session else 46
+    ws['G5'] = int(active_session.not_participated) if (active_session and active_session.not_participated is not None) else 46
     ws['G5'].font = Font(name="Calibri", size=18, bold=True, color="DC2626")
 
     # Headers (Row 8)
@@ -789,12 +813,12 @@ def export_monday_hod_master_pdf(
     ]
 
     for s in students:
-        d_name = s.department.name if s.department else "CSE-CS"
+        d_name = str(s.department.name) if (s.department and s.department.name) else "CSE-CS"
         table_data.append([
-            Paragraph(s.reg_no, cell_style),
-            Paragraph(s.name, cell_style),
+            Paragraph(str(s.reg_no or ""), cell_style),
+            Paragraph(str(s.name or ""), cell_style),
             Paragraph(d_name, cell_style),
-            Paragraph(s.year_level or "III Year", cell_style),
+            Paragraph(str(s.year_level or "III Year"), cell_style),
             Paragraph("OFFICIAL_ATTENDED", cell_style),
             Paragraph("3 / 4", cell_style),
             Paragraph("75", cell_style),
@@ -872,7 +896,7 @@ def get_contest_matrix(db: Session = Depends(get_db)):
                 "virtual_participants": s.virtual_participants or 0,
                 "not_participated": s.not_participated or 0,
                 "sync_status": s.sync_status or " Verified",
-                "last_synced": format_ist(s.last_synced) if s.last_synced else "Never",
+                "last_synced": format_ist(cast(Any, s.last_synced)) if s.last_synced else "Never",
             }
             for s in sessions
         ],

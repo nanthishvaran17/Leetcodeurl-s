@@ -329,15 +329,15 @@ def mark_notification_read_endpoint(
         title = target.title
         body = target.body
 
-        # Query all records matching event_id, notification_id, or title+body for user_id_variants
+        or_clauses = [NotificationRecord.notification_id == notification_id]
+        if event_id:
+            or_clauses.append(NotificationRecord.event_id == event_id)
+        or_clauses.append(and_(NotificationRecord.title == title, NotificationRecord.body == body))
+
         records = db.query(NotificationRecord).filter(
             and_(
                 NotificationRecord.recipient_user_id.in_(list(user_id_variants)),
-                or_(
-                    NotificationRecord.notification_id == notification_id,
-                    (NotificationRecord.event_id == event_id if event_id else False),
-                    and_(NotificationRecord.title == title, NotificationRecord.body == body)
-                )
+                or_(*or_clauses)
             )
         ).all()
 
@@ -394,14 +394,15 @@ def mark_notification_unread_endpoint(
         title = target.title
         body = target.body
 
+        or_clauses = [NotificationRecord.notification_id == notification_id]
+        if event_id:
+            or_clauses.append(NotificationRecord.event_id == event_id)
+        or_clauses.append(and_(NotificationRecord.title == title, NotificationRecord.body == body))
+
         records = db.query(NotificationRecord).filter(
             and_(
                 NotificationRecord.recipient_user_id.in_(list(user_id_variants)),
-                or_(
-                    NotificationRecord.notification_id == notification_id,
-                    (NotificationRecord.event_id == event_id if event_id else False),
-                    and_(NotificationRecord.title == title, NotificationRecord.body == body)
-                )
+                or_(*or_clauses)
             )
         ).all()
 
@@ -474,14 +475,15 @@ def delete_notification_endpoint(
         title = target.title
         body = target.body
 
+        or_clauses = [NotificationRecord.notification_id == notification_id]
+        if event_id:
+            or_clauses.append(NotificationRecord.event_id == event_id)
+        or_clauses.append(and_(NotificationRecord.title == title, NotificationRecord.body == body))
+
         records = db.query(NotificationRecord).filter(
             and_(
                 NotificationRecord.recipient_user_id.in_(list(user_id_variants)),
-                or_(
-                    NotificationRecord.notification_id == notification_id,
-                    (NotificationRecord.event_id == event_id if event_id else False),
-                    and_(NotificationRecord.title == title, NotificationRecord.body == body)
-                )
+                or_(*or_clauses)
             )
         ).all()
 
@@ -520,14 +522,15 @@ def archive_notification_endpoint(
         title = target.title
         body = target.body
 
+        or_clauses = [NotificationRecord.notification_id == notification_id]
+        if event_id:
+            or_clauses.append(NotificationRecord.event_id == event_id)
+        or_clauses.append(and_(NotificationRecord.title == title, NotificationRecord.body == body))
+
         records = db.query(NotificationRecord).filter(
             and_(
                 NotificationRecord.recipient_user_id.in_(list(user_id_variants)),
-                or_(
-                    NotificationRecord.notification_id == notification_id,
-                    (NotificationRecord.event_id == event_id if event_id else False),
-                    and_(NotificationRecord.title == title, NotificationRecord.body == body)
-                )
+                or_(*or_clauses)
             )
         ).all()
 

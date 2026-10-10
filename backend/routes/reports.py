@@ -65,11 +65,15 @@ def get_available_sundays(db: Session = Depends(get_db)):
     
     results = []
     for s in valid_sessions:
+        c_name = s.contest_name or "Weekly Contest"
+        c_type = "biweekly" if "biweekly" in c_name.lower() or "biweekly" in (s.contest_id or "").lower() else "weekly"
         results.append({
             "session_id": str(s.id),
             "snapshot_id": s.final_snapshot_id or str(s.id),
             "date": s.session_date,
-            "label": f"{s.session_date} - {s.contest_name}",
+            "label": f"{s.session_date} - {c_name}",
+            "contest_type": c_type,
+            "contest_name": c_name,
         })
     
     if results:
@@ -842,8 +846,8 @@ def get_sunday_live_report(
     Enforces strict role-based access control, department scoping, and data-driven calculations.
     Returns real student attendance, Q1-Q4 solve status + question times, contest solved, and total time.
     """
-    raw_d = str(department) if (department and not hasattr(department, "default")) else (str(dept) if (dept and not hasattr(dept, "default")) else "ALL")
-    raw_y = str(year_level) if (year_level and not hasattr(year_level, "default")) else (str(year) if (year and not hasattr(year, "default")) else "ALL")
+    raw_d = department if (department and not hasattr(department, "default")) else (dept if (dept and not hasattr(dept, "default")) else "ALL")
+    raw_y = year_level if (year_level and not hasattr(year_level, "default")) else (year if (year and not hasattr(year, "default")) else "ALL")
 
     from backend.services.report_models import ReportConfig
     from backend.services.contest_performance_service import build_contest_performance_report
@@ -877,8 +881,8 @@ def get_friday_official_report(
     Returns real student participation, binary Q1-Q4 solve status, official score, rank, rating,
     question-wise result, solve distribution, official leaderboard, top performers, and department results.
     """
-    raw_d = str(department) if (department and not hasattr(department, "default")) else (str(dept) if (dept and not hasattr(dept, "default")) else "ALL")
-    raw_y = str(year_level) if (year_level and not hasattr(year_level, "default")) else (str(year) if (year and not hasattr(year, "default")) else "ALL")
+    raw_d = department if (department and not hasattr(department, "default")) else (dept if (dept and not hasattr(dept, "default")) else "ALL")
+    raw_y = year_level if (year_level and not hasattr(year_level, "default")) else (year if (year and not hasattr(year, "default")) else "ALL")
 
     from backend.services.report_models import ReportConfig
     from backend.services.contest_performance_service import build_contest_performance_report
@@ -1270,6 +1274,10 @@ def get_contest_filename_base(
         type_slug = "Contest_Attendance"
     elif "PERFORMANCE_RANKING" in rtype_str:
         type_slug = "Contest_Performance"
+    elif "BIWEEKLY" in rtype_str or "BIWEEKLY" in cname_str or "SATURDAY" in rtype_str:
+        m_bw = re.search(r'\d+', cname_str or contest_name or "")
+        bw_num = m_bw.group(0) if m_bw else ""
+        type_slug = f"Saturday_Biweekly_BC{bw_num}" if bw_num else "Saturday_Biweekly_Result"
     elif "FRIDAY" in rtype_str:
         type_slug = "Friday_Official"
     elif "STUDENT_PERFORMANCE" in rtype_str or "STUDENT PERFORMANCE" in cname_str:
@@ -1295,7 +1303,10 @@ def get_contest_filename_base(
                     session_date = str(ws.session_date)
 
         if contest_num:
-            type_slug = f"WC{contest_num}"
+            if "BIWEEKLY" in cname_str:
+                type_slug = f"BC{contest_num}"
+            else:
+                type_slug = f"WC{contest_num}"
         else:
             type_slug = "Student_Performance_Report"
 

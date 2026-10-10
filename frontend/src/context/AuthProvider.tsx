@@ -11,9 +11,48 @@ import { AuthContext } from './authContextDef';
 // This file only exports AuthProvider to satisfy Vite Fast Refresh (components-only exports).
 
 
+const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000; // 1 Hour Inactivity Timeout (60 Minutes)
+const LAST_ACTIVITY_KEY = 'nec_last_activity';
+
+// Helper to evaluate whether the current session is expired due to inactivity (>1 hour) or JWT expiration
+const checkSessionExpired = (): boolean => {
+  try {
+    const token = localStorage.getItem('token');
+    if (token && token.includes('.')) {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payloadStr = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+        const payload = JSON.parse(payloadStr);
+        if (payload?.exp && payload.exp * 1000 <= Date.now()) {
+          return true;
+        }
+      }
+    }
+    const lastActivity = localStorage.getItem(LAST_ACTIVITY_KEY);
+    if (!lastActivity) {
+      if (localStorage.getItem('user')) {
+        localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
+        return false;
+      }
+      return true;
+    }
+    const elapsed = Date.now() - parseInt(lastActivity, 10);
+    if (isNaN(elapsed) || elapsed >= INACTIVITY_TIMEOUT_MS) {
+      return true;
+    }
+  } catch (_e) {}
+  return false;
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(() => {
     try {
+      if (checkSessionExpired()) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem(LAST_ACTIVITY_KEY);
+        return null;
+      }
       const saved = localStorage.getItem('user');
       return saved ? JSON.parse(saved) : null;
     } catch {
@@ -23,6 +62,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [token, setToken] = useState<string | null>(() => {
     try {
+      if (checkSessionExpired()) {
+        return null;
+      }
       return localStorage.getItem('token');
     } catch {
       return null;
@@ -30,6 +72,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [authState, setAuthState] = useState<AuthState>(() => {
+    if (checkSessionExpired()) {
+      return 'AUTH_UNAUTHENTICATED';
+    }
     const savedUser = localStorage.getItem('user');
     return savedUser ? 'AUTHORIZED' : 'INITIALIZING';
   });
@@ -46,6 +91,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Standard login handler
   const login = useCallback((newToken: string | null, newUser: any) => {
+    const nowStr = Date.now().toString();
+    localStorage.setItem(LAST_ACTIVITY_KEY, nowStr);
+
     if (newToken) {
       setToken(newToken);
       localStorage.setItem('token', newToken);
@@ -93,6 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('admin_user');
+    localStorage.removeItem(LAST_ACTIVITY_KEY);
     sessionStorage.clear();
     clearApiCache();
     clearContestCache();
@@ -119,6 +168,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     clearAuthError();
     setAuthState('AUTH_UNAUTHENTICATED');
   }, [clearAuthError]);
+
+  // Automatic 1-Hour Inactivity Timeout & Session Termination Monitor
+  useEffect(() => {
+    if (authState !== 'AUTHORIZED' && !user) return;
+
+    let lastUpdate = 0;
+    const updateActivity = () => {
+      const now = Date.now();
+      if (now - lastUpdate > 10000) { // Throttle activity writes to once every 10 seconds
+        lastUpdate = now;
+        localStorage.setItem(LAST_ACTIVITY_KEY, now.toString());
+      }
+    };
+
+    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    activityEvents.forEach((evt) => window.addEventListener(evt, updateActivity, { passive: true }));
+
+    // Periodic check every 30 seconds for inactivity timeout (> 1 hour)
+    const checkInterval = setInterval(() => {
+      if (checkSessionExpired()) {
+        console.warn('[AUTH] 1-Hour Session timeout detected. Auto-terminating session.');
+        logout();
+        setAuthNotice('Session automatically terminated after 1 hour of inactivity. Please log in again.');
+      }
+    }, 30000);
+
+    // Immediate check when returning to tab / refocusing window (e.g. reopening after 1-2 days)
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible' || document.hasFocus()) {
+        if (checkSessionExpired()) {
+          console.warn('[AUTH] Session expired upon tab focus / return. Auto-terminating session.');
+          logout();
+          setAuthNotice('Session automatically terminated after 1 hour of inactivity. Please log in again.');
+        } else {
+          updateActivity();
+        }
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('focus', handleVisibilityOrFocus);
+
+    return () => {
+      activityEvents.forEach((evt) => window.removeEventListener(evt, updateActivity));
+      clearInterval(checkInterval);
+      window.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+    };
+  }, [authState, user, logout]);
 
   // Handle global events: auth_logout, profile updates, and token refresh
   useEffect(() => {

@@ -674,6 +674,7 @@ export const ReportsPage: React.FC = () => {
                         titleColor: 'text-brand-600 dark:text-brand-400',
                         options: [
                           { value: 'FRIDAY_OFFICIAL_CONTEST', label: 'Friday Contest Result', dotColor: 'bg-indigo-500' },
+                          { value: 'SATURDAY_BIWEEKLY_CONTEST', label: 'Saturday Biweekly Contest Result', dotColor: 'bg-purple-500' },
                           { value: 'SUNDAY_LIVE_CONTEST', label: 'Sunday Live Contest', dotColor: 'bg-sky-500' },
                           { value: 'WEEKLY_CONTEST_INTELLIGENCE', label: 'Weekly Contest Intelligence', dotColor: 'bg-blue-500' },
                           { value: 'CONTEST_ATTENDANCE_PARTICIPATION', label: 'Contest Attendance & Participation', dotColor: 'bg-emerald-500' },
@@ -1002,18 +1003,19 @@ export const ReportsPage: React.FC = () => {
                           }
                           return d;
                         };
+                        const isBiweekly = opt.contest_type === 'biweekly' || (opt.label && opt.label.toLowerCase().includes('biweekly'));
                         return (
                           <button key={opt.session_id} type="button"
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => { setSelectedSessionId(opt.session_id); setRptSessionOpen(false); }}
                             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${isSelected ? 'bg-brand-600 text-white font-black shadow-md shadow-brand-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
                           >
-                            <span className={`w-14 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : (opt.is_latest ? 'bg-brand-100 text-brand-700 border-brand-300' : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700')}`}>
-                              {opt.is_latest ? 'LATEST' : 'PAST'}
+                            <span className={`w-16 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : (isBiweekly ? 'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800' : (opt.is_latest ? 'bg-brand-100 text-brand-700 border-brand-300 dark:bg-brand-950/60 dark:text-brand-300' : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700'))}`}>
+                              {isBiweekly ? 'BIWEEKLY' : (opt.is_latest ? 'LATEST' : 'PAST')}
                             </span>
                             <div className={`flex flex-col flex-1 min-w-0 ${isSelected ? 'text-white' : 'text-slate-800 dark:text-slate-100'}`}>
                               <span className={`text-xs truncate ${isSelected ? 'font-black' : 'font-bold'}`}>{formatDate(opt.date)}</span>
-                              <span className={`text-[11px] truncate ${isSelected ? 'text-white/90 font-bold' : 'text-slate-600 dark:text-slate-400 font-semibold'}`}>{opt.label.split(' - ')[1]}</span>
+                              <span className={`text-[11px] truncate ${isSelected ? 'text-white/90 font-bold' : 'text-slate-600 dark:text-slate-400 font-semibold'}`}>{opt.label.split(' - ')[1] || opt.contest_name || opt.label}</span>
                             </div>
                             {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
                           </button>

@@ -1984,7 +1984,7 @@ def verify_2fa_code(payload: Verify2FARequest, request: Request, db: Session = D
     if not totp_secret:
         raise HTTPException(status_code=400, detail="2FA secret not found. Please click 'Enable 2FA Protection' again to generate a setup QR code.")
         
-    clean_code = str(payload.code or "").strip().replace(" ", "").replace("-", "")
+    clean_code = (payload.code or "").strip().replace(" ", "").replace("-", "")
     if len(clean_code) != 6 or not clean_code.isdigit():
         raise HTTPException(status_code=400, detail="Please enter a valid 6-digit numeric code from your authenticator app.")
 

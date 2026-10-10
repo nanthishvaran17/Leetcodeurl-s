@@ -395,6 +395,50 @@ async def sunday_2205_rollover_job():
     finally:
         db.close()
 
+@with_global_lock('saturday_2135_biweekly_contest_job', timeout_minutes=60)
+async def saturday_2135_biweekly_contest_job():
+    """
+    Scheduled for Saturday 09:35 PM IST (Biweekly Contest night):
+    Triggers live contest results sync & finalization for the Biweekly Contest.
+    """
+    logger.info("[SCHEDULER] Saturday 09:35 PM IST: Executing Biweekly Contest Live Sync & Finalization...")
+    db = SessionLocal()
+    try:
+        from backend.services.contest_discovery import discover_biweekly_contest_metadata
+        from backend.models import WeeklySession
+        meta = discover_biweekly_contest_metadata()
+        s_date = meta["session_date"]
+        c_id = meta["contest_id"]
+        c_name = meta["contest_name"]
+        
+        session = db.query(WeeklySession).filter(WeeklySession.contest_id == c_id).first()
+        if not session:
+            session = WeeklySession(
+                academic_year="2026-27",
+                session_code=meta["session_code"],
+                session_date=s_date,
+                contest_id=c_id,
+                contest_name=c_name,
+                start_time="20:00",
+                end_time="21:30",
+                status="FINALIZING"
+            )
+            db.add(session)
+            db.commit()
+            db.refresh(session)
+        
+        from backend.services.live_sync_service import start_full_sync_job
+        sync_res = start_full_sync_job(db, triggered_by="saturday_biweekly_scheduler")
+        
+        session.status = "FINALIZED"
+        session.finalized_at = datetime.datetime.now(datetime.timezone.utc)
+        db.commit()
+        logger.info(f"[SCHEDULER] Saturday Biweekly Contest Job completed successfully for {c_name}")
+        return {"status": "success", "contest": c_name, "sync": sync_res}
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Error in saturday_2135_biweekly_contest_job: {e}", exc_info=True)
+    finally:
+        db.close()
 
 
 async def daily_auto_refresh_job():
@@ -846,6 +890,15 @@ def start_scheduler():
         replace_existing=True
     )
     # ------------------------------------
+
+    # 5. Saturday 09:35 PM IST — Biweekly Contest Live Sync & Report Finalization
+    scheduler.add_job(
+        saturday_2135_biweekly_contest_job,
+        CronTrigger(day_of_week='sat', hour=21, minute=35, timezone=tz),
+        id='saturday_2135_biweekly_contest',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
 
     # 5. Sunday 09:35 AM IST — Multi-Format Report Generation (Excel, PDF, Word, Depts)
     scheduler.add_job(

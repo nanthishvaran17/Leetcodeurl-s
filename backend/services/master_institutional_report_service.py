@@ -170,7 +170,7 @@ def normalize_student_record(s_dict: Dict[str, Any]) -> Dict[str, Any]:
     else:
         contest_rating_val = None
 
-    g_rnk = s_dict.get("global_rank") or s_dict.get("rank")
+    g_rnk = s_dict.get("global_rank") if s_dict.get("global_rank") is not None else s_dict.get("contest_global_ranking")
     if g_rnk is not None and str(g_rnk).strip() not in ("0", "N/A", "None", ""):
         global_rank_val = str(g_rnk)
     else:
@@ -226,7 +226,7 @@ def write_sheet_header(
     total_roster_val = 0
     if roster_scope:
         try:
-            total_roster_val = int("".join(filter(str.isdigit, str(roster_scope))))
+            total_roster_val = int("".join(filter(str.isdigit, roster_scope)))
         except Exception:
             total_roster_val = 0
 
@@ -404,7 +404,7 @@ def write_table_data(
                 cell.fill = alt_fill
 
             h_name = headers[col_idx - 1] if col_idx - 1 < len(headers) else ""
-            h_clean = str(h_name).replace('\n', ' ').strip()
+            h_clean = h_name.replace('\n', ' ').strip()
 
             # Convert text percentages and numeric strings to native Excel types to eliminate green error triangles!
             if isinstance(val, str):
@@ -555,6 +555,16 @@ def generate_master_10_sheet_workbook(
         s = str(val).strip().lower()
         return 1 if s in ("1", "1.0", "true", "yes", "solved") else 0
 
+    def _flt_val(x):
+        if x is None: return 0.0
+        try: return float(getattr(x, "value", x) or 0)
+        except Exception: return 0.0
+
+    def _int_val(x):
+        if x is None: return 0
+        try: return int(getattr(x, "value", x) or 0)
+        except Exception: return 0
+
     raw_students = []
     for s in students_models:
         dept_name = s.department.code if s.department else "CSE"
@@ -629,26 +639,26 @@ def generate_master_10_sheet_workbook(
 
         snp = snapshot_map.get(s.id)
         if target_session and (is_historical or snp):
-            c_rating = (st_stats.contest_rating if (st_stats and getattr(st_stats, "contest_rating", None) and float(st_stats.contest_rating) > 0 and float(st_stats.contest_rating) != 1500.0) else None) or \
-                       (getattr(snp, "end_rating", None) if (snp and float(getattr(snp, "end_rating", 0) or 0) > 0) else None) or \
-                       (getattr(p_res, "contest_rating", None) if (p_res and float(getattr(p_res, "contest_rating", 0) or 0) > 0) else None) or \
-                       (getattr(v_res, "contest_rating", None) if (v_res and float(getattr(v_res, "contest_rating", 0) or 0) > 0) else None)
-            g_rank = (st_stats.contest_global_ranking if (st_stats and getattr(st_stats, "contest_global_ranking", None) and int(st_stats.contest_global_ranking) > 0) else None) or \
+            c_rating = (st_stats.contest_rating if (st_stats and getattr(st_stats, "contest_rating", None) and _flt_val(st_stats.contest_rating) > 0 and _flt_val(st_stats.contest_rating) != 1500.0) else None) or \
+                       (getattr(snp, "end_rating", None) if (snp and _flt_val(getattr(snp, "end_rating", 0) or 0) > 0) else None) or \
+                       (getattr(p_res, "contest_rating", None) if (p_res and _flt_val(getattr(p_res, "contest_rating", 0) or 0) > 0) else None) or \
+                       (getattr(v_res, "contest_rating", None) if (v_res and _flt_val(getattr(v_res, "contest_rating", 0) or 0) > 0) else None)
+            g_rank = (st_stats.contest_global_ranking if (st_stats and getattr(st_stats, "contest_global_ranking", None) and _int_val(st_stats.contest_global_ranking) > 0) else None) or \
                      (getattr(snp, "global_rank", None) if snp else None) or \
                      (st_stats.public_profile_ranking if (st_stats and getattr(st_stats, "public_profile_ranking", None)) else None) or \
                      getattr(s, "global_rank", None)
         elif report_type == "FRIDAY_OFFICIAL_CONTEST":
-            c_rating = (st_stats.contest_rating if (st_stats and getattr(st_stats, "contest_rating", None) and float(st_stats.contest_rating) > 0 and float(st_stats.contest_rating) != 1500.0) else None) or \
-                       (getattr(p_res, "contest_rating", None) if (p_res and float(getattr(p_res, "contest_rating", 0) or 0) > 0) else None) or \
-                       (getattr(v_res, "contest_rating", None) if (v_res and float(getattr(v_res, "contest_rating", 0) or 0) > 0) else None)
-            g_rank = (st_stats.contest_global_ranking if (st_stats and getattr(st_stats, "contest_global_ranking", None) and int(st_stats.contest_global_ranking) > 0) else None) or \
+            c_rating = (st_stats.contest_rating if (st_stats and getattr(st_stats, "contest_rating", None) and _flt_val(st_stats.contest_rating) > 0 and _flt_val(st_stats.contest_rating) != 1500.0) else None) or \
+                       (getattr(p_res, "contest_rating", None) if (p_res and _flt_val(getattr(p_res, "contest_rating", 0) or 0) > 0) else None) or \
+                       (getattr(v_res, "contest_rating", None) if (v_res and _flt_val(getattr(v_res, "contest_rating", 0) or 0) > 0) else None)
+            g_rank = (st_stats.contest_global_ranking if (st_stats and getattr(st_stats, "contest_global_ranking", None) and _int_val(st_stats.contest_global_ranking) > 0) else None) or \
                      (st_stats.public_profile_ranking if (st_stats and getattr(st_stats, "public_profile_ranking", None)) else None) or \
                      getattr(s, "global_rank", None)
         else:
-            c_rating = (st_stats.contest_rating if (st_stats and getattr(st_stats, "contest_rating", None) and float(st_stats.contest_rating) > 0 and float(st_stats.contest_rating) != 1500.0) else None) or \
-                       (getattr(p_res, "contest_rating", None) if (p_res and float(getattr(p_res, "contest_rating", 0) or 0) > 0) else None) or \
-                       (getattr(v_res, "contest_rating", None) if (v_res and float(getattr(v_res, "contest_rating", 0) or 0) > 0) else None)
-            g_rank = (st_stats.contest_global_ranking if (st_stats and getattr(st_stats, "contest_global_ranking", None) and int(st_stats.contest_global_ranking) > 0) else None) or \
+            c_rating = (st_stats.contest_rating if (st_stats and getattr(st_stats, "contest_rating", None) and _flt_val(st_stats.contest_rating) > 0 and _flt_val(st_stats.contest_rating) != 1500.0) else None) or \
+                       (getattr(p_res, "contest_rating", None) if (p_res and _flt_val(getattr(p_res, "contest_rating", 0) or 0) > 0) else None) or \
+                       (getattr(v_res, "contest_rating", None) if (v_res and _flt_val(getattr(v_res, "contest_rating", 0) or 0) > 0) else None)
+            g_rank = (st_stats.contest_global_ranking if (st_stats and getattr(st_stats, "contest_global_ranking", None) and _int_val(st_stats.contest_global_ranking) > 0) else None) or \
                      (st_stats.public_profile_ranking if (st_stats and getattr(st_stats, "public_profile_ranking", None)) else None) or \
                      getattr(s, "global_rank", None)
         easy_s = st_stats.easy_solved if (st_stats and st_stats.easy_solved is not None) else 0
@@ -944,7 +954,7 @@ def generate_master_10_sheet_workbook(
         elif s_name == "Student Performance Roster":
             write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=12)  # type: ignore
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Easy Solved", "Medium Solved", "Hard Solved", "Total Solved", "Contest Rating", "Global Rank", "Status"]
-            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["easy_solved"], s["medium_solved"], s["hard_solved"], s["lifetime_solved"], f"{s['contest_rating']:.1f}" if s.get("contest_rating") is not None else "N/A", s.get("global_rank") or (f"#{s['rank']}" if s.get("rank") else "N/A"), s["status"]] for idx, s in enumerate(normalized_students)]
+            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["easy_solved"], s["medium_solved"], s["hard_solved"], s["lifetime_solved"], f"{s['contest_rating']:.1f}" if s.get("contest_rating") is not None else "N/A", s.get("global_rank") or "N/A", s["status"]] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name in ("5-Week Performance Matrix", "Five-Week Longitudinal Performance Matrix"):

@@ -40,8 +40,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = os.environ.get("SECRET_KEY", "")
     OTP_HMAC_SECRET: str = os.environ.get("OTP_HMAC_SECRET", "")
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080 # 7 Days
-    SESSION_EXPIRE_MINUTES: int = int(os.environ.get("SESSION_EXPIRE_MINUTES", "10080")) # 7 Days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "60")) # 1 Hour
+    SESSION_EXPIRE_MINUTES: int = int(os.environ.get("SESSION_EXPIRE_MINUTES", "60")) # 1 Hour
     SESSION_COOKIE_NAME: str = os.environ.get("SESSION_COOKIE_NAME", "admin_session_token")
     FRONTEND_ORIGIN: str = os.environ.get("FRONTEND_ORIGIN", "https://leetcodeurl-s-roan.vercel.app")
     BACKEND_URL: str = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")

@@ -388,7 +388,7 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
             s.get("hard") if s.get("hard") is not None else "—",
             s.get("total_solved") if s.get("total_solved") is not None else "—",
             s.get("contest_rating") if s.get("contest_rating") is not None else s.get("rating") if s.get("rating") is not None else "—",
-            s.get("global_rank") if s.get("global_rank") is not None else s.get("rank") if s.get("rank") is not None else "—",
+            s.get("global_rank") if s.get("global_rank") is not None else s.get("contest_global_ranking") if s.get("contest_global_ranking") is not None else "—",
             str(s.get("category") or "—"),
             pub_res,
             last_res

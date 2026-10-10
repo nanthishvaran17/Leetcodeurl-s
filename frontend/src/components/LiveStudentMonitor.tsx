@@ -51,7 +51,7 @@ export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialI
   return (
     <div className="space-y-6 animate-fade-in font-sans">
       {/* HEADER CARD */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white shadow-lg border border-brand-500/30 relative overflow-hidden">
+      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white shadow-lg border border-brand-500/30 relative overflow-hidden mb-6 sm:mb-8">
         <div className="relative z-10 space-y-4 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
             <Zap className="w-3.5 h-3.5 text-amber-400" />
@@ -93,7 +93,7 @@ export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialI
 
       {/* Loading State */}
       {loading && (
-        <div className="p-6 rounded-2xl bg-indigo-950/60 border border-indigo-500/30 flex items-center gap-3 animate-pulse text-indigo-200">
+        <div className="p-6 rounded-2xl bg-indigo-950/60 border border-indigo-500/30 flex items-center gap-3 animate-pulse text-indigo-200 mb-6">
           <RefreshCw className="w-5 h-5 animate-spin text-indigo-400 shrink-0" />
           <div>
             <p className="text-sm font-bold">Fetching live data from LeetCode GraphQL...</p>
@@ -104,7 +104,7 @@ export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialI
 
       {/* Error Alert */}
       {error && !loading && (
-        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center justify-between animate-fade-in">
+        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center justify-between animate-fade-in mb-6">
           <span className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-rose-500" />
             <span>{error}</span>
@@ -115,7 +115,7 @@ export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialI
 
       {/* DIAGNOSTIC RESULTS VIEW */}
       {data && !loading && (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-6 animate-fade-in mt-6 sm:mt-8 pt-2">
           <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-xl space-y-6">
             {/* Profile Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">

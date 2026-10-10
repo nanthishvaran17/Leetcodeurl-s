@@ -798,7 +798,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             "q4": r["q4"] if r["q4"] is not None else "—",
             "solved": r["contest_solved"] if r["contest_solved"] is not None else "—",
             "score": r.get("score") if r.get("score") is not None else (r["contest_solved"] * 3 if r["contest_solved"] is not None else "—"),
-            "global_rank": r.get("global_rank") or r.get("rank"),
+            "global_rank": r.get("global_rank") or r.get("contest_global_ranking"),
             "rating": r.get("rating") or r.get("contest_rating")
         })
 
@@ -867,15 +867,21 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
 
     # 9. Format Title
     CONTEST_REPORT_TITLES = {
-        "FRIDAY_OFFICIAL_CONTEST": "Friday Official Contest Result",
-        "OFFICIAL_CONTEST": "Friday Official Contest Result",
+        "SATURDAY_BIWEEKLY_CONTEST": f"{contest_name.upper()} — STUDENT PERFORMANCE REPORT",
+        "FRIDAY_OFFICIAL_CONTEST": f"{contest_name.upper()} — STUDENT PERFORMANCE REPORT",
+        "OFFICIAL_CONTEST": f"{contest_name.upper()} — STUDENT PERFORMANCE REPORT",
         "WEEKLY_CONTEST_INTELLIGENCE": "Weekly Contest Intelligence Report",
         "SUNDAY_LIVE_CONTEST": "Sunday Live Contest Report",
         "CONTEST_ATTENDANCE_PARTICIPATION": "Contest Attendance & Participation Report",
         "CONTEST_PERFORMANCE_RANKING": "Contest Performance & Ranking Report",
     }
     rpt_key = config.report_type or "FRIDAY_OFFICIAL_CONTEST"
-    base_title = CONTEST_REPORT_TITLES.get(rpt_key, f"{contest_name} Official Contest Result")
+    if "BIWEEKLY" in rpt_key or "BIWEEKLY" in (contest_name or "").upper():
+        base_title = f"{contest_name.upper()} — STUDENT PERFORMANCE REPORT"
+    elif rpt_key in ("FRIDAY_OFFICIAL_CONTEST", "OFFICIAL_CONTEST", "SATURDAY_BIWEEKLY_CONTEST"):
+        base_title = f"{contest_name.upper()} — STUDENT PERFORMANCE REPORT"
+    else:
+        base_title = CONTEST_REPORT_TITLES.get(rpt_key, f"{contest_name.upper()} — STUDENT PERFORMANCE REPORT")
     
     # Resolve numeric department ID or code to clear uppercase dept code (e.g. 8 -> CSE, 7 -> IT)
     resolved_dept_display = dept_filter
@@ -901,10 +907,12 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         title = f"{title} ({resolved_year_display} Year)"
     title = clean_report_title(title)
 
-    report_prefix = "RPT-SUNDAY" if rpt_key == "SUNDAY_LIVE_CONTEST" else "RPT-FRIDAY"
+    report_prefix = "RPT-BIWEEKLY" if "BIWEEKLY" in rpt_key else ("RPT-SUNDAY" if rpt_key == "SUNDAY_LIVE_CONTEST" else "RPT-FRIDAY")
     report_id = f"{report_prefix}-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
 
     version_str = f"v1.0.0 | Template Rev 3.0 | Contest {contest_id} | Generated {datetime.datetime.now(datetime.timezone.utc).strftime('%d-%m-%Y')}"
+    is_biw = "biweekly" in contest_name.lower() or "biweekly" in contest_id.lower()
+    c_window = "08:00 PM – 09:30 PM IST" if is_biw else "08:00 AM – 09:30 AM IST"
 
     dataset: Dict[str, Any] = {
         "reportId": report_id,
@@ -923,7 +931,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         "session_date": contest_date,
         "contestId": contest_id,
         "academicYear": "Academic Year 2026–2027",
-        "contestWindow": "08:00 AM – 09:30 AM IST",
+        "contestWindow": c_window,
         "version": "v1.0.0",
         "templateRevision": "Rev 3.0",
         "versionString": version_str,

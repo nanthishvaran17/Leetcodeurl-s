@@ -103,7 +103,7 @@ def resolve_weekly_sessions(
             return None
         for sess in all_db_sessions:
             extracted = extract_contest_number(sess)
-            if extracted == int(c_num):
+            if extracted == c_num:
                 return sess
         return None
 
@@ -240,35 +240,42 @@ def resolve_target_weekly_session(db: Session, session_identifier: Any) -> Optio
     clean_str = raw_str.replace("SESSION-", "").replace("session-", "").strip()
     all_sessions = db.query(WeeklySession).all()
 
-    # 1. Match by extracted contest number (e.g. 515, 516, 522)
-    if clean_str.isdigit():
-        c_num = int(clean_str)
-        for s in all_sessions:
-            if extract_contest_number(s) == c_num or str(getattr(s, "contest_id", "")) == str(c_num):
-                return s
-
-    # 2. Match by exact date string or formatted date string
-    for s in all_sessions:
-        if s.session_date and s.session_date.strip() == clean_str:
-            return s
-        if hasattr(s, "session_code") and s.session_code and s.session_code.strip() == clean_str:
-            return s
-
-    # 3. Match by date interchange (DD.MM.YYYY <-> YYYY-MM-DD <-> DD-MM-YYYY)
-    if "." in clean_str or "-" in clean_str:
-        alt_str = clean_str.replace(".", "-") if "." in clean_str else clean_str.replace("-", ".")
-        for s in all_sessions:
-            if s.session_date and (s.session_date.strip() == alt_str or s.session_date.replace(".", "-") == alt_str.replace(".", "-")):
-                return s
-
-    # 4. Match by Primary Key ID
+    # 1. Primary Key ID exact match (Highest Priority for dropdown session_id)
     if clean_str.isdigit():
         c_num = int(clean_str)
         for s in all_sessions:
             if s.id == c_num:
                 return s
 
-    # 5. Match by contest name / slug substring
+    # 2. Match by exact contest_id or contest_name
+    for s in all_sessions:
+        if s.contest_id and s.contest_id.strip().lower() == clean_str.lower():
+            return s
+        if s.contest_name and s.contest_name.strip().lower() == clean_str.lower():
+            return s
+
+    # 3. Match by extracted contest number (e.g. 515, 516, 522, 193)
+    if clean_str.isdigit():
+        c_num = int(clean_str)
+        for s in all_sessions:
+            if extract_contest_number(s) == c_num:
+                return s
+
+    # 4. Match by exact date string or formatted date string
+    for s in all_sessions:
+        if s.session_date and s.session_date.strip() == clean_str:
+            return s
+        if hasattr(s, "session_code") and s.session_code and s.session_code.strip() == clean_str:
+            return s
+
+    # 5. Match by date interchange (DD.MM.YYYY <-> YYYY-MM-DD <-> DD-MM-YYYY)
+    if "." in clean_str or "-" in clean_str:
+        alt_str = clean_str.replace(".", "-") if "." in clean_str else clean_str.replace("-", ".")
+        for s in all_sessions:
+            if s.session_date and (s.session_date.strip() == alt_str or s.session_date.replace(".", "-") == alt_str.replace(".", "-")):
+                return s
+
+    # 6. Match by contest name / slug substring
     for s in all_sessions:
         if s.contest_name and clean_str.lower() in s.contest_name.lower():
             return s

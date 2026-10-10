@@ -1564,9 +1564,10 @@ def get_student_audit_history(
     filter_conditions = []
     if student.reg_no:
         filter_conditions.append(AuditLog.details.ilike(f"%{student.reg_no}%"))
-    if student.name and len(student.name) >= 3:
-        filter_conditions.append(AuditLog.details.ilike(f"%({student.name})%"))
-        filter_conditions.append(AuditLog.details.ilike(f"%{student.name} ({student.reg_no})%"))
+    student_name = str(student.name) if student.name else ""
+    if student_name and len(student_name) >= 3:
+        filter_conditions.append(AuditLog.details.ilike(f"%({student_name})%"))
+        filter_conditions.append(AuditLog.details.ilike(f"%{student_name} ({student.reg_no})%"))
 
     logs = []
     if filter_conditions:

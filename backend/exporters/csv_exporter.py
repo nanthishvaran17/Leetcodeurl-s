@@ -65,7 +65,7 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
                 r.get("contest_easy", 0),
                 r.get("contest_medium", 0),
                 r.get("contest_hard", 0),
-                r.get("global_rank") or r.get("rank") or "—",
+                r.get("global_rank") or r.get("contest_global_ranking") or "—",
                 r.get("contest_rating") or r.get("rating") or "—"
             ])
     elif participations and not all_students:
@@ -110,7 +110,7 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
                 s.get("easy") if s.get("easy") is not None else (s.get("easy_solved", "")),
                 s.get("medium") if s.get("medium") is not None else (s.get("medium_solved", "")),
                 s.get("hard") if s.get("hard") is not None else (s.get("hard_solved", "")),
-                s.get("global_rank") if s.get("global_rank") is not None else (s.get("rank") or s.get("profile_rank") or ""),
+                s.get("global_rank") if s.get("global_rank") is not None else (s.get("contest_global_ranking") or s.get("profile_rank") or ""),
                 s.get("contest_rating") or s.get("rating") or "",
                 s.get("status") or s.get("verification_status") or "UNVERIFIED"
             ])

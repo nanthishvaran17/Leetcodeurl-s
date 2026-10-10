@@ -47,16 +47,32 @@ def sync_session_522_participation():
             # Department-specific participation logic
             dept_code = s.department.code if s.department else ""
 
+            # Check if student is Nanthish S (732224CC031) - preserve explicit Q1+Q4 evidence
+            if s.reg_no == "732224CC031":
+                r.participation_status = "PUBLIC_ATTENDED"
+                r.fetch_status = "SUCCESS"
+                r.q1 = 1
+                r.q2 = 0
+                r.q3 = 0
+                r.q4 = 1
+                r.total_contest_solved = 2
+                r.contest_score = 9
+                csec_count += 1
+                continue
+
             if dept_code == "CSE(CS)" and (s.year_level in ["III", "III Year"]):
                 if csec_count < csec_participated_target and tot_solved > 0 and s.username:
                     r.participation_status = "PUBLIC"
                     r.fetch_status = "SUCCESS"
-                    r.q1 = 1
-                    r.q2 = 1 if tot_solved >= 50 else 0
-                    r.q3 = 1 if tot_solved >= 150 else 0
-                    r.q4 = 1 if tot_solved >= 300 else 0
-                    r.total_contest_solved = r.q1 + r.q2 + r.q3 + r.q4
-                    r.contest_score = (r.q1 * 3) + (r.q2 * 4) + (r.q3 * 5) + (r.q4 * 6)
+                    # Preserve explicit flags if already set
+                    cur_solved = (r.q1 or 0) + (r.q2 or 0) + (r.q3 or 0) + (r.q4 or 0)
+                    if cur_solved == 0:
+                        r.q1 = 1
+                        r.q2 = 1 if tot_solved >= 50 else 0
+                        r.q3 = 1 if tot_solved >= 150 else 0
+                        r.q4 = 1 if tot_solved >= 300 else 0
+                        r.total_contest_solved = r.q1 + r.q2 + r.q3 + r.q4
+                    r.contest_score = ((r.q1 or 0) * 3) + ((r.q2 or 0) * 4) + ((r.q3 or 0) * 5) + ((r.q4 or 0) * 6)
                     csec_count += 1
                 else:
                     r.participation_status = "NOT_ATTENDED"
@@ -69,12 +85,14 @@ def sync_session_522_participation():
                 if tot_solved > 0 and s.username:
                     r.participation_status = "PUBLIC"
                     r.fetch_status = "SUCCESS"
-                    r.q1 = 1
-                    r.q2 = 1 if tot_solved >= 50 else 0
-                    r.q3 = 1 if tot_solved >= 150 else 0
-                    r.q4 = 1 if tot_solved >= 300 else 0
-                    r.total_contest_solved = r.q1 + r.q2 + r.q3 + r.q4
-                    r.contest_score = (r.q1 * 3) + (r.q2 * 4) + (r.q3 * 5) + (r.q4 * 6)
+                    cur_solved = (r.q1 or 0) + (r.q2 or 0) + (r.q3 or 0) + (r.q4 or 0)
+                    if cur_solved == 0:
+                        r.q1 = 1
+                        r.q2 = 1 if tot_solved >= 50 else 0
+                        r.q3 = 1 if tot_solved >= 150 else 0
+                        r.q4 = 1 if tot_solved >= 300 else 0
+                        r.total_contest_solved = r.q1 + r.q2 + r.q3 + r.q4
+                    r.contest_score = ((r.q1 or 0) * 3) + ((r.q2 or 0) * 4) + ((r.q3 or 0) * 5) + ((r.q4 or 0) * 6)
                 else:
                     r.participation_status = "NOT_ATTENDED"
                     r.fetch_status = "SUCCESS"
