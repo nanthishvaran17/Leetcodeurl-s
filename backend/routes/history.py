@@ -122,6 +122,20 @@ def _parse_cal_entries(raw_cal: Any) -> List[tuple]:
     return entries
 
 
+def _parse_cal_counts(raw_cal: Any) -> Dict[datetime.date, int]:
+    """Parses raw submission_calendar_json into a dictionary mapping date -> count."""
+    entries = _parse_cal_entries(raw_cal)
+    counts: Dict[datetime.date, int] = defaultdict(int)
+    for ts_int, cnt in entries:
+        try:
+            d = datetime.datetime.fromtimestamp(ts_int, tz=UTC_TZ).date()
+            counts[d] += cnt
+        except Exception:
+            pass
+    return dict(counts)
+
+
+
 def _get_target_dates(period: str, ref_date_ist: datetime.date, ref_date_utc: datetime.date) -> Optional[set]:
     if period == "today":
         return {ref_date_ist, ref_date_utc}
@@ -231,6 +245,7 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
             continue
 
         baseline_snap: Optional[StudentStatSnapshot] = None
+        has_valid_baseline = False
         if cutoff is not None:
             for snap in snaps:
                 s_at = snap.captured_at
@@ -238,6 +253,7 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
                     s_at = s_at.replace(tzinfo=UTC_TZ)
                 if s_at <= cutoff:
                     baseline_snap = snap
+                    has_valid_baseline = True
                 else:
                     break
 
@@ -293,7 +309,7 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
 
         # For today, 7d, 30d: Calculate ground-truth calendar delta + live snapshot delta reconciliation
         cal_delta = _sum_cal_delta(cal_entries, target_dates) if cal_entries else 0
-        d_tot = max(cal_delta, snap_d_tot)
+        d_tot = max(cal_delta, snap_d_tot) if has_valid_baseline else cal_delta
 
         if d_tot > 0:
             if snap_d_tot == d_tot:
