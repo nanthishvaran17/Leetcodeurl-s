@@ -16,6 +16,10 @@
       "destination": "/mobile-auth.html"
     },
     {
+      "source": "/health",
+      "destination": "http://13.53.231.6/health"
+    },
+    {
       "source": "/((?!assets/|mobile-auth.html|firebase-messaging-sw.js|favicon.ico|google[a-z0-9]+\\.html|sitemap\\.xml|robots\\.txt).*)",
       "destination": "/index.html"
     }
@@ -23,6 +27,15 @@
   "headers": [
     {
       "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.(?:webp|png|jpg|jpeg|svg|ico))",
       "headers": [
         {
           "key": "Cache-Control",
