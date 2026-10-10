@@ -810,7 +810,7 @@ def simulate_single_day_surge_endpoint(
 
     staff_title = f"100 Solved in a Single Day: {s_name} ({s_reg})"
     staff_body = (
-        f"Dear Sir/Ma'am,\n\n"
+        f"Dear Faculty & Staff,\n\n"
         f"Your student / mentee {s_name} (Roll No: {s_reg}) has achieved a remarkable milestone "
         f"of solving {req.solved_today} LeetCode problems on the same day today ({today_ist_str})!\n\n"
         f"Student Details:\n"
@@ -905,7 +905,7 @@ def simulate_fetch_surge_endpoint(
 
     title = f"High Problem Surge Alert: {s_name} (+{delta} Solved)"
     body = (
-        f"Dear Sir/Ma'am,\n\n"
+        f"Dear Faculty & Staff,\n\n"
         f"Significant problem-solving growth detected for {s_name} ({s_reg}) between sync cycles!\n\n"
         f"• Student Name: {s_name}\n"
         f"• Roll Number: {s_reg}\n"
@@ -1024,7 +1024,7 @@ def simulate_contest_attendance_endpoint(
         event_type="SUNDAY_CONTEST_ATTENDANCE_REPORT",
         title=f"Sunday Contest Attendance & Absentee Report — {contest_name}",
         body=(
-            f"Dear Sir/Ma'am,\n\n"
+            f"Dear Faculty & Staff,\n\n"
             f"Sunday Contest Attendance Report for {contest_name} has been published!\n\n"
             f"• Attended Students List: Verified and updated on the leaderboard.\n"
             f"• Absent Students (Not Attended): Flagged for mentor follow-up.\n"

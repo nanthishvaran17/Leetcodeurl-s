@@ -1652,32 +1652,3 @@ def dispatch_notification_email(
     logger.info(f"[EMAIL_BYPASS] Suppressed notification email to {to_email} subject='{subject}'")
     return False
 
-    base_url = getattr(settings, "FRONTEND_ORIGIN", "https://leetcodeurl-s-roan.vercel.app").rstrip("/")
-    if action_route:
-        route = action_route if action_route.startswith("/") else f"/{action_route}"
-        target_link = f"{base_url}{route}"
-    else:
-        target_link = f"{base_url}/dashboard"
-    html_content = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-      <h2 style="color: #2563eb; margin-top: 0;">{subject}</h2>
-      <p style="color: #334155; font-size: 14px; line-height: 1.6;">{message_body}</p>
-      <p style="margin-top: 20px;">
-        <a href="{target_link}" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold;">View Notification</a>
-      </p>
-      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-top: 20px;" />
-      <p style="font-size: 11px; color: #94a3b8;">Nandha Engineering College • LeetCode Intelligence System</p>
-    </div>
-    """
-
-    try:
-        delivered, err = send_email(
-            recipient=to_email,
-            subject=subject,
-            html_body=html_content
-        )
-        return delivered
-    except Exception as e:
-        logger.warning(f"[EMAIL_DISPATCH_ERROR] Failed sending email to {to_email}: {e}")
-        return False
-

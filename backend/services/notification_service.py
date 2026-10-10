@@ -168,7 +168,7 @@ class NotificationService:
                 
                 u = db.query(User).filter(or_(*user_filters)).first()
                 if u:
-                    recipients.append({"user_id": u.email or f"STAFF_{u.id}", "email": u.email, "user_type": "STAFF"})
+                    recipients.append({"user_id": u.email or f"STAFF_{u.id}", "email": u.email, "user_type": "STAFF", "name": u.full_name or u.username})
                 
                 # Check student table safely
                 student_filters = [Student.email == clean_target, Student.reg_no == clean_target, Student.username == clean_target]
@@ -177,7 +177,7 @@ class NotificationService:
                     
                 s = db.query(Student).filter(or_(*student_filters)).first()
                 if s:
-                    recipients.append({"user_id": s.email or s.reg_no, "email": s.email, "user_type": "STUDENT"})
+                    recipients.append({"user_id": s.email or s.reg_no, "email": s.email, "user_type": "STUDENT", "name": s.name or s.username})
                     
                 if not recipients:
                     recipients.append({"user_id": clean_target, "email": clean_target, "user_type": "USER"})
@@ -198,7 +198,7 @@ class NotificationService:
                 else:
                     query = query.filter(User.role.ilike(f"%{target_role}%"))
             for u in query.all():
-                recipients.append({"user_id": u.email or f"STAFF_{u.id}", "email": u.email, "user_type": "STAFF"})
+                recipients.append({"user_id": u.email or f"STAFF_{u.id}", "email": u.email, "user_type": "STAFF", "name": u.full_name or u.username})
 
         elif scope == "DEPARTMENT":
             dept_code = (recipient_target or "").strip()
@@ -207,14 +207,14 @@ class NotificationService:
             if dept_code and dept_code.upper() != "ALL":
                 s_query = s_query.filter(or_(Department.code == dept_code, Department.name == dept_code))
             for s in s_query.all():
-                recipients.append({"user_id": s.email or s.reg_no, "email": s.email, "user_type": "STUDENT"})
+                recipients.append({"user_id": s.email or s.reg_no, "email": s.email, "user_type": "STUDENT", "name": s.name or s.username})
                 
             # Staff in department
             u_query = db.query(User).join(Department).filter(User.is_active == True)
             if dept_code and dept_code.upper() != "ALL":
                 u_query = u_query.filter(or_(Department.code == dept_code, Department.name == dept_code))
             for u in u_query.all():
-                recipients.append({"user_id": u.email or f"STAFF_{u.id}", "email": u.email, "user_type": "STAFF"})
+                recipients.append({"user_id": u.email or f"STAFF_{u.id}", "email": u.email, "user_type": "STAFF", "name": u.full_name or u.username})
 
         elif scope in ("SEMESTER", "YEAR"):
             year_lvl = (recipient_target or "").strip()
@@ -222,7 +222,7 @@ class NotificationService:
             if year_lvl and year_lvl.upper() != "ALL":
                 s_query = s_query.filter(Student.year_level == year_lvl)
             for s in s_query.all():
-                recipients.append({"user_id": s.email or s.reg_no, "email": s.email, "user_type": "STUDENT"})
+                recipients.append({"user_id": s.email or s.reg_no, "email": s.email, "user_type": "STUDENT", "name": s.name or s.username})
 
         elif scope in ("SECTION", "CLASS"):
             sec_name = (recipient_target or "").strip()
@@ -230,7 +230,7 @@ class NotificationService:
             if sec_name and sec_name.upper() != "ALL":
                 s_query = s_query.filter(Section.name == sec_name)
             for s in s_query.all():
-                recipients.append({"user_id": s.email or s.reg_no, "email": s.email, "user_type": "STUDENT"})
+                recipients.append({"user_id": s.email or s.reg_no, "email": s.email, "user_type": "STUDENT", "name": s.name or s.username})
 
         elif scope == "MENTOR_GROUP":
             # Target assigned students of a specific faculty
@@ -238,14 +238,14 @@ class NotificationService:
             assignments = db.query(FacultyStudentAssignment).join(Student).filter(FacultyStudentAssignment.faculty_id == faculty_id).all()
             for a in assignments:
                 if a.student and a.student.is_active:
-                    recipients.append({"user_id": a.student.email or a.student.reg_no, "email": a.student.email, "user_type": "STUDENT"})
+                    recipients.append({"user_id": a.student.email or a.student.reg_no, "email": a.student.email, "user_type": "STUDENT", "name": a.student.name or a.student.username})
 
         elif scope in ("ALL", "GLOBAL"):
             # All active users and students
             for s in db.query(Student).filter(Student.is_active == True).all():
-                recipients.append({"user_id": s.email or s.reg_no, "email": s.email, "user_type": "STUDENT"})
+                recipients.append({"user_id": s.email or s.reg_no, "email": s.email, "user_type": "STUDENT", "name": s.name or s.username})
             for u in db.query(User).filter(User.is_active == True).all():
-                recipients.append({"user_id": u.email or f"STAFF_{u.id}", "email": u.email, "user_type": "STAFF"})
+                recipients.append({"user_id": u.email or f"STAFF_{u.id}", "email": u.email, "user_type": "STAFF", "name": u.full_name or u.username})
 
         # Deduplicate by user_id
         seen = set()
@@ -325,6 +325,47 @@ class NotificationService:
                 uid = r["user_id"]
                 n_id = f"NOTIF_{uuid.uuid4().hex[:16]}"
                 
+                recipient_name = r.get("name")
+                if not recipient_name and uid:
+                    if r.get("user_type") == "STAFF":
+                        clean_u = str(uid).replace("STAFF_", "").strip()
+                        user_opts = [User.email == uid, User.username == uid]
+                        if clean_u.isdigit():
+                            user_opts.append(User.id == int(clean_u))
+                        u_obj = db.query(User).filter(or_(*user_opts)).first()
+                        if u_obj:
+                            recipient_name = u_obj.full_name or u_obj.username
+                    elif r.get("user_type") == "STUDENT":
+                        std_opts = [Student.email == uid, Student.reg_no == uid, Student.username == uid]
+                        if str(uid).isdigit():
+                            std_opts.append(Student.id == int(uid))
+                        s_obj = db.query(Student).filter(or_(*std_opts)).first()
+                        if s_obj:
+                            recipient_name = s_obj.name or s_obj.username
+
+                eff_name = recipient_name or ("Staff Member" if r.get("user_type") == "STAFF" else "Student")
+
+                # Dynamically replace generic greetings with recipient-specific name
+                personalized_body = body
+                generic_greetings = [
+                    "Dear Sir/Ma'am,\n\n", "Dear Sir/Ma'am,\n", "Dear Sir/Ma'am,",
+                    "Dear Sir/Madam,\n\n", "Dear Sir/Madam,\n", "Dear Sir/Madam,",
+                    "Dear Sir/Madam ", "Dear Faculty & Staff,\n\n", "Dear Faculty & Staff,",
+                    "Dear Faculty,\n\n", "Dear Staff,\n\n", "Dear Mentor,\n\n", "Dear Mentor,"
+                ]
+                for gg in generic_greetings:
+                    if gg in personalized_body:
+                        if "\n\n" in gg:
+                            repl = f"Dear {eff_name},\n\n"
+                        elif "\n" in gg:
+                            repl = f"Dear {eff_name},\n"
+                        elif gg.endswith(" "):
+                            repl = f"Dear {eff_name}, "
+                        else:
+                            repl = f"Dear {eff_name},"
+                        personalized_body = personalized_body.replace(gg, repl, 1)
+                        break
+
                 # SQLite Record
                 record = NotificationRecord(
                     notification_id=n_id,
@@ -334,7 +375,7 @@ class NotificationService:
                     recipient_user_id=uid,
                     actor_user_id=actor_user_id,
                     title=title,
-                    body=body,
+                    body=personalized_body,
                     entity_type=eff_entity_type,
                     entity_id=entity_id,
                     file_id=file_id,
@@ -353,7 +394,7 @@ class NotificationService:
                     "id": n_id,
                     "eventId": eff_event_id,
                     "title": title,
-                    "message": body,
+                    "message": personalized_body,
                     "type": category,
                     "priority": eff_priority,
                     "recipientUserId": uid,
@@ -596,6 +637,7 @@ class NotificationService:
     ) -> Dict[str, Any]:
         """Registers client FCM device token for targeted & multi-device push delivery."""
         try:
+            now = datetime.datetime.now(datetime.timezone.utc)
             tok = db.query(FCMDevice).filter_by(device_token=device_token).first()
             if not tok:
                 tok = FCMDevice(
@@ -605,19 +647,34 @@ class NotificationService:
                     app_version=app_version,
                     device_model=device_model,
                     is_active=True,
-                    last_seen=datetime.datetime.now(datetime.timezone.utc)
+                    last_seen=now
                 )
                 db.add(tok)
+                db.commit()
             else:
-                tok.user_id = user_id  # type: ignore
-                tok.platform = platform  # type: ignore
-                if app_version: tok.app_version = app_version  # type: ignore
-                if device_model: tok.device_model = device_model  # type: ignore
-                tok.is_active = True  # type: ignore
-                tok.last_seen = datetime.datetime.now(datetime.timezone.utc)  # type: ignore
+                # Only write if something meaningful changed, or last_seen is stale by >60s.
+                # This prevents constant write-lock contention on SQLite from frontend heartbeats.
+                last_seen = tok.last_seen  # type: ignore
+                if last_seen and hasattr(last_seen, "tzinfo") and last_seen.tzinfo is None:
+                    last_seen = last_seen.replace(tzinfo=datetime.timezone.utc)
+                stale = (last_seen is None) or ((now - last_seen).total_seconds() > 60)
 
-            db.commit()
+                changed = (
+                    tok.user_id != user_id  # type: ignore
+                    or tok.platform != platform  # type: ignore
+                    or not tok.is_active  # type: ignore
+                    or (app_version and tok.app_version != app_version)  # type: ignore
+                    or (device_model and tok.device_model != device_model)  # type: ignore
+                )
 
+                if changed or stale:
+                    tok.user_id = user_id  # type: ignore
+                    tok.platform = platform  # type: ignore
+                    if app_version: tok.app_version = app_version  # type: ignore
+                    if device_model: tok.device_model = device_model  # type: ignore
+                    tok.is_active = True  # type: ignore
+                    tok.last_seen = now  # type: ignore
+                    db.commit()
 
             return {"success": True, "token_id": tok.id, "user_id": user_id}
         except Exception as e:

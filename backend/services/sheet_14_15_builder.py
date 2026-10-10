@@ -8,7 +8,7 @@ Does NOT modify or remove any existing sheets or data.
 
 import datetime
 from collections import defaultdict
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from backend.time_utils import format_ist, now_utc
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -100,6 +100,9 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
     else:
         contest_nums = [x[0] for x in contest_sessions]
 
+    first_c_num = contest_nums[0] if contest_nums else 518
+    latest_c_num = contest_nums[-1] if contest_nums else 519
+    curr_time_str = format_ist(now_utc())
     prev_c_num = contest_nums[-2] if len(contest_nums) >= 2 else contest_nums[0]
     curr_c_num = contest_nums[-1]
 
@@ -114,24 +117,24 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
         pub_results = db_session.query(WeeklyPublicResult).all()
     pub_map = {(pr.student_id, pr.session_id): pr for pr in pub_results}
 
-    def _get_student_contest_data(s, sess):
+    def _get_student_contest_data(s, sess) -> Dict[str, Any]:
         if not sess or not s.username or s.username == "unlinked":
-            return {"status": "UNLINKED" if not s.username else "NOT_ATTENDED", "q1": 0, "q2": 0, "q3": 0, "q4": 0, "solved": 0, "score": 0, "rank": None, "rating": 1500.0}
+            return {"status": "UNLINKED" if not s.username else "NOT_ATTENDED", "q1": 0, "q2": 0, "q3": 0, "q4": 0, "solved": 0, "score": 0, "rank": None, "rating": None}
 
         pr = pub_map.get((s.id, sess.id))
         if not pr:
-            return {"status": "NOT_ATTENDED", "q1": 0, "q2": 0, "q3": 0, "q4": 0, "solved": 0, "score": 0, "rank": None, "rating": 1500.0}
+            return {"status": "NOT_ATTENDED", "q1": 0, "q2": 0, "q3": 0, "q4": 0, "solved": 0, "score": 0, "rank": None, "rating": None}
 
         part_st = str(pr.participation_status or "").upper()
-        solved = pr.total_contest_solved or 0
-        score = pr.contest_score or 0
-        rank = pr.contest_rank
-        rating = pr.contest_rating or 1500.0
+        solved = int(pr.total_contest_solved or 0)
+        score = int(pr.contest_score or 0)
+        rank = int(pr.contest_rank) if pr.contest_rank is not None else None
+        rating = float(pr.contest_rating) if (pr.contest_rating is not None and round(float(pr.contest_rating)) != 1500) else None
 
-        q1 = 1 if (pr.q1 or 0) > 0 else 0
-        q2 = 1 if (pr.q2 or 0) > 0 else 0
-        q3 = 1 if (pr.q3 or 0) > 0 else 0
-        q4 = 1 if (pr.q4 or 0) > 0 else 0
+        q1 = 1 if (int(pr.q1 or 0)) > 0 else 0
+        q2 = 1 if (int(pr.q2 or 0)) > 0 else 0
+        q3 = 1 if (int(pr.q3 or 0)) > 0 else 0
+        q4 = 1 if (int(pr.q4 or 0)) > 0 else 0
         actual_sum = q1 + q2 + q3 + q4
         tot_solved = max(actual_sum, solved)
 
@@ -140,7 +143,10 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
 
         return {
             "status": status,
-            "q1": q1, "q2": q2, "q3": q3, "q4": q4,
+            "q1": q1,
+            "q2": q2,
+            "q3": q3,
+            "q4": q4,
             "solved": tot_solved if is_att else 0,
             "score": score if is_att else 0,
             "rank": rank if is_att else None,
@@ -187,23 +193,23 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
     prev_att = sum(1 for _, d in prev_st_data if d["status"] == "PUBLIC_ATTENDED")
     curr_att = sum(1 for _, d in curr_st_data if d["status"] == "PUBLIC_ATTENDED")
 
-    prev_solves = sum(d["solved"] for _, d in prev_st_data)
-    curr_solves = sum(d["solved"] for _, d in curr_st_data)
+    prev_solves = sum(int(d["solved"]) for _, d in prev_st_data)
+    curr_solves = sum(int(d["solved"]) for _, d in curr_st_data)
 
-    prev_p4 = sum(1 for _, d in prev_st_data if d["solved"] == 4)
-    curr_p4 = sum(1 for _, d in curr_st_data if d["solved"] == 4)
+    prev_p4 = sum(1 for _, d in prev_st_data if int(d["solved"]) == 4)
+    curr_p4 = sum(1 for _, d in curr_st_data if int(d["solved"]) == 4)
 
-    prev_p3 = sum(1 for _, d in prev_st_data if d["solved"] == 3)
-    curr_p3 = sum(1 for _, d in curr_st_data if d["solved"] == 3)
+    prev_p3 = sum(1 for _, d in prev_st_data if int(d["solved"]) == 3)
+    curr_p3 = sum(1 for _, d in curr_st_data if int(d["solved"]) == 3)
 
-    prev_p2 = sum(1 for _, d in prev_st_data if d["solved"] == 2)
-    curr_p2 = sum(1 for _, d in curr_st_data if d["solved"] == 2)
+    prev_p2 = sum(1 for _, d in prev_st_data if int(d["solved"]) == 2)
+    curr_p2 = sum(1 for _, d in curr_st_data if int(d["solved"]) == 2)
 
-    prev_p1 = sum(1 for _, d in prev_st_data if d["solved"] == 1)
-    curr_p1 = sum(1 for _, d in curr_st_data if d["solved"] == 1)
+    prev_p1 = sum(1 for _, d in prev_st_data if int(d["solved"]) == 1)
+    curr_p1 = sum(1 for _, d in curr_st_data if int(d["solved"]) == 1)
 
-    prev_score = sum(d["score"] for _, d in prev_st_data)
-    curr_score = sum(d["score"] for _, d in curr_st_data)
+    prev_score = sum(int(d["score"]) for _, d in prev_st_data)
+    curr_score = sum(int(d["score"]) for _, d in curr_st_data)
 
     exec_rows = [
         ("Total Students", total_students, total_students),
@@ -258,12 +264,12 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
         att_last = d_prev["status"]
         att_this = d_curr["status"]
 
-        sol_last = d_prev["solved"]
-        sol_this = d_curr["solved"]
+        sol_last = int(d_prev["solved"])
+        sol_this = int(d_curr["solved"])
         sol_chg = sol_this - sol_last
 
-        sco_last = d_prev["score"]
-        sco_this = d_curr["score"]
+        sco_last = int(d_prev["score"])
+        sco_this = int(d_curr["score"])
         sco_chg = sco_this - sco_last
 
         rnk_last = d_prev["rank"] or "N/A"
@@ -272,7 +278,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
 
         rat_last = d_prev["rating"]
         rat_this = d_curr["rating"]
-        rat_chg = round(rat_this - rat_last, 1)
+        rat_chg = round(float(rat_this) - float(rat_last), 1) if (rat_this is not None and rat_last is not None) else "N/A"
 
         # Movement classification
         if att_last == "NOT_ATTENDED" and att_this == "PUBLIC_ATTENDED":
@@ -329,11 +335,11 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
 
         row_vals = [
             idx, s.reg_no, s.name,
-            d_prev["q1"], d_curr["q1"], d_curr["q1"] - d_prev["q1"],
-            d_prev["q2"], d_curr["q2"], d_curr["q2"] - d_prev["q2"],
-            d_prev["q3"], d_curr["q3"], d_curr["q3"] - d_prev["q3"],
-            d_prev["q4"], d_curr["q4"], d_curr["q4"] - d_prev["q4"],
-            d_prev["solved"], d_curr["solved"], d_curr["solved"] - d_prev["solved"]
+            int(d_prev["q1"]), int(d_curr["q1"]), int(d_curr["q1"]) - int(d_prev["q1"]),
+            int(d_prev["q2"]), int(d_curr["q2"]), int(d_curr["q2"]) - int(d_prev["q2"]),
+            int(d_prev["q3"]), int(d_curr["q3"]), int(d_curr["q3"]) - int(d_prev["q3"]),
+            int(d_prev["q4"]), int(d_curr["q4"]), int(d_curr["q4"]) - int(d_prev["q4"]),
+            int(d_prev["solved"]), int(d_curr["solved"]), int(d_curr["solved"]) - int(d_prev["solved"])
         ]
         ws14.row_dimensions[row_idx].height = 18
         for c, v in enumerate(row_vals, 1):
@@ -400,8 +406,8 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
         dept_stats[dept_code]["curr_total"] += 1
         if d_prev["status"] == "PUBLIC_ATTENDED": dept_stats[dept_code]["prev_att"] += 1
         if d_curr["status"] == "PUBLIC_ATTENDED": dept_stats[dept_code]["curr_att"] += 1
-        dept_stats[dept_code]["prev_sol"] += d_prev["solved"]
-        dept_stats[dept_code]["curr_sol"] += d_curr["solved"]
+        dept_stats[dept_code]["prev_sol"] += int(d_prev["solved"])
+        dept_stats[dept_code]["curr_sol"] += int(d_curr["solved"])
 
     for dept_code, st in sorted(dept_stats.items()):
         prev_att_pct = round(st["prev_att"] / max(st["prev_total"], 1) * 100, 1)
@@ -449,8 +455,8 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
         fac_stats[fac_name]["curr_total"] += 1
         if d_prev["status"] == "PUBLIC_ATTENDED": fac_stats[fac_name]["prev_att"] += 1
         if d_curr["status"] == "PUBLIC_ATTENDED": fac_stats[fac_name]["curr_att"] += 1
-        fac_stats[fac_name]["prev_sol"] += d_prev["solved"]
-        fac_stats[fac_name]["curr_sol"] += d_curr["solved"]
+        fac_stats[fac_name]["prev_sol"] += int(d_prev["solved"])
+        fac_stats[fac_name]["curr_sol"] += int(d_curr["solved"])
 
     for fac_name, st in sorted(fac_stats.items()):
         prev_act_pct = round(st["prev_att"] / max(st["prev_total"], 1) * 100, 1)
@@ -584,13 +590,13 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
         tot_st = len(master_students)
         part_cnt = sum(1 for d in st_data if d["status"] == "PUBLIC_ATTENDED")
         att_pct = f"{(part_cnt / max(tot_st, 1) * 100):.1f}%"
-        tot_solves = sum(d["solved"] for d in st_data)
+        tot_solves = sum(int(d["solved"]) for d in st_data)
         avg_solves = round(tot_solves / max(part_cnt, 1), 2)
-        p4 = sum(1 for d in st_data if d["solved"] == 4)
-        p3 = sum(1 for d in st_data if d["solved"] == 3)
-        p2 = sum(1 for d in st_data if d["solved"] == 2)
-        p1 = sum(1 for d in st_data if d["solved"] == 1)
-        tot_score = sum(d["score"] for d in st_data)
+        p4 = sum(1 for d in st_data if int(d["solved"]) == 4)
+        p3 = sum(1 for d in st_data if int(d["solved"]) == 3)
+        p2 = sum(1 for d in st_data if int(d["solved"]) == 2)
+        p1 = sum(1 for d in st_data if int(d["solved"]) == 1)
+        tot_score = sum(int(d["score"]) for d in st_data)
         avg_score = round(tot_score / max(part_cnt, 1), 2)
         st_val = "COMPLETED" if part_cnt > 0 else "FETCH_FAILED/EMPTY"
 
@@ -621,7 +627,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
 
         c_solves = [ d["solved"] if d["status"] == "PUBLIC_ATTENDED" else ("UNLINKED" if d["status"] == "UNLINKED" else "0") for d in st_records ]
         tot_att = sum(1 for d in st_records if d["status"] == "PUBLIC_ATTENDED")
-        tot_sol = sum(d["solved"] for d in st_records)
+        tot_sol = sum(int(d["solved"]) for d in st_records)
         att_pct = f"{(tot_att / max(len(contest_nums), 1) * 100):.1f}%"
         latest_c_val = c_solves[-1]
 
@@ -715,17 +721,18 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
         st_records = [ _get_student_contest_data(s, next((sess for n, sess in contest_sessions if n == cn), None)) for cn in contest_nums ]
         tot_c = len(contest_nums)
         tot_att = sum(1 for d in st_records if d["status"] == "PUBLIC_ATTENDED")
-        tot_sol = sum(d["solved"] for d in st_records)
+        tot_sol = sum(int(d["solved"]) for d in st_records)
         avg_sol = round(tot_sol / max(tot_att, 1), 2)
-        best_sol = max((d["solved"] for d in st_records), default=0)
-        best_sco = max((d["score"] for d in st_records), default=0)
+        best_sol = max((int(d["solved"]) for d in st_records), default=0)
+        best_sco = max((int(d["score"]) for d in st_records), default=0)
         ranks = [d["rank"] for d in st_records if d["rank"] is not None]
         best_rnk = min(ranks) if ranks else "N/A"
-        hi_rat = max((d["rating"] for d in st_records), default=1500.0)
-        p4 = sum(1 for d in st_records if d["solved"] == 4)
-        p3 = sum(1 for d in st_records if d["solved"] == 3)
-        p2 = sum(1 for d in st_records if d["solved"] == 2)
-        p1 = sum(1 for d in st_records if d["solved"] == 1)
+        valid_ratings = [float(d["rating"]) for d in st_records if d["rating"] is not None]
+        hi_rat = max(valid_ratings, default=1500.0)
+        p4 = sum(1 for d in st_records if int(d["solved"]) == 4)
+        p3 = sum(1 for d in st_records if int(d["solved"]) == 3)
+        p2 = sum(1 for d in st_records if int(d["solved"]) == 2)
+        p1 = sum(1 for d in st_records if int(d["solved"]) == 1)
         h_status = "ACTIVE" if tot_att > 0 else ("UNLINKED" if not s.username else "INACTIVE")
 
         vals = [s.reg_no, s.name, tot_c, tot_att, tot_sol, avg_sol, best_sol, best_sco, best_rnk, hi_rat, p4, p3, p2, p1, h_status]
@@ -782,10 +789,10 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
         st_records = [ _get_student_contest_data(s, sess) for s in master_students ]
         parts = [ d for d in st_records if d["status"] == "PUBLIC_ATTENDED" ]
         tot_p = max(len(parts), 1)
-        q1_cnt = sum(d["q1"] for d in parts)
-        q2_cnt = sum(d["q2"] for d in parts)
-        q3_cnt = sum(d["q3"] for d in parts)
-        q4_cnt = sum(d["q4"] for d in parts)
+        q1_cnt = sum(int(d["q1"]) for d in parts)
+        q2_cnt = sum(int(d["q2"]) for d in parts)
+        q3_cnt = sum(int(d["q3"]) for d in parts)
+        q4_cnt = sum(int(d["q4"]) for d in parts)
 
         vals = [
             f"Contest {cn}", q1_cnt, q2_cnt, q3_cnt, q4_cnt, len(parts),
@@ -820,7 +827,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
             dept_h_map[d_code][cn]["total"] += 1
             if d["status"] == "PUBLIC_ATTENDED":
                 dept_h_map[d_code][cn]["att"] += 1
-                dept_h_map[d_code][cn]["solves"] += d["solved"]
+                dept_h_map[d_code][cn]["solves"] += int(d["solved"])
 
     for d_code, c_dict in sorted(dept_h_map.items()):
         c_solves = [ c_dict[cn]["solves"] for cn in contest_nums ]
@@ -860,7 +867,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
             fac_h_map[fac_name][cn]["total"] += 1
             if d["status"] == "PUBLIC_ATTENDED":
                 fac_h_map[fac_name][cn]["att"] += 1
-                fac_h_map[fac_name][cn]["solves"] += d["solved"]
+                fac_h_map[fac_name][cn]["solves"] += int(d["solved"])
 
     for fac_name, c_dict in sorted(fac_h_map.items()):
         c_active = [ c_dict[cn]["att"] for cn in contest_nums ]
@@ -977,11 +984,12 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
                 all_att_records.append(d)
 
     tot_part_records = len(all_att_records)
-    tot_h_solves = sum(d["solved"] for d in all_att_records)
+    tot_h_solves = sum(int(d["solved"]) for d in all_att_records)
     avg_h_solves = round(tot_h_solves / max(tot_part_records, 1), 2)
-    hi_h_solved = max((d["solved"] for d in all_att_records), default=0)
-    hi_h_rating = max((d["rating"] for d in all_att_records), default=1500.0)
-    tot_p4_h = sum(1 for d in all_att_records if d["solved"] == 4)
+    hi_h_solved = max((int(d["solved"]) for d in all_att_records), default=0)
+    valid_h_ratings = [float(d["rating"]) for d in all_att_records if d["rating"] is not None]
+    hi_h_rating = max(valid_h_ratings, default=1500.0)
+    tot_p4_h = sum(1 for d in all_att_records if int(d["solved"]) == 4)
 
     h_summary_rows = [
         ("First Contest", f"Contest {first_c_num}"),

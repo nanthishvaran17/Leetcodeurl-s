@@ -63,7 +63,7 @@ export function getContestRatingDisplay(st: any): string {
     ?? st.contest_rating
     ?? st.public_contest_result?.contest_rating
     ?? st.lc_contest_standing?.contest_rating;
-  if (rawRating == null || Number(rawRating) <= 0) return '—';
+  if (rawRating == null || Number(rawRating) <= 0 || Number(rawRating) === 1500 || Math.round(Number(rawRating)) === 1500) return '—';
   return Math.round(Number(rawRating)).toLocaleString();
 }
 

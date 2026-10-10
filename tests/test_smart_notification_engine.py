@@ -322,6 +322,13 @@ class TestSmartNotificationEngine(unittest.TestCase):
         res = AutomaticNotificationEngine.check_and_emit_sync_completed_summary(self.db, "job_123", summary)
         self.assertIsNotNone(res)
         self.assertEqual(res.get("event_type"), "SYNC_COMPLETED_SUMMARY")
+        from backend.models import NotificationRecord
+        rec = self.db.query(NotificationRecord).filter_by(event_id=res["event_id"]).first()
+        self.assertIsNotNone(rec)
+        self.assertIn("Total Eligible Roster: 53", rec.body)
+        self.assertIn("Successfully Fetched: 50", rec.body)
+        self.assertIn("Fetch Failures: 1", rec.body)
+        self.assertIn("Skipped Profiles: 2", rec.body)
 
     def test_19_sync_failed_reaches_only_authorized_admins(self):
         """19. Sync-failed notification reaches only authorized Admin recipients."""

@@ -252,7 +252,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     if (val === null || val === undefined || val === '' || val === '—' || val === 'None' || val === 'NaN' || val === 'nan') return '—';
     const cleanStr = String(val).replace(/[^0-9.]/g, '');
     const num = Number(cleanStr);
-    if (isNaN(num) || num <= 0) return '—';
+    if (isNaN(num) || num <= 0 || num === 1500 || Math.round(num) === 1500) return '—';
     return Math.round(num).toLocaleString();
   };
 

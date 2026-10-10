@@ -800,8 +800,8 @@ def get_unassigned_students(
 
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
-    if year_level and str(year_level).strip().upper() not in ['ALL', 'ALL YEARS', 'ALL_YEARS', '']:
-        clean_yl = str(year_level).strip().upper()
+    if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', 'ALL_YEARS', '']:
+        clean_yl = year_level.strip().upper()
         years_map = {
             "I": ["1", "I", "1ST", "I YEAR", "1 YEAR", "YEAR I", "YEAR 1", "1ST YEAR"],
             "II": ["2", "II", "2ND", "II YEAR", "2 YEAR", "YEAR II", "YEAR 2", "2ND YEAR"],
@@ -818,7 +818,7 @@ def get_unassigned_students(
             target_years = years_map.get(stripped, [clean_yl, stripped])
             
         from sqlalchemy import or_, func
-        conds = [Student.year_level.in_(target_years)]
+        conds: list[Any] = [Student.year_level.in_(target_years)]
         for t in target_years:
             conds.append(func.upper(Student.year_level) == t.upper())
             conds.append(func.upper(Student.year_level).like(f"%{t.upper()}%"))
@@ -862,7 +862,7 @@ def create_staff_user(
         raise HTTPException(status_code=403, detail="Only Admins can create staff accounts.")
 
     # Flexible institutional_id: accept any custom format or auto-generate if missing
-    inst_id = payload.institutional_id.strip().upper() if (payload.institutional_id and str(payload.institutional_id).strip()) else None
+    inst_id = payload.institutional_id.strip().upper() if (payload.institutional_id and payload.institutional_id.strip()) else None
     if not inst_id and payload.department_id:
         from backend.models import Department
         dept = db.query(Department).filter(Department.id == payload.department_id).first()
@@ -974,7 +974,7 @@ def create_staff_user(
         NotificationService.create_direct_notification(
             title="Staff Account Created",
             message=f"New staff account for '{staff_user.full_name}' ({staff_user.role}) was created successfully.",
-            recipient_user_ids=[str(r) for r in recipients if r],
+            recipient_user_ids=[r for r in recipients if r],
             notification_type="system",
             priority="normal",
             action_route="/settings",
@@ -1130,7 +1130,7 @@ def update_staff_user(
     update_data = payload.model_dump(exclude_unset=True)
 
     if payload.profile_photo is not None:
-        staff_user.profile_photo = payload.profile_photo
+        staff_user.profile_photo = payload.profile_photo  # type: ignore[assignment]
         changes_made["profile_photo"] = "Updated"
 
     if "mentoring_role" in update_data:
@@ -1552,7 +1552,7 @@ def bulk_assign_students_admin(
         db=db,
         faculty_id=payload.staff_id,
         student_ids=payload.student_ids,
-        assigned_by_id=int(current_user.id),
+        assigned_by_id=int(cast(Any, current_user.id)),
         background_tasks=background_tasks
     )
 
@@ -1578,7 +1578,7 @@ def auto_rebalance_workload(
     result = faculty_assignment_service.rebalance_staff_allocations(
         db=db,
         department_id=dept_id,
-        assigned_by_id=int(current_user.id)
+        assigned_by_id=int(cast(Any, current_user.id))
     )
 
     log_admin_action(

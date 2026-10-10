@@ -1,15 +1,29 @@
 import datetime
 import hashlib
 import re
+import threading
+import time
 import uuid
-from typing import Optional, List, Dict, Any
+from concurrent.futures import ThreadPoolExecutor
+from typing import Optional, List, Dict, Any, Tuple, cast
 from fastapi import Request, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from backend.database import get_db
+from backend.database import get_db, SessionLocal
 from backend.config import settings
 from backend.models import User, AdminAuditLog
 from backend.logger import logger
+
+# ---------------------------------------------------------------------------
+# Background audit-log thread pool & in-memory dedup
+# A single-thread executor serialises SQLite audit writes without blocking
+# the request handler. On PostgreSQL it degrades gracefully (pool handles it).
+# ---------------------------------------------------------------------------
+_AUDIT_EXECUTOR = ThreadPoolExecutor(max_workers=1, thread_name_prefix="audit_writer")
+
+# (username, action, resource, result) -> last write timestamp
+_RECENT_ACCESS_LOGS: Dict[Tuple, float] = {}
+_RECENT_ACCESS_LOCK = threading.Lock()
 
 # In-memory sliding window tracking for Security Alert emails
 # Key: source_identifier -> List of failure timestamps
@@ -302,88 +316,56 @@ def parse_user_agent_details(user_agent_str: Optional[str]) -> dict:
         "raw": ua[:500]
     }
 
-def log_security_access_event(
-    db: Session,
-    request: Request,
-    user: Optional[User],
+def _write_audit_log_background(
+    username: str,
+    user_id: Optional[int],
+    user_email: Optional[str],
+    user_role: str,
     action: str,
     resource: str,
     result: str,
-    denial_reason: Optional[str] = None,
-    session_id: Optional[str] = None,
-    debounce_seconds: float = 2.0
-):
-    """
-    Persists a detailed security access audit log into AdminAuditLog with complete
-    forensic traceability, IP version, device breakdown, and SHA-256 hash sealing.
-    """
-    username = user.username if user else "UNKNOWN"
-    user_id = user.id if user else None
-    user_email = user.email if user else None
-    user_role = user.role if user else "UNKNOWN"
-
-    # 1. In-memory debounce check
-    dedup_key = (username, action, resource, result)
-    now_ts = time.time()
-    with _RECENT_ACCESS_LOCK:
-        last_ts = _RECENT_ACCESS_LOGS.get(dedup_key, 0.0)
-        if now_ts - last_ts < debounce_seconds:
-            return
-        _RECENT_ACCESS_LOGS[dedup_key] = now_ts
-
-        # Housekeeping: prune old entries if map grows
-        if len(_RECENT_ACCESS_LOGS) > 500:
-            threshold = now_ts - 60.0
-            expired = [k for k, v in _RECENT_ACCESS_LOGS.items() if v < threshold]
-            for k in expired:
-                _RECENT_ACCESS_LOGS.pop(k, None)
-
-    # 2. Database safety-net debounce check (within last debounce_seconds)
-    try:
-        cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(seconds=debounce_seconds)
-        existing = db.query(AdminAuditLog.audit_id).filter(
-            AdminAuditLog.admin_name == username,
-            AdminAuditLog.action == action,
-            AdminAuditLog.target_id == resource,
-            AdminAuditLog.status == result,
-            AdminAuditLog.event_timestamp >= cutoff
-        ).first()
-        if existing:
-            return
-    except Exception:
-        try:
-            db.rollback()
-        except Exception:
-            pass
-
-    hashed_ip = get_hashed_ip(request)
-    client_ip_addr, ip_ver = get_real_client_ip(request)
-    ua_info = parse_user_agent_details(request.headers.get("User-Agent"))
-    req_time = datetime.datetime.now(datetime.timezone.utc)
+    denial_reason: Optional[str],
+    session_id: Optional[str],
+    hashed_ip: str,
+    client_ip_addr: str,
+    ip_ver: str,
+    ua_info: dict,
+    request_path: str,
+    request_method: str,
+    req_time: datetime.datetime,
+) -> None:
+    """Runs in a background thread — opens its own short-lived DB session so the
+    calling request handler is never blocked waiting for a SQLite write lock."""
     sec_audit_id = f"SEC-{uuid.uuid4().hex[:8].upper()}"
     req_id = f"req_{uuid.uuid4().hex[:12]}"
     corr_id = f"corr_{uuid.uuid4().hex[:12]}"
 
-    # Hash chain calculation over stored event values (PostgreSQL transaction-safe)
-    prev_hash = "0000000000000000000000000000000000000000000000000000000000000000"
+    db = SessionLocal()
     try:
-        prev_entry = db.query(AdminAuditLog.event_hash).order_by(AdminAuditLog.event_timestamp.desc()).first()
-        if prev_entry and prev_entry.event_hash:
-            prev_hash = prev_entry.event_hash
-    except Exception:
+        # Hash-chain: fetch previous event hash
+        prev_hash = "0000000000000000000000000000000000000000000000000000000000000000"
         try:
-            db.rollback()
+            prev_entry = db.query(AdminAuditLog.event_hash).order_by(
+                AdminAuditLog.event_timestamp.desc()
+            ).first()
+            if prev_entry and prev_entry.event_hash:
+                prev_hash = prev_entry.event_hash
         except Exception:
-            pass
+            try:
+                db.rollback()
+            except Exception:
+                pass
 
-    raw_hash_payload = f"{sec_audit_id}:{req_time.isoformat()}:{user_id or 0}:{username}:{action}:{resource}:{result}:{client_ip_addr}:{prev_hash}"
-    event_hash = hashlib.sha256(raw_hash_payload.encode()).hexdigest()
-    
-    desc = f"{action} on {resource} -> {result}"
-    if denial_reason:
-        desc += f" ({denial_reason})"
-        
-    try:
+        raw_hash_payload = (
+            f"{sec_audit_id}:{req_time.isoformat()}:{user_id or 0}:"
+            f"{username}:{action}:{resource}:{result}:{client_ip_addr}:{prev_hash}"
+        )
+        event_hash = hashlib.sha256(raw_hash_payload.encode()).hexdigest()
+
+        desc = f"{action} on {resource} -> {result}"
+        if denial_reason:
+            desc += f" ({denial_reason})"
+
         audit_entry = AdminAuditLog(
             audit_id=sec_audit_id,
             event_timestamp=req_time,
@@ -400,8 +382,8 @@ def log_security_access_event(
             target_type="Resource",
             target_id=resource,
             resource_name=resource,
-            route=request.url.path,
-            http_method=request.method,
+            route=request_path,
+            http_method=request_method,
             ip_address=hashed_ip,
             client_ip=client_ip_addr,
             ip_version=ip_ver,
@@ -414,14 +396,16 @@ def log_security_access_event(
             device_type=ua_info["device_type"],
             user_agent_category=ua_info["category"],
             user_agent=ua_info["raw"],
-            authentication_status="AUTHENTICATED" if user else "UNAUTHENTICATED",
+            authentication_status="AUTHENTICATED" if user_id else "UNAUTHENTICATED",
             authorization_result="ALLOWED" if result in ("SUCCESS", "ALLOWED") else "DENIED",
             permission_checked=action,
             risk_level="HIGH" if result in ("BLOCKED", "DENIED") else "LOW",
             denial_reason=denial_reason,
             request_timestamp=req_time,
             response_timestamp=datetime.datetime.now(datetime.timezone.utc),
-            response_status=200 if result in ("SUCCESS", "ALLOWED") else (401 if denial_reason == "NOT_AUTHENTICATED" else 403),
+            response_status=200 if result in ("SUCCESS", "ALLOWED") else (
+                401 if denial_reason == "NOT_AUTHENTICATED" else 403
+            ),
             response_time_ms=0.0,
             trace_id=f"trace_{sec_audit_id.lower()}",
             event_hash=event_hash,
@@ -432,7 +416,7 @@ def log_security_access_event(
             institution_logo_reference="nandha_emblem.png",
             description=desc,
             metadata_json={
-                "route": request.url.path,
+                "route": request_path,
                 "resource": resource,
                 "session_id": session_id,
                 "denial_reason": denial_reason,
@@ -448,14 +432,73 @@ def log_security_access_event(
         except Exception:
             pass
         exc_str = str(ex).lower()
-        if "operationalerror" in type(ex).__name__.lower() or any(k in exc_str for k in ("connection", "closed", "timeout")):
-            try:
-                pass  # Session doesn't support invalidate(); pool_pre_ping handles reconnection
-            except Exception:
-                pass
+        if "database is locked" in exc_str or "operationalerror" in type(ex).__name__.lower():
             logger.warning(f"Notice: Security audit log deferred due to DB reconnection: {ex}")
         else:
-            logger.error(f"Failed to record security audit log: {ex}")
+            logger.error(f"Failed to record audit log: {ex}")
+    finally:
+        try:
+            db.close()
+        except Exception:
+            pass
+
+
+def log_security_access_event(
+    db: Session,
+    request: Request,
+    user: Optional[User],
+    action: str,
+    resource: str,
+    result: str,
+    denial_reason: Optional[str] = None,
+    session_id: Optional[str] = None,
+    debounce_seconds: float = 3.0
+):
+    """
+    Persists a detailed security access audit log into AdminAuditLog with complete
+    forensic traceability, IP version, device breakdown, and SHA-256 hash sealing.
+    The actual DB write is offloaded to a background thread to avoid blocking the
+    request handler on SQLite write-lock contention.
+    """
+    user_any = cast(Any, user) if user else None
+    username = str(user_any.username) if (user_any and user_any.username) else "UNKNOWN"
+    user_id = int(user_any.id) if (user_any and user_any.id is not None) else None
+    user_email = str(user_any.email) if (user_any and user_any.email) else None
+    user_role = str(user_any.role) if (user_any and user_any.role) else "UNKNOWN"
+
+    # --- In-memory debounce: drop identical events within debounce_seconds ---
+    dedup_key = (username, action, resource, result)
+    now_ts = time.time()
+    with _RECENT_ACCESS_LOCK:
+        last_ts = _RECENT_ACCESS_LOGS.get(dedup_key, 0.0)
+        if now_ts - last_ts < debounce_seconds:
+            return  # Duplicate suppressed — no DB hit
+        _RECENT_ACCESS_LOGS[dedup_key] = now_ts
+
+        # Prune stale entries to prevent unbounded dict growth
+        if len(_RECENT_ACCESS_LOGS) > 500:
+            threshold = now_ts - 120.0
+            expired = [k for k, v in _RECENT_ACCESS_LOGS.items() if v < threshold]
+            for k in expired:
+                _RECENT_ACCESS_LOGS.pop(k, None)
+
+    # Snapshot all request data NOW (before handing off to background thread)
+    hashed_ip = get_hashed_ip(request)
+    client_ip_addr, ip_ver = get_real_client_ip(request)
+    ua_info = parse_user_agent_details(request.headers.get("User-Agent"))
+    req_time = datetime.datetime.now(datetime.timezone.utc)
+    request_path = request.url.path
+    request_method = request.method
+
+    # --- Offload the actual DB write to the background audit executor ---
+    # This means the API handler returns immediately without waiting for SQLite.
+    _AUDIT_EXECUTOR.submit(
+        _write_audit_log_background,
+        username, user_id, user_email, user_role,
+        action, resource, result, denial_reason, session_id,
+        hashed_ip, client_ip_addr, ip_ver, ua_info,
+        request_path, request_method, req_time,
+    )
 
 def extract_current_user_optional(request: Request, db: Session) -> Optional[User]:
     """Extracts authenticated user from HttpOnly Cookie or Bearer token if present."""

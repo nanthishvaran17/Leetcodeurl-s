@@ -12,7 +12,7 @@ True Real-Time Per-Student Streaming Pipeline:
 import asyncio
 import datetime
 import httpx
-from typing import List, Dict, Any, Optional, Set
+from typing import List, Dict, Any, Optional, Set, cast
 import sqlalchemy
 import sqlalchemy.exc
 from sqlalchemy.orm import Session
@@ -310,15 +310,15 @@ async def _sync_single_student_canonical_impl(
                     data = phase_a_res["data"]
                     c_user = data.get("canonical_username") or data.get("username") or c_username
                     p_url = data.get("profile_url") or f"https://leetcode.com/u/{c_user}/"
-                    lc_prof.canonical_username = c_user
-                    lc_prof.profile_url = p_url
-                    lc_prof.real_name = data.get("real_name")
-                    lc_prof.avatar_url = data.get("avatar_url")
-                    lc_prof.about_me = data.get("about_me")
-                    lc_prof.school = data.get("school")
-                    lc_prof.company = data.get("company")
-                    lc_prof.country = data.get("country")
-                    lc_prof.reputation = data.get("reputation")
+                    setattr(lc_prof, "canonical_username", c_user)
+                    setattr(lc_prof, "profile_url", p_url)
+                    setattr(lc_prof, "real_name", data.get("real_name"))
+                    setattr(lc_prof, "avatar_url", data.get("avatar_url"))
+                    setattr(lc_prof, "about_me", data.get("about_me"))
+                    setattr(lc_prof, "school", data.get("school"))
+                    setattr(lc_prof, "company", data.get("company"))
+                    setattr(lc_prof, "country", data.get("country"))
+                    setattr(lc_prof, "reputation", data.get("reputation"))
                     setattr(lc_prof, "verification_status", "PROFILE_VERIFIED")
                     setattr(lc_prof, "sync_state", "SYNCED")
                     setattr(lc_prof, "last_verified_at", now_dt)
@@ -326,8 +326,8 @@ async def _sync_single_student_canonical_impl(
                     setattr(lc_prof, "error_code", None)
                     setattr(lc_prof, "error_message", None)
     
-                    st.username = c_user
-                    st.leetcode_url = p_url
+                    setattr(st, "username", c_user)
+                    setattr(st, "leetcode_url", p_url)
     
                     total_solved = data.get("total_solved")
                     easy_solved = data.get("easy_solved")
@@ -475,7 +475,8 @@ async def _sync_single_student_canonical_impl(
     
                     sync_status_str = "success"
     
-                st.version = (st.version or 0) + 1
+                st_any = cast(Any, st)
+                st_any.version = int(st_any.version or 0) + 1
                 if not defer_commit:
                     try:
                         db_student.commit()
@@ -728,7 +729,7 @@ async def run_full_pipeline(
                                 LeetCodeProfileStats.total_solved.isnot(None),
                                 LeetCodeProfileStats.sync_status == "success"
                             ).all()
-                            fresh_student_ids = {fs.student_id for fs in fresh_stats}
+                            fresh_student_ids: set[int] = {int(cast(Any, fs).student_id) for fs in fresh_stats}
                             for fs in fresh_stats:
                                 uname_raw = next(
                                     (s.username or s.leetcode_url for s in chunk if s.id == fs.student_id),
@@ -894,12 +895,17 @@ async def run_full_pipeline(
         summary = {
             "job_id": effective_job_id,
             "total_students": total_students,
+            "total_eligible": total_students,
             "profile_verified": sync_tracker.successful,
             "full_dataset_synced": sync_tracker.successful,
+            "fetched": sync_tracker.successful,
+            "updated": sync_tracker.successful,
             "partial_sync": 0,
             "pending_username": sync_tracker.pending_usernames,
             "invalid_username": sync_tracker.invalid,
             "fetch_failed": sync_tracker.failed,
+            "failed": sync_tracker.failed,
+            "skipped": sync_tracker.pending_usernames + sync_tracker.invalid,
             "duration_seconds": duration_sec,
             "completed_at": end_time.isoformat(),
             "completed_at_ist": format_ist(end_time, "%d %b %Y, %I:%M %p IST")

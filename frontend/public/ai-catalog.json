@@ -1,5 +1,4 @@
 {
-  "$schema": "https://agenticresourcediscovery.org/spec/v1/schema.json",
   "name": "Nandha Engineering College LeetCode Intelligence Platform",
   "description": "Official LeetCode tracking, student performance analytics, leaderboards, and institutional reporting for Nandha Engineering College.",
   "publisher": {

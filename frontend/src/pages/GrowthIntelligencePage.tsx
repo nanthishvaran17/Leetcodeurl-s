@@ -339,11 +339,12 @@ export const GrowthIntelligencePage: React.FC = () => {
               <div className="p-2 sm:p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0 shadow-lg shadow-emerald-500/10 mt-1 sm:mt-0">
                 <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 stroke-[2.5]" />
               </div>
-              <h1 className="text-xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
-                Growth Intelligence <span className="hidden sm:inline">&</span>
-                <br className="sm:hidden" />
-                <span className="sm:hidden text-emerald-400/80 mr-1.5">&</span>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300">Time Machine</span>
+              <h1 className="text-xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-snug flex flex-wrap items-center gap-x-2">
+                <span>Growth Intelligence</span>
+                <span className="text-emerald-400 font-extrabold">&amp;</span>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300">
+                  Time Machine
+                </span>
               </h1>
             </div>
 
@@ -353,7 +354,7 @@ export const GrowthIntelligencePage: React.FC = () => {
           </div>
 
           {/* Filters, Timeframe Selector Pills & Live Refresh Button */}
-          <div className="flex flex-col 2xl:flex-row flex-wrap items-stretch lg:items-end 2xl:items-center justify-end gap-3 w-full lg:w-auto shrink-0 mt-2 lg:mt-0">
+          <div className="flex flex-col sm:flex-row 2xl:flex-row flex-wrap items-stretch sm:items-center justify-end gap-3 w-full lg:w-auto shrink-0 mt-2 lg:mt-0">
             
             {/* Department & Academic Year Filters */}
             <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 w-full 2xl:w-auto">

@@ -22,8 +22,9 @@ Features:
 """
 
 import os
+import json
 import datetime
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, cast
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_, and_
 
@@ -443,8 +444,9 @@ class AutomaticNotificationEngine:
                     abs_list_str += f"\n  ...and {len(absent_students) - 10} more"
 
                 title = f"Sunday Contest Attendance Report — {contest_name}"
+                fac_name = faculty.full_name or faculty.username or "Faculty"
                 body = (
-                    f"Dear Sir/Ma'am,\n\n"
+                    f"Dear {fac_name},\n\n"
                     f"Contest Attendance & Absentee Roster for {contest_name}:\n\n"
                     f"• Total Assigned Mentees: {assigned_count}\n"
                     f"• Attended Students: {participated_count}\n"
@@ -515,8 +517,10 @@ class AutomaticNotificationEngine:
                 part_pct = round((participated_count / total_dept) * 100, 1)
 
                 title = f"Sunday Contest Department Report — {dept_name}"
+                hod_name = hod.full_name or hod.username or "HOD"
                 body = (
-                    f"Sunday Contest Department Summary ({dept_name})\n\n"
+                    f"Dear {hod_name} (HOD - {dept_name}),\n\n"
+                    f"Sunday Contest Department Summary ({dept_name}):\n\n"
                     f"Total Department Students: {total_dept}\n"
                     f"Participated: {participated_count} ({part_pct}%)\n"
                     f"Absent: {absent_count}\n\n"
@@ -554,14 +558,17 @@ class AutomaticNotificationEngine:
                 if total_college == 0:
                     continue
 
-                official_cnt = session.official_participants or 0
-                virtual_cnt = session.virtual_participants or 0
-                total_part = official_cnt + virtual_cnt
+                all_college_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == sess_id).all()
+                official_cnt = sum(1 for r in all_college_results if (r.participation_status or "").upper() in ("OFFICIAL_ATTENDED", "PUBLIC", "ATTENDED"))
+                virtual_cnt = sum(1 for r in all_college_results if (r.participation_status or "").upper() == "VIRTUAL_ATTENDED")
+                total_part = sum(1 for r in all_college_results if (r.participation_status or "").upper() in ("OFFICIAL_ATTENDED", "VIRTUAL_ATTENDED", "PUBLIC", "ATTENDED") or (r.total_contest_solved or 0) > 0)
                 part_pct = round((total_part / total_college) * 100, 1) if total_college > 0 else 0
 
                 title = f"Sunday Contest Executive Report — {contest_name}"
+                p_name = principal.full_name or principal.username or "Principal"
                 body = (
-                    f"Sunday Contest Executive College Summary\n\n"
+                    f"Dear {p_name},\n\n"
+                    f"Sunday Contest Executive College Summary:\n\n"
                     f"Total College Enrolled: {total_college}\n"
                     f"Total Participated: {total_part} ({part_pct}%)\n"
                     f"Official Live: {official_cnt} | Virtual: {virtual_cnt}\n\n"
@@ -908,7 +915,7 @@ class AutomaticNotificationEngine:
         for a in assignments:
             if a.faculty_id:
                 u = db.query(User).filter_by(id=a.faculty_id).first()
-                target_user = u.email if (u and u.email) else f"STAFF_{a.faculty_id}"
+                target_user = str(u.email) if (u and u.email) else f"STAFF_{a.faculty_id}"
                 res = NotificationService.emit_event(
                     event_type="CONTEST_ATTENDANCE_UPDATE",
                     title=title,
@@ -1072,7 +1079,7 @@ class AutomaticNotificationEngine:
         for a in assignments:
             if a.faculty_id:
                 u = db.query(User).filter_by(id=a.faculty_id).first()
-                target_user = u.email if (u and u.email) else f"STAFF_{a.faculty_id}"
+                target_user = str(u.email) if (u and u.email) else f"STAFF_{a.faculty_id}"
                 res_fac = NotificationService.emit_event(
                     event_type="STUDENT_GROWTH_ALERT",
                     title=title,
@@ -1138,7 +1145,7 @@ class AutomaticNotificationEngine:
             if not stats or stats.sync_status == "failed":
                 continue
 
-            last_upd = ensure_utc(stats.last_updated)
+            last_upd = ensure_utc(cast(Any, stats.last_updated))
             if last_upd and last_upd < cutoff:
                 idempotency_key = f"inactivity_review_{student.id}_{today_str}"
                 assignments = db.query(FacultyStudentAssignment).filter_by(student_id=student.id).all()
@@ -1154,7 +1161,7 @@ class AutomaticNotificationEngine:
                 for a in assignments:
                     if a.faculty_id:
                         u = db.query(User).filter_by(id=a.faculty_id).first()
-                        target_user = u.email if (u and u.email) else f"STAFF_{a.faculty_id}"
+                        target_user = str(u.email) if (u and u.email) else f"STAFF_{a.faculty_id}"
                         res = NotificationService.emit_event(
                             event_type="STUDENT_INACTIVITY_REVIEW",
                             title=title,
@@ -1210,7 +1217,7 @@ class AutomaticNotificationEngine:
         for a in assignments:
             if a.faculty_id:
                 u = db.query(User).filter_by(id=a.faculty_id).first()
-                target_user = u.email if (u and u.email) else f"STAFF_{a.faculty_id}"
+                target_user = str(u.email) if (u and u.email) else f"STAFF_{a.faculty_id}"
                 res = NotificationService.emit_event(
                     event_type="CONTEST_RATING_IMPROVED",
                     title=title,
@@ -1296,12 +1303,36 @@ class AutomaticNotificationEngine:
         Reports actual metrics after a sync run finishes persistence operations.
         """
         now_ist = datetime.datetime.now(tz=IST).strftime("%d-%b-%Y %I:%M %p IST")
-        total_eligible = summary_data.get("total_eligible", 0)
-        fetched = summary_data.get("fetched", 0)
-        updated = summary_data.get("updated", 0)
+        total_eligible = (
+            summary_data.get("total_eligible")
+            if summary_data.get("total_eligible") is not None
+            else summary_data.get("total_students", 0)
+        )
+        fetched = (
+            summary_data.get("fetched")
+            if summary_data.get("fetched") is not None
+            else summary_data.get("full_dataset_synced", summary_data.get("profile_verified", 0))
+        )
+        updated = (
+            summary_data.get("updated")
+            if summary_data.get("updated") is not None
+            else summary_data.get("full_dataset_synced", summary_data.get("profile_verified", 0))
+        )
         unchanged = summary_data.get("unchanged", 0)
-        failed = summary_data.get("failed", 0)
-        skipped = summary_data.get("skipped", 0)
+        failed = (
+            summary_data.get("failed")
+            if summary_data.get("failed") is not None
+            else summary_data.get("fetch_failed", 0)
+        )
+        skipped = (
+            summary_data.get("skipped")
+            if summary_data.get("skipped") is not None
+            else (
+                summary_data.get("pending_username", 0)
+                + summary_data.get("invalid_username", 0)
+                + summary_data.get("partial_sync", 0)
+            )
+        )
 
         title = f"LeetCode Data Sync Run Completed (Job: {job_id})"
         body = (
@@ -1398,7 +1429,7 @@ class AutomaticNotificationEngine:
         body = (
             f"Duplicate or conflicting student-to-LeetCode-account mappings detected:\n\n"
             f"• Student Identity / People ID: {people_id}\n"
-            f"• Conflicting Usernames: {', '.join(str(u) for u in duplicate_usernames)}\n\n"
+            f"• Conflicting Usernames: {', '.join(duplicate_usernames)}\n\n"
             f"No automatic merge was performed. Please resolve mapping in administrative console."
         )
 

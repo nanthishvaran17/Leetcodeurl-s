@@ -615,7 +615,7 @@ def seed_institutional_historical_sessions(db: Session):
 
         # If not a valid Sunday or Biweekly contest session, purge it safely!
         logger.info(f"Purging non-canonical session ID {sess.id} ('{sess.contest_name}', date {sess.session_date})")
-        _safe_purge_or_merge_session(db, int(sess.id))
+        _safe_purge_or_merge_session(db, int(cast(Any, sess).id))
 
     # Step 2: For each canonical contest number, select the canonical session (highest result count)
     canonical_by_num = {}

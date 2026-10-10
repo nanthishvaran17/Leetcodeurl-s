@@ -505,12 +505,13 @@ def get_student_intelligence(
         ]
 
     # 7. Submissions & Problems - Live fetch and upsert latest real-time submissions
-    c_sub_username, _, _ = extract_leetcode_username(
+    raw_user_target = (
         getattr(student, "primary_leetcode_id", None) or 
         getattr(student, "leetcode_url", None) or 
         getattr(student, "username", None) or 
-        (lc_prof.canonical_username if lc_prof else None)
+        (str(lc_prof.canonical_username) if (lc_prof and lc_prof.canonical_username) else None)
     )
+    c_sub_username, _, _ = extract_leetcode_username(str(raw_user_target) if raw_user_target else None)
 
     if c_sub_username:
         import httpx, asyncio, concurrent.futures

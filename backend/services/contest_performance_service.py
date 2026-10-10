@@ -595,7 +595,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 return "—"
             try:
                 num = float(v_str)
-                if math.isnan(num) or num <= 0:
+                if math.isnan(num) or num <= 0 or round(num) == 1500:
                     return "—"
                 return f"{round(num):,}"
             except (ValueError, TypeError):
@@ -608,10 +608,12 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         if rank_val is None and st_profile:
             rank_val = c_global_rank
 
-        if (rating_val is None or (isinstance(rating_val, (int, float)) and rating_val <= 0)) and st_profile:
+        if (rating_val is None or (isinstance(rating_val, (int, float)) and (rating_val <= 0 or round(float(rating_val)) == 1500))) and st_profile:
             r_st = getattr(st_profile, "contest_rating", None)
-            if r_st is not None and float(r_st or 0) > 0:
+            if r_st is not None and float(r_st or 0) > 0 and round(float(r_st)) != 1500:
                 rating_val = float(r_st)
+            else:
+                rating_val = None
 
         disp_rank = _clean_rank_val(rank_val)
         disp_rating = _clean_rating_val(rating_val)

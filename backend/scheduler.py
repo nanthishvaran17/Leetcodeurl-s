@@ -430,8 +430,8 @@ async def saturday_2135_biweekly_contest_job():
         from backend.services.live_sync_service import start_full_sync_job
         sync_res = start_full_sync_job(db, triggered_by="saturday_biweekly_scheduler")
         
-        session.status = "FINALIZED"
-        session.finalized_at = datetime.datetime.now(datetime.timezone.utc)
+        setattr(session, "status", "FINALIZED")
+        setattr(session, "finalized_at", datetime.datetime.now(datetime.timezone.utc))
         db.commit()
         logger.info(f"[SCHEDULER] Saturday Biweekly Contest Job completed successfully for {c_name}")
         return {"status": "success", "contest": c_name, "sync": sync_res}

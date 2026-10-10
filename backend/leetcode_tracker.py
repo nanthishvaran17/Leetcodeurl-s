@@ -684,19 +684,22 @@ def export_monday_hod_master_excel(
     ws.merge_cells('C4:D4')
     ws['C4'] = "OFFICIAL ATTENDED (8:00-9:30 AM)"
     ws['C4'].font = font_bold
-    ws['C5'] = int(active_session.official_participants) if (active_session and active_session.official_participants is not None) else 184
+    off_val = getattr(active_session, "official_participants", None) if active_session else None
+    ws['C5'] = int(cast(Any, off_val)) if off_val is not None else 184
     ws['C5'].font = Font(name="Calibri", size=18, bold=True, color="059669")
 
     ws.merge_cells('E4:F4')
     ws['E4'] = "VIRTUAL ATTENDED (9:30 AM-10:00 PM)"
     ws['E4'].font = font_bold
-    ws['E5'] = int(active_session.virtual_participants) if (active_session and active_session.virtual_participants is not None) else 72
+    virt_val = getattr(active_session, "virtual_participants", None) if active_session else None
+    ws['E5'] = int(cast(Any, virt_val)) if virt_val is not None else 72
     ws['E5'].font = Font(name="Calibri", size=18, bold=True, color="D97706")
 
     ws.merge_cells('G4:H4')
     ws['G4'] = "ABSENT / INACTIVE"
     ws['G4'].font = font_bold
-    ws['G5'] = int(active_session.not_participated) if (active_session and active_session.not_participated is not None) else 46
+    np_val = getattr(active_session, "not_participated", None) if active_session else None
+    ws['G5'] = int(cast(Any, np_val)) if np_val is not None else 46
     ws['G5'].font = Font(name="Calibri", size=18, bold=True, color="DC2626")
 
     # Headers (Row 8)
@@ -727,9 +730,9 @@ def export_monday_hod_master_excel(
                 WeeklyPublicResult.student_id == s.id
             ).first()
 
-        status_text = res.participation_status if res else "OFFICIAL_ATTENDED"
-        solved = res.total_contest_solved if res else (3 if idx % 2 == 0 else 2)
-        score = solved * 25
+        status_text = str(res.participation_status or "OFFICIAL_ATTENDED") if res else "OFFICIAL_ATTENDED"
+        solved = int(cast(Any, res.total_contest_solved)) if (res and res.total_contest_solved is not None) else (3 if idx % 2 == 0 else 2)
+        score = int(solved * 25)
 
         if status_text == "OFFICIAL_ATTENDED":
             badge_str = "GREEN BADGE: Official Participant"
@@ -741,7 +744,7 @@ def export_monday_hod_master_excel(
             badge_str = "RED BADGE: Absent / Inactive"
             fill_style = red_fill
 
-        values = [idx, s.reg_no, s.name, d_name, y_name, status_text, f"{solved} / 4", score, badge_str]
+        values: list[Any] = [idx, str(s.reg_no or ""), str(s.name or ""), str(d_name or ""), str(y_name or ""), status_text, f"{solved} / 4", score, badge_str]
 
         for col_idx, val in enumerate(values, 1):
             cell = ws.cell(row=row_no, column=col_idx, value=val)
@@ -756,7 +759,7 @@ def export_monday_hod_master_excel(
     # Auto Column Widths
     for col in ws.columns:
         max_len = max(len(str(cell.value or '')) for cell in col)
-        col_letter = get_column_letter(col[0].column)
+        col_letter = get_column_letter(int(col[0].column or 1))
         ws.column_dimensions[col_letter].width = max(max_len + 4, 14)
 
     output = io.BytesIO()

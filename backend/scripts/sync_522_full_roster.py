@@ -41,64 +41,65 @@ def sync_session_522_participation():
                 db.add(r)
                 res_map[s.id] = r
 
+            r_any = cast(Any, r)
             stats = s.stats
-            tot_solved = stats.total_solved if (stats and stats.total_solved is not None) else 0
+            tot_solved = int(cast(Any, stats).total_solved) if (stats and stats.total_solved is not None) else 0
 
             # Department-specific participation logic
             dept_code = s.department.code if s.department else ""
 
             # Check if student is Nanthish S (732224CC031) - preserve explicit Q1+Q4 evidence
             if s.reg_no == "732224CC031":
-                r.participation_status = "PUBLIC_ATTENDED"
-                r.fetch_status = "SUCCESS"
-                r.q1 = 1
-                r.q2 = 0
-                r.q3 = 0
-                r.q4 = 1
-                r.total_contest_solved = 2
-                r.contest_score = 9
+                r_any.participation_status = "PUBLIC_ATTENDED"
+                r_any.fetch_status = "SUCCESS"
+                r_any.q1 = 1
+                r_any.q2 = 0
+                r_any.q3 = 0
+                r_any.q4 = 1
+                r_any.total_contest_solved = 2
+                r_any.contest_score = 9
                 csec_count += 1
                 continue
 
             if dept_code == "CSE(CS)" and (s.year_level in ["III", "III Year"]):
                 if csec_count < csec_participated_target and tot_solved > 0 and s.username:
-                    r.participation_status = "PUBLIC"
-                    r.fetch_status = "SUCCESS"
+                    r_any.participation_status = "PUBLIC"
+                    r_any.fetch_status = "SUCCESS"
                     # Preserve explicit flags if already set
-                    cur_solved = (r.q1 or 0) + (r.q2 or 0) + (r.q3 or 0) + (r.q4 or 0)
+                    cur_solved = (r_any.q1 or 0) + (r_any.q2 or 0) + (r_any.q3 or 0) + (r_any.q4 or 0)
                     if cur_solved == 0:
-                        r.q1 = 1
-                        r.q2 = 1 if tot_solved >= 50 else 0
-                        r.q3 = 1 if tot_solved >= 150 else 0
-                        r.q4 = 1 if tot_solved >= 300 else 0
-                        r.total_contest_solved = r.q1 + r.q2 + r.q3 + r.q4
-                    r.contest_score = ((r.q1 or 0) * 3) + ((r.q2 or 0) * 4) + ((r.q3 or 0) * 5) + ((r.q4 or 0) * 6)
+                        r_any.q1 = 1
+                        r_any.q2 = 1 if tot_solved >= 50 else 0
+                        r_any.q3 = 1 if tot_solved >= 150 else 0
+                        r_any.q4 = 1 if tot_solved >= 300 else 0
+                        r_any.total_contest_solved = r_any.q1 + r_any.q2 + r_any.q3 + r_any.q4
+                    r_any.contest_score = ((r_any.q1 or 0) * 3) + ((r_any.q2 or 0) * 4) + ((r_any.q3 or 0) * 5) + ((r_any.q4 or 0) * 6)
                     csec_count += 1
                 else:
-                    r.participation_status = "NOT_ATTENDED"
-                    r.fetch_status = "SUCCESS"
-                    r.q1 = r.q2 = r.q3 = r.q4 = 0
-                    r.total_contest_solved = 0
-                    r.contest_score = 0
+                    r_any.participation_status = "NOT_ATTENDED"
+                    r_any.fetch_status = "SUCCESS"
+                    r_any.q1 = r_any.q2 = r_any.q3 = r_any.q4 = 0
+                    r_any.total_contest_solved = 0
+                    r_any.contest_score = 0
             else:
                 # General participation rule for other cohorts
                 if tot_solved > 0 and s.username:
-                    r.participation_status = "PUBLIC"
-                    r.fetch_status = "SUCCESS"
-                    cur_solved = (r.q1 or 0) + (r.q2 or 0) + (r.q3 or 0) + (r.q4 or 0)
+                    r_any.participation_status = "PUBLIC"
+                    r_any.fetch_status = "SUCCESS"
+                    cur_solved = (r_any.q1 or 0) + (r_any.q2 or 0) + (r_any.q3 or 0) + (r_any.q4 or 0)
                     if cur_solved == 0:
-                        r.q1 = 1
-                        r.q2 = 1 if tot_solved >= 50 else 0
-                        r.q3 = 1 if tot_solved >= 150 else 0
-                        r.q4 = 1 if tot_solved >= 300 else 0
-                        r.total_contest_solved = r.q1 + r.q2 + r.q3 + r.q4
-                    r.contest_score = ((r.q1 or 0) * 3) + ((r.q2 or 0) * 4) + ((r.q3 or 0) * 5) + ((r.q4 or 0) * 6)
+                        r_any.q1 = 1
+                        r_any.q2 = 1 if tot_solved >= 50 else 0
+                        r_any.q3 = 1 if tot_solved >= 150 else 0
+                        r_any.q4 = 1 if tot_solved >= 300 else 0
+                        r_any.total_contest_solved = r_any.q1 + r_any.q2 + r_any.q3 + r_any.q4
+                    r_any.contest_score = ((r_any.q1 or 0) * 3) + ((r_any.q2 or 0) * 4) + ((r_any.q3 or 0) * 5) + ((r_any.q4 or 0) * 6)
                 else:
-                    r.participation_status = "NOT_ATTENDED"
-                    r.fetch_status = "SUCCESS"
-                    r.q1 = r.q2 = r.q3 = r.q4 = 0
-                    r.total_contest_solved = 0
-                    r.contest_score = 0
+                    r_any.participation_status = "NOT_ATTENDED"
+                    r_any.fetch_status = "SUCCESS"
+                    r_any.q1 = r_any.q2 = r_any.q3 = r_any.q4 = 0
+                    r_any.total_contest_solved = 0
+                    r_any.contest_score = 0
 
         db.commit()
         print(f"\nUPDATED SESSION 522 ROSTER SUCCESSFUL!")

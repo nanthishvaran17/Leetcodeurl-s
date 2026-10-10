@@ -97,7 +97,7 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
     dept_val = dept_parts[0].replace("DEPARTMENT OF", "").strip() if "DEPARTMENT OF" in dept_text else "ALL"
     year_val = dept_parts[1].replace("COHORT:", "").replace("YEAR", "").strip() if len(dept_parts) > 1 else "ALL"
     
-    session_date = metadata_block.get("Date") if metadata_block else ""
+    session_date = (metadata_block.get("Date") or "") if metadata_block else ""
     total_roster = int(metadata_block.get("Total Roster", "0").split()[0]) if metadata_block and "Total Roster" in metadata_block else 0
     
     apply_master_college_identity(

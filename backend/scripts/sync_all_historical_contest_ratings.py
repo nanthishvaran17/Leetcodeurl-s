@@ -125,14 +125,15 @@ async def run_sync():
                             ).first()
 
                             if wpr:
-                                wpr.contest_rating = float(rating)  # type: ignore
+                                wpr_any = cast(Any, wpr)
+                                wpr_any.contest_rating = float(rating)
                                 if ranking and int(ranking) > 0:
-                                    wpr.contest_rank = int(ranking)  # type: ignore
+                                    wpr_any.contest_rank = int(ranking)
                                 if attended or (solved and int(solved) > 0) or (ranking and int(ranking) > 0):
-                                    wpr.participation_status = "PUBLIC_ATTENDED"
-                                    wpr.fetch_status = "SUCCESS"
+                                    wpr_any.participation_status = "PUBLIC_ATTENDED"
+                                    wpr_any.fetch_status = "SUCCESS"
                                 if solved is not None:
-                                    wpr.total_contest_solved = int(solved)  # type: ignore
+                                    wpr_any.total_contest_solved = int(solved)
                                 total_ratings_synced += 1
 
                 try:
