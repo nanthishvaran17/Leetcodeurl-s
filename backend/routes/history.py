@@ -244,27 +244,29 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
         c_snap = snaps[-1] if snaps else None
         
         if c_snap:
-            c_at = c_snap.captured_at
+            c_snap_any = cast(Any, c_snap)
+            c_at = c_snap_any.captured_at
             if c_at and c_at.tzinfo is None:
                 c_at = c_at.replace(tzinfo=UTC_TZ)
-            cur_ez = int(c_snap.easy_solved or 0)
-            cur_med = int(c_snap.medium_solved or 0)
-            cur_hd = int(c_snap.hard_solved or 0)
-            cur_tot = int(c_snap.total_solved if c_snap.total_solved is not None else (cur_ez + cur_med + cur_hd))
-            cur_rat = float(c_snap.contest_rating) if c_snap.contest_rating is not None else None
+            cur_ez = int(c_snap_any.easy_solved or 0)
+            cur_med = int(c_snap_any.medium_solved or 0)
+            cur_hd = int(c_snap_any.hard_solved or 0)
+            cur_tot = int(c_snap_any.total_solved if c_snap_any.total_solved is not None else (cur_ez + cur_med + cur_hd))
+            cur_rat = float(c_snap_any.contest_rating) if c_snap_any.contest_rating is not None else None
             current_dict = _serialize_snap(c_snap)
         elif st and st.total_solved is not None:
-            c_at = st.last_verified_at or st.last_updated or datetime.datetime.now(UTC_TZ)
+            st_any = cast(Any, st)
+            c_at = st_any.last_verified_at or st_any.last_updated or datetime.datetime.now(UTC_TZ)
             if c_at and c_at.tzinfo is None:
                 c_at = c_at.replace(tzinfo=UTC_TZ)
-            cur_ez = int(st.easy_solved or 0)
-            cur_med = int(st.medium_solved or 0)
-            cur_hd = int(st.hard_solved or 0)
-            cur_tot = int(st.total_solved if st.total_solved is not None else (cur_ez + cur_med + cur_hd))
-            cur_rat = float(st.contest_rating) if st.contest_rating is not None else None
+            cur_ez = int(st_any.easy_solved or 0)
+            cur_med = int(st_any.medium_solved or 0)
+            cur_hd = int(st_any.hard_solved or 0)
+            cur_tot = int(st_any.total_solved if st_any.total_solved is not None else (cur_ez + cur_med + cur_hd))
+            cur_rat = float(st_any.contest_rating) if st_any.contest_rating is not None else None
             current_dict = {
                 "captured_at": c_at.isoformat() if c_at else None,
-                "source": st.source or "live_stats",
+                "source": st_any.source or "live_stats",
                 "total_solved": cur_tot,
                 "easy_solved": cur_ez,
                 "medium_solved": cur_med,
@@ -289,7 +291,8 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
 
         if period == "all":
             baseline_snap = snaps[0] if snaps else None
-            b_rat = float(baseline_snap.contest_rating) if (baseline_snap and baseline_snap.contest_rating is not None) else None
+            b_snap_any = cast(Any, baseline_snap) if baseline_snap else None
+            b_rat = float(b_snap_any.contest_rating) if (b_snap_any and b_snap_any.contest_rating is not None) else None
             d_rat = None
             if b_rat is not None and cur_rat is not None:
                 d_rat = round(cur_rat - b_rat, 1)
@@ -367,11 +370,12 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
             }
             continue
 
-        b_ez = int(baseline_snap.easy_solved or 0)
-        b_med = int(baseline_snap.medium_solved or 0)
-        b_hd = int(baseline_snap.hard_solved or 0)
-        b_tot = int(baseline_snap.total_solved if baseline_snap.total_solved is not None else (b_ez + b_med + b_hd))
-        b_rat = float(baseline_snap.contest_rating) if baseline_snap.contest_rating is not None else None
+        b_snap_any = cast(Any, baseline_snap)
+        b_ez = int(b_snap_any.easy_solved or 0)
+        b_med = int(b_snap_any.medium_solved or 0)
+        b_hd = int(b_snap_any.hard_solved or 0)
+        b_tot = int(b_snap_any.total_solved if b_snap_any.total_solved is not None else (b_ez + b_med + b_hd))
+        b_rat = float(b_snap_any.contest_rating) if b_snap_any.contest_rating is not None else None
 
         # Check reconciliation conflict:
         if (cur_ez + cur_med + cur_hd) != cur_tot:
@@ -410,14 +414,14 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
                 if snap_d_tot == d_tot:
                     d_ez, d_med, d_hd = snap_d_ez, snap_d_med, snap_d_hd
                 elif snap_d_tot > 0:
-                    d_ez = int(round(float(d_tot) * (float(snap_d_ez) / float(snap_d_tot))))
-                    d_hd = int(round(float(d_tot) * (float(snap_d_hd) / float(snap_d_tot))))
+                    d_ez = round(float(d_tot) * (float(snap_d_ez) / float(snap_d_tot)))
+                    d_hd = round(float(d_tot) * (float(snap_d_hd) / float(snap_d_tot)))
                     d_med = max(0, d_tot - d_ez - d_hd)
                     if d_ez + d_med + d_hd != d_tot:
                         d_ez = d_tot - d_med - d_hd
                 elif cur_tot > 0:
-                    d_ez = int(round(float(d_tot) * (float(cur_ez) / float(cur_tot))))
-                    d_hd = int(round(float(d_tot) * (float(cur_hd) / float(cur_tot))))
+                    d_ez = round(float(d_tot) * (float(cur_ez) / float(cur_tot)))
+                    d_hd = round(float(d_tot) * (float(cur_hd) / float(cur_tot)))
                     d_med = max(0, d_tot - d_ez - d_hd)
                     if d_ez + d_med + d_hd != d_tot:
                         d_ez = d_tot - d_med - d_hd
