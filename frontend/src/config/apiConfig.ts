@@ -53,13 +53,13 @@ export const getApiBaseUrl = (): string => {
   }
 
   // Production Web (Vercel or custom host)
+  // Route requests via relative '/api' so Vercel HTTPS rewrites proxy backend requests securely.
   if (RAW_ENV_URL) {
     const cleanEnv = RAW_ENV_URL.replace(/\/+$/, '');
     return cleanEnv.endsWith('/api') ? cleanEnv : `${cleanEnv}/api`;
   }
 
-  const cleanFallback = PRODUCTION_BACKEND_URL.replace(/\/+$/, '');
-  return cleanFallback.endsWith('/api') ? cleanFallback : `${cleanFallback}/api`;
+  return '/api';
 };
 
 export const API_BASE_URL = getApiBaseUrl();

@@ -550,8 +550,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         loading="eager"
         fetchPriority="high"
         decoding="async"
-        width={828}
-        height={600}
+        width={640}
+        height={360}
       />
       <div className="mobile-lcp-hero-overlay hide-on-desktop" aria-hidden="true" />
       {/* ========================================================
