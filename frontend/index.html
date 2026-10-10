@@ -35,14 +35,16 @@
   <meta name="msapplication-navbutton-color" content="#ffffff" />
 
   <!-- Google Fonts — Single high-performance connection with font-display swap -->
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 
-  <!-- LCP Asset Preloading (WebP Only) -->
-  <link rel="preload" as="image" href="/nec_25_logo.webp" type="image/webp">
-  <link rel="preload" as="image" href="/nandha_aerial_bg_mobile.webp" type="image/webp" media="(max-width: 768px)">
-  <link rel="preload" as="image" href="/nandha_aerial_bg.webp" type="image/webp" media="(min-width: 769px)">
+  <!-- LCP Asset Preloading (WebP Only with fetchpriority=high) -->
+  <link rel="preload" as="image" href="/nec_25_logo.webp" type="image/webp" fetchpriority="high">
+  <link rel="preload" as="image" href="/nandha_aerial_bg_mobile.webp" type="image/webp" media="(max-width: 768px)" fetchpriority="high">
+  <link rel="preload" as="image" href="/nandha_aerial_bg.webp" type="image/webp" media="(min-width: 769px)" fetchpriority="high">
 
 
   <!-- SEO / Page Metadata -->
