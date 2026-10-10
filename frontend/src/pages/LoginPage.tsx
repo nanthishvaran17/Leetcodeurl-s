@@ -591,6 +591,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
             DESKTOP LEFT HERO PANEL
             ======================================================== */}
         <div className="panel-left hide-on-mobile">
+          <img
+            src="/nandha_aerial_bg.webp"
+            alt="Nandha Campus Aerial View"
+            className="panel-left-bg-img"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            width={854}
+            height={480}
+          />
           <div className="grid-texture"></div>
           <svg className="seal" viewBox="0 0 200 200" aria-hidden="true">
             <circle cx="100" cy="100" r="95" fill="none" stroke="#eae7de" strokeWidth="1" />

@@ -118,15 +118,25 @@
   z-index: 1;
 }
 
+.panel-left-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .panel-left::before {
   content: "";
   position: absolute;
   inset: 0;
   background: 
     linear-gradient(180deg, rgba(7, 19, 36, 0.72) 0%, rgba(11, 27, 51, 0.50) 45%, rgba(7, 19, 36, 0.92) 100%),
-    radial-gradient(ellipse at 25% 25%, rgba(56, 189, 248, 0.16) 0%, transparent 65%),
-    url('/nandha_aerial_bg.webp') center center/cover no-repeat;
-  z-index: 0;
+    radial-gradient(ellipse at 25% 25%, rgba(56, 189, 248, 0.16) 0%, transparent 65%);
+  z-index: 1;
   pointer-events: none;
 }
 
