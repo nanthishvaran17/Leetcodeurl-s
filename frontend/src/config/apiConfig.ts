@@ -37,7 +37,18 @@ export const getApiBaseUrl = (): string => {
     return `${base}/api`;
   }
 
-  // Web Browser dev environment (localhost, 127.0.0.1, or local LAN IP like 192.168.x.x / 10.x.x.x)
+  // Web Browser Environment (Production Web on Vercel or local dev)
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+    // On HTTPS web deployments (Vercel), ALWAYS use relative '/api' unless RAW_ENV_URL is explicitly secure HTTPS.
+    // Calling 'http://...' directly from an HTTPS page is strictly blocked as Mixed Content by browsers.
+    if (RAW_ENV_URL && RAW_ENV_URL.startsWith('https://')) {
+      const cleanEnv = RAW_ENV_URL.replace(/\/+$/, '');
+      return cleanEnv.endsWith('/api') ? cleanEnv : `${cleanEnv}/api`;
+    }
+    return '/api';
+  }
+
+  // Web Browser dev environment (localhost, 127.0.0.1, or local LAN IP)
   if (
     typeof window !== 'undefined' &&
     (
@@ -46,15 +57,12 @@ export const getApiBaseUrl = (): string => {
       window.location.hostname.startsWith('192.168.') ||
       window.location.hostname.startsWith('10.') ||
       window.location.hostname.endsWith('.local')
-    ) &&
-    (window.location.port === '3000' || window.location.port === '5173' || window.location.port === '8000')
+    )
   ) {
     return '/api';
   }
 
-  // Production Web (Vercel or custom host)
-  // Route requests via relative '/api' so Vercel HTTPS rewrites proxy backend requests securely.
-  if (RAW_ENV_URL) {
+  if (RAW_ENV_URL && !RAW_ENV_URL.startsWith('http://13.53.231.6')) {
     const cleanEnv = RAW_ENV_URL.replace(/\/+$/, '');
     return cleanEnv.endsWith('/api') ? cleanEnv : `${cleanEnv}/api`;
   }
