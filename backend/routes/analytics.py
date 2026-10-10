@@ -1273,9 +1273,9 @@ def get_activity_aggregate(
         StudentStatSnapshot.captured_at >= start_dt,
         StudentStatSnapshot.captured_at <= end_dt
     ).group_by(date_col).order_by(date_col.asc()).all()
-    
-    # Fallback for single student when snapshot table is empty or has zero delta
-    if student_id and (not agg or not agg.total_submissions or not trend):
+    # For a single student, the most accurate daily trend comes from their LeetCode submission calendar
+    # This prevents artificial spikes / straight lines caused by skipped days in our Snapshot table
+    if student_id:
         st = db.query(Student).filter(Student.id == student_id).first()
         st_stats = st.stats if st else None
         tot_solved = st_stats.total_solved if st_stats else 0
@@ -1287,16 +1287,32 @@ def get_activity_aggregate(
             try:
                 cal_data = json.loads(act_row.submission_calendar_json) if isinstance(act_row.submission_calendar_json, str) else act_row.submission_calendar_json
                 if isinstance(cal_data, dict):
-                    items = []
+                    # Recalculate true total submissions from calendar if possible
+                    actual_tot_sub = sum(int(c) for c in cal_data.values())
+                    if actual_tot_sub > 0:
+                        tot_sub = actual_tot_sub
+
+                    end_date_obj = end_dt.date()
+                    start_date_obj = start_dt.date()
+                    
+                    # Pad all days in the requested period with 0 to prevent straight lines
+                    days_dict = {}
+                    curr = start_date_obj
+                    while curr <= end_date_obj:
+                        days_dict[curr.strftime("%Y-%m-%d")] = 0
+                        curr += datetime.timedelta(days=1)
+                    
+                    # Overlay calendar data
                     for ts, cnt in cal_data.items():
                         try:
-                            d_obj = datetime.datetime.fromtimestamp(int(ts), tz=datetime.timezone.utc).strftime("%Y-%m-%d")
-                            items.append((d_obj, int(cnt)))
+                            d_str = datetime.datetime.fromtimestamp(int(ts), tz=datetime.timezone.utc).strftime("%Y-%m-%d")
+                            if d_str in days_dict:
+                                days_dict[d_str] += int(cnt)
                         except Exception:
                             pass
-                    items.sort(key=lambda x: x[0])
-                    for d_str, cnt in items[-30:]:
-                        daily_trend.append({"date": d_str, "submissions": cnt, "active_students": 1})
+                            
+                    daily_trend = [{"date": k, "submissions": v, "active_students": 1} for k, v in days_dict.items()]
+                    daily_trend.sort(key=lambda x: x["date"])
             except Exception as ex:
                 logger.warning(f"Error parsing submission calendar: {ex}")
 

@@ -692,14 +692,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   }, [selectedDept, departments, user]);
 
   return (
-    <div className="space-y-6 sm:space-y-8 pt-1 sm:pt-6 pb-6">
+    <div className="space-y-4 sm:space-y-6 pt-0 sm:pt-1 pb-6">
 
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-900 via-navy-900 to-indigo-950 text-white p-8 md:p-12 shadow-lg border border-brand-500/30"
+        className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-brand-900 via-navy-900 to-indigo-950 text-white p-5 sm:p-7 md:p-10 shadow-lg border border-brand-500/30"
       >
 
         <div className="relative z-10 max-w-3xl space-y-6">

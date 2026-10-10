@@ -1226,13 +1226,28 @@ class ExportExcelPayload(BaseModel):
 def clean_cell_value(val: Any) -> Any:
     if val is None:
         return ""
-    if isinstance(val, (int, float)):
-        return val
     if isinstance(val, bool):
         return "Yes" if val else "No"
+    if isinstance(val, (int, float)):
+        return val
     if isinstance(val, (list, tuple, set)):
         return ", ".join(str(clean_cell_value(x)) for x in val if x is not None)
-    return str(val).strip()
+    val_s = str(val).strip()
+    if val_s.endswith("%"):
+        try:
+            num = float(val_s.rstrip("%").strip())
+            return num / 100.0 if num > 1.0 or num == 0.0 else num
+        except ValueError:
+            pass
+    if val_s.replace(".", "", 1).replace("-", "", 1).isdigit():
+        try:
+            if "." in val_s:
+                return float(val_s)
+            else:
+                return int(val_s)
+        except ValueError:
+            pass
+    return val_s
 
 def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters_desc: str = "All Candidates") -> bytes:
     """

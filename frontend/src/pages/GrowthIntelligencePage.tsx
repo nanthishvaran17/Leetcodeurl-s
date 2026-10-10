@@ -328,54 +328,55 @@ export const GrowthIntelligencePage: React.FC = () => {
     <div className="space-y-8 py-2 pb-16 animate-slideUp">
 
       {/* Executive Header Banner */}
-      <div className={`relative rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 shadow-lg border border-brand-500/30 ${deptOpen || yearOpen ? 'z-50' : 'z-10'}`}>
+      <div className="relative rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-7 md:p-8 shadow-xl border border-brand-500/30">
         <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-1/3 -mb-10 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6">
-          <div className="space-y-3.5 flex-1 max-w-2xl">
-            <div className="flex items-start sm:items-center gap-3 sm:gap-3.5">
-              <div className="p-2 sm:p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0 shadow-lg shadow-emerald-500/10 mt-1 sm:mt-0">
-                <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 stroke-[2.5]" />
-              </div>
-              <h1 className="text-xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-snug flex flex-wrap items-center gap-x-2">
-                <span>Growth Intelligence</span>
+        <div className="relative z-10 space-y-6">
+          {/* Header Title Section */}
+          <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0 shadow-lg shadow-emerald-500/10 mt-0.5 sm:mt-0">
+              <TrendingUp className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex flex-wrap items-center gap-x-2.5 leading-tight">
+                <span className="whitespace-nowrap">Growth Intelligence</span>
                 <span className="text-emerald-400 font-extrabold">&amp;</span>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300 whitespace-nowrap">
                   Time Machine
                 </span>
               </h1>
+              <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed mt-1 max-w-3xl">
+                Track student problem-solving deltas, biggest improvers leaderboard, difficulty velocity, and granular historical stat snapshots across custom timeframe windows.
+              </p>
             </div>
-
-            <p className="text-xs md:text-sm text-slate-300 font-medium leading-relaxed">
-              Track student problem-solving deltas, biggest improvers leaderboard, difficulty velocity, and granular historical stat snapshots across custom timeframe windows.
-            </p>
           </div>
 
           {/* Filters, Timeframe Selector Pills & Live Refresh Button */}
-          <div className="flex flex-col sm:flex-row 2xl:flex-row flex-wrap items-stretch sm:items-center justify-end gap-3 w-full lg:w-auto shrink-0 mt-2 lg:mt-0">
+          <div className="pt-4 border-t border-slate-800/80 flex flex-col xl:flex-row xl:items-center justify-between gap-3 sm:gap-4">
             
-            {/* Department & Academic Year Filters */}
-            <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 w-full 2xl:w-auto">
-              <div className="flex-1 min-w-0">
+            {/* Department & Academic Year Filters - Side-by-side on mobile */}
+            <div className="flex flex-row items-center gap-2 sm:gap-3 flex-1 min-w-0">
+              <div className="flex-1 min-w-0 sm:w-72 sm:flex-none">
                 <GlobalFilter
                   options={departmentOptions}
                   value={deptFilter}
                   onChange={(val) => setDeptFilter(val)}
                   icon={<Building2 className="w-3.5 h-3.5 text-brand-400" />}
-                  dropdownWidth="w-full sm:min-w-[240px]"
+                  dropdownWidth="w-full sm:w-72"
                   showSearch={false}
                   variant="dark"
                 />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 sm:w-60 sm:flex-none">
                 <GlobalFilter
                   options={yearOptions}
                   value={yearFilter}
                   onChange={(val) => setYearFilter(val)}
                   icon={<GraduationCap className="w-3.5 h-3.5 text-brand-400" />}
-                  dropdownWidth="w-full sm:min-w-[210px]"
+                  dropdownWidth="w-full sm:w-60"
                   showSearch={false}
                   variant="dark"
                 />
@@ -383,21 +384,21 @@ export const GrowthIntelligencePage: React.FC = () => {
             </div>
 
             {/* Timeframe Selector Pills & Sleek Inline Refresh Button */}
-            <div className="flex items-center gap-2 w-full 2xl:w-auto min-w-0">
-              <div className="flex-1 sm:flex-initial min-w-0 flex items-center justify-between bg-navy-900/90 p-1 rounded-xl sm:rounded-2xl border border-slate-700/80 shadow-inner backdrop-blur-md">
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 w-full xl:w-auto">
+              <div className="flex-1 sm:flex-initial flex items-center bg-navy-900/90 p-1 rounded-xl sm:rounded-2xl border border-slate-700/80 shadow-inner backdrop-blur-md">
                 {(['today', '7d', '30d', 'all'] as const).map((p) => (
                   <button
                     key={p}
                     onClick={() => setPeriod(p)}
-                    className={`flex-1 whitespace-nowrap px-1 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-black transition-all cursor-pointer text-center ${
+                    className={`flex-1 sm:flex-initial whitespace-nowrap px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer text-center ${
                       period === p
                         ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30 sm:scale-105'
                         : 'text-slate-300 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     {p === 'today' ? 'Today' : 
-                     p === '7d' ? <><span className="sm:hidden">7 Days</span><span className="hidden sm:inline">Last 7 Days</span></> : 
-                     p === '30d' ? <><span className="sm:hidden">30 Days</span><span className="hidden sm:inline">Last 30 Days</span></> : 
+                     p === '7d' ? 'Last 7 Days' : 
+                     p === '30d' ? 'Last 30 Days' : 
                      'All Time'}
                   </button>
                 ))}
@@ -408,10 +409,10 @@ export const GrowthIntelligencePage: React.FC = () => {
                 onClick={handleManualRefresh}
                 disabled={loading || isRefreshing}
                 title="Refresh Growth Metrics & Solve Deltas"
-                className="inline-flex items-center justify-center shrink-0 w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center justify-center shrink-0 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
               >
-                <RotateCw className={`w-4 h-4 sm:w-3.5 sm:h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline ml-1.5">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+                <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline ml-1.5 font-bold">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
               </button>
             </div>
 
@@ -796,7 +797,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                       <td className="py-2.5 px-2 text-center font-black text-emerald-600 dark:text-emerald-400">
                                         {snap.delta_total > 0 ? `+${snap.delta_total}` : snap.delta_total === snap.total_solved ? 'Base' : '0'}
                                       </td>
-                                      <td className="py-2.5 px-3 text-right text-slate-700 dark:text-slate-300 font-bold truncate">{snap.contest_rating && Math.round(Number(snap.contest_rating)) !== 1500 && Number(snap.contest_rating) > 0 ? Math.round(Number(snap.contest_rating)) : '—'}</td>
+                                      <td className="py-2.5 px-3 text-right text-slate-700 dark:text-slate-300 font-bold truncate">{snap.contest_rating && Number(snap.contest_rating) > 0 ? Math.round(Number(snap.contest_rating)) : '—'}</td>
                                     </tr>
                                   ))}
                                 </tbody>
@@ -1107,7 +1108,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                               <td className="py-2.5 px-3.5 font-bold text-emerald-600 dark:text-emerald-400">{snap.easy_solved}</td>
                                               <td className="py-2.5 px-3.5 font-bold text-amber-600 dark:text-amber-400">{snap.medium_solved}</td>
                                               <td className="py-2.5 px-3.5 font-bold text-rose-600 dark:text-rose-400">{snap.hard_solved}</td>
-                                              <td className="py-2.5 px-3.5 font-bold text-slate-700 dark:text-slate-300">{snap.contest_rating && Math.round(Number(snap.contest_rating)) !== 1500 && Number(snap.contest_rating) > 0 ? Math.round(Number(snap.contest_rating)) : '—'}</td>
+                                              <td className="py-2.5 px-3.5 font-bold text-slate-700 dark:text-slate-300">{snap.contest_rating && Number(snap.contest_rating) > 0 ? Math.round(Number(snap.contest_rating)) : '—'}</td>
                                               <td className="py-2.5 px-3.5">
                                                 {snap.delta_total === snap.total_solved ? (
                                                   <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-400 font-black text-[11px]" title="Initial Baseline Snapshot">

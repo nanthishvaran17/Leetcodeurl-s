@@ -193,11 +193,25 @@ def export_student_excel_from_dataset(dataset: dict, report_type: str = "STUDENT
             cell.alignment = center_align
             cell.border = thin_border
 
-        contest_history = s.get("contest_history", [])
-        if not contest_history:
+        raw_c_hist_e2 = s.get("contest_history", [])
+        if not raw_c_hist_e2:
             contest_history = [
                 {"contest_name": "Weekly Contest 470", "contest_date": "2026-09-07", "rank": 1050, "score": "3 / 4", "rating_before": "1,730.9", "rating_after": "1,746.3", "participation_type": "OFFICIAL"}
             ]
+        else:
+            chrono_e2 = list(reversed(raw_c_hist_e2))
+            prev_after_e2 = None
+            norm_chrono_e2 = []
+            for item in chrono_e2:
+                c = dict(item)
+                r_before = c.get("rating_before")
+                r_after = c.get("rating_after")
+                if (r_before in [None, "—", "-", "", "N/A"]) and (prev_after_e2 not in [None, "—", "-", "", "N/A"]):
+                    c["rating_before"] = str(prev_after_e2)
+                if r_after not in [None, "—", "-", "", "N/A"]:
+                    prev_after_e2 = r_after
+                norm_chrono_e2.append(c)
+            contest_history = list(reversed(norm_chrono_e2))
 
         for idx, ch in enumerate(contest_history, start=4):
             ws2.cell(row=idx, column=1, value=ch.get('contest_name')).font = bold_font
@@ -359,12 +373,26 @@ def export_student_excel_from_dataset(dataset: dict, report_type: str = "STUDENT
             cell.alignment = center_align
             cell.border = thin_border
             
-        contest_history = s.get("contest_history", [])
-        if not contest_history:
+        raw_c_hist_e4 = s.get("contest_history", [])
+        if not raw_c_hist_e4:
             contest_history = [
                 {"contest_name": "Weekly Contest 470", "contest_date": "2026-09-07", "rank": 1050, "score": "3 / 4", "rating_before": "1,730.9", "rating_after": "1,746.3", "participation_type": "OFFICIAL"},
                 {"contest_name": "Biweekly Contest 138", "contest_date": "2026-08-31", "rank": 1420, "score": "3 / 4", "rating_before": "1,712.5", "rating_after": "1,730.9", "participation_type": "OFFICIAL"}
             ]
+        else:
+            chrono_e4 = list(reversed(raw_c_hist_e4))
+            prev_after_e4 = None
+            norm_chrono_e4 = []
+            for item in chrono_e4:
+                c = dict(item)
+                r_before = c.get("rating_before")
+                r_after = c.get("rating_after")
+                if (r_before in [None, "—", "-", "", "N/A"]) and (prev_after_e4 not in [None, "—", "-", "", "N/A"]):
+                    c["rating_before"] = str(prev_after_e4)
+                if r_after not in [None, "—", "-", "", "N/A"]:
+                    prev_after_e4 = r_after
+                norm_chrono_e4.append(c)
+            contest_history = list(reversed(norm_chrono_e4))
             
         for idx, ch in enumerate(contest_history, start=4):
             ws4.cell(row=idx, column=1, value=ch.get('contest_name')).font = bold_font

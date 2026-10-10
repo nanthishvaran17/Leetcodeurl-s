@@ -426,7 +426,10 @@ export function matchesAcademicYear(student: StudentData, selectedYear: string):
 }
 
 /**
- * Name & General search matching predicate
+ * Name & General search matching predicate.
+ * Supports live-type search across all student fields including LeetCode handles.
+ * Multi-token queries: each space-separated word must match at least one field.
+ * e.g. "bharath cse" matches student "BHARATH K" in "CSE(CS)" department.
  */
 export function matchesNameSearch(student: StudentData, search: string): boolean {
   const query = normalizeSearchValue(search);
@@ -436,20 +439,39 @@ export function matchesNameSearch(student: StudentData, search: string): boolean
     ? student.department
     : (student.department?.name || '') + ' ' + (student.department?.code || '');
 
-  const searchableValues = [
+  // Collect ALL searchable values independently (don't use || which skips fields)
+  const searchableValues: (string | number | null | undefined)[] = [
     student.name,
     student.reg_no,
     (student as any).roll_no,
-    student.username || (student as any).leetcode_username,
+    student.username,
+    student.canonical_username,
+    (student as any).leetcode_username,
+    (student as any).primary_leetcode_id,
+    (student as any).secondary_leetcode_id,
     student.email,
+    (student as any).institutional_email,
     deptStr,
-    student.year_level || (student as any).batch,
-    student.section || (student as any).section
+    student.year_level,
+    (student as any).batch,
+    student.section?.name || (student as any).section,
   ];
 
-  return searchableValues.some((value) =>
-    normalizeSearchValue(value).includes(query)
-  );
+  // Include secondary LeetCode accounts from the leetcode_accounts array
+  const secAccounts = (student as any).leetcode_accounts || (student as any).secondary_accounts || [];
+  for (const acc of secAccounts) {
+    if (acc) searchableValues.push(acc.username || acc.leetcode_username);
+  }
+
+  // Build a single normalized haystack from all fields for efficient matching
+  const haystack = searchableValues
+    .map(v => normalizeSearchValue(v))
+    .filter(Boolean)
+    .join(' ');
+
+  // Multi-token search: every space-separated token must appear in the haystack
+  const tokens = query.split(/\s+/).filter(Boolean);
+  return tokens.every(token => haystack.includes(token));
 }
 
 /**

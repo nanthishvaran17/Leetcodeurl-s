@@ -439,6 +439,8 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       if (res.data?.stats) {
         studentLiveStore.updateStudent(studentId, {
           stats: res.data.stats,
+          sync_status: res.data.stats.sync_status || res.data.status,
+          total_solved: res.data.total_solved ?? res.data.stats.total_solved,
         } as any);
       }
       notify.success('Profile Synced', res.data?.message || 'Student profile synced successfully!', { category: 'SYNC ENGINE' });

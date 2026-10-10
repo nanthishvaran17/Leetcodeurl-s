@@ -95,16 +95,18 @@ export const studentLiveStore = {
   updateStudent(id: string | number, patch: Partial<StudentEntity>) {
     const idStr = String(id);
     const prev = byId[idStr];
-    if (!prev) return; // Ignore if student doesn't exist
 
     // Optimistic Version Check
-    if (patch.version && prev.version && patch.version < prev.version) {
+    if (prev && patch.version && prev.version && patch.version < prev.version) {
         return; // Ignore stale event
     }
 
-    const merged = { ...prev, ...patch };
-    if (patch.stats && prev.stats) {
-      merged.stats = { ...prev.stats, ...patch.stats };
+    const merged: StudentEntity = prev
+      ? { ...prev, ...patch }
+      : ({ id: Number(id) || id, ...patch } as StudentEntity);
+
+    if (patch.stats) {
+      merged.stats = prev?.stats ? { ...prev.stats, ...patch.stats } : (patch.stats as any);
     }
     // Promote top-level total_solved if stats has total_solved
     if (merged.stats?.total_solved !== undefined && merged.stats.total_solved !== null) {
@@ -116,7 +118,10 @@ export const studentLiveStore = {
     }
 
     byId[idStr] = merged;
-    
+    if (!allIds.includes(idStr)) {
+      allIds.push(idStr);
+    }
+
     // Notify ONLY the single row component observing this specific ID
     notifyStudent(idStr);
 

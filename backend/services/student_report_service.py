@@ -8,7 +8,8 @@ from fastapi import HTTPException
 
 from backend.models import (
     Student, Department, StudentStatSnapshot, StudentContestSnapshot,
-    ContestParticipation, ReportCache, WeeklyStudentProgress, LeetCodeProfileStats
+    ContestParticipation, ReportCache, WeeklyStudentProgress, LeetCodeProfileStats,
+    LeetCodeLanguageStats, LeetCodeTopicStats
 )
 
 # Global Semaphore to prevent OOM on Render. Allows max 2 concurrent report generation jobs.
@@ -85,7 +86,7 @@ def generate_student_report(
 
         raw_rating = (rt_stats.contest_rating if rt_stats and rt_stats.contest_rating is not None 
                           else (stats.contest_rating if stats else 0.0))
-        contest_rating = round(raw_rating) if raw_rating else 0
+        contest_rating = round(raw_rating) if raw_rating else 0  # type: ignore
 
         # 1. Global Rank Resolution (Disentangled Site Rank vs Contest Rank)
         raw_site_rank = None
@@ -137,23 +138,43 @@ def generate_student_report(
         active_days = (rt_stats.active_days if rt_stats and rt_stats.active_days 
                        else max(10, min(180, total_solved // 15)))
         
-        # Fetch Contest Participations
-        contest_participations = db.query(ContestParticipation).filter(
+        # Fetch Contest Participations ordered chronologically to compute rating_before chain
+        raw_participations = db.query(ContestParticipation).filter(
             ContestParticipation.student_id == student_id
-        ).order_by(ContestParticipation.id.desc()).all()
+        ).order_by(ContestParticipation.contest_date.asc(), ContestParticipation.id.asc()).all()
 
-        contest_history = []
-        for cp in contest_participations:
-            contest_history.append({
+        if not raw_participations:
+            raw_participations = db.query(ContestParticipation).filter(
+                ContestParticipation.student_id == student_id
+            ).order_by(ContestParticipation.id.asc()).all()
+
+        chrono_history = []
+        prev_rating_after = None
+
+        for cp in raw_participations:
+            r_after = round(cp.contest_rating_after, 1) if cp.contest_rating_after else None  # type: ignore
+            r_before = round(cp.contest_rating_before, 1) if cp.contest_rating_before else None  # type: ignore
+
+            # Fallback rating_before to previous contest's rating_after
+            if (r_before is None or r_before == 0) and prev_rating_after is not None:
+                r_before = prev_rating_after
+
+            chrono_history.append({
                 "contest_name": cp.contest_name or "Weekly Contest",
                 "contest_date": cp.contest_date or datetime.date.today().strftime("%Y-%m-%d"),
                 "rank": cp.contest_rank if cp.contest_rank else "N/A",
                 "solved": cp.problems_solved if cp.problems_solved is not None else 0,
                 "score": f"{cp.problems_solved or 0} / {cp.total_problems or 4}",
-                "rating_before": round(cp.contest_rating_before, 1) if cp.contest_rating_before else "—",  # type: ignore
-                "rating_after": round(cp.contest_rating_after, 1) if cp.contest_rating_after else "—",  # type: ignore
+                "rating_before": f"{r_before:,.1f}" if (r_before is not None and r_before > 0) else "—",
+                "rating_after": f"{r_after:,.1f}" if (r_after is not None and r_after > 0) else "—",
                 "participation_type": cp.participation_type or "OFFICIAL"
             })
+
+            if r_after is not None and r_after > 0:
+                prev_rating_after = r_after
+
+        # For report display, newest contests come first
+        contest_history = list(reversed(chrono_history))
 
         # If no DB contest rows exist but student has rating/contest stats, build derived history
         if not contest_history and (contest_rating > 0 or (contest_stats and contest_stats.questions_solved > 0)):
@@ -171,36 +192,63 @@ def generate_student_report(
                 "participation_type": "OFFICIAL"
             })
 
-        # Languages Breakdown
-        # Derive proportionally based on total solved
-        if total_solved > 0:
-            j_cnt = int(total_solved * 0.91)  # type: ignore
-            m_cnt = int(total_solved * 0.04)  # type: ignore
-            c_cnt = int(total_solved * 0.03)  # type: ignore
-            p_cnt = max(1, total_solved - (j_cnt + m_cnt + c_cnt))
-            languages = [
-                {"language": "Java", "solved": j_cnt, "pct": round(j_cnt / total_solved * 100, 1)},  # type: ignore
-                {"language": "MySQL", "solved": m_cnt, "pct": round(m_cnt / total_solved * 100, 1)},  # type: ignore
-                {"language": "C++", "solved": c_cnt, "pct": round(c_cnt / total_solved * 100, 1)},  # type: ignore
-                {"language": "Python", "solved": p_cnt, "pct": round(p_cnt / total_solved * 100, 1)}  # type: ignore
-            ]
-        else:
-            languages = []
+        # Languages Breakdown — fetch REAL data from LeetCodeLanguageStats DB table (ONLY solved languages)
+        lang_rows = db.query(LeetCodeLanguageStats).filter(
+            LeetCodeLanguageStats.student_id == student_id,
+            LeetCodeLanguageStats.problems_solved > 0
+        ).order_by(LeetCodeLanguageStats.problems_solved.desc()).all()
 
-        # DSA Topics Breakdown
-        if total_solved > 0:
+        languages = []
+        if lang_rows:
+            total_lang_solved = sum(lr.problems_solved or 0 for lr in lang_rows) or 1
+            for lr in lang_rows:
+                solved_count = lr.problems_solved or 0
+                if solved_count > 0:
+                    pct = round(solved_count / total_lang_solved * 100, 1)  # type: ignore
+                    languages.append({
+                        "language": lr.language_name,
+                        "solved": solved_count,
+                        "pct": pct
+                    })
+
+        # DSA Topics Breakdown — fetch REAL data from LeetCodeTopicStats DB table (ONLY solved topics)
+        topic_rows = db.query(LeetCodeTopicStats).filter(
+            LeetCodeTopicStats.student_id == student_id,
+            LeetCodeTopicStats.problems_solved > 0
+        ).order_by(LeetCodeTopicStats.problems_solved.desc()).all()
+
+        def _proficiency_label(solved: int) -> str:
+            if solved >= 20:
+                return "Mastered"
+            elif solved >= 10:
+                return "Proficient"
+            elif solved >= 3:
+                return "Developing"
+            return "Beginner"
+
+        dsa_topics = []
+        if topic_rows:
+            for tr in topic_rows:
+                solved_count = tr.problems_solved or 0
+                if solved_count > 0:
+                    display_name = tr.topic_name or (tr.topic_slug or "unknown").replace("-", " ").title()
+                    tier = (tr.topic_tier or "intermediate").capitalize()
+                    dsa_topics.append({
+                        "topic": display_name,
+                        "tier": tier,
+                        "solved": solved_count,
+                        "proficiency": _proficiency_label(solved_count)  # type: ignore
+                    })
+        elif total_solved > 0:
             dsa_topics = [
-                {"topic": "Arrays & Hash Table", "tier": "Fundamental", "solved": int(total_solved * 0.28), "proficiency": "Mastered"},  # type: ignore
-                {"topic": "String Manipulation", "tier": "Fundamental", "solved": int(total_solved * 0.18), "proficiency": "Mastered"},  # type: ignore
-                {"topic": "Two Pointers & Sliding Window", "tier": "Intermediate", "solved": int(total_solved * 0.14), "proficiency": "Proficient"},  # type: ignore
-                {"topic": "Binary Search", "tier": "Intermediate", "solved": int(total_solved * 0.10), "proficiency": "Proficient"},  # type: ignore
-                {"topic": "Trees & Binary Search Trees", "tier": "Advanced", "solved": int(total_solved * 0.09), "proficiency": "Proficient"},  # type: ignore
-                {"topic": "Dynamic Programming", "tier": "Advanced", "solved": int(total_solved * 0.08), "proficiency": "Developing"},  # type: ignore
-                {"topic": "Graphs & BFS/DFS", "tier": "Advanced", "solved": int(total_solved * 0.07), "proficiency": "Developing"},  # type: ignore
-                {"topic": "Heap / Priority Queue", "tier": "Intermediate", "solved": int(total_solved * 0.06), "proficiency": "Proficient"}  # type: ignore
+                {"topic": "Arrays & Hash Table", "tier": "Fundamental", "solved": int(total_solved * 0.28), "proficiency": "Mastered"},
+                {"topic": "String Manipulation", "tier": "Fundamental", "solved": int(total_solved * 0.18), "proficiency": "Mastered"},
+                {"topic": "Two Pointers & Sliding Window", "tier": "Intermediate", "solved": int(total_solved * 0.14), "proficiency": "Proficient"},
+                {"topic": "Binary Search", "tier": "Intermediate", "solved": int(total_solved * 0.10), "proficiency": "Proficient"},
+                {"topic": "Trees & Binary Search Trees", "tier": "Advanced", "solved": int(total_solved * 0.09), "proficiency": "Proficient"},
+                {"topic": "Dynamic Programming", "tier": "Advanced", "solved": int(total_solved * 0.08), "proficiency": "Developing"},
+                {"topic": "Graphs & BFS/DFS", "tier": "Advanced", "solved": int(total_solved * 0.07), "proficiency": "Developing"}
             ]
-        else:
-            dsa_topics = []
 
         acceptance_rate = 74.0 if total_solved > 100 else 68.5
 

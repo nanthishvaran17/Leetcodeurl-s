@@ -16,6 +16,7 @@ from backend.models import Student, WeeklySession, WeeklyPublicResult
 from backend.services.report_models import ReportConfig
 from backend.services.authorization_service import apply_role_based_student_filter
 from backend.services.contest_performance_service import matches_dept, matches_year, normalize_dept_val, normalize_year_val
+from backend.services.weekly_session_resolver import parse_session_date, extract_contest_number
 from backend.logger import logger
 
 
@@ -28,39 +29,62 @@ def build_five_week_trend_report(
     Builds authoritative 5-Week Performance Trend Report.
     Calculates per-student 5-contest solve breakdown, attendance consistency, and trajectory signals.
     """
-    # Respect session_id to generate 5-week trend looking backward from the selected historical Sunday
-    override_session_id = (config.filters or {}).get("session_id")
-    query = db.query(WeeklySession)
-    if override_session_id and str(override_session_id).isdigit():
-        query = query.filter(WeeklySession.id <= int(override_session_id))
-    all_sessions = query.order_by(WeeklySession.id.desc()).all()
-
-    # Filter sessions that have valid attended public results (excluding test/mock)
+    # 1. Fetch all weekly sessions (excluding test/mock)
+    all_raw_sessions = db.query(WeeklySession).filter(WeeklySession.status != "SCHEDULED").all()
+    
     usable_sessions = []
-    for s in all_sessions:
+    for s in all_raw_sessions:
         c_name = str(s.contest_name or "")
-        if re.search(r'\b(test|mock)\b', c_name, re.IGNORECASE):
+        if re.search(r'\b(test|mock)\b', c_name, re.IGNORECASE) or c_name.upper().startswith("TEST_"):
             continue
         cnt = db.query(WeeklyPublicResult).filter(
             WeeklyPublicResult.session_id == s.id,
-            WeeklyPublicResult.participation_status.in_(["PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"])
+            WeeklyPublicResult.participation_status.in_(["PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE", "ATTENDED_ZERO", "ATTENDED_SOLVED"])
         ).count()
         if cnt > 0:
             usable_sessions.append(s)
-        if len(usable_sessions) >= 5:
-            break
 
-    # Sort chronological (oldest to newest) by session_date if available, else by extracting number from contest_name, else fallback to id
-    def get_sort_key(s):
-        if hasattr(s, 'session_date') and s.session_date:
-            return s.session_date
-        import re
-        match = re.search(r'\d+', str(s.contest_name or ''))
-        return match.group(0) if match else str(s.id).zfill(10)
-        
-    five_sessions = sorted(usable_sessions, key=get_sort_key)
+    # Sort all usable sessions strictly chronologically by parsed date and contest number ascending (oldest -> newest)
+    def _session_chronological_key(s):
+        p_date = parse_session_date(s.session_date) or datetime.date.min
+        c_num = extract_contest_number(s) or s.id or 0
+        return (p_date, c_num, s.id)
+
+    usable_sessions.sort(key=_session_chronological_key)
+
+    # Respect session_id or contest target to generate 5-week trend looking backward from the selected historical Sunday
+    override_session_id = (config.filters or {}).get("session_id") or getattr(config, "session_id", None) or (config.filters or {}).get("report_date")
+    
+    target_idx = None
+    if override_session_id and str(override_session_id).lower() not in ("latest", "all", "none", ""):
+        # Check by id or by contest number
+        if str(override_session_id).isdigit():
+            req_id = int(override_session_id)
+            for idx, s in enumerate(usable_sessions):
+                if s.id == req_id or extract_contest_number(s) == req_id:
+                    target_idx = idx
+                    break
+        if target_idx is None:
+            for idx, s in enumerate(usable_sessions):
+                if s.session_date == str(override_session_id) or str(s.contest_name or "") == str(override_session_id):
+                    target_idx = idx
+                    break
+        if target_idx is None:
+            c_target = extract_contest_number(str(override_session_id))
+            if c_target is not None:
+                for idx, s in enumerate(usable_sessions):
+                    if extract_contest_number(s) == c_target:
+                        target_idx = idx
+                        break
+
+    if target_idx is not None:
+        start_idx = max(0, target_idx - 4)
+        five_sessions = usable_sessions[start_idx : target_idx + 1]
+    else:
+        five_sessions = usable_sessions[-5:] if len(usable_sessions) >= 5 else usable_sessions[:]
+
     session_ids = [s.id for s in five_sessions]
-    session_names = [s.contest_name or f"Contest {s.id}" for s in five_sessions]
+    session_names = [s.contest_name or f"Weekly Contest {extract_contest_number(s) or s.id}" for s in five_sessions]
 
     # Pad session_names to exactly 5 headers
     while len(session_names) < 5:

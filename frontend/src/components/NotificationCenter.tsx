@@ -115,7 +115,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
 
   return (
     <div
-      className={`pointer-events-auto relative overflow-hidden rounded-2xl p-4 shadow-lg border backdrop-blur-xl transition-all duration-300 transform hover:-translate-y-0.5 ${style.bg}`}
+      className={`pointer-events-auto relative shrink-0 w-full overflow-hidden rounded-2xl p-4 shadow-xl border backdrop-blur-xl transition-all duration-300 transform hover:-translate-y-0.5 animate-fade-in ${style.bg}`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       role="alert"
@@ -212,7 +212,7 @@ export const NotificationCenter: React.FC = () => {
       {/* Toast Notification Stack Container */}
       <div
         id="nec-toast-container"
-        className="fixed top-[calc(env(safe-area-inset-top,0px)+4rem)] sm:top-20 right-3 sm:right-6 z-[99999999] flex flex-col space-y-3 w-[calc(100vw-24px)] sm:w-[420px] pointer-events-none print:hidden no-print"
+        className="fixed top-[calc(env(safe-area-inset-top,0px)+4.5rem)] sm:top-20 right-3 sm:right-6 z-[99999999] flex flex-col gap-3.5 sm:gap-4 w-[calc(100vw-24px)] sm:w-[420px] pointer-events-none print:hidden no-print"
         aria-live="polite"
         aria-atomic="true"
       >

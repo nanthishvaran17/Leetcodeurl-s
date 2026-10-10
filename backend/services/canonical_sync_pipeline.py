@@ -252,31 +252,35 @@ async def _sync_single_student_canonical_impl(
                     setattr(shim_stats, "error_code", "MISMATCH")
                     sync_status_str = "mismatch"
                 elif status_code in ("PROFILE_NOT_FOUND",):
-                    # Check if student was previously verified (Old Data Fallback Protection)
-                    if shim_stats.total_solved is not None and shim_stats.total_solved > 0:
-                        status_code = "SUCCESS"
-                        sync_status_str = "verified"
-                        total_solved = shim_stats.total_solved
-                        easy_solved = shim_stats.easy_solved
-                        medium_solved = shim_stats.medium_solved
-                        hard_solved = shim_stats.hard_solved
-                        contest_rating = shim_stats.contest_rating
-                        setattr(shim_stats, "status", "verified")
-                        setattr(shim_stats, "sync_status", "success")
-                        setattr(shim_stats, "validation_status", "verified")
-                        setattr(lc_prof, "verification_status", "PROFILE_VERIFIED")
-                        setattr(lc_prof, "sync_state", "SYNCED")
-                    else:
-                        setattr(lc_prof, "verification_status", "INVALID_USERNAME")
-                        setattr(lc_prof, "sync_state", "INVALID_USERNAME")
-                        setattr(lc_prof, "error_code", "404_NOT_FOUND")
-                        setattr(lc_prof, "error_message", "LeetCode username does not resolve to a public profile")
-                        setattr(shim_stats, "status", "INVALID_USERNAME")
-                        setattr(shim_stats, "sync_status", "failed")
-                        setattr(shim_stats, "error_code", "PROFILE_NOT_FOUND")
-                        status_code = "INVALID_USERNAME"
-                        sync_status_str = "failed"
-                        error_msg = "Profile not found (404)"
+                    # Profile does not exist (404) on LeetCode: Never preserve or fake solved stats!
+                    total_solved = None
+                    easy_solved = None
+                    medium_solved = None
+                    hard_solved = None
+                    contest_rating = None
+                    setattr(lc_prof, "verification_status", "INVALID_USERNAME")
+                    setattr(lc_prof, "sync_state", "INVALID_USERNAME")
+                    setattr(lc_prof, "error_code", "404_NOT_FOUND")
+                    setattr(lc_prof, "error_message", "LeetCode username does not resolve to a public profile (404)")
+                    setattr(shim_stats, "status", "INVALID_USERNAME")
+                    setattr(shim_stats, "sync_status", "invalid_profile")
+                    setattr(shim_stats, "validation_status", "invalid_profile")
+                    setattr(shim_stats, "total_solved", None)
+                    setattr(shim_stats, "easy_solved", None)
+                    setattr(shim_stats, "medium_solved", None)
+                    setattr(shim_stats, "hard_solved", None)
+                    setattr(shim_stats, "contest_rating", None)
+                    setattr(shim_stats, "contest_global_ranking", None)
+                    setattr(shim_stats, "public_profile_ranking", None)
+                    setattr(shim_stats, "error_code", "PROFILE_NOT_FOUND")
+                    setattr(shim_stats, "error_message", "LeetCode profile not found (404)")
+                    lc_stats.total_solved = None
+                    lc_stats.easy_solved = None
+                    lc_stats.medium_solved = None
+                    lc_stats.hard_solved = None
+                    status_code = "INVALID_USERNAME"
+                    sync_status_str = "invalid_profile"
+                    error_msg = "Profile not found (404)"
                 elif status_code in ("FETCH_FAILED", "TIMEOUT"):
                     # Preserve last known good data (Data Integrity Axiom)
                     original_status_code = status_code
@@ -395,6 +399,20 @@ async def _sync_single_student_canonical_impl(
                                 db_student.add(existing_l)
                             existing_l.problems_solved = lang.get("problems_solved", 0)
                             setattr(existing_l, "fetched_at", now_dt)
+
+                    for skill in data.get("skills", []):
+                        t_name = skill.get("topic_name")
+                        if t_name:
+                            existing_t = db_student.query(LeetCodeTopicStats).filter(
+                                LeetCodeTopicStats.student_id == st.id, LeetCodeTopicStats.topic_name == t_name
+                            ).first()
+                            if not existing_t:
+                                existing_t = LeetCodeTopicStats(student_id=st.id, topic_name=t_name)
+                                db_student.add(existing_t)
+                            existing_t.topic_slug = skill.get("topic_slug", "")
+                            existing_t.problems_solved = skill.get("problems_solved", 0)
+                            existing_t.topic_tier = skill.get("topic_tier", "intermediate")
+                            setattr(existing_t, "fetched_at", now_dt)
 
                     # Phase E recent submissions
                     if 'phase_e_res' in locals() and phase_e_res and isinstance(phase_e_res, dict) and phase_e_res.get("status") == "ok":

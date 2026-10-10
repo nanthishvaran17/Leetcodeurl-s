@@ -216,6 +216,9 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
     if (!token) return;
     setIsSimulating(endpoint);
     try {
+      if (setSelectedCategory) {
+        setSelectedCategory('all');
+      }
       const res = await fetch(`${API_BASE_URL}/notifications${endpoint}`, {
         method: 'POST',
         headers: {
@@ -225,7 +228,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
         body: JSON.stringify(payload)
       });
       if (res.ok) {
-        setTestPushStatus(' Alert successfully generated and dispatched!');
+        setTestPushStatus('✓ In-App Alert dispatched & live in notification center!');
         if (refreshNotifications) await refreshNotifications();
       } else {
         const errJson = await res.json().catch(() => ({}));

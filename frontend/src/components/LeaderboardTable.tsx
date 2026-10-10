@@ -524,7 +524,9 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         if (res.data?.stats) {
           studentLiveStore.updateStudent(idStr, {
             stats: res.data.stats,
-          });
+            sync_status: res.data.stats.sync_status || res.data.status,
+            total_solved: res.data.total_solved ?? res.data.stats.total_solved,
+          } as any);
         }
         notify.success('Profile Synced', res.data?.message || 'Student profile refreshed!', { category: 'SYNC ENGINE' });
         queryClient.invalidateQueries();

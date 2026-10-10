@@ -295,7 +295,7 @@ settings = Settings()
 def _acquire_global_lock(db: Optional[Session] = None, job_id: str = "", timeout_minutes: int = 120) -> bool:
     """Atomic acquisition of the global sync lock using a single short-lived transaction."""
     now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
-    for attempt in range(3):
+    for attempt in range(5):
         lock_db = SessionLocal()
         try:
             # Ensure a lock row exists (id=1)
@@ -350,12 +350,15 @@ def _acquire_global_lock(db: Optional[Session] = None, job_id: str = "", timeout
                 lock_db.rollback()
             except Exception:
                 pass
-            try:
-                pass  # pool_pre_ping handles reconnection
-            except Exception:
-                pass
-            if attempt < 2 and ('SSL' in str(e) or 'OperationalError' in str(e) or 'connection' in str(e).lower()):
-                import time; time.sleep(0.3 * (attempt + 1))
+            exc_str = str(e).lower()
+            is_transient = any(kw in exc_str for kw in (
+                'ssl', 'operationalerror', 'connection', 'database is locked', 'locked', 'busy'
+            ))
+            if attempt < 4 and is_transient:
+                import time
+                backoff = 0.4 * (attempt + 1)
+                logger.warning(f"[SYNC_LOCK] Transient DB lock notice on attempt {attempt + 1}/5 ({e}). Retrying in {backoff:.2f}s...")
+                time.sleep(backoff)
                 continue
             logger.error(f"[SYNC_LOCK] Error acquiring global lock: {e}")
             return False
@@ -368,38 +371,40 @@ def _acquire_global_lock(db: Optional[Session] = None, job_id: str = "", timeout
 
 def _release_global_lock(db: Session = None, job_id: str = None):  # type: ignore
     """Release the global sync lock using an isolated short-lived session."""
-    lock_db = SessionLocal()
-    try:
-        lock = lock_db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
-        if not lock or not lock.is_locked:
-            return
-        if job_id and lock.locked_by_job_id and lock.locked_by_job_id != job_id:
-            return
+    for attempt in range(3):
+        lock_db = SessionLocal()
+        try:
+            lock = lock_db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
+            if not lock or not lock.is_locked:
+                return
+            if job_id and lock.locked_by_job_id and lock.locked_by_job_id != job_id:
+                return
 
-        stmt = (
-            update(GlobalSyncLock)
-            .where(GlobalSyncLock.id == 1)
-        )
-        if job_id:
-            stmt = stmt.where(GlobalSyncLock.locked_by_job_id == job_id)
-        stmt = stmt.values(is_locked=False, locked_by_job_id=None, locked_at=None, expires_at=None)
-        lock_db.execute(stmt)
-        lock_db.commit()
-    except Exception as e:
-        try:
-            lock_db.rollback()
-        except Exception:
-            pass
-        try:
-            pass  # pool_pre_ping handles reconnection
-        except Exception:
-            pass
-        logger.warning(f"[SYNC_LOCK] Lock release note: {e}")
-    finally:
-        try:
-            lock_db.close()
-        except Exception:
-            pass
+            stmt = (
+                update(GlobalSyncLock)
+                .where(GlobalSyncLock.id == 1)
+            )
+            if job_id:
+                stmt = stmt.where(GlobalSyncLock.locked_by_job_id == job_id)
+            stmt = stmt.values(is_locked=False, locked_by_job_id=None, locked_at=None, expires_at=None)
+            lock_db.execute(stmt)
+            lock_db.commit()
+            return
+        except Exception as e:
+            try:
+                lock_db.rollback()
+            except Exception:
+                pass
+            exc_str = str(e).lower()
+            if attempt < 2 and any(kw in exc_str for kw in ('ssl', 'operationalerror', 'connection', 'locked', 'busy')):
+                import time; time.sleep(0.3 * (attempt + 1))
+                continue
+            logger.warning(f"[SYNC_LOCK] Lock release note: {e}")
+        finally:
+            try:
+                lock_db.close()
+            except Exception:
+                pass
 
 def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, Any]:
     """
@@ -942,7 +947,7 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
             if p.get("contest_date"):
                 try:
                     c_date_dt = datetime.datetime.strptime(p.get("contest_date"), "%Y-%m-%d")
-                    existing_hist.contest_start_time = c_date_dt
+                    existing_hist.contest_start_time = c_date_dt  # type: ignore
                 except Exception:
                     pass
             existing_hist.problems_solved = p.get("problems_solved", 0)
@@ -1026,12 +1031,12 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
                 AutomaticNotificationEngine.check_and_emit_student_growth(
                     db=db,
                     student_id=student.id,  # type: ignore
-                    old_total=old_total,
+                    old_total=old_total,  # type: ignore
                     new_total=st.total_solved or 0,  # type: ignore
-                    old_timestamp=previous_snapshot.captured_at if previous_snapshot else None,
-                    delta_easy=delta_easy,
-                    delta_medium=delta_medium,
-                    delta_hard=delta_hard
+                    old_timestamp=previous_snapshot.captured_at if previous_snapshot else None,  # type: ignore
+                    delta_easy=delta_easy,  # type: ignore
+                    delta_medium=delta_medium,  # type: ignore
+                    delta_hard=delta_hard  # type: ignore
                 )
             # Student Milestones (Type 9)
             AutomaticNotificationEngine.check_and_emit_student_milestones(
@@ -1051,7 +1056,7 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
                 AutomaticNotificationEngine.check_and_emit_rating_improvement(
                     db=db,
                     student_id=student.id,  # type: ignore
-                    old_rating=previous_snapshot.contest_rating,
+                    old_rating=previous_snapshot.contest_rating,  # type: ignore
                     new_rating=st.contest_rating or 0.0  # type: ignore
                 )
         except Exception as m_err:
@@ -1250,7 +1255,7 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
 
-        res = loop.run_until_complete(fetch_leetcode_profile(student.username, force_refresh=force_refresh))  # type: ignore
+        res = loop.run_until_complete(fetch_leetcode_profile(student.username, force_refresh=force_refresh, timeout=10.0))  # type: ignore
 
         job_id = f"SINGLE-{student_id}-{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}"
         job = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
@@ -1295,32 +1300,35 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
             f"Error: '{student.stats.error_message if student.stats else None}' | Timestamp: {end_time_iso}"  # type: ignore
         )  # type: ignore
 
+        import typing
+        student_obj: typing.Any = student
+
         # Broadcast WebSocket update  # type: ignore
         try:  # type: ignore
             dispatch_background_task(broadcast_sync_event({  # type: ignore
                 "type": "STUDENT_UPDATED",  # type: ignore
-                "student_id": student.id,  # type: ignore
-                "version": student.version,  # type: ignore
+                "student_id": student_obj.id,  # type: ignore
+                "version": student_obj.version,  # type: ignore
                 "changes": {
-                    "reg_no": student.reg_no,
-                    "name": student.name,
-                    "username": student.username,
-                    "total_solved": student.stats.total_solved if student.stats else None,
-                    "easy_solved": student.stats.easy_solved if student.stats else None,
-                    "medium_solved": student.stats.medium_solved if student.stats else None,
-                    "hard_solved": student.stats.hard_solved if student.stats else None,
-                    "contest_rating": student.stats.contest_rating if student.stats else None,
-                    "contest_global_ranking": student.stats.contest_global_ranking if student.stats else None,
+                    "reg_no": student_obj.reg_no,
+                    "name": student_obj.name,
+                    "username": student_obj.username,
+                    "total_solved": student_obj.stats.total_solved if student_obj.stats else None,
+                    "easy_solved": student_obj.stats.easy_solved if student_obj.stats else None,
+                    "medium_solved": student_obj.stats.medium_solved if student_obj.stats else None,
+                    "hard_solved": student_obj.stats.hard_solved if student_obj.stats else None,
+                    "contest_rating": student_obj.stats.contest_rating if student_obj.stats else None,
+                    "contest_global_ranking": student_obj.stats.contest_global_ranking if student_obj.stats else None,
                     "stats": {
-                        "total_solved": student.stats.total_solved if student.stats else None,
-                        "easy_solved": student.stats.easy_solved if student.stats else None,
-                        "medium_solved": student.stats.medium_solved if student.stats else None,
-                        "hard_solved": student.stats.hard_solved if student.stats else None,
-                        "contest_rating": student.stats.contest_rating if student.stats else None,
-                        "contest_global_ranking": student.stats.contest_global_ranking if student.stats else None,
-                        "sync_status": student.stats.sync_status if student.stats else "failed",
-                        "status": student.stats.status if student.stats else "pending",
-                        "last_verified_at": student.stats.last_verified_at.isoformat() if student.stats and student.stats.last_verified_at else None
+                        "total_solved": student_obj.stats.total_solved if student_obj.stats else None,
+                        "easy_solved": student_obj.stats.easy_solved if student_obj.stats else None,
+                        "medium_solved": student_obj.stats.medium_solved if student_obj.stats else None,
+                        "hard_solved": student_obj.stats.hard_solved if student_obj.stats else None,
+                        "contest_rating": student_obj.stats.contest_rating if student_obj.stats else None,
+                        "contest_global_ranking": student_obj.stats.contest_global_ranking if student_obj.stats else None,
+                        "sync_status": student_obj.stats.sync_status if student_obj.stats else "failed",
+                        "status": student_obj.stats.status if student_obj.stats else "pending",
+                        "last_verified_at": student_obj.stats.last_verified_at.isoformat() if student_obj.stats and student_obj.stats.last_verified_at else None
                     }
                 }
             }))
@@ -1329,30 +1337,30 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
 
         return {
             "status": "success" if is_success else "partial" if is_partial else "error",
-            "student_id": student.id,
-            "name": student.name,
-            "reg_no": student.reg_no,
-            "username": student.username,
-            "leetcode_url": student.leetcode_url,
-            "total_solved": student.stats.total_solved if student.stats else None,
-            "easy_solved": student.stats.easy_solved if student.stats else None,
-            "medium_solved": student.stats.medium_solved if student.stats else None,
-            "hard_solved": student.stats.hard_solved if student.stats else None,
-            "contest_rating": student.stats.contest_rating if student.stats else None,
-            "contest_global_ranking": student.stats.contest_global_ranking if student.stats else None,
-            "sync_status": student.stats.sync_status if student.stats else "failed",
-            "error_message": student.stats.error_message if student.stats else None,
-            "last_verified_at": student.stats.last_verified_at.isoformat() if (student.stats and student.stats.last_verified_at) else None,
+            "student_id": student_obj.id,
+            "name": student_obj.name,
+            "reg_no": student_obj.reg_no,
+            "username": student_obj.username,
+            "leetcode_url": student_obj.leetcode_url,
+            "total_solved": student_obj.stats.total_solved if student_obj.stats else None,
+            "easy_solved": student_obj.stats.easy_solved if student_obj.stats else None,
+            "medium_solved": student_obj.stats.medium_solved if student_obj.stats else None,
+            "hard_solved": student_obj.stats.hard_solved if student_obj.stats else None,
+            "contest_rating": student_obj.stats.contest_rating if student_obj.stats else None,
+            "contest_global_ranking": student_obj.stats.contest_global_ranking if student_obj.stats else None,
+            "sync_status": student_obj.stats.sync_status if student_obj.stats else "failed",
+            "error_message": student_obj.stats.error_message if student_obj.stats else None,
+            "last_verified_at": student_obj.stats.last_verified_at.isoformat() if (student_obj.stats and student_obj.stats.last_verified_at) else None,
             "stats": {
-                "total_solved": student.stats.total_solved if student.stats else None,
-                "easy_solved": student.stats.easy_solved if student.stats else None,
-                "medium_solved": student.stats.medium_solved if student.stats else None,
-                "hard_solved": student.stats.hard_solved if student.stats else None,
-                "contest_rating": student.stats.contest_rating if student.stats else None,
-                "contest_global_ranking": student.stats.contest_global_ranking if student.stats else None,
-                "sync_status": student.stats.sync_status if student.stats else "failed",
-                "status": student.stats.status if student.stats else "pending",
-                "last_verified_at": student.stats.last_verified_at.isoformat() if student.stats and student.stats.last_verified_at else None
+                "total_solved": student_obj.stats.total_solved if student_obj.stats else None,
+                "easy_solved": student_obj.stats.easy_solved if student_obj.stats else None,
+                "medium_solved": student_obj.stats.medium_solved if student_obj.stats else None,
+                "hard_solved": student_obj.stats.hard_solved if student_obj.stats else None,
+                "contest_rating": student_obj.stats.contest_rating if student_obj.stats else None,
+                "contest_global_ranking": student_obj.stats.contest_global_ranking if student_obj.stats else None,
+                "sync_status": student_obj.stats.sync_status if student_obj.stats else "failed",
+                "status": student_obj.stats.status if student_obj.stats else "pending",
+                "last_verified_at": student_obj.stats.last_verified_at.isoformat() if student_obj.stats and student_obj.stats.last_verified_at else None
             }
         }
     finally:

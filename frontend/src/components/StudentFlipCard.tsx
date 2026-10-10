@@ -276,11 +276,13 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 <AlertCircle className="w-8 h-8 mx-auto text-slate-300 dark:text-navy-600 mb-3" />
                 <p className="font-extrabold text-sm text-slate-700 dark:text-slate-300">
                   {state === 'pending_username' ? 'Pending LeetCode Username' :
-                    state === 'pending' ? 'Awaiting Scheduled Sync' :
-                      state === 'mismatch' ? 'Data Mismatch Detected' : 'Stats Unavailable'}
+                    state === 'invalid_profile' ? 'Invalid LeetCode Profile' :
+                      state === 'pending' ? 'Awaiting Scheduled Sync' :
+                        state === 'mismatch' ? 'Data Mismatch Detected' : 'Stats Unavailable'}
                 </p>
                 <p className="text-xs font-medium text-slate-500">
                   {state === 'pending_username' && 'Awaiting valid LeetCode profile assignment'}
+                  {state === 'invalid_profile' && 'Profile not found or URL is incorrect'}
                   {state === 'pending' && 'Scheduled for background sync'}
                   {state === 'failed' && (lastVerifiedAt ? `Last verified: ${verifiedAgo}` : 'Never successfully synced')}
                   {state === 'mismatch' && 'Easy + Medium + Hard ≠ Total'}

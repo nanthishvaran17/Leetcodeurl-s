@@ -27,7 +27,7 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsProps> = ({
     setLoading(true);
     setError(null);
 
-    let url = `/analytics/activity/aggregate?period=${period}`;
+    let url = `/analytics/activity/aggregate?period=${period}&_t=${Date.now()}`;
     if (studentId) url += `&student_id=${studentId}`;
     if (deptId) url += `&dept_id=${deptId}`;
     if (yearLevel && yearLevel !== 'ALL') url += `&year_level=${yearLevel}`;

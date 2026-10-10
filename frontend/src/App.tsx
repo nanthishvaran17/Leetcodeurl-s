@@ -906,7 +906,7 @@ export const App: React.FC = () => {
       <div className={`flex-1 w-full mx-auto relative ${
         activeTab === 'messages'
           ? 'pt-0 pb-0 px-0 max-w-full'
-          : 'pt-1.5 sm:pt-3 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 px-2 sm:px-3 max-w-full'
+          : 'pt-1 sm:pt-2 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 px-2 sm:px-3 max-w-full'
       }`}>
         
         {/* Slide-out Sidebar Drawer */}

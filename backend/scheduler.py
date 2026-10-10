@@ -78,7 +78,7 @@ def with_global_lock(job_name: str, timeout_minutes: int = 15):
 scheduler = AsyncIOScheduler(timezone=IST)
 
 def apscheduler_listener(event):
-    for attempt in range(3):
+    for attempt in range(5):
         db = SessionLocal()
         try:
             if event.code == EVENT_JOB_EXECUTED:
@@ -112,13 +112,8 @@ def apscheduler_listener(event):
             except Exception:
                 pass
             exc_str = str(e).lower()
-            if 'ssl' in exc_str or 'operationalerror' in exc_str or 'connection' in exc_str:
-                try:
-                    pass  # Session doesn't support invalidate(); pool_pre_ping handles reconnection
-                except Exception:
-                    pass
-            if attempt < 2 and any(kw in exc_str for kw in ('ssl', 'operationalerror', 'connection', 'closed')):
-                import time; time.sleep(0.5 * (attempt + 1))
+            if attempt < 4 and any(kw in exc_str for kw in ('ssl', 'operationalerror', 'connection', 'closed', 'locked', 'busy')):
+                import time; time.sleep(0.4 * (attempt + 1))
                 continue
             logger.warning(f'[SCHEDULER LISTENER RECOVERED] Handled transient connection notice: {e}')
             break

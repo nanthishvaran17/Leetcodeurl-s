@@ -98,7 +98,7 @@ def test_generate_hr_candidate_finder_excel_formatting(mock_dataset):
 
     wb = openpyxl.load_workbook(io.BytesIO(excel_bytes))
     sheet_names = wb.sheetnames
-    assert "HR Candidate Finder" in sheet_names
+    assert "Student Intelligence" in sheet_names
 
     non_tnr_cells = []
     for sheet_name in sheet_names:

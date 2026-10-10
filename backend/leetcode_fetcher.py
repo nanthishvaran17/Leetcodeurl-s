@@ -29,7 +29,7 @@ def _get_gql_semaphore() -> asyncio.Semaphore:
     try:
         loop = asyncio.get_running_loop()
         loop_id = id(loop)
-        if loop_id not in _GQL_SEMAPHORES or _GQL_SEMAPHORES[loop_id]._loop != loop:
+        if loop_id not in _GQL_SEMAPHORES or getattr(_GQL_SEMAPHORES[loop_id], '_loop', None) != loop:
             _GQL_SEMAPHORES[loop_id] = asyncio.Semaphore(_LEETCODE_MAX_CONCURRENCY)
         return _GQL_SEMAPHORES[loop_id]
     except RuntimeError:
@@ -56,7 +56,7 @@ _in_flight_requests: Dict[str, asyncio.Future] = {}
 # Thread-local HTTP connection storage to avoid cross-loop/cross-thread Event binding errors
 _client_local = threading.local()
 
-def get_httpx_client(req_timeout: float = 10.0) -> httpx.AsyncClient:
+def get_httpx_client(req_timeout: float = 5.0) -> httpx.AsyncClient:
     try:
         current_loop = asyncio.get_running_loop()
     except RuntimeError:
@@ -254,7 +254,7 @@ def extract_leetcode_username(url_or_username: Optional[str]) -> Tuple[Optional[
 
 GRAPHQL_URL = "https://leetcode.com/graphql"
 
-# PROFILE + STATS + BADGES + LANGUAGES + CALENDAR (Phase A) 
+# PROFILE + STATS + CONTEST + BADGES + LANGUAGES (Combined, sans calendar for safety)
 USER_PROFILE_QUERY = """
 query userPublicProfile($username: String!) {
   matchedUser(username: $username) {
@@ -268,11 +268,6 @@ query userPublicProfile($username: String!) {
       company
       countryName
       reputation
-    }
-    userCalendar {
-      streak
-      totalActiveDays
-      submissionCalendar
     }
     submitStats: submitStatsGlobal {
       acSubmissionNum {
@@ -290,14 +285,24 @@ query userPublicProfile($username: String!) {
       languageName
       problemsSolved
     }
+    tagProblemCounts {
+      advanced {
+        tagName
+        tagSlug
+        problemsSolved
+      }
+      intermediate {
+        tagName
+        tagSlug
+        problemsSolved
+      }
+      fundamental {
+        tagName
+        tagSlug
+        problemsSolved
+      }
+    }
   }
-}
-"""
-
-# CONTEST RANKING + FULL HISTORY (Phase B) 
-
-USER_CONTEST_QUERY = """
-query userContestRankingInfo($username: String!) {
   userContestRanking(username: $username) {
     attendedContestsCount
     rating
@@ -320,6 +325,22 @@ query userContestRankingInfo($username: String!) {
   }
 }
 """
+
+USER_CALENDAR_QUERY = """
+query userCalendar($username: String!) {
+  matchedUser(username: $username) {
+    userCalendar {
+      streak
+      totalActiveDays
+      submissionCalendar
+    }
+  }
+}
+"""
+
+# Kept for backward compatibility if imported elsewhere
+USER_CONTEST_QUERY = USER_PROFILE_QUERY
+
 
 def fetch_leetcode_profile_sync(
     url_or_username: Optional[str],
@@ -379,7 +400,7 @@ async def fetch_leetcode_profile(
     fut = asyncio.Future()
     _in_flight_requests[username] = fut
     try:
-        res = await _fetch_leetcode_profile_impl(username, std_url, force_refresh, max_retries or 3, timeout or 10.0)
+        res = await _fetch_leetcode_profile_impl(username, std_url, force_refresh, max_retries or 2, timeout or 5.0)
         fut.set_result(res)
         return res
     except Exception as e:
@@ -388,7 +409,7 @@ async def fetch_leetcode_profile(
     finally:
         _in_flight_requests.pop(username, None)
 
-async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = None, force_refresh: bool = False, retries: int = 3, req_timeout: float = 10.0) -> Dict[str, Any]:
+async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = None, force_refresh: bool = False, retries: int = 2, req_timeout: float = 5.0) -> Dict[str, Any]:
     """
     Fetches publicly available LeetCode profile statistics cleanly and safely.
     Strictly distinguishes Public Profile stats, Official Contest participation, and Virtual Contest participation.
@@ -432,6 +453,7 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
     }
 
     matched_user = None
+    gql_data = None
     last_error_detail = ""
 
     # Fine-grained timeouts handled by global client
@@ -456,7 +478,8 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
                         last_error_detail = f"GraphQL Error: {gql_errors[0].get('message', 'Unknown GraphQL error')}"
                         logger.warning(f"GraphQL error for '{username}' (Attempt {attempt}/{retries}): {last_error_detail}")
                     else:
-                        matched_user = data.get("data", {}).get("matchedUser")
+                        gql_data = data.get("data", {})
+                        matched_user = gql_data.get("matchedUser")
                         if matched_user is not None:
                             await circuit_breaker.record_success()
                             adaptive_batch_controller.report_success()
@@ -594,8 +617,24 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
         hard_solved = solved_map.get("Hard", 0)
         profile_ranking = matched_user.get("profile", {}).get("ranking")
 
-        # Parse calendar info
+        # Parse calendar info safely (in a secondary query so private calendar permissions never invalidate matchedUser)
         user_calendar = matched_user.get("userCalendar") or {}
+        if not user_calendar:
+            try:
+                payload_cal = {
+                    "query": USER_CALENDAR_QUERY,
+                    "variables": {"username": canonical_username},
+                    "operationName": "userCalendar"
+                }
+                async with _GQL_SEMAPHORE:
+                    res_cal = await client.post(GRAPHQL_URL, json=payload_cal, headers=headers)
+                if res_cal.status_code == 200:
+                    cal_data = res_cal.json().get("data", {})
+                    if cal_data and cal_data.get("matchedUser"):
+                        user_calendar = cal_data["matchedUser"].get("userCalendar") or {}
+            except Exception as cal_err:
+                logger.debug(f"Optional userCalendar fetch failed for '{canonical_username}': {cal_err}")
+
         active_days = user_calendar.get("totalActiveDays")
         max_streak = user_calendar.get("streak")
         raw_calendar = user_calendar.get("submissionCalendar")
@@ -615,83 +654,22 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
         contest_status = "failed"
         contest_participations = []
 
-        payload_contest = {
-            "query": USER_CONTEST_QUERY,
-            "variables": {"username": canonical_username},
-            "operationName": "userContestRankingInfo"
-        }
-        contest_history = []
-        contest_retries = 2
+        # 2. Parse Contest Ranking & History (Phase B - Now from Combined Query)
+        contest_info = (gql_data or {}).get("userContestRanking")
+        contest_history = (gql_data or {}).get("userContestRankingHistory") or []
 
-        for c_attempt in range(1, contest_retries + 1):
-            try:
-                async with _GQL_SEMAPHORE:
-                    res_contest = await client.post(GRAPHQL_URL, json=payload_contest, headers=headers)
-
-                if res_contest.status_code == 200:
-                    c_data = res_contest.json()
-                    gql_errors = c_data.get("errors")
-                    gql_data = c_data.get("data")
-
-                    if gql_errors and not gql_data:
-                        logger.warning(f"[CONTEST_GQL_ERROR] '{canonical_username}': {gql_errors[0].get('message')}")
-                        contest_status = "failed"
-                        break
-
-                    await circuit_breaker.record_success()
-                    adaptive_batch_controller.report_success()
-                    contest_info = (gql_data or {}).get("userContestRanking")
-                    contest_history = (gql_data or {}).get("userContestRankingHistory") or []
-
-                    if contest_info is not None and isinstance(contest_info, dict):
-                        contest_status = "ok"
-                        c_rating = contest_info.get("rating")
-                        if c_rating is not None:
-                            contest_rating = round(float(c_rating), 1)
-                        c_grank = contest_info.get("globalRanking")
-                        if c_grank is not None:
-                            contest_global_ranking = c_grank
-                    else:
-                        contest_status = "unrated"
-                    break
-
-                elif res_contest.status_code in [429, 403]:
-                    if res_contest.status_code == 429:
-                        await circuit_breaker.record_failure()
-                    adaptive_batch_controller.report_failure(res_contest.status_code)
-                    backoff_sec = min(30.0, (2.0 ** c_attempt) + random.uniform(0.5, 1.5))
-                    logger.warning(f"LeetCode Contest {res_contest.status_code} for '{canonical_username}' (Attempt {c_attempt}/{contest_retries}). Backoff {round(backoff_sec, 2)}s")
-                    if c_attempt < contest_retries:
-                        await asyncio.sleep(backoff_sec)
-                        continue
-                    contest_status = "failed"
-                    break
-                else:
-                    await circuit_breaker.record_failure()
-                    adaptive_batch_controller.report_failure(res_contest.status_code)
-                    backoff_sec = min(30.0, (2.0 ** c_attempt) + random.uniform(0.5, 1.5))
-                    logger.warning(f"LeetCode Contest HTTP {res_contest.status_code} for '{canonical_username}' (Attempt {c_attempt}/{contest_retries}). Backoff {round(backoff_sec, 2)}s")
-                    if c_attempt < contest_retries:
-                        await asyncio.sleep(backoff_sec)
-                        continue
-                    contest_status = "failed"
-                    break
-            except (httpx.TimeoutException, httpx.RemoteProtocolError, httpx.ConnectError, httpx.NetworkError) as net_err:
-                await circuit_breaker.record_failure()
-                adaptive_batch_controller.report_failure(503)
-                logger.warning(f"Network error fetching contest data for '{canonical_username}' (Attempt {c_attempt}/{contest_retries}): {net_err}")
-                if c_attempt < contest_retries:
-                    await asyncio.sleep((1.5 ** c_attempt) + random.uniform(0.1, 0.5))
-                    continue
-                contest_status = "failed"
-                break
-            except Exception as c_exc:
-                logger.warning(f"Error fetching contest data for '{canonical_username}' (Attempt {c_attempt}/{contest_retries}): {c_exc}")
-                if c_attempt < contest_retries:
-                    await asyncio.sleep((1.5 ** c_attempt) + random.uniform(0.1, 0.5))
-                    continue
-                contest_status = "failed"
-                break
+        if contest_info is not None and isinstance(contest_info, dict):
+            contest_status = "ok"
+            c_rating = contest_info.get("rating")
+            if c_rating is not None:
+                contest_rating = round(float(c_rating), 1)
+            c_grank = contest_info.get("globalRanking")
+            if c_grank is not None:
+                contest_global_ranking = c_grank
+        elif contest_history:
+            contest_status = "unrated"
+        else:
+            contest_status = "unrated"
 
         if contest_status != "failed" and isinstance(contest_history, list):
             try:
@@ -753,6 +731,33 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
         if not is_valid_sum:
             logger.warning(f"CRITICAL STATS MISMATCH for user '{username}': {error_detail}")
 
+        # Parse Language Stats
+        raw_lang_data = matched_user.get("languageProblemCount") or []
+        languages_list = []
+        for l_item in raw_lang_data:
+            if isinstance(l_item, dict) and l_item.get("languageName"):
+                languages_list.append({
+                    "language_name": l_item["languageName"],
+                    "problems_solved": l_item.get("problemsSolved", 0)
+                })
+
+        # Parse DSA Topic/Skills Stats (tagProblemCounts)
+        tag_data = matched_user.get("tagProblemCounts") or {}
+        skills_list = []
+        tier_map = {"advanced": "advanced", "intermediate": "intermediate", "fundamental": "fundamental"}
+        for tier_key, tier_label in tier_map.items():
+            tier_items = tag_data.get(tier_key) or []
+            for t_item in tier_items:
+                if isinstance(t_item, dict) and t_item.get("tagName") and (t_item.get("problemsSolved") or 0) > 0:
+                    skills_list.append({
+                        "topic_name": t_item["tagName"],
+                        "topic_slug": t_item.get("tagSlug", ""),
+                        "problems_solved": t_item.get("problemsSolved", 0),
+                        "topic_tier": tier_label
+                    })
+
+        logger.info(f"[FETCHER] '{canonical_username}': {len(languages_list)} languages, {len(skills_list)} DSA topics fetched")
+
         duration = round(time.time() - start_time, 3)
         verified_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
@@ -784,7 +789,9 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = N
             "last_verified_at": verified_at,
             "error": error_detail,
             "error_message": error_detail,
-            "fetch_duration": duration
+            "fetch_duration": duration,
+            "languages": languages_list,
+            "skills": skills_list,
         }
 
         # Do not cache failed contest results so subsequent calls can retry (§6)
@@ -1013,6 +1020,19 @@ async def fetch_profile_and_stats(
         for lp in languages_raw if isinstance(lp, dict)
     ]
 
+    skills_raw = matched.get("tagProblemCounts") or {}
+    skills = []
+    if isinstance(skills_raw, dict):
+        for tier_name in ["advanced", "intermediate", "fundamental"]:
+            for item in skills_raw.get(tier_name, []):
+                if isinstance(item, dict) and item.get("problemsSolved", 0) > 0:
+                    skills.append({
+                        "topic_name": item.get("tagName"),
+                        "topic_slug": item.get("tagSlug"),
+                        "problems_solved": item.get("problemsSolved"),
+                        "topic_tier": tier_name
+                    })
+
     # Calendar & streak
     user_cal = matched.get("userCalendar") or {}
     cal_streak = user_cal.get("streak")
@@ -1039,6 +1059,7 @@ async def fetch_profile_and_stats(
             "hard_solved":            solved_map.get("Hard"),
             "badges":                 badges,
             "languages":              languages,
+            "skills":                 skills,
             "streak":                 cal_streak,
             "max_streak":             cal_streak,
             "total_active_days":      cal_active_days,

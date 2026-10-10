@@ -39,11 +39,19 @@ class DownloadManager {
 
     const downloadId = `${endpoint}:${filename}:${JSON.stringify(options.params || {})}`;
 
-    // 1. DUPLICATE CLICK PROTECTION: Block concurrent duplicate taps
+    // 1. DUPLICATE CLICK PROTECTION: Block concurrent duplicate taps with stale lock clearance (30s timeout)
     const existing = this.activeDownloads.get(downloadId);
-    if (existing && ['AUTHENTICATING', 'PREPARING', 'READY', 'DOWNLOADING', 'STARTED'].includes(existing.status)) {
-      console.warn('[DownloadManager] Duplicate download tap blocked:', downloadId);
-      return { success: false, downloadId, error: 'A report generation or download is already in progress.' };
+    if (existing) {
+      const isStale = Date.now() - existing.startTime > 30000;
+      const isFinishedState = !['AUTHENTICATING', 'PREPARING', 'READY', 'DOWNLOADING', 'STARTED'].includes(existing.status);
+
+      if (isStale || isFinishedState) {
+        console.warn('[DownloadManager] Clearing stale or completed download lock:', downloadId);
+        this.activeDownloads.delete(downloadId);
+      } else {
+        console.warn('[DownloadManager] Duplicate download tap blocked:', downloadId);
+        return { success: false, downloadId, error: 'A report generation or download is already in progress.' };
+      }
     }
 
     const state: DownloadState = {

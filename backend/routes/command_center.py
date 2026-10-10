@@ -605,6 +605,55 @@ def get_faculty_workload(
 
 # 4. DEDICATED REPORT DATA ENGINE 
 
+def set_clean_excel_cell_value(cell, val, is_percentage=False):
+    """
+    Sets Excel cell values cleanly as native Python types (float, int, str)
+    with proper openpyxl number_format so Excel NEVER displays green triangle warning indicators
+    ('Number Stored as Text').
+    """
+    if val is None or str(val).strip() in ("", "—", "N/A", "None"):
+        cell.value = str(val) if val is not None else ""
+        return
+
+    val_str = str(val).strip()
+
+    if is_percentage or val_str.endswith("%"):
+        clean_num_str = val_str.rstrip("%").strip()
+        try:
+            num = float(clean_num_str)
+            cell.value = num / 100.0 if num > 1.0 or num == 0.0 else num
+            cell.number_format = '0.0%'
+            return
+        except ValueError:
+            pass
+
+    if isinstance(val, bool):
+        cell.value = val
+        return
+
+    if isinstance(val, (int, float)):
+        cell.value = val
+        if isinstance(val, float):
+            cell.number_format = '0.0'
+        else:
+            cell.number_format = '#,##0'
+        return
+
+    if val_str.replace(".", "", 1).replace("-", "", 1).isdigit():
+        try:
+            if "." in val_str:
+                cell.value = float(val_str)
+                cell.number_format = '0.0'
+            else:
+                cell.value = int(val_str)
+                cell.number_format = '#,##0'
+            return
+        except ValueError:
+            pass
+
+    cell.value = val_str
+
+
 @router.get("/reports/export-excel")
 def export_command_center_report_excel(
     report_type: str = Query(..., description="EXECUTIVE, FACULTY_ALLOCATION, INACTIVE_AT_RISK, CONTEST, SKILL_GAP"),
@@ -721,7 +770,7 @@ def export_command_center_report_excel(
 
         metrics = data.get("summary_metrics", {})
         for k, v in metrics.items():
-            ws.append([k, "", "", "", v])
+            ws.append([k, "", "", "", ""])
             ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=4)
             left_cell = ws.cell(row=ws.max_row, column=1)
             left_cell.font = bold_cell_font
@@ -730,7 +779,8 @@ def export_command_center_report_excel(
             val_cell = ws.cell(row=ws.max_row, column=5)
             val_cell.font = cell_font
             val_cell.alignment = center_align
-            
+            set_clean_excel_cell_value(val_cell, v)
+
             for c in range(1, 6):
                 ws.cell(row=ws.max_row, column=c).border = thin_border
                 if ws.max_row % 2 == 0:
@@ -761,7 +811,7 @@ def export_command_center_report_excel(
         ws.row_dimensions[ws.max_row].height = 22
             
         for row in data.get("dimension_breakdown", []):
-            ws.append([row.get("dimension"), "", "", "", row.get("score")])
+            ws.append([row.get("dimension"), "", "", "", ""])
             ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=4)
             left_cell = ws.cell(row=ws.max_row, column=1)
             left_cell.font = cell_font
@@ -770,7 +820,8 @@ def export_command_center_report_excel(
             val_cell = ws.cell(row=ws.max_row, column=5)
             val_cell.font = bold_cell_font
             val_cell.alignment = center_align
-            
+            set_clean_excel_cell_value(val_cell, row.get("score"))
+
             for col_idx in range(1, 6):
                 cell = ws.cell(row=ws.max_row, column=col_idx)
                 cell.border = thin_border
@@ -805,17 +856,23 @@ def export_command_center_report_excel(
                 d_code = d_rec.get("department_code") or d_rec.get("department_name") or "DEPT"
                 t_std = d_rec.get("student_count", 0)
                 a_std = d_rec.get("active_count", 0)
-                p_pct = f"{d_rec.get('participation_rate_pct', 0)}%"
+                p_pct = d_rec.get('participation_rate_pct', 0)
                 h_score = f"{d_rec.get('health_score', 0)}/100"
                 
-                ws.append([d_code, t_std, a_std, p_pct, h_score])
+                ws.append([d_code, "", "", "", h_score])
+                r_idx = ws.max_row
                 for col_idx in range(1, 6):
-                    cell = ws.cell(row=ws.max_row, column=col_idx)
+                    cell = ws.cell(row=r_idx, column=col_idx)
                     cell.font = cell_font
                     cell.border = thin_border
                     cell.alignment = center_align
-                    if ws.max_row % 2 == 0:
+                    if r_idx % 2 == 0:
                         cell.fill = alt_row_fill
+
+                set_clean_excel_cell_value(ws.cell(row=r_idx, column=1), d_code)
+                set_clean_excel_cell_value(ws.cell(row=r_idx, column=2), t_std)
+                set_clean_excel_cell_value(ws.cell(row=r_idx, column=3), a_std)
+                set_clean_excel_cell_value(ws.cell(row=r_idx, column=4), p_pct, is_percentage=True)
 
     elif report_type == "FACULTY_ALLOCATION":
         headers = ["Faculty Mentor", "Dept", "Assigned", "Active Solvers", "Ratio Status"]

@@ -87,8 +87,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         className="sticky top-0 z-40 bg-white/95 dark:bg-navy-950/95 backdrop-blur-md border-b border-slate-200 dark:border-navy-800 transition-colors shadow-xs pt-safe-top"
         style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 0px)' }}
       >
-        <div className="w-full max-w-full mx-auto px-2 sm:px-3">
-          <div className="flex items-center justify-between min-h-[56px] sm:min-h-[68px] py-2 sm:py-2.5 gap-1 sm:gap-4">
+        <div className="w-full max-w-full mx-auto px-2 sm:px-4">
+          <div className="flex items-center justify-between min-h-[48px] sm:min-h-[52px] py-1 sm:py-1.5 gap-1 sm:gap-4">
             
             {/* Left: Hamburger Button (Mobile/Tablet) + Branding */}
             <div className="flex items-center space-x-1 sm:space-x-3 min-w-0 flex-1">
@@ -96,7 +96,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="p-2 flex-shrink-0 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+                  className="p-1.5 flex-shrink-0 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer min-w-[38px] min-h-[38px] flex items-center justify-center"
                   title="Toggle Navigation Menu"
                 >
                   {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -108,23 +108,23 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="flex items-center space-x-1.5 sm:space-x-2.5 cursor-pointer group min-w-0"
               >
                 <div className="flex-shrink-0 flex items-center justify-center">
-                  <div className="sm:hidden"><CollegeLogo size={26} className="transition-transform group-hover:scale-105" /></div>
-                  <div className="hidden sm:block"><CollegeLogo size={34} className="transition-transform group-hover:scale-105" /></div>
+                  <div className="sm:hidden"><CollegeLogo size={24} className="transition-transform group-hover:scale-105" /></div>
+                  <div className="hidden sm:block"><CollegeLogo size={30} className="transition-transform group-hover:scale-105" /></div>
                 </div>
                 <div className="flex flex-col justify-center min-w-0">
-                  <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
-                    <span className="font-black text-[10px] xs:text-[11.5px] leading-tight sm:text-base sm:leading-tight tracking-tight text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors whitespace-nowrap truncate">
+                  <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                    <span className="font-black text-[10px] xs:text-[11.5px] leading-tight sm:text-sm sm:leading-tight tracking-tight text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors whitespace-nowrap truncate">
                       NANDHA INTELLIGENCE
                     </span>
                     {(freshness?.total_students || menteesCount !== null) ? (
-                      <span className="hidden sm:inline-flex px-2 py-0.5 text-[9px] font-black rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 whitespace-nowrap flex-shrink-0 items-center">
+                      <span className="hidden sm:inline-flex px-1.5 py-0.5 text-[8.5px] font-black rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 whitespace-nowrap flex-shrink-0 items-center">
                         {['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes((user?.role || '').toLowerCase()) 
                           ? `${menteesCount !== null ? menteesCount : '...'} MENTEES` 
                           : `${freshness?.total_students || 0} STUDENTS`}
                       </span>
                     ) : null}
                   </div>
-                  <span className="text-[8.5px] xs:text-[10px] leading-tight sm:text-xs sm:leading-snug text-slate-800 dark:text-slate-100 font-extrabold tracking-wide truncate">
+                  <span className="text-[8px] xs:text-[9.5px] leading-tight sm:text-[11px] sm:leading-snug text-slate-700 dark:text-slate-200 font-extrabold tracking-wide truncate">
                     Nandha Engineering College<span className="hidden sm:inline"> • Erode</span>
                   </span>
                 </div>
@@ -134,15 +134,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Middle: Quick Status Indicator (Removed per request) */}
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-3 sm:gap-4 lg:gap-5 flex-shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 flex-shrink-0">
               
               {/* Sync Status Button */}
               <button
                 type="button"
                 onClick={() => setShowSyncModal(true)}
-                className="hidden lg:flex items-center justify-center space-x-2 px-4 h-[44px] rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-all duration-200 cursor-pointer active:scale-95"
+                className="hidden lg:flex items-center justify-center space-x-1.5 px-3 h-[36px] rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-all duration-200 cursor-pointer active:scale-95"
               >
-                <Activity className={`w-4 h-4 ${currentSessionStatus === 'ACTIVE' ? 'text-brand-500 animate-sync-spin' : 'text-brand-500'}`} />
+                <Activity className={`w-3.5 h-3.5 ${currentSessionStatus === 'ACTIVE' ? 'text-brand-500 animate-sync-spin' : 'text-brand-500'}`} />
                 <span>Sync Engine Status</span>
               </button>
 

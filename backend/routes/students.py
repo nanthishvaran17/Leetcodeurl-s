@@ -220,7 +220,14 @@ async def get_leaderboard_fast(
                 easy_solved = s.easy_solved if has_stats else 0
                 medium_solved = s.medium_solved if has_stats else 0
                 hard_solved = s.hard_solved if has_stats else 0
-                contest_rating = int(round(s.contest_rating)) if (s and s.contest_rating is not None) else None
+                # Only send contest_rating if it was genuinely verified by LeetCode API.
+                # When contest_sync_status is not 'ok', the stored 1500.0 is a fake default, not a real rating.
+                _raw_cr = s.contest_rating if s else None
+                _contest_verified = s and getattr(s, 'contest_sync_status', None) == 'ok'
+                if _raw_cr is not None and round(float(_raw_cr)) == 1500 and not _contest_verified:
+                    contest_rating = None  # fake default — LeetCode never returned a real rating
+                else:
+                    contest_rating = int(round(_raw_cr)) if (_raw_cr is not None and float(_raw_cr) > 0) else None
 
                 streak = 0
                 if st.lc_activity and st.lc_activity.current_streak is not None:

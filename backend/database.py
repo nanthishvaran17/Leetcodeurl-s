@@ -98,7 +98,7 @@ if "postgresql" in db_url or "postgres" in db_url:
 else:
     engine_kwargs.update({
         "poolclass": NullPool,
-        "connect_args": {"check_same_thread": False, "timeout": 30}
+        "connect_args": {"check_same_thread": False, "timeout": 60}
     })
 
 try:
@@ -116,7 +116,7 @@ except Exception as _engine_exc:
         db_url,
         echo=False,
         poolclass=NullPool,
-        connect_args={"check_same_thread": False, "timeout": 30}
+        connect_args={"check_same_thread": False, "timeout": 60}
     )
     try:
         from backend.logger import logger as _log
@@ -131,7 +131,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     if "sqlite" in db_url:
         try:
             cursor = dbapi_connection.cursor()
-            cursor.execute("PRAGMA busy_timeout=30000")  # 30s busy timeout for concurrent import resilience
+            cursor.execute("PRAGMA busy_timeout=60000")  # 60s busy timeout for concurrent import resilience
             try:
                 cursor.execute("PRAGMA journal_mode=WAL")
             except Exception:

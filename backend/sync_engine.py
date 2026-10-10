@@ -342,6 +342,36 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
             st_stats.fetch_duration = stats_dict.get("fetch_duration")
             if contest_status == "ok":
                 st_stats.contest_last_verified_at = now_utc
+            # Always sync language + topic stats even on unchanged profile (they may be new)
+            from backend.models import LeetCodeActivity, LeetCodeLanguageStats, LeetCodeTopicStats
+            _raw_langs = stats_dict.get("languages") or []
+            for _l in _raw_langs:
+                _ln = _l.get("language_name") or _l.get("language")
+                if _ln:
+                    _el = db.query(LeetCodeLanguageStats).filter(
+                        LeetCodeLanguageStats.student_id == student.id,
+                        LeetCodeLanguageStats.language_name == _ln
+                    ).first()
+                    if not _el:
+                        _el = LeetCodeLanguageStats(student_id=student.id, language_name=_ln)
+                        db.add(_el)
+                    _el.problems_solved = _l.get("problems_solved", 0)
+                    _el.fetched_at = now_utc
+            _raw_skills = stats_dict.get("skills") or stats_dict.get("dsa_topics") or []
+            for _s in _raw_skills:
+                _tn = _s.get("topic_name") or _s.get("topic")
+                if _tn:
+                    _et = db.query(LeetCodeTopicStats).filter(
+                        LeetCodeTopicStats.student_id == student.id,
+                        LeetCodeTopicStats.topic_name == _tn
+                    ).first()
+                    if not _et:
+                        _et = LeetCodeTopicStats(student_id=student.id, topic_name=_tn)
+                        db.add(_et)
+                    _et.topic_slug = _s.get("topic_slug", "")
+                    _et.problems_solved = _s.get("problems_solved", 0) or _s.get("solved", 0)
+                    _et.topic_tier = _s.get("topic_tier") or _s.get("tier", "intermediate")
+                    _et.fetched_at = now_utc
             if commit:
                 db.commit()
                 db.refresh(student)
@@ -417,7 +447,7 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
                     pass
 
         # Sync LeetCodeActivity model ALWAYS on profile success (streak, active days, calendar)
-        from backend.models import LeetCodeActivity, LeetCodeContestRatingHistory
+        from backend.models import LeetCodeActivity, LeetCodeContestRatingHistory, LeetCodeLanguageStats, LeetCodeTopicStats
         lc_act = db.query(LeetCodeActivity).filter(LeetCodeActivity.student_id == student.id).first()
         if not lc_act:
             lc_act = LeetCodeActivity(student_id=student.id)
@@ -435,6 +465,38 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         if sub_cal_json:
             lc_act.submission_calendar_json = sub_cal_json
         lc_act.fetched_at = now_utc
+
+        # Sync LeetCodeLanguageStats
+        raw_langs = stats_dict.get("languages") or []
+        for l_item in raw_langs:
+            l_name = l_item.get("language_name") or l_item.get("language")
+            if l_name:
+                existing_l = db.query(LeetCodeLanguageStats).filter(
+                    LeetCodeLanguageStats.student_id == student.id,
+                    LeetCodeLanguageStats.language_name == l_name
+                ).first()
+                if not existing_l:
+                    existing_l = LeetCodeLanguageStats(student_id=student.id, language_name=l_name)
+                    db.add(existing_l)
+                existing_l.problems_solved = l_item.get("problems_solved", 0)
+                existing_l.fetched_at = now_utc
+
+        # Sync LeetCodeTopicStats (DSA Skills)
+        raw_skills = stats_dict.get("skills") or stats_dict.get("dsa_topics") or []
+        for s_item in raw_skills:
+            t_name = s_item.get("topic_name") or s_item.get("topic")
+            if t_name:
+                existing_t = db.query(LeetCodeTopicStats).filter(
+                    LeetCodeTopicStats.student_id == student.id,
+                    LeetCodeTopicStats.topic_name == t_name
+                ).first()
+                if not existing_t:
+                    existing_t = LeetCodeTopicStats(student_id=student.id, topic_name=t_name)
+                    db.add(existing_t)
+                existing_t.topic_slug = s_item.get("topic_slug", "")
+                existing_t.problems_solved = s_item.get("problems_solved", 0) or s_item.get("solved", 0)
+                existing_t.topic_tier = s_item.get("topic_tier") or s_item.get("tier", "intermediate")
+                existing_t.fetched_at = now_utc
 
         # Sync LeetCodeContestRatingHistory ONLY if contest call succeeded (§5)
         if contest_status != "failed":
@@ -466,9 +528,29 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         has_prev_verified = bool(st_stats.last_successful_sync and st_stats.total_solved is not None)
         raw_status = stats_dict.get("status", "")
         err_detail = stats_dict.get("error") or stats_dict.get("error_message") or "Sync failed"
+        is_404 = (
+            raw_status in ("INVALID_USERNAME", "PROFILE NOT FOUND")
+            or stats_dict.get("sync_status") in ("invalid_username", "invalid_profile")
+            or "not found (404)" in str(err_detail).lower()
+            or "matchedUser is null" in str(err_detail).lower()
+        )
 
-        if has_prev_verified:
-            # Stale record: Preserve previous verified numbers!
+        if is_404:
+            # Confirmed 404: profile deleted/renamed — ALWAYS wipe stats, never preserve fake data
+            st_stats.status = "INVALID_USERNAME"
+            st_stats.sync_status = "invalid_profile"
+            st_stats.validation_status = "invalid_profile"
+            st_stats.total_solved = None
+            st_stats.easy_solved = None
+            st_stats.medium_solved = None
+            st_stats.hard_solved = None
+            st_stats.contest_rating = None
+            st_stats.contest_global_ranking = None
+            st_stats.public_profile_ranking = None
+            st_stats.error_message = err_detail
+            st_stats.error_code = "PROFILE_NOT_FOUND"
+        elif has_prev_verified:
+            # Network/timeout failure only: Preserve previous verified numbers!
             st_stats.status = "STALE"
             st_stats.sync_status = "stale"
             st_stats.validation_status = "stale"
@@ -485,15 +567,16 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
             st_stats.contest_rating = None
             st_stats.error_message = err_detail
 
-        # Determine error_code from status
-        if "timeout" in str(err_detail).lower():
-            st_stats.error_code = "NETWORK_TIMEOUT"
-        elif raw_status == "PROFILE NOT FOUND" or "404" in str(err_detail):
-            st_stats.error_code = "PROFILE_NOT_FOUND"
-        elif raw_status in ("MISSING LINK", "INVALID LINK"):
-            st_stats.error_code = raw_status.replace(" ", "_")
-        else:
-            st_stats.error_code = "FETCH_FAILED"
+        # Determine error_code from status (only if not already set above for 404)
+        if not is_404:
+            if "timeout" in str(err_detail).lower():
+                st_stats.error_code = "NETWORK_TIMEOUT"
+            elif raw_status == "PROFILE NOT FOUND" or "404" in str(err_detail):
+                st_stats.error_code = "PROFILE_NOT_FOUND"
+            elif raw_status in ("MISSING LINK", "INVALID LINK"):
+                st_stats.error_code = raw_status.replace(" ", "_")
+            else:
+                st_stats.error_code = "FETCH_FAILED"
 
         st_stats.retry_count = (st_stats.retry_count or 0) + 1
         st_stats.fetch_duration = stats_dict.get("fetch_duration")
@@ -509,9 +592,9 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
 
     return student
 
-async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> Dict[str, Any]:
+async def sync_single_student_by_id(student_id: int, timeout: float = 10.0) -> Dict[str, Any]:
     """
-    Fetches LeetCode stats for a single student by ID with 30-second timeout constraint.
+    Fetches LeetCode stats for a single student by ID with optimal 10-second timeout constraint.
     If timeout occurs, preserves last known good data and returns timeout status.
     """
     db = SessionLocal()
@@ -521,11 +604,11 @@ async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> D
             return {"status": "failed", "error": f"Student ID {student_id} not found."}
 
         url_or_username = str(student.leetcode_url or student.username or "")
-        logger.info(f"[INFO] Syncing single student (Timeout <= 30s): {student.reg_no} ({student.name}) - {url_or_username}")
+        logger.info(f"[INFO] Syncing single student (Timeout <= 10s): {student.reg_no} ({student.name}) - {url_or_username}")
 
         try:
             stats_dict = await asyncio.wait_for(
-                fetch_leetcode_profile(url_or_username, force_refresh=True, timeout=12.0),
+                fetch_leetcode_profile(url_or_username, force_refresh=True, timeout=10.0),
                 timeout=timeout
             )
             updated_student = sync_single_student_db(int(cast(Any, student).id), stats_dict, db)
@@ -535,12 +618,20 @@ async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> D
             except Exception:
                 pass
 
-            try:
-                update_all_rankings_and_badges(db)
-                from backend.assets.sync_firestore import sync_database_to_firestore
-                sync_database_to_firestore()
-            except Exception as r_err:
-                logger.warning(f"Rankings update / Firestore sync note: {r_err}")
+            # Offload heavy institutional rank recalculation & Firestore sync to background
+            # thread so single-student refresh HTTP response completes immediately!
+            def _async_post_sync():
+                bg_db = SessionLocal()
+                try:
+                    update_all_rankings_and_badges(bg_db)
+                    from backend.assets.sync_firestore import sync_database_to_firestore
+                    sync_database_to_firestore()
+                except Exception as r_err:
+                    logger.warning(f"Background Rankings/Firestore sync note: {r_err}")
+                finally:
+                    bg_db.close()
+
+            asyncio.create_task(asyncio.to_thread(_async_post_sync))
 
             # Broadcast live update over websocket if available
             try:

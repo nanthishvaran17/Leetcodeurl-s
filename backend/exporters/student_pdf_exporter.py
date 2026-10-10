@@ -18,10 +18,10 @@ def _create_student_doc(buffer: io.BytesIO, doc_title: str, subject: str) -> Bas
     left_margin = 36.0
     right_margin = 36.0
     content_width = p_width - left_margin - right_margin
-    bottom_margin = 34.0
+    bottom_margin = 54.0  # Safe margin above footer separator line at y=42.0
     
-    top_margin_first = 22.0
-    top_margin_later = 46.0
+    top_margin_first = 34.0  # Safe margin below inner top border line
+    top_margin_later = 50.0  # Safe margin below header line on Page 2+
 
     frame_first = Frame(
         left_margin, bottom_margin,
@@ -198,7 +198,7 @@ def _get_common_styles():
         'DocTitle',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=15,
+        fontSize=14.5,
         leading=18,
         textColor=colors.HexColor('#1B365D'),
         alignment=1,
@@ -209,8 +209,8 @@ def _get_common_styles():
         'DocSubTitle',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=10.5,
-        leading=13,
+        fontSize=11,
+        leading=14,
         textColor=colors.HexColor('#2E5B88'),
         alignment=1,
         spaceAfter=1
@@ -335,28 +335,62 @@ def _get_common_styles():
 
 
 def _add_institutional_header(story: list, title_text: str, subtitle_text: str, tag_text: str, styles: dict):
-    # Search for official emblem logo in public or assets
     base_dir = os.path.dirname(os.path.dirname(__file__))
-    logo_path = os.path.join(base_dir, "frontend", "public", "nandha_emblem.png")
-    if not os.path.exists(logo_path):
-        logo_path = os.path.join(base_dir, "assets", "nandha_emblem.png")
-    if not os.path.exists(logo_path):
-        logo_path = os.path.join(base_dir, "static", "nec_25_logo.png")
 
-    if os.path.exists(logo_path):
+    # 1. Left Emblem Logo
+    emblem_path = os.path.join(base_dir, "frontend", "public", "nandha_emblem.png")
+    if not os.path.exists(emblem_path):
+        emblem_path = os.path.join(base_dir, "assets", "nandha_emblem.png")
+    if not os.path.exists(emblem_path):
+        emblem_path = os.path.join(base_dir, "static", "nandha_emblem.png")
+
+    # 2. Right 25 Years Jubilee Logo
+    logo25_path = os.path.join(base_dir, "frontend", "public", "nec_25_logo.png")
+    if not os.path.exists(logo25_path):
+        logo25_path = os.path.join(base_dir, "static", "nec_25_logo.png")
+    if not os.path.exists(logo25_path):
+        logo25_path = os.path.join(base_dir, "assets", "nec_25_logo.png")
+
+    img_left = None
+    if os.path.exists(emblem_path):
         try:
-            img_obj = Image(logo_path, width=1.3*inch, height=0.55*inch)
-            img_obj.hAlign = 'CENTER'
-            story.append(img_obj)
-            story.append(Spacer(1, 2))
+            img_left = Image(emblem_path, width=1.35*inch, height=0.60*inch)
+            img_left.hAlign = 'LEFT'
         except Exception:
-            pass
+            img_left = None
 
-    story.append(Paragraph(title_text, styles['title']))
-    story.append(Spacer(1, 2))
-    story.append(Paragraph(subtitle_text, styles['subtitle']))
-    story.append(Spacer(1, 1))
-    story.append(Paragraph(tag_text, styles['tag']))
+    img_right = None
+    if os.path.exists(logo25_path):
+        try:
+            img_right = Image(logo25_path, width=1.35*inch, height=0.60*inch)
+            img_right.hAlign = 'RIGHT'
+        except Exception:
+            img_right = None
+
+    text_cells = [
+        Paragraph(title_text, styles['title']),
+        Spacer(1, 2),
+        Paragraph(subtitle_text, styles['subtitle'])
+    ]
+    if tag_text:
+        text_cells.extend([Spacer(1, 1), Paragraph(tag_text, styles['tag'])])
+
+    header_table_data = [
+        [img_left if img_left else "", text_cells, img_right if img_right else ""]
+    ]
+    t_header = Table(header_table_data, colWidths=[1.35*inch, 4.567*inch, 1.35*inch])
+    t_header.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    story.append(t_header)
+    story.append(Spacer(1, 10))
 
 
 def _build_student_identity_table(s: dict, styles: dict) -> Table:
@@ -372,6 +406,10 @@ def _build_student_identity_table(s: dict, styles: dict) -> Table:
     tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
     gen_date = s.get("generatedAtIST") or datetime.datetime.now(tz_ist).strftime("%d %b %Y, %I:%M %p IST")
 
+    raw_langs = s.get("languages", [])
+    top_lang = raw_langs[0].get("language") if (raw_langs and isinstance(raw_langs, list) and len(raw_langs) > 0 and raw_langs[0].get("language")) else None
+    primary_stack_str = f"{top_lang} / Data Structures" if top_lang else "DSA & Problem Solving"
+
     profile_table_data = [
         [
             Paragraph("<b>Student Name</b>", styles['td_left']), Paragraph(s_name, styles['td_left']),
@@ -386,7 +424,7 @@ def _build_student_identity_table(s: dict, styles: dict) -> Table:
             Paragraph("<b>Audit Status</b>", styles['td_left']), Paragraph("<font color='#059669'><b>VERIFIED & ON RECORD</b></font>", styles['td_left'])
         ],
         [
-            Paragraph("<b>Primary Stack</b>", styles['td_left']), Paragraph("Java / Data Structures", styles['td_left']),
+            Paragraph("<b>Primary Stack</b>", styles['td_left']), Paragraph(primary_stack_str, styles['td_left']),
             Paragraph("<b>Report Date</b>", styles['td_left']), Paragraph(gen_date, styles['td_left'])
         ]
     ]
@@ -427,7 +465,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
         subject="Individual Student Detailed Analytics Report"
     )
     styles = _get_common_styles()
-    story = [NextPageTemplate('LaterPages')]
+    story: list = [NextPageTemplate('LaterPages')]
 
     # ----------------------------------------------------
     # PAGE 1: HEADER, STUDENT IDENTITY & EXECUTIVE KPI DASHBOARD
@@ -436,7 +474,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
         story,
         "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)",
         "INDIVIDUAL STUDENT DETAILED ANALYTICS REPORT",
-        "Student Performance • Competitive Programming • DSA Intelligence • Placement Benchmark",
+        "",
         styles
     )
 
@@ -592,13 +630,28 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     story.append(Paragraph("2. CONTEST INTELLIGENCE & HISTORY", styles['section_hdr']))
     story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#1B365D"), spaceAfter=8))
 
-    contest_history = s.get("contest_history", [])
-    if not contest_history:
+    raw_c_hist = s.get("contest_history", [])
+    if not raw_c_hist:
         contest_history = [
             {"contest_name": "Weekly Contest 470", "contest_date": "2026-09-07", "rank": 1050, "solved": 3, "score": "3 / 4", "rating_before": "1,730.9", "rating_after": "1,746.3", "participation_type": "OFFICIAL"},
             {"contest_name": "Biweekly Contest 138", "contest_date": "2026-08-31", "rank": 1420, "solved": 3, "score": "3 / 4", "rating_before": "1,712.5", "rating_after": "1,730.9", "participation_type": "OFFICIAL"},
             {"contest_name": "Weekly Contest 469", "contest_date": "2026-08-24", "rank": 980, "solved": 4, "score": "4 / 4", "rating_before": "1,680.0", "rating_after": "1,712.5", "participation_type": "OFFICIAL"}
         ]
+    else:
+        # Process chronologically (oldest first) to compute rating_before chain
+        chrono = list(reversed(raw_c_hist))
+        prev_after = None
+        norm_chrono = []
+        for item in chrono:
+            c = dict(item)
+            r_before = c.get("rating_before")
+            r_after = c.get("rating_after")
+            if (r_before in [None, "—", "-", "", "N/A"]) and (prev_after not in [None, "—", "-", "", "N/A"]):
+                c["rating_before"] = str(prev_after)
+            if r_after not in [None, "—", "-", "", "N/A"]:
+                prev_after = r_after
+            norm_chrono.append(c)
+        contest_history = list(reversed(norm_chrono))
 
     c_table_data = [
         [
@@ -659,14 +712,8 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     story.append(Paragraph("3. PROGRAMMING LANGUAGE & DSA TOPIC INTELLIGENCE", styles['section_hdr']))
     story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#1B365D"), spaceAfter=8))
 
-    languages = s.get("languages", [])
-    if not languages:
-        languages = [
-            {"language": "Java", "solved": int(tot_solved * 0.91), "pct": 91.0},
-            {"language": "MySQL", "solved": int(tot_solved * 0.04), "pct": 4.0},
-            {"language": "C++", "solved": int(tot_solved * 0.03), "pct": 3.0},
-            {"language": "Python", "solved": max(1, int(tot_solved * 0.02)), "pct": 2.0}
-        ]
+    raw_languages = s.get("languages", [])
+    languages = [l for l in raw_languages if l.get('solved', 0) > 0]
 
     lang_table_data = [
         [
@@ -676,12 +723,20 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
             Paragraph("Specialization Tier", styles['th_left'])
         ]
     ]
-    for lang in languages:
+    if languages:
+        for lang in languages:
+            lang_table_data.append([
+                Paragraph(f"<b>{lang.get('language')}</b>", styles['td_left']),
+                Paragraph(f"{lang.get('solved'):,}", styles['td_bold']),
+                Paragraph(f"{lang.get('pct')}%", styles['td']),
+                Paragraph("Primary Core Stack" if lang.get('pct') > 50 else "Secondary / Supporting", styles['td_left'])
+            ])
+    else:
         lang_table_data.append([
-            Paragraph(f"<b>{lang.get('language')}</b>", styles['td_left']),
-            Paragraph(f"{lang.get('solved'):,}", styles['td_bold']),
-            Paragraph(f"{lang.get('pct')}%", styles['td']),
-            Paragraph("Primary Core Stack" if lang.get('pct') > 50 else "Secondary / Supporting", styles['td_left'])
+            Paragraph("<i>No language data recorded</i>", styles['td_left']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td_left'])
         ])
 
     t_lang = Table(lang_table_data, colWidths=[2.2*inch, 1.5*inch, 1.5*inch, 2.1*inch])
@@ -696,17 +751,8 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     story.append(t_lang)
     story.append(Spacer(1, 14))
 
-    dsa_topics = s.get("dsa_topics", [])
-    if not dsa_topics:
-        dsa_topics = [
-            {"topic": "Arrays & Hash Table", "tier": "Fundamental", "solved": int(tot_solved * 0.28), "proficiency": "Mastered"},
-            {"topic": "String Manipulation", "tier": "Fundamental", "solved": int(tot_solved * 0.18), "proficiency": "Mastered"},
-            {"topic": "Two Pointers & Sliding Window", "tier": "Intermediate", "solved": int(tot_solved * 0.14), "proficiency": "Proficient"},
-            {"topic": "Binary Search", "tier": "Intermediate", "solved": int(tot_solved * 0.10), "proficiency": "Proficient"},
-            {"topic": "Trees & Binary Search Trees", "tier": "Advanced", "solved": int(tot_solved * 0.09), "proficiency": "Proficient"},
-            {"topic": "Dynamic Programming", "tier": "Advanced", "solved": int(tot_solved * 0.08), "proficiency": "Developing"},
-            {"topic": "Graphs & BFS/DFS", "tier": "Advanced", "solved": int(tot_solved * 0.07), "proficiency": "Developing"}
-        ]
+    raw_dsa_topics = s.get("dsa_topics", [])
+    dsa_topics = [d for d in raw_dsa_topics if d.get('solved', 0) > 0]
 
     dsa_table_data = [
         [
@@ -716,13 +762,21 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
             Paragraph("Proficiency Level", styles['th_left'])
         ]
     ]
-    for dsa in dsa_topics:
-        prof_color = "#059669" if dsa.get('proficiency') in ("Mastered", "Proficient") else "#D97706"
+    if dsa_topics:
+        for dsa in dsa_topics:
+            prof_color = "#059669" if dsa.get('proficiency') in ("Mastered", "Proficient") else "#D97706"
+            dsa_table_data.append([
+                Paragraph(f"<b>{dsa.get('topic')}</b>", styles['td_left']),
+                Paragraph(dsa.get('tier', 'Intermediate'), styles['td']),
+                Paragraph(f"{dsa.get('solved'):,}", styles['td_bold']),
+                Paragraph(f"<font color='{prof_color}'><b>{dsa.get('proficiency')}</b></font>", styles['td_left'])
+            ])
+    else:
         dsa_table_data.append([
-            Paragraph(f"<b>{dsa.get('topic')}</b>", styles['td_left']),
-            Paragraph(dsa.get('tier', 'Intermediate'), styles['td']),
-            Paragraph(f"{dsa.get('solved'):,}", styles['td_bold']),
-            Paragraph(f"<font color='{prof_color}'><b>{dsa.get('proficiency')}</b></font>", styles['td_left'])
+            Paragraph("<i>No DSA topic data recorded</i>", styles['td_left']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td_left'])
         ])
 
     t_dsa = Table(dsa_table_data, colWidths=[2.5*inch, 1.3*inch, 1.4*inch, 2.1*inch])
@@ -810,13 +864,13 @@ def generate_student_summary_pdf(dataset: dict) -> bytes:
         subject="Individual Student Performance Summary"
     )
     styles = _get_common_styles()
-    story = [NextPageTemplate('LaterPages')]
+    story: list = [NextPageTemplate('LaterPages')]
 
     _add_institutional_header(
         story,
         "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)",
         "INDIVIDUAL STUDENT PERFORMANCE SUMMARY",
-        "Concise Executive Summary • Key Performance Indicators • Placement Benchmark",
+        "",
         styles
     )
 
@@ -940,26 +994,40 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
         subject="Individual Student Contest Intelligence Matrix"
     )
     styles = _get_common_styles()
-    story = [NextPageTemplate('LaterPages')]
+    story: list = [NextPageTemplate('LaterPages')]
 
     _add_institutional_header(
         story,
         "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)",
         "INDIVIDUAL STUDENT CONTEST INTELLIGENCE MATRIX",
-        "Weekly Contest Performance Matrix • Rating Progression • Global Ranking Trajectory",
+        "",
         styles
     )
 
     story.append(_build_student_identity_table(s, styles))
     story.append(Spacer(1, 6))
 
-    contest_history = s.get("contest_history", [])
-    if not contest_history:
+    raw_c_hist_p4 = s.get("contest_history", [])
+    if not raw_c_hist_p4:
         contest_history = [
             {"contest_name": "Weekly Contest 470", "contest_date": "2026-09-07", "rank": 1050, "solved": 3, "score": "3 / 4", "rating_before": "1,730.9", "rating_after": "1,746.3", "participation_type": "OFFICIAL"},
             {"contest_name": "Biweekly Contest 138", "contest_date": "2026-08-31", "rank": 1420, "solved": 3, "score": "3 / 4", "rating_before": "1,712.5", "rating_after": "1,730.9", "participation_type": "OFFICIAL"},
             {"contest_name": "Weekly Contest 469", "contest_date": "2026-08-24", "rank": 980, "solved": 4, "score": "4 / 4", "rating_before": "1,680.0", "rating_after": "1,712.5", "participation_type": "OFFICIAL"}
         ]
+    else:
+        chrono_p4 = list(reversed(raw_c_hist_p4))
+        prev_after_p4 = None
+        norm_chrono_p4 = []
+        for item in chrono_p4:
+            c = dict(item)
+            r_before = c.get("rating_before")
+            r_after = c.get("rating_after")
+            if (r_before in [None, "—", "-", "", "N/A"]) and (prev_after_p4 not in [None, "—", "-", "", "N/A"]):
+                c["rating_before"] = str(prev_after_p4)
+            if r_after not in [None, "—", "-", "", "N/A"]:
+                prev_after_p4 = r_after
+            norm_chrono_p4.append(c)
+        contest_history = list(reversed(norm_chrono_p4))
 
     rating_val = str(s.get("contest_rating") or s.get("rating") or "—")
     contests_cnt = str(len(contest_history))
