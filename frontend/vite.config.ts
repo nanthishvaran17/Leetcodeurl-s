@@ -105,7 +105,22 @@ export default defineConfig({
           if (id.includes('node_modules/@capacitor')) {
             return 'vendor-capacitor';
           }
+          if (id.includes('node_modules/exceljs')) {
+            return 'vendor-exceljs';
+          }
+          if (id.includes('node_modules/react-markdown') || id.includes('node_modules/remark-') || id.includes('node_modules/micromark') || id.includes('node_modules/unist-') || id.includes('node_modules/mdast-')) {
+            return 'vendor-markdown';
+          }
+          if (id.includes('node_modules/react-window')) {
+            return 'vendor-window';
+          }
+          if (id.includes('node_modules/@simplewebauthn')) {
+            return 'vendor-authn';
+          }
           // ── App-level splits ───────────────────────────────────────────────
+          if (id.includes('/src/components/')) {
+            return 'app-components';
+          }
           // Context providers and shared custom hooks (bundled together to avoid circular chunking)
           if (id.includes('/src/context/') || id.includes('/src/hooks/')) {
             return 'app-state';

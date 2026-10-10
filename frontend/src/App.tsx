@@ -5,7 +5,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Sparkles, LogOut } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
-import { StudentData } from './components/LeaderboardTable';
+import type { StudentData } from './components/LeaderboardTable';
 import api, { logActivity } from './services/api';
 import { getCachedSummary, saveCachedSummary } from './utils/rosterCache';
 import { ErrorBoundary } from './ErrorBoundary';
@@ -19,9 +19,9 @@ import { StudentProfileSkeleton } from './components/StudentProfileSkeleton';
 import { StudentShareCardModal } from './components/StudentShareCardModal';
 import { MobileFilterDrawer } from './components/MobileFilterDrawer';
 
-import { LandingPage } from './pages/LandingPage';
+const LandingPage = safeLazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
 import { LoginPage } from './pages/LoginPage';
-import { AdminLoginPage } from './pages/AdminLoginPage';
+const AdminLoginPage = safeLazy(() => import('./pages/AdminLoginPage').then(m => ({ default: m.AdminLoginPage })));
 const CommandPalette = safeLazy(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
 const KeyboardShortcutsModal = safeLazy(() => import('./components/KeyboardShortcutsModal').then(m => ({ default: m.KeyboardShortcutsModal })));
 
@@ -66,7 +66,7 @@ const ReportsPage = safeLazy(() => import('./pages/ReportsPage').then(m => ({ de
 const DepartmentDashboard = safeLazy(() => import('./pages/DepartmentDashboard').then(m => ({ default: m.DepartmentDashboard })));
 const PublicLeaderboardPage = safeLazy(() => import('./pages/PublicLeaderboardPage').then(m => ({ default: m.PublicLeaderboardPage })));
 const AccountSettingsPage = safeLazy(() => import('./pages/AccountSettingsPage').then(m => ({ default: m.AccountSettingsPage })));
-import { SettingsPage } from './pages/SettingsPage';
+const SettingsPage = safeLazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const AuditLogPage = safeLazy(() => import('./pages/AuditLogPage').then(m => ({ default: m.AuditLogPage })));
 const WeeklyContestPage = safeLazy(() => import('./pages/WeeklyContestPage').then(m => ({ default: m.WeeklyContestPage })));
 const StudentDashboardView = safeLazy(() => import('./pages/StudentDashboardView').then(m => ({ default: m.StudentDashboardView })));

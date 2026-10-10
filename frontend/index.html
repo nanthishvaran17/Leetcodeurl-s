@@ -68,25 +68,27 @@
   <meta name="twitter:description" content="LeetCode Intelligence Platform — Nandha Engineering College." />
   <meta name="twitter:image" content="/pwa-512x512.png" />
 
-  <!-- CRITICAL INLINE CSS: Eliminates blank frame before React hydrates.
-       Sets background color immediately to clean white. -->
+  <!-- CRITICAL INLINE CSS: Instant zero-delay paint before React hydrates. -->
   <style>
     *,*::before,*::after{box-sizing:border-box}
-    html,body,#root{margin:0;padding:0;width:100%;min-height:100vh;overflow-x:hidden}
+    html,body,#root{margin:0;padding:0;width:100%;min-height:100vh;overflow-x:hidden;background-color:#F5F9FC}
     #root{display:flex;flex-direction:column}
+    .mobile-pre-branding{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 16px 8px;text-align:center}
+    .mobile-pre-logo{width:70px;height:70px;border-radius:50%;object-fit:cover;margin-bottom:8px}
+    .mobile-pre-title{font-family:Inter,system-ui,sans-serif;font-weight:800;font-size:22px;color:#002B49;margin:4px 0 2px;letter-spacing:-0.02em}
+    .mobile-pre-sub{font-family:Inter,system-ui,sans-serif;font-size:12px;color:#475569;margin:0}
   </style>
 </head>
 
-<body
-  class="bg-white text-slate-900 dark:bg-navy-950 dark:text-slate-100 antialiased font-sans">
+<body class="bg-white text-slate-900 dark:bg-navy-950 dark:text-slate-100 antialiased font-sans">
   <div id="root">
-    <div style="min-height:100vh; display:flex; flex-direction:column;" class="bg-white dark:bg-navy-950">
-      <header style="height:64px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between; padding:0 24px;" class="dark:border-navy-800">
-        <div style="display:flex; align-items:center; gap:12px;">
-          <img src="/nec_25_logo.webp" alt="Nandha Intelligence Logo" width="36" height="36" style="width:36px; height:36px; border-radius:50%; object-fit:cover;" fetchpriority="high">
-          <span style="font-family:Inter,system-ui,sans-serif; font-weight:800; font-size:17px; letter-spacing:-0.02em;" class="text-slate-900 dark:text-white">Nandha Intelligence</span>
-        </div>
-      </header>
+    <div style="min-height:100vh; display:flex; flex-direction:column; align-items:center; background-color:#F5F9FC;" class="bg-slate-50 dark:bg-navy-950">
+      <div class="mobile-pre-branding">
+        <img src="/nec_25_logo.webp" alt="25 NEC Silver Jubilee" class="mobile-pre-logo" width="70" height="70" fetchpriority="high">
+        <span style="font-family:Inter,sans-serif; font-size:10px; font-weight:800; color:#006A94; letter-spacing:0.08em;">INSTITUTIONAL PORTAL</span>
+        <h1 class="mobile-pre-title">Nandha Intelligence</h1>
+        <p class="mobile-pre-sub">Nandha Engineering College (Autonomous) · Erode</p>
+      </div>
     </div>
   </div>
   <script type="module" src="/src/main.tsx"></script>
