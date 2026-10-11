@@ -11,7 +11,7 @@ import {
  Sliders, User, CheckCircle, XCircle, ExternalLink, Calendar, Info,
  UserPlus, UserMinus, Shuffle, Printer, Share2, TrendingDown, Minus
 } from 'lucide-react';
-import { Mail, UserX, GraduationCap } from 'lucide-react';
+import { Mail, UserX, GraduationCap, Trophy } from 'lucide-react';
 import { StaffDetailDrawer } from '../components/admin/StaffDetailDrawer';
 import { DepartmentDetailDrawer } from '../components/admin/DepartmentDetailDrawer';
 import { GlobalFilter } from '../components/GlobalFilter';
@@ -25,6 +25,7 @@ import {
 import { simulateWhatIfScenario, askAIDepartmentQuery } from '../services/intelligenceService';
 import { CustomDropdown } from '../components/CustomDropdown';
 import { AnalyticsDashboard } from '../components/analytics/AnalyticsDashboard';
+import { PerformanceChart } from '../components/PerformanceChart';
 import { useKeyboardContext } from '../context/KeyboardContext';
 import { useDebounce } from '../hooks/useDebounce';
 import { useAuth } from '../context/AuthContext';
@@ -1601,14 +1602,14 @@ export const HODCommandCenter: React.FC = () => {
  </div>
 
  {/* 2. EXECUTIVE MULTI-SCOPE FILTER BAR */}
- <div className="p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-navy-950/90 backdrop-blur-md border border-slate-200/80 dark:border-navy-800 shadow-sm space-y-3">
-   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-navy-900">
-     <div className="flex items-center gap-2">
-       <Filter className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-       <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+ <div className="p-3 sm:p-4 rounded-2xl bg-white/90 dark:bg-navy-950/90 backdrop-blur-md border border-slate-200/80 dark:border-navy-800 shadow-sm space-y-2.5">
+   <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-navy-900">
+     <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+       <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+       <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white truncate">
          Active Oversight Scope
        </span>
-       <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 font-bold">
+       <span className="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 font-bold truncate">
          {scopeDeptCode} • {scopeStaffName}
        </span>
      </div>
@@ -1621,7 +1622,7 @@ export const HODCommandCenter: React.FC = () => {
            setSelectedSection('ALL');
            setSelectedStatus('ALL');
          }}
-         className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 transition cursor-pointer self-start sm:self-auto"
+         className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 transition cursor-pointer shrink-0"
        >
          <RotateCcw size={12} />
          <span>Reset All Filters</span>
@@ -1629,80 +1630,108 @@ export const HODCommandCenter: React.FC = () => {
      )}
    </div>
 
-   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+   <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-2.5">
      {/* 1. Department Scope */}
-     <div className="space-y-1">
-       <label className="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+     <div className="space-y-1 min-w-0">
+       <label className="block text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
          Department Scope
        </label>
        <GlobalFilter
+         compact
          value={selectedDept}
          onChange={val => {
            setSelectedDept(val);
            setSelectedStaff('ALL');
          }}
-         dropdownWidth="min-w-[280px]"
+         dropdownWidth="min-w-[260px] sm:min-w-[280px]"
          searchPlaceholder="Search department..."
          options={deptOptions}
-         icon={<Building2 className="w-4 h-4 text-brand-500" />}
+         icon={<Building2 className="w-3.5 h-3.5 text-brand-500" />}
        />
      </div>
 
      {/* 2. Staff Mentor Scope */}
-     <div className="space-y-1">
-       <label className="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+     <div className="space-y-1 min-w-0">
+       <label className="block text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
          Faculty Mentor
        </label>
        <GlobalFilter
+         compact
          value={selectedStaff}
          onChange={val => setSelectedStaff(val)}
-         dropdownWidth="min-w-[280px]"
+         dropdownWidth="min-w-[260px] sm:min-w-[280px]"
          searchPlaceholder="Search staff mentor..."
          options={staffOptions}
-         icon={<User className="w-4 h-4 text-indigo-500" />}
+         icon={<User className="w-3.5 h-3.5 text-indigo-500" />}
        />
      </div>
 
      {/* 3. Academic Year */}
-     <div className="space-y-1">
-       <label className="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+     <div className="space-y-1 min-w-0">
+       <label className="block text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
          Cohort Year
        </label>
        <GlobalFilter
+         compact
          value={selectedYear}
          onChange={val => setSelectedYear(val)}
-         dropdownWidth="min-w-[220px]"
+         dropdownWidth="min-w-[200px] sm:min-w-[220px]"
          options={yearOptions}
-         icon={<Calendar className="w-4 h-4 text-amber-500" />}
+         icon={<Calendar className="w-3.5 h-3.5 text-amber-500" />}
        />
      </div>
 
      {/* 4. Section */}
-     <div className="space-y-1">
-       <label className="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+     <div className="space-y-1 min-w-0">
+       <label className="block text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
          Section / Cohort
        </label>
        <GlobalFilter
+         compact
          value={selectedSection}
          onChange={val => setSelectedSection(val)}
-         dropdownWidth="min-w-[220px]"
+         dropdownWidth="min-w-[200px] sm:min-w-[220px]"
          options={sectionOptions}
-         icon={<Layers className="w-4 h-4 text-purple-500" />}
+         icon={<Layers className="w-3.5 h-3.5 text-purple-500" />}
        />
      </div>
 
      {/* 5. Solver Status */}
-     <div className="space-y-1">
-       <label className="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+     <div className="space-y-1 min-w-0">
+       <label className="block text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
          Solver Status
        </label>
        <GlobalFilter
+         compact
          value={selectedStatus}
          onChange={val => setSelectedStatus(val)}
-         dropdownWidth="min-w-[220px]"
+         dropdownWidth="min-w-[200px] sm:min-w-[220px]"
          options={statusOptions}
-         icon={<Activity className="w-4 h-4 text-emerald-500" />}
+         icon={<Activity className="w-3.5 h-3.5 text-emerald-500" />}
        />
+     </div>
+
+     {/* 6. Mobile Quick Reset Filter Button (Pairs with Solver Status on mobile) */}
+     <div className="space-y-1 min-w-0 flex flex-col justify-end lg:hidden">
+       <label className="block text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate invisible select-none">
+         Reset
+       </label>
+       <button
+         type="button"
+         onClick={() => {
+           setSelectedDept('ALL');
+           setSelectedStaff('ALL');
+           setSelectedYear('ALL');
+           setSelectedSection('ALL');
+           setSelectedStatus('ALL');
+         }}
+         disabled={selectedDept === 'ALL' && selectedStaff === 'ALL' && selectedYear === 'ALL' && selectedSection === 'ALL' && selectedStatus === 'ALL'}
+         className="h-9 min-h-[36px] px-2.5 w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-navy-900/80 dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed text-[11px] font-black transition-all cursor-pointer shadow-xs active:scale-95"
+         title="Reset all active filters to default"
+       >
+         <RotateCcw size={11} className="text-rose-500 shrink-0" />
+         <span className="truncate">Reset All</span>
+       </button>
      </div>
    </div>
  </div>
@@ -2068,7 +2097,12 @@ export const HODCommandCenter: React.FC = () => {
  </Card>
  </div>
 
- {/* 6. GRAPH ANALYTICS LAYER */}
+ {/* 6. REAL-TIME INSTITUTIONAL PERFORMANCE TRAJECTORY */}
+  <div className="my-8">
+    <PerformanceChart department={selectedDept} yearLevel={selectedYear} />
+  </div>
+
+  {/* 6. GRAPH ANALYTICS LAYER */}
  <AnalyticsDashboard />
 
  {/* 7. LIVE STUDENT ACTIVITY (MOST IMPORTANT MAIN OPERATIONAL TABLE) */}
@@ -2717,6 +2751,7 @@ export const HODCommandCenter: React.FC = () => {
  <th className="py-2.5 px-3">Dept</th>
  <th className="py-2.5 px-3 text-right">Assigned Mentees</th>
  <th className="py-2.5 px-3 text-right">Active Solvers</th>
+ <th className="py-2.5 px-3 text-center">Sunday Contest</th>
  <th className="py-2.5 px-3 text-right">Completion Rate</th>
  <th className="py-2.5 px-3 text-center">Workload Status</th>
  <th className="py-2.5 px-3 text-center">Action</th>
@@ -2725,7 +2760,7 @@ export const HODCommandCenter: React.FC = () => {
  <tbody className="block md:table-row-group divide-y-0 md:divide-y divide-slate-100 dark:divide-navy-800 font-mono">
  {staffList.length === 0 ? (
  <tr>
- <td colSpan={7} className="py-8 text-center text-slate-700 dark:text-slate-400 font-bold">No staff members found for the selected scope.</td>
+ <td colSpan={8} className="py-8 text-center text-slate-700 dark:text-slate-400 font-bold">No staff members found for the selected scope.</td>
  </tr>
  ) : (
  staffList.map(s => {
@@ -2789,6 +2824,30 @@ export const HODCommandCenter: React.FC = () => {
  <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
  0 active
  </span>
+ )}
+ </div>
+ </td>
+
+ {/* Sunday Contest Attendance */}
+ <td className="flex items-center justify-between py-2.5 md:py-3 md:px-3 text-center font-mono border-b border-slate-50 dark:border-navy-800/50 md:border-none md:table-cell">
+ <span className="md:hidden text-xs font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">Sunday Contest</span>
+ <div>
+ {assigned > 0 ? (
+ <span className={`px-2 py-0.5 rounded-full text-xs font-extrabold inline-flex items-center gap-1 border ${
+   (s.sunday_contest_turnout_pct || 0) >= 80
+     ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300'
+     : (s.sunday_contest_turnout_pct || 0) >= 50
+     ? 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950 dark:text-indigo-300'
+     : (s.sunday_contest_attended || 0) > 0
+     ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300'
+     : 'bg-slate-100 text-slate-600 border-slate-300 dark:bg-navy-800 dark:text-slate-400'
+ }`} title={`${s.sunday_contest_session_name || 'Sunday Contest'}: ${s.sunday_contest_attended || 0} of ${assigned} attended`}>
+   <Trophy size={11} className="text-amber-500 shrink-0" />
+   <span>{s.sunday_contest_attended ?? 0} / {assigned}</span>
+   <span className="text-[10px] opacity-75">({s.sunday_contest_turnout_pct ?? 0}%)</span>
+ </span>
+ ) : (
+ <span className="text-slate-400 font-bold text-xs">—</span>
  )}
  </div>
  </td>

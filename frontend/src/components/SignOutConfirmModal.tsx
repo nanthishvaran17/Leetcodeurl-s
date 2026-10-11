@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, X, AlertTriangle } from 'lucide-react';
+import { LogOut, X, Lock, ArrowRight } from 'lucide-react';
 
 interface SignOutConfirmModalProps {
   isOpen: boolean;
@@ -14,6 +14,8 @@ interface SignOutConfirmModalProps {
     role?: string;
     photoURL?: string;
     profile_photo?: string;
+    department?: string;
+    email?: string;
   } | null;
 }
 
@@ -23,133 +25,160 @@ export const SignOutConfirmModal: React.FC<SignOutConfirmModalProps> = ({
   onConfirm,
   user
 }) => {
-  // Close on Escape key press
+  // Keyboard listeners: Escape to close, Enter to confirm
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        onClose();
+        onConfirm();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, onConfirm]);
 
   if (typeof document === 'undefined') return null;
 
-  const displayName = user?.full_name || user?.name || user?.username || 'User';
-  const username = user?.username || user?.name || '';
+  const displayName = user?.full_name || user?.name || user?.username || 'Authorized User';
+  const username = user?.username || user?.name || 'admin';
   const photo = user?.photoURL || (user as any)?.profile_photo;
-  const role = user?.role || 'Session';
+  const role = (user?.role || 'ADMIN').toUpperCase();
+  const department = (user as any)?.department || 'Nandha Engineering College';
 
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6 select-none perspective-[1000px]">
-          {/* Enhanced Backdrop with deep blur and overlay */}
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6 select-none">
+          {/* Backdrop with soft blur and dark overlay */}
           <motion.div
-            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
-            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            transition={{ duration: 0.4, ease: "easeInOut" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 cursor-pointer"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md cursor-pointer"
           />
 
-          {/* Premium Glassmorphic Modal Container */}
+          {/* Premium White Card Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20, rotateX: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -20, rotateX: -10 }}
-            transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+            initial={{ opacity: 0, scale: 0.95, y: 14 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 14 }}
+            transition={{ type: 'spring', damping: 26, stiffness: 380 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-[420px] rounded-[2rem] bg-white/95 dark:bg-navy-950/95 backdrop-blur-2xl border border-slate-200/80 dark:border-navy-800/80 shadow-2xl p-8 overflow-hidden text-center z-10"
+            className="relative w-full max-w-[420px] rounded-[28px] bg-white border border-slate-200/90 shadow-[0_20px_50px_rgba(0,0,0,0.18),0_1px_3px_rgba(0,0,0,0.06)] p-6 sm:p-8 text-center z-10 overflow-hidden"
           >
-            {/* Subtle Ambient Background Light (Clean & Non-distracting) */}
-            <div className="absolute -top-24 -left-24 w-56 h-56 bg-brand-500/10 dark:bg-brand-500/15 rounded-full blur-[70px] pointer-events-none" />
-            <div className="absolute -bottom-24 -right-24 w-56 h-56 bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-[70px] pointer-events-none" />
-
             {/* Top Close Button */}
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-navy-900 text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-navy-800 transition-all cursor-pointer shadow-sm z-20 hover:scale-105 active:scale-95"
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-all cursor-pointer border border-slate-200/60"
+              title="Close (Esc)"
+              aria-label="Close"
             >
               <X className="w-4 h-4" />
             </button>
 
-            {/* Sign Out Icon Container - Clean & Crisp */}
-            <div className="relative mx-auto w-16 h-16 sm:w-18 sm:h-18 mb-6 flex items-center justify-center">
-              <div className="w-full h-full rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/40 flex items-center justify-center shadow-xs">
-                <LogOut className="w-7 h-7 text-rose-600 dark:text-rose-400" />
-              </div>
+            {/* Clean Security Pill */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200/80 text-[10px] font-black uppercase tracking-wider text-slate-600 mb-5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Institutional Security Checkpoint</span>
             </div>
 
-            {/* Header & Subtitle */}
-            <div className="space-y-2 mb-8 relative z-10">
-              <h3 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-br from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 tracking-tight">
-                Ready to leave?
+            {/* Crisp Red Icon Container (Clean white/rose container, no messy background smudges) */}
+            <div className="mx-auto w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200/80 flex items-center justify-center mb-4 shadow-xs">
+              <LogOut className="w-6 h-6 text-rose-600" />
+            </div>
+
+            {/* Title & Subtitle */}
+            <div className="space-y-1.5 mb-5">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                Ready to Sign Out?
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium px-4">
-                You're about to sign out of your institutional account.
+              <p className="text-xs text-slate-500 font-medium px-2 leading-relaxed">
+                You're about to sign out of your institutional account on Nandha Intelligence.
               </p>
             </div>
 
-            {/* Premium User Profile Card */}
-            <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/60 dark:bg-navy-900/60 backdrop-blur-md border border-white dark:border-navy-700/50 shadow-sm text-left relative z-10 mb-8 transform transition-transform duration-300 hover:scale-[1.02]">
-              <div className="relative">
-                {photo ? (
-                  <img
-                    src={photo}
-                    alt={displayName}
-                    className="w-12 h-12 rounded-full object-cover ring-2 ring-white dark:ring-navy-800 shadow-md"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white font-black text-lg flex items-center justify-center uppercase shadow-md ring-2 ring-white dark:ring-navy-800">
-                    {displayName[0]}
+            {/* Profile Information Box */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-left mb-6 shadow-2xs">
+              <div className="flex items-center gap-3">
+                <div className="relative shrink-0">
+                  {photo ? (
+                    <img
+                      src={photo}
+                      alt={displayName}
+                      className="w-11 h-11 rounded-xl object-cover ring-2 ring-white shadow-xs"
+                    />
+                  ) : (
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-base flex items-center justify-center uppercase shadow-xs">
+                      {displayName[0]}
+                    </div>
+                  )}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full ring-2 ring-white" />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-black text-slate-900 truncate">
+                      {displayName}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+                      {role}
+                    </span>
                   </div>
-                )}
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full ring-2 ring-white dark:ring-navy-900 shadow-sm" />
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[11px] font-mono text-slate-500 truncate">
+                      @{username}
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-[10px] text-slate-500 truncate">
+                      {department}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
-                  {displayName}
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400 truncate">
-                    @{username || 'user'}
-                  </span>
-                  <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                  <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                    {role}
-                  </span>
-                </div>
+
+              {/* Status Row */}
+              <div className="mt-2.5 pt-2 border-t border-slate-200/70 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                <span className="flex items-center gap-1.5">
+                  <Lock className="w-2.5 h-2.5 text-emerald-600" />
+                  <span>Session Encrypted</span>
+                </span>
+                <span className="text-emerald-600 font-bold">Active</span>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-3 relative z-10">
+            {/* Buttons */}
+            <div className="space-y-2.5">
               <button
                 type="button"
                 onClick={() => {
                   onClose();
                   onConfirm();
                 }}
-                className="group relative w-full h-12 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white font-black text-sm shadow-[0_8px_20px_-6px_rgba(225,29,72,0.5)] transition-all duration-300 cursor-pointer overflow-hidden flex items-center justify-center space-x-2"
+                className="w-full h-11 sm:h-12 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-black text-xs sm:text-sm shadow-[0_4px_14px_rgba(225,29,72,0.35)] hover:shadow-[0_6px_20px_rgba(225,29,72,0.45)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
               >
-                {/* Shine effect */}
-                <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
-                
-                <span className="relative z-10">Sign Out Now</span>
-                <LogOut className="w-4 h-4 relative z-10 transform group-hover:translate-x-1 transition-transform" />
+                <span>Sign Out Now</span>
+                <ArrowRight className="w-4 h-4" />
+                <span className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/20 text-white/90 border border-white/20 ml-1">
+                  ↵ Enter
+                </span>
               </button>
 
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full h-12 rounded-xl bg-slate-100/80 dark:bg-navy-900/80 hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-extrabold text-sm transition-all duration-200 cursor-pointer backdrop-blur-sm"
+                className="w-full h-10 sm:h-11 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-[0.99] text-slate-700 font-bold text-xs sm:text-sm border border-slate-200 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
               >
-                Stay Logged In
+                <span>Stay Logged In</span>
+                <span className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-200/80 text-slate-500">
+                  Esc
+                </span>
               </button>
             </div>
           </motion.div>

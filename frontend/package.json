@@ -2,10 +2,15 @@
   "name": "college-leetcode-tracker-frontend",
   "private": true,
   "version": "2.6.9",
+  "description": "Nandha Intelligence LeetCode Tracker Desktop Application",
+  "author": "Nandha Engineering College",
+  "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite",
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 tsc && cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on tcp:5173 && electron .\"",
+    "electron:build": "npm run build && electron-builder --win nsis",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "android": "npx cap open android",
@@ -56,12 +61,39 @@
     "@vitejs/plugin-react": "^4.2.1",
     "@vitejs/plugin-react-swc": "^4.3.3",
     "autoprefixer": "^10.4.19",
+    "concurrently": "^10.0.6",
     "cross-env": "^10.1.0",
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3",
     "million": "^3.1.11",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
-    "vite-plugin-compression2": "^2.5.3"
+    "vite-plugin-compression2": "^2.5.3",
+    "wait-on": "^9.5.1"
+  },
+  "build": {
+    "appId": "com.nandha.leetcodetracker",
+    "productName": "Nandha Intelligence",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "public/desktop-icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Nandha Intelligence LeetCode Tracker"
+    }
   }
 }

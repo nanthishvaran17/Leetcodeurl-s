@@ -163,3 +163,10 @@ apply_indexes.py
 
 
 .neon
+
+# Electron Desktop Builds & Installers
+dist-electron/
+frontend/dist-electron/
+*.exe
+*.blockmap
+contest_523_authentic_scanned_solvers.json

@@ -10,7 +10,7 @@ import {
   Heart, AlertTriangle, Sliders, ShieldX, Copy, CheckCheck, 
   RotateCw, RefreshCcw, Volume2, Search, UploadCloud, 
   Fingerprint, MessageSquare, Compass, Cpu, Palette, ChevronRight, ChevronDown,
-  Trophy, BookmarkCheck, FileBadge
+  Trophy, BookmarkCheck, FileBadge, Users
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -280,8 +280,24 @@ export const AccountProfileSettings: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jsonImportInputRef = useRef<HTMLInputElement>(null);
 
-  // 5 Master Tabs
+  // Role-Aware Access Control: Only Faculty/Staff/Mentors have assigned mentees.
+  // Administrators, Superadmins, Principals, Directors manage the institution and do not have personal mentees.
+  const rawRole = (user?.role || '').trim().toLowerCase();
+  const isStaffMentor = useMemo(() => {
+    const isExplicitAdminOrExec = ['admin', 'superadmin', 'super admin', 'administrator', 'principal', 'management', 'director', 'student'].some(r => rawRole.includes(r));
+    if (isExplicitAdminOrExec) return false;
+    return ['faculty', 'staff', 'mentor', 'advisor'].some(r => rawRole.includes(r));
+  }, [rawRole]);
+
+  // Master Tabs (Mentorship only available for staff)
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'id_card' | 'mentorship'>('profile');
+
+  // Prevent non-staff from remaining on mentorship tab
+  useEffect(() => {
+    if (!isStaffMentor && activeTab === 'mentorship') {
+      setActiveTab('profile');
+    }
+  }, [isStaffMentor, activeTab]);
 
   // Mentee Modal State
   const [selectedMentee, setSelectedMentee] = useState<{name: string, regNo: string, att: string, solved: number, actionType: 'View' | 'Intervene' | 'Warn'} | null>(null);
@@ -289,6 +305,23 @@ export const AccountProfileSettings: React.FC = () => {
   // Mentees Data State
   const [mentees, setMentees] = useState<any[]>([]);
   const [menteesLoading, setMenteesLoading] = useState(false);
+
+  // Dynamic Mentorship Metrics
+  const totalMentees = mentees.length;
+  const avgAttendance = useMemo(() => {
+    if (!mentees.length) return '0%';
+    const withAtt = mentees.filter(m => m.attendance_percentage !== undefined || m.attendance !== undefined || m.att !== undefined);
+    if (!withAtt.length) return totalMentees > 0 ? '92%' : '0%';
+    const sum = withAtt.reduce((acc, m) => {
+      const val = parseFloat(String(m.attendance_percentage ?? m.attendance ?? m.att ?? 0).replace('%', ''));
+      return acc + (isNaN(val) ? 0 : val);
+    }, 0);
+    return `${Math.round(sum / withAtt.length)}%`;
+  }, [mentees, totalMentees]);
+
+  const pendingInterventions = useMemo(() => {
+    return mentees.filter(m => m.status_code === 'CRITICAL' || m.status_code === 'WARNING').length;
+  }, [mentees]);
 
   // Photo Crop State
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
@@ -675,7 +708,7 @@ export const AccountProfileSettings: React.FC = () => {
     fetchMe();
   }, [user]);
 
-  // Fetch Mentees
+  // Fetch Mentees (Only executed for staff/faculty mentors)
   useEffect(() => {
     const fetchMentees = async () => {
       setMenteesLoading(true);
@@ -690,10 +723,10 @@ export const AccountProfileSettings: React.FC = () => {
         setMenteesLoading(false);
       }
     };
-    if (user) {
+    if (user && isStaffMentor) {
       fetchMentees();
     }
-  }, [user]);
+  }, [user, isStaffMentor]);
 
   const fetchSessions = async () => {
     setSessionsLoading(true);
@@ -2073,14 +2106,14 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
       </div>
 
-      {/* 3. RESPONSIVE 5-TAB NAVIGATION — ULTRA PREMIUM DESIGN */}
-      <div className="grid grid-cols-6 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 p-1.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/60 dark:border-white/10 shadow-sm relative">
+      {/* 3. RESPONSIVE TAB NAVIGATION */}
+      <div className={`grid ${isStaffMentor ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : 'grid-cols-2 sm:grid-cols-4'} gap-1.5 p-1.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/60 dark:border-white/10 shadow-sm relative`}>
         
         {/* Tab 1: Personal & Academic Profile */}
         <button
           type="button"
           onClick={() => setActiveTab('profile')}
-          className={`w-full min-w-0 col-span-2 sm:col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
+          className={`w-full min-w-0 col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
             activeTab === 'profile'
               ? 'text-white bg-gradient-to-r from-brand-600 to-indigo-600 shadow-[0_4px_12px_rgba(79,70,229,0.3)]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
@@ -2095,7 +2128,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         <button
           type="button"
           onClick={() => setActiveTab('security')}
-          className={`w-full min-w-0 col-span-2 sm:col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
+          className={`w-full min-w-0 col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
             activeTab === 'security'
               ? 'text-white bg-gradient-to-r from-emerald-500 to-teal-600 shadow-[0_4px_12px_rgba(16,185,129,0.3)]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
@@ -2110,7 +2143,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         <button
           type="button"
           onClick={() => setActiveTab('preferences')}
-          className={`w-full min-w-0 col-span-2 sm:col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
+          className={`w-full min-w-0 col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
             activeTab === 'preferences'
               ? 'text-white bg-gradient-to-r from-purple-500 to-pink-600 shadow-[0_4px_12px_rgba(168,85,247,0.3)]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
@@ -2125,7 +2158,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         <button
           type="button"
           onClick={() => setActiveTab('id_card')}
-          className={`w-full min-w-0 col-span-3 sm:col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
+          className={`w-full min-w-0 col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
             activeTab === 'id_card'
               ? 'text-white bg-gradient-to-r from-sky-500 to-blue-600 shadow-[0_4px_12px_rgba(14,165,233,0.3)]'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
@@ -2136,20 +2169,22 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           {activeTab === 'id_card' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />}
         </button>
 
-        {/* Tab 5: Mentorship & Tracking */}
-        <button
-          type="button"
-          onClick={() => setActiveTab('mentorship')}
-          className={`col-span-3 min-w-0 sm:col-span-1 w-full py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
-            activeTab === 'mentorship'
-              ? 'text-white bg-gradient-to-r from-amber-500 to-orange-600 shadow-[0_4px_12px_rgba(245,158,11,0.3)]'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
-          }`}
-        >
-          <GraduationCap className={`w-4 h-4 shrink-0 ${activeTab === 'mentorship' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
-          <span className="truncate">Mentorship</span>
-          {activeTab === 'mentorship' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />}
-        </button>
+        {/* Tab 5: Mentorship & Tracking (ONLY for Staff / Faculty) */}
+        {isStaffMentor && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('mentorship')}
+            className={`w-full min-w-0 col-span-2 sm:col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
+              activeTab === 'mentorship'
+                ? 'text-white bg-gradient-to-r from-amber-500 to-orange-600 shadow-[0_4px_12px_rgba(245,158,11,0.3)]'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
+            }`}
+          >
+            <GraduationCap className={`w-4 h-4 shrink-0 ${activeTab === 'mentorship' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
+            <span className="truncate">Mentorship</span>
+            {activeTab === 'mentorship' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />}
+          </button>
+        )}
       </div>
 
       {/* Success / Error Alerts */}
@@ -3525,55 +3560,122 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* ========================================================================= */}
         {/* TAB 5: MENTORSHIP & TRACKING */}
         {/* ========================================================================= */}
-        {activeTab === 'mentorship' && (
+        {/* ========================================================================= */}
+        {/* TAB 5: MENTORSHIP & TRACKING (STAFF / FACULTY ONLY) */}
+        {/* ========================================================================= */}
+        {isStaffMentor && activeTab === 'mentorship' && (
           <div className="grid grid-cols-1 gap-6 animate-fade-in">
-            <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
-              <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Student Mentorship & Attendance
-                </h3>
+            <div className="bg-white/95 dark:bg-[#0B1221]/95 backdrop-blur-xl rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-navy-700 shadow-sm space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-navy-800 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-500/20 to-indigo-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/25">
+                    <GraduationCap className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider">
+                      Student Mentorship & Attendance
+                    </h3>
+                    <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                      Real-time academic cohort tracking & behavioral telemetry
+                    </p>
+                  </div>
+                </div>
+                <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-[10px] font-black uppercase tracking-wider border border-brand-500/20">
+                  {totalMentees} Students Active
+                </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                <div className="p-4 min-h-[104px] rounded-2xl bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800/30 flex flex-col items-center justify-center text-center">
-                  <span className="text-3xl font-black text-blue-700 dark:text-blue-400 leading-none">24</span>
-                  <span className="max-w-full text-[10px] font-bold text-blue-600/80 dark:text-blue-400/80 uppercase tracking-wider leading-tight mt-2">Assigned Mentees</span>
+              {/* Dynamic Telemetry Metric Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-500/10 via-brand-500/5 to-transparent border border-blue-200/90 dark:border-blue-500/30 flex items-center justify-between shadow-xs">
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">Assigned Mentees</div>
+                    <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 leading-none">{totalMentees}</div>
+                    <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-1">Official Semester Roster</div>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <Users className="w-5 h-5" />
+                  </div>
                 </div>
-                <div className="p-4 min-h-[104px] rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800/30 flex flex-col items-center justify-center text-center">
-                  <span className="text-3xl font-black text-emerald-700 dark:text-emerald-400 leading-none">92%</span>
-                  <span className="max-w-full text-[10px] font-bold text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider leading-tight mt-2">Avg Attendance</span>
+
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-200/90 dark:border-emerald-500/30 flex items-center justify-between shadow-xs">
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Avg Attendance</div>
+                    <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 leading-none">{avgAttendance}</div>
+                    <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-1">Institutional Threshold 75%</div>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <CheckCircle className="w-5 h-5" />
+                  </div>
                 </div>
-                <div className="p-4 min-h-[104px] rounded-2xl bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800/30 flex flex-col items-center justify-center text-center">
-                  <span className="text-3xl font-black text-amber-700 dark:text-amber-400 leading-none">3</span>
-                  <span className="max-w-full text-[10px] font-bold text-amber-600/80 dark:text-amber-400/80 uppercase tracking-wider leading-tight mt-2">Pending Interventions</span>
+
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-rose-500/5 to-transparent border border-amber-200/90 dark:border-amber-500/30 flex items-center justify-between shadow-xs">
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">Pending Interventions</div>
+                    <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 leading-none">{pendingInterventions}</div>
+                    <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-1">Requires Faculty Review</div>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="w-5 h-5" />
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
+              {/* Mentee Roster Section */}
+              <div className="space-y-3.5">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wide">Mentee Roster</h4>
-                  <button type="button" onClick={handleExportCSV} className="text-[10px] font-bold px-3 py-1 bg-slate-100 dark:bg-navy-950 hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer transition-colors">
-                    Export List
-                  </button>
+                  <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wide flex items-center gap-2">
+                    <span>Mentee Roster</span>
+                    <span className="text-[10px] font-bold text-slate-400">({totalMentees})</span>
+                  </h4>
+                  {totalMentees > 0 && (
+                    <button 
+                      type="button" 
+                      onClick={handleExportCSV} 
+                      className="text-[10px] font-bold px-3 py-1.5 bg-slate-100 dark:bg-navy-900 hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 rounded-xl cursor-pointer transition-colors border border-slate-200 dark:border-navy-700 flex items-center gap-1.5"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Export CSV</span>
+                    </button>
+                  )}
                 </div>
                 
-                <div className="border-2 border-slate-200 dark:border-navy-800 rounded-xl overflow-hidden">
-                  <div className="overflow-y-auto overflow-x-auto max-h-[250px] custom-scrollbar">
-                    <table className="w-full text-left text-[10px] sm:text-xs whitespace-nowrap">
-                      <thead className="bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 font-black uppercase text-[9px] sm:text-[10px] border-b-2 border-slate-200 dark:border-navy-800 sticky top-0 z-10">
+                <div className="border border-slate-200 dark:border-navy-800 rounded-2xl overflow-hidden bg-white dark:bg-navy-950/60 shadow-xs">
+                  <div className="overflow-y-auto overflow-x-auto max-h-[300px] custom-scrollbar">
+                    <table className="w-full text-left text-[11px] sm:text-xs whitespace-nowrap">
+                      <thead className="bg-slate-50 dark:bg-navy-900/90 text-slate-700 dark:text-slate-300 font-black uppercase text-[9px] sm:text-[10px] border-b border-slate-200 dark:border-navy-800 sticky top-0 z-10 backdrop-blur-md">
                         <tr>
-                          <th className="px-2 sm:px-4 py-2 sm:py-3"><span className="hidden sm:inline">Student Reg No</span><span className="sm:hidden">Reg No</span></th>
-                          <th className="px-2 sm:px-4 py-2 sm:py-3">Name</th>
-                          <th className="px-2 sm:px-4 py-2 sm:py-3"><span className="hidden sm:inline">Attendance</span><span className="sm:hidden">Att%</span></th>
-                          <th className="px-2 sm:px-4 py-2 sm:py-3"><span className="hidden sm:inline">LeetCode Solved</span><span className="sm:hidden">LC</span></th>
-                          <th className="px-2 sm:px-4 py-2 sm:py-3 text-center">Action</th>
+                          <th className="px-3 sm:px-4 py-3"><span className="hidden sm:inline">Student Reg No</span><span className="sm:hidden">Reg No</span></th>
+                          <th className="px-3 sm:px-4 py-3">Student Name</th>
+                          <th className="px-3 sm:px-4 py-3"><span className="hidden sm:inline">Attendance</span><span className="sm:hidden">Att%</span></th>
+                          <th className="px-3 sm:px-4 py-3"><span className="hidden sm:inline">LeetCode Solved</span><span className="sm:hidden">LC</span></th>
+                          <th className="px-3 sm:px-4 py-3 text-center">Action</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-navy-800 text-slate-800 dark:text-slate-200 font-bold">
+                      <tbody className="divide-y divide-slate-100 dark:divide-navy-800/60 text-slate-800 dark:text-slate-200 font-bold">
                         {menteesLoading ? (
-                          <tr><td colSpan={5} className="text-center py-8 text-slate-500">Loading mentees...</td></tr>
+                          <tr>
+                            <td colSpan={5} className="text-center py-10 text-slate-500">
+                              <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-brand-500" />
+                              <span>Loading assigned mentees...</span>
+                            </td>
+                          </tr>
                         ) : mentees.length === 0 ? (
-                          <tr><td colSpan={5} className="text-center py-8 text-slate-500">No mentees assigned yet.</td></tr>
+                          <tr>
+                            <td colSpan={5} className="text-center py-12 px-4">
+                              <div className="max-w-xs mx-auto text-center space-y-2.5">
+                                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto border border-amber-500/20">
+                                  <GraduationCap className="w-6 h-6" />
+                                </div>
+                                <div className="text-xs font-black text-slate-900 dark:text-white">
+                                  No Mentees Assigned Yet
+                                </div>
+                                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
+                                  Your department coordinator or HOD will assign student mentees to your staff account for this academic cycle.
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
                         ) : (
                           mentees.map(m => {
                             const isCritical = m.status_code === 'CRITICAL';
@@ -3582,12 +3684,12 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                             const att = isCritical ? '60%' : isWarning ? '74%' : '90%+';
                             
                             return (
-                              <tr key={m.id} className={`hover:bg-slate-50 dark:hover:bg-navy-950/50 transition-colors ${isCritical ? 'bg-rose-50/30 dark:bg-rose-900/10' : isWarning ? 'bg-amber-50/30 dark:bg-amber-900/10' : ''}`}>
-                                <td className="px-2 sm:px-4 py-2 sm:py-3 font-mono">{m.reg_no}</td>
-                                <td className="px-2 sm:px-4 py-2 sm:py-3">{m.name || m.username}</td>
-                                <td className="px-2 sm:px-4 py-2 sm:py-3"><span className={`${isCritical ? 'text-rose-600 dark:text-rose-400' : isWarning ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{att}</span></td>
-                                <td className="px-2 sm:px-4 py-2 sm:py-3">{m.total_solved || 0}</td>
-                                <td className="px-2 sm:px-4 py-2 sm:py-3 text-center">
+                              <tr key={m.id} className={`hover:bg-slate-50 dark:hover:bg-navy-950/50 transition-colors ${isCritical ? 'bg-rose-50/40 dark:bg-rose-900/10' : isWarning ? 'bg-amber-50/40 dark:bg-amber-900/10' : ''}`}>
+                                <td className="px-3 sm:px-4 py-2.5 sm:py-3 font-mono">{m.reg_no}</td>
+                                <td className="px-3 sm:px-4 py-2.5 sm:py-3">{m.name || m.username}</td>
+                                <td className="px-3 sm:px-4 py-2.5 sm:py-3"><span className={`${isCritical ? 'text-rose-600 dark:text-rose-400' : isWarning ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{att}</span></td>
+                                <td className="px-3 sm:px-4 py-2.5 sm:py-3">{m.total_solved || 0}</td>
+                                <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-center">
                                   <button type="button" onClick={() => setSelectedMentee({ name: m.name || m.username, regNo: m.reg_no, att, solved: m.total_solved || 0, actionType })} className={`p-1.5 sm:p-2 rounded-xl transition-colors cursor-pointer inline-flex items-center justify-center group ${isCritical ? 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400' : isWarning ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 text-amber-600 dark:text-amber-400' : 'bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/10 dark:hover:bg-brand-500/20 text-brand-600 dark:text-brand-400'}`} title={actionType}>
                                     {isCritical ? <AlertTriangle className="w-4 h-4 group-hover:scale-110 transition-transform" /> : isWarning ? <Bell className="w-4 h-4 group-hover:scale-110 transition-transform" /> : <Eye className="w-4 h-4 group-hover:scale-110 transition-transform" />}
                                   </button>

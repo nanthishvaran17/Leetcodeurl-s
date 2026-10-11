@@ -98,7 +98,7 @@ const CustomSelect: React.FC<{
     <div className="relative flex-1 w-full md:w-auto md:flex-initial min-w-0 md:min-w-[102px]" ref={containerRef}>
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center justify-between gap-2 w-full sm:w-auto sm:min-w-[140px] px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-xs ${
+        className={`flex items-center justify-between gap-1.5 sm:gap-2 w-full sm:w-auto md:min-w-[115px] lg:min-w-[125px] xl:min-w-[135px] px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-xs ${
           open 
             ? 'border-indigo-500 bg-white dark:bg-navy-950 ring-4 ring-indigo-500/10' 
             : value 
@@ -1072,9 +1072,9 @@ export const FacultyActionCenter: React.FC = () => {
       )}
 
       {/* Filters */}
-      <div className="relative z-20 flex flex-col md:flex-row flex-wrap items-stretch md:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-3xl bg-white/80 dark:bg-navy-850/80 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm mb-6">
+      <div className="relative z-20 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-3xl bg-white/80 dark:bg-navy-850/80 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm mb-6">
         {/* Search Bar Input */}
-        <div className="relative group flex-1 min-w-[240px] w-full md:w-auto">
+        <div className="relative group flex-1 min-w-[200px] w-full md:w-auto">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-brand-500 rounded-2xl md:rounded-full blur opacity-15 group-focus-within:opacity-60 transition duration-500"></div>
           <div className="relative flex items-center gap-2.5 bg-white dark:bg-navy-950 rounded-2xl md:rounded-full px-4 py-2 sm:py-2.5 border border-slate-300 dark:border-navy-700 focus-within:border-indigo-500 shadow-xs">
             <Search size={16} className="text-slate-400 group-focus-within:text-indigo-600 transition-colors shrink-0" />
@@ -1092,8 +1092,8 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
 
         {/* Dropdown Filters (Flex container with adequate spacing) */}
-        <div className="grid grid-cols-2 md:flex md:flex-row items-stretch md:items-center gap-2.5 sm:gap-3 w-full md:w-auto">
-          <div className="col-span-1 min-w-0 w-full">
+        <div className="grid grid-cols-2 md:flex md:flex-row items-stretch md:items-center gap-2.5 sm:gap-3 w-full md:w-auto shrink-0">
+          <div className="col-span-1 min-w-0 w-full md:w-auto shrink-0">
           <CustomSelect
             value={filterPriority}
             onChange={v => { 
@@ -1115,7 +1115,7 @@ export const FacultyActionCenter: React.FC = () => {
           />
           </div>
           
-          <div className="col-span-1 min-w-0 w-full">
+          <div className="col-span-1 min-w-0 w-full md:w-auto shrink-0">
           <CustomSelect
             value={filterStatus}
             onChange={v => { 
@@ -1138,7 +1138,7 @@ export const FacultyActionCenter: React.FC = () => {
           />
           </div>
 
-          <div className="col-span-2 min-w-0 w-1/2 justify-self-center md:col-auto md:w-auto md:justify-self-auto">
+          <div className="col-span-2 min-w-0 w-1/2 justify-self-center md:col-auto md:w-auto md:justify-self-auto shrink-0">
           <CustomSelect
             value={filterYear}
             onChange={v => { setFilterYear(v); setPage(1); }}

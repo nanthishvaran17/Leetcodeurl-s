@@ -365,7 +365,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
         # 4. Global Rank & Contest Rating ALWAYS AT THE VERY END
         FINAL_METRICS = [
-            ("Global Rank", ["contest_global_ranking", "contest_rank", "global_rank"]),
+            ("Global Rank", ["contest_global_ranking", "contest_global_rank", "contest_rank", "global_rank", "profile_rank"]),
             ("Contest Rating", ["contest_rating", "rating", "rating_val", "contest_rating_after"])
         ]
         for title, candidates in FINAL_METRICS:

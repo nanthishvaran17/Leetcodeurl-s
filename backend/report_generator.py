@@ -100,6 +100,7 @@ class CollegeReportGenerator:
                 "score": score,
                 "rank": rank if rank is not None else "-",
                 "rating": round(rating, 1) if rating else 0,
+                "global_rank": f"#{int(stats.contest_global_ranking):,}" if (stats and stats.contest_global_ranking) else "Unrated",
                 "evidence_source": evidence_source,
                 "q1": q1,
                 "q2": q2,
@@ -217,8 +218,9 @@ class CollegeReportGenerator:
                 "Q4": p.get("q4", "-"),
                 "Contest Solved": p.get("contest_solved", 0),
                 "Score": p.get("score", 0),
-                "Rank": p.get("rank", "-"),
-                "Rating": p.get("rating", 0),
+                "Contest Rank": p.get("rank", "-"),
+                "Contest Rating": p.get("rating", 0) if p.get("rating") else "Unrated",
+                "Global Ranking": p.get("global_rank", "Unrated"),
                 "Profile Total Solved": p.get("profile_total_solved", 0),
                 "Username": p.get("leetcode_username", ""),
                 "Profile URL": p.get("profile_url", ""),
@@ -349,7 +351,7 @@ class CollegeReportGenerator:
         # Write header
         headers = [
             "S.No", "Register No", "Student Name", "Dept", "Year", "Status",
-            "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Score", "Rank", "Rating",
+            "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Score", "Contest Rank", "Contest Rating", "Global Ranking",
             "Profile Total Solved", "Username", "Profile URL", "Source"
         ]
         for col_idx, h in enumerate(headers, start=1):
@@ -364,7 +366,7 @@ class CollegeReportGenerator:
                 val = r.get(h, "")
                 cell = ws2.cell(row=r_idx, column=col_idx, value=val)
                 cell.border = grid_border
-                if h in ("Status", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Score", "Rank", "Rating", "Profile Total Solved", "Dept", "Year"):
+                if h in ("Status", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Score", "Contest Rank", "Contest Rating", "Global Ranking", "Profile Total Solved", "Dept", "Year"):
                     cell.alignment = Alignment(horizontal="center", vertical="center")
                 else:
                     cell.alignment = Alignment(horizontal="left", vertical="center")

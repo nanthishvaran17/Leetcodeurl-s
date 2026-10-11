@@ -220,7 +220,7 @@ def send_email_via_resend(
 ) -> Tuple[bool, Optional[str]]:
     # === TEMPORARY EMAIL BLOCK ===
     # Requested by Admin: Stop all automated/report emails EXCEPT ID Creation, Allocation Updates, and Forgot Password.
-    allowed_keywords = ["allocation", "assigned", "removed", "password", "verification", "credentials", "account", "setup", "update"]
+    allowed_keywords = ["allocation", "assigned", "removed", "password", "verification", "credentials", "account", "setup", "update", "reminder", "contest", "attendance", "participation"]
     subject_lower = subject.lower()
     
     if not any(k in subject_lower for k in allowed_keywords):
@@ -389,7 +389,7 @@ def send_email_via_brevo(
     # === TEMPORARY EMAIL BLOCK ===
     # Requested by Admin: Stop all automated/report emails EXCEPT ID Creation, Allocation Updates, and Forgot Password.
     if "PYTEST_CURRENT_TEST" not in os.environ:
-        allowed_keywords = ["allocation", "assigned", "removed", "password", "verification", "credentials", "account", "setup", "update"]
+        allowed_keywords = ["allocation", "assigned", "removed", "password", "verification", "credentials", "account", "setup", "update", "reminder", "contest", "attendance", "participation"]
         subject_lower = subject.lower()
         
         if not any(k in subject_lower for k in allowed_keywords):
@@ -553,7 +553,7 @@ def send_email(
 
     # === TEMPORARY EMAIL BLOCK ===
     # Requested by Admin: Stop all automated/report emails EXCEPT ID Creation, Allocation Updates, and Forgot Password.
-    allowed_keywords = ["allocation", "assigned", "removed", "password", "verification", "credentials", "account", "setup", "update"]
+    allowed_keywords = ["allocation", "assigned", "removed", "password", "verification", "credentials", "account", "setup", "update", "reminder", "contest", "attendance", "participation"]
     subject_lower = subject.lower()
     
     if not any(k in subject_lower for k in allowed_keywords):

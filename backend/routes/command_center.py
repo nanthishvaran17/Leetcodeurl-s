@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from backend.database import get_db
 from backend.models import (
     Student, Department, LeetCodeProfileStats, AdminAuditLog, WeeklyPublicResult,
-    FacultyStudentAssignment, User
+    FacultyStudentAssignment, User, WeeklySession
 )
 from backend.services.faculty_assignment_service import faculty_assignment_service, MAX_STUDENTS_PER_FACULTY
 from backend.websocket_manager import connection_manager
@@ -29,6 +29,41 @@ def _is_real_dept(dept_code: Optional[str]) -> bool:
     if not dept_code:
         return True
     return is_production_department(dept_code)
+
+def _get_active_or_latest_sunday_session(db: Session) -> Optional[WeeklySession]:
+    """
+    Finds the authoritative Sunday Weekly Contest session.
+    Prioritizes LIVE / active session if currently happening, or the most recent finalized/completed
+    weekly contest session that contains actual verified student participation records.
+    """
+    ATTENDED_STATUSES = ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE", "ATTENDED_ZERO", "ATTENDED_SOLVED")
+    
+    # 1. LIVE session takes top precedence
+    live_sess = db.query(WeeklySession).filter(
+        WeeklySession.status == "LIVE",
+        or_(WeeklySession.session_code.like("WEEK-%"), WeeklySession.contest_name.ilike("%Weekly Contest%"))
+    ).order_by(WeeklySession.id.desc()).first()
+    if live_sess:
+        return live_sess
+
+    # 2. Check for recent weekly contest sessions with real attended records
+    candidates = db.query(WeeklySession).filter(
+        or_(WeeklySession.session_code.like("WEEK-%"), WeeklySession.contest_name.ilike("%Weekly Contest%")),
+        WeeklySession.status.in_(["FINALIZED", "COMPLETED", "VERIFIED", "ARCHIVED"])
+    ).order_by(WeeklySession.id.desc()).all()
+
+    for cand in candidates:
+        has_attended = db.query(WeeklyPublicResult.id).filter(
+            WeeklyPublicResult.session_id == cand.id,
+            or_(
+                WeeklyPublicResult.participation_status.in_(ATTENDED_STATUSES),
+                WeeklyPublicResult.total_contest_solved > 0
+            )
+        ).first()
+        if has_attended:
+            return cand
+
+    return candidates[0] if candidates else None
 
 router = APIRouter(prefix="/command-center", tags=["Command Center Operations & Analytics"])
 
@@ -218,6 +253,38 @@ def get_command_center_summary(
             for r in staff_assigned_rows
         }
 
+        # Authoritative Sunday Contest Attendance for latest/live session
+        active_sunday_session = _get_active_or_latest_sunday_session(db)
+        staff_sunday_stats_map = {}
+        if active_sunday_session:
+            ATTENDED_STATUSES = ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE", "ATTENDED_ZERO", "ATTENDED_SOLVED")
+            staff_sunday_q = db.query(
+                FacultyStudentAssignment.faculty_id,
+                func.count(WeeklyPublicResult.id)
+            ).join(
+                Student, FacultyStudentAssignment.student_id == Student.id
+            ).join(
+                WeeklyPublicResult, and_(
+                    WeeklyPublicResult.student_id == Student.id,
+                    WeeklyPublicResult.session_id == active_sunday_session.id,
+                    or_(
+                        WeeklyPublicResult.participation_status.in_(ATTENDED_STATUSES),
+                        WeeklyPublicResult.total_contest_solved > 0,
+                        and_(WeeklyPublicResult.contest_rank.isnot(None), WeeklyPublicResult.contest_rank > 0)
+                    )
+                )
+            ).filter(
+                FacultyStudentAssignment.is_active == True,
+                Student.is_active == True
+            )
+            if dept_id:
+                staff_sunday_q = staff_sunday_q.filter(Student.department_id == dept_id)
+            else:
+                staff_sunday_q = staff_sunday_q.filter(Student.department_id.in_(prod_dept_ids))
+            
+            for fid, cnt in staff_sunday_q.group_by(FacultyStudentAssignment.faculty_id).all():
+                staff_sunday_stats_map[fid] = int(cnt or 0)
+
         staff_list = []
         for u in staff_users:
             s_stat = staff_stats_map.get(u.id, {"assigned_cnt": 0, "active_cnt": 0, "completed_cnt": 0, "coding_activity": 0})
@@ -231,6 +298,9 @@ def get_command_center_summary(
             
             traffic_status = "GREEN" if staff_prog >= 80.0 else ("AMBER" if staff_prog >= 60.0 else "RED")
             d_code = u.department.code if u.department else dept_code
+
+            sunday_att_cnt = staff_sunday_stats_map.get(u.id, 0)
+            sunday_turnout = round((sunday_att_cnt / float(assigned_cnt)) * 100.0) if assigned_cnt > 0 else 0
 
             staff_list.append({
                 "id": u.id,
@@ -251,7 +321,11 @@ def get_command_center_summary(
                 "is_active": u.is_active,
                 "joined_date": u.created_at.strftime("%Y-%m-%d") if u.created_at else "N/A",
                 "last_active": u.last_login.strftime("%Y-%m-%d") if getattr(u, 'last_login', None) else "N/A",
-                "coding_activity": coding_act
+                "coding_activity": coding_act,
+                "sunday_contest_attended": sunday_att_cnt,
+                "sunday_contest_turnout_pct": sunday_turnout,
+                "sunday_contest_session_name": active_sunday_session.contest_name if active_sunday_session else "Sunday Contest",
+                "sunday_contest_session_date": active_sunday_session.session_date if active_sunday_session else ""
             })
     
         # Unassigned student count in this scope
@@ -413,16 +487,35 @@ def get_students(
             assignment_map[fa.student_id] = u.username
             assignment_faculty_id_map[fa.student_id] = u.id
 
-    contest_map = {}
-    if student_ids:
-        latest_session_id = db.query(func.max(WeeklyPublicResult.session_id)).scalar()
-        if latest_session_id:
+    contest_standing_map = {}
+    contest_attended_map = {}
+    contest_status_map = {}
+    contest_session_name = ""
+    contest_session_date = ""
+
+    active_sunday_session = _get_active_or_latest_sunday_session(db)
+    if active_sunday_session:
+        contest_session_name = active_sunday_session.contest_name or "Sunday Contest"
+        contest_session_date = active_sunday_session.session_date or ""
+        if student_ids:
+            ATTENDED_STATUSES = {"PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE", "ATTENDED_ZERO", "ATTENDED_SOLVED"}
             pub_results = db.query(WeeklyPublicResult).filter(
                 WeeklyPublicResult.student_id.in_(student_ids),
-                WeeklyPublicResult.session_id == latest_session_id
+                WeeklyPublicResult.session_id == active_sunday_session.id
             ).all()
             for pr in pub_results:
-                contest_map[pr.student_id] = f"{pr.total_contest_solved}/4" if pr.total_contest_solved is not None else "—"
+                is_att = (
+                    (pr.participation_status in ATTENDED_STATUSES) or
+                    ((pr.total_contest_solved or 0) > 0) or
+                    (pr.contest_rank is not None and pr.contest_rank > 0)
+                )
+                contest_attended_map[pr.student_id] = is_att
+                contest_status_map[pr.student_id] = pr.participation_status or ("ATTENDED" if is_att else "NOT_ATTENDED")
+                if is_att:
+                    solved = pr.total_contest_solved if pr.total_contest_solved is not None else 0
+                    contest_standing_map[pr.student_id] = f"{solved}/4"
+                else:
+                    contest_standing_map[pr.student_id] = "Absent"
 
     results = []
     for s in students:
@@ -451,7 +544,11 @@ def get_students(
             "is_active":           s.is_active,
             "total_solved":        total_solved,
             "weekly_change":       f"+{weekly_delta}" if weekly_delta > 0 else "0",
-            "contest_standing":    contest_map.get(s.id, "—"),
+            "contest_standing":    contest_standing_map.get(s.id, "—"),
+            "contest_attended":    contest_attended_map.get(s.id, False),
+            "contest_status":      contest_status_map.get(s.id, "NOT_ATTENDED"),
+            "contest_session_name": contest_session_name,
+            "contest_session_date": contest_session_date,
             "status":              status_label,
             "assigned_staff":      assignment_map.get(s.id, "Unassigned"),
             "assigned_faculty_id": assignment_faculty_id_map.get(s.id, None),

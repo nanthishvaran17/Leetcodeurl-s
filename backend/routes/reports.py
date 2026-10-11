@@ -682,6 +682,7 @@ def download_pdf_report(
         eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
 
         if dept_id:
+            from backend.models import Department
             d_obj = db.query(Department).filter(Department.id == dept_id).first()
             if d_obj:
                 eff_dept = getattr(d_obj, "code", None) or getattr(d_obj, "name", None)
@@ -695,7 +696,7 @@ def download_pdf_report(
 
         if is_top_performers:
             from backend.exporters.dynamic_pdf_exporter import export_dynamic_pdf
-            from backend.models import Student, Department, LeetCodeProfileStats, LanguageStats
+            from backend.models import Student, Department, LeetCodeProfileStats, LeetCodeLanguageStats as LanguageStats
             from sqlalchemy.orm import joinedload
             from sqlalchemy import desc, func
 
@@ -1615,7 +1616,7 @@ def _enrich_dataset_ranks_and_ratings(dataset: dict, db: Session) -> dict:
             entry = {
                 "accom": accom or "",
                 "cutoff": float(cut) if cut is not None else None,
-                "rank": prank or grank,
+                "rank": grank or prank,  # contest_global_ranking preferred over public_profile_ranking
                 "rating": int(round(crat)) if crat else None
             }
             if reg_db:

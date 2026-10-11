@@ -848,6 +848,21 @@ def get_performance_chart(
             "activeStudents": int(row.activeStudents) if row.activeStudents and int(row.activeStudents) > 0 else None
         }
 
+    # Query latest live profile totals for the current scope to anchor current day metrics
+    total_scoped_students = db.query(func.count(student_subquery.c.id)).scalar() or 0
+    live_total_solved = db.query(func.sum(LeetCodeProfileStats.total_solved)).filter(
+        LeetCodeProfileStats.student_id.in_(db.query(student_subquery.c.id))
+    ).scalar() or 0
+    live_active_students = db.query(func.count(LeetCodeProfileStats.id)).filter(
+        LeetCodeProfileStats.student_id.in_(db.query(student_subquery.c.id)),
+        LeetCodeProfileStats.total_solved > 0
+    ).scalar() or 0
+
+    # If partial snapshot runs were captured on recent days (e.g. only 2 or 8 students synced out of hundreds),
+    # clamp them so cumulative institutional totals don't display a sudden fake plummet.
+    today_str = datetime.date.today().strftime("%Y-%m-%d")
+    yesterday_str = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+
     # Generate full daily sequence
     start_date = start_dt.date()
     end_date = end_dt.date()
@@ -858,13 +873,24 @@ def get_performance_chart(
     last_p_solved = None
     last_p_active = None
 
-    # First pass: forward fill
+    # First pass: forward fill with anomaly protection for incomplete sync batches
     for d in daily_dates:
         d_str = d.strftime("%Y-%m-%d")
         item = db_perf_map.get(d_str)
 
         p_solv = item["problemsSolved"] if item and item["problemsSolved"] is not None else None
         p_act = item["activeStudents"] if item and item["activeStudents"] is not None else None
+
+        # Check for partial sync anomaly: if active students recorded today/yesterday is less than 30%
+        # of our known active baseline and we have a previous verified snapshot or live stats,
+        # don't drop off a cliff; maintain institutional baseline with live data.
+        if (d_str == today_str or d_str == yesterday_str) and (p_act is None or p_act < max(10, int(0.3 * (last_p_active or live_active_students)))):
+            p_solv = live_total_solved if live_total_solved > 0 else last_p_solved
+            p_act = live_active_students if live_active_students > 0 else last_p_active
+        elif p_act is not None and last_p_active is not None and p_act < int(0.2 * last_p_active) and (d_str >= "2026-10-09"):
+            # Partial background scrape run on recent date
+            p_solv = last_p_solved
+            p_act = last_p_active
 
         if p_solv is not None:
             last_p_solved = p_solv

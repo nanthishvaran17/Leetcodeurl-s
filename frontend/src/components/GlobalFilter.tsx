@@ -27,6 +27,7 @@ export interface GlobalFilterProps {
   showSearch?: boolean;
   searchPlaceholder?: string;
   variant?: 'default' | 'dark' | 'glass';
+  compact?: boolean;
 }
 
 export interface DepartmentTheme {
@@ -389,7 +390,8 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
   align = 'left',
   showSearch = true,
   searchPlaceholder,
-  variant = 'default'
+  variant = 'default',
+  compact = false
 }) => {
 
   const [isOpen, setIsOpen] = useState(false);
@@ -588,8 +590,10 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={twMerge(
-            "relative w-full flex items-center justify-between px-3 py-1.5 h-10 min-h-[40px] sm:px-3.5 sm:py-2 sm:h-11 sm:min-h-[44px]",
-            "border-2 transition-all duration-200 outline-none select-none rounded-xl sm:rounded-2xl cursor-pointer shadow-sm text-left group",
+            "relative w-full flex items-center justify-between border-2 transition-all duration-200 outline-none select-none cursor-pointer shadow-sm text-left group",
+            compact 
+              ? "px-2.5 py-1 h-9 min-h-[36px] rounded-xl"
+              : "px-3 py-1.5 h-10 min-h-[40px] sm:px-3.5 sm:py-2 sm:h-11 sm:min-h-[44px] rounded-xl sm:rounded-2xl",
             variant === 'dark'
               ? "bg-navy-900/90 text-white border-slate-700 hover:border-brand-500/60 shadow-inner backdrop-blur-md"
               : variant === 'glass'
@@ -600,10 +604,11 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
               : ""
           )}
         >
-          <div className="flex items-center space-x-2 overflow-hidden min-w-0 flex-1 pr-1.5">
+          <div className="flex items-center space-x-1.5 overflow-hidden min-w-0 flex-1 pr-1">
             {!hideIcon && (selectedOption?.icon || icon) && (
               <div className={clsx(
-                "w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition-colors border",
+                "flex items-center justify-center shrink-0 transition-colors border",
+                compact ? "w-4 h-4 rounded text-xs" : "w-5 h-5 rounded-md",
                 triggerTheme.iconBg,
                 isOpen ? "border-brand-400" : (variant === 'dark' || variant === 'glass' ? "border-slate-700/60" : "border-slate-300 dark:border-navy-700")
               )}>
@@ -615,7 +620,8 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
             
             {selectedOption?.hidePill !== true && (
               <div className={clsx(
-                "shrink-0 text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border",
+                "shrink-0 font-black uppercase tracking-wider border",
+                compact ? "text-[9px] px-1 py-0.2 rounded" : "text-[10px] px-1.5 py-0.5 rounded-md",
                 triggerTheme.badgeBg, triggerTheme.badgeText, triggerTheme.badgeBorder
               )}>
                 {getPillText(selectedOption)}
@@ -623,7 +629,8 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
             )}
             
             <span className={clsx(
-              "text-xs font-black truncate flex-1 text-left",
+              "font-black truncate flex-1 text-left",
+              compact ? "text-[11px] sm:text-xs" : "text-xs",
               (variant === 'dark' || variant === 'glass') ? "text-white" : "text-slate-900 dark:text-white"
             )}>
               {selectedOption ? selectedOption.label : placeholder}
@@ -632,7 +639,8 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
 
           <ChevronDown 
             className={clsx(
-              "w-4 h-4 shrink-0 transition-transform duration-200 ml-1",
+              "shrink-0 transition-transform duration-200",
+              compact ? "w-3.5 h-3.5 ml-0.5" : "w-4 h-4 ml-1",
               isOpen 
                 ? "rotate-180 text-brand-400" 
                 : (variant === 'dark' || variant === 'glass') ? "text-slate-300 group-hover:text-white" : "text-slate-700 dark:text-slate-300"

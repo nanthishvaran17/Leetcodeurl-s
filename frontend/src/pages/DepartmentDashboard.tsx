@@ -193,81 +193,88 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       </div>
 
       {/* Filter Tabs Bar */}
-      <div className="glass-card p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 relative z-30 overflow-visible">
+      <div className="glass-card p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-3 sm:space-y-4 relative z-30 overflow-visible">
 
         {/* Header with Title & Controls */}
-        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-          <div className="space-y-1">
-            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center space-x-2">
-              <Filter className="w-4 h-4 text-brand-500" />
-              <span>Department Analytics Filtering</span>
+        <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+          <div className="space-y-0.5 min-w-0">
+            <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center space-x-1.5">
+              <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-500 shrink-0" />
+              <span className="truncate">Department Analytics Filtering</span>
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
               Select department and academic year criteria to analyze student metrics
             </p>
           </div>
 
-          <div className="flex items-center space-x-2.5">
+          <div className="flex items-center space-x-2 shrink-0">
             {/* View Mode Switch */}
             <button
               onClick={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
-              className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 transition-all cursor-pointer shadow-sm flex items-center justify-center"
+              className="p-1.5 sm:p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 transition-all cursor-pointer shadow-sm flex items-center justify-center"
               title={viewMode === 'cards' ? 'Switch to Table View' : 'Switch to Grid View'}
             >
               {viewMode === 'cards' ? (
-                <List className="w-4 h-4" />
+                <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               ) : (
-                <LayoutGrid className="w-4 h-4" />
+                <LayoutGrid className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               )}
             </button>
 
             {/* Reset Filters Button */}
             <button
               onClick={handleResetFilters}
-              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-sm"
+              className="flex items-center space-x-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] sm:text-xs font-bold border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-sm"
               title="Reset all filters to default"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+              <RotateCcw className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500" />
               <span>Reset Filters</span>
             </button>
           </div>
         </div>
 
-        {/* 5 Filter & Search Controls — Auto-Fitting Responsive Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4 items-start">
+        {/* 5 Filter & Search Controls — Auto-Fitting Responsive 2-Column Grid on Mobile */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 sm:gap-2.5 items-start">
 
           {/* 1. Department Filter */}
-          <PremiumDepartmentSelect
-            selectedDept={selectedDept === 'all' ? 'ALL' : selectedDept}
-            onChange={(val) => {
-              setSelectedDept(val === 'ALL' ? 'all' : val);
-              setDisplayCount(32);
-            }}
-            useIdAsValue={true}
-          />
+          <div className="min-w-0 w-full">
+            <PremiumDepartmentSelect
+              compact={true}
+              selectedDept={selectedDept === 'all' ? 'ALL' : selectedDept}
+              onChange={(val) => {
+                setSelectedDept(val === 'ALL' ? 'all' : val);
+                setDisplayCount(32);
+              }}
+              dropdownWidth="min-w-[260px] sm:min-w-[320px]"
+              useIdAsValue={true}
+            />
+          </div>
 
           {/* 2. Academic Year Filter */}
-          <GlobalFilter
-            label="Academic Year"
-            value={yearLevel}
-            onChange={(val) => {
-              setYearLevel(val);
-              setDisplayCount(32);
-            }}
-            dropdownWidth="min-w-[320px]"
-            searchPlaceholder="Search academic year..."
-            options={[
-              { value: "all", label: "All Academic Years", pillText: "ALL" },
-              { value: "1", label: "I Year", pillText: "1ST" },
-              { value: "2", label: "II Year", pillText: "2ND" },
-              { value: "3", label: "III Year", pillText: "3RD" },
-              { value: "4", label: "IV Year", pillText: "4TH" }
-            ]}
-          />
+          <div className="min-w-0 w-full">
+            <GlobalFilter
+              compact={true}
+              label="Academic Year"
+              value={yearLevel}
+              onChange={(val) => {
+                setYearLevel(val);
+                setDisplayCount(32);
+              }}
+              dropdownWidth="min-w-[200px] sm:min-w-[240px]"
+              searchPlaceholder="Search academic year..."
+              options={[
+                { value: "all", label: "All Academic Years", pillText: "ALL" },
+                { value: "1", label: "I Year", pillText: "1ST" },
+                { value: "2", label: "II Year", pillText: "2ND" },
+                { value: "3", label: "III Year", pillText: "3RD" },
+                { value: "4", label: "IV Year", pillText: "4TH" }
+              ]}
+            />
+          </div>
 
-          {/* 3. Name Search */}
-          <div className="flex flex-col space-y-1.5 min-w-0 w-full">
-            <label htmlFor="dept-dashboard-name-search" className="block text-[11px] font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider truncate h-4 leading-4 m-0 p-0">
+          {/* 3. Name Search (spans full width on mobile for easy typing, single col on desktop) */}
+          <div className="col-span-2 sm:col-span-1 xl:col-span-1 flex flex-col space-y-1.5 min-w-0 w-full">
+            <label htmlFor="dept-dashboard-name-search" className="block text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider truncate h-4 leading-4 m-0 p-0">
               Search Student Name
             </label>
             <div className="relative flex items-center">
@@ -282,48 +289,54 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 autoComplete="off"
                 spellCheck={false}
                 placeholder="Search by name, reg no..."
-                className="w-full h-11 min-h-[44px] bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs font-bold py-2 pl-10 pr-8 rounded-2xl border border-slate-300 dark:border-slate-700 shadow-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 text-left transition-all"
+                className="w-full h-9 min-h-[36px] bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-[11px] sm:text-xs font-bold py-1.5 pl-8 pr-7 rounded-xl border border-slate-300 dark:border-slate-700 shadow-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 text-left transition-all"
               />
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
-                <Search className="w-4 h-4 stroke-[2.5]" />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 z-10 text-slate-500 dark:text-slate-400">
+                <Search className="w-3.5 h-3.5 stroke-[2.5]" />
               </div>
               {nameSearch && (
                 <button
                   type="button"
                   onClick={() => { setNameSearch(''); setDisplayCount(32); }}
-                  className="absolute inset-y-0 right-0 z-10 flex items-center px-2.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors"
+                  className="absolute inset-y-0 right-0 z-10 flex items-center px-2 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors"
                   title="Clear search"
                 >
-                  <X className="w-4 h-4 stroke-[2.5]" />
+                  <X className="w-3.5 h-3.5 stroke-[2.5]" />
                 </button>
               )}
             </div>
           </div>
 
           {/* 4. Performance Range Filter */}
-          <CustomDropdown
-            id="dept-dashboard-performance-filter"
-            label="Performance Range"
-            options={performanceOptions}
-            value={solvedFilter}
-            onChange={(val) => {
-              setSolvedFilter(val);
-              setDisplayCount(32);
-            }}
-            icon={Trophy}
-            align="right"
-          />
+          <div className="min-w-0 w-full">
+            <CustomDropdown
+              compact={true}
+              id="dept-dashboard-performance-filter"
+              label="Performance Range"
+              options={performanceOptions}
+              value={solvedFilter}
+              onChange={(val) => {
+                setSolvedFilter(val);
+                setDisplayCount(32);
+              }}
+              icon={Trophy}
+              align="right"
+            />
+          </div>
 
           {/* 5. Sort Students */}
-          <CustomDropdown
-            id="dept-dashboard-sort-filter"
-            label="Sort Ranking"
-            options={sortOptions}
-            value={sortBy}
-            onChange={(val) => setSortBy(val)}
-            icon={ArrowUpDown}
-            align="right"
-          />
+          <div className="min-w-0 w-full">
+            <CustomDropdown
+              compact={true}
+              id="dept-dashboard-sort-filter"
+              label="Sort Ranking"
+              options={sortOptions}
+              value={sortBy}
+              onChange={(val) => setSortBy(val)}
+              icon={ArrowUpDown}
+              align="right"
+            />
+          </div>
 
         </div>
 

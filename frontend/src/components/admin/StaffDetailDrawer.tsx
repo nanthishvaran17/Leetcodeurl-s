@@ -63,7 +63,9 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   const totalProblemsSolved = loadingMentees ? (staff.coding_activity || 0) : mentees.reduce((acc, m) => acc + (m.total_solved || 0), 0);
   const targetCompletedCount = mentees.filter(m => (m.total_solved || 0) >= 10).length;
   
-  const recentContestAttendedCount = mentees.filter(m => m.contest_standing && m.contest_standing !== '—').length;
+  const recentContestAttendedCount = !loadingMentees && mentees.length > 0
+    ? mentees.filter(m => m.contest_attended === true || (m.contest_standing && m.contest_standing !== '—' && m.contest_standing !== 'Absent' && m.contest_standing !== 'Not Attended')).length
+    : (staff.sunday_contest_attended ?? 0);
   const contestAttendanceRate = assignedCount > 0 ? Math.round((recentContestAttendedCount / assignedCount) * 100) : 0;
 
   if (typeof document === 'undefined') return null;
@@ -206,15 +208,23 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
               {/* Recent Contest Attendance */}
               <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm shadow-slate-200/50 dark:shadow-black/10 relative overflow-hidden">
                 <Trophy className="absolute -right-2 -top-2 text-amber-50 dark:text-navy-800" size={58} />
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Sunday Contest</div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>Sunday Contest</span>
+                  <span className="text-[9px] font-mono lowercase text-slate-400 truncate max-w-[120px]">
+                    {staff.sunday_contest_session_name || 'verified live'}
+                  </span>
+                </div>
                 <div className="flex items-baseline gap-1">
                   <div className="text-xl font-black text-blue-600 dark:text-blue-400">
                     {recentContestAttendedCount}
                   </div>
-                  <div className="text-[11px] text-slate-500">/ {assignedCount} attended</div>
+                  <div className="text-[11px] text-slate-500 font-semibold">/ {assignedCount} attended</div>
                 </div>
                 <div className="mt-2 w-full h-2 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden border border-slate-200 dark:border-navy-700">
-                  <div className={`h-full rounded-full transition-all duration-500 ${contestAttendanceRate >= 80 ? 'bg-blue-500' : contestAttendanceRate >= 50 ? 'bg-indigo-400' : 'bg-slate-400'}`} style={{ width: `${contestAttendanceRate}%` }} />
+                  <div 
+                    className={`h-full rounded-full transition-all duration-500 ${contestAttendanceRate >= 80 ? 'bg-blue-500' : contestAttendanceRate >= 50 ? 'bg-indigo-400' : contestAttendanceRate > 0 ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700'}`} 
+                    style={{ width: `${contestAttendanceRate}%` }} 
+                  />
                 </div>
                 <div className="text-[10px] text-slate-700 dark:text-slate-300 mt-1 font-bold text-right">{contestAttendanceRate}% turnout</div>
               </div>
@@ -268,54 +278,92 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                   {loadingMentees ? 'Fetching assigned mentees data...' : 'No students assigned to this faculty mentor yet.'}
                 </div>
               ) : (
-                <div className="max-h-72 overflow-y-auto">
+                <div className="max-h-80 overflow-y-auto overflow-x-hidden">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead className="bg-slate-100 dark:bg-navy-800 text-[9px] sm:text-[10px] font-bold text-slate-700 dark:text-slate-300 sticky top-0 border-b border-slate-200 dark:border-navy-700">
+                    <thead className="bg-slate-100/90 dark:bg-navy-800/90 backdrop-blur-sm text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 sticky top-0 z-10 border-b border-slate-200 dark:border-navy-700">
                       <tr>
-                        <th className="py-2 px-1.5 sm:px-3 text-left">Student Info</th>
-                        <th className="py-2 px-1.5 sm:px-3 text-center">Year / Sec</th>
-                        <th className="py-2 px-1.5 sm:px-3 text-right">Solved</th>
-                        <th className="py-2 px-1.5 sm:px-3 text-center">Status</th>
-                        {onSelectStudent && <th className="py-2 px-1.5 sm:px-3 text-center">Action</th>}
+                        <th className="py-2.5 px-2.5 text-left">Student Info</th>
+                        <th className="py-2.5 px-1.5 text-center whitespace-nowrap">Year & Dept</th>
+                        <th className="py-2.5 px-1.5 text-right whitespace-nowrap">Solved</th>
+                        <th className="py-2.5 px-1.5 text-center whitespace-nowrap">Sunday Contest</th>
+                        <th className="py-2.5 px-2 text-center whitespace-nowrap">Status</th>
+                        {onSelectStudent && <th className="py-2.5 px-1.5 text-center whitespace-nowrap">Action</th>}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
+                    <tbody className="divide-y divide-slate-100 dark:divide-navy-800 font-sans">
                       {mentees.map(s => {
                         const isStudentActive = (s.total_solved || 0) > 0 || s.is_active || s.status === 'ACTIVE';
+                        const isContestAttended = s.contest_attended || (s.contest_standing && s.contest_standing !== '—' && s.contest_standing !== 'Absent' && s.contest_standing !== 'Not Attended');
                         return (
-                          <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/80 transition">
-                            <td className="py-2.5 px-1.5 sm:px-3">
-                              <div className="font-extrabold text-slate-900 dark:text-white text-[11px] sm:text-xs leading-tight break-words min-w-[70px]">{s.name}</div>
-                              <div className="text-[9px] sm:text-[10px] text-amber-700 dark:text-amber-400 font-bold mt-0.5">{s.reg_no}</div>
+                          <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/80 transition-colors">
+                            {/* Student Info */}
+                            <td className="py-2.5 px-2.5 min-w-0">
+                              <div className="font-extrabold text-slate-900 dark:text-white text-[11px] leading-tight truncate max-w-[125px] sm:max-w-[170px]" title={s.name}>
+                                {s.name}
+                              </div>
+                              <div className="text-[9.5px] font-mono font-bold text-amber-600 dark:text-amber-400 mt-0.5 tracking-tight truncate">
+                                {s.reg_no}
+                              </div>
                             </td>
-                            <td className="py-2.5 px-1.5 sm:px-3 text-center font-bold text-slate-700 dark:text-slate-300 text-[10px] sm:text-[11px] min-w-[60px]">
-                              <div>{s.year_level || 'Yr-N/A'}</div>
-                              <div className="text-[9px] opacity-80">{s.department_code ? `(${s.department_code})` : ''}</div>
-                            </td>
-                            <td className="py-2.5 px-1.5 sm:px-3 text-right font-extrabold text-slate-900 dark:text-white text-[11px] sm:text-xs whitespace-nowrap">
-                              {s.total_solved || 0}
-                              {s.easy_solved !== undefined && (
-                                <div className="text-[8px] sm:text-[9px] text-slate-500 font-normal">
-                                  {s.easy_solved}E / {s.medium_solved || 0}M / {s.hard_solved || 0}H
+
+                            {/* Year & Dept */}
+                            <td className="py-2.5 px-1.5 text-center whitespace-nowrap">
+                              <div className="font-extrabold text-slate-800 dark:text-slate-200 text-[11px] leading-tight">
+                                {s.year_level || 'N/A'}
+                              </div>
+                              {s.department_code && (
+                                <div className="text-[9px] font-mono font-bold text-slate-600 dark:text-slate-400 leading-tight mt-0.5">
+                                  ({s.department_code})
                                 </div>
                               )}
                             </td>
-                            <td className="py-2.5 px-1.5 sm:px-3 text-center">
-                              {isStudentActive ? (
-                                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] sm:text-[10px] font-extrabold border border-emerald-300 dark:border-emerald-800 whitespace-nowrap">
-                                  <CheckCircle size={10} className="text-emerald-600 dark:text-emerald-400 shrink-0" /> Active
+
+                            {/* Solved Count */}
+                            <td className="py-2.5 px-1.5 text-right whitespace-nowrap">
+                              <div className="font-black text-slate-900 dark:text-white text-xs">
+                                {s.total_solved || 0}
+                              </div>
+                              {s.easy_solved !== undefined && (
+                                <div className="text-[8.5px] font-mono font-medium text-slate-600 dark:text-slate-400 mt-0.5">
+                                  {s.easy_solved}E/{s.medium_solved || 0}M/{s.hard_solved || 0}H
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Sunday Contest (Clean score pill without trophy icon) */}
+                            <td className="py-2.5 px-1.5 text-center whitespace-nowrap">
+                              {isContestAttended ? (
+                                <span className="inline-block px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-black border border-blue-200/80 dark:border-blue-800/80 shadow-2xs">
+                                  {s.contest_standing && s.contest_standing !== '—' && s.contest_standing !== 'Absent' ? s.contest_standing : 'Attended'}
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-400 text-[9px] sm:text-[10px] font-bold border border-slate-300 dark:border-navy-700 whitespace-nowrap">
-                                  Inactive
+                                <span className="inline-block px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 text-[9.5px] font-semibold border border-slate-200 dark:border-navy-700">
+                                  Absent
                                 </span>
                               )}
                             </td>
+
+                            {/* Status */}
+                            <td className="py-2.5 px-2 text-center whitespace-nowrap">
+                              {isStudentActive ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[9.5px] font-extrabold border border-emerald-200/80 dark:border-emerald-800/80 shadow-2xs">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                  <span>Active</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 text-[9.5px] font-bold border border-slate-200 dark:border-navy-700">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
+                                  <span>Inactive</span>
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Optional Action */}
                             {onSelectStudent && (
-                              <td className="py-2.5 px-1.5 sm:px-3 text-center">
+                              <td className="py-2.5 px-1.5 text-center whitespace-nowrap">
                                 <button
                                   onClick={() => onSelectStudent(s)}
-                                  className="px-2 py-1 rounded-full bg-brand-50 hover:bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 font-bold text-[9px] sm:text-[10px] transition cursor-pointer border border-brand-200 whitespace-nowrap"
+                                  className="px-2 py-0.5 rounded-lg bg-brand-50 hover:bg-brand-600 text-brand-700 hover:text-white dark:bg-brand-950 dark:text-brand-300 dark:hover:bg-brand-600 font-bold text-[9.5px] transition cursor-pointer border border-brand-200 dark:border-brand-800"
                                 >
                                   Inspect →
                                 </button>

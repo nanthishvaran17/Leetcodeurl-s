@@ -832,8 +832,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <CountdownTimer targetSeconds={summaryData?.next_session_countdown_seconds || 86400} isLive={summaryData?.is_session_live} />
       </motion.div>
 
-      {/* Stat Cards Grid — Data-quality-aware with Framer Motion hover & AnimatedNumber */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-5">
+      {/* Stat Cards Grid — 4 in a single line on desktop, 2-col on mobile */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
         {(() => {
           const activeCohort = (selectedDept !== 'all' || isFiltered) ? sortedList : students;
           const totalStudents = activeCohort.length;

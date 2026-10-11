@@ -112,6 +112,10 @@ export interface StaffRecord {
   joined_date?: string;
   last_active?: string;
   coding_activity?: number;
+  sunday_contest_attended?: number;
+  sunday_contest_turnout_pct?: number;
+  sunday_contest_session_name?: string;
+  sunday_contest_session_date?: string;
 }
 
 export interface FacultyWorkloadItem {
@@ -211,6 +215,10 @@ export interface StudentRecord {
   total_solved: number;
   weekly_change?: string;
   contest_standing?: string;
+  contest_attended?: boolean;
+  contest_status?: string;
+  contest_session_name?: string;
+  contest_session_date?: string;
   status?: 'ACTIVE' | 'INACTIVE' | 'IMPROVING' | 'DECLINING';
   assigned_staff?: string;
   assigned_faculty_id?: number | null;

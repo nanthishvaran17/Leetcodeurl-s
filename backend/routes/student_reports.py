@@ -26,7 +26,7 @@ def generate_isolated_student_report(
     from backend.services.student_report_service import generate_student_report
     
     # 1. Generate Report
-    result = generate_student_report(
+    result: dict = generate_student_report(
         db=db,
         student_id=req.student_id,
         report_type=req.report_type,
@@ -36,10 +36,10 @@ def generate_isolated_student_report(
     
     return {
         "status": "READY",
-        "download_url": result["download_url"],
-        "filename": result["filename"],
-        "mime_type": result["mime_type"],
-        "file_size_bytes": result["file_size_bytes"]
+        "download_url": result.get("download_url"),
+        "filename": result.get("filename"),
+        "mime_type": result.get("mime_type"),
+        "file_size_bytes": result.get("file_size_bytes")
     }
 
 @router.post("/generate-direct")
@@ -51,7 +51,7 @@ def generate_isolated_student_report_direct(
     from backend.services.student_report_service import generate_student_report
     from fastapi.responses import Response
     
-    file_bytes, filename, mime_type = generate_student_report(
+    gen_res = generate_student_report(
         db=db,
         student_id=req.student_id,
         report_type=req.report_type,
@@ -59,10 +59,11 @@ def generate_isolated_student_report_direct(
         current_user=current_user,
         return_bytes=True
     )
+    file_bytes, filename, mime_type = gen_res
     
     return Response(
         content=file_bytes,
-        media_type=mime_type,
+        media_type=str(mime_type) if mime_type else "application/octet-stream",
         headers={
             "Content-Disposition": f'attachment; filename="{filename}"'
         }

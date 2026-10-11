@@ -1088,7 +1088,11 @@ def get_normalized_contest_data(
             "total_contest_solved": r["total_solved"] if is_att and r["total_solved"] is not None else "—",
             "score": r["score"] if is_att and r["score"] is not None else 0,
             "rank": r["rank"] if is_att and r["rank"] is not None else "—",
-            "rating": r["rating"] if is_att and r["rating"] is not None else "—",
+            "contest_rank": r.get("contest_rank") if is_att and r.get("contest_rank") is not None else "—",
+            "rating": round(float(r["rating"]), 1) if (r.get("rating") and r["rating"] not in ("—", "None", None, 0, "0")) else "Unrated",
+            "contest_rating": round(float(r["contest_rating"]), 1) if (r.get("contest_rating") and r["contest_rating"] not in ("—", "None", None, 0, "0")) else "Unrated",
+            "contest_global_rank": f"#{int(r['contest_global_rank']):,}" if (r.get("contest_global_rank") and str(r["contest_global_rank"]).isdigit() and int(r["contest_global_rank"]) > 0) else "Unrated",
+            "global_rank": f"#{int(r['global_rank']):,}" if (r.get("global_rank") and str(r["global_rank"]).isdigit() and int(r["global_rank"]) > 0) else "Unrated",
             "source_status": "AUTHENTIC_VERIFIED" if is_att or status_val == "NOT_ATTENDED" else "UNVERIFIED",
             "fetch_status": r.get("data_source", "LeetCode GraphQL"),
             "error_reason": r.get("error_reason")
@@ -1253,7 +1257,11 @@ def get_session_matrix(
                 "total_contest_solved": r.get("total_solved") if is_att and r.get("total_solved") is not None else "—",
                 "score": r.get("score") if is_att and r.get("score") is not None else 0,
                 "rank": r.get("rank") if is_att and r.get("rank") is not None else "—",
-                "rating": r.get("rating") if is_att and r.get("rating") is not None else "—",
+                "contest_rank": r.get("contest_rank") if is_att and r.get("contest_rank") is not None else "—",
+                "rating": round(float(r["rating"]), 1) if (r.get("rating") and r["rating"] not in ("—", "None", None, 0, "0")) else "Unrated",
+                "contest_rating": round(float(r["contest_rating"]), 1) if (r.get("contest_rating") and r["contest_rating"] not in ("—", "None", None, 0, "0")) else "Unrated",
+                "contest_global_rank": f"#{int(r['contest_global_rank']):,}" if (r.get("contest_global_rank") and str(r["contest_global_rank"]).isdigit() and int(r["contest_global_rank"]) > 0) else "Unrated",
+                "global_rank": f"#{int(r['global_rank']):,}" if (r.get("global_rank") and str(r["global_rank"]).isdigit() and int(r["global_rank"]) > 0) else "Unrated",
                 "source_status": "AUTHENTIC_VERIFIED" if is_att or status_val == "NOT_ATTENDED" else "UNVERIFIED",
                 "fetch_status": r.get("fetch_status", "LeetCode GraphQL"),
                 "error_reason": r.get("error_reason")
@@ -3481,6 +3489,244 @@ def get_live_contest_summary(
         "session_date": session.session_date,
         "metrics": metrics
     }
+
+
+from pydantic import BaseModel
+from typing import List
+
+class SendContestRemindersRequest(BaseModel):
+    student_reg_nos: List[str]
+    session_id: Optional[int] = None
+    custom_message: Optional[str] = None
+
+
+@router.post("/sessions/{session_id}/send-reminders")
+@router.post("/send-reminders")
+def send_contest_student_reminders(
+    req: SendContestRemindersRequest,
+    session_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(require_security_access(resource_name="Send Contest Reminders"))
+):
+    """
+    Sends personalized, official institutional contest reminder/status emails to selected students.
+    Supports live participants, virtual participants, absentees, and unlinked profiles.
+    Recipient is mapped to personal email, institutional email, or auto-generated @nandhaengg.org email.
+    """
+    target_session_id = session_id or req.session_id
+    if target_session_id:
+        session_obj = db.query(WeeklySession).filter(WeeklySession.id == target_session_id).first()
+    else:
+        session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+
+    if not session_obj:
+        raise HTTPException(status_code=404, detail="Contest session not found.")
+
+    contest_name = session_obj.contest_name or f"Weekly Contest {session_obj.id}"
+    contest_date = session_obj.session_date or datetime.datetime.now().strftime("%d.%m.%Y")
+    start_time = getattr(session_obj, "start_time", "08:00") or "08:00"
+    end_time = getattr(session_obj, "end_time", "09:30") or "09:30"
+
+    from backend.services.canonical_contest_engine import build_canonical_contest_dataset
+    from backend.services.email_identity_service import generate_institutional_email
+    from backend.services.email_service import send_email
+    from backend.services.email_templates import generate_professional_template
+    from backend.models import EmailDispatchLog
+
+    canonical_data = build_canonical_contest_dataset(session_id=session_obj.id, db=db)
+    rows_by_reg = {str(r.get("reg_no", "")).strip().upper(): r for r in canonical_data.get("rows", [])}
+
+    requested_regs = [str(reg).strip().upper() for reg in req.student_reg_nos if str(reg).strip()]
+    if not requested_regs:
+        raise HTTPException(status_code=400, detail="No student registration numbers provided.")
+
+    students = db.query(Student).filter(Student.reg_no.in_(requested_regs)).all()
+    students_by_reg = {s.reg_no.strip().upper(): s for s in students}
+
+    dispatched = []
+    failed = []
+
+    for reg in requested_regs:
+        student = students_by_reg.get(reg)
+        if not student:
+            failed.append({"reg_no": reg, "error": "Student not found in database"})
+            continue
+
+        row_data = rows_by_reg.get(reg, {})
+        status = str(row_data.get("status") or "NOT_ATTENDED").upper()
+        solved_str = str(row_data.get("solved") or "0/4")
+        username = student.username or row_data.get("username") or "N/A"
+
+        recipient = None
+        if student.email and "@" in student.email:
+            recipient = student.email.strip().lower()
+        elif student.institutional_email and "@" in student.institutional_email:
+            recipient = student.institutional_email.strip().lower()
+        else:
+            generated = generate_institutional_email(student.reg_no)
+            if generated and "@" in generated:
+                recipient = generated.strip().lower()
+
+        if not recipient:
+            failed.append({"reg_no": reg, "name": student.name, "error": "Could not determine recipient email address."})
+            continue
+
+        if status in ("PUBLIC", "ATTENDED", "LIVE_ATTENDED"):
+            status_display = "Live Contest Attended"
+            status_color = "#16a34a"
+            action_text = (
+                f"Congratulations on participating in the live Sunday contest! "
+                f"You solved <strong>{solved_str}</strong> problems during the official contest window. "
+                "Keep up the momentum and continue competing consistently each week."
+            )
+        elif status in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+            status_display = "Virtual Mode Completed"
+            status_color = "#9333ea"
+            action_text = (
+                f"You completed this contest in Virtual Mode with <strong>{solved_str}</strong> problems solved. "
+                "Consistent practice is great! Aim to participate in the live window (Sunday 08:00 AM – 09:30 AM IST) whenever available."
+            )
+        elif status in ("DATA ERROR", "DATA_ERROR", "UNLINKED", "USERNAME_NOT_FOUND"):
+            status_display = "Profile Verification Required"
+            status_color = "#d97706"
+            action_text = (
+                "Your LeetCode profile handle could not be verified during this weekly contest. "
+                "Please log in to your student portal and ensure your official LeetCode handle is linked accurately so your scores are counted."
+            )
+        else:
+            status_display = "Not Attended"
+            status_color = "#dc2626"
+            action_text = (
+                "You were marked as <strong>Not Attended</strong> for the official Sunday LeetCode Weekly Contest window (08:00 AM – 09:30 AM IST). "
+                "Regular contest participation is mandatory for tracking placement readiness. "
+                "Please complete this contest in <strong>Virtual Mode on LeetCode</strong> to make up for missed participation."
+            )
+
+        custom_note_html = ""
+        if req.custom_message and req.custom_message.strip():
+            custom_note_html = f"""
+            <div style="background-color: #f1f5f9; border-left: 4px solid #6366f1; border-radius: 4px; padding: 12px 16px; margin-bottom: 20px;">
+                <p style="margin: 0 0 4px 0; font-size: 12px; font-weight: 700; color: #4338ca; text-transform: uppercase;">Coordinator Note</p>
+                <p style="margin: 0; font-size: 13px; color: #1e293b; line-height: 1.5;">{req.custom_message.strip()}</p>
+            </div>
+            """
+
+        subject = f"Weekly LeetCode Contest Reminder — {contest_name} | {student.name} ({student.reg_no})"
+        title = "Weekly LeetCode Contest Reminder"
+
+        content_html = f"""
+        <p style="margin-top: 0; margin-bottom: 16px; font-size: 15px; color: #1e293b;">
+            Dear <strong>{student.name}</strong>,
+        </p>
+        <p style="margin-top: 0; margin-bottom: 20px; font-size: 14px; color: #334155; line-height: 1.6;">
+            This is an official update regarding your participation status in the weekly institutional coding contest.
+        </p>
+
+        {custom_note_html}
+
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px 20px; margin-bottom: 24px;">
+            <h4 style="margin: 0 0 14px 0; color: #0f172a; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+                Contest Participation Summary
+            </h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <tr>
+                    <td style="padding: 6px 0; color: #64748b; width: 35%; font-weight: 600;">Student Name:</td>
+                    <td style="padding: 6px 0; color: #0f172a; font-weight: 600;">{student.name}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Roll / Reg No:</td>
+                    <td style="padding: 6px 0; color: #0f172a; font-family: monospace;">{student.reg_no}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Contest:</td>
+                    <td style="padding: 6px 0; color: #0f172a; font-weight: 600;">{contest_name}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Contest Date:</td>
+                    <td style="padding: 6px 0; color: #0f172a;">{contest_date} ({start_time} – {end_time} IST)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-weight: 600;">LeetCode Username:</td>
+                    <td style="padding: 6px 0; color: #0f172a; font-family: monospace;">{username}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Participation Status:</td>
+                    <td style="padding: 6px 0; color: {status_color}; font-weight: 800;">{status_display}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Problems Solved:</td>
+                    <td style="padding: 6px 0; color: #0f172a; font-weight: 700;">{solved_str}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="background-color: #ffffff; border: 1px solid #cbd5e1; border-left: 4px solid #475569; border-radius: 6px; padding: 14px 16px; margin-bottom: 24px;">
+            <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                Action Item & Next Steps
+            </h4>
+            <p style="margin: 0; font-size: 13px; color: #334155; line-height: 1.6;">
+                {action_text}
+            </p>
+        </div>
+
+        <p style="margin-top: 24px; margin-bottom: 4px; font-size: 14px; color: #475569;">
+            Best regards,
+        </p>
+        <p style="margin-top: 0; margin-bottom: 2px; font-size: 14px; font-weight: 700; color: #0f172a;">
+            Nandha LeetCode Intelligence & Placement Cell
+        </p>
+        <p style="margin-top: 0; font-size: 13px; color: #64748b;">
+            Nandha Engineering College (Autonomous)
+        </p>
+        """
+
+        html_body = generate_professional_template(title, content_html)
+        plain_text = f"Dear {student.name},\n\nThis is an official contest reminder for {contest_name} ({contest_date}).\nStatus: {status_display}\nProblems Solved: {solved_str}\n\n{action_text}\n\nRegards,\nNandha Engineering College"
+
+        ok, msg_or_err = send_email(
+            recipient=recipient,
+            subject=subject,
+            html_body=html_body,
+            text_body=plain_text
+        )
+
+        idempotency_key = f"contest_reminder_{student.id}_{session_obj.id}_{int(datetime.datetime.now().timestamp())}"
+        try:
+            dispatch_log = EmailDispatchLog(
+                email_id=f"REMINDER-{student.id}-{session_obj.id}-{int(datetime.datetime.now().timestamp())}",
+                report_id=f"Contest_{session_obj.id}",
+                session_id=session_obj.id,
+                idempotency_key=idempotency_key,
+                recipient=recipient,
+                role="STUDENT",
+                subject=subject,
+                dispatch_type="MANUAL_CONTEST_REMINDER",
+                provider="BREVO_API",
+                status="SENT" if ok else "FAILED",
+                error_message=None if ok else str(msg_or_err),
+                sent_at=datetime.datetime.now(datetime.timezone.utc) if ok else None
+            )
+            db.add(dispatch_log)
+            db.commit()
+        except Exception as log_err:
+            db.rollback()
+            logger.warning(f"Failed to log email dispatch: {log_err}")
+
+        if ok:
+            dispatched.append({"reg_no": reg, "name": student.name, "email": recipient, "status": "SENT"})
+        else:
+            failed.append({"reg_no": reg, "name": student.name, "email": recipient, "error": str(msg_or_err)})
+
+    return {
+        "success": len(dispatched) > 0 or len(failed) == 0,
+        "total_requested": len(requested_regs),
+        "sent_count": len(dispatched),
+        "failed_count": len(failed),
+        "dispatched": dispatched,
+        "failed": failed,
+        "message": f"Successfully sent contest reminder emails to {len(dispatched)} students." if dispatched else "Failed to send reminder emails."
+    }
+
 
 
 

@@ -1190,7 +1190,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 flex-wrap flex-1 w-full">
+        <div className="flex items-center justify-between sm:justify-end gap-2 flex-wrap flex-1 w-full">
           {/* Active Status Filter Chip */}
           {selectedTypeFilter !== 'ALL' && (
             <button
@@ -1275,56 +1275,59 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
               <div
                 key={`${r.student_id}-${idx}`}
                 onClick={() => setSelectedForensicRecord(r)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer bg-white dark:bg-navy-900 shadow-sm hover:shadow-md space-y-3 ${
+                className={`p-4 rounded-2xl border transition-all cursor-pointer bg-white dark:bg-navy-900 shadow-sm hover:shadow-md space-y-3 overflow-hidden ${
                   r.recently_updated
                     ? 'border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/20'
                     : 'border-slate-200/90 dark:border-navy-800 hover:border-brand-400'
                 }`}
               >
-                {/* Header: Rank + Student Info + Status Pill */}
-                <div className="flex items-start justify-between gap-2.5">
-                  <div className="flex items-center gap-2.5 min-w-0">
+                {/* Header: Rank + Student Name + Status Pill */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <span className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-900 dark:text-white font-mono font-black text-xs flex items-center justify-center shrink-0 border border-slate-200 dark:border-navy-700">
                       {rankIndex}
                     </span>
-                    <div className="min-w-0">
-                      <h4 className="font-black text-sm text-slate-950 dark:text-white truncate tracking-tight">
-                        {r.student_name}
-                      </h4>
-                      <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 font-mono font-bold mt-0.5 truncate">
-                        <span>{r.reg_no}</span>
-                        {cleanYear && <span>• {cleanYear}</span>}
-                        {r.department_name && (
-                          <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-black text-[10px] uppercase border border-indigo-500/20">
-                            {r.department_name}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <h4 className="font-black text-sm text-slate-950 dark:text-white truncate tracking-tight">
+                      {r.student_name}
+                    </h4>
                   </div>
 
                   <div className="shrink-0">
                     {isPublic && (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shadow-2xs">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shadow-2xs whitespace-nowrap">
                         LIVE
                       </span>
                     )}
                     {isVirtual && (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-2xs">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-2xs whitespace-nowrap">
                         VIRTUAL
                       </span>
                     )}
                     {isAbsent && (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 shadow-2xs">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 shadow-2xs whitespace-nowrap">
                         NOT PARTICIPATED
                       </span>
                     )}
                     {(isMissingHandle || isPending) && (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shadow-2xs">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shadow-2xs whitespace-nowrap">
                         {isMissingHandle ? 'NO HANDLE' : 'PENDING'}
                       </span>
                     )}
                   </div>
+                </div>
+
+                {/* Sub-Header: Reg No + Year + Department Badge (Full width, wrapping allowed, never cut off!) */}
+                <div className="flex items-center flex-wrap gap-1.5 text-xs text-slate-600 dark:text-slate-300 font-mono font-bold pl-[38px]">
+                  <span className="shrink-0">{r.reg_no}</span>
+                  {cleanYear && <span className="shrink-0 text-slate-400">• {cleanYear}</span>}
+                  {r.department_name && (() => {
+                    const deptInfo = getDeptInfo(r.department_name);
+                    return (
+                      <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase border shrink-0 whitespace-nowrap ${deptInfo.color}`}>
+                        {deptInfo.code || r.department_name}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 {/* Middle: Q1-Q4 Solve Question Pills - Ultra High Contrast */}
@@ -1348,7 +1351,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                     ].map(q => (
                       <div
                         key={q.label}
-                        className={`py-1.5 px-2 rounded-xl flex items-center justify-center gap-1 text-xs text-center border transition-all ${
+                        className={`py-1.5 px-1 sm:px-2 rounded-xl flex items-center justify-center gap-1 text-xs text-center border transition-all ${
                           q.val
                             ? 'bg-emerald-600 text-white border-emerald-500 shadow-xs font-black'
                             : 'bg-white dark:bg-navy-900 text-slate-950 dark:text-white border-slate-300/90 dark:border-navy-700 shadow-2xs font-black'

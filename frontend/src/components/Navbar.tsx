@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon, Bell, Palette, Check, RefreshCw, ChevronUp, ChevronDown, Maximize2 } from 'lucide-react';
+import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon, Bell, Palette, Check, RefreshCw } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -15,8 +15,6 @@ interface NavbarProps {
   setActiveTab: (tab: string) => void;
   isSidebarOpen: boolean;
   setIsSidebarOpen: (isOpen: boolean) => void;
-  isHeaderHidden?: boolean;
-  onToggleHideHeader?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -25,9 +23,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   isSidebarOpen,
-  setIsSidebarOpen,
-  isHeaderHidden,
-  onToggleHideHeader
+  setIsSidebarOpen
 }) => {
   const { user, logout, isAuthenticated } = useAuth();
 
@@ -85,34 +81,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
-  if (isHeaderHidden) {
-    return (
-      <>
-        {onToggleHideHeader && (
-          <button
-            type="button"
-            onClick={onToggleHideHeader}
-            className="fixed top-2 right-4 z-[9999] px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-900 text-white text-xs font-bold shadow-xl border border-slate-700/80 backdrop-blur-md flex items-center space-x-1.5 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer group"
-            title="Show Header"
-            aria-label="Show Header"
-          >
-            <ChevronDown className="w-3.5 h-3.5 text-brand-400 group-hover:translate-y-0.5 transition-transform" />
-            <span className="hidden xs:inline">Show Header</span>
-          </button>
-        )}
-        <SignOutConfirmModal
-          isOpen={showLogoutConfirm}
-          onClose={() => setShowLogoutConfirm(false)}
-          onConfirm={logout}
-          user={user}
-        />
-        <SyncStatusModal
-          isOpen={showSyncModal}
-          onClose={() => setShowSyncModal(false)}
-        />
-      </>
-    );
-  }
 
   return (
     <>
@@ -120,8 +88,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         className="sticky top-0 z-40 bg-white/95 dark:bg-navy-950/95 backdrop-blur-md border-b border-slate-200 dark:border-navy-800 transition-colors shadow-xs pt-safe-top"
         style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 0px)' }}
       >
-        <div className="w-full max-w-full mx-auto px-2 sm:px-4">
-          <div className="flex items-center justify-between min-h-[48px] sm:min-h-[52px] py-1 sm:py-1.5 gap-1 sm:gap-4">
+        <div className="w-full max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between min-h-[48px] sm:min-h-[52px] py-1 sm:py-1.5 gap-2 sm:gap-4">
             
             {/* Left: Hamburger Button (Mobile/Tablet) + Branding */}
             <div className="flex items-center space-x-1 sm:space-x-3 min-w-0 flex-1">
@@ -218,7 +186,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Auth Profile / Login */}
               {isAuthenticated && user ? (
-                <div className="hidden sm:flex items-center space-x-1 sm:space-x-2 pl-1 border-l border-slate-200 dark:border-navy-700">
+                <div className="hidden sm:flex items-center space-x-2 sm:space-x-3 pl-2 sm:pl-3 border-l border-slate-200 dark:border-navy-700">
                   <button
                     type="button"
                     onClick={() => setActiveTab('account-settings')}
@@ -248,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowLogoutConfirm(true)}
-                    className="p-2 flex-shrink-0 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors flex items-center space-x-1 cursor-pointer min-w-[44px] min-h-[44px] sm:min-w-auto sm:min-h-auto justify-center"
+                    className="px-2.5 py-1.5 sm:px-3 sm:py-2 flex-shrink-0 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors flex items-center space-x-1.5 cursor-pointer min-w-[44px] min-h-[44px] sm:min-w-auto sm:min-h-auto justify-center"
                     title="Sign Out"
                   >
                     <LogOut className="w-4 h-4 text-rose-500" />
@@ -267,18 +235,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               )}
 
-              {/* Hide Header Toggle Button */}
-              {onToggleHideHeader && (
-                <button
-                  type="button"
-                  onClick={onToggleHideHeader}
-                  className="p-2 flex-shrink-0 rounded-xl text-slate-500 hover:text-brand-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-800 transition-all duration-200 cursor-pointer active:scale-90 min-w-[38px] min-h-[38px] flex items-center justify-center border border-slate-200/60 dark:border-navy-700/60"
-                  title="Hide Top Header (Full View Mode)"
-                  aria-label="Hide Top Header"
-                >
-                  <ChevronUp className="w-4 h-4" />
-                </button>
-              )}
 
             </div>
 

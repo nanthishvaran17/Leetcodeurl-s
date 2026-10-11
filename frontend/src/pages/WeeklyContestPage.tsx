@@ -560,6 +560,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
   const [showEmailModal, setShowEmailModal] = useState<boolean>(false);
   const [notification, setNotification] = useState<NotificationState | null>(null);
+  const [isSendingReminders, setIsSendingReminders] = useState<boolean>(false);
 
   // New Feature States
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
@@ -1454,6 +1455,49 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       });
     } finally {
       setIsSendingEmail(false);
+    }
+  };
+
+  const handleSendBulkReminders = async () => {
+    if (selectedRowIds.size === 0) return;
+    setIsSendingReminders(true);
+    try {
+      const regNos = Array.from(selectedRowIds);
+      const res = await api.post(`/contests/sessions/${selectedSessionId || ''}/send-reminders`, {
+        student_reg_nos: regNos,
+        session_id: selectedSessionId || undefined
+      });
+      const data = res.data;
+      const sentCount = data?.sent_count ?? regNos.length;
+      const failedCount = data?.failed_count ?? 0;
+
+      let detailsMsg = `Delivered: ${sentCount}`;
+      if (failedCount > 0) {
+        detailsMsg += ` • Failed: ${failedCount}`;
+      }
+      if (data?.dispatched && data.dispatched.length > 0) {
+        const sampleEmails = data.dispatched.slice(0, 3).map((d: any) => `${d.name} (${d.email})`).join(', ');
+        detailsMsg += `\nRecipients: ${sampleEmails}${data.dispatched.length > 3 ? '...' : ''}`;
+      }
+
+      setNotification({
+        isOpen: true,
+        title: sentCount > 0 ? 'Reminder Emails Dispatched' : 'Email Dispatch Notice',
+        type: sentCount > 0 ? 'success' : 'error',
+        message: data?.message || `Successfully sent contest reminder emails to ${sentCount} students.`,
+        details: detailsMsg
+      });
+      setSelectedRowIds(new Set());
+    } catch (err: any) {
+      const errMsg = err.response?.data?.detail || err.message || 'Failed to dispatch reminder emails.';
+      setNotification({
+        isOpen: true,
+        title: 'Reminder Email Dispatch Failed',
+        type: 'error',
+        message: errMsg
+      });
+    } finally {
+      setIsSendingReminders(false);
     }
   };
 
@@ -4022,14 +4066,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       <span>Mark as Verified</span>
                     </button>
                     <button
-                      onClick={() => {
-                        setNotification({ isOpen: true, title: 'Success', type: 'success', message: `Reminder emails queued for ${selectedRowIds.size} students.` });
-                        setSelectedRowIds(new Set());
-                      }}
-                      className="flex items-center space-x-1.5 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm"
+                      onClick={handleSendBulkReminders}
+                      disabled={isSendingReminders}
+                      className="flex items-center space-x-1.5 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      <Mail className="w-3.5 h-3.5" />
-                      <span>Send Reminder Email</span>
+                      {isSendingReminders ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Mail className="w-3.5 h-3.5" />
+                      )}
+                      <span>{isSendingReminders ? 'Sending Emails...' : 'Send Reminder Email'}</span>
                     </button>
                   </div>
                 </div>
@@ -4750,13 +4796,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       <th className="px-2 py-2 text-center w-10">Q3</th>
                       <th className="px-2 py-2 text-center w-10">Q4</th>
                       <th className="px-3 py-2 text-right">Contest Solved</th>
+                      <th className="px-2 py-2 text-right">Score</th>
+                      <th className="px-3 py-2 text-right">Contest Rank</th>
+                      <th className="px-3 py-2 text-right">Contest Rating</th>
                       <th className="px-3 py-2 text-right">Global Rank</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800/80">
                     {previewPaginatedRows.length === 0 ? (
                       <tr>
-                        <td colSpan={12} className="p-8 text-center text-slate-500 font-bold">
+                        <td colSpan={15} className="p-8 text-center text-slate-500 font-bold">
                           No matching student records found for the active filter selection.
                         </td>
                       </tr>
@@ -4790,7 +4839,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                             <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q3 === 1 || r.q3 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
                             <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q4 === 1 || r.q4 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
                             <td className="px-3 py-1.5 text-right font-black text-emerald-600 dark:text-emerald-400">{isAttended ? (r.total_solved ?? 0) : 0}</td>
-                            <td className="px-3 py-1.5 text-right font-bold text-slate-600 dark:text-slate-400">{isAttended ? (r.rank || r.contest_rank || 0) : 0}</td>
+                            <td className="px-2 py-1.5 text-right font-bold text-indigo-600 dark:text-indigo-400">{isAttended ? (r.score ?? 0) : 0}</td>
+                            <td className="px-3 py-1.5 text-right font-mono font-bold text-amber-600 dark:text-amber-400">{isAttended && (r.contest_rank || r.rank) && String(r.contest_rank || r.rank) !== '—' ? `#${Number(String(r.contest_rank || r.rank).replace(/[^0-9]/g, '')).toLocaleString()}` : '—'}</td>
+                            <td className="px-3 py-1.5 text-right font-mono font-bold text-slate-700 dark:text-slate-300">{r.contest_rating && String(r.contest_rating) !== 'Unrated' && String(r.contest_rating) !== '—' ? (typeof r.contest_rating === 'number' ? Math.round(r.contest_rating) : r.contest_rating) : (r.rating && String(r.rating) !== 'Unrated' && String(r.rating) !== '—' ? (typeof r.rating === 'number' ? Math.round(r.rating) : r.rating) : 'Unrated')}</td>
+                            <td className="px-3 py-1.5 text-right font-mono font-bold text-slate-600 dark:text-slate-400">{r.contest_global_rank && String(r.contest_global_rank) !== 'Unrated' ? r.contest_global_rank : (r.global_rank && String(r.global_rank) !== 'Unrated' ? r.global_rank : 'Unrated')}</td>
                           </tr>
                         );
                       })

@@ -172,10 +172,20 @@ def fetch_leetcode_live_contest_info(target_contest_num: int = None) -> Dict[str
             return c
     return {}
 
+_contest_questions_cache = {}
+
 def fetch_leetcode_contest_questions(title_slug: str) -> list:
     """
     Fetches real problem titles and scores for a specific contest from Leetcode GraphQL.
+    Uses memory caching with 15-minute TTL to prevent blocking HTTP endpoints.
     """
+    global _contest_questions_cache
+    now = time.time()
+    if title_slug in _contest_questions_cache:
+        cached_data, cached_at = _contest_questions_cache[title_slug]
+        if now - cached_at < 900.0:
+            return cached_data
+
     query = """
     query getContest($titleSlug: String!) {
       contest(titleSlug: $titleSlug) {
@@ -198,11 +208,15 @@ def fetch_leetcode_contest_questions(title_slug: str) -> list:
             },
             method="POST"
         )
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=3.0) as resp:
             data = json.loads(resp.read().decode('utf-8'))
-            return data.get("data", {}).get("contest", {}).get("questions", [])
+            qs = data.get("data", {}).get("contest", {}).get("questions", [])
+            if qs:
+                _contest_questions_cache[title_slug] = (qs, now)
+            return qs
     except Exception as e:
         logger.warning(f"[CONTEST_DISCOVERY] Live LeetCode questions fetch failed for {title_slug}: {e}")
+        _contest_questions_cache[title_slug] = ([], now)
         return []
 
 def calculate_biweekly_contest_number(contest_date: datetime.date) -> int:

@@ -22,7 +22,7 @@ def generate_student_report(
     format: str,
     current_user=None,
     return_bytes=False
-) -> bytes:
+) -> Any:
     """
     Isolated entrypoint for generating Student Reports.
     100% STUDENT-ONLY isolated reporting logic with institutional quality.
@@ -240,14 +240,15 @@ def generate_student_report(
                         "proficiency": _proficiency_label(solved_count)  # type: ignore
                     })
         elif total_solved > 0:
+            solved_val = int(total_solved or 0)
             dsa_topics = [
-                {"topic": "Arrays & Hash Table", "tier": "Fundamental", "solved": int(total_solved * 0.28), "proficiency": "Mastered"},
-                {"topic": "String Manipulation", "tier": "Fundamental", "solved": int(total_solved * 0.18), "proficiency": "Mastered"},
-                {"topic": "Two Pointers & Sliding Window", "tier": "Intermediate", "solved": int(total_solved * 0.14), "proficiency": "Proficient"},
-                {"topic": "Binary Search", "tier": "Intermediate", "solved": int(total_solved * 0.10), "proficiency": "Proficient"},
-                {"topic": "Trees & Binary Search Trees", "tier": "Advanced", "solved": int(total_solved * 0.09), "proficiency": "Proficient"},
-                {"topic": "Dynamic Programming", "tier": "Advanced", "solved": int(total_solved * 0.08), "proficiency": "Developing"},
-                {"topic": "Graphs & BFS/DFS", "tier": "Advanced", "solved": int(total_solved * 0.07), "proficiency": "Developing"}
+                {"topic": "Arrays & Hash Table", "tier": "Fundamental", "solved": int(solved_val * 0.28), "proficiency": "Mastered"},
+                {"topic": "String Manipulation", "tier": "Fundamental", "solved": int(solved_val * 0.18), "proficiency": "Mastered"},
+                {"topic": "Two Pointers & Sliding Window", "tier": "Intermediate", "solved": int(solved_val * 0.14), "proficiency": "Proficient"},
+                {"topic": "Binary Search", "tier": "Intermediate", "solved": int(solved_val * 0.10), "proficiency": "Proficient"},
+                {"topic": "Trees & Binary Search Trees", "tier": "Advanced", "solved": int(solved_val * 0.09), "proficiency": "Proficient"},
+                {"topic": "Dynamic Programming", "tier": "Advanced", "solved": int(solved_val * 0.08), "proficiency": "Developing"},
+                {"topic": "Graphs & BFS/DFS", "tier": "Advanced", "solved": int(solved_val * 0.07), "proficiency": "Developing"}
             ]
 
         acceptance_rate = 74.0 if total_solved > 100 else 68.5

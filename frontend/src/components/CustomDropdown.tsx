@@ -29,6 +29,7 @@ interface CustomDropdownProps {
   menuWidthClass?: string;
   hideTriggerBadge?: boolean;
   forceDirection?: 'up' | 'down' | 'auto';
+  compact?: boolean;
 }
 
 export const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -45,7 +46,8 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   triggerClassName,
   menuWidthClass,
   hideTriggerBadge = false,
-  forceDirection = 'auto'
+  forceDirection = 'auto',
+  compact = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number>(0);
@@ -327,33 +329,42 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
           }
           setIsOpen(!isOpen);
         }}
-        className={`flex items-center justify-between flex-nowrap space-x-2 transition-all duration-200 text-left cursor-pointer group shadow-sm box-border active:scale-[0.98] touch-manipulation px-3.5 border ${
-          triggerClassName || 'w-full h-11 min-h-[44px] py-2 rounded-2xl bg-white dark:bg-slate-800/90 border-slate-300 dark:border-slate-700 hover:border-brand-500/60'
+        className={`flex items-center justify-between flex-nowrap space-x-1.5 transition-all duration-200 text-left cursor-pointer group shadow-sm box-border active:scale-[0.98] touch-manipulation border ${
+          triggerClassName || (compact
+            ? 'w-full h-9 min-h-[36px] py-1 px-2.5 rounded-xl bg-white dark:bg-slate-800/90 border-slate-300 dark:border-slate-700 hover:border-brand-500/60'
+            : 'w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl bg-white dark:bg-slate-800/90 border-slate-300 dark:border-slate-700 hover:border-brand-500/60'
+          )
         } ${
           isOpen
             ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10'
             : ''
         }`}
       >
-        <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden pr-1.5">
+        <div className="flex items-center space-x-1.5 min-w-0 flex-1 overflow-hidden pr-1">
           {HeaderIcon && (
-            <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-colors ${
+            <div className={`rounded-md flex items-center justify-center shrink-0 border transition-colors ${
+              compact ? 'w-4 h-4 text-xs' : 'w-5 h-5'
+            } ${
               isOpen
                 ? 'bg-brand-50 dark:bg-brand-950/80 border-brand-300 text-brand-600 dark:text-brand-400'
                 : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 group-hover:text-brand-600 group-hover:border-brand-500/50'
             }`}>
-              <HeaderIcon className="w-3.5 h-3.5 shrink-0" />
+              <HeaderIcon className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} shrink-0`} />
             </div>
           )}
-          <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden">
+          <div className="flex items-center space-x-1.5 min-w-0 flex-1 overflow-hidden">
             {selectedOption?.badge && !selectedOption.hidePill && !hideTriggerBadge && (
-              <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${
+              <span className={`shrink-0 rounded-md font-black uppercase tracking-wider border ${
+                compact ? 'text-[9px] px-1 py-0.2' : 'px-1.5 py-0.5 text-[10px]'
+              } ${
                 selectedOption.badgeColor || 'bg-brand-100 dark:bg-brand-900/80 text-brand-900 dark:text-brand-200 border-brand-300 dark:border-brand-800'
               }`}>
                 {selectedOption.badge}
               </span>
             )}
-            <span className={`text-xs font-black truncate block min-w-0 flex-1 ${
+            <span className={`font-black truncate block min-w-0 flex-1 ${
+              compact ? 'text-[11px] sm:text-xs' : 'text-xs'
+            } ${
               selectedOption ? 'text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'
             }`}>
               {selectedOption ? selectedOption.label : (placeholder || label || 'Select...')}
@@ -361,7 +372,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
           </div>
         </div>
 
-        <ChevronDown className={`w-4 h-4 shrink-0 text-slate-700 dark:text-slate-300 transition-transform duration-200 ${
+        <ChevronDown className={`${compact ? 'w-3.5 h-3.5 ml-0.5' : 'w-4 h-4'} shrink-0 text-slate-700 dark:text-slate-300 transition-transform duration-200 ${
           isOpen ? 'rotate-180 text-brand-600 dark:text-brand-400' : 'group-hover:text-slate-900 dark:group-hover:text-white'
         }`} />
       </button>
