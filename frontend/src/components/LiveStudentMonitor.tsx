@@ -11,9 +11,11 @@ import api from '../services/api';
 interface LiveStudentMonitorProps {
   /** Optional: pre-fill the search field and auto-trigger a sync */
   initialIdentifier?: string;
+  /** Optional: targeted contest session ID */
+  sessionId?: number | string;
 }
 
-export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialIdentifier }) => {
+export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialIdentifier, sessionId }) => {
   const [identifier, setIdentifier] = useState(initialIdentifier || '');
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any>(null);
@@ -26,7 +28,10 @@ export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialI
     setError(null);
     setData(null);
     try {
-      const res = await api.post(`/tracker/force-sync-student/${encodeURIComponent(target)}`);
+      const url = sessionId 
+        ? `/tracker/force-sync-student/${encodeURIComponent(target)}?session_id=${encodeURIComponent(String(sessionId))}`
+        : `/tracker/force-sync-student/${encodeURIComponent(target)}`;
+      const res = await api.post(url);
       setData(res.data);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Student not found or failed to fetch LeetCode data.');
@@ -35,14 +40,14 @@ export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialI
     }
   };
 
-  // Auto-trigger sync when component is pre-filled via initialIdentifier
+  // Auto-trigger sync when component is pre-filled via initialIdentifier or sessionId changes
   useEffect(() => {
     if (initialIdentifier && initialIdentifier.trim()) {
       setIdentifier(initialIdentifier.trim());
       handleInspectStudent(initialIdentifier.trim());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialIdentifier]);
+  }, [initialIdentifier, sessionId]);
 
   const student = data?.student;
   const perf = data?.performance;
@@ -210,7 +215,7 @@ export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialI
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={ratingGraph}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
-                      <XAxis dataKey="contest" stroke="#94A3B8" fontSize={11} />
+                      <XAxis dataKey="contest" stroke="#94A3B8" fontSize={11} interval={0} />
                       <YAxis domain={['auto', 'auto']} stroke="#94A3B8" fontSize={11} />
                       <Tooltip contentStyle={{ backgroundColor: '#0F172A', borderColor: '#334155', borderRadius: '1rem', color: '#F8FAFC', fontSize: '12px' }} />
                       <Line type="monotone" dataKey="rating" stroke="#6366F1" strokeWidth={3} dot={{ r: 4, fill: '#6366F1' }} activeDot={{ r: 6 }} />

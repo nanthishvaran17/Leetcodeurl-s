@@ -1530,17 +1530,28 @@ export const AccountProfileSettings: React.FC = () => {
 
     /* ── Mobile Responsive Rules ───────── */
     @media (max-width: 768px) {
-      .action-bar { padding: 12px; height: auto; flex-direction: column; align-items: stretch; gap: 12px; }
-      .bar-btns { justify-content: space-between; }
-      .page-wrap { padding: 74px 12px 32px; }
-      .a4-card { padding: 20px 16px; }
-      .hdr { flex-direction: column; text-align: center; gap: 12px; }
-      .hdr-left { flex-direction: column; gap: 10px; }
-      .hdr-tag { width: 100%; text-align: center; }
+      .action-bar { padding: 10px 14px; height: auto; flex-direction: column; align-items: stretch; gap: 8px; }
+      .bar-left-title { font-size: 12px; }
+      .bar-left-sub { font-size: 9.5px; }
+      .bar-btns { justify-content: flex-end; gap: 8px; }
+      .btn-print { padding: 7px 14px; font-size: 11.5px; }
+      .btn-close { padding: 7px 12px; font-size: 11.5px; }
+      .page-wrap { padding: 94px 8px 24px; max-width: 100%; }
+      .a4-card { padding: 18px 12px; border-radius: 12px; }
+      .hdr { flex-direction: column; text-align: center; gap: 12px; padding: 16px 14px; }
+      .hdr-left { flex-direction: column; align-items: center; gap: 10px; }
+      .hdr-h1 { font-size: 16px; }
+      .hdr-sub { font-size: 9.5px; }
+      .hdr-aff { font-size: 8.5px; }
+      .hdr-tag { width: 100%; text-align: center; padding: 8px 12px; }
+      .hdr-tag-id { font-size: 13px; }
       .meta-grid { grid-template-columns: 1fr; }
-      .meta-cell { border-right: none; border-bottom: 1px solid #e2e8f0; }
+      .meta-cell { border-right: none; border-bottom: 1px solid #e2e8f0; padding: 10px 12px; }
       .meta-cell:last-child { border-bottom: none; }
-      .sec-head { flex-direction: column; align-items: flex-start; gap: 6px; }
+      .sec-head { flex-direction: column; align-items: flex-start; gap: 4px; }
+      table { font-size: 10px; }
+      thead th, tbody td { padding: 8px 9px; }
+      .footer { flex-direction: column; align-items: flex-start; gap: 14px; }
     }
 
     /* ── Print: hide bar, collapse padding ───────── */
@@ -1616,130 +1627,6 @@ export const AccountProfileSettings: React.FC = () => {
       <!-- Section Heading -->
       <div class="sec-head">
         <h2>${reportCfg.personRoleLabel} Authentication &amp; Security Access Audit Trail</h2>
-        <span>${loginHistory.length} Record${loginHistory.length !== 1 ? 's' : ''} Logged</span>
-      </div>
-
-    /* â”€â”€ Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 24px; }
-    thead th {
-      background: #002147; color: #fff; text-align: left;
-      padding: 10px 13px; font-weight: 800; text-transform: uppercase;
-      font-size: 9.5px; letter-spacing: 0.5px; border: 1px solid #001a38;
-    }
-    tbody td { padding: 10px 13px; border: 1px solid #cbd5e1; font-weight: 600; color: #1e293b; }
-    tbody tr:nth-child(even) td { background: #f8fafc; }
-    .tag-id { font-family: 'Courier New', monospace; font-weight: 900; color: #002147; }
-    .tag-ip { font-family: 'Courier New', monospace; background: #e0f2fe;
-              color: #0369a1; padding: 2px 7px; border-radius: 4px;
-              font-size: 10.5px; font-weight: 700; }
-    .tag-ok { background: #dcfce7; color: #15803d; border: 1px solid #86efac;
-              font-weight: 900; padding: 3px 9px; border-radius: 4px;
-              font-size: 9.5px; letter-spacing: 0.4px; display: inline-block; }
-
-    /* â”€â”€ Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .footer {
-      padding-top: 18px; border-top: 2px dashed #cbd5e1;
-      display: flex; align-items: flex-end; justify-content: space-between;
-      margin-top: 8px;
-    }
-    .footer-text p { font-size: 10px; color: #475569; font-weight: 600; line-height: 1.7; }
-    .footer-text strong { color: #0f172a; }
-    .footer-text .hash { font-family: 'Courier New', monospace; color: #1e3a8a; font-weight: 700; }
-    .seal { flex-shrink: 0; text-align: center; border: 1.5px solid #002147;
-            border-radius: 10px; padding: 11px 20px; background: #f8fafc; }
-    .seal-lbl { font-size: 8.5px; font-weight: 900; color: #002147;
-                text-transform: uppercase; letter-spacing: 0.5px; }
-    .seal-ok  { font-size: 11px; font-weight: 800; color: #15803d; margin-top: 4px; }
-
-    /* ── Mobile Responsive Rules ───────── */
-    @media (max-width: 768px) {
-      .action-bar { padding: 12px; height: auto; flex-direction: column; align-items: stretch; gap: 12px; }
-      .bar-btns { justify-content: space-between; }
-      .page-wrap { padding: 110px 12px 24px; }
-      .a4-card { padding: 20px 16px; }
-      .hdr { flex-direction: column; align-items: stretch; gap: 16px; }
-      .hdr-left { flex-direction: column; align-items: flex-start; gap: 12px; }
-      .hdr-tag { text-align: left; }
-      .meta-grid { grid-template-columns: 1fr; }
-      .meta-cell { border-right: none; border-bottom: 1px solid #e2e8f0; }
-      .meta-cell:last-child { border-bottom: none; }
-      .footer { flex-direction: column; align-items: flex-start; gap: 16px; }
-      .sec-head { flex-direction: column; align-items: flex-start; gap: 6px; }
-    }
-
-    /* ── Print: hide bar, collapse padding ───────── */
-    @media print {
-      @page { size: A4 portrait; margin: 12mm; }
-      body { background: #fff; }
-      .action-bar { display: none !important; }
-      .page-wrap  { padding: 0; max-width: 100%; }
-      .a4-card    { border-radius: 0; box-shadow: none; padding: 0; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- Sticky Action Bar -->
-  <div class="action-bar">
-    <div>
-      <div class="bar-left-title">NEC Official Security Audit Report</div>
-      <div class="bar-left-sub">${institutionalId} &bull; ${fullName || user?.username} &bull; ${nowShort} IST</div>
-    </div>
-    <div class="bar-btns">
-      <button id="btnPrintReport" type="button" class="btn-print" onclick="window.print()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm1-4h.01M12 12h.01" /></svg>
-        Print / Save as PDF
-      </button>
-      <button id="btnCloseReport" type="button" class="btn-close" onclick="window.close()">&#10005; Close</button>
-    </div>
-  </div>
-
-  <!-- Report Content -->
-  <div class="page-wrap">
-    <div class="a4-card">
-
-      <!-- College Header -->
-      <div class="hdr">
-        <div class="hdr-left">
-          <img class="hdr-logo"
-               src="${logoUrl}"
-               onerror="this.onerror=null; this.src='${emblemUrl}';"
-               alt="Nandha Engineering College Logo" />
-          <div>
-            <div class="hdr-h1">Nandha Engineering College</div>
-            <div class="hdr-sub">Autonomous Institution &bull; Approved by AICTE &bull; NBA &amp; NAAC A+ Grade Accredited</div>
-            <div class="hdr-aff">Affiliated to Anna University Chennai &bull; Erode–Perundurai Road, Tamil Nadu &ndash; 638 052</div>
-          </div>
-        </div>
-        <div class="hdr-tag">
-          <div class="hdr-tag-lbl">Verified Audit Log</div>
-          <div class="hdr-tag-id">${institutionalId}</div>
-        </div>
-      </div>
-
-      <!-- Meta Strip -->
-      <div class="meta-grid">
-        <div class="meta-cell">
-          <div class="meta-lbl">Faculty Name</div>
-          <div class="meta-val">${fullName || user?.username}</div>
-        </div>
-        <div class="meta-cell">
-          <div class="meta-lbl">Institutional ID</div>
-          <div class="meta-val meta-mono">${institutionalId}</div>
-        </div>
-        <div class="meta-cell">
-          <div class="meta-lbl">Department &amp; Role</div>
-          <div class="meta-val">${departmentName} &bull; ${roleName}</div>
-        </div>
-        <div class="meta-cell">
-          <div class="meta-lbl">Report Generated (IST)</div>
-          <div class="meta-val">${nowIst}</div>
-        </div>
-      </div>
-
-      <!-- Section Heading -->
-      <div class="sec-head">
-        <h2>Authentication &amp; Security Access Audit Trail</h2>
         <span>${loginHistory.length} Record${loginHistory.length !== 1 ? 's' : ''} Logged</span>
       </div>
 

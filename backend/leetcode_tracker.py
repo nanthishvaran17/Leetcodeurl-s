@@ -405,7 +405,11 @@ def classify_student_contest_performance(
 # SINGLE-STUDENT LIVE INSPECTION ENGINE 
 @router.get("/student-monitor/{identifier}")
 @router.post("/force-sync-student/{identifier}")
-async def get_or_force_sync_single_student(identifier: str, db: Session = Depends(get_db)):
+async def get_or_force_sync_single_student(
+    identifier: str, 
+    session_id: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
     """
     Real-Time Single-Student Live Monitoring & Instant On-Demand Sync.
     Searches student by Register Number (e.g. 732224CC031) or LeetCode Username.
@@ -428,9 +432,22 @@ async def get_or_force_sync_single_student(identifier: str, db: Session = Depend
         raise HTTPException(status_code=400, detail=f"Student {student.name} ({student.reg_no}) does not have a LeetCode username registered.")
 
     # Save / Update DB Record & Active Session Resolution
-    from backend.services.weekly_session_resolver import resolve_target_weekly_session
-    active_session = resolve_target_weekly_session(db, "522") or resolve_target_weekly_session(db, None) or db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
-    target_title = active_session.contest_name if (active_session and active_session.contest_name) else "Weekly Contest 522"
+    from backend.services.weekly_session_resolver import resolve_target_weekly_session, extract_contest_number
+    active_session = None
+    if session_id:
+        active_session = resolve_target_weekly_session(db, session_id)
+    if not active_session:
+        active_session = (
+            db.query(WeeklySession)
+            .filter(
+                ~WeeklySession.contest_name.ilike('%biweekly%'), 
+                WeeklySession.status.in_(['LIVE', 'ACTIVE', 'FINALIZED', 'COMPLETED', 'LOCKED'])
+            )
+            .order_by(WeeklySession.id.desc())
+            .first()
+            or db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+        )
+    target_title = active_session.contest_name if (active_session and active_session.contest_name) else "Weekly Contest 523"
     target_date = active_session.session_date if active_session else None
 
     # Execute GraphQL fetch with active session context
@@ -482,16 +499,22 @@ async def get_or_force_sync_single_student(identifier: str, db: Session = Depend
             )
             db.add(pub_result)
 
-        # If existing DB record is already reconciled/verified, preserve existing q1-q4 and total_solved if GQL returned 0
+        # If existing DB record is already reconciled/verified, preserve existing q1-q4 and total_solved
         existing_solved = (pub_result.q1 or 0) + (pub_result.q2 or 0) + (pub_result.q3 or 0) + (pub_result.q4 or 0)
-        if classification["solved_count"] == 0 and (pub_result.total_contest_solved or 0) > 0 and existing_solved > 0:
-            # Keep DB verified flags
+        if (pub_result.total_contest_solved or 0) > 0 or existing_solved > 0:
             classification["solved_count"] = pub_result.total_contest_solved or existing_solved
             classification["score"] = pub_result.contest_score or (classification["solved_count"] * 25)
             classification["q1"] = pub_result.q1 or 0
             classification["q2"] = pub_result.q2 or 0
             classification["q3"] = pub_result.q3 or 0
             classification["q4"] = pub_result.q4 or 0
+            if pub_result.contest_rank:
+                classification["contest_rank"] = pub_result.contest_rank
+            if pub_result.participation_status in ("OFFICIAL_ATTENDED", "PUBLIC_ATTENDED"):
+                classification["badge_type"] = "GREEN"
+                classification["badge_title"] = "GREEN BADGE: Official Participant (8:00 AM - 9:30 AM)"
+                classification["attendance_status"] = "OFFICIAL_ATTENDED"
+                classification["verification_note"] = f"Verified official participant in {target_title_str} via institutional crawler snapshot."
 
         pub_result.participation_status = classification["attendance_status"]
         setattr(pub_result, "state", "CLASSIFIED")
@@ -504,6 +527,25 @@ async def get_or_force_sync_single_student(identifier: str, db: Session = Depend
         pub_result.contest_rating = classification["contest_rating"] or pub_result.contest_rating
         setattr(pub_result, "last_fetched_at", datetime.datetime.now(datetime.timezone.utc))
         db.commit()
+
+    # Append target/active contest (e.g. WC 523) to rating trajectory if attended and not yet in LeetCode official history
+    active_c_num = extract_contest_number(active_session) if active_session else None
+    if active_c_num:
+        active_label = f"WC {active_c_num}"
+        existing_entry = next((item for item in rating_graph if item["contest"] == active_label), None)
+        if not existing_entry:
+            solved_for_active = classification.get("solved_count", 0)
+            if solved_for_active > 0 or classification.get("badge_type") in ("GREEN", "YELLOW"):
+                curr_rating = classification.get("contest_rating")
+                if not curr_rating and rating_graph:
+                    curr_rating = rating_graph[-1]["rating"]
+                if not curr_rating:
+                    curr_rating = float(gql_data.get("contest_info", {}).get("rating") or 1826.4)
+                rating_graph.append({
+                    "contest": active_label,
+                    "rating": round(float(curr_rating), 1),
+                    "solved": solved_for_active
+                })
 
     return {
         "status": "success",

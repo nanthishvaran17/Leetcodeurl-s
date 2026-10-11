@@ -59,10 +59,21 @@ const getRoleStyle = (role: string): string => {
   const r = (role || '').toUpperCase();
   if (r.includes('SUPER')) return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-700';
   if (r.includes('HOD')) return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700';
-  if (r.includes('MANAGEMENT') || r.includes('MGMT')) return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-700';
+  if (r.includes('MANAGEMENT') || r.includes('MGMT') || r.includes('PRINCIPAL')) return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-700';
+  if (r.includes('STAFF') || r.includes('FACULTY')) return 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-700';
+  if (r.includes('STUDENT')) return 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-700';
   if (r.includes('SYSTEM')) return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700';
   if (r.includes('ADMIN')) return 'bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800';
   return 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+};
+/** Normalizes role display for clean badges (e.g. 'hod' -> 'HOD') */
+const formatRoleBadge = (role: string): string => {
+  if (!role) return 'UNKNOWN';
+  const r = role.trim().toUpperCase();
+  if (r === 'HOD') return 'HOD';
+  if (r === 'ADMIN') return 'ADMIN';
+  if (r === 'SUPER ADMIN') return 'SUPER ADMIN';
+  return role;
 };
 
 export const AuditLogPage: React.FC = () => {
@@ -317,12 +328,13 @@ export const AuditLogPage: React.FC = () => {
 
   const roleOptions: DropdownOption[] = useMemo(() => [
     { value: 'ALL', label: 'All Roles', badge: 'ALL', badgeColor: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700' },
-    { value: 'ADMIN', label: 'ADMIN', badge: 'ROLE', badgeColor: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300 dark:border-rose-700' },
+    { value: 'HOD', label: 'Head of Dept (HOD)', badge: 'HOD', badgeColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700' },
+    { value: 'ADMIN', label: 'Administrator', badge: 'ADMIN', badgeColor: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300 dark:border-rose-700' },
     { value: 'Super Admin', label: 'Super Admin', badge: 'SUPER', badgeColor: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-300 dark:border-purple-700' },
-    { value: 'MANAGEMENT', label: 'MANAGEMENT', badge: 'MGMT', badgeColor: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 dark:border-blue-700' },
-    { value: 'HOD', label: 'HOD', badge: 'DEPT', badgeColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700' },
-    { value: 'STAFF', label: 'STAFF', badge: 'TEAM', badgeColor: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 border-cyan-300 dark:border-cyan-700' },
-    { value: 'SYSTEM', label: 'SYSTEM', badge: 'AUTO', badgeColor: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-700' },
+    { value: 'STAFF', label: 'Faculty / Staff', badge: 'STAFF', badgeColor: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 border-cyan-300 dark:border-cyan-700' },
+    { value: 'MANAGEMENT', label: 'Management / Principal', badge: 'MGMT', badgeColor: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 dark:border-blue-700' },
+    { value: 'STUDENT', label: 'Student', badge: 'STUDENT', badgeColor: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700' },
+    { value: 'SYSTEM', label: 'Automated System', badge: 'SYSTEM', badgeColor: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-700' },
   ], []);
 
   const statusOptions: DropdownOption[] = useMemo(() => [
@@ -614,7 +626,7 @@ export const AuditLogPage: React.FC = () => {
 
                       <td className="py-3.5 px-4">
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black border ${getRoleStyle(log.admin_role)}`}>
-                          {log.admin_role}
+                          {formatRoleBadge(log.admin_role)}
                         </span>
                       </td>
 
@@ -711,7 +723,7 @@ export const AuditLogPage: React.FC = () => {
                     {/* Row 4: Role + Timestamp Pill */}
                     <div className="flex justify-between items-center gap-2">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-black border ${getRoleStyle(log.admin_role)}`}>
-                        {log.admin_role}
+                        {formatRoleBadge(log.admin_role)}
                       </span>
                       <span className="font-mono font-black text-slate-700 dark:text-slate-200 text-[11px] bg-slate-100 dark:bg-navy-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-navy-700">
                         {formatAuditDate(log.created_at)}
@@ -786,7 +798,7 @@ export const AuditLogPage: React.FC = () => {
                   </span>
                 )}
                 <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black border ${getRoleStyle(selectedLog.admin_role)}`}>
-                  {selectedLog.admin_role || 'Admin'}
+                  {formatRoleBadge(selectedLog.admin_role || 'Admin')}
                 </span>
               </div>
 

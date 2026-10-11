@@ -1630,90 +1630,85 @@ export const HODCommandCenter: React.FC = () => {
      )}
    </div>
 
-   <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-2.5">
+   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-3.5">
      {/* 1. Department Scope */}
-     <div className="space-y-1 min-w-0">
-       <label className="block text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+     <div className="space-y-1.5 min-w-0">
+       <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
          Department Scope
        </label>
        <GlobalFilter
-         compact
          value={selectedDept}
          onChange={val => {
            setSelectedDept(val);
            setSelectedStaff('ALL');
          }}
-         dropdownWidth="min-w-[260px] sm:min-w-[280px]"
+         dropdownWidth="min-w-[280px] sm:min-w-[320px]"
          searchPlaceholder="Search department..."
          options={deptOptions}
-         icon={<Building2 className="w-3.5 h-3.5 text-brand-500" />}
+         icon={<Building2 className="w-4 h-4 text-brand-500" />}
        />
      </div>
 
      {/* 2. Staff Mentor Scope */}
-     <div className="space-y-1 min-w-0">
-       <label className="block text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+     <div className="space-y-1.5 min-w-0">
+       <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
          Faculty Mentor
        </label>
        <GlobalFilter
-         compact
          value={selectedStaff}
          onChange={val => setSelectedStaff(val)}
-         dropdownWidth="min-w-[260px] sm:min-w-[280px]"
+         dropdownWidth="min-w-[280px] sm:min-w-[320px]"
          searchPlaceholder="Search staff mentor..."
          options={staffOptions}
-         icon={<User className="w-3.5 h-3.5 text-indigo-500" />}
+         icon={<User className="w-4 h-4 text-indigo-500" />}
        />
      </div>
 
      {/* 3. Academic Year */}
-     <div className="space-y-1 min-w-0">
-       <label className="block text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+     <div className="space-y-1.5 min-w-0">
+       <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
          Cohort Year
        </label>
        <GlobalFilter
-         compact
          value={selectedYear}
          onChange={val => setSelectedYear(val)}
-         dropdownWidth="min-w-[200px] sm:min-w-[220px]"
+         dropdownWidth="min-w-[220px] sm:min-w-[250px]"
          options={yearOptions}
-         icon={<Calendar className="w-3.5 h-3.5 text-amber-500" />}
+         icon={<Calendar className="w-4 h-4 text-amber-500" />}
        />
      </div>
 
      {/* 4. Section */}
-     <div className="space-y-1 min-w-0">
-       <label className="block text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+     <div className="space-y-1.5 min-w-0">
+       <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
          Section / Cohort
        </label>
        <GlobalFilter
-         compact
          value={selectedSection}
          onChange={val => setSelectedSection(val)}
-         dropdownWidth="min-w-[200px] sm:min-w-[220px]"
+         dropdownWidth="min-w-[220px] sm:min-w-[250px]"
          options={sectionOptions}
-         icon={<Layers className="w-3.5 h-3.5 text-purple-500" />}
+         icon={<Layers className="w-4 h-4 text-purple-500" />}
        />
      </div>
 
      {/* 5. Solver Status */}
-     <div className="space-y-1 min-w-0">
-       <label className="block text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+     <div className="space-y-1.5 min-w-0">
+       <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
          Solver Status
        </label>
        <GlobalFilter
-         compact
          value={selectedStatus}
          onChange={val => setSelectedStatus(val)}
-         dropdownWidth="min-w-[200px] sm:min-w-[220px]"
+         dropdownWidth="min-w-[220px] sm:min-w-[250px]"
          options={statusOptions}
-         icon={<Activity className="w-3.5 h-3.5 text-emerald-500" />}
+         icon={<Activity className="w-4 h-4 text-emerald-500" />}
        />
      </div>
 
-     {/* 6. Mobile Quick Reset Filter Button (Pairs with Solver Status on mobile) */}
-     <div className="space-y-1 min-w-0 flex flex-col justify-end lg:hidden">
-       <label className="block text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate invisible select-none">
+     {/* 6. Mobile Quick Reset Filter Button */}
+     <div className="space-y-1.5 min-w-0 flex flex-col justify-end lg:hidden">
+       <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate invisible select-none">
          Reset
        </label>
        <button
@@ -1726,11 +1721,11 @@ export const HODCommandCenter: React.FC = () => {
            setSelectedStatus('ALL');
          }}
          disabled={selectedDept === 'ALL' && selectedStaff === 'ALL' && selectedYear === 'ALL' && selectedSection === 'ALL' && selectedStatus === 'ALL'}
-         className="h-9 min-h-[36px] px-2.5 w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-navy-900/80 dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed text-[11px] font-black transition-all cursor-pointer shadow-xs active:scale-95"
+         className="h-11 min-h-[44px] px-3.5 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-navy-900 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-black transition-all cursor-pointer shadow-xs active:scale-95"
          title="Reset all active filters to default"
        >
-         <RotateCcw size={11} className="text-rose-500 shrink-0" />
-         <span className="truncate">Reset All</span>
+         <RotateCcw size={13} className="text-rose-500 shrink-0" />
+         <span className="truncate">Reset All Filters</span>
        </button>
      </div>
    </div>
@@ -2842,7 +2837,6 @@ export const HODCommandCenter: React.FC = () => {
      ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300'
      : 'bg-slate-100 text-slate-600 border-slate-300 dark:bg-navy-800 dark:text-slate-400'
  }`} title={`${s.sunday_contest_session_name || 'Sunday Contest'}: ${s.sunday_contest_attended || 0} of ${assigned} attended`}>
-   <Trophy size={11} className="text-amber-500 shrink-0" />
    <span>{s.sunday_contest_attended ?? 0} / {assigned}</span>
    <span className="text-[10px] opacity-75">({s.sunday_contest_turnout_pct ?? 0}%)</span>
  </span>

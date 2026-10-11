@@ -30,6 +30,10 @@ HEADERS = {
     "Referer": "https://leetcode.com"
 }
 
+# Contest 523 window: Oct 5 2026, 08:00 AM IST = 1791685800 UTC, duration ~90 min + buffer
+CONTEST_523_START_TS = 1791685800
+CONTEST_523_END_TS   = 1791685800 + 7200  # 2-hour buffer
+
 GRAPHQL_QUERY = """
 query userContestAndSubs($username: String!) {
   userContestRankingHistory(username: $username) {
@@ -44,7 +48,7 @@ query userContestAndSubs($username: String!) {
       startTime
     }
   }
-  recentAcSubmissionList(username: $username, limit: 35) {
+  recentAcSubmissionList(username: $username, limit: 100) {
     id
     title
     titleSlug
@@ -164,12 +168,21 @@ async def run_reconciliation(session_id: int = 14, contest_number: int = 523):
                     hist_problems_solved = c_history.get("problemsSolved") or 0 if c_history else 0
                     hist_rank = c_history.get("ranking") if c_history else None
                     hist_rating = c_history.get("rating") if c_history else None
+                    contest_start_ts = (c_history.get("contest") or {}).get("startTime") or CONTEST_523_START_TS if c_history else CONTEST_523_START_TS
+                    contest_end_ts = contest_start_ts + 7200
 
+                    # Filter submissions to only those within the contest window
                     ac_slugs: Set[str] = set()
                     for sub in recent_ac:
-                        ts_slug = normalize_slug(sub.get("titleSlug") or sub.get("title") or "")
-                        if ts_slug:
-                            ac_slugs.add(ts_slug)
+                        try:
+                            sub_ts = int(sub.get("timestamp") or 0)
+                        except (ValueError, TypeError):
+                            sub_ts = 0
+                        # Include if within contest window OR if timestamp is 0 (unknown)
+                        if sub_ts == 0 or (contest_start_ts - 60 <= sub_ts <= contest_end_ts):
+                            ts_slug = normalize_slug(sub.get("titleSlug") or sub.get("title") or "")
+                            if ts_slug:
+                                ac_slugs.add(ts_slug)
 
                     q1 = 1 if slug_map[1] in ac_slugs else 0
                     q2 = 1 if slug_map[2] in ac_slugs else 0
@@ -177,6 +190,14 @@ async def run_reconciliation(session_id: int = 14, contest_number: int = 523):
                     q4 = 1 if slug_map[4] in ac_slugs else 0
 
                     slug_solved_count = q1 + q2 + q3 + q4
+
+                    # If history says attended but slug scan missed, trust history's problemsSolved
+                    if is_attended and slug_solved_count == 0 and hist_problems_solved > 0:
+                        slug_solved_count = hist_problems_solved
+                        q1 = 1 if slug_solved_count >= 1 else 0
+                        q2 = 1 if slug_solved_count >= 2 else 0
+                        q3 = 1 if slug_solved_count >= 3 else 0
+                        q4 = 1 if slug_solved_count >= 4 else 0
 
                     if is_attended or slug_solved_count > 0:
                         if slug_solved_count > 0:

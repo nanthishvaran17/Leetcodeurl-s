@@ -733,10 +733,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="error-banner"
+                  className="error-banner select-text"
                   role="alert"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <AlertCircle size={18} className="shrink-0 text-rose-400" />
+                  <AlertCircle size={18} className="shrink-0 text-rose-400 mt-0.5" />
                   <div className="flex-1 min-w-0 space-y-1 text-left">
                     <p className="text-xs font-bold leading-normal">{error || authError}</p>
                     {((error || authError || '').toLowerCase().includes('cannot reach server') ||
@@ -745,22 +746,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                       (error || authError || '').toLowerCase().includes('retry')) && (
                         <button
                           type="button"
+                          disabled={loading}
                           onClick={(e) => {
-                            setError('');
-                            clearAuthError();
-                            if (username && password) handlePasswordLogin(e);
+                            e.stopPropagation();
+                            if (username && password) {
+                              handlePasswordLogin(e);
+                            }
                           }}
-                          className="inline-flex items-center space-x-1 text-[11px] font-black underline hover:text-white transition-colors cursor-pointer mt-1"
+                          className="inline-flex items-center space-x-1.5 text-[11px] font-black underline hover:text-white transition-colors cursor-pointer mt-1 disabled:opacity-60"
                         >
-                          <RefreshCw className="w-3 h-3 animate-spin-hover" />
-                          <span>Tap here to retry sign-in now</span>
+                          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                          <span>{loading ? 'Retrying sign-in...' : 'Tap here to retry sign-in now'}</span>
                         </button>
                       )}
                   </div>
                   <button
                     type="button"
-                    onClick={() => { setError(''); clearAuthError(); }}
-                    className="banner-close-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setError('');
+                      clearAuthError();
+                    }}
+                    className="banner-close-btn p-1.5 ml-2 hover:bg-rose-500/20 rounded-lg transition-colors"
                     aria-label="Dismiss error"
                   >
                     <X size={16} />

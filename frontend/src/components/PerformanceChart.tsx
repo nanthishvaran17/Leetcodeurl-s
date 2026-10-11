@@ -421,6 +421,27 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
         </div>
       )}
 
+      {/* Scope Live Telemetry Status Bar */}
+      {!error && !loading && (latestPoint || isUpdating) && (
+        <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3 px-0.5">
+          {latestPoint && (
+            <div className="inline-flex items-center space-x-2 text-[10.5px] font-extrabold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-navy-900 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-navy-800 shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+              <span className="text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[9.5px] font-bold">Scope Live:</span>
+              <span className="text-blue-600 dark:text-blue-400 font-mono font-black">{latestPoint.problemsSolved.toLocaleString()} Solved</span>
+              <span className="text-slate-300 dark:text-navy-700">•</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">{latestPoint.activeStudents.toLocaleString()} Active</span>
+            </div>
+          )}
+          {isUpdating && (
+            <div className="px-3 py-1 rounded-full bg-blue-600 text-white text-[10px] font-extrabold shadow-sm flex items-center space-x-1.5 ml-auto">
+              <RefreshCw className="w-3 h-3 animate-spin" />
+              <span>Syncing Live Telemetry...</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Main Chart Canvas */}
       <div className="h-[340px] sm:h-[380px] w-full relative">
         <AnimatePresence mode="wait">
@@ -490,26 +511,10 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
               transition={{ duration: 0.35 }}
               className="h-full w-full relative"
             >
-              {isUpdating && (
-                <div className="absolute top-2 right-2 z-20 px-3 py-1 rounded-full bg-blue-600/95 text-white text-[10px] font-extrabold shadow-md backdrop-blur-sm flex items-center space-x-1.5">
-                  <RefreshCw className="w-3 h-3 animate-spin" />
-                  <span>Syncing Live Telemetry...</span>
-                </div>
-              )}
-
-              {latestPoint && (
-                <div className="absolute top-2 left-2 z-20 flex items-center space-x-2 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 bg-white/90 dark:bg-navy-900/90 px-3 py-1.5 rounded-full border border-slate-200/90 dark:border-navy-800 backdrop-blur-md shadow-xs">
-                  <span className="text-slate-400 uppercase tracking-widest">Scope Live:</span>
-                  <span className="text-blue-600 dark:text-blue-400 font-mono font-black">{latestPoint.problemsSolved.toLocaleString()} Solved</span>
-                  <span className="text-slate-300 dark:text-navy-700">•</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">{latestPoint.activeStudents.toLocaleString()} Active</span>
-                </div>
-              )}
-
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={data}
-                  margin={{ top: 35, right: metricMode !== 'problems' ? 45 : 15, left: metricMode !== 'students' ? 10 : -10, bottom: 5 }}
+                  margin={{ top: 12, right: metricMode !== 'problems' ? 45 : 15, left: metricMode !== 'students' ? 10 : -10, bottom: 5 }}
                 >
                   <defs>
                     <linearGradient id="colorProblemsGrad" x1="0" y1="0" x2="0" y2="1">

@@ -1995,11 +1995,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
 
           {/* Right Controls: Unified Session Selector & Admin Monitor Toggle */}
-          <div className="w-full lg:w-[615px] flex flex-col gap-3 bg-slate-900/80 p-3.5 sm:p-4 rounded-[1.75rem] border border-white/15 backdrop-blur-md shadow-lg">
+          <div className="w-full lg:w-[615px] flex flex-col gap-3 bg-slate-900/60 p-3 sm:p-3.5 rounded-2xl backdrop-blur-md shadow-md">
 
             {/* Session Dropdown Selector with Delete Option */}
             <div className="flex items-center gap-3 min-w-0">
-              <div className="min-w-0 flex-1 rounded-2xl bg-white p-1 shadow-[0_6px_18px_rgba(0,0,0,0.2)]">
+              <div className="min-w-0 flex-1">
                 <GlobalFilter
                   options={displaySessions.map((s) => {
                   const statusUp = (s.status || '').toUpperCase();
@@ -2033,7 +2033,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   searchPlaceholder="Search contest session..."
                   showSearch={true}
                   variant="default"
-                  className="w-full !rounded-xl !border-0 !bg-white !text-slate-900"
+                  className="w-full !rounded-2xl border-0 !border-0 !shadow-lg !bg-white !text-slate-900"
                   dropdownWidth="w-[320px]"
                 />
               </div>
@@ -2042,7 +2042,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   type="button"
                   onClick={(e) => handleDeleteSession(activeSessionObj.sessionId, activeSessionObj.contestName, e)}
-                  className="p-3.5 bg-rose-500/20 hover:bg-rose-500/30 rounded-2xl border border-rose-500/40 text-rose-400 hover:text-rose-300 transition-colors shadow-sm cursor-pointer shrink-0"
+                  className="p-3 bg-rose-500/20 hover:bg-rose-500/30 rounded-2xl border border-rose-500/30 text-rose-400 hover:text-rose-300 transition-colors shadow-sm cursor-pointer shrink-0"
                   title="Delete this Weekly Contest Session"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -2067,7 +2067,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     setShowAdminMonitor(false);
                   }
                 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold rounded-2xl border border-slate-600 transition-all cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700 text-white text-xs font-bold rounded-xl border border-white/10 transition-all cursor-pointer shadow-sm"
                 title="Toggle Live Contest Monitor"
               >
                 <Activity className="w-3.5 h-3.5 text-brand-400" />
@@ -2691,7 +2691,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           {adminSubTab === 'live_monitor' && (
             <div className="pt-2 animate-fade-in">
               <React.Suspense fallback={<div className="p-8 text-center text-xs font-bold text-slate-400 animate-pulse">Loading Live Monitor Chart Engine...</div>}>
-                <LiveStudentMonitor initialIdentifier={quickSyncIdentifier} />
+                <LiveStudentMonitor initialIdentifier={quickSyncIdentifier} sessionId={selectedSessionId} />
               </React.Suspense>
             </div>
           )}

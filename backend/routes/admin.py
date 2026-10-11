@@ -139,7 +139,33 @@ def get_admin_audit_logs(
     if action:
         query = query.filter(AdminAuditLog.action == action)
     if role:
-        query = query.filter(AdminAuditLog.admin_role == role)
+        r_upper = role.strip().upper()
+        if r_upper == "HOD":
+            query = query.filter(AdminAuditLog.admin_role.ilike("%hod%"))
+        elif r_upper in ("ADMIN", "SUPER ADMIN"):
+            if r_upper == "SUPER ADMIN":
+                query = query.filter(AdminAuditLog.admin_role.ilike("%super%"))
+            else:
+                query = query.filter(
+                    (AdminAuditLog.admin_role.ilike("%admin%")) &
+                    (~AdminAuditLog.admin_role.ilike("%super%"))
+                )
+        elif r_upper in ("STAFF", "FACULTY"):
+            query = query.filter(
+                (AdminAuditLog.admin_role.ilike("%staff%")) |
+                (AdminAuditLog.admin_role.ilike("%faculty%"))
+            )
+        elif r_upper in ("MANAGEMENT", "PRINCIPAL"):
+            query = query.filter(
+                (AdminAuditLog.admin_role.ilike("%management%")) |
+                (AdminAuditLog.admin_role.ilike("%principal%"))
+            )
+        elif r_upper == "STUDENT":
+            query = query.filter(AdminAuditLog.admin_role.ilike("%student%"))
+        elif r_upper == "SYSTEM":
+            query = query.filter(AdminAuditLog.admin_role.ilike("%system%"))
+        else:
+            query = query.filter(AdminAuditLog.admin_role.ilike(f"%{role.strip()}%"))
     if status:
         query = query.filter(AdminAuditLog.status == status.upper())
     if search:

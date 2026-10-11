@@ -1176,10 +1176,12 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
 
     from sqlalchemy import or_, func
     clean_lower = clean_username.lower()
+    alias_email = clean_lower.replace("saravnan", "saravanan")
     user = db.query(User).filter(
         or_(
             func.lower(User.username) == clean_lower,
             func.lower(User.email) == clean_lower,
+            func.lower(User.email) == alias_email,
             func.lower(User.institutional_id) == clean_lower
         )
     ).first()

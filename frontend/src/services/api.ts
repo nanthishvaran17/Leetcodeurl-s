@@ -236,9 +236,21 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // --- 0. BAILOUT FOR AUTH ROUTES ---
+    // --- 0. BAILOUT FOR AUTH ROUTES (with Network Error Auto-Failover) ---
     const isAuthRoute = config.url && (config.url.includes('auth/login') || config.url.includes('auth/refresh') || config.url.includes('auth/session'));
     if (isAuthRoute) {
+      if (error.response) {
+        return Promise.reject(error);
+      }
+      // If a pure network error occurred (no response received), try alternate backend once
+      if (!config._triedFallback && typeof window !== 'undefined') {
+        config._triedFallback = true;
+        const currentBase = config.baseURL || '';
+        const fallbackBase = currentBase.includes('vercel.app') ? 'http://13.53.231.6/api' : 'https://leetcodeurl-s-roan.vercel.app/api';
+        console.warn(`[AUTH_FAILOVER] Primary auth server unreachable. Retrying via ${fallbackBase}...`);
+        config.baseURL = fallbackBase;
+        return api(config);
+      }
       return Promise.reject(error);
     }
 
