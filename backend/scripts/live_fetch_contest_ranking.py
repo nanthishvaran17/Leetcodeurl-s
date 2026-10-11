@@ -529,8 +529,8 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
 
         print(f"  [Progress] Pages {start_p}-{end_p-1}/{pages} | Found {len(matched_results)} enrolled students so far...")
         
-        if not remaining_targets:
-            print("[SUCCESS] All students found! Stopping early.")
+        if len(found_student_ids) >= len(students):
+            print("[SUCCESS] All enrolled students found! Stopping early.")
             break
             print("[SUCCESS] All students found! Stopping early.")
             break
