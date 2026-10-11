@@ -4,10 +4,14 @@ const url = require('url');
 
 // Register custom scheme privileges before app is ready
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } }
+  { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } }
 ]);
 
 function createWindow() {
+  const iconPath = process.platform === 'win32' && require('fs').existsSync(path.join(__dirname, '../public/desktop-icon.ico'))
+    ? path.join(__dirname, '../public/desktop-icon.ico')
+    : path.join(__dirname, '../public/desktop-icon.png');
+
   const win = new BrowserWindow({
     width: 1366,
     height: 850,
@@ -17,9 +21,10 @@ function createWindow() {
     autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      webSecurity: false // Allows app:// protocol to communicate with remote backend HTTP APIs seamlessly
     },
-    icon: path.join(__dirname, '../public/desktop-icon.png')
+    icon: iconPath
   });
 
   if (app.isPackaged) {

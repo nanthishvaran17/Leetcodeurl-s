@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_BASE_URL, getApiBaseUrl, isCapacitorNative, getApiUrl as configGetApiUrl } from '../config/apiConfig';
+import { API_BASE_URL, getApiBaseUrl, isCapacitorNative, isElectron, getApiUrl as configGetApiUrl } from '../config/apiConfig';
 export const getApiUrl = configGetApiUrl;
 
 export const getAuthHeaders = async () => {
@@ -28,7 +28,8 @@ const api = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
-    'Bypass-Tunnel-Reminder': 'true' // Bypasses localtunnel's "Click to Continue" warning page
+    'Bypass-Tunnel-Reminder': 'true', // Bypasses localtunnel's "Click to Continue" warning page
+    'X-App-Origin': 'capacitor://localhost'
   },
 });
 
@@ -144,6 +145,9 @@ api.interceptors.request.use(async (config) => {
     config.headers['Origin'] = originVal;
     config.headers['X-App-Origin'] = originVal;
     config.headers['X-Capacitor-Platform'] = 'android';
+  } else if (isElectron()) {
+    config.headers['X-App-Origin'] = 'capacitor://localhost';
+    config.headers['X-Electron-Platform'] = 'windows';
   }
 
   try {

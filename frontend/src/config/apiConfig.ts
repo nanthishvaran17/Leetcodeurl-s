@@ -26,13 +26,23 @@ export const isCapacitorNative = (): boolean => {
 };
 
 /**
+ * Detects if the current runtime environment is Electron Desktop App (Windows / macOS / Linux)
+ */
+export const isElectron = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  if (typeof navigator !== 'undefined' && /electron/i.test(navigator.userAgent)) return true;
+  if (window.location.protocol === 'app:' || window.location.protocol === 'file:') return true;
+  return !!(window as any).process?.versions?.electron;
+};
+
+/**
  * Resolves the API Base URL dynamically based on execution environment:
- * 1. Capacitor Native Android/iOS App -> Uses absolute Backend HTTPS URL
+ * 1. Capacitor Native Android/iOS App or Electron Desktop -> Uses absolute Backend HTTPS URL
  * 2. Web Browser (Vite dev server) -> Uses '/api' relative path proxied by Vite
  * 3. Production Web (Vercel) -> Resolves VITE_API_URL or defaults to PRODUCTION_BACKEND_URL
  */
 export const getApiBaseUrl = (): string => {
-  if (isCapacitorNative()) {
+  if (isCapacitorNative() || isElectron()) {
     const base = PRODUCTION_BACKEND_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '');
     return `${base}/api`;
   }

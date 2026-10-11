@@ -82,6 +82,7 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
+      "public/**/*",
       "package.json"
     ],
     "win": {
