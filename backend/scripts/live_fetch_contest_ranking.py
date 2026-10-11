@@ -452,63 +452,80 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     matched_results = {}
     remaining_targets = set(student_map.keys())
 
-    def fetch_page(p):
-        p_url = f"{base}/contest/api/ranking/{contest_slug}/?pagination={p}&region=global"
-        for _ in range(3):
-            try:
-                r = s.get(p_url, timeout=18)
-                if r.status_code == 200:
-                    return r.json()
-            except Exception:
-                time.sleep(0.5)
-        return None
+    # Execute batch fetching directly inside Chrome runtime for 100% Cloudflare bypass
+    def fetch_pages_batch_in_browser(page_list):
+        js_batch = f"""
+        var callback = arguments[arguments.length - 1];
+        var pages = {page_list};
+        var promises = pages.map(function(p) {{
+            return fetch('/contest/api/ranking/{contest_slug}/?pagination=' + p + '&region=global', {{
+                headers: {{ 'Accept': 'application/json', 'x-requested-with': 'XMLHttpRequest' }}
+            }})
+            .then(function(r) {{ return r.json(); }})
+            .catch(function(e) {{ return null; }});
+        }});
+        Promise.all(promises).then(function(results) {{
+            callback(results);
+        }}).catch(function(err) {{
+            callback([]);
+        }});
+        """
+        try:
+            return engine_obj.execute_async_script(js_batch)
+        except Exception as e:
+            return []
 
-    # We iterate and match
-    batch_size = 25
+    batch_size = 15
     for start_p in range(1, pages + 1, batch_size):
         end_p = min(start_p + batch_size, pages + 1)
-        with ThreadPoolExecutor(max_workers=8) as executor:
-            future_to_page = {executor.submit(fetch_page, p): p for p in range(start_p, end_p)}
-            for future in as_completed(future_to_page):
-                p_data = future.result()
-                if not p_data:
-                    continue
-                ranks = p_data.get("total_rank", [])
-                subs = p_data.get("submissions", {})
-                for entry in ranks:
-                    username = (entry.get("username") or "").strip()
-                    user_slug = (entry.get("user_slug") or "").strip()
-                    uname_lower = username.lower()
-                    uslug_lower = user_slug.lower()
+        target_pages = list(range(start_p, end_p))
+        
+        batch_results = fetch_pages_batch_in_browser(target_pages)
+        if not batch_results:
+            # Short pause and retry once
+            time.sleep(1)
+            batch_results = fetch_pages_batch_in_browser(target_pages) or []
 
-                    matched_key = None
-                    if uname_lower in remaining_targets:
-                        matched_key = uname_lower
-                    elif uslug_lower in remaining_targets:
-                        matched_key = uslug_lower
+        for p_data in batch_results:
+            if not p_data or not isinstance(p_data, dict):
+                continue
+            ranks = p_data.get("total_rank", [])
+            subs = p_data.get("submissions", {})
+            for entry in ranks:
+                username = (entry.get("username") or "").strip()
+                user_slug = (entry.get("user_slug") or "").strip()
+                uname_lower = username.lower()
+                uslug_lower = user_slug.lower()
 
-                    if matched_key:
-                        uid = str(entry.get("data_region", "US")) + "_" + str(entry.get("user_id", ""))
-                        user_subs = subs.get(uid, {})
-                        
-                        solves = [0, 0, 0, 0]
-                        for idx, qid in enumerate(q_ids[:4]):
-                            if qid in user_subs:
-                                solves[idx] = 1
+                matched_key = None
+                if uname_lower in remaining_targets:
+                    matched_key = uname_lower
+                elif uslug_lower in remaining_targets:
+                    matched_key = uslug_lower
 
-                        matched_results[matched_key] = {
-                            "username": username,
-                            "rank": entry.get("rank"),
-                            "score": entry.get("score"),
-                            "finish_time": entry.get("finish_time"),
-                            "solves": solves,
-                        }
-                        remaining_targets.discard(matched_key)
+                if matched_key:
+                    uid = str(entry.get("data_region", "US")) + "_" + str(entry.get("user_id", ""))
+                    user_subs = subs.get(uid, {})
+                    
+                    solves = [0, 0, 0, 0]
+                    for idx, qid in enumerate(q_ids[:4]):
+                        if qid in user_subs:
+                            solves[idx] = 1
+
+                    matched_results[matched_key] = {
+                        "username": username,
+                        "rank": entry.get("rank"),
+                        "score": entry.get("score"),
+                        "finish_time": entry.get("finish_time"),
+                        "solves": solves,
+                    }
+                    remaining_targets.discard(matched_key)
 
         print(f"  [Progress] Pages {start_p}-{end_p-1}/{pages} | Found {len(matched_results)} enrolled students so far...")
         
-        # If we found all target students, we can stop early!
         if not remaining_targets:
+            print("[SUCCESS] All students found! Stopping early.")
+            break
             print("[SUCCESS] All students found! Stopping early.")
             break
 
