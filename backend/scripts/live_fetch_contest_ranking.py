@@ -1,0 +1,328 @@
+"""
+live_fetch_contest_ranking.py
+==============================
+Runs directly on LIVE EC2 server!
+Fetches official contest ranking directly from LeetCode by bypassing Cloudflare
+using Chrome TLS Fingerprinting (curl_cffi) or stealth sessions.
+
+Usage on EC2:
+  /var/www/leetcode-tracker/.venv/bin/python3 backend/scripts/live_fetch_contest_ranking.py --contest weekly-contest-523
+"""
+
+import sys
+import os
+import time
+import math
+import argparse
+from pathlib import Path
+
+# Add project root to sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+from backend.database import SessionLocal, engine
+from backend.models import Student, WeeklySession, WeeklyPublicResult, PreviousWeekParticipationRecord
+
+# Configure sqlite busy timeout and WAL mode
+if "sqlite" in str(engine.url):
+    with engine.connect() as conn:
+        try:
+            conn.exec_driver_sql("PRAGMA journal_mode=WAL;")
+            conn.exec_driver_sql("PRAGMA busy_timeout=60000;")
+        except Exception:
+            pass
+
+
+def get_session():
+    """Tries curl_cffi for Chrome impersonation, falls back to requests."""
+    try:
+        from curl_cffi import requests as cffi_requests
+        print("[INFO] Using curl_cffi (Chrome 120 TLS fingerprint impersonation)")
+        s = cffi_requests.Session(impersonate="chrome120")
+        return s, True
+    except ImportError:
+        import requests
+        print("[WARN] curl_cffi not found. Using standard requests with browser headers.")
+        print("[TIP] For 100% Cloudflare bypass on EC2, install: pip install curl_cffi")
+        s = requests.Session()
+        return s, False
+
+
+def fetch_contest_data(contest_slug: str):
+    session, is_cffi = get_session()
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+        "Accept": "*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": f"https://leetcode.com/contest/{contest_slug}/ranking/",
+        "Origin": "https://leetcode.com",
+    }
+    
+    # Check page 1
+    url = f"https://leetcode.com/contest/api/ranking/{contest_slug}/?pagination=1&region=global_v2"
+    print(f"[INFO] Connecting to LeetCode API for {contest_slug}...")
+    
+    try:
+        resp = session.get(url, headers=headers, timeout=25)
+    except Exception as e:
+        print(f"[ERROR] Failed to connect: {e}")
+        return None, None
+
+    if resp.status_code == 403:
+        print(f"[ERROR] LeetCode returned HTTP 403 Forbidden on EC2.")
+        print("[ACTION REQUIRED] Please install curl_cffi on EC2:")
+        print("  /var/www/leetcode-tracker/.venv/bin/pip install curl_cffi")
+        return None, None
+        
+    if resp.status_code != 200:
+        print(f"[ERROR] Unexpected HTTP status: {resp.status_code}")
+        return None, None
+
+    data = resp.json()
+    user_num = data.get("user_num", 0)
+    questions = data.get("questions", [])
+    
+    # Find start time
+    start_ts = 0
+    total_ranks = data.get("total_rank", [])
+    sub_map = data.get("submissions", {})
+    if total_ranks:
+        for u in total_ranks:
+            uid = str(u.get("data_region", "US")) + "_" + str(u.get("user_id", ""))
+            subs = sub_map.get(uid, {})
+            for qid, s in subs.items():
+                date_val = s.get("date", 0)
+                if date_val > 1700000000:
+                    start_ts = (date_val // 5400) * 5400
+                    break
+            if start_ts > 0:
+                break
+                
+    # Fallback to questions list
+    q_ids = [str(q.get("question_id")) for q in questions] if questions else []
+    
+    # If questions empty on v2, fallback to region=global
+    if not q_ids:
+        print("[INFO] Fetching question metadata from region=global...")
+        try:
+            g_resp = session.get(f"https://leetcode.com/contest/api/ranking/{contest_slug}/?pagination=1&region=global", headers=headers, timeout=20)
+            if g_resp.status_code == 200:
+                g_data = g_resp.json()
+                q_ids = [str(q.get("question_id")) for q in g_data.get("questions", [])]
+        except Exception:
+            pass
+
+    pages = math.ceil(user_num / 25)
+    print(f"[OK] Total participants: {user_num} | Pages: {pages} | Questions: {q_ids}")
+    
+    return q_ids, start_ts, pages
+
+
+def live_run(contest_slug: str, session_id: int = None):
+    # Check students in DB
+    db = SessionLocal()
+    students = db.query(Student).filter(Student.leetcode_id.isnot(None), Student.leetcode_id != "").all()
+    student_map = {s.leetcode_id.lower().strip(): s for s in students}
+    print(f"[INFO] Loaded {len(student_map)} students from DB to track.")
+    
+    # Match session
+    ws = None
+    if session_id:
+        ws = db.query(WeeklySession).filter_by(id=session_id).first()
+    else:
+        # Match by contest number
+        import re
+        m = re.search(r'\d+', contest_slug)
+        c_num = m.group(0) if m else "523"
+        ws = db.query(WeeklySession).filter(
+            (WeeklySession.contest_name.like(f"%{c_num}%")) | 
+            (WeeklySession.title.like(f"%{c_num}%"))
+        ).first()
+
+    if not ws:
+        print(f"[WARN] WeeklySession not found for {contest_slug}. Creating or using default...")
+    else:
+        print(f"[INFO] Target WeeklySession: {ws.contest_name or ws.title} (ID: {ws.id})")
+
+    session, _ = get_session()
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+        "Accept": "*/*",
+        "Referer": f"https://leetcode.com/contest/{contest_slug}/ranking/",
+    }
+
+    # First probe
+    url = f"https://leetcode.com/contest/api/ranking/{contest_slug}/?pagination=1&region=global_v2"
+    resp = session.get(url, headers=headers, timeout=25)
+    if resp.status_code != 200:
+        print(f"[ERROR] Failed to fetch contest: HTTP {resp.status_code}")
+        db.close()
+        return
+
+    data = resp.json()
+    user_num = data.get("user_num", 0)
+    pages = math.ceil(user_num / 25)
+    
+    # Questions
+    q_ids = [str(q.get("question_id")) for q in data.get("questions", [])]
+    if not q_ids:
+        g_resp = session.get(f"https://leetcode.com/contest/api/ranking/{contest_slug}/?pagination=1&region=global", headers=headers, timeout=20)
+        if g_resp.status_code == 200:
+            q_ids = [str(q.get("question_id")) for q in g_resp.json().get("questions", [])]
+
+    print(f"[INFO] Fetching pages 1 to {pages} from LeetCode LIVE server...")
+    
+    matched_results = {}
+    remaining_targets = set(student_map.keys())
+
+    # Concurrently fetch in chunks
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    def fetch_page(p):
+        p_url = f"https://leetcode.com/contest/api/ranking/{contest_slug}/?pagination={p}&region=global_v2"
+        for _ in range(3):
+            try:
+                r = session.get(p_url, headers=headers, timeout=15)
+                if r.status_code == 200:
+                    return r.json()
+            except Exception:
+                time.sleep(0.5)
+        return None
+
+    # We iterate and match
+    batch_size = 30
+    for start_p in range(1, pages + 1, batch_size):
+        end_p = min(start_p + batch_size, pages + 1)
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_page = {executor.submit(fetch_page, p): p for p in range(start_p, end_p)}
+            for future in as_completed(future_to_page):
+                p_data = future.result()
+                if not p_data:
+                    continue
+                ranks = p_data.get("total_rank", [])
+                subs = p_data.get("submissions", {})
+                for entry in ranks:
+                    username = (entry.get("username") or "").strip()
+                    user_slug = (entry.get("user_slug") or "").strip()
+                    uname_lower = username.lower()
+                    uslug_lower = user_slug.lower()
+
+                    matched_key = None
+                    if uname_lower in remaining_targets:
+                        matched_key = uname_lower
+                    elif uslug_lower in remaining_targets:
+                        matched_key = uslug_lower
+
+                    if matched_key:
+                        uid = str(entry.get("data_region", "US")) + "_" + str(entry.get("user_id", ""))
+                        user_subs = subs.get(uid, {})
+                        
+                        solves = [0, 0, 0, 0]
+                        for idx, qid in enumerate(q_ids[:4]):
+                            if qid in user_subs:
+                                solves[idx] = 1
+
+                        matched_results[matched_key] = {
+                            "username": username,
+                            "rank": entry.get("rank"),
+                            "score": entry.get("score"),
+                            "finish_time": entry.get("finish_time"),
+                            "solves": solves,
+                        }
+                        remaining_targets.discard(matched_key)
+
+        print(f"  [Progress] Pages {start_p}-{end_p-1}/{pages} | Found {len(matched_results)} enrolled students so far...")
+        
+        # If we found all target students, we can stop early!
+        if not remaining_targets:
+            print("[SUCCESS] All students found! Stopping early.")
+            break
+
+    print(f"\n[INFO] Total matched students: {len(matched_results)}")
+
+    if not ws:
+        print("[WARN] No database session to write to. Exiting.")
+        db.close()
+        return
+
+    # Update database
+    updated_count = 0
+    for s_lower, res in matched_results.items():
+        student = student_map[s_lower]
+        solves = res["solves"]
+        rank = res["rank"]
+        score = res["score"]
+        problems_solved = sum(solves)
+
+        # WeeklyPublicResult
+        wpr = db.query(WeeklyPublicResult).filter_by(session_id=ws.id, student_id=student.id).first()
+        if not wpr:
+            wpr = WeeklyPublicResult(
+                session_id=ws.id,
+                student_id=student.id,
+                attended=True,
+                solved_count=problems_solved,
+                official_score=score,
+                official_rank=rank,
+                q1=solves[0],
+                q2=solves[1],
+                q3=solves[2],
+                q4=solves[3]
+            )
+            db.add(wpr)
+        else:
+            wpr.attended = True
+            wpr.solved_count = problems_solved
+            wpr.official_score = score
+            wpr.official_rank = rank
+            wpr.q1 = solves[0]
+            wpr.q2 = solves[1]
+            wpr.q3 = solves[2]
+            wpr.q4 = solves[3]
+
+        # PreviousWeekParticipationRecord
+        pw = db.query(PreviousWeekParticipationRecord).filter_by(student_id=student.id, session_id=ws.id).first()
+        if pw:
+            pw.participation_type = "PUBLIC"
+            pw.problems_solved = problems_solved
+            pw.official_score = score
+            pw.official_rank = rank
+            pw.q1 = solves[0]
+            pw.q2 = solves[1]
+            pw.q3 = solves[2]
+            pw.q4 = solves[3]
+        else:
+            pw = PreviousWeekParticipationRecord(
+                student_id=student.id,
+                session_id=ws.id,
+                contest_name=ws.contest_name or ws.title,
+                participation_type="PUBLIC",
+                problems_solved=problems_solved,
+                official_score=score,
+                official_rank=rank,
+                q1=solves[0],
+                q2=solves[1],
+                q3=solves[2],
+                q4=solves[3]
+            )
+            db.add(pw)
+        
+        updated_count += 1
+
+    try:
+        db.commit()
+        print(f"[SUCCESS] Updated {updated_count} students in live database!")
+    except Exception as e:
+        db.rollback()
+        print(f"[ERROR] Commit failed: {e}")
+    finally:
+        db.close()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--contest", type=str, default="weekly-contest-523")
+    parser.add_argument("--session-id", type=int, default=None)
+    args = parser.parse_args()
+
+    live_run(args.contest, args.session_id)
