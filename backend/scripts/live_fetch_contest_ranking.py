@@ -355,12 +355,21 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     user_num = data.get("user_num", 0)
     pages = math.ceil(user_num / 25)
     
-    # Questions
-    q_ids = [str(q.get("question_id")) for q in data.get("questions", [])]
-    if not q_ids:
+    # Questions: probe region=global directly first
+    q_ids = []
+    try:
         g_resp = session.get(f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global", headers=headers, timeout=20)
         if g_resp.status_code == 200:
             q_ids = [str(q.get("question_id")) for q in g_resp.json().get("questions", [])]
+    except Exception:
+        pass
+
+    if not q_ids:
+        q_ids = [str(q.get("question_id")) for q in data.get("questions", [])]
+
+    # Contest 523 fallback questions if LeetCode hides them
+    if not q_ids and "523" in contest_slug:
+        q_ids = ["4450", "4433", "4377", "4434"]
 
     print(f"[INFO] Total participants: {user_num} | Pages: {pages} | Questions: {q_ids}")
     print(f"[INFO] Fetching pages 1 to {pages} from LeetCode LIVE server...")
@@ -368,14 +377,20 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     matched_results = {}
     remaining_targets = set(student_map.keys())
 
-    # Concurrently fetch in chunks
-    from concurrent.futures import ThreadPoolExecutor, as_completed
+    import random
+    from curl_cffi import requests as cffi_requests
 
     def fetch_page(p):
         p_url = f"{base}/contest/api/ranking/{contest_slug}/?pagination={p}&region=global_v2"
+        # Each worker thread gets its own proxy session for 100% thread safety
+        chosen_proxy = random.choice(WEBSHARE_PROXIES)
+        worker_proxies = {"http": chosen_proxy, "https": chosen_proxy}
+        
         for _ in range(3):
             try:
-                r = session.get(p_url, headers=headers, timeout=15)
+                s = cffi_requests.Session(impersonate="chrome120")
+                s.proxies = worker_proxies
+                r = s.get(p_url, headers=headers, timeout=18)
                 if r.status_code == 200:
                     return r.json()
             except Exception:
@@ -383,10 +398,10 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
         return None
 
     # We iterate and match
-    batch_size = 30
+    batch_size = 25
     for start_p in range(1, pages + 1, batch_size):
         end_p = min(start_p + batch_size, pages + 1)
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=8) as executor:
             future_to_page = {executor.submit(fetch_page, p): p for p in range(start_p, end_p)}
             for future in as_completed(future_to_page):
                 p_data = future.result()
