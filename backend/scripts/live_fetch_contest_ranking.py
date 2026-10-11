@@ -32,18 +32,26 @@ if "sqlite" in str(engine.url):
             pass
 
 
-def get_session():
-    """Tries curl_cffi for Chrome impersonation, falls back to requests."""
+DEFAULT_PROXY = "http://arzqjzzu:739oi9b5naq4@p.webshare.io:80"
+
+def get_session(proxy: str = None):
+    """Creates a session with curl_cffi and residential proxy to bypass Cloudflare."""
+    proxy_url = proxy or os.environ.get("CONTEST_PROXY", DEFAULT_PROXY)
+    proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+
     try:
         from curl_cffi import requests as cffi_requests
-        print("[INFO] Using curl_cffi (Chrome 120 TLS fingerprint impersonation)")
+        print(f"[INFO] Using curl_cffi (Chrome 120 impersonation) with Residential Proxy...")
         s = cffi_requests.Session(impersonate="chrome120")
+        if proxies:
+            s.proxies = proxies
         return s, True
     except ImportError:
         import requests
-        print("[WARN] curl_cffi not found. Using standard requests with browser headers.")
-        print("[TIP] For 100% Cloudflare bypass on EC2, install: pip install curl_cffi")
+        print(f"[INFO] Using standard requests with Residential Proxy...")
         s = requests.Session()
+        if proxies:
+            s.proxies = proxies
         return s, False
 
 
