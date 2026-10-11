@@ -1,7 +1,7 @@
 {
   "name": "college-leetcode-tracker-frontend",
   "private": true,
-  "version": "2.6.9",
+  "version": "2.7.0",
   "description": "Nandha Intelligence LeetCode Tracker Desktop Application",
   "author": "Nandha Engineering College",
   "main": "electron/main.cjs",
@@ -16,7 +16,7 @@
     "android": "npx cap open android",
     "sync": "npx cap sync android",
     "cap:sync": "npm run build && npx cap sync android",
-    "build:apk": "npm run build && npx cap sync android && cd android && gradlew.bat assembleDebug"
+    "build:apk": "npm run build && npx cap sync android && cd android && gradlew.bat assembleDebug && cd .. && node -e \"const fs=require('fs'); fs.copyFileSync('android/app/build/outputs/apk/debug/app-debug.apk', 'public/nandha-leetcode-tracker-latest.apk'); console.log('APK successfully copied to public/nandha-leetcode-tracker-latest.apk');\""
   },
   "dependencies": {
     "@capacitor/browser": "^7.0.5",
