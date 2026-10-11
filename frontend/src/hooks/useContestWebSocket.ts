@@ -160,6 +160,7 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
 
           // Single student live event handler (Incremental Live Update Rule)
           if (
+            data.type === 'CONTEST_STUDENT_SOLVED' ||
             data.type === 'CONTEST_RESULT_UPDATED' || 
             data.type === 'STUDENT_LEETCODE_UPDATE' || 
             data.type === 'STUDENT_UPDATED' || 

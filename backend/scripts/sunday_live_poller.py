@@ -154,11 +154,16 @@ def run_live_loop():
                 # Update DB
                 wpr = db.query(WeeklyPublicResult).filter_by(session_id=ws.id, student_id=st.id).first()
                 if not wpr:
-                    wpr = WeeklyPublicResult(session_id=ws.id, student_id=st.id, attended=True, solved_count=total_solved)
+                    wpr = WeeklyPublicResult(
+                        session_id=ws.id,
+                        student_id=st.id,
+                        participation_status="PUBLIC_ATTENDED",
+                        total_contest_solved=total_solved
+                    )
                     db.add(wpr)
                 else:
-                    wpr.attended = True
-                    wpr.solved_count = max(wpr.solved_count, total_solved)
+                    wpr.participation_status = "PUBLIC_ATTENDED"
+                    wpr.total_contest_solved = max(wpr.total_contest_solved or 0, total_solved)
 
                 # Broadcast via WebSocket
                 try:
