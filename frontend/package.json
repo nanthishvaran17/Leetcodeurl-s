@@ -1,7 +1,7 @@
 {
   "name": "college-leetcode-tracker-frontend",
   "private": true,
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "Nandha Intelligence LeetCode Tracker Desktop Application",
   "author": "Nandha Engineering College",
   "main": "electron/main.cjs",
