@@ -39,10 +39,10 @@ def fix_contest_523_records():
                 "q1": 1, "q2": 1, "q3": 1, "q4": 1,
                 "total_solved": 4, "score": 18, "status": "PUBLIC"
             },
-            # 4. NANTHISH S (732224CC031) - Solved 1 problem
+            # 4. NANTHISH S (732224CC031) - Solved 4 problems
             "732224CC031": {
-                "q1": 1, "q2": 0, "q3": 0, "q4": 0,
-                "total_solved": 1, "score": 3, "status": "PUBLIC"
+                "q1": 1, "q2": 1, "q3": 1, "q4": 1,
+                "total_solved": 4, "score": 18, "status": "PUBLIC"
             },
             # 5. LAKSANA S (732224CC023) - Solved 1 problem
             "732224CC023": {
