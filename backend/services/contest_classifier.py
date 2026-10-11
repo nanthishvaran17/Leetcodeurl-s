@@ -229,7 +229,7 @@ def get_contest_utc_window(contest_id: str) -> Tuple[datetime.datetime, datetime
 
 
 def get_official_contest_problems(contest_id: str) -> List[Dict[str, Any]]:
-    """Helper to load official contest problems from DB or cache."""
+    """Helper to load official contest problems from DB, registry, or dynamic fetch."""
     canonical_id = normalize_contest_id(contest_id)
     try:
         from backend.database import SessionLocal
@@ -239,12 +239,30 @@ def get_official_contest_problems(contest_id: str) -> List[Dict[str, Any]]:
         c_obj = db.query(Contest).filter(Contest.contest_slug == canonical_id).first()
         if c_obj and c_obj.problem_list:
             probs = json.loads(c_obj.problem_list) if isinstance(c_obj.problem_list, str) else c_obj.problem_list
-            if isinstance(probs, list) and len(probs) > 0:
+            if isinstance(probs, list) and len(probs) > 0 and not any("weekly-contest-" in (p.get("title_slug") or p.get("slug") or "") for p in probs):
                 db.close()
                 return probs
         db.close()
     except Exception as e:
         logger.warning(f"Could not load official problems from DB for {canonical_id}: {e}")
+
+    try:
+        from backend.services.contest_problem_accuracy_engine import ContestProblemAccuracyEngine
+        pset = ContestProblemAccuracyEngine.resolve_official_problem_set(contest_name=canonical_id)
+        if pset and pset.is_valid and pset.problems:
+            return [
+                {
+                    "question_order": p.index,
+                    "problem_id": p.problem_id,
+                    "title": p.title,
+                    "titleSlug": p.title_slug,
+                    "slug": p.title_slug
+                }
+                for p in pset.problems
+            ]
+    except Exception as e:
+        logger.warning(f"Could not load from ContestProblemAccuracyEngine for {canonical_id}: {e}")
+
     return []
 
 
@@ -356,9 +374,9 @@ def evaluate_contest_evidence(
 
         slug = str(sub.get("titleSlug") or sub.get("title_slug") or "").lower().strip()
         
-        # If official problem list is provided, enforce strict slug matching
-        if official_slug_map and slug not in official_slug_map:
-            # Unrelated LeetCode problem! Must NOT increase contest solved count.
+        # Strict slug matching: only submissions to verified official contest problems count
+        if not official_slug_map or slug not in official_slug_map:
+            # Unrelated LeetCode practice problem! Must NOT increase contest solved count.
             continue
 
         sub_id = str(sub.get("id") or sub.get("submission_id") or "")

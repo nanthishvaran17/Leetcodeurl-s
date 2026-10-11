@@ -70,10 +70,8 @@ export function getContestRatingDisplay(st: any): string {
 export function getContestRankDisplay(st: any): string {
   if (!st) return '—';
   const rawRank = st.stats?.contest_global_ranking
-    ?? st.stats?.global_rank
-    ?? st.stats?.contest_rank
     ?? st.contest_global_ranking
-    ?? st.global_rank
+    ?? st.stats?.contest_rank
     ?? st.contest_rank
     ?? st.public_contest_result?.contest_rank
     ?? st.lc_contest_standing?.contest_global_ranking;
@@ -82,20 +80,8 @@ export function getContestRankDisplay(st: any): string {
 }
 
 export function getProfileRankDisplay(st: any): string {
-  if (!st) return '—';
-  const rawProfileRank = st.stats?.public_profile_ranking
-    ?? st.stats?.profile_global_ranking
-    ?? st.stats?.profile_rank
-    ?? st.stats?.ranking
-    ?? st.public_profile_ranking
-    ?? st.profile_rank
-    ?? st.profile_global_ranking
-    ?? st.ranking
-    ?? st.lc_problem_stats?.profile_global_ranking;
-  if (!rawProfileRank || Number(rawProfileRank) <= 0) return '—';
-  const val = Number(rawProfileRank);
-  if (val >= 5000000) return '~5,000,000';
-  return `#${val.toLocaleString()}`;
+  // Profile ranking is deprecated; use official contest global ranking exclusively
+  return getContestRankDisplay(st);
 }
 
 // million-ignore
@@ -329,10 +315,6 @@ export const FastStudentRow = memo(({
 
       <div className="hidden md:flex flex-none w-28 px-3 items-center justify-center text-center text-indigo-700 dark:text-indigo-300 font-extrabold">
         {getContestRankDisplay(student)}
-      </div>
-
-      <div className="hidden md:flex flex-none w-28 px-3 items-center justify-center text-center text-slate-900 dark:text-slate-100 font-extrabold">
-        {getProfileRankDisplay(student)}
       </div>
 
       <div className="hidden md:flex flex-none w-32 px-3 items-center justify-center text-center" onClick={(e) => e.stopPropagation()}>

@@ -215,10 +215,7 @@ class ContestVerificationEngine:
             if sub_ist and contest_start_ist and contest_end_ist:
                 is_within_window = (contest_start_ist <= sub_ist <= contest_end_ist)
 
-            # Verification outcome: allow live AC solves during active contest window
-            if not is_contest_problem and is_ac and is_within_window and is_actual:
-                is_contest_problem = True
-
+            # A solve is ONLY verified if it is explicitly an official contest problem
             is_verified = (
                 is_ac and
                 is_actual and
@@ -244,7 +241,7 @@ class ContestVerificationEngine:
                 leetcode_username=clean_username,
                 contest_id=contest_id,
                 problem_id=problem_def.problem_id if problem_def else slug_or_title,
-                question_number=problem_def.question_number if problem_def else (seen_slugs.index(slug_or_title) + 1 if slug_or_title in seen_slugs else 1),
+                question_number=problem_def.question_number if problem_def else None,
                 submission_id=sub_id,
                 submission_timestamp=sub_ist,
                 submission_status=raw_status,
@@ -258,17 +255,11 @@ class ContestVerificationEngine:
             )
             evidence_list.append(ev)
 
-            if is_verified:
-                if problem_def:
-                    q_num = problem_def.question_number
-                else:
-                    if slug_or_title not in seen_slugs:
-                        seen_slugs.append(slug_or_title)
-                    q_num = min(4, seen_slugs.index(slug_or_title) + 1)
-
+            if is_verified and problem_def:
+                q_num = problem_def.question_number
                 solved_questions.add(q_num)
                 q_key = f"Q{q_num}"
-                p_title = problem_def.title if problem_def else slug_or_title
+                p_title = problem_def.title
                 result.q_reasons[q_key] = f"VERIFIED: Accepted submission {sub_id} at {sub_ist} on problem '{p_title}'"
 
         result.raw_ac_count = raw_ac_count

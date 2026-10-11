@@ -322,7 +322,7 @@ export function matchesDepartment(student: StudentData, selectedDept: string | a
  */
 export function getDepartmentThemeColor(dept: any): { bg: string; text: string; border: string; pillBg: string; pillText: string } {
   const norm = normalizeDepartment(dept);
-  
+
   if (norm === 'cse_iot') {
     return {
       bg: 'bg-orange-50 dark:bg-orange-950/40',

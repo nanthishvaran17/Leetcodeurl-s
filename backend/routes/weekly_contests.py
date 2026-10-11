@@ -1150,6 +1150,7 @@ def get_normalized_contest_data(
             "status": canonical_data.get("status", "FINALIZED")
         },
         "rows": matrix_rows,
+        "items": matrix_rows,
         "departmentStats": canonical_data["departmentStats"],
         "yearStats": canonical_data["yearStats"],
         "statusCounts": canonical_data["statusCounts"],
@@ -1885,6 +1886,7 @@ def _run_sync_in_background(session_id: int):
 
         session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
         is_516 = False
+        c_name = ""
         if session:
             c_name = session.contest_name or ""
             c_id = session.contest_id or ""
@@ -1896,6 +1898,16 @@ def _run_sync_in_background(session_id: int):
             logger.info(f"Starting background reconciliation for Contest 516 (Session {session_id})")
             Contest516ReconciliationService.reconcile_contest(session_id, db)
             logger.info(f"Completed background reconciliation for Contest 516 (Session {session_id})")
+        elif session_id == 13 or "522" in str(c_name):
+            logger.info(f"Starting authoritative Sunday roster sync for Contest 522 (Session {session_id})")
+            from backend.scripts.sync_522_full_roster import sync_session_522_participation
+            sync_session_522_participation()
+            _CONTEST_RAM_CACHE.clear()
+            from backend.cache import cache
+            from backend.services.canonical_contest_engine import invalidate_canonical_cache
+            invalidate_canonical_cache(session_id)
+            cache.clear()
+            logger.info(f"Completed Contest 522 roster sync and cleared cache")
         else:
             logger.info(f"Starting background sync for Session {session_id}")
             sync_single_historical_session(db, session_id)

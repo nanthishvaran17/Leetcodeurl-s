@@ -240,10 +240,44 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
         s_id = getattr(s, "id")
         snaps = _clean_snaps(grouped.get(s_id, []))
         st = s.stats
-        
         c_snap = snaps[-1] if snaps else None
         
-        if c_snap:
+        if st and st.total_solved is not None:
+            st_any = cast(Any, st)
+            c_at = st_any.last_verified_at or st_any.last_updated or datetime.datetime.now(UTC_TZ)
+            if c_at and c_at.tzinfo is None:
+                c_at = c_at.replace(tzinfo=UTC_TZ)
+            cur_ez = int(st_any.easy_solved or 0)
+            cur_med = int(st_any.medium_solved or 0)
+            cur_hd = int(st_any.hard_solved or 0)
+            cur_tot = int(st_any.total_solved if st_any.total_solved is not None else (cur_ez + cur_med + cur_hd))
+            cur_rat = float(st_any.contest_rating) if st_any.contest_rating is not None else None
+            
+            if c_snap:
+                c_snap_any = cast(Any, c_snap)
+                cs_at = c_snap_any.captured_at
+                if cs_at and cs_at.tzinfo is None:
+                    cs_at = cs_at.replace(tzinfo=UTC_TZ)
+                cs_tot = int(c_snap_any.total_solved if c_snap_any.total_solved is not None else 0)
+                if cs_tot > cur_tot or (cs_at and cs_at > c_at):
+                    cur_ez = max(cur_ez, int(c_snap_any.easy_solved or 0))
+                    cur_med = max(cur_med, int(c_snap_any.medium_solved or 0))
+                    cur_hd = max(cur_hd, int(c_snap_any.hard_solved or 0))
+                    cur_tot = max(cur_tot, cs_tot)
+                    if c_snap_any.contest_rating is not None:
+                        cur_rat = float(c_snap_any.contest_rating)
+                    c_at = max(c_at, cs_at)
+                    
+            current_dict = {
+                "captured_at": c_at.isoformat() if c_at else None,
+                "source": st_any.source or "live_stats",
+                "total_solved": cur_tot,
+                "easy_solved": cur_ez,
+                "medium_solved": cur_med,
+                "hard_solved": cur_hd,
+                "contest_rating": cur_rat
+            }
+        elif c_snap:
             c_snap_any = cast(Any, c_snap)
             c_at = c_snap_any.captured_at
             if c_at and c_at.tzinfo is None:
@@ -254,25 +288,6 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
             cur_tot = int(c_snap_any.total_solved if c_snap_any.total_solved is not None else (cur_ez + cur_med + cur_hd))
             cur_rat = float(c_snap_any.contest_rating) if c_snap_any.contest_rating is not None else None
             current_dict = _serialize_snap(c_snap)
-        elif st and st.total_solved is not None:
-            st_any = cast(Any, st)
-            c_at = st_any.last_verified_at or st_any.last_updated or datetime.datetime.now(UTC_TZ)
-            if c_at and c_at.tzinfo is None:
-                c_at = c_at.replace(tzinfo=UTC_TZ)
-            cur_ez = int(st_any.easy_solved or 0)
-            cur_med = int(st_any.medium_solved or 0)
-            cur_hd = int(st_any.hard_solved or 0)
-            cur_tot = int(st_any.total_solved if st_any.total_solved is not None else (cur_ez + cur_med + cur_hd))
-            cur_rat = float(st_any.contest_rating) if st_any.contest_rating is not None else None
-            current_dict = {
-                "captured_at": c_at.isoformat() if c_at else None,
-                "source": st_any.source or "live_stats",
-                "total_solved": cur_tot,
-                "easy_solved": cur_ez,
-                "medium_solved": cur_med,
-                "hard_solved": cur_hd,
-                "contest_rating": cur_rat
-            }
         else:
             growth[s_id] = {
                 "growth_status": "UNKNOWN",
@@ -322,38 +337,48 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
             }
             continue
 
-        # For today, 7d, 30d:
-        # Check current staleness if ref_now_utc is passed
-        if ref_now_utc and c_at and (ref_now_utc - c_at) > MAX_CURRENT_AGE:
-            growth[s_id] = {
-                "period": period,
-                "growth_status": "UNKNOWN",
-                "current_status": "UNKNOWN",
-                "total_solved": None, "easy_solved": None, "medium_solved": None, "hard_solved": None, "contest_rating": None,
-                "delta_total": None, "delta_easy": None, "delta_medium": None, "delta_hard": None, "delta_rating": None,
-                "conflict_reason": "CURRENT_STALE",
-                "baseline": None,
-                "current": current_dict
-            }
-            continue
-
         # Baseline snapshot selection:
         baseline_snap: Optional[StudentStatSnapshot] = None
-        max_staleness = MAX_BASELINE_STALENESS.get(period, datetime.timedelta(hours=48))
         if cutoff is not None:
-            for snap in snaps:
-                s_at = snap.captured_at
-                if s_at.tzinfo is None:
-                    s_at = s_at.replace(tzinfo=UTC_TZ)
-                if s_at <= cutoff:
-                    if (cutoff - s_at) <= max_staleness:
-                        baseline_snap = snap
-                    else:
-                        baseline_snap = None
-                else:
-                    break
+            snaps_before_cutoff = [
+                snap for snap in snaps
+                if (snap.captured_at.replace(tzinfo=UTC_TZ) if snap.captured_at.tzinfo is None else snap.captured_at) <= cutoff
+            ]
+            if snaps_before_cutoff:
+                baseline_snap = snaps_before_cutoff[-1]
+            elif snaps:
+                baseline_snap = snaps[0]
 
         if baseline_snap is None:
+            act = getattr(s, "lc_activity", None)
+            cal_entries = _parse_cal_entries(act.submission_calendar_json if act else None)
+            if cal_entries:
+                cal_delta = _sum_cal_delta(cal_entries, target_dates)
+                growth[s_id] = {
+                    "period": period,
+                    "growth_status": "VERIFIED",
+                    "current_status": "VERIFIED",
+                    "total_solved": cur_tot,
+                    "easy_solved": cur_ez,
+                    "medium_solved": cur_med,
+                    "hard_solved": cur_hd,
+                    "contest_rating": cur_rat,
+                    "site_rank": getattr(st, "public_profile_ranking", None) if st else None,
+                    "contest_rank": getattr(st, "contest_global_ranking", None) if st else None,
+                    "global_rank": getattr(st, "public_profile_ranking", None) if st else None,
+                    "captured_at": current_dict.get("captured_at") if current_dict else None,
+                    "source": "submission_calendar",
+                    "delta_total": cal_delta,
+                    "delta_easy": round(cal_delta * (cur_ez / cur_tot)) if cur_tot > 0 else cal_delta,
+                    "delta_medium": round(cal_delta * (cur_med / cur_tot)) if cur_tot > 0 else 0,
+                    "delta_hard": round(cal_delta * (cur_hd / cur_tot)) if cur_tot > 0 else 0,
+                    "delta_rating": None,
+                    "conflict_reason": None,
+                    "baseline": None,
+                    "current": current_dict
+                }
+                continue
+
             growth[s_id] = {
                 "period": period,
                 "growth_status": "UNKNOWN",
@@ -377,32 +402,10 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
         b_tot = int(b_snap_any.total_solved if b_snap_any.total_solved is not None else (b_ez + b_med + b_hd))
         b_rat = float(b_snap_any.contest_rating) if b_snap_any.contest_rating is not None else None
 
-        # Check reconciliation conflict:
-        if (cur_ez + cur_med + cur_hd) != cur_tot:
-            growth[s_id] = _conflict(baseline_snap, c_snap, "reconciliation:current")
-            continue
-        if (b_ez + b_med + b_hd) != b_tot:
-            growth[s_id] = _conflict(baseline_snap, c_snap, "reconciliation:baseline")
-            continue
-
-        # Check negative deltas:
-        if cur_hd < b_hd:
-            growth[s_id] = _conflict(baseline_snap, c_snap, "negative_delta:hard")
-            continue
-        if cur_med < b_med:
-            growth[s_id] = _conflict(baseline_snap, c_snap, "negative_delta:medium")
-            continue
-        if cur_ez < b_ez:
-            growth[s_id] = _conflict(baseline_snap, c_snap, "negative_delta:easy")
-            continue
-        if cur_tot < b_tot:
-            growth[s_id] = _conflict(baseline_snap, c_snap, "negative_delta:total")
-            continue
-
-        snap_d_ez = cur_ez - b_ez
-        snap_d_med = cur_med - b_med
-        snap_d_hd = cur_hd - b_hd
-        snap_d_tot = cur_tot - b_tot
+        snap_d_ez = max(0, cur_ez - b_ez)
+        snap_d_med = max(0, cur_med - b_med)
+        snap_d_hd = max(0, cur_hd - b_hd)
+        snap_d_tot = max(0, cur_tot - b_tot)
 
         # Check activity heatmap calendar
         act = getattr(s, "lc_activity", None)

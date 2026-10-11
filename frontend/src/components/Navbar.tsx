@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon, Bell, Palette, Check, RefreshCw } from 'lucide-react';
+import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon, Bell, Palette, Check, RefreshCw, ChevronUp, ChevronDown, Maximize2 } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -15,6 +15,8 @@ interface NavbarProps {
   setActiveTab: (tab: string) => void;
   isSidebarOpen: boolean;
   setIsSidebarOpen: (isOpen: boolean) => void;
+  isHeaderHidden?: boolean;
+  onToggleHideHeader?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -23,7 +25,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   isSidebarOpen,
-  setIsSidebarOpen
+  setIsSidebarOpen,
+  isHeaderHidden,
+  onToggleHideHeader
 }) => {
   const { user, logout, isAuthenticated } = useAuth();
 
@@ -80,6 +84,35 @@ export const Navbar: React.FC<NavbarProps> = ({
       console.warn("Freshness load warning:", err);
     }
   };
+
+  if (isHeaderHidden) {
+    return (
+      <>
+        {onToggleHideHeader && (
+          <button
+            type="button"
+            onClick={onToggleHideHeader}
+            className="fixed top-2 right-4 z-[9999] px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-900 text-white text-xs font-bold shadow-xl border border-slate-700/80 backdrop-blur-md flex items-center space-x-1.5 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer group"
+            title="Show Header"
+            aria-label="Show Header"
+          >
+            <ChevronDown className="w-3.5 h-3.5 text-brand-400 group-hover:translate-y-0.5 transition-transform" />
+            <span className="hidden xs:inline">Show Header</span>
+          </button>
+        )}
+        <SignOutConfirmModal
+          isOpen={showLogoutConfirm}
+          onClose={() => setShowLogoutConfirm(false)}
+          onConfirm={logout}
+          user={user}
+        />
+        <SyncStatusModal
+          isOpen={showSyncModal}
+          onClose={() => setShowSyncModal(false)}
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -231,6 +264,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span className="hidden sm:inline">Portal Sign In</span>
                   <span className="sm:hidden">Sign In</span>
+                </button>
+              )}
+
+              {/* Hide Header Toggle Button */}
+              {onToggleHideHeader && (
+                <button
+                  type="button"
+                  onClick={onToggleHideHeader}
+                  className="p-2 flex-shrink-0 rounded-xl text-slate-500 hover:text-brand-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-800 transition-all duration-200 cursor-pointer active:scale-90 min-w-[38px] min-h-[38px] flex items-center justify-center border border-slate-200/60 dark:border-navy-700/60"
+                  title="Hide Top Header (Full View Mode)"
+                  aria-label="Hide Top Header"
+                >
+                  <ChevronUp className="w-4 h-4" />
                 </button>
               )}
 

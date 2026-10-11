@@ -5174,12 +5174,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
-                  <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Total Solved</p>
-                  <p className="text-2xl font-black font-mono mt-1 text-slate-900 dark:text-white">{viewingProfileStudent.total_solved ?? viewingProfileStudent.total_contest_solved ?? ((viewingProfileStudent.q1 || 0) + (viewingProfileStudent.q2 || 0) + (viewingProfileStudent.q3 || 0) + (viewingProfileStudent.q4 || 0))}/4</p>
+                  <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Contest Solved</p>
+                  <p className="text-2xl font-black font-mono mt-1 text-slate-900 dark:text-white">
+                    {((viewingProfileStudent.q1 || 0) + (viewingProfileStudent.q2 || 0) + (viewingProfileStudent.q3 || 0) + (viewingProfileStudent.q4 || 0))}/4
+                  </p>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
                   <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Rank</p>
-                  <p className="text-2xl font-black font-mono mt-1 text-slate-900 dark:text-white">{viewingProfileStudent.rank || viewingProfileStudent.contest_rank || '0'}</p>
+                  <p className="text-2xl font-black font-mono mt-1 text-slate-900 dark:text-white">
+                    {viewingProfileStudent.contest_rank || viewingProfileStudent.rank ? `#${viewingProfileStudent.contest_rank || viewingProfileStudent.rank}` : '—'}
+                  </p>
                 </div>
               </div>
 

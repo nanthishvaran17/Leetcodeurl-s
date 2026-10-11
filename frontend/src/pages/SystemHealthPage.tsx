@@ -1645,7 +1645,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 {showRawJson && (
                   <div className="max-h-72 max-w-[calc(100vw-3rem)] overflow-auto rounded-2xl bg-black/40 border border-white/10 p-3 font-mono text-[11px] text-indigo-300 custom-scrollbar animate-fade-in">
                     <pre className="whitespace-pre leading-relaxed min-w-min">
-                      {JSON.stringify(forensicResult.rawEvidence, null, 2)}
+                      {JSON.stringify(forensicResult.rawEvidence || forensicResult, null, 2)}
                     </pre>
                   </div>
                 )}

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef, startTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { App as CapacitorApp } from '@capacitor/app';
-import { Sparkles, LogOut } from 'lucide-react';
+import { Sparkles, LogOut, ChevronDown } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import type { StudentData } from './components/LeaderboardTable';
@@ -303,6 +303,17 @@ export const App: React.FC = () => {
   const [showAiWidget, setShowAiWidget] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showMobileFilterDrawer, setShowMobileFilterDrawer] = useState(false);
+  const [isHeaderHidden, setIsHeaderHidden] = useState<boolean>(() => {
+    return localStorage.getItem('is_header_hidden') === 'true';
+  });
+
+  const toggleHeaderHidden = useCallback(() => {
+    setIsHeaderHidden(prev => {
+      const next = !prev;
+      localStorage.setItem('is_header_hidden', String(next));
+      return next;
+    });
+  }, []);
 
   useGlobalKeyboardShortcuts({
     onOpenCommandPalette: () => setShowCommandPalette(true),
@@ -901,6 +912,8 @@ export const App: React.FC = () => {
         setActiveTab={handleTabChange}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
+        isHeaderHidden={isHeaderHidden}
+        onToggleHideHeader={toggleHeaderHidden}
       />
 
       <div className={`flex-1 w-full mx-auto relative ${

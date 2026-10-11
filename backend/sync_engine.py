@@ -201,7 +201,7 @@ def capture_student_snapshot(student: Student, db: Session, run_id: Optional[str
             medium_solved=cast(Any, student.stats).medium_solved,
             hard_solved=cast(Any, student.stats).hard_solved,
             contest_rating=cur_rat,
-            global_rank=cast(Any, student.stats).public_profile_ranking,
+            global_rank=getattr(student.stats, "contest_global_ranking", None),
             contest_global_ranking=getattr(student.stats, "contest_global_ranking", None),
             delta_total=delta_total,
             delta_easy=delta_easy,

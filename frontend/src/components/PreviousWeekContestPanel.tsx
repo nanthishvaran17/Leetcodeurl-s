@@ -204,6 +204,23 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   }, [isFacultyRole, user?.id]);
 
   const [summary, setSummary] = useState<PreviousWeekSummary | null>(null);
+
+  const isLiveContest = useMemo(() => {
+    if (summary?.validation_status === 'LIVE' || summary?.publish_status === 'LIVE') return true;
+    try {
+      const now = new Date();
+      const utcMs = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
+      const istMs = utcMs + (5.5 * 60 * 60 * 1000);
+      const istDate = new Date(istMs);
+      const day = istDate.getDay(); // 0 = Sunday
+      const hours = istDate.getHours();
+      const mins = istDate.getMinutes();
+      const timeInMins = hours * 60 + mins;
+      return day === 0 && timeInMins >= 480 && timeInMins <= 570; // 08:00 to 09:30 IST
+    } catch {
+      return false;
+    }
+  }, [summary?.validation_status, summary?.publish_status]);
   const [records, setRecords] = useState<ParticipationRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [syncing, setSyncing] = useState<boolean>(false);
@@ -369,24 +386,24 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       try {
         const keys = Object.keys(localStorage);
         for (const k of keys) {
-          if (k.startsWith('cache_prev_panel_') && !k.endsWith('_v19')) {
+          if (k.startsWith('cache_prev_panel_') && !k.endsWith('_v29')) {
             localStorage.removeItem(k);
           }
         }
         if (isFacultyRole) {
           localStorage.removeItem(`cache_prev_panel_${latestSessionId}`);
         }
-        const localKey = `cache_prev_panel_${userScope}_${latestSessionId}_v27`;
+        const localKey = `cache_prev_panel_${userScope}_${latestSessionId}_v29`;
         const stored = localStorage.getItem(localKey);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed.v === 'v27' && parsed.summary) {
+          if (parsed.v === 'v29' && parsed.summary) {
             setSummary(parsed.summary);
             setLoading(false);
           } else {
             localStorage.removeItem(localKey);
           }
-          if (parsed.v === 'v27' && parsed.records && Array.isArray(parsed.records) && records.length === 0) {
+          if (parsed.v === 'v29' && parsed.records && Array.isArray(parsed.records) && records.length === 0) {
             const safeRecords = parsed.records;
             setRecords(safeRecords);
           }
@@ -426,6 +443,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           
           // Hardcode fallback for Recent Contests if the backend cache is stuck returning an empty array due to Cloudflare blocks
           const fallbackMap: Record<string, string[]> = {
+            'weekly-contest-523': [
+              "three-fibonacci-sum",
+              "prime-subset-selection-i",
+              "design-bus-seat-booking-system",
+              "prime-subset-selection-ii"
+            ],
             'weekly-contest-522': [
               "minimum-rotations-to-dial-a-number-i",
               "minimum-rotations-to-dial-a-number-ii",
@@ -552,7 +575,11 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
       // 3. Matrix Stream Update
       const matrixData = await matrixPromise;
-      const rows = matrixData?.items || matrixData?.rows || [];
+      const rows = (matrixData?.rows && Array.isArray(matrixData.rows) && matrixData.rows.length > 0)
+        ? matrixData.rows
+        : (matrixData?.items && Array.isArray(matrixData.items) && matrixData.items.length > 0)
+          ? matrixData.items
+          : [];
       if (rows.length > 0) {
         const mappedRecords: ParticipationRecord[] = rows.map((row: any) => {
           const usernameStr = (row.username || '').toString().trim();
@@ -601,7 +628,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         const finalRecords = mappedRecords;
         setRecords(finalRecords);
 
-        // Store in localStorage for 0ms instant reload on next visit with v18 version tag!
+        // Store in localStorage for 0ms instant reload on next visit with v28 version tag!
         try {
           if (summaryData) {
             const pubCount = finalRecords.filter(r => r.participation_type === 'PUBLIC').length;
@@ -621,8 +648,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                 }
               : summaryData;
 
-            localStorage.setItem(`cache_prev_panel_${userScope}_${latestSessionId}_v27`, JSON.stringify({
-              v: 'v27',
+            localStorage.setItem(`cache_prev_panel_${userScope}_${latestSessionId}_v29`, JSON.stringify({
+              v: 'v29',
               summary: {
                 session_id: scopedSummary.sessionId,
                 contest_slug: scopedSummary.contestId || `weekly-contest-${scopedSummary.contestNumber}`,
@@ -907,12 +934,22 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       NOT_PARTICIPATED: 0,
       NOT_VERIFIED: 0,
       MISSING_LEETCODE_USERNAME: 0,
-      TOTAL_STUDENTS: records.length,
+      TOTAL_STUDENTS: 0,
     };
     records.forEach(r => {
+      if (selectedDeptFilter !== 'ALL') {
+        const info = getDeptInfo(r.department_name || '');
+        const dName = (r.department_name || '').toUpperCase().trim();
+        const targetDept = selectedDeptFilter.toUpperCase().trim();
+        if (info.key.toUpperCase() !== targetDept && dName !== targetDept) {
+          return;
+        }
+      }
       const cat = getParticipationCategory(r);
       counts[cat]++;
     });
+    counts.TOTAL_STUDENTS = counts.PUBLIC + counts.VIRTUAL + counts.NOT_PARTICIPATED + counts.NOT_VERIFIED + counts.MISSING_LEETCODE_USERNAME;
+
     if (records.length === 0 && summary?.metrics) {
       if (isFacultyRole) {
         return {
@@ -923,7 +960,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       return summary.metrics;
     }
     return counts;
-  }, [records, summary?.metrics, isFacultyRole]);
+  }, [records, summary?.metrics, selectedDeptFilter, isFacultyRole]);
 
   if (loading && !summary) {
     return (
@@ -1898,10 +1935,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       <>
                         <span className="text-xs font-mono font-black text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
                           <X className="w-4 h-4 shrink-0" />
-                          DID NOT JOIN
+                          {isLiveContest ? 'NO SUBMISSIONS YET' : 'DID NOT JOIN'}
                         </span>
                         <span className="text-[9px] text-slate-500 dark:text-slate-400 mt-1.5 block leading-tight">
-                          No activity recorded in official contest window.
+                          {isLiveContest ? 'Official contest window is active. No submissions recorded yet.' : 'No activity recorded in official contest window.'}
                         </span>
                       </>
                     )}
@@ -1913,10 +1950,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                     </span>
                     <span className="text-xs font-mono font-black text-slate-950 dark:text-white flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      {selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? '—' : formatFinishClockTime(selectedForensicRecord, summary?.contest_title)}
+                      {selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? (isLiveContest ? 'Live Window Open' : '—') : formatFinishClockTime(selectedForensicRecord, summary?.contest_title)}
                     </span>
                     <span className="text-[9px] text-slate-500 dark:text-slate-400 mt-1.5 block">
-                      {selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? 'Contest Window Closed' : 'Derived from submit duration.'}
+                      {isLiveContest ? 'Contest In Progress • Ends 09:30 AM IST' : (selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? 'Contest Window Closed' : 'Derived from submit duration.')}
                     </span>
                   </div>
 

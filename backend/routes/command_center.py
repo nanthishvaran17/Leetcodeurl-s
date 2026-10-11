@@ -584,6 +584,11 @@ def get_faculty_workload(
 
         count = len(students_summary)
         active_count = sum(1 for st in students_summary if st["is_active"])
+        inactive_count = count - active_count
+        conversion_rate_pct = round((active_count / count * 100), 1) if count > 0 else 0.0
+        total_solves = sum((st["total_solved"] or 0) for st in students_summary)
+        avg_solves = round(total_solves / count, 1) if count > 0 else 0.0
+
         workload.append({
             "faculty_id": fac.id,
             "faculty_name": fac.username,
@@ -592,6 +597,10 @@ def get_faculty_workload(
             "department_code": fac.department.code if fac.department else "GEN",
             "assigned_students": count,
             "active_students": active_count,
+            "inactive_students": inactive_count,
+            "conversion_rate_pct": conversion_rate_pct,
+            "total_mentee_solves": total_solves,
+            "avg_solves_per_mentee": avg_solves,
             "max_capacity": MAX_STUDENTS_PER_FACULTY,
             "workload_status": "NORMAL" if count < 20 else ("AT_RATIO" if count == 20 else "HIGH_WORKLOAD"),
             "students": students_summary
@@ -694,12 +703,11 @@ def export_command_center_report_excel(
     left_align = Alignment(horizontal="left", vertical="center", wrap_text=True)
     
     thin_border = Border(left=Side(style="thin"), right=Side(style="thin"), top=Side(style="thin"), bottom=Side(style="thin"))
-
     col_span = 5
     if report_type == "INACTIVE_AT_RISK":
         col_span = 5
     elif report_type == "FACULTY_ALLOCATION":
-        col_span = 5
+        col_span = 9
     elif report_type == "EXECUTIVE":
         col_span = 5
 
@@ -718,35 +726,47 @@ def export_command_center_report_excel(
 
     center_no_wrap = Alignment(horizontal="center", vertical="center", wrap_text=False)
     
-    # 1. Main Title (Row 1, merged A1:E1 across full table width)
+    # 1. Main Title (Row 1, merged A1 to last column across full table width)
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=col_span)
     cell = ws.cell(row=1, column=1, value=main_title)
     cell.font = title_font
     cell.alignment = center_no_wrap
 
-    # 2. Subtitle Scope (Row 2, merged A2:E2)
+    # 2. Subtitle Scope (Row 2, merged A2 to last column)
     ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=col_span)
     cell = ws.cell(row=2, column=1, value=data.get("department_scope", "All Departments"))
     cell.font = subtitle_font
     cell.alignment = center_no_wrap
 
-    # 3. Generated At Timestamp (Row 3, merged A3:E3)
+    # 3. Generated At Timestamp (Row 3, merged A3 to last column)
     ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=col_span)
     cell = ws.cell(row=3, column=1, value=f"Generated At: {data.get('generated_at', '')}")
     cell.font = cell_font
     cell.alignment = center_no_wrap
 
-    # IMAGES (College emblem in top-left corner of Column A, sized cleanly)
+    # IMAGES (College emblem in top-left corner A1, 25-years anniversary logo in top-right corner)
     try:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         logo1_path = os.path.join(base_dir, "assets", "nandha_emblem.png")
+        if not os.path.exists(logo1_path):
+            logo1_path = os.path.join(base_dir, "assets", "nandha_emblem_white_transparent.png")
+
+        logo2_path = os.path.join(base_dir, "assets", "nec_25_years_logo_transparent.png")
+        if not os.path.exists(logo2_path):
+            logo2_path = os.path.join(base_dir, "assets", "nec_25_years_logo.png")
         
         if os.path.exists(logo1_path):
             img1 = ExcelImage(logo1_path)
-            img1.width = 65
-            img1.height = 54
-            # Anchor cleanly to top-left A1
+            img1.width = 62
+            img1.height = 50
             ws.add_image(img1, "A1")
+
+        if os.path.exists(logo2_path):
+            img2 = ExcelImage(logo2_path)
+            img2.width = 50
+            img2.height = 50
+            right_col_letter = openpyxl.utils.get_column_letter(col_span)
+            ws.add_image(img2, f"{right_col_letter}1")
     except Exception as e:
         print("Image error:", e)
         pass
@@ -818,7 +838,7 @@ def export_command_center_report_excel(
             left_cell.alignment = left_align
             
             val_cell = ws.cell(row=ws.max_row, column=5)
-            val_cell.font = bold_cell_font
+            val_cell.font = cell_font
             val_cell.alignment = center_align
             set_clean_excel_cell_value(val_cell, row.get("score"))
 
@@ -875,7 +895,49 @@ def export_command_center_report_excel(
                 set_clean_excel_cell_value(ws.cell(row=r_idx, column=4), p_pct, is_percentage=True)
 
     elif report_type == "FACULTY_ALLOCATION":
-        headers = ["Faculty Mentor", "Dept", "Assigned", "Active Solvers", "Ratio Status"]
+        # Section 1: Mentorship KPI Overview
+        kpi_banner = ws.cell(row=ws.max_row + 1, column=1, value="FACULTY MENTORSHIP & WORKLOAD SUMMARY")
+        ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=9)
+        for col_idx in range(1, 10):
+            c = ws.cell(row=ws.max_row, column=col_idx)
+            c.font = Font(name="Times New Roman", size=11.5, bold=True, color="FFFFFF")
+            c.fill = header_fill
+            c.alignment = center_align
+            c.border = thin_border
+        ws.row_dimensions[ws.max_row].height = 24
+
+        metrics = data.get("summary_metrics", {})
+        for k, v in metrics.items():
+            ws.append([k, "", "", "", "", "", "", "", ""])
+            ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=8)
+            left_cell = ws.cell(row=ws.max_row, column=1)
+            left_cell.font = bold_cell_font
+            left_cell.alignment = left_align
+            
+            val_cell = ws.cell(row=ws.max_row, column=9)
+            val_cell.font = cell_font
+            val_cell.alignment = center_align
+            set_clean_excel_cell_value(val_cell, v)
+
+            for c in range(1, 10):
+                ws.cell(row=ws.max_row, column=c).border = thin_border
+                if ws.max_row % 2 == 0:
+                    ws.cell(row=ws.max_row, column=c).fill = alt_row_fill
+
+        ws.append([]) # spacing
+
+        # Section 2: Detailed Faculty Allocation Audit Table
+        table_banner = ws.cell(row=ws.max_row + 1, column=1, value="DETAILED FACULTY MENTOR ALLOCATION AUDIT")
+        ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=9)
+        for col_idx in range(1, 10):
+            c = ws.cell(row=ws.max_row, column=col_idx)
+            c.font = Font(name="Times New Roman", size=11.5, bold=True, color="FFFFFF")
+            c.fill = header_fill
+            c.alignment = center_align
+            c.border = thin_border
+        ws.row_dimensions[ws.max_row].height = 24
+
+        headers = ["Faculty Mentor", "Department", "Capacity Limit", "Assigned Mentees", "Active Solvers", "Inactive Mentees", "Active Conversion %", "Total Mentee Solves", "Ratio Status"]
         ws.append(headers)
         for col_idx, h in enumerate(headers, 1):
             cell = ws.cell(row=ws.max_row, column=col_idx)
@@ -883,17 +945,39 @@ def export_command_center_report_excel(
             cell.fill = header_fill
             cell.alignment = center_align
             cell.border = thin_border
-            
+        ws.row_dimensions[ws.max_row].height = 22
+
         for fac in data.get("faculty_records", []):
-            ws.append([fac.get("faculty_name"), fac.get("department_code"), fac.get("assigned_students"), fac.get("active_students"), fac.get("workload_status")])
-            for col_idx in range(1, 6):
-                cell = ws.cell(row=ws.max_row, column=col_idx)
+            ws.append([
+                fac.get("faculty_name"),
+                fac.get("department_code"),
+                fac.get("max_capacity", 20),
+                fac.get("assigned_students", 0),
+                fac.get("active_students", 0),
+                fac.get("inactive_students", 0),
+                f"{fac.get('conversion_rate_pct', 0)}%",
+                fac.get("total_mentee_solves", 0),
+                fac.get("workload_status", "NORMAL")
+            ])
+            r_idx = ws.max_row
+            for col_idx in range(1, 10):
+                cell = ws.cell(row=r_idx, column=col_idx)
                 cell.font = cell_font
                 cell.border = thin_border
-                if ws.max_row % 2 == 0:
+                if r_idx % 2 == 0:
                     cell.fill = alt_row_fill
                 if col_idx > 2:
                     cell.alignment = center_align
+
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=1), fac.get("faculty_name"))
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=2), fac.get("department_code"))
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=3), fac.get("max_capacity", 20))
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=4), fac.get("assigned_students", 0))
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=5), fac.get("active_students", 0))
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=6), fac.get("inactive_students", 0))
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=7), fac.get("conversion_rate_pct", 0), is_percentage=True)
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=8), fac.get("total_mentee_solves", 0))
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=9), fac.get("workload_status", "NORMAL"))
 
     elif report_type == "INACTIVE_AT_RISK":
         ws.append([f"Total Inactive Solvers: {data.get('total_inactive', 0)}"])
@@ -936,11 +1020,9 @@ def export_command_center_report_excel(
         
         # Enforce generous minimum widths for flawless layout
         if column == "A":
-            max_length = max(max_length, 48)
-        elif column in ["B", "C", "D"]:
-            max_length = max(max_length, 18)
-        elif column == "E":
-            max_length = max(max_length, 24)
+            max_length = max(max_length, 36)
+        elif column in ["B", "C", "D", "E", "F", "G", "H", "I"]:
+            max_length = max(max_length, 20)
             
         adjusted_width = (max_length + 4)
         ws.column_dimensions[column].width = adjusted_width
@@ -1081,12 +1163,31 @@ def get_report_data(
 
     elif report_type == "FACULTY_ALLOCATION":
         workload_res = get_faculty_workload(dept_id=eff_dept_id, db=db, current_user=current_user)  # type: ignore
+        faculty_recs = workload_res["faculty_workload"]
+        tot_assigned = sum(f.get("assigned_students", 0) for f in faculty_recs)
+        tot_active = sum(f.get("active_students", 0) for f in faculty_recs)
+        tot_inactive = sum(f.get("inactive_students", 0) for f in faculty_recs)
+        overall_conv = round((tot_active / tot_assigned * 100), 1) if tot_assigned > 0 else 0.0
+        tot_solves = sum(f.get("total_mentee_solves", 0) for f in faculty_recs)
+        opt_workload = sum(1 for f in faculty_recs if f.get("workload_status") in ("NORMAL", "AT_RATIO"))
+        high_workload = sum(1 for f in faculty_recs if f.get("workload_status") == "HIGH_WORKLOAD")
+
         return {
             "report_title": "Faculty Mentorship & Student Allocation Audit Report",
             "generated_at": now_str,
             "department_scope": scope_summary_str,
             "total_faculty": workload_res["total_faculty"],
-            "faculty_records": workload_res["faculty_workload"]
+            "summary_metrics": {
+                "Total Faculty Mentors": workload_res["total_faculty"],
+                "Total Assigned Mentees": tot_assigned,
+                "Active Solvers (Mentees)": tot_active,
+                "Inactive Mentees": tot_inactive,
+                "Active Conversion Rate": f"{overall_conv}%",
+                "Total Mentees Solves": tot_solves,
+                "Optimal Workload (<=20)": opt_workload,
+                "High Workload (>20)": high_workload
+            },
+            "faculty_records": faculty_recs
         }
 
     elif report_type == "INACTIVE_AT_RISK":

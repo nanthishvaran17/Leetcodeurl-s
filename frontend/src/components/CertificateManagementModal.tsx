@@ -658,11 +658,7 @@ export const CertificateManagementModal: React.FC<{
                   })}
                 </div>
 
-                <div className="hidden lg:flex items-center space-x-2 text-xs font-black text-slate-800 dark:text-slate-200">
-                  <span className="px-3 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30 text-emerald-900 dark:text-emerald-300 font-mono font-black text-[11px] shadow-xs">
-                    A4 LANDSCAPE (297mm × 210mm)
-                  </span>
-                </div>
+
               </div>
 
               {/* Two-Column Studio Layout */}
@@ -1250,11 +1246,7 @@ export const CertificateManagementModal: React.FC<{
                       <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                       <span>Live Official Certificate Preview Canvas</span>
                     </span>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-mono text-xs text-emerald-900 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-300 dark:border-emerald-500/30 font-black shadow-xs">
-                        A4 Landscape (297 × 210 mm)
-                      </span>
-                    </div>
+
                   </div>
 
                   {/* THE A4 CERTIFICATE CANVAS (PRINT TARGET) */}

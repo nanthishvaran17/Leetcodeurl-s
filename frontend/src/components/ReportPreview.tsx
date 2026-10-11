@@ -11,6 +11,7 @@ interface ReportPreviewProps {
 }
 
 import { useNotification } from '../context/NotificationContext';
+import { useScrollLock } from '../hooks/useScrollLock';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 import { deriveYearLevelFromRegNo } from '../utils/filterUtils';
@@ -73,6 +74,7 @@ const getContestDifficultyBreakdown = (s: any, forceCurrentContestOnly: boolean 
 
 export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialData, onClose }) => {
   const { notify } = useNotification();
+  useScrollLock(true);
   const [report, setReport] = useState<any>(initialData || null);
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);

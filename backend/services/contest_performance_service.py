@@ -601,9 +601,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             except (ValueError, TypeError):
                 return "—"
 
-        st_profile = getattr(s, "stats", None)
         c_global_rank = getattr(st_profile, "contest_global_ranking", None) if st_profile else None
-        s_global_rank = getattr(st_profile, "public_profile_ranking", None) if st_profile else None
+        s_global_rank = c_global_rank  # Deprecate profile ranking; use authentic contest ranking exclusively
 
         if rank_val is None and st_profile:
             rank_val = c_global_rank

@@ -6,6 +6,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
+import { downloadManager } from '../services/download/downloadManager';
 
 const formatAuditDate = (dateString: string) => {
   if (!dateString) return '—';
@@ -182,12 +183,9 @@ export const AuditLogPage: React.FC = () => {
 
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `NEC_Audit_Trail_${institutionalId}_${new Date().toISOString().split('T')[0]}.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const filename = `NEC_Audit_Trail_${institutionalId}_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      await downloadManager.downloadBlob(blob, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       
       notify.dismiss(notifyToast);
       notify.success('Audit log Excel report exported with clean column sizing!', '', { category: 'ADMIN' });

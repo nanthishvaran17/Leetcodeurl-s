@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../../services/api';
-import { Sparkles, CheckCircle2, ShieldAlert, ArrowRight, RefreshCw, Send, AlertTriangle, Bot, User, ArrowLeft, History, Plus, Trash2, X, Maximize2, Minimize2 } from 'lucide-react';
+import { Sparkles, CheckCircle2, ShieldAlert, ArrowRight, RefreshCw, Send, AlertTriangle, Bot, User, ArrowLeft, History, Plus, Trash2, X, Maximize2, Minimize2, MoreVertical, Share2, Archive, MessageSquare, Check, Copy } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -25,6 +25,7 @@ interface StoredChat {
   title: string;
   messages: ChatMessage[];
   updatedAt: string;
+  archived?: boolean;
 }
 
 const chatHistoryKey = 'institution-intelligence-chat-conversations';
@@ -71,6 +72,9 @@ export const AskInstitutionPanel: React.FC<AskInstitutionPanelProps> = ({
   });
   const [error, setError] = useState<string | null>(null);
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
+  const [openMenuChatId, setOpenMenuChatId] = useState<string | null>(null);
+  const [showArchivedView, setShowArchivedView] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -82,9 +86,147 @@ export const AskInstitutionPanel: React.FC<AskInstitutionPanelProps> = ({
     'Which students improved most?'
   ];
 
+function encodeChatToShareUrl(chat: StoredChat): string {
+  try {
+    const payload = {
+      t: chat.title,
+      m: chat.messages.map(m => ({ r: m.role, c: m.content, e: m.evidence, a: m.actions, d: m.dataConfidence }))
+    };
+    const jsonStr = JSON.stringify(payload);
+    const base64 = btoa(encodeURIComponent(jsonStr));
+    const url = new URL(window.location.href);
+    url.searchParams.set('ai_chat', chat.id);
+    url.searchParams.set('shareData', base64);
+    return url.toString();
+  } catch (e) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('ai_chat', chat.id);
+    return url.toString();
+  }
+}
+
+function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
+  try {
+    const jsonStr = decodeURIComponent(atob(base64Payload));
+    const payload = JSON.parse(jsonStr);
+    if (payload && payload.t && Array.isArray(payload.m)) {
+      return {
+        id: `shared_${Date.now()}`,
+        title: payload.t,
+        messages: payload.m.map((m: any, i: number) => ({
+          id: `shared_msg_${i}`,
+          role: m.r,
+          content: m.c,
+          evidence: m.e,
+          actions: m.a,
+          dataConfidence: m.d
+        })),
+        updatedAt: new Date().toISOString()
+      };
+    }
+  } catch (e) {
+    return null;
+  }
+  return null;
+}
+
+  useEffect(() => {
+    const handleClickOutside = () => setOpenMenuChatId(null);
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  // ChatGPT-Style Share Link Auto-Load Listener
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const targetChatId = params.get('ai_chat') || params.get('chat');
+      const shareData = params.get('shareData');
+
+      if (shareData) {
+        const decoded = decodeShareUrlPayload(shareData);
+        if (decoded) {
+          setStoredChats(prev => {
+            const next = [decoded, ...prev.filter(c => c.id !== decoded.id)];
+            try { localStorage.setItem(chatHistoryKey, JSON.stringify(next)); } catch {}
+            return next;
+          });
+          setActiveChatId(decoded.id);
+          setMessages(decoded.messages);
+          setToastMessage('Shared conversation loaded!');
+          setTimeout(() => setToastMessage(null), 3000);
+          return;
+        }
+      }
+
+      if (targetChatId) {
+        const allChats = loadStoredChats();
+        const matched = allChats.find(c => c.id === targetChatId);
+        if (matched) {
+          setActiveChatId(matched.id);
+          setMessages(matched.messages);
+        }
+      }
+    } catch (e) {
+      console.warn('Error loading shared chat link:', e);
+    }
+  }, []);
+
+  const toggleArchiveChat = (chatId: string) => {
+    setStoredChats(previousChats => {
+      const nextChats = previousChats.map(c => c.id === chatId ? { ...c, archived: !c.archived } : c);
+      try {
+        localStorage.setItem(chatHistoryKey, JSON.stringify(nextChats));
+      } catch {
+        // Fallback
+      }
+      return nextChats;
+    });
+    setToastMessage('Chat status updated');
+    setTimeout(() => setToastMessage(null), 2500);
+  };
+
+  const shareChat = async (chat: StoredChat) => {
+    const shareUrl = encodeChatToShareUrl(chat);
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Institutional AI Chat - ${chat.title}`,
+          text: `Explore this Institutional AI Conversation: "${chat.title}"`,
+          url: shareUrl,
+        });
+        setToastMessage('Share link sent!');
+        setTimeout(() => setToastMessage(null), 2500);
+        return;
+      } catch (err) {
+        // User cancelled or share API unsupported, fallback to clipboard
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setToastMessage('Shareable link copied to clipboard!');
+    } catch {
+      setToastMessage('Unable to copy share link.');
+    }
+    setTimeout(() => setToastMessage(null), 2500);
+  };
+
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   useEffect(() => {
     if (messages.length > 0) {
-      endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      scrollToBottom();
     }
   }, [messages, loading]);
 
@@ -228,6 +370,10 @@ export const AskInstitutionPanel: React.FC<AskInstitutionPanelProps> = ({
     return () => window.removeEventListener('keydown', handleEscape);
   }, [isFullscreen]);
 
+  const activeChatsList = storedChats.filter(c => !c.archived);
+  const archivedChatsList = storedChats.filter(c => c.archived);
+  const displayChatsList = showArchivedView ? archivedChatsList : activeChatsList;
+
   const panelContent = (
     <div 
       className={`bg-white dark:bg-[#0B1120] text-slate-800 dark:text-slate-200 flex flex-col overflow-hidden ${
@@ -237,6 +383,14 @@ export const AskInstitutionPanel: React.FC<AskInstitutionPanelProps> = ({
       }`}
       style={isFullscreen ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999 } : undefined}
     >
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-16 right-6 z-[999999] px-4 py-2.5 bg-slate-900/95 dark:bg-slate-800/95 text-white text-xs font-bold rounded-xl shadow-2xl border border-slate-700/80 flex items-center space-x-2 animate-in fade-in slide-in-from-top-2 backdrop-blur-md">
+          <Check className="w-4 h-4 text-emerald-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Streamlined Responsive Header */}
       <div className="flex items-center px-4 py-3 sm:px-6 sm:py-3.5 bg-white dark:bg-[#0B1120] border-b border-slate-200/80 dark:border-slate-800/60 shrink-0 relative z-10 w-full shadow-xs">
         <div className="w-full flex items-center justify-between gap-3">
@@ -284,15 +438,25 @@ export const AskInstitutionPanel: React.FC<AskInstitutionPanelProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center space-x-1 shrink-0 ml-2">
+          <div className="flex items-center space-x-2 shrink-0 ml-2">
             <button
               type="button"
               onClick={() => setIsFullscreen(previous => !previous)}
               aria-label={isFullscreen ? "Exit Fullscreen" : "Fullscreen mode"}
-              className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors"
-              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen mode"}
+              className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 rounded-xl cursor-pointer transition-all border border-slate-200 dark:border-slate-700 shadow-2xs"
+              title={isFullscreen ? "Exit Fullscreen" : "Expand to Full Screen"}
             >
-              {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+              {isFullscreen ? (
+                <>
+                  <Minimize2 className="w-4 h-4 text-indigo-500 shrink-0" />
+                  <span className="hidden sm:inline">Exit Fullscreen</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-4 h-4 text-indigo-500 shrink-0" />
+                  <span className="hidden sm:inline">Full Screen</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -333,14 +497,50 @@ export const AskInstitutionPanel: React.FC<AskInstitutionPanelProps> = ({
                 </button>
               </div>
             </div>
+
+            {/* Active / Archived Filter Bar */}
+            <div className="flex items-center gap-1 border-b border-slate-200/80 dark:border-slate-800/80 px-2 py-1.5 bg-slate-50/50 dark:bg-slate-900/40">
+              <button
+                type="button"
+                onClick={() => setShowArchivedView(false)}
+                className={`flex-1 py-1 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer text-center ${
+                  !showArchivedView 
+                    ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs border border-slate-200/80 dark:border-slate-700' 
+                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                Chats ({activeChatsList.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowArchivedView(true)}
+                className={`flex-1 py-1 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer text-center ${
+                  showArchivedView 
+                    ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs border border-slate-200/80 dark:border-slate-700' 
+                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                Archived ({archivedChatsList.length})
+              </button>
+            </div>
+
+            {/* Chats List */}
             <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-              {storedChats.length === 0 ? (
-                <p className="px-2 py-4 text-xs text-slate-500 dark:text-slate-400">Your recent chats will appear here.</p>
+              {displayChatsList.length === 0 ? (
+                <div className="px-3 py-6 text-center">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                    {showArchivedView ? 'No archived chats.' : 'Your recent chats will appear here.'}
+                  </p>
+                </div>
               ) : (
-                storedChats.map(chat => (
+                displayChatsList.map(chat => (
                   <div
                     key={chat.id}
-                    className={`group flex items-start gap-1 rounded-lg ${activeChatId === chat.id ? 'bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800' : 'hover:bg-slate-50 dark:hover:bg-slate-900 border border-transparent'}`}
+                    className={`group relative flex items-center justify-between rounded-xl px-2.5 py-2 transition-all ${
+                      activeChatId === chat.id 
+                        ? 'bg-indigo-50/90 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800/80 shadow-2xs' 
+                        : 'hover:bg-slate-100/80 dark:hover:bg-slate-900 border border-transparent'
+                    }`}
                   >
                     <button
                       type="button"
@@ -348,29 +548,95 @@ export const AskInstitutionPanel: React.FC<AskInstitutionPanelProps> = ({
                         openStoredChat(chat);
                         if (window.innerWidth < 768) setIsHistoryOpen(false);
                       }}
-                      className="min-w-0 flex-1 px-2.5 py-2 text-left cursor-pointer"
+                      className="min-w-0 flex-1 text-left cursor-pointer pr-1"
                     >
-                      <span className="block truncate text-xs font-semibold text-slate-700 dark:text-slate-200">{chat.title}</span>
-                      <span className="block mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">
+                      <span className="block truncate text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {chat.title}
+                      </span>
+                      <span className="block mt-0.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500">
                         {new Date(chat.updatedAt).toLocaleDateString()}
                       </span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeletingChatId(chat.id);
-                      }}
-                      className="p-2 mt-1 mr-1 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-rose-500 cursor-pointer transition-opacity"
-                      aria-label={`Delete ${chat.title}`}
-                      title="Delete chat"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+
+                    {/* 3-Dots Action Menu */}
+                    <div className="relative shrink-0">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuChatId(openMenuChatId === chat.id ? null : chat.id);
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                        aria-label={`Options for ${chat.title}`}
+                        title="More options"
+                      >
+                        <MoreVertical className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Dropdown Menu Popup */}
+                      {openMenuChatId === chat.id && (
+                        <div 
+                          className="absolute right-0 top-7 z-[100] w-44 bg-white dark:bg-[#0E1726] border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl py-1 text-xs animate-in fade-in zoom-in-95"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              openStoredChat(chat);
+                              setOpenMenuChatId(null);
+                              if (window.innerWidth < 768) setIsHistoryOpen(false);
+                            }}
+                            className="w-full px-3 py-2 text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center gap-2 cursor-pointer"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5 text-indigo-500" />
+                            Open chat
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              shareChat(chat);
+                              setOpenMenuChatId(null);
+                            }}
+                            className="w-full px-3 py-2 text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center gap-2 cursor-pointer"
+                          >
+                            <Share2 className="w-3.5 h-3.5 text-emerald-500" />
+                            Share chat
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              toggleArchiveChat(chat.id);
+                              setOpenMenuChatId(null);
+                            }}
+                            className="w-full px-3 py-2 text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center gap-2 cursor-pointer"
+                          >
+                            <Archive className="w-3.5 h-3.5 text-amber-500" />
+                            {chat.archived ? 'Unarchive' : 'Archive chat'}
+                          </button>
+
+                          <div className="my-1 border-t border-slate-100 dark:border-slate-800/80" />
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDeletingChatId(chat.id);
+                              setOpenMenuChatId(null);
+                            }}
+                            className="w-full px-3 py-2 text-left font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2 cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete chat
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
             </div>
+
             <div className="p-2.5 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-white dark:bg-[#0B1120]">
               <button
                 type="button"
@@ -387,231 +653,236 @@ export const AskInstitutionPanel: React.FC<AskInstitutionPanelProps> = ({
           </div>
         </aside>
 
-        <div className="flex-1 overflow-y-auto pt-4 sm:pt-6 pb-4 px-3 sm:px-6 flex flex-col">
-          <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col justify-center space-y-4">
-            {messages.length === 0 ? (
-              <div className="my-auto py-6 sm:py-10 px-2 w-full flex justify-center items-center animate-in fade-in zoom-in-95 duration-300">
-                <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 sm:p-8 max-w-md sm:max-w-lg w-full text-center shadow-lg hover:shadow-xl transition-all duration-300 space-y-5">
-                  <div className="w-12 h-12 mx-auto bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 text-white rounded-2xl flex items-center justify-center shadow-md ring-4 ring-indigo-50 dark:ring-indigo-950/50 animate-pulse">
-                    <Bot className="w-6 h-6" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-                      How can I help you today?
-                    </h3>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                      Ask me to generate reports, find inactive students, or analyze performance. All answers are verified against live DB records.
-                    </p>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-left pt-2">
-                    {presetQueries.map((preset, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleSearch(preset);
-                        }}
-                        className="bg-slate-50 dark:bg-slate-800/60 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/70 border border-slate-200/80 dark:border-slate-700/60 hover:border-indigo-400 dark:hover:border-indigo-600 text-slate-700 dark:text-slate-200 text-xs font-semibold p-3 rounded-2xl transition-all duration-200 cursor-pointer flex justify-between items-center group hover:-translate-y-0.5 hover:shadow-sm"
-                      >
-                        <span className="truncate pr-1">{preset}</span>
-                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 shrink-0 transition-transform group-hover:translate-x-1" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
-            messages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full animate-in fade-in slide-in-from-bottom-2 duration-200`}>
-                <div className={`flex max-w-[96%] sm:max-w-[90%] gap-3 sm:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                  
-                  {/* Avatar */}
-                  <div className="shrink-0 flex items-start pt-1">
-                    {msg.role === 'user' ? (
-                      <div className="w-8 h-8 rounded-full bg-slate-800 dark:bg-slate-700 flex items-center justify-center text-white shadow-xs">
-                        <User className="w-4 h-4" />
-                      </div>
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-indigo-600 dark:bg-indigo-600 flex items-center justify-center text-white shadow-xs">
-                        <Bot className="w-4 h-4" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Message Bubble */}
-                  <div className={`flex flex-col space-y-2 min-w-0 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                    <div className={`px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-xs ${
-                      msg.role === 'user' 
-                        ? 'bg-slate-800 text-white dark:bg-indigo-600 rounded-tr-xs font-medium' 
-                        : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-xs w-full'
-                    }`}>
-                      {msg.role === 'assistant' ? (
-                        <div className="prose prose-sm dark:prose-invert max-w-none overflow-x-auto prose-tables:border prose-tables:rounded-xl prose-th:bg-slate-50 dark:prose-th:bg-slate-800/60 prose-th:text-slate-700 dark:prose-th:text-slate-300 prose-td:border-t prose-p:my-1.5 prose-ul:my-1.5 font-medium">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {msg.content}
-                          </ReactMarkdown>
-                        </div>
-                      ) : (
-                        <span>{msg.content}</span>
-                      )}
+        {/* Main Content Area (Scrollable Messages + Fixed Bottom Input Container) */}
+        <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden relative">
+          {/* Scrollable Messages Container */}
+          <div 
+            ref={messagesContainerRef}
+            className="flex-1 min-h-0 overflow-y-auto pt-4 sm:pt-6 pb-4 sm:pb-6 px-3 sm:px-6 flex flex-col"
+          >
+            <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col justify-center space-y-4">
+              {messages.length === 0 ? (
+                <div className="my-auto py-6 sm:py-10 px-2 w-full flex justify-center items-center animate-in fade-in zoom-in-95 duration-300">
+                  <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 sm:p-8 max-w-md sm:max-w-lg w-full text-center shadow-lg hover:shadow-xl transition-all duration-300 space-y-5">
+                    <div className="w-12 h-12 mx-auto bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 text-white rounded-2xl flex items-center justify-center shadow-md ring-4 ring-indigo-50 dark:ring-indigo-950/50 animate-pulse">
+                      <Bot className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+                        How can I help you today?
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                        Ask me to generate reports, find inactive students, or analyze performance. All answers are verified against live DB records.
+                      </p>
                     </div>
                     
-                    {/* Metadata & Actions */}
-                    {msg.role === 'assistant' && (
-                      <div className="w-full flex flex-col space-y-2.5 pt-1">
-                        {msg.dataConfidence && (
-                          <div className="flex items-center space-x-1.5 self-start px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 shadow-xs">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span>{msg.dataConfidence}</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-left pt-2">
+                      {presetQueries.map((preset, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleSearch(preset);
+                          }}
+                          className="bg-slate-50 dark:bg-slate-800/60 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/70 border border-slate-200/80 dark:border-slate-700/60 hover:border-indigo-400 dark:hover:border-indigo-600 text-slate-700 dark:text-slate-200 text-xs font-semibold p-3 rounded-2xl transition-all duration-200 cursor-pointer flex justify-between items-center group hover:-translate-y-0.5 hover:shadow-sm"
+                        >
+                          <span className="truncate pr-1">{preset}</span>
+                          <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 shrink-0 transition-transform group-hover:translate-x-1" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                messages.map((msg) => (
+                  <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full animate-in fade-in slide-in-from-bottom-2 duration-200`}>
+                    <div className={`flex max-w-[96%] sm:max-w-[90%] gap-3 sm:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                      
+                      {/* Avatar */}
+                      <div className="shrink-0 flex items-start pt-1">
+                        {msg.role === 'user' ? (
+                          <div className="w-8 h-8 rounded-full bg-slate-800 dark:bg-slate-700 flex items-center justify-center text-white shadow-xs">
+                            <User className="w-4 h-4" />
                           </div>
-                        )}
-
-                        {msg.evidence && msg.evidence.length > 0 && (
-                          <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs space-y-1.5 max-w-xl">
-                            <div className="font-bold text-slate-700 dark:text-slate-300 flex items-center space-x-1.5 mb-1">
-                              <ShieldAlert className="w-3.5 h-3.5 text-slate-500" />
-                              <span>Verified Provenance</span>
-                            </div>
-                            <ul className="space-y-1 text-slate-500 dark:text-slate-400 font-medium list-disc list-inside">
-                              {msg.evidence.map((ev, i) => (
-                                <li key={i}>{ev}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        {msg.actions && msg.actions.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 pt-0.5">
-                            {msg.actions.map((act, i) => (
-                              <button
-                                key={i}
-                                type="button"
-                                onClick={async () => {
-                                  if (act.action === 'RUN_QUERY') {
-                                    handleSearch(act.params.query);
-                                  } else if (act.action === 'EXPORT_STUDENT_PDF') {
-                                    const studentId = act.params?.student_id;
-                                    if (!studentId) {
-                                      setError('Student report could not be identified. Please run the student lookup again.');
-                                      return;
-                                    }
-
-                                    try {
-                                      const response = await api.post(
-                                        '/student-reports/generate-direct',
-                                        { student_id: studentId, report_type: 'STUDENT', format: 'pdf' },
-                                        { responseType: 'blob' }
-                                      );
-                                      const blobUrl = URL.createObjectURL(response.data);
-                                      const link = document.createElement('a');
-                                      link.href = blobUrl;
-                                      link.download = `student-report-${studentId}.pdf`;
-                                      document.body.appendChild(link);
-                                      link.click();
-                                      link.remove();
-                                      URL.revokeObjectURL(blobUrl);
-                                    } catch (err: any) {
-                                      console.error('Student PDF export error:', err);
-                                      setError(err.response?.data?.detail || 'Unable to generate the student PDF report.');
-                                    }
-                                  } else if (['DOWNLOAD_PDF', 'EXPORT_PDF'].includes(act.action)) {
-                                    const token = localStorage.getItem('token') || '';
-                                    const reportParams = new URLSearchParams({ token });
-                                    Object.entries(act.params || {}).forEach(([key, value]) => {
-                                      if (value !== undefined && value !== null && value !== '') {
-                                        reportParams.set(key, String(value));
-                                      }
-                                    });
-                                    const downloadUrl = `${api.defaults.baseURL || '/api'}/reports/export-pdf?${reportParams.toString()}`;
-                                    window.open(downloadUrl, '_blank');
-                                  } else {
-                                    onActionTrigger && onActionTrigger(act);
-                                  }
-                                }}
-                                className="bg-white dark:bg-slate-900 hover:bg-indigo-600 dark:hover:bg-indigo-600 text-indigo-600 dark:text-indigo-400 hover:text-white dark:hover:text-white border border-indigo-200 dark:border-indigo-800 hover:border-transparent px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center space-x-1 transition-all duration-200 shadow-xs cursor-pointer group whitespace-nowrap"
-                              >
-                                <span>{act.label}</span>
-                                <ArrowRight className="w-3 h-3 transform group-hover:translate-x-0.5 transition-transform shrink-0" />
-                              </button>
-                            ))}
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-indigo-600 dark:bg-indigo-600 flex items-center justify-center text-white shadow-xs">
+                            <Bot className="w-4 h-4" />
                           </div>
                         )}
                       </div>
-                    )}
+
+                      {/* Message Bubble */}
+                      <div className={`flex flex-col space-y-2 min-w-0 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                        <div className={`px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-xs ${
+                          msg.role === 'user' 
+                            ? 'bg-slate-800 text-white dark:bg-indigo-600 rounded-tr-xs font-medium' 
+                            : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-xs w-full'
+                        }`}>
+                          {msg.role === 'assistant' ? (
+                            <div className="prose prose-sm dark:prose-invert max-w-none overflow-x-auto prose-tables:border prose-tables:rounded-xl prose-th:bg-slate-50 dark:prose-th:bg-slate-800/60 prose-th:text-slate-700 dark:prose-th:text-slate-300 prose-td:border-t prose-p:my-1.5 prose-ul:my-1.5 font-medium">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {msg.content}
+                              </ReactMarkdown>
+                            </div>
+                          ) : (
+                            <span>{msg.content}</span>
+                          )}
+                        </div>
+                        
+                        {/* Metadata & Actions */}
+                        {msg.role === 'assistant' && (
+                          <div className="w-full flex flex-col space-y-2.5 pt-1">
+                            {msg.dataConfidence && (
+                              <div className="flex items-center space-x-1.5 self-start px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 shadow-xs">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>{msg.dataConfidence}</span>
+                              </div>
+                            )}
+
+                            {msg.evidence && msg.evidence.length > 0 && (
+                              <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs space-y-1.5 max-w-xl">
+                                <div className="font-bold text-slate-700 dark:text-slate-300 flex items-center space-x-1.5 mb-1">
+                                  <ShieldAlert className="w-3.5 h-3.5 text-slate-500" />
+                                  <span>Verified Provenance</span>
+                                </div>
+                                <ul className="space-y-1 text-slate-500 dark:text-slate-400 font-medium list-disc list-inside">
+                                  {msg.evidence.map((ev, i) => (
+                                    <li key={i}>{ev}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {msg.actions && msg.actions.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                                {msg.actions.map((act, i) => (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    onClick={async () => {
+                                      if (act.action === 'RUN_QUERY') {
+                                        handleSearch(act.params.query);
+                                      } else if (act.action === 'EXPORT_STUDENT_PDF') {
+                                        const studentId = act.params?.student_id;
+                                        if (!studentId) {
+                                          setError('Student report could not be identified. Please run the student lookup again.');
+                                          return;
+                                        }
+
+                                        try {
+                                          const response = await api.post(
+                                            '/student-reports/generate-direct',
+                                            { student_id: studentId, report_type: 'STUDENT', format: 'pdf' },
+                                            { responseType: 'blob' }
+                                          );
+                                          const blobUrl = URL.createObjectURL(response.data);
+                                          const link = document.createElement('a');
+                                          link.href = blobUrl;
+                                          link.download = `student-report-${studentId}.pdf`;
+                                          document.body.appendChild(link);
+                                          link.click();
+                                          link.remove();
+                                          URL.revokeObjectURL(blobUrl);
+                                        } catch (err: any) {
+                                          console.error('Student PDF export error:', err);
+                                          setError(err.response?.data?.detail || 'Unable to generate the student PDF report.');
+                                        }
+                                      } else if (['DOWNLOAD_PDF', 'EXPORT_PDF'].includes(act.action)) {
+                                        const token = localStorage.getItem('token') || '';
+                                        const reportParams = new URLSearchParams({ token });
+                                        Object.entries(act.params || {}).forEach(([key, value]) => {
+                                          if (value !== undefined && value !== null && value !== '') {
+                                            reportParams.set(key, String(value));
+                                          }
+                                        });
+                                        const downloadUrl = `${api.defaults.baseURL || '/api'}/reports/export-pdf?${reportParams.toString()}`;
+                                        window.open(downloadUrl, '_blank');
+                                      } else {
+                                        onActionTrigger && onActionTrigger(act);
+                                      }
+                                    }}
+                                    className="bg-white dark:bg-slate-900 hover:bg-indigo-600 dark:hover:bg-indigo-600 text-indigo-600 dark:text-indigo-400 hover:text-white dark:hover:text-white border border-indigo-200 dark:border-indigo-800 hover:border-transparent px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center space-x-1 transition-all duration-200 shadow-xs cursor-pointer group whitespace-nowrap"
+                                  >
+                                    <span>{act.label}</span>
+                                    <ArrowRight className="w-3 h-3 transform group-hover:translate-x-0.5 transition-transform shrink-0" />
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+
+              {/* Loading Indicator */}
+              {loading && (
+                <div className="flex justify-start w-full animate-pulse">
+                  <div className="flex space-x-3 items-center">
+                    <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900">
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    </div>
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-3 rounded-2xl rounded-tl-xs shadow-xs flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 ml-2">Analyzing verified records...</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
+              )}
 
-          {/* Loading Indicator */}
-          {loading && (
-            <div className="flex justify-start w-full animate-pulse">
-              <div className="flex space-x-3 items-center">
-                <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900">
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+              {/* Error state */}
+              {error && (
+                <div className="flex justify-center my-3 w-full animate-in fade-in slide-in-from-top-2">
+                  <div className="px-4 py-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center space-x-2.5 shadow-xs max-w-lg">
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
+                    <span>{error}</span>
+                  </div>
                 </div>
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-3 rounded-2xl rounded-tl-xs shadow-xs flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 ml-2">Analyzing verified records...</span>
-                </div>
-              </div>
+              )}
             </div>
-          )}
+            <div ref={endOfMessagesRef} />
+          </div>
 
-          {/* Error state */}
-          {error && (
-            <div className="flex justify-center my-3 w-full animate-in fade-in slide-in-from-top-2">
-              <div className="px-4 py-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center space-x-2.5 shadow-xs max-w-lg">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
-                <span>{error}</span>
-              </div>
+          {/* Static Bottom Search Input Area */}
+          <div className="px-3 sm:px-6 pt-2 pb-3 sm:pb-4 bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent dark:from-[#060B14] dark:via-[#060B14]/95 dark:to-transparent shrink-0 w-full z-10">
+            <div className="max-w-5xl mx-auto w-full flex items-end gap-2.5 bg-white dark:bg-[#0B1120] border border-slate-300/90 dark:border-slate-700/80 focus-within:border-indigo-500 dark:focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 rounded-2xl px-4 py-2.5 shadow-md hover:shadow-lg transition-all">
+              <textarea
+                ref={textareaRef}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={loading}
+                placeholder="Ask anything about students, performance, or reports..."
+                aria-label="Ask institution intelligence"
+                className="flex-1 bg-transparent text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium min-h-[32px] max-h-24 focus:outline-none resize-none placeholder-slate-400 dark:placeholder-slate-500 py-1"
+                rows={1}
+                style={{
+                  height: 'auto',
+                  maxHeight: '96px',
+                  overflowY: query.split('\n').length > 3 ? 'auto' : 'hidden'
+                }}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = 'auto';
+                  target.style.height = `${Math.min(target.scrollHeight, 96)}px`;
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => handleSearch()}
+                disabled={!query.trim() || loading}
+                aria-label="Send message"
+                className="shrink-0 mb-0.5 w-8 h-8 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl transition-all flex items-center justify-center shadow-sm cursor-pointer disabled:cursor-not-allowed"
+              >
+                <Send className="w-4 h-4" />
+              </button>
             </div>
-          )}
-
-        </div>
-        <div ref={endOfMessagesRef} />
-      </div>
-      </div>
-
-      {/* Input Footer */}
-      <div className="px-3 sm:px-6 py-2.5 sm:py-3.5 bg-white dark:bg-[#0B1120] border-t border-slate-200/80 dark:border-slate-800/60 shrink-0 w-full">
-        <div className="max-w-5xl mx-auto w-full flex items-end gap-2.5 bg-slate-50 dark:bg-[#060B14] border border-slate-300 dark:border-slate-700/80 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 rounded-2xl px-4 py-2 shadow-xs transition-all">
-          <textarea
-            ref={textareaRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={loading}
-            placeholder="Ask anything about students, performance, or reports..."
-            aria-label="Ask institution intelligence"
-            className="flex-1 bg-transparent text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium min-h-[32px] max-h-24 focus:outline-none resize-none placeholder-slate-400 dark:placeholder-slate-500 py-1"
-            rows={1}
-            style={{
-              height: query ? 'auto' : '32px',
-              overflowY: query.split('\n').length > 3 ? 'auto' : 'hidden'
-            }}
-            onInput={(e) => {
-              const target = e.target as HTMLTextAreaElement;
-              target.style.height = '32px';
-              if (target.value) {
-                target.style.height = `${Math.min(target.scrollHeight, 96)}px`;
-              }
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => handleSearch()}
-            disabled={!query.trim() || loading}
-            aria-label="Send message"
-            className="shrink-0 mb-0.5 w-8 h-8 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl transition-all flex items-center justify-center shadow-sm cursor-pointer disabled:cursor-not-allowed"
-          >
-            <Send className="w-4 h-4" />
-          </button>
+          </div>
         </div>
       </div>
 

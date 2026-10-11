@@ -49,12 +49,16 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     } catch(e) {}
   }, []);
 
-  // Deep Link Auto-Navigation from Notification tap
+  // Deep Link Auto-Navigation from Notification tap or AI Chat share links
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       const convId = params.get('conversationId') || params.get('conversation_id');
-      if (convId) {
+      const aiChatParam = params.get('ai_chat') || params.get('chat') || params.get('shareData');
+      if (aiChatParam) {
+        console.log('[DEEP LINK] Automatically opening AI Agent from share link');
+        setActiveConversationId('system-ai-agent');
+      } else if (convId) {
         console.log(`[DEEP LINK] Automatically opening target conversation: ${convId}`);
         setActiveConversationId(convId);
       }

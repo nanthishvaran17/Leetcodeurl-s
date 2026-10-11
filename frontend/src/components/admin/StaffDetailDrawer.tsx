@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { StaffRecord, StudentRecord, getCommandCenterStudents } from '../../services/commandCenterService';
 import { Users, X, Code, CheckCircle, Clock, Calendar, Mail, Briefcase, Activity, RefreshCw, Gauge, Trophy, Sparkles } from 'lucide-react';
 
@@ -65,9 +66,10 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   const recentContestAttendedCount = mentees.filter(m => m.contest_standing && m.contest_standing !== '—').length;
   const contestAttendanceRate = assignedCount > 0 ? Math.round((recentContestAttendedCount / assignedCount) * 100) : 0;
 
+  if (typeof document === 'undefined') return null;
 
-  return (
-    <div className="fixed inset-0 z-[100050] flex justify-center items-end sm:justify-end sm:items-stretch bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in sm:p-0 pt-4" onClick={e => e.target === e.currentTarget && onClose()}>
+  return createPortal(
+    <div className="fixed inset-0 z-[999999] flex justify-center items-end sm:justify-end sm:items-stretch bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in p-0" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="w-full max-w-xl h-[85vh] sm:h-[100dvh] bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden flex flex-col rounded-t-3xl sm:rounded-none">
 
         {/* Hero Header Profile Section */}
@@ -383,7 +385,8 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 };
 

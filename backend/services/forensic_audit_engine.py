@@ -407,5 +407,64 @@ def build_normalized_forensic_report(
             "sha256": sha256_checksum,
             "auditEngine": "Nandha Autonomous Forensic Audit Engine",
             "status": "AUTHENTIC & SEALED"
+        },
+        "sourceMetadata": {
+            "sourceEngine": "LeetCode GraphQL API Engine v2.0",
+            "retrievedAt": retrieved_at,
+            "checksum": sha256_checksum,
+            "auditEngine": "Nandha Autonomous Forensic Audit Engine",
+            "status": "AUTHENTIC & SEALED"
+        },
+        "evidenceSummary": {
+            "studentIdentity": "Matched",
+            "contestIdentity": "Matched",
+            "publicParticipation": "Verified" if participation_status in ("PUBLIC_ATTENDED", "ATTENDED") else ("Virtual" if "VIRTUAL" in str(participation_status) else "Not Found"),
+            "virtualParticipation": "Attended" if "VIRTUAL" in str(participation_status) else "Not Found",
+            "databaseRecord": "Matched",
+            "canonicalResolution": participation_status
+        },
+        "rawEvidence": {
+            "trace_id": final_trace_id,
+            "sha256_checksum": sha256_checksum,
+            "canonical_payload": canonical_data,
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "retrieved_at": retrieved_at,
+            "student_identity": {
+                "id": student.id,
+                "name": student.name,
+                "register_no": student.reg_no,
+                "department": dept_code,
+                "department_name": dept_name,
+                "year_level": year_level,
+                "batch": batch_str,
+                "leetcode_username": username_str,
+                "contest_global_rank": rank_str,
+                "contest_rating": rating_str
+            },
+            "contest_session": {
+                "id": session_obj.id,
+                "contest_id": session_obj.contest_id or f"weekly-contest-{session_obj.id}",
+                "contest_name": contest_name,
+                "contest_date": contest_date,
+                "status": session_obj.status or "COMPLETED"
+            },
+            "audit_evidence": {
+                "participation_status": participation_status,
+                "problems_solved": total_solved,
+                "contest_score": score_val,
+                "questions": questions,
+                "score_breakdown": {
+                    "q1": q1_val,
+                    "q2": q2_val,
+                    "q3": q3_val,
+                    "q4": q4_val
+                }
+            },
+            "verification_audit": {
+                "source_engine": "LeetCode GraphQL API Engine v2.0",
+                "integrity_seal": "AUTHENTIC & SEALED",
+                "audit_engine": "Nandha Autonomous Forensic Audit Engine",
+                "certificate_code": final_trace_id
+            }
         }
     }

@@ -87,8 +87,8 @@ const StudentDetailDrawer: React.FC<{
 
  if (!student) return null;
 
- return createPortal(
- <div className="fixed inset-0 z-[100050] flex justify-end bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+  return createPortal(
+    <div className="fixed inset-0 z-[999999] flex justify-end bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
  <div className="w-full max-w-md h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl rounded-l-3xl p-4 sm:p-6 pt-6 sm:pt-7 overflow-y-auto space-y-6 flex flex-col justify-between">
  <div className="space-y-6">
  {/* Header */}
@@ -959,13 +959,19 @@ const ReportHubModal: React.FC<{
  <div className="p-16 text-center text-slate-700 dark:text-slate-400 font-black text-sm">Loading live report data for selected scope...</div>
  ) : (
  <div className="mt-6 sm:mt-8 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-lg space-y-6 sm:space-y-7 text-slate-900 dark:text-white">
- <div className="border-b border-slate-200 dark:border-navy-800 pb-4 sm:pb-5 mb-2 flex justify-between items-start flex-wrap gap-4">
+ <div className="border-b border-slate-200 dark:border-navy-800 pb-4 sm:pb-5 mb-2 flex justify-between items-center flex-wrap gap-4">
+ <div className="flex items-center space-x-3">
+ <img src="/nandha_emblem.png" alt="Nandha Emblem" className="h-10 w-auto object-contain hidden sm:block" onError={(e: any) => { e.target.style.display = 'none'; }} />
  <div>
  <div className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-400 tracking-wider">INSTITUTIONAL AUDIT & PERFORMANCE REPORT</div>
  <h2 className="text-base sm:text-lg font-black text-slate-950 dark:text-white mt-0.5 tracking-tight">{reportData?.report_title}</h2>
  </div>
+ </div>
+ <div className="flex items-center space-x-3">
  <div className="text-right text-xs text-slate-600 dark:text-slate-300 font-bold">
  {reportData?.generated_at}
+ </div>
+ <img src="/nec_25_years_logo_transparent.png" alt="Nandha 25 Years Logo" className="h-10 w-auto object-contain hidden sm:block" onError={(e: any) => { e.target.style.display = 'none'; }} />
  </div>
  </div>
 
@@ -1003,14 +1009,29 @@ const ReportHubModal: React.FC<{
  )}
 
  {selectedReportType === 'FACULTY_ALLOCATION' && (
+ <div className="space-y-5 font-sans">
+ {/* Summary Cards */}
+ <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-4">
+ {Object.entries(reportData?.summary_metrics || {}).map(([k, v]: any) => (
+ <div key={k} className="p-3 sm:p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200/90 dark:border-navy-800 shadow-xs">
+ <div className="text-[10px] sm:text-xs text-slate-700 dark:text-slate-400 font-extrabold uppercase tracking-wider leading-snug">{k}</div>
+ <div className="text-lg sm:text-xl font-black text-brand-600 dark:text-brand-400 mt-1 tracking-tight">{String(v)}</div>
+ </div>
+ ))}
+ </div>
+
  <div className="overflow-x-auto table-responsive-container">
  <table className="w-full text-left text-xs border-collapse mobile-card-table font-sans">
  <thead className="hidden md:table-header-group">
  <tr className="border-b border-slate-300 dark:border-navy-700 font-extrabold text-slate-800 dark:text-slate-100 bg-slate-100/90 dark:bg-navy-900 uppercase text-xs tracking-wider">
  <th className="py-2.5 px-3">Faculty Mentor</th>
  <th className="py-2.5 px-3">Dept</th>
+ <th className="py-2.5 px-3 text-right">Limit</th>
  <th className="py-2.5 px-3 text-right">Assigned</th>
- <th className="py-2.5 px-3 text-right">Active Solvers</th>
+ <th className="py-2.5 px-3 text-right">Active</th>
+ <th className="py-2.5 px-3 text-right">Inactive</th>
+ <th className="py-2.5 px-3 text-right">Active %</th>
+ <th className="py-2.5 px-3 text-right">Total Solves</th>
  <th className="py-2.5 px-3 text-center">Ratio Status</th>
  </tr>
  </thead>
@@ -1019,11 +1040,15 @@ const ReportHubModal: React.FC<{
  <tr key={fac.faculty_id} className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors">
  <td className="py-2.5 px-3 font-bold text-slate-950 dark:text-white text-xs sm:text-sm">{fac.faculty_name}</td>
  <td className="py-2.5 px-3 font-bold text-slate-700 dark:text-slate-300">{fac.department_code}</td>
- <td className="py-2.5 px-3 text-right font-extrabold">{fac.assigned_students}/20</td>
+ <td className="py-2.5 px-3 text-right font-bold text-slate-500">{fac.max_capacity || 20}</td>
+ <td className="py-2.5 px-3 text-right font-extrabold">{fac.assigned_students}</td>
  <td className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400 font-extrabold">{fac.active_students}</td>
+ <td className="py-2.5 px-3 text-right text-rose-600 dark:text-rose-400 font-bold">{fac.inactive_students ?? (fac.assigned_students - fac.active_students)}</td>
+ <td className="py-2.5 px-3 text-right font-extrabold text-brand-600 dark:text-brand-400">{fac.conversion_rate_pct ?? (fac.assigned_students > 0 ? ((fac.active_students / fac.assigned_students) * 100).toFixed(1) : '0')}%</td>
+ <td className="py-2.5 px-3 text-right font-black text-amber-600 dark:text-amber-400">{fac.total_mentee_solves ?? 0}</td>
  <td className="py-2.5 px-3 text-center">
  <span className={`px-2.5 py-1 rounded-full text-xs font-black shadow-xs ${
- fac.workload_status === 'NORMAL'
+ fac.workload_status === 'NORMAL' || fac.workload_status === 'AT_RATIO'
  ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40'
  : 'bg-rose-100 dark:bg-rose-500/20 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40'
  }`}>
@@ -1034,6 +1059,7 @@ const ReportHubModal: React.FC<{
  ))}
  </tbody>
  </table>
+ </div>
  </div>
  )}
 

@@ -238,18 +238,25 @@
   border-color: #334155;
 }
 
+/* Global Scroll Lock Rule for Active Modals & Drawers */
+body.global-scroll-lock,
+html.global-scroll-lock {
+  overflow: hidden !important;
+  touch-action: none !important;
+}
+
 /* Viewport-Centered Auto-Fit Responsive Modal System (GPU Hardware Accelerated) */
 .modal-overlay-responsive {
   position: fixed !important;
   inset: 0 !important;
-  z-index: 100050 !important;
+  z-index: 999999 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   padding: 1rem !important;
-  background-color: rgba(3, 7, 18, 0.88) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  background-color: rgba(2, 6, 23, 0.96) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
   overflow-y: auto !important;
   box-sizing: border-box !important;
   will-change: opacity;

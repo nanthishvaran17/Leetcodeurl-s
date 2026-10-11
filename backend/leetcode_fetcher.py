@@ -1317,7 +1317,6 @@ async def fetch_recent_submissions(
 CONTEST_METADATA_QUERY = """
 query contestMetadata($vContestSlug: String!) {
   contest(titleSlug: $vContestSlug) {
-    id
     title
     titleSlug
     startTime
@@ -1326,7 +1325,6 @@ query contestMetadata($vContestSlug: String!) {
     isVirtual
     containsPremium
     questions {
-      id
       questionId
       title
       titleSlug
@@ -1391,7 +1389,21 @@ async def fetch_contest_metadata(
     fallback_num = re.search(r'\d+', slug_clean)
     num_str = fallback_num.group(0) if fallback_num else ""
     fallback_slugs = []
-    if slug_clean == "weekly-contest-521":
+    if slug_clean == "weekly-contest-523":
+        fallback_slugs = [
+            "three-fibonacci-sum",
+            "prime-subset-selection-i",
+            "design-bus-seat-booking-system",
+            "prime-subset-selection-ii"
+        ]
+    elif slug_clean == "weekly-contest-522":
+        fallback_slugs = [
+            "minimum-rotations-to-dial-a-number-i",
+            "minimum-rotations-to-dial-a-number-ii",
+            "maximum-alternating-subarray-sum-with-one-deletion",
+            "count-good-strings"
+        ]
+    elif slug_clean == "weekly-contest-521":
         fallback_slugs = [
             "rearrange-array-by-removing-distinct-values",
             "maximum-equal-adjacent-pairs-after-at-most-one-replacement",

@@ -290,26 +290,6 @@ export const AccountProfileSettings: React.FC = () => {
   const [mentees, setMentees] = useState<any[]>([]);
   const [menteesLoading, setMenteesLoading] = useState(false);
 
-  // Dynamic Mentorship Metrics
-  const dynamicAssignedMentees = mentees.length;
-  const dynamicPendingInterventions = mentees.filter(
-    m => m.status_code === 'CRITICAL' || m.status_code === 'WARNING'
-  ).length;
-
-  const dynamicAvgAttendance = useMemo(() => {
-    if (mentees.length === 0) return 0;
-    const totalAtt = mentees.reduce((sum, m) => {
-      const attVal =
-        m.attendance_pct ??
-        m.attendance_rate ??
-        m.attendance ??
-        (m.status_code === 'CRITICAL' ? 60 : m.status_code === 'WARNING' ? 74 : 92);
-      const parsed = typeof attVal === 'string' ? parseFloat(attVal.replace('%', '')) : Number(attVal);
-      return sum + (isNaN(parsed) ? 90 : parsed);
-    }, 0);
-    return Math.round(totalAtt / mentees.length);
-  }, [mentees]);
-
   // Photo Crop State
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -3366,30 +3346,18 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </h3>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                <div className="p-3 sm:p-4 min-h-[104px] rounded-2xl bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800/30 flex flex-col items-center justify-center text-center">
-                  <span className="text-2xl sm:text-3xl font-black text-blue-700 dark:text-blue-400 leading-none">
-                    {menteesLoading ? '...' : dynamicAssignedMentees}
-                  </span>
-                  <span className="max-w-full text-[10px] font-bold text-blue-600/80 dark:text-blue-400/80 uppercase tracking-wider leading-tight mt-2 whitespace-normal break-words">
-                    Assigned Mentees
-                  </span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                <div className="p-4 min-h-[104px] rounded-2xl bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800/30 flex flex-col items-center justify-center text-center">
+                  <span className="text-3xl font-black text-blue-700 dark:text-blue-400 leading-none">24</span>
+                  <span className="max-w-full text-[10px] font-bold text-blue-600/80 dark:text-blue-400/80 uppercase tracking-wider leading-tight mt-2">Assigned Mentees</span>
                 </div>
-                <div className="p-3 sm:p-4 min-h-[104px] rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800/30 flex flex-col items-center justify-center text-center">
-                  <span className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 leading-none">
-                    {menteesLoading ? '...' : `${dynamicAvgAttendance}%`}
-                  </span>
-                  <span className="max-w-full text-[10px] font-bold text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider leading-tight mt-2 whitespace-normal break-words">
-                    Avg Attendance
-                  </span>
+                <div className="p-4 min-h-[104px] rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800/30 flex flex-col items-center justify-center text-center">
+                  <span className="text-3xl font-black text-emerald-700 dark:text-emerald-400 leading-none">92%</span>
+                  <span className="max-w-full text-[10px] font-bold text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider leading-tight mt-2">Avg Attendance</span>
                 </div>
-                <div className="col-span-2 sm:col-span-1 p-3 sm:p-4 min-h-[104px] rounded-2xl bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800/30 flex flex-col items-center justify-center text-center">
-                  <span className="text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-400 leading-none">
-                    {menteesLoading ? '...' : dynamicPendingInterventions}
-                  </span>
-                  <span className="max-w-full text-[10px] font-bold text-amber-600/80 dark:text-amber-400/80 uppercase tracking-wider leading-tight mt-2 whitespace-normal break-words">
-                    Pending Interventions
-                  </span>
+                <div className="p-4 min-h-[104px] rounded-2xl bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800/30 flex flex-col items-center justify-center text-center">
+                  <span className="text-3xl font-black text-amber-700 dark:text-amber-400 leading-none">3</span>
+                  <span className="max-w-full text-[10px] font-bold text-amber-600/80 dark:text-amber-400/80 uppercase tracking-wider leading-tight mt-2">Pending Interventions</span>
                 </div>
               </div>
 

@@ -363,9 +363,9 @@ def _build_canonical_contest_dataset_internal(
     def _is_real_student_record(reg_no: Optional[str], name: Optional[str]) -> bool:
         reg = (reg_no or "").upper().strip()
         nm = (name or "").upper().strip()
-        if not reg or reg.startswith("TEST") or reg.startswith("CONCUR") or reg.startswith("HARDENING") or reg.startswith("7322STU"):
+        if not reg or reg.startswith("TEST") or reg.startswith("CONCUR") or reg.startswith("HARDENING") or reg.startswith("7322STU") or reg.startswith("REG_"):
             return False
-        if "TEST" in nm or "DUMMY" in nm or "CONCURRENT" in nm:
+        if "TEST" in nm or "DUMMY" in nm or "CONCURRENT" in nm or "PROFILE ONLY" in nm:
             return False
         return True
 

@@ -216,18 +216,18 @@ async def get_leaderboard_fast(
                 is_verified = has_stats and not is_invalid and not is_pending
 
                 sync_state = "SYNCED" if is_verified else ("INVALID_USERNAME" if is_invalid else "PENDING_USERNAME")
-                total_solved = s.total_solved if has_stats else 0
-                easy_solved = s.easy_solved if has_stats else 0
-                medium_solved = s.medium_solved if has_stats else 0
-                hard_solved = s.hard_solved if has_stats else 0
+                total_solved = s.total_solved if is_verified else None
+                easy_solved = s.easy_solved if is_verified else None
+                medium_solved = s.medium_solved if is_verified else None
+                hard_solved = s.hard_solved if is_verified else None
                 # Only send contest_rating if it was genuinely verified by LeetCode API.
                 # When contest_sync_status is not 'ok', the stored 1500.0 is a fake default, not a real rating.
-                _raw_cr = s.contest_rating if s else None
-                _contest_verified = s and getattr(s, 'contest_sync_status', None) == 'ok'
+                _raw_cr = s.contest_rating if (s and is_verified) else None
+                _contest_verified = s and is_verified and getattr(s, 'contest_sync_status', None) == 'ok'
                 if _raw_cr is not None and round(float(_raw_cr)) == 1500 and not _contest_verified:
                     contest_rating = None  # fake default — LeetCode never returned a real rating
                 else:
-                    contest_rating = int(round(_raw_cr)) if (_raw_cr is not None and float(_raw_cr) > 0) else None
+                    contest_rating = int(round(_raw_cr)) if (_raw_cr is not None and float(_raw_cr) > 0 and is_verified) else None
 
                 streak = 0
                 if st.lc_activity and st.lc_activity.current_streak is not None:
@@ -308,6 +308,8 @@ async def get_leaderboard_fast(
                         "public_profile_ranking": clean_pub_rank,
                     } if s else None,
                     "streak_count": streak,
+                    "contest_global_ranking": s.contest_global_ranking if s else None,
+                    "global_rank": s.contest_global_ranking if s else None,
                     "college_rank": college_rank,
                     "dept_rank": dept_rank,
                     "weekly_progress": weekly_progress,
@@ -979,16 +981,43 @@ def get_student_detail(student_id: str, request: Request, db: Session = Depends(
     )
 
     if student.stats:
-        st_out.lc_problem_stats = CanonicalProblemStatsOut(
-            total_solved=student.stats.total_solved,
-            easy_solved=student.stats.easy_solved,
-            medium_solved=student.stats.medium_solved,
-            hard_solved=student.stats.hard_solved,
-            profile_global_ranking=student.stats.public_profile_ranking
+        is_invalid_prof = bool(
+            student.stats.sync_status in ("invalid_username", "invalid_profile") or
+            student.stats.status in ("INVALID_USERNAME", "INVALID_PROFILE", "404_NOT_FOUND") or
+            student.stats.error_code in ("PROFILE_NOT_FOUND", "INVALID_USERNAME")
         )
-        if st_out.stats:
-            st_out.stats.official_contests = official_total
-            st_out.stats.virtual_contests = virtual_total
+        if is_invalid_prof:
+            st_out.lc_problem_stats = CanonicalProblemStatsOut(
+                total_solved=None,
+                easy_solved=None,
+                medium_solved=None,
+                hard_solved=None,
+                profile_global_ranking=None
+            )
+            if st_out.stats:
+                st_out.stats.total_solved = None
+                st_out.stats.easy_solved = None
+                st_out.stats.medium_solved = None
+                st_out.stats.hard_solved = None
+                st_out.stats.contest_rating = None
+                st_out.stats.contest_global_ranking = None
+                st_out.stats.public_profile_ranking = None
+                st_out.stats.sync_status = "invalid_profile"
+                st_out.stats.status = "INVALID_USERNAME"
+                st_out.stats.official_contests = 0
+                st_out.stats.virtual_contests = 0
+            st_out.leetcode_url = None
+        else:
+            st_out.lc_problem_stats = CanonicalProblemStatsOut(
+                total_solved=student.stats.total_solved,
+                easy_solved=student.stats.easy_solved,
+                medium_solved=student.stats.medium_solved,
+                hard_solved=student.stats.hard_solved,
+                profile_global_ranking=student.stats.public_profile_ranking
+            )
+            if st_out.stats:
+                st_out.stats.official_contests = official_total
+                st_out.stats.virtual_contests = virtual_total
 
     return st_out
 

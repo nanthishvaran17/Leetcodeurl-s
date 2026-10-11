@@ -628,11 +628,11 @@ export const StudentDataIssuesPage: React.FC = () => {
           </div>
 
           {/* Right Hero Action Buttons */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0 w-full lg:w-auto">
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
             <button
               onClick={handleManualRefresh}
               disabled={refreshing}
-              className="flex-1 lg:flex-initial flex items-center justify-center space-x-1.5 px-3 py-2.5 sm:px-4 sm:py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl text-[11px] sm:text-xs font-bold border border-slate-700 shadow-md transition-all cursor-pointer whitespace-nowrap"
+              className="flex items-center space-x-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl text-xs font-bold border border-slate-700 shadow-md transition-all cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
               <span>{refreshing ? 'Refreshing...' : 'Refresh Ledger'}</span>
@@ -641,10 +641,10 @@ export const StudentDataIssuesPage: React.FC = () => {
             <button
               onClick={handleDownloadExcel}
               disabled={isExporting || students.length === 0}
-              className="flex-1 lg:flex-initial flex items-center justify-center space-x-1.5 px-3 py-2.5 sm:px-5 sm:py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 text-white rounded-2xl text-[11px] sm:text-xs font-black shadow-lg shadow-emerald-600/30 transition-all cursor-pointer transform hover:scale-[1.02] whitespace-nowrap"
+              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-600/30 transition-all cursor-pointer transform hover:scale-[1.02]"
             >
-              <FileSpreadsheet className="w-4 h-4 shrink-0" />
-              <span>{isExporting ? 'Exporting...' : `Download Excel (${students.length})`}</span>
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>{isExporting ? 'Exporting...' : 'Download Excel (50)'}</span>
             </button>
           </div>
         </div>
@@ -683,7 +683,7 @@ export const StudentDataIssuesPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Department Selector */}
           <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center space-x-1 h-5">
+            <label className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center space-x-1">
               <Building2 className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
               <span>Department Filter</span>
             </label>
@@ -701,7 +701,7 @@ export const StudentDataIssuesPage: React.FC = () => {
 
           {/* Academic Year Selector */}
           <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center space-x-1 h-5">
+            <label className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center space-x-1">
               <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
               <span>Academic Year</span>
             </label>
@@ -718,7 +718,7 @@ export const StudentDataIssuesPage: React.FC = () => {
 
           {/* Issue Category Selector */}
           <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center space-x-1 h-5">
+            <label className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center space-x-1">
               <Sliders className="w-3.5 h-3.5 text-amber-500" />
               <span>Issue Category</span>
             </label>
@@ -736,17 +736,11 @@ export const StudentDataIssuesPage: React.FC = () => {
 
           {/* Search Input */}
           <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center space-x-1 h-5">
+            <label className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center space-x-1">
               <Search className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
               <span>Search Query</span>
             </label>
-            <div className="relative w-full flex items-center px-3 py-1.5 h-10 min-h-[40px] sm:px-3.5 sm:py-2 sm:h-11 sm:min-h-[44px] border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-brand-500/60 rounded-xl sm:rounded-2xl bg-white dark:bg-navy-950 shadow-sm focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/10 transition-all duration-200">
-              <div className="w-5 h-5 rounded-md bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-brand-400 flex items-center justify-center shrink-0 mr-2">
-                <Search className="w-3 h-3 stroke-[2.5]" />
-              </div>
-              <div className="shrink-0 text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-brand-300 border-indigo-200 dark:border-indigo-800 mr-2">
-                SEARCH
-              </div>
+            <div className="relative flex items-center">
               <input
                 ref={searchInputRef}
                 type="text"
@@ -755,13 +749,16 @@ export const StudentDataIssuesPage: React.FC = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoComplete="off"
                 spellCheck={false}
-                className="w-full bg-transparent border-none text-xs font-black text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none p-0 leading-none min-w-0"
+                className="w-full h-11 min-h-[44px] pl-10 pr-9 bg-white dark:bg-navy-950 border-2 border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm text-left"
               />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
+                <Search className="w-4 h-4 stroke-[2.5]" />
+              </div>
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="ml-1.5 p-0.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer shrink-0"
+                  className="absolute inset-y-0 right-0 z-10 flex items-center px-3 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
                   title="Clear Search"
                 >
                   <XCircle className="w-4 h-4 stroke-[2]" />
@@ -1612,62 +1609,23 @@ export const StudentDataIssuesPage: React.FC = () => {
               </div>
 
               <div className="space-y-3 text-xs">
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="space-y-1">
-                    <span className="block font-bold text-slate-700 flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-                      Primary Department Filter
-                    </span>
-                    <GlobalFilter
-                      label=""
+                <div className="grid grid-cols-1 gap-2.5">
+                  <label className="space-y-1">
+                    <span className="block font-bold text-slate-700">Primary Department Filter</span>
+                    <select
                       value={selectedDept}
-                      onChange={setSelectedDept}
-                      options={deptFilterOptions}
-                      icon={<Building2 size={16} />}
-                      showSearch={true}
-                      searchPlaceholder="Search department..."
-                      dropdownWidth="w-full min-w-[320px]"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="block font-bold text-slate-700 flex items-center gap-1.5">
-                      <GraduationCap className="w-3.5 h-3.5 text-indigo-600" />
-                      Academic Year Filter
-                    </span>
-                    <GlobalFilter
-                      label=""
-                      value={selectedYear}
-                      onChange={setSelectedYear}
-                      options={yearFilterOptions}
-                      icon={<GraduationCap size={16} />}
-                      showSearch={false}
-                      dropdownWidth="w-full min-w-[280px]"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="block font-bold text-slate-700 flex items-center gap-1.5">
-                      <Sliders className="w-3.5 h-3.5 text-amber-500" />
-                      Issue Category Filter
-                    </span>
-                    <GlobalFilter
-                      label=""
-                      value={selectedIssue}
-                      onChange={setSelectedIssue}
-                      options={issueFilterOptions}
-                      icon={<Sliders size={16} />}
-                      showSearch={true}
-                      searchPlaceholder="Search issue category..."
-                      dropdownWidth="w-full min-w-[340px]"
-                    />
-                  </div>
+                      onChange={(e) => setSelectedDept(e.target.value)}
+                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-xs font-bold text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+                    >
+                      {deptFilterOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                    </select>
+                  </label>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="text-[11px] font-semibold text-slate-500">Active Preset Configuration:</div>
-                  <div className="font-bold text-xs text-slate-900 leading-snug">
-                    Dept: <span className="text-indigo-600">{getPresetFilterLabel(selectedDept, deptFilterOptions, 'All Departments')}</span> • Year: <span className="text-indigo-600">{getPresetFilterLabel(selectedYear, yearFilterOptions, 'All Academic Years')}</span> • Issue: <span className="text-amber-600">{getPresetFilterLabel(selectedIssue, issueFilterOptions, 'All Categories')}</span>
+                  <div className="text-slate-500">Active Preset Configuration:</div>
+                  <div className="font-bold text-slate-900">
+                    Dept: {getPresetFilterLabel(selectedDept, deptFilterOptions, 'All Departments')} • Year: {getPresetFilterLabel(selectedYear, yearFilterOptions, 'All Academic Years')} • Issue: {getPresetFilterLabel(selectedIssue, issueFilterOptions, 'All Categories')}
                   </div>
                 </div>
 

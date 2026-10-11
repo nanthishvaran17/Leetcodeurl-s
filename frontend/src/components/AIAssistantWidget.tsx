@@ -453,7 +453,12 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
   }, []);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    messagesEndRef.current?.scrollIntoView({ behavior });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior
+      });
+    }
   }, []);
 
   const handleScroll = () => {
@@ -1048,7 +1053,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                 <div
                   ref={messagesContainerRef}
                   onScroll={handleScroll}
-                  className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-navy-950"
+                  className="flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-white dark:bg-navy-950"
                 >
                   {isEmptyConversation ? (
                     <div className="h-full flex flex-col">

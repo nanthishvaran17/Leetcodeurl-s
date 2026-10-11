@@ -1,7 +1,7 @@
 // million-ignore
 import React, { useState, useEffect, useRef, useTransition } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Medal, TrendingUp, Target, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Medal, TrendingUp, Target, CheckCircle2, AlertCircle } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
@@ -519,7 +519,26 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           >
       {activeTab === 'overview' && (
         <>
-      {/* PREMIUM BENTO GRID FOR STATS */}
+          {(() => {
+            const syncStatus = (detail?.stats?.sync_status || detail?.stats?.status || detail?.sync_state || '').toLowerCase();
+            const is404 = syncStatus.includes('invalid') || syncStatus.includes('404') || syncStatus.includes('not_found');
+            if (!is404) return null;
+            return (
+              <div className="bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/80 rounded-2xl p-4 flex items-center justify-between text-rose-800 dark:text-rose-200 font-bold text-xs mb-5 shadow-sm">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0">
+                    <AlertCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="font-black text-sm text-rose-900 dark:text-rose-100">LeetCode Profile Not Found (404 Error)</p>
+                    <p className="font-medium text-rose-700 dark:text-rose-300 text-xs mt-0.5">
+                      The handle <span className="font-mono font-bold">@{detail?.username || 'unknown'}</span> was not found on LeetCode. No static/fake counts are generated; only genuine verified solved counts are displayed.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         {/* Left Section: Rankings & Activity (7 columns) */}

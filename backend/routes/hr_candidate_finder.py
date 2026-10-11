@@ -398,9 +398,9 @@ def get_student_intelligence(
 
     # 4. Contest Standing & History
     contest = db.query(LeetCodeContest).filter(LeetCodeContest.student_id == student.id).first()
-    c_rating = contest.contest_rating if contest and contest.contest_rating is not None else (getattr(p_stats, "contest_rating", None) if p_stats else getattr(student, "contest_rating", None))
-    c_rank = contest.contest_global_ranking if contest and contest.contest_global_ranking is not None else (getattr(p_stats, "contest_global_ranking", None) if p_stats else getattr(student, "global_rank", None))
-    c_attended = contest.attended_count if contest and contest.attended_count is not None else (getattr(p_stats, "attended_contests_count", None) if p_stats else getattr(student, "contests_attended", None))
+    c_rating = (getattr(p_stats, "contest_rating", None) if p_stats and getattr(p_stats, "contest_rating", None) is not None and float(getattr(p_stats, "contest_rating", 0) or 0) > 0 else (contest.contest_rating if contest and contest.contest_rating is not None else getattr(student, "contest_rating", None)))
+    c_rank = (getattr(p_stats, "contest_global_ranking", None) if p_stats and getattr(p_stats, "contest_global_ranking", None) is not None and int(getattr(p_stats, "contest_global_ranking", 0) or 0) > 0 else (contest.contest_global_ranking if contest and contest.contest_global_ranking is not None and int(contest.contest_global_ranking or 0) > 0 else None))
+    c_attended = (getattr(p_stats, "attended_contests_count", None) if p_stats and getattr(p_stats, "attended_contests_count", None) is not None else (contest.attended_count if contest and contest.attended_count is not None else getattr(student, "contests_attended", None)))
     c_top_pct = contest.top_percentage if contest and contest.top_percentage is not None else None
 
     c_history_records = (
@@ -1097,15 +1097,13 @@ def search_candidates(
             tot_subs = tot
 
         c_rating = (
-            contest.contest_rating if contest and contest.contest_rating is not None and contest.contest_rating > 0
-            else (getattr(stats, "contest_rating", None) if stats and getattr(stats, "contest_rating", None) is not None
+            getattr(stats, "contest_rating", None) if stats and getattr(stats, "contest_rating", None) is not None and float(getattr(stats, "contest_rating", 0) or 0) > 0
+            else (contest.contest_rating if contest and contest.contest_rating is not None and contest.contest_rating > 0
             else getattr(st, "contest_rating", 0.0))
         ) or 0.0
         c_rank = (
-            (contest.contest_global_ranking if contest and contest.contest_global_ranking else None)
-            or (stats.contest_global_ranking if stats and stats.contest_global_ranking else None)
-            or (stats.public_profile_ranking if stats and stats.public_profile_ranking else None)
-            or getattr(st, "global_rank", None)
+            (stats.contest_global_ranking if stats and stats.contest_global_ranking and int(stats.contest_global_ranking) > 0 else None)
+            or (contest.contest_global_ranking if contest and contest.contest_global_ranking and int(contest.contest_global_ranking) > 0 else None)
         )
         c_attended = contest.attended_count if contest and contest.attended_count is not None else (getattr(stats, "attended_contests_count", None) if stats else getattr(st, "contests_attended", None))
         c_top_pct = contest.top_percentage if contest and contest.top_percentage is not None else None
@@ -1249,6 +1247,22 @@ def clean_cell_value(val: Any) -> Any:
             pass
     return val_s
 
+def _safe_int(val, default: int = 0) -> int:
+    if val is None or val == "" or str(val).strip().upper() in ("N/A", "NONE", "—", "-"):
+        return default
+    try:
+        return int(float(str(val).strip()))
+    except (ValueError, TypeError):
+        return default
+
+def _safe_float(val, default: float = 0.0) -> float:
+    if val is None or val == "" or str(val).strip().upper() in ("N/A", "NONE", "—", "-"):
+        return default
+    try:
+        return float(str(val).strip())
+    except (ValueError, TypeError):
+        return default
+
 def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters_desc: str = "All Candidates") -> bytes:
     """
     Generates a professional multi-sheet Management Report Excel Workbook matching Nandha Intelligence standard.
@@ -1285,9 +1299,9 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     FONT_DATA_BOLD = Font(name="Times New Roman", size=9.5, bold=True)
 
     tot_cnt = len(candidates)
-    avg_tot = round(sum(float(c.get("total_solved", 0) or 0) for c in candidates) / tot_cnt, 1) if tot_cnt > 0 else 0
-    avg_acc = round(sum(float(c.get("acceptance_rate", 0) or 0) for c in candidates) / tot_cnt, 1) if tot_cnt > 0 else 0
-    avg_rat = round(sum(float(c.get("contest_rating", 0) or 0) for c in candidates) / tot_cnt, 1) if tot_cnt > 0 else 0
+    avg_tot = round(sum(_safe_float(c.get("total_solved", 0)) for c in candidates) / tot_cnt, 1) if tot_cnt > 0 else 0
+    avg_acc = round(sum(_safe_float(c.get("acceptance_rate", 0)) for c in candidates) / tot_cnt, 1) if tot_cnt > 0 else 0
+    avg_rat = round(sum(_safe_float(c.get("contest_rating", 0)) for c in candidates) / tot_cnt, 1) if tot_cnt > 0 else 0
 
     date_str = now_ist().strftime("%d %b %Y, %I:%M %p IST")
 
@@ -1369,9 +1383,9 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         for col_i in range(2, 9):
             ws1.cell(row=idx, column=col_i).border = _THIN_BORDER
 
-    tot_easy = sum(int(c.get("easy_solved", 0) or 0) for c in candidates)
-    tot_med = sum(int(c.get("medium_solved", 0) or 0) for c in candidates)
-    tot_hrd = sum(int(c.get("hard_solved", 0) or 0) for c in candidates)
+    tot_easy = sum(_safe_int(c.get("easy_solved", 0)) for c in candidates)
+    tot_med = sum(_safe_int(c.get("medium_solved", 0)) for c in candidates)
+    tot_hrd = sum(_safe_int(c.get("hard_solved", 0)) for c in candidates)
 
     ws1["U10"] = "Difficulty"; ws1["V10"] = "Problems"
     ws1["U10"].font = FONT_DATA_BOLD; ws1["V10"].font = FONT_DATA_BOLD
@@ -1424,8 +1438,8 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
 
     for i, c in enumerate(candidates):
         r_idx = 17 + i
-        tot = int(c.get("total_solved", 0) or 0)
-        rat = float(c.get("contest_rating", 0) or 0)
+        tot = _safe_int(c.get("total_solved", 0))
+        rat = _safe_float(c.get("contest_rating", 0))
 
         rat_num = rat if rat > 0 else "—"
         rank_str = clean_cell_value(c.get("global_rank", "—"))
@@ -1433,14 +1447,14 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
 
         acc_val = c.get('acceptance_rate', 0)
         try:
-            acc_num = float(acc_val) / 100.0 if float(acc_val) > 1.0 else float(acc_val)
+            acc_num = _safe_float(acc_val) / 100.0 if _safe_float(acc_val) > 1.0 else _safe_float(acc_val)
         except (ValueError, TypeError):
             acc_num = 0.0
 
         top_val = c.get('contest_top_pct')
-        if top_val is not None:
+        if top_val is not None and str(top_val).strip().upper() not in ("N/A", "NONE", "—", "-"):
             try:
-                top_num = float(top_val) / 100.0 if float(top_val) > 1.0 else float(top_val)
+                top_num = _safe_float(top_val) / 100.0 if _safe_float(top_val) > 1.0 else _safe_float(top_val)
             except (ValueError, TypeError):
                 top_num = "—"
         else:
@@ -1458,16 +1472,16 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
             clean_cell_value(c.get("twelfth_cutoff", "—")),
             clean_cell_value(c.get("primary_language", "Java")),
             tot,
-            int(c.get("easy_solved", 0) or 0),
-            int(c.get("medium_solved", 0) or 0),
-            int(c.get("hard_solved", 0) or 0),
+            _safe_int(c.get("easy_solved", 0)),
+            _safe_int(c.get("medium_solved", 0)),
+            _safe_int(c.get("hard_solved", 0)),
             acc_num,
-            int(c.get("total_submissions", 0) or 0),
-            int(c.get("current_streak", 0) or 0),
-            int(c.get("active_days", 0) or 0),
+            _safe_int(c.get("total_submissions", 0)),
+            _safe_int(c.get("current_streak", 0)),
+            _safe_int(c.get("active_days", 0)),
             rat_num,
             rank_str,
-            int(c.get("contests_attended", 0) or 0),
+            _safe_int(c.get("contests_attended", 0)),
             top_num
         ]
 
@@ -1559,7 +1573,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         r_idx = 8 + i
         acc_val = c.get('acceptance_rate', 0)
         try:
-            acc_num = float(acc_val) / 100.0 if float(acc_val) > 1.0 else float(acc_val)
+            acc_num = _safe_float(acc_val) / 100.0 if _safe_float(acc_val) > 1.0 else _safe_float(acc_val)
         except (ValueError, TypeError):
             acc_num = 0.0
 
@@ -1572,12 +1586,12 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
             clean_cell_value(c.get("section")),
             clean_cell_value(c.get("twelfth_cutoff", "—")),
             clean_cell_value(c.get("primary_language")),
-            int(c.get("total_solved", 0) or 0),
-            int(c.get("easy_solved", 0) or 0),
-            int(c.get("medium_solved", 0) or 0),
-            int(c.get("hard_solved", 0) or 0),
+            _safe_int(c.get("total_solved", 0)),
+            _safe_int(c.get("easy_solved", 0)),
+            _safe_int(c.get("medium_solved", 0)),
+            _safe_int(c.get("hard_solved", 0)),
             acc_num,
-            float(c.get("contest_rating", 0) or 0)
+            _safe_float(c.get("contest_rating", 0))
         ]
         for col_idx, val in enumerate(row_vals, start=1):
             cell = ws2.cell(row=r_idx, column=col_idx, value=val)
@@ -1687,9 +1701,9 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     r_curr = 8
     for dept_code, d_cands in dept_map.items():
         cnt = len(d_cands)
-        t_solv = sum(int(x.get("total_solved", 0) or 0) for x in d_cands)
+        t_solv = sum(_safe_int(x.get("total_solved", 0)) for x in d_cands)
         a_solv = round(t_solv / cnt, 1) if cnt > 0 else 0
-        a_rat = round(sum(float(x.get("contest_rating", 0) or 0) for x in d_cands) / cnt, 1) if cnt > 0 else 0
+        a_rat = round(sum(_safe_float(x.get("contest_rating", 0)) for x in d_cands) / cnt, 1) if cnt > 0 else 0
 
         row_vals = [dept_code, cnt, t_solv, a_solv, a_rat]
         for c_i, val in enumerate(row_vals, start=1):

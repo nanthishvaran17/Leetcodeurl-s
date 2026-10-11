@@ -343,6 +343,10 @@ async def _sync_single_student_canonical_impl(
                     lc_stats.medium_solved = medium_solved
                     lc_stats.hard_solved = hard_solved
                     lc_stats.profile_global_ranking = data.get("profile_global_ranking")
+                    if data.get("contest_rating") is not None:
+                        lc_stats.contest_rating = data.get("contest_rating")
+                    if data.get("contest_global_ranking") is not None:
+                        lc_stats.contest_global_ranking = data.get("contest_global_ranking")
                     setattr(lc_stats, "fetched_at", now_dt)
     
                     shim_stats.total_solved = total_solved
@@ -350,11 +354,29 @@ async def _sync_single_student_canonical_impl(
                     shim_stats.medium_solved = medium_solved
                     shim_stats.hard_solved = hard_solved
                     shim_stats.public_profile_ranking = data.get("profile_global_ranking")
+                    if data.get("contest_rating") is not None:
+                        shim_stats.contest_rating = data.get("contest_rating")
+                    if data.get("contest_global_ranking") is not None:
+                        shim_stats.contest_global_ranking = data.get("contest_global_ranking")
                     setattr(shim_stats, "status", "verified")
                     setattr(shim_stats, "sync_status", "success")
                     setattr(shim_stats, "validation_status", "verified")
                     setattr(shim_stats, "last_successful_sync", now_dt)
                     setattr(shim_stats, "last_verified_at", now_dt)
+
+                    if data.get("contest_rating") is not None and float(data.get("contest_rating") or 0) > 0:
+                        setattr(st, "contest_rating", data.get("contest_rating"))
+                    if data.get("contest_global_ranking") is not None and int(data.get("contest_global_ranking") or 0) > 0:
+                        setattr(st, "global_rank", f"#{data.get('contest_global_ranking'):,}")
+
+                    lc_c_rec = db_student.query(LeetCodeContest).filter(LeetCodeContest.student_id == st.id).first()
+                    if not lc_c_rec:
+                        lc_c_rec = LeetCodeContest(student_id=st.id)
+                        db_student.add(lc_c_rec)
+                    if data.get("contest_rating") is not None:
+                        lc_c_rec.contest_rating = data.get("contest_rating")
+                    if data.get("contest_global_ranking") is not None:
+                        lc_c_rec.contest_global_ranking = data.get("contest_global_ranking")
     
                     streak_count = data.get("streak")
                     total_active_days = data.get("total_active_days")
@@ -463,6 +485,11 @@ async def _sync_single_student_canonical_impl(
                         shim_stats.contest_rating = contest_rating
                         shim_stats.contest_global_ranking = c_data.get("contest_global_ranking")
                         shim_stats.recent_contest_name = c_data.get("most_recent_contest_name")
+
+                        if contest_rating is not None and float(contest_rating or 0) > 0:
+                            setattr(st, "contest_rating", contest_rating)
+                        if c_data.get("contest_global_ranking") is not None and int(c_data.get("contest_global_ranking") or 0) > 0:
+                            setattr(st, "global_rank", f"#{c_data.get('contest_global_ranking'):,}")
     
                         for hist in c_data.get("history", []):
                             c_name = hist.get("contest_name")

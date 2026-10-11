@@ -598,7 +598,6 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
           <div className="flex-none w-32 px-4 text-center">Contest</div>
           <div className="flex-none w-24 px-4 text-center">Rating</div>
           <div className="flex-none w-28 px-4 text-center">Contest Rank</div>
-          <div className="flex-none w-28 px-4 text-center">Profile Rank</div>
           <div className="flex-none w-32 px-4 text-center">Actions</div>
         </div>
 
@@ -953,7 +952,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-slate-800 text-center">
                     <span className="text-[10px] font-bold text-slate-500 block">Contest Score</span>
                     <p className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
@@ -971,7 +970,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                     >
                       {(() => {
                         const r = viewingStudent.public_contest_result?.contest_rating || viewingStudent.stats?.contest_rating;
-                        if (!r || Number(r) === 1500) return '0';
+                        if (!r || Number(r) === 1500) return '—';
                         return Math.round(Number(r)).toLocaleString('en-US');
                       })()}
                     </p>
@@ -979,17 +978,10 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                   <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-slate-800 text-center">
                     <span className="text-[10px] font-bold text-slate-500 block">Contest Rank</span>
                     <p className="text-sm sm:text-base font-black text-indigo-600 dark:text-indigo-400 mt-0.5">
-                      {viewingStudent.public_contest_result?.contest_rank
-                        ? `#${viewingStudent.public_contest_result.contest_rank.toLocaleString('en-US')}`
-                        : '0'}
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-slate-800 text-center">
-                    <span className="text-[10px] font-bold text-slate-500 block">Profile Global Rank</span>
-                    <p className="text-sm sm:text-base font-black text-slate-700 dark:text-slate-300 mt-0.5">
-                      {viewingStudent.stats?.public_profile_ranking
-                        ? `#${viewingStudent.stats.public_profile_ranking.toLocaleString('en-US')}`
-                        : '0'}
+                      {(() => {
+                        const cr = viewingStudent.stats?.contest_global_ranking ?? viewingStudent.public_contest_result?.contest_rank;
+                        return cr && Number(cr) > 0 ? `#${Number(cr).toLocaleString('en-US')}` : '—';
+                      })()}
                     </p>
                   </div>
                 </div>
