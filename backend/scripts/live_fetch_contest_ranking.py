@@ -548,7 +548,7 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
         solves = res["solves"]
         rank = res["rank"]
         score = res["score"]
-        problems_solved = sum(solves)
+        total_solved = sum(solves)
 
         # WeeklyPublicResult
         wpr = db.query(WeeklyPublicResult).filter_by(session_id=ws.id, student_id=student.id).first()
@@ -556,32 +556,36 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
             wpr = WeeklyPublicResult(
                 session_id=ws.id,
                 student_id=student.id,
-                attended=True,
-                solved_count=problems_solved,
-                official_score=score,
-                official_rank=rank,
+                participation_status="PUBLIC_ATTENDED",
                 q1=solves[0],
                 q2=solves[1],
                 q3=solves[2],
-                q4=solves[3]
+                q4=solves[3],
+                total_contest_solved=total_solved,
+                contest_score=score or 0,
+                contest_rank=rank,
+                confidence="VERIFIED",
+                fetch_status="SUCCESS"
             )
             db.add(wpr)
         else:
-            wpr.attended = True
-            wpr.solved_count = problems_solved
-            wpr.official_score = score
-            wpr.official_rank = rank
+            wpr.participation_status = "PUBLIC_ATTENDED"
             wpr.q1 = solves[0]
             wpr.q2 = solves[1]
             wpr.q3 = solves[2]
             wpr.q4 = solves[3]
+            wpr.total_contest_solved = total_solved
+            wpr.contest_score = score or 0
+            wpr.contest_rank = rank
+            wpr.confidence = "VERIFIED"
+            wpr.fetch_status = "SUCCESS"
 
         # PreviousWeekParticipationRecord
         pw = db.query(PreviousWeekParticipationRecord).filter_by(student_id=student.id, session_id=ws.id).first()
         if pw:
             pw.participation_type = "PUBLIC"
-            pw.problems_solved = problems_solved
-            pw.official_score = score
+            pw.problems_solved = total_solved
+            pw.official_score = score or 0
             pw.official_rank = rank
             pw.q1 = solves[0]
             pw.q2 = solves[1]
@@ -593,8 +597,8 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
                 session_id=ws.id,
                 contest_name=ws.contest_name or ws.title,
                 participation_type="PUBLIC",
-                problems_solved=problems_solved,
-                official_score=score,
+                problems_solved=total_solved,
+                official_score=score or 0,
                 official_rank=rank,
                 q1=solves[0],
                 q2=solves[1],
@@ -608,6 +612,11 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     try:
         db.commit()
         print(f"[SUCCESS] Updated {updated_count} students in live database!")
+        # Invalidate contest cache
+        from backend.cache import cache
+        cache.delete(f"contest_results:{ws.id}")
+        cache.delete(f"canonical:contest:{ws.id}")
+        print("[INFO] Contest cache invalidated successfully.")
     except Exception as e:
         db.rollback()
         print(f"[ERROR] Commit failed: {e}")
