@@ -34,12 +34,21 @@ if "sqlite" in str(engine.url):
 
 
 def get_session():
-    """Launches full-featured stealth Chrome with complete browser footprint."""
+    """Starts a Virtual Desktop Display and runs real desktop Chrome to bypass Cloudflare completely."""
+    vdisplay = None
+    try:
+        from pyvirtualdisplay import Display
+        print("[INFO] Starting Virtual Desktop Display (1920x1080)...")
+        vdisplay = Display(visible=0, size=(1920, 1080))
+        vdisplay.start()
+    except Exception as e:
+        print(f"[WARN] Virtual display start note: {e}")
+
     try:
         import undetected_chromedriver as uc
-        print("[INFO] Launching Stealth Google Chrome Engine on EC2...")
+        print("[INFO] Launching Real Desktop Chrome in Virtual Display...")
         options = uc.ChromeOptions()
-        options.add_argument("--headless=new")
+        # No headless flag! Runs as a full desktop browser on Xvfb
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
@@ -49,12 +58,11 @@ def get_session():
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36")
         
         driver = uc.Chrome(options=options, version_main=155)
-        # Set realistic timeouts
         driver.set_page_load_timeout(35)
-        return driver, "chrome"
+        return driver, "chrome", vdisplay
     except Exception as e:
         print(f"[WARN] Chrome launch exception: {e}")
-        return None, "none"
+        return None, "none", vdisplay
 
     # Fallback to curl_cffi
     try:
@@ -331,7 +339,7 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     else:
         print(f"[INFO] Target WeeklySession: '{ws.contest_name}' (ID: {ws.id})")
 
-    engine_obj, engine_type = get_session()
+    engine_obj, engine_type, vdisplay = get_session()
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
         "Accept": "*/*",
