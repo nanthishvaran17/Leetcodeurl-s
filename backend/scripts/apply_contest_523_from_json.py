@@ -16,8 +16,17 @@ import argparse
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from backend.database import SessionLocal
+from backend.database import SessionLocal, engine
 from backend.models import Student, WeeklySession, WeeklyPublicResult, PreviousWeekParticipationRecord
+
+# Configure sqlite timeout and WAL mode to prevent 'database is locked' errors
+if "sqlite" in str(engine.url):
+    with engine.connect() as conn:
+        try:
+            conn.exec_driver_sql("PRAGMA journal_mode=WAL;")
+            conn.exec_driver_sql("PRAGMA busy_timeout=60000;")
+        except Exception:
+            pass
 
 CONTEST_NUMBER = 523
 JSON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "contest_523_solver_map.json")
