@@ -32,32 +32,29 @@ if "sqlite" in str(engine.url):
             pass
 
 
-# Verified working proxies on LeetCode
-WEBSHARE_PROXIES = [
-    "http://31.59.20.176:6754",
-    "http://191.96.254.138:6185",
-    "http://45.38.107.97:6014",
-    "http://64.137.96.74:6641",
-]
+def get_session():
+    """Tries undetected Chrome browser first on EC2 for 100% Cloudflare bypass."""
+    try:
+        import undetected_chromedriver as uc
+        print("[INFO] Launching Headless Real Google Chrome Engine on EC2...")
+        options = uc.ChromeOptions()
+        options.add_argument("--headless=new")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+        driver = uc.Chrome(options=options, version_main=155)
+        return driver, "chrome"
+    except Exception as e:
+        print(f"[WARN] Chrome launch note: {e}")
 
-def get_session(proxy: str = None):
-    """Creates a session with curl_cffi and verified working proxy."""
-    import random
-    proxy_url = proxy or os.environ.get("CONTEST_PROXY", WEBSHARE_PROXIES[0])
-    proxies = {"http": proxy_url, "https": proxy_url}
-
+    # Fallback to curl_cffi
     try:
         from curl_cffi import requests as cffi_requests
-        print(f"[INFO] Using curl_cffi (Chrome 120) with Verified Proxy {proxy_url}...")
         s = cffi_requests.Session(impersonate="chrome120")
-        s.proxies = proxies
-        return s, True
+        return s, "cffi"
     except ImportError:
         import requests
-        print(f"[INFO] Using standard requests with Proxy {proxy_url}...")
-        s = requests.Session()
-        s.proxies = proxies
-        return s, False
+        return requests.Session(), "requests"
 
 
 def fetch_contest_data(contest_slug: str, proxy_base: str = None):
@@ -325,7 +322,7 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     else:
         print(f"[INFO] Target WeeklySession: '{ws.contest_name}' (ID: {ws.id})")
 
-    session, _ = get_session()
+    engine_obj, engine_type = get_session()
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
         "Accept": "*/*",
@@ -333,19 +330,40 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     }
 
     base = proxy_base.rstrip("/") if proxy_base else "https://leetcode.com"
-    # First probe via REST API / Proxy with region=global
     url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global"
-    print(f"[INFO] Testing connection at {url}...")
-    resp = session.get(url, headers=headers, timeout=25)
-    
-    if resp.status_code != 200:
-        print(f"[WARN] REST Ranking API returned HTTP {resp.status_code}.")
-        print("[INFO] Switching to LeetCode Official GraphQL Live API (100% unblocked on EC2)...")
-        run_graphql_direct_fetch(ws, student_map, contest_slug)
+    print(f"[INFO] Testing connection at {url} using {engine_type}...")
+
+    data = None
+    if engine_type == "chrome":
+        import json
+        try:
+            engine_obj.get(url)
+            time.sleep(3)
+            page_source = engine_obj.page_source
+            # Chrome extracts raw json or inside pre tag
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(page_source, "html.parser")
+            text = soup.find("pre").text if soup.find("pre") else soup.text
+            data = json.loads(text)
+            print("[SUCCESS] Real Chrome bypassed Cloudflare! Data received!")
+        except Exception as e:
+            print(f"[WARN] Chrome parse note: {e}")
+            try: engine_obj.quit()
+            except: pass
+            engine_obj, engine_type = None, "cffi"
+
+    if not data:
+        # fallback to requests/cffi
+        from curl_cffi import requests as cffi_requests
+        s = cffi_requests.Session(impersonate="chrome120")
+        resp = s.get(url, headers=headers, timeout=25)
+        if resp.status_code == 200:
+            data = resp.json()
+
+    if not data:
+        print("[ERROR] Could not fetch contest ranking data.")
         db.close()
         return
-
-    data = resp.json()
     user_num = data.get("user_num", 0)
     pages = math.ceil(user_num / 25)
     
