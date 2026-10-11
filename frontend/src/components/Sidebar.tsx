@@ -64,8 +64,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
   const { theme, toggleTheme } = useTheme();
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
   const roleClean = (user?.role || '').trim().toLowerCase();
+  const isPrincipalOrManagement = ['principal', 'management', 'director'].includes(roleClean);
   const isFaculty = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(roleClean);
-  const isHOD = ['hod', 'department hod', 'department_hod', 'principal', 'management', 'director', 'placement coordinator'].includes(roleClean);
+  const isHOD = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
   const isAdmin = ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean);
   const isStudent = roleClean === 'student';
 
@@ -77,6 +78,42 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
     }
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
+
+  // PRINCIPAL & MANAGEMENT: Institutional Command, All HODs oversight, Faculty actions, Master reports
+  const executiveSections: NavSection[] = [
+    {
+      title: 'EXECUTIVE COMMAND',
+      items: [
+        { id: 'dashboard', label: 'Executive Dashboard', icon: LayoutDashboard, badge: 'CAMPUS', badgeColor: 'indigo' },
+        { id: 'hod-command-center', label: 'Department Leadership Deck', icon: Cpu, badge: 'ALL DEPTS', badgeColor: 'purple' },
+        { id: 'faculty-action-center', label: 'Faculty & Staff Portal', icon: Zap, badge: 'STAFF', badgeColor: 'rose', pulse: true },
+        { id: 'hr-candidate-finder', label: 'Placement Portal', icon: Briefcase, badge: 'HIRE', badgeColor: 'purple' },
+        { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
+        { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
+      ]
+    },
+    {
+      title: 'ACADEMIC & CONTEST TRACKING',
+      items: [
+        { id: 'departments', label: 'Departments & Sections', icon: Layers },
+        { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
+        { id: 'integrity-monitor', label: 'Contest Integrity Monitor', icon: ShieldAlert, badge: 'DUAL-ID', badgeColor: 'rose' },
+        { id: 'students', label: 'Student Leaderboard', icon: Users },
+        { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
+        { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },
+        { id: 'data-issues', label: 'Student Data Issues', icon: AlertOctagon, badge: 'RECOVERY', badgeColor: 'rose' },
+      ]
+    },
+    {
+      title: 'INSTITUTIONAL OPERATIONS',
+      items: [
+        { id: 'system-health', label: 'Institutional Operations', icon: Activity, badge: 'PROD', badgeColor: 'emerald' },
+        { id: 'reports', label: 'Executive Reports & Export', icon: FileSpreadsheet, badge: 'EXECUTIVE', badgeColor: 'emerald' },
+        { id: 'public', label: 'Public Shareable View', icon: Globe },
+        { id: 'account-settings', label: 'Account Settings', icon: User },
+      ]
+    }
+  ];
 
   // FACULTY / STAFF MENTOR: Full Academic, Contest & Mentoring Access 
   const facultySections: NavSection[] = [
@@ -117,7 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
     {
       title: 'EXECUTIVE INTELLIGENCE',
       items: [
-        { id: 'dashboard', label: 'HOD Dashboard', icon: LayoutDashboard },
+        { id: 'dashboard', label: 'Department Leadership Deck', icon: LayoutDashboard },
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
         { id: 'faculty-action-center', label: 'Faculty Portal', icon: Zap, badge: 'FACULTY', badgeColor: 'indigo' },
         { id: 'hr-candidate-finder', label: 'Placement Portal', icon: Briefcase, badge: 'HIRE', badgeColor: 'purple' },
@@ -153,7 +190,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       items: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
-        { id: 'hod-command-center', label: 'HOD Dashboard', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
+        { id: 'hod-command-center', label: 'Department Leadership Deck', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
         { id: 'faculty-action-center', label: 'Faculty Portal', icon: Zap, badge: 'STAFF', badgeColor: 'indigo' },
         { id: 'hr-candidate-finder', label: 'Placement Portal', icon: Briefcase, badge: 'HIRE', badgeColor: 'purple' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
@@ -199,6 +236,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
 
   const sections: NavSection[] = isAdmin
     ? adminSections
+    : isPrincipalOrManagement
+    ? executiveSections
     : isHOD
     ? hodSections
     : isFaculty

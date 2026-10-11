@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from backend.models import (
     Student, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult, 
-    ContestParticipation, ReportHistory, Department
+    ContestParticipation, ReportHistory, Department, LeetCodeProfileStats
 )
 from backend.services.report_models import ReportConfig
 from backend.services.weekly_session_resolver import resolve_weekly_sessions
@@ -265,6 +265,12 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     # 5. Build authoritative student-level contest rows
     student_rows: List[Dict[str, Any]] = []
 
+    all_student_ids = [int(getattr(s, "id")) for s in filtered_students if getattr(s, "id", None) is not None]
+    stats_map: Dict[int, Any] = {}
+    if all_student_ids:
+        for p in db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id.in_(all_student_ids)).all():
+            stats_map[int(getattr(p, "student_id"))] = p
+
     for s in filtered_students:
         s_id = int(getattr(s, "id"))
         reg_no = s.reg_no
@@ -274,6 +280,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         year_level = s.year_level or "III"
         yr_norm = normalize_year_val(str(year_level) if year_level else None)
         username = (s.username or "").strip()
+        st_profile = stats_map.get(s_id) or getattr(s, "stats", None)
 
         p_res = public_map.get(s_id)
         v_res = virtual_map.get(s_id)

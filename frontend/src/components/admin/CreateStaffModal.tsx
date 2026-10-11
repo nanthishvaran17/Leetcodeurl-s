@@ -456,7 +456,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     setFormErrors({});
 
     try {
-      const isGlobalAdmin = ['Administrator', 'Super Admin'].includes(formData.role);
+      const isGlobalAdmin = ['Administrator', 'Super Admin', 'Principal', 'Management'].includes(formData.role);
       const rawDeptId = formData.department_id ? parseInt(formData.department_id, 10) : 0;
       const deptIdToSend = (rawDeptId > 0 && !isGlobalAdmin) ? rawDeptId : null;
 

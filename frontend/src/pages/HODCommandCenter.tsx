@@ -122,9 +122,9 @@ const StudentDetailDrawer: React.FC<{
  <div className="text-xs font-extrabold uppercase text-slate-600 dark:text-slate-300 tracking-wider">Contest Rating</div>
  <div 
  className="font-display text-2xl font-black text-brand-600 mt-0.5 cursor-pointer"
- title={student.contest_rating && !isNaN(Number(student.contest_rating)) ? `Exact Rating: ${Number(student.contest_rating).toFixed(3)}` : undefined}
+ title={student.contest_rating && !isNaN(Number(student.contest_rating)) && Math.round(Number(student.contest_rating)) !== 1500 ? `Exact Rating: ${Number(student.contest_rating).toFixed(3)}` : undefined}
  >
- {student.contest_rating && !isNaN(Number(student.contest_rating)) ? Math.round(Number(student.contest_rating)).toLocaleString('en-US') : student.contest_rating || '—'}
+ {student.contest_rating && !isNaN(Number(student.contest_rating)) && Number(student.contest_rating) > 0 && Math.round(Number(student.contest_rating)) !== 1500 ? Math.round(Number(student.contest_rating)).toLocaleString('en-US') : '—'}
  </div>
  <div className="text-xs text-slate-700 dark:text-slate-400">Contest: {student.contest_standing || '—'}</div>
  </div>
@@ -1467,42 +1467,44 @@ export const HODCommandCenter: React.FC = () => {
  const scopeStaffName = staffList.find(s => String(s.id) === selectedStaff)?.username || 'All Staff';
  const scopeDeptCode = departments.find(d => String(d.id) === selectedDept)?.code || 'All Departments';
 
- const staffOptions = [
- { value: 'ALL', label: user?.role?.toLowerCase() === 'hod' ? 'All Department Staff Mentors' : 'All Staff Mentors', icon: Users, badge: 'ALL', badgeColor: 'bg-brand-500 text-white' },
- ...staffList.map(s => ({ value: String(s.id), label: s.username, sublabel: `${s.assigned_count} students`, icon: User }))
- ];
+  const isGlobalRole = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase());
 
- const deptOptions = [
- ...(user?.role?.toLowerCase() === 'hod' ? [] : [{ value: 'ALL', label: 'All Departments', icon: Building2, badge: 'ALL', pillText: 'ALL', badgeColor: 'bg-brand-500 text-white' }]),
- ...departments.map(d => ({ value: String(d.id), label: d.name, pillText: d.code, badge: d.code, count: d.student_count, icon: Building2 }))
- ];
-
- const yearOptions = [
-    { value: 'ALL', label: 'All Cohorts', badge: 'ALL', icon: Calendar },
-    { value: '2', label: 'II Year', badge: '2nd', icon: Calendar },
-    { value: '3', label: 'III Year', badge: '3rd', icon: Calendar },
-    { value: '4', label: 'IV Year', badge: '4th', icon: Calendar }
+  const staffOptions = [
+    { value: 'ALL', label: isGlobalRole ? 'All Campus Faculty Mentors' : user?.role?.toLowerCase() === 'hod' ? 'All Department Staff Mentors' : 'All Staff Mentors', pillText: 'ALL' },
+    ...staffList.map(s => ({ value: String(s.id), label: `${s.username} (${s.assigned_count}/20)`, pillText: `${s.assigned_count}/20` }))
   ];
 
- const isSingleIntakeDeptSelected = Boolean(
-   selectedDept && departments.some((d: any) => String(d.id) === String(selectedDept) && (d.code?.toUpperCase().includes('CS') || d.code?.toUpperCase().includes('CYBER') || d.code?.toUpperCase().includes('IOT') || d.name?.toLowerCase().includes('cyber') || d.name?.toLowerCase().includes('iot')))
- );
+  const deptOptions = [
+    ...(isGlobalRole ? [{ value: 'ALL', label: 'All Institutional Departments', pillText: 'ALL' }] : (user?.role?.toLowerCase() === 'hod' ? [] : [{ value: 'ALL', label: 'All Departments', pillText: 'ALL' }])),
+    ...departments.map(d => ({ value: String(d.id), label: d.name, pillText: d.code }))
+  ];
 
- const sectionOptions = isSingleIntakeDeptSelected
-   ? [{ value: 'ALL', label: 'Single Cohort (All Students)', badge: 'SINGLE', pillText: 'SINGLE', icon: Layers }]
-   : [
-       { value: 'ALL', label: 'All Sections', badge: 'ALL', icon: Layers },
-       { value: 'A', label: 'Section A', badge: 'A', icon: Layers },
-       { value: 'B', label: 'Section B', badge: 'B', icon: Layers },
-       { value: 'C', label: 'Section C', badge: 'C', icon: Layers }
-     ];
+  const yearOptions = [
+    { value: 'ALL', label: 'All Cohorts', pillText: 'ALL' },
+    { value: '2', label: 'II Year', pillText: '2ND' },
+    { value: '3', label: 'III Year', pillText: '3RD' },
+    { value: '4', label: 'IV Year', pillText: '4TH' }
+  ];
 
- const statusOptions = [
- { value: 'ALL', label: 'All Status', badge: 'ALL', icon: Activity },
- { value: 'ACTIVE', label: 'Active Solvers', badge: 'Active', badgeColor: 'bg-emerald-500/10 text-emerald-600', icon: CheckCircle2 },
- { value: 'INACTIVE', label: 'Inactive', badge: 'Inactive', badgeColor: 'bg-rose-500/10 text-rose-600', icon: AlertTriangle },
- { value: 'IMPROVING', label: 'Improving', badge: 'Improving', badgeColor: 'bg-brand-500/10 text-brand-600', icon: TrendingUp }
- ];
+  const isSingleIntakeDeptSelected = Boolean(
+    selectedDept && departments.some((d: any) => String(d.id) === String(selectedDept) && (d.code?.toUpperCase().includes('CS') || d.code?.toUpperCase().includes('CYBER') || d.code?.toUpperCase().includes('IOT') || d.name?.toLowerCase().includes('cyber') || d.name?.toLowerCase().includes('iot')))
+  );
+
+  const sectionOptions = isSingleIntakeDeptSelected
+    ? [{ value: 'ALL', label: 'Single Cohort (All Students)', pillText: 'SINGLE' }]
+    : [
+        { value: 'ALL', label: 'All Sections', pillText: 'ALL' },
+        { value: 'A', label: 'Section A', pillText: 'A' },
+        { value: 'B', label: 'Section B', pillText: 'B' },
+        { value: 'C', label: 'Section C', pillText: 'C' }
+      ];
+
+  const statusOptions = [
+    { value: 'ALL', label: 'All Status', pillText: 'ALL' },
+    { value: 'ACTIVE', label: 'Active Solvers', pillText: 'ACTIVE' },
+    { value: 'INACTIVE', label: 'Inactive Solvers', pillText: 'INACTIVE' },
+    { value: 'IMPROVING', label: 'Improving Solvers', pillText: 'IMPROVING' }
+  ];
 
  return (
  <div className="max-w-full w-full box-border space-y-8 sm:space-y-10 md:space-y-12 pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
@@ -1515,21 +1517,27 @@ export const HODCommandCenter: React.FC = () => {
  <div className="space-y-3">
  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
  <span className="uppercase tracking-tight">
- {user?.role?.toLowerCase() === 'hod'
- ? `HOD DASHBOARD • ${departments[0]?.name || 'Loading...'}`
+ {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase())
+ ? 'EXECUTIVE LEADERSHIP DECK • ALL DEPARTMENTS'
+ : user?.role?.toLowerCase() === 'hod'
+ ? `LEADERSHIP DECK • ${departments[0]?.name || 'Loading...'}`
  : ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())
  ? 'FACULTY PORTAL'
  : 'NANDHA INTELLIGENCE COMMAND'}
  </span>
  </div>
  <h1 className="text-[2rem] leading-[1.05] md:text-4xl font-black tracking-tight text-white mt-1 uppercase max-w-xl">
- {['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? (
+ {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase()) ? (
+ <>
+ CAMPUS EXECUTIVE <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">LEADERSHIP DECK</span>
+ </>
+ ) : ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? (
  <>
  MY FACULTY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">ACTION CENTER</span>
  </>
  ) : user?.role?.toLowerCase() === 'hod' ? (
  <>
- DEPARTMENT EXECUTIVE <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">OPERATIONS CENTER</span>
+ DEPARTMENT <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">LEADERSHIP DECK</span>
  </>
  ) : (
  <>
@@ -1538,7 +1546,9 @@ export const HODCommandCenter: React.FC = () => {
  )}
  </h1>
  <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium leading-relaxed mt-2">
- {user?.role?.toLowerCase() === 'hod'
+ {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase())
+ ? 'Campus-wide departmental oversight: Inspect any department HOD process, staff mentoring allocations, student progress, and real-time operational health.'
+ : user?.role?.toLowerCase() === 'hod'
  ? 'Department-scoped performance analytics, student cohort tracking, and faculty oversight for your HOD scope.'
  : ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())
  ? 'Track your assigned student cohort progress, submit mentoring actions, and manage student interventions.'
@@ -1590,7 +1600,112 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  </div>
 
+ {/* 2. EXECUTIVE MULTI-SCOPE FILTER BAR */}
+ <div className="p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-navy-950/90 backdrop-blur-md border border-slate-200/80 dark:border-navy-800 shadow-sm space-y-3">
+   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-navy-900">
+     <div className="flex items-center gap-2">
+       <Filter className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+       <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+         Active Oversight Scope
+       </span>
+       <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 font-bold">
+         {scopeDeptCode} • {scopeStaffName}
+       </span>
+     </div>
+     {(selectedDept !== 'ALL' || selectedStaff !== 'ALL' || selectedYear !== 'ALL' || selectedSection !== 'ALL' || selectedStatus !== 'ALL') && (
+       <button
+         onClick={() => {
+           setSelectedDept('ALL');
+           setSelectedStaff('ALL');
+           setSelectedYear('ALL');
+           setSelectedSection('ALL');
+           setSelectedStatus('ALL');
+         }}
+         className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 transition cursor-pointer self-start sm:self-auto"
+       >
+         <RotateCcw size={12} />
+         <span>Reset All Filters</span>
+       </button>
+     )}
+   </div>
 
+   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+     {/* 1. Department Scope */}
+     <div className="space-y-1">
+       <label className="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+         Department Scope
+       </label>
+       <GlobalFilter
+         value={selectedDept}
+         onChange={val => {
+           setSelectedDept(val);
+           setSelectedStaff('ALL');
+         }}
+         dropdownWidth="min-w-[280px]"
+         searchPlaceholder="Search department..."
+         options={deptOptions}
+         icon={<Building2 className="w-4 h-4 text-brand-500" />}
+       />
+     </div>
+
+     {/* 2. Staff Mentor Scope */}
+     <div className="space-y-1">
+       <label className="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+         Faculty Mentor
+       </label>
+       <GlobalFilter
+         value={selectedStaff}
+         onChange={val => setSelectedStaff(val)}
+         dropdownWidth="min-w-[280px]"
+         searchPlaceholder="Search staff mentor..."
+         options={staffOptions}
+         icon={<User className="w-4 h-4 text-indigo-500" />}
+       />
+     </div>
+
+     {/* 3. Academic Year */}
+     <div className="space-y-1">
+       <label className="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+         Cohort Year
+       </label>
+       <GlobalFilter
+         value={selectedYear}
+         onChange={val => setSelectedYear(val)}
+         dropdownWidth="min-w-[220px]"
+         options={yearOptions}
+         icon={<Calendar className="w-4 h-4 text-amber-500" />}
+       />
+     </div>
+
+     {/* 4. Section */}
+     <div className="space-y-1">
+       <label className="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+         Section / Cohort
+       </label>
+       <GlobalFilter
+         value={selectedSection}
+         onChange={val => setSelectedSection(val)}
+         dropdownWidth="min-w-[220px]"
+         options={sectionOptions}
+         icon={<Layers className="w-4 h-4 text-purple-500" />}
+       />
+     </div>
+
+     {/* 5. Solver Status */}
+     <div className="space-y-1">
+       <label className="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+         Solver Status
+       </label>
+       <GlobalFilter
+         value={selectedStatus}
+         onChange={val => setSelectedStatus(val)}
+         dropdownWidth="min-w-[220px]"
+         options={statusOptions}
+         icon={<Activity className="w-4 h-4 text-emerald-500" />}
+       />
+     </div>
+   </div>
+ </div>
 
  {/* 3. STUDENT COHORT SUMMARY BANNER */}
  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 px-5 sm:px-6 py-4 sm:py-5 rounded-2xl bg-white dark:bg-navy-950 border-2 border-slate-200/80 dark:border-navy-700 shadow-sm">

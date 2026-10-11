@@ -111,7 +111,7 @@ def get_command_center_summary(
 
     uid = current_user.id if current_user else "anon"
     role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower() if current_user else "admin"
-    is_global_admin = role_clean in ["admin", "super_admin", "super admin", "administrator"]
+    is_global_admin = role_clean in ["admin", "super_admin", "super admin", "administrator", "principal", "management", "director"]
     
     # Strictly enforce server-side department isolation for non-admin HODs
     if current_user and not is_global_admin and role_clean in ["hod", "head of department"] and current_user.department_id:

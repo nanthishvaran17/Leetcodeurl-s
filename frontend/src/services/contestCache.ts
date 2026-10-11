@@ -41,10 +41,14 @@ function getContestUserScope(): string {
   return 'public';
 }
 
-export function getCachedContestData<T>(key: string, maxAgeMs: number = 30 * 60 * 1000): T | null {
+export function getCachedContestData<T>(key: string, maxAgeMs: number = 30 * 1000): T | null {
   const scopedKey = `${getContestUserScope()}:${key}`;
   const entry = MEMORY_CACHE.get(scopedKey);
   if (!entry) return null;
+  if (Date.now() - entry.timestamp > maxAgeMs) {
+    MEMORY_CACHE.delete(scopedKey);
+    return null;
+  }
   return entry.data;
 }
 

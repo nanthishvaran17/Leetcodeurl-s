@@ -867,7 +867,7 @@ def create_staff_user(
         from backend.models import Department
         dept = db.query(Department).filter(Department.id == payload.department_id).first()
         dept_code = (dept.code if dept and dept.code else "GEN").replace("(", "").replace(")", "").replace("-", "").upper()
-        role_prefix = "FAC" if payload.role in ["Faculty", "Staff"] else ("HOD" if payload.role == "HOD" else "ADM")
+        role_prefix = "PRN" if payload.role == "Principal" else ("MGT" if payload.role == "Management" else ("FAC" if payload.role in ["Faculty", "Staff", "Faculty Mentor", "Staff Mentor"] else ("HOD" if payload.role in ["HOD", "Department HOD"] else "ADM")))
         prefix = f"NEC-{dept_code}-{role_prefix}-"
         existing_users = db.query(User).filter(User.institutional_id.like(f"{prefix}%")).all()
         max_num = 0
@@ -899,6 +899,24 @@ def create_staff_user(
     # Auto-generate password if none provided
     raw_pwd = payload.password.strip() if payload.password else "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
 
+    allowed_roles = {
+        "super admin": "Super Admin",
+        "administrator": "Administrator",
+        "department hod": "Department HOD",
+        "placement coordinator": "Placement Coordinator",
+        "staff mentor": "Staff Mentor",
+        "faculty mentor": "Faculty Mentor",
+        "admin": "Admin",
+        "faculty": "Faculty",
+        "staff": "Staff",
+        "hod": "HOD",
+        "viewer": "Viewer",
+        "principal": "Principal",
+        "management": "Management",
+        "director": "Director"
+    }
+    assigned_role = allowed_roles.get((payload.role or "").strip().lower(), payload.role or "Faculty Mentor")
+
     staff_user = User(
         institutional_id=inst_id,
         full_name=payload.full_name.strip(),
@@ -907,7 +925,7 @@ def create_staff_user(
         phone_number=payload.phone_number.strip(),
         designation=payload.designation.strip() if payload.designation else None,
         hashed_password=get_password_hash(raw_pwd),
-        role=payload.role if payload.role in ["Super Admin", "Administrator", "Department HOD", "Placement Coordinator", "Staff Mentor", "Faculty Mentor", "Admin", "Faculty", "Staff", "HOD", "Viewer"] else "Faculty Mentor",
+        role=assigned_role,
         department_id=payload.department_id,
         section_id=payload.section_id,
         academic_year=payload.academic_year.strip() if payload.academic_year else None,
@@ -1106,7 +1124,22 @@ def update_staff_user(
 
     if payload.role is not None and payload.role.strip():
         r_cleaned = payload.role.strip()
-        valid_roles = {"super admin": "Super Admin", "administrator": "Administrator", "department hod": "Department HOD", "placement coordinator": "Placement Coordinator", "staff mentor": "Staff Mentor", "faculty mentor": "Faculty Mentor", "admin": "Admin", "faculty": "Faculty", "staff": "Staff", "hod": "HOD", "viewer": "Viewer"}
+        valid_roles = {
+            "super admin": "Super Admin",
+            "administrator": "Administrator",
+            "department hod": "Department HOD",
+            "placement coordinator": "Placement Coordinator",
+            "staff mentor": "Staff Mentor",
+            "faculty mentor": "Faculty Mentor",
+            "admin": "Admin",
+            "faculty": "Faculty",
+            "staff": "Staff",
+            "hod": "HOD",
+            "viewer": "Viewer",
+            "principal": "Principal",
+            "management": "Management",
+            "director": "Director"
+        }
         matched_role = valid_roles.get(r_cleaned.lower(), r_cleaned)
         if staff_user.role != matched_role:
             if is_protected_super_admin(staff_user) and matched_role.lower() not in ["super admin", "admin", "administrator"]:

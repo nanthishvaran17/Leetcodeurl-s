@@ -14,6 +14,7 @@ import {
   blobToBase64,
   shareOrOpenFile,
   normalizeBlob,
+  isMobileBrowser,
 } from './downloadUtils';
 
 class DownloadManager {
@@ -439,6 +440,36 @@ class DownloadManager {
       this.updateState(state);
 
       const typedBlob = blob instanceof Blob && blob.type ? blob : new Blob([blob], { type: effectiveMime });
+
+      // Mobile Web Browser support: On iOS/Android mobile web browsers, native Web Share allows
+      // direct saving/sharing of generated files to device storage or apps (Excel/Sheets/Files).
+      if (typeof navigator !== 'undefined' && navigator.canShare && typeof File !== 'undefined' && isMobileBrowser()) {
+        try {
+          const shareFile = new File([typedBlob], safeFilename, { type: effectiveMime });
+          if (navigator.canShare({ files: [shareFile] })) {
+            await navigator.share({
+              files: [shareFile],
+              title: safeFilename,
+            });
+            state.status = 'COMPLETED';
+            this.updateState(state);
+            await downloadNotification.notifySuccess({
+              filename: safeFilename,
+              mimeType: effectiveMime,
+              fileSizeBytes: blob.size,
+            });
+            return { success: true, downloadId };
+          }
+        } catch (shareErr: any) {
+          if (shareErr?.name === 'AbortError') {
+            state.status = 'COMPLETED';
+            this.updateState(state);
+            return { success: true, downloadId };
+          }
+          console.warn('[DownloadManager] Mobile share fallback to anchor download:', shareErr);
+        }
+      }
+
       const blobUrl = URL.createObjectURL(typedBlob);
       await triggerBrowserAnchorDownload(blobUrl, safeFilename, effectiveMime);
 

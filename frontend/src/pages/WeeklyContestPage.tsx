@@ -696,10 +696,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     const isSessionLive = currentSession?.status === 'LIVE' || activeObj?.status === 'LIVE' || isSundayActiveWindow;
 
     if (isSessionLive || autoRefresh) {
-      // Poll telemetry every 60s when LIVE or during Sunday window
+      // Poll telemetry every 20s when LIVE or during Sunday window for TV responsiveness
       interval = setInterval(() => {
         if (isMounted) pollTelemetry();
-      }, 60000);
+      }, isSessionLive ? 20000 : 60000);
     }
 
     return () => {
@@ -709,7 +709,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pollTelemetry, autoRefresh, currentSession?.status, sessionsList, selectedSessionId, isSundayLiveWindowActive]);
 
-  // Live Matrix Rows Auto-Poll: refresh contest results every 2 minutes (120s) when LIVE or during Sunday window
+  // Live Matrix Rows Auto-Poll: refresh contest results every 25s when LIVE or during Sunday window
   useEffect(() => {
     if (!selectedSessionId) return;
     const isSundayActiveWindow = isSundayLiveWindowActive();
@@ -721,7 +721,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       if (!isMounted || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) return;
       // Silent refresh — keep existing rows, just update values
       fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, true);
-    }, isSessionLive ? 120000 : 120000); // Every 2 minutes (120s) during LIVE / Sunday contest window
+    }, isSessionLive ? 25000 : 60000); // Every 25s during LIVE / Sunday contest window for instant TV updates
 
     return () => {
       isMounted = false;
@@ -1635,43 +1635,53 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     const fallbackTotal = hasMatrixRows ? matrixRows.length : 0;
 
     // Use dynamic scope-calculated metrics whenever scope is filtered OR sessionMetrics doesn't cover matrixRows
-    const totalRowsVal = (isScopeActive && hasMatrixRows)
-      ? matrixRows.length
-      : (sessionMetrics?.totalStudents ?? sessionMetrics?.totalCount ?? fastSummary?.totalStudents ?? (totalRows > 0 ? totalRows : undefined) ?? fallbackTotal);
+    const totalRowsVal = (isScopeActive && sessionMetrics?.totalStudents !== undefined)
+      ? sessionMetrics.totalStudents
+      : (isScopeActive && hasMatrixRows)
+        ? matrixRows.length
+        : (sessionMetrics?.totalStudents ?? sessionMetrics?.totalCount ?? fastSummary?.totalStudents ?? (totalRows > 0 ? totalRows : undefined) ?? fallbackTotal);
 
-    const attendedRows = (isScopeActive && hasMatrixRows)
-      ? calcAttended
-      : (sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? fastSummary?.participantCount ?? calcAttended);
+    const attendedRows = (isScopeActive && sessionMetrics?.officialAttended !== undefined)
+      ? sessionMetrics.officialAttended
+      : (isScopeActive && hasMatrixRows)
+        ? calcAttended
+        : (sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? fastSummary?.participantCount ?? calcAttended);
 
-    const virtualRows = (isScopeActive && hasMatrixRows)
-      ? calcVirtual
-      : (sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? fastSummary?.virtualParticipants ?? calcVirtual);
+    const virtualRows = (isScopeActive && sessionMetrics?.virtualAttended !== undefined)
+      ? sessionMetrics.virtualAttended
+      : (isScopeActive && hasMatrixRows)
+        ? calcVirtual
+        : (sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? fastSummary?.virtualParticipants ?? calcVirtual);
 
-    const errorRows = (isScopeActive && hasMatrixRows)
-      ? calcDataError
-      : (sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.errors ?? sessionMetrics?.failedVerification ?? fastSummary?.dataErrors ?? fastSummary?.missingUsername ?? fastSummary?.errors ?? calcDataError);
+    const errorRows = (isScopeActive && (sessionMetrics?.dataErrors !== undefined || sessionMetrics?.errors !== undefined))
+      ? (sessionMetrics?.dataErrors ?? sessionMetrics?.errors ?? 0)
+      : (isScopeActive && hasMatrixRows)
+        ? calcDataError
+        : (sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.errors ?? sessionMetrics?.failedVerification ?? fastSummary?.dataErrors ?? fastSummary?.missingUsername ?? fastSummary?.errors ?? calcDataError);
 
-    const notAttendedRows = (isScopeActive && hasMatrixRows)
-      ? calcNotAttended
-      : Math.max(0, totalRowsVal - attendedRows - virtualRows - errorRows);
+    const notAttendedRows = (isScopeActive && sessionMetrics?.notAttended !== undefined)
+      ? sessionMetrics.notAttended
+      : (isScopeActive && hasMatrixRows)
+        ? calcNotAttended
+        : Math.max(0, totalRowsVal - attendedRows - virtualRows - errorRows);
 
     const isVirtualAvailable = sessionMetrics?.virtualDataStatus === 'AVAILABLE' || virtualRows > 0;
 
     let q4Solved = (isScopeActive && hasMatrixRows)
       ? (calcQ4 + calcVirt4)
-      : (sessionMetrics?.q4Count ?? sessionMetrics?.['4 Q Solved'] ?? (calcQ4 + calcVirt4));
+      : (sessionMetrics?.q4Count ?? sessionMetrics?.['4 Q Solved'] ?? fastSummary?.solvedDistribution?.q4 ?? fastSummary?.q4Count ?? (calcQ4 + calcVirt4));
 
     let q3Solved = (isScopeActive && hasMatrixRows)
       ? (calcQ3 + calcVirt3)
-      : (sessionMetrics?.q3Count ?? sessionMetrics?.['3 Q Solved'] ?? (calcQ3 + calcVirt3));
+      : (sessionMetrics?.q3Count ?? sessionMetrics?.['3 Q Solved'] ?? fastSummary?.solvedDistribution?.q3 ?? fastSummary?.q3Count ?? (calcQ3 + calcVirt3));
 
     let q2Solved = (isScopeActive && hasMatrixRows)
       ? (calcQ2 + calcVirt2)
-      : (sessionMetrics?.q2Count ?? sessionMetrics?.['2 Q Solved'] ?? (calcQ2 + calcVirt2));
+      : (sessionMetrics?.q2Count ?? sessionMetrics?.['2 Q Solved'] ?? fastSummary?.solvedDistribution?.q2 ?? fastSummary?.q2Count ?? (calcQ2 + calcVirt2));
 
     let q1Solved = (isScopeActive && hasMatrixRows)
       ? (calcQ1 + calcVirt1)
-      : (sessionMetrics?.q1Count ?? sessionMetrics?.['1 Q Solved'] ?? (calcQ1 + calcVirt1));
+      : (sessionMetrics?.q1Count ?? sessionMetrics?.['1 Q Solved'] ?? fastSummary?.solvedDistribution?.q1 ?? fastSummary?.q1Count ?? (calcQ1 + calcVirt1));
 
     let virtual4Solved = hasMatrixRows ? calcVirt4 : (sessionMetrics?.virtual4Solved ?? 0);
     let virtual3Solved = hasMatrixRows ? calcVirt3 : (sessionMetrics?.virtual3Solved ?? 0);

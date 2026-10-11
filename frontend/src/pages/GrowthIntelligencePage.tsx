@@ -797,7 +797,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                       <td className="py-2.5 px-2 text-center font-black text-emerald-600 dark:text-emerald-400">
                                         {snap.delta_total > 0 ? `+${snap.delta_total}` : snap.delta_total === snap.total_solved ? 'Base' : '0'}
                                       </td>
-                                      <td className="py-2.5 px-3 text-right text-slate-700 dark:text-slate-300 font-bold truncate">{snap.contest_rating && Number(snap.contest_rating) > 0 ? Math.round(Number(snap.contest_rating)) : '—'}</td>
+                                      <td className="py-2.5 px-3 text-right text-slate-700 dark:text-slate-300 font-bold truncate">{snap.contest_rating && Number(snap.contest_rating) > 0 && Math.round(Number(snap.contest_rating)) !== 1500 ? Math.round(Number(snap.contest_rating)) : '—'}</td>
                                     </tr>
                                   ))}
                                 </tbody>
@@ -1108,7 +1108,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                               <td className="py-2.5 px-3.5 font-bold text-emerald-600 dark:text-emerald-400">{snap.easy_solved}</td>
                                               <td className="py-2.5 px-3.5 font-bold text-amber-600 dark:text-amber-400">{snap.medium_solved}</td>
                                               <td className="py-2.5 px-3.5 font-bold text-rose-600 dark:text-rose-400">{snap.hard_solved}</td>
-                                              <td className="py-2.5 px-3.5 font-bold text-slate-700 dark:text-slate-300">{snap.contest_rating && Number(snap.contest_rating) > 0 ? Math.round(Number(snap.contest_rating)) : '—'}</td>
+                                              <td className="py-2.5 px-3.5 font-bold text-slate-700 dark:text-slate-300">{snap.contest_rating && Number(snap.contest_rating) > 0 && Math.round(Number(snap.contest_rating)) !== 1500 ? Math.round(Number(snap.contest_rating)) : '—'}</td>
                                               <td className="py-2.5 px-3.5">
                                                 {snap.delta_total === snap.total_solved ? (
                                                   <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-400 font-black text-[11px]" title="Initial Baseline Snapshot">

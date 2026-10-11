@@ -108,13 +108,36 @@ export const studentLiveStore = {
     if (patch.stats) {
       merged.stats = prev?.stats ? { ...prev.stats, ...patch.stats } : (patch.stats as any);
     }
-    // Promote top-level total_solved if stats has total_solved
-    if (merged.stats?.total_solved !== undefined && merged.stats.total_solved !== null) {
-      (merged as any).total_solved = merged.stats.total_solved;
+    // Promote and synchronize stats <-> top-level fields
+    if (merged.stats) {
+      if (merged.stats.total_solved !== undefined && merged.stats.total_solved !== null) {
+        (merged as any).total_solved = merged.stats.total_solved;
+      }
+      if (merged.stats.easy_solved !== undefined && merged.stats.easy_solved !== null) {
+        (merged as any).easy_solved = merged.stats.easy_solved;
+      }
+      if (merged.stats.medium_solved !== undefined && merged.stats.medium_solved !== null) {
+        (merged as any).medium_solved = merged.stats.medium_solved;
+      }
+      if (merged.stats.hard_solved !== undefined && merged.stats.hard_solved !== null) {
+        (merged as any).hard_solved = merged.stats.hard_solved;
+      }
     }
     if ((patch as any).total_solved !== undefined && (patch as any).total_solved !== null) {
       (merged as any).total_solved = (patch as any).total_solved;
       if (merged.stats) merged.stats.total_solved = (patch as any).total_solved;
+    }
+    if ((patch as any).easy_solved !== undefined && (patch as any).easy_solved !== null) {
+      (merged as any).easy_solved = (patch as any).easy_solved;
+      if (merged.stats) merged.stats.easy_solved = (patch as any).easy_solved;
+    }
+    if ((patch as any).medium_solved !== undefined && (patch as any).medium_solved !== null) {
+      (merged as any).medium_solved = (patch as any).medium_solved;
+      if (merged.stats) merged.stats.medium_solved = (patch as any).medium_solved;
+    }
+    if ((patch as any).hard_solved !== undefined && (patch as any).hard_solved !== null) {
+      (merged as any).hard_solved = (patch as any).hard_solved;
+      if (merged.stats) merged.stats.hard_solved = (patch as any).hard_solved;
     }
 
     byId[idStr] = merged;

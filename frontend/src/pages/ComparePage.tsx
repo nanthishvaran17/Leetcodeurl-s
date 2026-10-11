@@ -755,7 +755,7 @@ export const ComparePage: React.FC = () => {
                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Contest Rating</p>
                         <p className="text-base font-black mt-1 text-indigo-600 dark:text-indigo-400 flex justify-center items-center gap-1">
                            <Star className="w-3.5 h-3.5 fill-indigo-500/20" />
-                           {studentA.stats?.contest_rating ? Math.round(studentA.stats.contest_rating) : 'Unrated'}
+                           {studentA.stats?.contest_rating && Math.round(studentA.stats.contest_rating) !== 1500 ? Math.round(studentA.stats.contest_rating) : 'Unrated'}
                         </p>
                       </div>
                       <div className="p-3 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-sm flex flex-col justify-center">
@@ -867,7 +867,7 @@ export const ComparePage: React.FC = () => {
                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Contest Rating</p>
                         <p className="text-base font-black mt-1 text-indigo-600 dark:text-indigo-400 flex justify-center items-center gap-1">
                            <Star className="w-3.5 h-3.5 fill-indigo-500/20" />
-                           {studentB.stats?.contest_rating ? Math.round(studentB.stats.contest_rating) : 'Unrated'}
+                           {studentB.stats?.contest_rating && Math.round(studentB.stats.contest_rating) !== 1500 ? Math.round(studentB.stats.contest_rating) : 'Unrated'}
                         </p>
                       </div>
                       <div className="p-3 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-sm flex flex-col justify-center">
@@ -914,9 +914,9 @@ export const ComparePage: React.FC = () => {
                   {/* Contest Rating Bar */}
                   <div className="space-y-1.5 pt-2">
                     <div className="flex justify-between text-slate-600 dark:text-slate-300">
-                      <span>Rating: {studentA.stats?.contest_rating ? Math.round(studentA.stats.contest_rating) : 'Unrated'}</span>
+                      <span>Rating: {studentA.stats?.contest_rating && Math.round(studentA.stats.contest_rating) !== 1500 ? Math.round(studentA.stats.contest_rating) : 'Unrated'}</span>
                       <span className="uppercase text-indigo-500 font-extrabold text-[10px]">Contest Rating</span>
-                      <span>Rating: {studentB.stats?.contest_rating ? Math.round(studentB.stats.contest_rating) : 'Unrated'}</span>
+                      <span>Rating: {studentB.stats?.contest_rating && Math.round(studentB.stats.contest_rating) !== 1500 ? Math.round(studentB.stats.contest_rating) : 'Unrated'}</span>
                     </div>
                     <div className="flex h-3 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                       <div

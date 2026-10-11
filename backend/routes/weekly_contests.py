@@ -218,7 +218,7 @@ def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user:
     now_ts = datetime.datetime.now(datetime.timezone.utc).timestamp()
     if session.status == "FINALIZED" and cache_key in _CONTEST_RAM_CACHE:
         cached = _CONTEST_RAM_CACHE[cache_key]
-        if now_ts - cached["ts"] < 1800:
+        if now_ts - cached["ts"] < 15:
             return cached["data"]
 
     authorized_ids = get_authorized_student_ids(db, current_user) if current_user else None
@@ -1898,25 +1898,28 @@ def _run_sync_in_background(session_id: int):
             logger.info(f"Starting background reconciliation for Contest 516 (Session {session_id})")
             Contest516ReconciliationService.reconcile_contest(session_id, db)
             logger.info(f"Completed background reconciliation for Contest 516 (Session {session_id})")
-        elif session_id == 13 or "522" in str(c_name):
-            logger.info(f"Starting authoritative Sunday roster sync for Contest 522 (Session {session_id})")
-            from backend.scripts.sync_522_full_roster import sync_session_522_participation
-            sync_session_522_participation()
-            _CONTEST_RAM_CACHE.clear()
-            from backend.cache import cache
-            from backend.services.canonical_contest_engine import invalidate_canonical_cache
-            invalidate_canonical_cache(session_id)
-            cache.clear()
-            logger.info(f"Completed Contest 522 roster sync and cleared cache")
         else:
-            logger.info(f"Starting background sync for Session {session_id}")
-            sync_single_historical_session(db, session_id)
+            logger.info(f"Starting universal official LeetCode ranking sync for Contest {c_name} (Session {session_id})")
+            from backend.services.official_contest_ranking_service import OfficialContestRankingService
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    import concurrent.futures
+                    with concurrent.futures.ThreadPoolExecutor() as pool:
+                        pool.submit(asyncio.run, OfficialContestRankingService.scan_and_sync_contest(session_id, db)).result()
+                else:
+                    loop.run_until_complete(OfficialContestRankingService.scan_and_sync_contest(session_id, db))
+            except RuntimeError:
+                asyncio.run(OfficialContestRankingService.scan_and_sync_contest(session_id, db))
+
             _CONTEST_RAM_CACHE.clear()
             from backend.cache import cache
             from backend.services.canonical_contest_engine import invalidate_canonical_cache
             invalidate_canonical_cache(session_id)
             cache.clear()
-            logger.info(f"Completed background sync and cleared canonical caches for Session {session_id}")
+            logger.info(f"Completed official LeetCode ranking sync and cleared cache for Session {session_id}")
+
     except Exception as e:
         from backend.logger import logger
         logger.error(f"Background single session sync failed for {session_id}: {e}")

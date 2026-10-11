@@ -99,7 +99,9 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
   const getWsUrl = useCallback(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    return `${protocol}//${host}/ws/contest/${targetId}`;
+    const token = localStorage.getItem('token') || localStorage.getItem('auth_token') || sessionStorage.getItem('token');
+    const query = token ? `?token=${encodeURIComponent(token)}` : '';
+    return `${protocol}//${host}/ws/contest/${targetId}${query}`;
   }, [targetId]);
 
   const connect = useCallback(() => {

@@ -41,19 +41,40 @@ export const useStudentsQuery = () => {
 
         // Version guard: if the server student has a version, use it for strict comparison.
         // Otherwise, fallback to checking last_verified_at timestamp.
-        const serverVersion = serverStudent.version || 0;
-        const cachedVersion = cachedStudent.version || 0;
+        const serverVersion = (serverStudent as any).version || 0;
+        const cachedVersion = (cachedStudent as any).version || 0;
+
+        const serverHasValidSum =
+          serverStudent.stats &&
+          (serverStudent.stats.total_solved ?? 0) > 0 &&
+          ((serverStudent.stats.easy_solved ?? 0) + (serverStudent.stats.medium_solved ?? 0) + (serverStudent.stats.hard_solved ?? 0) === serverStudent.stats.total_solved);
+
+        const cachedHasValidSum =
+          cachedStudent.stats &&
+          (cachedStudent.stats.total_solved ?? 0) > 0 &&
+          ((cachedStudent.stats.easy_solved ?? 0) + (cachedStudent.stats.medium_solved ?? 0) + (cachedStudent.stats.hard_solved ?? 0) === cachedStudent.stats.total_solved);
+
+        const mergedStats = (serverHasValidSum && !cachedHasValidSum)
+          ? {
+              ...(cachedStudent.stats || {}),
+              ...(serverStudent.stats || {}),
+            }
+          : {
+              ...(serverStudent.stats || {}),
+              ...(cachedStudent.stats || {})
+            };
 
         if (serverVersion > 0 && cachedVersion > 0) {
           if (cachedVersion > serverVersion) {
             return {
               ...serverStudent,
               ...cachedStudent,
-              stats: {
-                ...(serverStudent.stats || {}),
-                ...(cachedStudent.stats || {})
-              }
-            }; // Keep our newer live patched version but preserve schema from server
+              total_solved: mergedStats.total_solved ?? serverStudent.total_solved,
+              easy_solved: mergedStats.easy_solved ?? serverStudent.easy_solved,
+              medium_solved: mergedStats.medium_solved ?? serverStudent.medium_solved,
+              hard_solved: mergedStats.hard_solved ?? serverStudent.hard_solved,
+              stats: mergedStats
+            };
           }
           return serverStudent;
         }
@@ -66,11 +87,12 @@ export const useStudentsQuery = () => {
           return {
             ...serverStudent,
             ...cachedStudent,
-            stats: {
-              ...(serverStudent.stats || {}),
-              ...(cachedStudent.stats || {})
-            }
-          }; // Keep our newer live patched version but preserve schema from server
+            total_solved: mergedStats.total_solved ?? serverStudent.total_solved,
+            easy_solved: mergedStats.easy_solved ?? serverStudent.easy_solved,
+            medium_solved: mergedStats.medium_solved ?? serverStudent.medium_solved,
+            hard_solved: mergedStats.hard_solved ?? serverStudent.hard_solved,
+            stats: mergedStats
+          };
         }
 
         return serverStudent;

@@ -143,7 +143,8 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
     from backend.services.excel_intelligence_engine import (
         detect_column_headers, find_best_header_row_and_dataframe,
         normalize_year_value, normalize_batch_value,
-        normalize_department_value, normalize_leetcode_url, CANONICAL_FIELDS
+        normalize_department_value, normalize_leetcode_url, CANONICAL_FIELDS,
+        normalize_reg_no
     )
 
     db = SessionLocal()
@@ -196,7 +197,7 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
                     return str(row[raw_col]).strip()
                 return ""
 
-            reg_no = _get_val("reg_no").upper()
+            reg_no = normalize_reg_no(_get_val("reg_no"))
             name = _get_val("name")
             raw_dept = _get_val("department")
             raw_year = _get_val("year_level")
@@ -529,7 +530,8 @@ def commit_smart_excel_import(
     from backend.services.excel_intelligence_engine import (
         detect_column_headers, find_best_header_row_and_dataframe,
         normalize_year_value, normalize_batch_value,
-        normalize_department_value, normalize_leetcode_url, CANONICAL_FIELDS
+        normalize_department_value, normalize_leetcode_url, CANONICAL_FIELDS,
+        normalize_reg_no
     )
     from backend.services.audit_service import log_admin_action
     from backend.cache import cache
@@ -611,7 +613,7 @@ def commit_smart_excel_import(
                     return str(row[raw_col]).strip()
                 return ""
 
-            reg_no = _get_val("reg_no").upper()
+            reg_no = normalize_reg_no(_get_val("reg_no"))
             name = _get_val("name")
             raw_dept = _get_val("department")
             raw_year = _get_val("year_level")

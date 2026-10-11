@@ -129,6 +129,12 @@ export class LiveEventRouter {
           Object.entries(changes).forEach(([k, v]) => {
             if (k !== 'stats') merged[k] = v;
           });
+          if (merged.stats) {
+            if (merged.stats.easy_solved !== undefined) merged.easy_solved = merged.stats.easy_solved;
+            if (merged.stats.medium_solved !== undefined) merged.medium_solved = merged.stats.medium_solved;
+            if (merged.stats.hard_solved !== undefined) merged.hard_solved = merged.stats.hard_solved;
+            if (merged.stats.total_solved !== undefined) merged.total_solved = merged.stats.total_solved;
+          }
           if (incomingVersion) merged.version = incomingVersion;
 
           return merged;
@@ -239,8 +245,19 @@ export class LiveEventRouter {
                 reg_no: update.reg_no,
                 name: update.name,
                 username: update.username,
+                total_solved: update.total_solved ?? update.stats?.total_solved,
+                easy_solved: update.easy_solved ?? update.stats?.easy_solved,
+                medium_solved: update.medium_solved ?? update.stats?.medium_solved,
+                hard_solved: update.hard_solved ?? update.stats?.hard_solved,
+                contest_rating: update.contest_rating ?? update.stats?.contest_rating,
+                streak_count: update.streak_count ?? update.stats?.streak_count,
+                total_active_days: update.total_active_days ?? update.stats?.total_active_days,
                 stats: {
                   total_solved: update.stats?.total_solved ?? update.total_solved,
+                  easy_solved: update.stats?.easy_solved ?? update.easy_solved,
+                  medium_solved: update.stats?.medium_solved ?? update.medium_solved,
+                  hard_solved: update.stats?.hard_solved ?? update.hard_solved,
+                  contest_rating: update.stats?.contest_rating ?? update.contest_rating,
                   sync_status: update.stats?.sync_status ?? update.sync_status,
                   status: update.stats?.status ?? update.status,
                   last_verified_at: update.stats?.last_verified_at ?? update.last_verified_at ?? event.timestamp

@@ -68,6 +68,7 @@ const getRoleStyle = (role: string): string => {
 export const AuditLogPage: React.FC = () => {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [exportingExcel, setExportingExcel] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -96,8 +97,17 @@ export const AuditLogPage: React.FC = () => {
   }, [user]);
 
   const handleExportAuditLogsExcel = async () => {
+    if (exportingExcel) return;
+
+    if (!logs || logs.length === 0) {
+      notify.warning('No audit logs available', 'No audit logs were found to export. Adjust search or filters and try again.', { category: 'ADMIN' });
+      return;
+    }
+
+    let notifyToast: any = null;
     try {
-      const notifyToast = notify.loading('Generating Excel report...', '', { duration: 10000, category: 'ADMIN' });
+      setExportingExcel(true);
+      notifyToast = notify.loading('Generating Excel report...', '', { duration: 10000, category: 'ADMIN' });
       // @ts-ignore
       const excelMod: any = await import('exceljs');
       const ExcelJS = excelMod.default ? excelMod.default : (excelMod.Workbook ? excelMod : (window as any).ExcelJS);
@@ -185,13 +195,48 @@ export const AuditLogPage: React.FC = () => {
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const filename = `NEC_Audit_Trail_${institutionalId}_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-      await downloadManager.downloadBlob(blob, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      const downloadRes = await downloadManager.downloadBlob(blob, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       
-      notify.dismiss(notifyToast);
-      notify.success('Audit log Excel report exported with clean column sizing!', '', { category: 'ADMIN' });
+      if (notifyToast) notify.dismiss(notifyToast);
+      if (downloadRes.success) {
+        notify.success('Audit log Excel report exported successfully!', '', { category: 'ADMIN' });
+      } else {
+        throw new Error(downloadRes.error || 'Excel download failed');
+      }
     } catch (err: any) {
-      console.error('Failed to generate Excel report', err);
-      notify.error(`Failed to generate Excel report: ${err?.message || err}`, '', { category: 'ADMIN' });
+      console.warn('Failed to generate Excel report, initiating CSV fallback:', err);
+      // Robust CSV Fallback: All mobile devices and office apps open CSV seamlessly
+      try {
+        const rows = [
+          ['Audit ID', 'Admin Name', 'Admin Email', 'Admin Role', 'Action', 'Description', 'Status', 'Timestamp (IST)']
+        ];
+        logs.forEach(l => {
+          rows.push([
+            l.audit_id || '',
+            l.admin_name || '',
+            l.admin_email || '',
+            l.admin_role || '',
+            l.action || '',
+            l.description || '—',
+            l.status || '',
+            formatAuditDate(l.created_at)
+          ]);
+        });
+        const csvContent = '\uFEFF' + rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+        const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const csvFilename = `NEC_Audit_Trail_${institutionalId}_${new Date().toISOString().split('T')[0]}.csv`;
+        
+        await downloadManager.downloadBlob(csvBlob, csvFilename, 'text/csv;charset=utf-8;');
+        if (notifyToast) notify.dismiss(notifyToast);
+        notify.success('Audit log report exported (CSV format for mobile compatibility)!', '', { category: 'ADMIN' });
+      } catch (csvErr: any) {
+        console.error('Failed to export audit report fallback:', csvErr);
+        if (notifyToast) notify.dismiss(notifyToast);
+        notify.error(`Failed to export report: ${err?.message || err}`, '', { category: 'ADMIN' });
+      }
+    } finally {
+      setExportingExcel(false);
+      if (notifyToast) notify.dismiss(notifyToast);
     }
   };
 
@@ -311,11 +356,12 @@ export const AuditLogPage: React.FC = () => {
             </button>
             <button
               onClick={handleExportAuditLogsExcel}
-              className="inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-2 sm:px-5 py-2.5 h-11 bg-emerald-600/80 hover:bg-emerald-500 active:scale-95 text-white rounded-2xl text-[11px] sm:text-xs font-black shadow-lg shadow-emerald-600/20 transition-all cursor-pointer border border-emerald-400/30 whitespace-nowrap"
+              disabled={exportingExcel}
+              className="inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-2 sm:px-5 py-2.5 h-11 bg-emerald-600/80 hover:bg-emerald-500 active:scale-95 disabled:opacity-60 text-white rounded-2xl text-[11px] sm:text-xs font-black shadow-lg shadow-emerald-600/20 transition-all cursor-pointer border border-emerald-400/30 whitespace-nowrap"
               title="Export formatted Excel report with clean column widths"
             >
-              <Download className="w-4 h-4 text-emerald-200" />
-              <span>Excel Report</span>
+              <Download className={`w-4 h-4 text-emerald-200 ${exportingExcel ? 'animate-spin' : ''}`} />
+              <span>{exportingExcel ? 'Exporting...' : 'Excel Report'}</span>
             </button>
             <button
               onClick={() => fetchLogs()}

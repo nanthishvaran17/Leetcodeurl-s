@@ -587,6 +587,11 @@ async def get_students(
                     st_out.stats.sync_status = "pending_username"
                     st_out.stats.validation_status = "pending_username"
 
+            if st_out.stats and st_out.stats.contest_rating is not None:
+                if float(st_out.stats.contest_rating) == 1500.0 or round(float(st_out.stats.contest_rating)) == 1500 or float(st_out.stats.contest_rating) <= 0:
+                    st_out.stats.contest_rating = None
+                    st_out.stats.contest_global_ranking = None
+
             # Canonical fields from normalized tables if available
             if st.lc_profile:
                 st_out.canonical_username = st.lc_profile.canonical_username if is_verified else None
@@ -1018,6 +1023,16 @@ def get_student_detail(student_id: str, request: Request, db: Session = Depends(
             if st_out.stats:
                 st_out.stats.official_contests = official_total
                 st_out.stats.virtual_contests = virtual_total
+
+        if st_out.stats and st_out.stats.contest_rating is not None:
+            if float(st_out.stats.contest_rating) == 1500.0 or round(float(st_out.stats.contest_rating)) == 1500 or float(st_out.stats.contest_rating) <= 0:
+                st_out.stats.contest_rating = None
+                st_out.stats.contest_global_ranking = None
+
+        if st_out.lc_contest_standing and st_out.lc_contest_standing.contest_rating is not None:
+            if float(st_out.lc_contest_standing.contest_rating) == 1500.0 or round(float(st_out.lc_contest_standing.contest_rating)) == 1500 or float(st_out.lc_contest_standing.contest_rating) <= 0:
+                st_out.lc_contest_standing.contest_rating = None
+                st_out.lc_contest_standing.contest_global_ranking = None
 
     return st_out
 

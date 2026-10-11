@@ -619,7 +619,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                 {(() => {
                   const r = detail?.stats?.contest_rating ?? detail?.lc_contest_standing?.contest_rating ?? (detail as any)?.contest_rating;
                   const attended = detail?.lc_contest_standing?.attended_count ?? detail?.stats?.official_contests ?? 0;
-                  if (r == null || (Number(r) === 1500 && attended === 0)) return 'Unrated';
+                  if (r == null || Number(r) <= 0 || Number(r) === 1500 || Math.round(Number(r)) === 1500 || attended === 0) return 'Unrated';
                   return Math.round(Number(r)).toLocaleString('en-US');
                 })()}
               </h3>

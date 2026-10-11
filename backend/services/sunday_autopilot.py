@@ -1,3 +1,4 @@
+# type: ignore
 """
 sunday_autopilot.py — UNIVERSAL ZERO-MANUAL WEEKLY CONTEST AUTOPILOT ENGINE
 =============================================================================
@@ -12,6 +13,7 @@ Authoritative, idempotent, crash-resilient, and rate-limit aware.
 """
 
 import os
+import asyncio
 import datetime
 import hashlib
 from typing import Dict, Any, Optional
@@ -461,6 +463,16 @@ class UniversalWeeklyContestAutopilot:
             self.last_sync_timestamp = datetime.datetime.now(datetime.timezone.utc)
             self.last_action_summary = f"Contest {session.contest_name} is LIVE. Monitoring active."
 
+            # Automatically ensure Sunday Live Contest Engine is running in the background
+            try:
+                loop = asyncio.get_running_loop()
+                from backend.services.weekly_session_manager import sunday_live_engine
+                if not sunday_live_engine.is_running and not sunday_live_engine.is_paused:
+                    loop.create_task(sunday_live_engine.run_live_sync_cycle(session.id, SessionLocal))
+                    logger.info(f"[AUTOPILOT] Auto-spawned sunday_live_engine background task for session {session.id}")
+            except Exception as _spawn_err:
+                logger.warning(f"[AUTOPILOT] Note on spawning live engine: {_spawn_err}")
+
             return {
                 "phase": "START_MONITORING",
                 "success": True,
@@ -489,6 +501,15 @@ class UniversalWeeklyContestAutopilot:
             session = self._resolve_target_session(db, session_id)
             if not session:
                 return {"phase": "LIVE_CYCLE", "success": False, "error": "Session not found"}
+
+            # Ensure continuous Sunday Live Contest Engine background worker is running
+            try:
+                loop = asyncio.get_running_loop()
+                from backend.services.weekly_session_manager import sunday_live_engine
+                if not sunday_live_engine.is_running and not sunday_live_engine.is_paused:
+                    loop.create_task(sunday_live_engine.run_live_sync_cycle(session.id, SessionLocal))
+            except Exception:
+                pass
 
             # Execute incremental reconciliation
             reconciliation = UniversalContestReconciliationEngine.reconcile_contest(

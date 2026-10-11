@@ -261,25 +261,28 @@ export async function triggerBrowserAnchorDownload(url: string, filename: string
   const safeName = sanitizeFilename(filename);
 
   // iOS Safari mobile browser handling:
-  // iOS Safari ignores the download attribute on blob: URLs for PDFs/documents.
-  // Navigating/opening the blob URL directly opens native Safari PDF preview with Save/Share.
-  if (isIOS() && url.startsWith('blob:')) {
+  // iOS Safari can preview PDFs and images directly inline in a new tab.
+  // For document files (xlsx, csv, docx, zip), navigating to blob: URLs fails or opens a blank screen.
+  // Therefore, only use window.open for PDF/images on iOS.
+  const isPreviewableOnIOS = !!(mimeType?.includes('pdf') || mimeType?.startsWith('image/'));
+  if (isIOS() && url.startsWith('blob:') && isPreviewableOnIOS) {
     try {
       const w = window.open(url, '_blank');
-      if (!w) {
-        window.location.href = url;
-      }
-      return;
+      if (w) return;
     } catch {
-      window.location.href = url;
-      return;
+      /* fallback to anchor download */
     }
   }
 
   const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = safeName;
-  anchor.style.display = 'none';
+  // Position offscreen instead of display: none (some mobile browsers ignore programmatic clicks on display: none)
+  anchor.style.position = 'fixed';
+  anchor.style.top = '-9999px';
+  anchor.style.left = '-9999px';
+  anchor.style.opacity = '0';
+  anchor.style.pointerEvents = 'none';
   anchor.rel = 'noopener noreferrer';
   if (mimeType) {
     anchor.type = mimeType;
@@ -288,10 +291,16 @@ export async function triggerBrowserAnchorDownload(url: string, filename: string
   document.body.appendChild(anchor);
 
   try {
-    anchor.click();
+    anchor.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
   } catch (e) {
-    console.warn('[DownloadUtils] Anchor click failed, falling back to direct navigation:', e);
-    window.location.href = url;
+    try {
+      anchor.click();
+    } catch (clickErr) {
+      console.warn('[DownloadUtils] Anchor click failed, falling back to direct navigation:', clickErr);
+      if (!isIOS()) {
+        window.location.href = url;
+      }
+    }
   }
 
   // Remove anchor after a small delay
@@ -299,6 +308,6 @@ export async function triggerBrowserAnchorDownload(url: string, filename: string
     if (document.body.contains(anchor)) {
       document.body.removeChild(anchor);
     }
-  }, 1000);
+  }, 1500);
 }
 

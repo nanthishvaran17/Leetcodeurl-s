@@ -59,6 +59,23 @@ CANONICAL_FIELDS = {
 
 # --- Institutional Register Number Decoder ---
 
+def normalize_reg_no(reg_no_val: Any) -> str:
+    """
+    Normalizes and cleans institutional register numbers.
+    Auto-corrects common typos like '73225...' where the '2' in admission year '25' was accidentally omitted.
+    e.g. '73225CCL02' -> '732225CCL02'
+    """
+    if reg_no_val is None or pd.isna(reg_no_val):
+        return ""
+    reg = str(reg_no_val).strip().upper()
+    if not reg:
+        return ""
+    
+    # Auto-correct missing '2' in 7322[3-6] (e.g. 73225CCL02 -> 732225CCL02)
+    if re.match(r'^7322[3-6][A-Z]', reg):
+        reg = reg[:4] + '2' + reg[4:]
+    return reg
+
 def decode_reg_no_attributes(reg_no_val: Any) -> Dict[str, Optional[str]]:
     """
     Intelligently decodes Year, Batch, and Department from institutional Register Number.
@@ -69,10 +86,7 @@ def decode_reg_no_attributes(reg_no_val: Any) -> Dict[str, Optional[str]]:
       732226... -> I Year (2026-2030)
       CS/CC -> CSE(CS), CI/IOT -> CSE(IOT), IT -> IT, AI/AD/AIDS -> AIDS, EC/ECE -> ECE
     """
-    if reg_no_val is None or pd.isna(reg_no_val):
-        return {"year": None, "batch": None, "department": None}
-
-    reg = str(reg_no_val).strip().upper()
+    reg = normalize_reg_no(reg_no_val)
     result: Dict[str, Optional[str]] = {"year": None, "batch": None, "department": None}
     if not reg:
         return result

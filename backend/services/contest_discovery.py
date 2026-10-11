@@ -144,7 +144,7 @@ def _get_leetcode_top_contests() -> list:
             },
             method="POST"
         )
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=2.5) as resp:
             data = json.loads(resp.read().decode('utf-8'))
             contests = data.get("data", {}).get("topTwoContests", [])
             _top_contests_cache = contests

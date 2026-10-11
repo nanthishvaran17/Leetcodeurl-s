@@ -427,12 +427,18 @@ def _build_canonical_contest_dataset_internal(
                     ds = json.loads(ds)
                 if isinstance(ds, dict):
                     ds = ds.get("rows", []) or ds.get("students", []) or ds.get("dataset", [])
-                for item in ds:
-                    if isinstance(item, dict):
-                        reg = item.get("reg_no") or item.get("register_number") or item.get("regNo")
-                        sol = item.get("cumulative_solved") or item.get("total_solved_profile") or item.get("profile_solved") or item.get("total_solved")
-                        if reg and sol is not None and sol != "":
-                            locked_snapshot_map[reg.strip().upper()] = int(sol)
+                    for item in ds:
+                        if isinstance(item, dict):
+                            reg = item.get("reg_no") or item.get("register_number") or item.get("regNo")
+                            # DO NOT use "total_solved" here: in OfficialWeeklySnapshot, total_solved is contest solves (0..4), NOT cumulative profile solves!
+                            sol = item.get("cumulative_solved") or item.get("total_solved_profile") or item.get("profile_solved") or item.get("profile_total_solved")
+                            if reg and sol is not None and sol != "":
+                                try:
+                                    v_sol = int(sol)
+                                    if v_sol > 0:
+                                        locked_snapshot_map[reg.strip().upper()] = v_sol
+                                except (ValueError, TypeError):
+                                    pass
             except Exception:
                 pass
 
@@ -550,9 +556,9 @@ def _build_canonical_contest_dataset_internal(
         pre_930_snaps = [sn for sn in student_snaps if window_start_utc <= sn.captured_at <= lock_0930_utc]
         practice_window_snaps = [sn for sn in student_snaps if lock_0930_utc < sn.captured_at <= cutoff_1000pm_utc]
 
-        if locked_sol is not None:
+        if locked_sol is not None and locked_sol > 0:
             baseline_solves = locked_sol
-        elif pre_930_snaps:
+        elif pre_930_snaps and pre_930_snaps[-1].total_solved is not None and pre_930_snaps[-1].total_solved > 0:
             baseline_solves = pre_930_snaps[-1].total_solved
         else:
             baseline_solves = None
@@ -566,7 +572,9 @@ def _build_canonical_contest_dataset_internal(
             latest_solves_10pm = None
             latest_snap_time_10pm = None
 
-        if latest_solves_10pm is not None and baseline_solves is not None and latest_solves_10pm > baseline_solves:
+        # EVIDENCE-FIRST: Positive practice delta requires an established, authentic pre-9:30 AM baseline.
+        # NEVER compute positive delta when baseline is None or 0 without pre-contest verification.
+        if latest_solves_10pm is not None and baseline_solves is not None and baseline_solves > 0 and latest_solves_10pm > baseline_solves:
             post_930_diff = latest_solves_10pm - baseline_solves
         else:
             post_930_diff = 0
@@ -712,11 +720,38 @@ def _build_canonical_contest_dataset_internal(
                 q4_val = 1 if solved_val >= 4 else 0
                 score_val = (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
 
-            rank_val = None
-            rating_val = None
-            evidence_source_str = v_evidence_source or "Post-Contest Virtual Practice Window (09:31 AM - 10:00 PM IST)"
-            evidence_timestamp_str = v_evidence_timestamp or lock_0930_ist.isoformat()
-            classification_reason_str = f"Verified Post-Contest Practice Submissions ({solved_val} solves in 09:31 AM - 10:00 PM IST window)"
+            # Anti-Hallucination Difficulty Guard:
+            # Q4 in Weekly Contests is ALWAYS Hard. If student has 0 hard solved in lifetime profile, Q4 CANNOT be solved.
+            student_hard_solved = (stat_obj.hard_solved or 0) if stat_obj else 0
+            student_med_solved = (stat_obj.medium_solved or 0) if stat_obj else 0
+            if student_hard_solved == 0 and q4_val == 1:
+                q4_val = 0
+            if student_med_solved == 0 and student_hard_solved == 0:
+                if q2_val == 1: q2_val = 0
+                if q3_val == 1: q3_val = 0
+
+            recomputed_solved = (q1_val or 0) + (q2_val or 0) + (q3_val or 0) + (q4_val or 0)
+            if recomputed_solved == 0 and v_attributed == 0 and (v_res is None or (v_res.total_contest_solved or 0) == 0) and post_ev is None:
+                canon_status = "NOT_ATTENDED"
+                q1_val = None
+                q2_val = None
+                q3_val = None
+                q4_val = None
+                solved_val = 0
+                score_val = None
+                rank_val = None
+                rating_val = None
+                evidence_source_str = None
+                evidence_timestamp_str = None
+                classification_reason_str = "No Official Contest or Verified Practice Evidence Recorded"
+            else:
+                solved_val = min(4, recomputed_solved)
+                score_val = ((q1_val or 0) * 3 + (q2_val or 0) * 4 + (q3_val or 0) * 5 + (q4_val or 0) * 6)
+                rank_val = None
+                rating_val = None
+                evidence_source_str = v_evidence_source or "Post-Contest Virtual Practice Window (09:31 AM - 10:00 PM IST)"
+                evidence_timestamp_str = v_evidence_timestamp or lock_0930_ist.isoformat()
+                classification_reason_str = f"Verified Post-Contest Practice Submissions ({solved_val} solves in 09:31 AM - 10:00 PM IST window)"
         elif canon_status == "NOT_ATTENDED":
             q1_val = None
             q2_val = None

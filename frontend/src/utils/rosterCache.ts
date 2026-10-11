@@ -1,15 +1,14 @@
 // Lightweight localStorage Cache Manager for Student & Summary Data
 // Eliminates ~300KB synchronous import of canonical static roster on initial bundle load
 
-const CACHE_VERSION = '2026.10.09.v2'; // bumped: department reconciliation for all branches (IT, CSE, CSE(CS), CSE(IOT), AIDS, ECE, EEE, AGRI, MECH, CIVIL)
+const CACHE_VERSION = '2026.10.11.v4'; // bumped: 2nd Year CSE(CS) count reconciled to exact 68 genuine students
 
 export function checkCacheVersion(): void {
   if (typeof window === 'undefined') return;
   try {
     const currentVersion = localStorage.getItem('nec_cache_version');
     if (currentVersion !== CACHE_VERSION) {
-      localStorage.removeItem('nec_cached_students');
-      localStorage.removeItem('nec_cached_summary');
+      clearAllStudentCaches();
       localStorage.setItem('nec_cache_version', CACHE_VERSION);
     }
   } catch (e) {

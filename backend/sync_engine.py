@@ -307,14 +307,16 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         elif contest_status == "unrated":
             # NOTE: "unrated" means the user exists and the API returned a 200 OK without errors,
             # but userContestRanking was null (student never took part in rated contests).
-            # When no ranking object is provided by the API, preserve previous verified values.
-            new_rating = st_stats.contest_rating
-            new_grank = st_stats.contest_global_ranking
+            # An unrated student has no rating; never preserve 1500.0 fake defaults.
+            new_rating = st_stats.contest_rating if (st_stats.contest_rating is not None and st_stats.contest_rating != 1500.0 and round(st_stats.contest_rating) != 1500) else None
+            new_grank = st_stats.contest_global_ranking if new_rating is not None else None
             st_stats.contest_sync_status = "unrated"
         else:  # contest_status == "ok"
             raw_r = stats_dict.get("contest_rating")
             new_rating = round(float(raw_r), 1) if raw_r is not None else None
-            new_grank = stats_dict.get("contest_global_ranking") if stats_dict.get("contest_global_ranking") is not None else stats_dict.get("contest_global_rank")
+            if new_rating is not None and (new_rating == 1500.0 or round(new_rating) == 1500):
+                new_rating = None
+            new_grank = stats_dict.get("contest_global_ranking") if (new_rating is not None and stats_dict.get("contest_global_ranking") is not None) else (stats_dict.get("contest_global_rank") if new_rating is not None else None)
             st_stats.contest_sync_status = "ok"
 
         raw_prank = stats_dict.get("public_profile_ranking")

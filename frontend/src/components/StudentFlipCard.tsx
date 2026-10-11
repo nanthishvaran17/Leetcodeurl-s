@@ -75,9 +75,23 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
 
   // Display verified stats
   const totalSolved = isVerified ? (rawTotal ?? 0) : null;
-  const easy = isVerified ? (student.stats?.easy_solved ?? 0) : null;
-  const medium = isVerified ? (student.stats?.medium_solved ?? 0) : null;
-  const hard = isVerified ? (student.stats?.hard_solved ?? 0) : null;
+  let easy = isVerified ? (student.stats?.easy_solved ?? student.easy_solved ?? student.lc_problem_stats?.easy_solved ?? 0) : null;
+  let medium = isVerified ? (student.stats?.medium_solved ?? student.medium_solved ?? student.lc_problem_stats?.medium_solved ?? 0) : null;
+  let hard = isVerified ? (student.stats?.hard_solved ?? student.hard_solved ?? student.lc_problem_stats?.hard_solved ?? 0) : null;
+
+  // Self-heal from alternative accurate records if stats breakdown has a sum mismatch
+  if (isVerified && totalSolved && ((easy ?? 0) + (medium ?? 0) + (hard ?? 0) !== totalSolved)) {
+    if (student.lc_problem_stats && ((student.lc_problem_stats.easy_solved ?? 0) + (student.lc_problem_stats.medium_solved ?? 0) + (student.lc_problem_stats.hard_solved ?? 0) === totalSolved)) {
+      easy = student.lc_problem_stats.easy_solved ?? 0;
+      medium = student.lc_problem_stats.medium_solved ?? 0;
+      hard = student.lc_problem_stats.hard_solved ?? 0;
+    } else if (student.easy_solved !== undefined && ((student.easy_solved ?? 0) + (student.medium_solved ?? 0) + (student.hard_solved ?? 0) === totalSolved)) {
+      easy = student.easy_solved ?? 0;
+      medium = student.medium_solved ?? 0;
+      hard = student.hard_solved ?? 0;
+    }
+  }
+
   const isSolver = (totalSolved ?? 0) > 0;
 
   const rank = student.college_rank;

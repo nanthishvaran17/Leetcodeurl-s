@@ -589,7 +589,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     );
 
     // Card 4: Contest Rating
-    const rVal = contestRating && contestRating > 0 ? Math.round(contestRating).toString() : '1500';
+    const rVal = contestRating && contestRating > 0 && Math.round(contestRating) !== 1500 ? Math.round(contestRating).toString() : '—';
     drawKpiCard(
       rightX + 48 + kpiCardW + 44,
       kpiGridY + kpiCardH + 40,

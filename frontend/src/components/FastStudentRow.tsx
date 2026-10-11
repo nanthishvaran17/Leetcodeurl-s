@@ -63,19 +63,24 @@ export function getContestRatingDisplay(st: any): string {
     ?? st.contest_rating
     ?? st.public_contest_result?.contest_rating
     ?? st.lc_contest_standing?.contest_rating;
-  if (rawRating == null || Number(rawRating) <= 0) return '—';
+  if (rawRating == null || Number(rawRating) <= 0 || Number(rawRating) === 1500 || Math.round(Number(rawRating)) === 1500) return '—';
   return Math.round(Number(rawRating)).toLocaleString();
 }
 
 export function getContestRankDisplay(st: any): string {
   if (!st) return '—';
+  const rawRating = st.stats?.contest_rating
+    ?? st.contest_rating
+    ?? st.public_contest_result?.contest_rating
+    ?? st.lc_contest_standing?.contest_rating;
+  if (rawRating != null && (Number(rawRating) === 1500 || Math.round(Number(rawRating)) === 1500)) return '—';
   const rawRank = st.stats?.contest_global_ranking
     ?? st.contest_global_ranking
     ?? st.stats?.contest_rank
     ?? st.contest_rank
     ?? st.public_contest_result?.contest_rank
     ?? st.lc_contest_standing?.contest_global_ranking;
-  if (rawRank == null || Number(rawRank) <= 0 || Number(rawRank) === 50000) return '—';
+  if (rawRank == null || Number(rawRank) <= 0 || Number(rawRank) === 50000 || Number(rawRank) >= 1000000) return '—';
   return `#${Number(rawRank).toLocaleString()}`;
 }
 

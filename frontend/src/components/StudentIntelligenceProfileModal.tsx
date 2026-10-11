@@ -170,7 +170,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
     ? contests.contest_rating
     : st.contest_rating ?? initialStudent?.contest_rating ?? st.rating ?? initialStudent?.rating ?? null;
 
-  const contestRatingVal = rawRatingVal != null && rawRatingVal !== 'Unrated'
+  const contestRatingVal = rawRatingVal != null && rawRatingVal !== 'Unrated' && Number(rawRatingVal) !== 1500 && Math.round(Number(rawRatingVal)) !== 1500
     ? (!isNaN(Number(rawRatingVal)) ? Math.round(Number(rawRatingVal)).toLocaleString('en-US') : rawRatingVal)
     : 'Unrated';
 

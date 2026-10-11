@@ -93,7 +93,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   useEffect(() => {
     // Strictly prevent loading public 302 canonical roster for faculty/staff mentors
     if (!isFacultyRole && (!students || students.length === 0)) {
-      import('../data/canonicalRosterData').then(m => {
+      import('../data/canonicalRoster').then(m => {
         if (m.CANONICAL_ROSTER && m.CANONICAL_ROSTER.length > 0) {
           setStudents(m.CANONICAL_ROSTER);
         }
@@ -231,8 +231,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   useEffect(() => {
     if (user) {
       const roleClean = (user.role || '').trim().toLowerCase();
-      const isAdmin = ['admin', 'administrator', 'superadmin', 'super_admin', 'super admin'].includes(roleClean);
-      if (!isAdmin) {
+      const isGlobalLeader = ['admin', 'administrator', 'superadmin', 'super_admin', 'super admin', 'principal', 'management', 'director'].includes(roleClean);
+      if (!isGlobalLeader) {
         let userDeptCode: string | null = null;
         if (user.authorized_department_codes && user.authorized_department_codes.length > 0) {
           userDeptCode = user.authorized_department_codes[0];
@@ -241,6 +241,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         }
         if (userDeptCode && selectedDept === 'all') {
           setSelectedDept(userDeptCode);
+        }
+      } else {
+        if (selectedDept !== 'all') {
+          setSelectedDept('all');
         }
       }
     }
@@ -578,8 +582,31 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const activeDepartmentDescription = useMemo(() => {
     const userName = (user?.name || (user as any)?.full_name || user?.username || '').trim();
     const userRole = (user?.role || '').trim();
+    const roleClean = userRole.toLowerCase();
+    const isGlobalLeader = ['admin', 'administrator', 'superadmin', 'super_admin', 'super admin', 'principal', 'management', 'director'].includes(roleClean);
 
-    // 1. Resolve user's assigned department if logged in
+    // 1. If user is a Global Executive (Principal, Management, Director, Super Admin)
+    if (isGlobalLeader) {
+      if (selectedDept && selectedDept !== 'all') {
+        const matchedDept = departments.find(d => 
+          (d.code && d.code.toUpperCase() === selectedDept.toUpperCase()) ||
+          normalizeDepartment(d.code || d.name) === normalizeDepartment(selectedDept)
+        );
+        const deptFullName = matchedDept ? formatDepartmentName(matchedDept) : formatDepartmentName(selectedDept);
+        return (
+          <>
+            for <span className="font-bold text-white">{userName}</span> {userRole ? <span className="text-emerald-300 font-semibold">({userRole})</span> : null} across <span className="font-bold text-white">{deptFullName}</span> department
+          </>
+        );
+      }
+      return (
+        <>
+          for <span className="font-bold text-white">{userName}</span> {userRole ? <span className="text-emerald-300 font-semibold">({userRole})</span> : null} across <span className="font-bold text-white">all institutional departments</span>
+        </>
+      );
+    }
+
+    // 2. Resolve department(s) for scoped roles (HOD / Faculty Mentor / Staff / Student)
     let userDeptNames: string[] = [];
 
     if (user?.authorized_department_codes && user.authorized_department_codes.length > 0) {
@@ -602,7 +629,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     // Filter out duplicate department names
     userDeptNames = Array.from(new Set(userDeptNames.filter(Boolean)));
 
-    // 2. If user selected a specific department from the dropdown filter (not 'all')
+    // 3. If user selected a specific department from the dropdown filter (not 'all')
     if (selectedDept && selectedDept !== 'all') {
       const matchedDept = departments.find(d => 
         (d.code && d.code.toUpperCase() === selectedDept.toUpperCase()) ||
@@ -610,10 +637,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       );
       const deptFullName = matchedDept ? formatDepartmentName(matchedDept) : formatDepartmentName(selectedDept);
       
-      if (userName && userDeptNames.length > 0) {
+      if (userName) {
         return (
           <>
-            for <span className="font-bold text-white">{userName}</span> across <span className="font-bold text-white">{deptFullName}</span> department
+            for <span className="font-bold text-white">{userName}</span> {userRole ? <span className="text-emerald-300 font-semibold">({userRole})</span> : null} across <span className="font-bold text-white">{deptFullName}</span> department
           </>
         );
       }
@@ -624,7 +651,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       );
     }
 
-    // 3. If logged-in user has assigned department(s) (HOD / Faculty / Staff / Student)
+    // 4. If logged-in user has assigned department(s) (HOD / Faculty / Staff / Student)
     if (userDeptNames.length > 0) {
       const isMulti = userDeptNames.length > 1;
       const deptText = userDeptNames.length === 1
@@ -648,45 +675,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       );
     }
 
-    // 4. Default for Super Admin or All Departments view
-    if (departments.length > 0) {
-      const formattedDepts = departments.map(d => formatDepartmentName(d));
-      const uniqueDepts = Array.from(new Set(formattedDepts));
-      
-      if (uniqueDepts.length === 1) {
-        return (
-          <>
-            across <span className="font-bold text-white">{uniqueDepts[0]}</span> department
-          </>
-        );
-      }
-      
-      if (uniqueDepts.length === 2) {
-        return (
-          <>
-            across <span className="font-bold text-white">{uniqueDepts[0]}</span> &amp; <span className="font-bold text-white">{uniqueDepts[1]}</span> departments
-          </>
-        );
-      }
-      
-      const lastDept = uniqueDepts[uniqueDepts.length - 1];
-      const leadingDepts = uniqueDepts.slice(0, -1);
-      return (
-        <>
-          across {leadingDepts.map((dept, index) => (
-            <React.Fragment key={index}>
-              <span className="font-bold text-white">{dept}</span>,{' '}
-            </React.Fragment>
-          ))}
-          &amp; <span className="font-bold text-white">{lastDept}</span> departments
-        </>
-      );
-    }
-
-    // Fallback if departments are not loaded yet
+    // 5. Default view across all departments (unauthenticated or unassigned)
     return (
       <>
-        across <span className="font-bold text-white">Computer Science and Engineering (Cyber Security)</span> &amp; <span className="font-bold text-white">Computer Science and Engineering (IoT)</span> departments
+        across <span className="font-bold text-white">all institutional departments</span>
       </>
     );
   }, [selectedDept, departments, user]);

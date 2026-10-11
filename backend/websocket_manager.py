@@ -382,13 +382,18 @@ class ConnectionManager:
     async def _broadcast_to_local_connections(self, payload: str):
         """Broadcasts to all authenticated connections. Anonymous connections only receive public event types."""
         disconnected = []
-        # Determine if this is a public-safe event type
+        # Determine if this is a public-safe event type (including all public contest updates for TV and lab displays)
         is_public_event = False
         try:
             msg = json.loads(payload)
             event_type = msg.get("type", "")
-            # Only sync_progress and BATCH_UPDATES with sync_progress are considered public-safe
-            is_public_event = event_type in ("sync_progress", "pong", "HEALTH_STATUS")
+            is_public_event = event_type in (
+                "sync_progress", "pong", "HEALTH_STATUS",
+                "BATCH_UPDATES", "CONTEST_RESULT_UPDATED", "CONTEST_SUMMARY_UPDATED",
+                "TELEMETRY_UPDATE", "LIVE_ACTIVITY", "LIVE_EVENT", "CONTEST_LEADERBOARD_UPDATED",
+                "STUDENT_ACTIVITY_UPDATED", "STUDENT_LEETCODE_UPDATE", "LIVE_STUDENT_UPDATE",
+                "QUESTION_SOLVED"
+            )
         except Exception:
             pass
         
@@ -530,26 +535,8 @@ class ConnectionManager:
         year_level: Optional[str] = None,
         dataset_version: int = 1
     ):
-        """Targeted broadcast when a student's question solve state updates. Uses batching.
-        v3 RULE: Do not broadcast classification status via WebSocket during the Jobs 1-4 (24 hours) verification window.
-        """
-        try:
-            from backend.database import SessionLocal
-            from backend.models import WeeklySession
-            db = SessionLocal()
-            try:
-                session_obj = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
-                if session_obj and session_obj.start_date:
-                    # Contest ends ~90 mins after start
-                    # The rule is: Freeze until Monday 9:00 AM (approx 24 hours).
-                    contest_end_dt = session_obj.start_date + datetime.timedelta(minutes=90)  # type: ignore
-                    if datetime.datetime.now(datetime.timezone.utc).timestamp() < (contest_end_dt.timestamp() + 24 * 3600):  # type: ignore
-                        logger.info(f"WebSocket Broadcast Rule: Suppressed broadcast for student {student_id} as the 24-hour verification window for session {session_id} is still active.")
-                        return
-            finally:
-                db.close()
-        except Exception as e:
-            logger.warning(f"Error checking verification window for broadcast rule: {e}")
+        """Targeted broadcast when a student's question solve state updates. Uses batching."""
+        import time
         payload = {
             "type": "CONTEST_RESULT_UPDATED",
             "studentId": student_id,

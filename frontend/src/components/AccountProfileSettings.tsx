@@ -990,6 +990,65 @@ export const AccountProfileSettings: React.FC = () => {
   const roleName = user?.role || 'Faculty Mentor';
   const createdAtFormatted = (user as any)?.created_at ? new Date((user as any).created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Academic Session 2025–26';
 
+  // Dynamic Role-Aware Security Report Descriptor
+  const getSecurityReportConfig = () => {
+    const rawRole = (user?.role || '').trim().toLowerCase();
+    
+    if (['admin', 'super admin', 'superadmin', 'administrator'].includes(rawRole)) {
+      return {
+        reportTitle: 'OFFICIAL ADMINISTRATIVE SECURITY ACCESS & AUDIT LOG REPORT',
+        personRoleLabel: 'Administrator',
+        personNameLabel: 'Administrator Name',
+        scopeLabel: 'Institutional Administrative Scope',
+        filePrefix: 'Admin',
+      };
+    }
+    if (['principal'].includes(rawRole)) {
+      return {
+        reportTitle: 'OFFICIAL PRINCIPAL EXECUTIVE SECURITY ACCESS & AUDIT LOG REPORT',
+        personRoleLabel: 'Principal',
+        personNameLabel: 'Principal Name',
+        scopeLabel: 'Institutional Campus Scope',
+        filePrefix: 'Principal',
+      };
+    }
+    if (['management', 'director', 'vice principal'].includes(rawRole)) {
+      return {
+        reportTitle: 'OFFICIAL EXECUTIVE LEADERSHIP SECURITY ACCESS & AUDIT LOG REPORT',
+        personRoleLabel: 'Executive Director',
+        personNameLabel: 'Executive Name',
+        scopeLabel: 'Institutional Executive Scope',
+        filePrefix: 'Executive',
+      };
+    }
+    if (['hod', 'department hod', 'head of department', 'placement coordinator'].includes(rawRole)) {
+      return {
+        reportTitle: 'OFFICIAL DEPARTMENT LEADERSHIP SECURITY ACCESS & AUDIT LOG REPORT',
+        personRoleLabel: 'Head of Department',
+        personNameLabel: 'HOD Name',
+        scopeLabel: 'Department Scope',
+        filePrefix: 'HOD',
+      };
+    }
+    if (['student'].includes(rawRole)) {
+      return {
+        reportTitle: 'OFFICIAL STUDENT SECURITY ACCESS & AUDIT LOG REPORT',
+        personRoleLabel: 'Student',
+        personNameLabel: 'Student Name',
+        scopeLabel: 'Department & Academic Year',
+        filePrefix: 'Student',
+      };
+    }
+    // Default for Faculty / Staff
+    return {
+      reportTitle: 'OFFICIAL FACULTY SECURITY ACCESS & AUDIT LOG REPORT',
+      personRoleLabel: 'Faculty Mentor',
+      personNameLabel: 'Faculty Name',
+      scopeLabel: 'Department Scope',
+      filePrefix: 'Faculty',
+    };
+  };
+
   // Dynamic Scannable Verification Payload (vCard + Official Accreditation verification)
   const qrVerificationPayload = useMemo(() => {
     return `BEGIN:VCARD\r\nVERSION:3.0\r\nN:${fullName || 'Faculty Member'};;;;\r\nFN:${fullName || 'Faculty Member'}\r\nTITLE:${designation || 'Staff'}\r\nORG:Nandha Engineering College (Autonomous);${departmentName}\r\nTEL;TYPE=WORK,VOICE:${phoneNumber || '9042020879'}\r\nEMAIL;TYPE=WORK:${user?.email || 'nanthishvaran17@gmail.com'}\r\nNOTE:Institutional ID: ${institutionalId} | Status: VERIFIED ACTIVE | Auth: SHA256-${institutionalId.toLowerCase()}-verified\r\nURL:https://nandhaengg.org\r\nEND:VCARD`;
@@ -1177,6 +1236,8 @@ export const AccountProfileSettings: React.FC = () => {
 
       const colSpan = 7;
       
+      const reportCfg = getSecurityReportConfig();
+
       // Setup Title Headers - Balanced, compact executive spacing
       worksheet.getRow(1).height = 46;
       worksheet.getRow(2).height = 24;
@@ -1186,14 +1247,14 @@ export const AccountProfileSettings: React.FC = () => {
       // 1. Main Title (Row 1)
       worksheet.mergeCells('A1:G1');
       const titleCell = worksheet.getCell('A1');
-      titleCell.value = 'OFFICIAL FACULTY SECURITY ACCESS & AUDIT LOG REPORT';
+      titleCell.value = reportCfg.reportTitle;
       titleCell.font = { name: 'Times New Roman', size: 16, bold: true, color: { argb: 'FFFFFFFF' } }; // White text to match HTML
       titleCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
 
       // 2. Subtitle (Row 2)
       worksheet.mergeCells('A2:G2');
       const subCell = worksheet.getCell('A2');
-      subCell.value = `Faculty: ${fullName || user?.username} | Dept: ${departmentName}`;
+      subCell.value = `${reportCfg.personRoleLabel}: ${fullName || user?.username} | Dept: ${departmentName}`;
       subCell.font = { name: 'Times New Roman', size: 12, bold: true, color: { argb: 'FFFDE047' } }; // Yellow text to match HTML
       subCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
 
@@ -1262,7 +1323,7 @@ export const AccountProfileSettings: React.FC = () => {
       // Export Excel via universal downloadManager (Web, Mobile WebView, Capacitor APK)
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const filename = `NEC_Security_Audit_${institutionalId}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const filename = `NEC_${reportCfg.filePrefix}_Security_Audit_${institutionalId}_${new Date().toISOString().split('T')[0]}.xlsx`;
 
       const downloadResult = await downloadManager.downloadBlob(blob, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       if (!downloadResult.success) {
@@ -1287,7 +1348,7 @@ export const AccountProfileSettings: React.FC = () => {
         });
         const csvContent = rows.map(r => r.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(',')).join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const filename = `NEC_Security_Audit_${institutionalId}_${new Date().toISOString().split('T')[0]}.csv`;
+        const filename = `NEC_${reportCfg.filePrefix}_Security_Audit_${institutionalId}_${new Date().toISOString().split('T')[0]}.csv`;
         await downloadManager.downloadBlob(blob, filename, 'text/csv;charset=utf-8;');
         
         if (notifyToast) notify.dismiss(notifyToast);
@@ -1299,8 +1360,9 @@ export const AccountProfileSettings: React.FC = () => {
     }
   };
 
-  // Print Formatted Security Audit Report â€” Full Page Preview (no auto-print)
+  // Print Formatted Security Audit Report — Full Page Preview (no auto-print)
   const handlePrintSecurityAuditReport = () => {
+    const reportCfg = getSecurityReportConfig();
     const logoUrl   = `${window.location.origin}/nec_25_years_logo.png`;
     const emblemUrl = `${window.location.origin}/nandha_emblem.png`;
     const nowIst    = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
@@ -1314,7 +1376,7 @@ export const AccountProfileSettings: React.FC = () => {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NEC Security Audit Report â€” ${institutionalId}</title>
+  <title>NEC ${reportCfg.personRoleLabel} Security Audit Report — ${institutionalId}</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -1323,7 +1385,7 @@ export const AccountProfileSettings: React.FC = () => {
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
 
-    /* â”€â”€ Sticky action bar (hidden when printing) â”€â”€â”€ */
+    /* ── Sticky action bar (hidden when printing) ─── */
     .action-bar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
       background: linear-gradient(90deg, #002147 0%, #0f3460 100%);
@@ -1348,10 +1410,10 @@ export const AccountProfileSettings: React.FC = () => {
     }
     .btn-close:hover { background: rgba(255,255,255,0.22); }
 
-    /* â”€â”€ Page wrapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Page wrapper ────────────────────────────── */
     .page-wrap { max-width: 920px; margin: 0 auto; padding: 82px 24px 48px; }
 
-    /* â”€â”€ A4 white card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── A4 white card ───────────────────────────── */
     .a4-card {
       background: #fff; border-radius: 18px;
       box-shadow: 0 4px 32px rgba(0,0,0,0.13);
@@ -1359,7 +1421,7 @@ export const AccountProfileSettings: React.FC = () => {
       display: flex; flex-direction: column; gap: 0;
     }
 
-    /* â”€â”€ Header banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Header banner ───────────────────────────── */
     .hdr {
       background: linear-gradient(135deg, #002147 0%, #0f3460 100%);
       border-radius: 12px; border-bottom: 4px solid #f59e0b;
@@ -1380,7 +1442,7 @@ export const AccountProfileSettings: React.FC = () => {
     .hdr-tag-id  { font-size: 15px; font-weight: 900; color: #fff;
                    font-family: 'Courier New', monospace; margin-top: 3px; }
 
-    /* â”€â”€ Meta strip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Meta strip ──────────────────────────────── */
     .meta-grid {
       display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
       background: #f8fafc; border: 1.5px solid #e2e8f0;
@@ -1393,7 +1455,7 @@ export const AccountProfileSettings: React.FC = () => {
     .meta-val { font-size: 12px; font-weight: 800; color: #0f172a; }
     .meta-mono { font-family: 'Courier New', monospace; color: #1e3a8a; }
 
-    /* â”€â”€ Section heading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Section heading ─────────────────────────── */
     .sec-head {
       display: flex; align-items: center; justify-content: space-between;
       border-bottom: 2.5px solid #002147; padding-bottom: 7px; margin-bottom: 14px;
@@ -1401,6 +1463,129 @@ export const AccountProfileSettings: React.FC = () => {
     .sec-head h2 { font-size: 12px; font-weight: 900; color: #002147;
                    text-transform: uppercase; letter-spacing: 0.6px; }
     .sec-head span { font-size: 10px; color: #64748b; font-weight: 700; }
+
+    /* ── Table ───────────────────────────────────── */
+    table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 24px; }
+    thead th {
+      background: #002147; color: #fff; text-align: left;
+      padding: 10px 13px; font-weight: 800; text-transform: uppercase;
+      font-size: 9.5px; letter-spacing: 0.5px; border: 1px solid #001a38;
+    }
+    tbody td { padding: 10px 13px; border: 1px solid #cbd5e1; font-weight: 600; color: #1e293b; }
+    tbody tr:nth-child(even) td { background: #f8fafc; }
+    .tag-id { font-family: 'Courier New', monospace; font-weight: 900; color: #002147; }
+    .tag-ip { font-family: 'Courier New', monospace; background: #e0f2fe;
+              color: #0369a1; padding: 2px 7px; border-radius: 4px;
+              font-size: 10.5px; font-weight: 700; }
+    .tag-ok { background: #dcfce7; color: #15803d; border: 1px solid #86efac;
+              font-weight: 900; padding: 3px 9px; border-radius: 4px;
+              font-size: 9.5px; letter-spacing: 0.4px; display: inline-block; }
+
+    /* ── Footer ──────────────────────────────────── */
+    .footer {
+      padding-top: 18px; border-top: 2px dashed #cbd5e1;
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-top: 8px;
+    }
+    .footer-text p { font-size: 10px; color: #475569; font-weight: 600; line-height: 1.7; }
+    .footer-text strong { color: #0f172a; }
+    .footer-text .hash { font-family: 'Courier New', monospace; color: #1e3a8a; font-weight: 700; }
+    .seal { flex-shrink: 0; text-align: center; border: 1.5px solid #002147;
+            border-radius: 10px; padding: 11px 20px; background: #f8fafc; }
+    .seal-lbl { font-size: 8.5px; font-weight: 900; color: #002147;
+                text-transform: uppercase; letter-spacing: 0.5px; }
+    .seal-ok  { font-size: 11px; font-weight: 800; color: #15803d; margin-top: 4px; }
+
+    /* ── Mobile Responsive Rules ───────── */
+    @media (max-width: 768px) {
+      .action-bar { padding: 12px; height: auto; flex-direction: column; align-items: stretch; gap: 12px; }
+      .bar-btns { justify-content: space-between; }
+      .page-wrap { padding: 74px 12px 32px; }
+      .a4-card { padding: 20px 16px; }
+      .hdr { flex-direction: column; text-align: center; gap: 12px; }
+      .hdr-left { flex-direction: column; gap: 10px; }
+      .hdr-tag { width: 100%; text-align: center; }
+      .meta-grid { grid-template-columns: 1fr; }
+      .meta-cell { border-right: none; border-bottom: 1px solid #e2e8f0; }
+      .meta-cell:last-child { border-bottom: none; }
+      .sec-head { flex-direction: column; align-items: flex-start; gap: 6px; }
+    }
+
+    /* ── Print: hide bar, collapse padding ───────── */
+    @media print {
+      @page { size: A4 portrait; margin: 12mm; }
+      body { background: #fff; }
+      .action-bar { display: none !important; }
+      .page-wrap  { padding: 0; max-width: 100%; }
+      .a4-card    { border-radius: 0; box-shadow: none; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Action Bar -->
+  <div class="action-bar">
+    <div>
+      <div class="bar-left-title">NEC Official ${reportCfg.personRoleLabel} Security Audit Report</div>
+      <div class="bar-left-sub">${institutionalId} &bull; ${fullName || user?.username} (${reportCfg.personRoleLabel}) &bull; ${nowShort} IST</div>
+    </div>
+    <div class="bar-btns">
+      <button id="btnPrintReport" type="button" class="btn-print" onclick="window.print()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm1-4h.01M12 12h.01" /></svg>
+        Print / Save as PDF
+      </button>
+      <button id="btnCloseReport" type="button" class="btn-close" onclick="window.close()">&#10005; Close</button>
+    </div>
+  </div>
+
+  <!-- Report Content -->
+  <div class="page-wrap">
+    <div class="a4-card">
+
+      <!-- College Header -->
+      <div class="hdr">
+        <div class="hdr-left">
+          <img class="hdr-logo"
+               src="${logoUrl}"
+               onerror="this.onerror=null; this.src='${emblemUrl}';"
+               alt="Nandha Engineering College Logo" />
+          <div>
+            <div class="hdr-h1">Nandha Engineering College</div>
+            <div class="hdr-sub">Autonomous Institution &bull; Approved by AICTE &bull; NBA &amp; NAAC A+ Grade Accredited</div>
+            <div class="hdr-aff">Affiliated to Anna University Chennai &bull; Erode–Perundurai Road, Tamil Nadu &ndash; 638 052</div>
+          </div>
+        </div>
+        <div class="hdr-tag">
+          <div class="hdr-tag-lbl">${reportCfg.filePrefix.toUpperCase()} AUDIT LOG</div>
+          <div class="hdr-tag-id">${institutionalId}</div>
+        </div>
+      </div>
+
+      <!-- Meta Strip -->
+      <div class="meta-grid">
+        <div class="meta-cell">
+          <div class="meta-lbl">${reportCfg.personNameLabel}</div>
+          <div class="meta-val">${fullName || user?.username}</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-lbl">Institutional ID</div>
+          <div class="meta-val meta-mono">${institutionalId}</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-lbl">${reportCfg.scopeLabel} &amp; Role</div>
+          <div class="meta-val">${departmentName} &bull; ${roleName}</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-lbl">Report Generated (IST)</div>
+          <div class="meta-val">${nowIst}</div>
+        </div>
+      </div>
+
+      <!-- Section Heading -->
+      <div class="sec-head">
+        <h2>${reportCfg.personRoleLabel} Authentication &amp; Security Access Audit Trail</h2>
+        <span>${loginHistory.length} Record${loginHistory.length !== 1 ? 's' : ''} Logged</span>
+      </div>
 
     /* â”€â”€ Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 24px; }
@@ -2820,7 +3005,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
                   <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Login Security Audit Log
+                    <Clock className="w-4 h-4 text-purple-600 dark:text-purple-400" /> 
+                    <span>Login Security Audit Log</span>
+                    <span className="px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                      {getSecurityReportConfig().personRoleLabel} Audit
+                    </span>
                   </h3>
                   <div className="flex items-center gap-2">
                     <button

@@ -91,6 +91,17 @@ class LeetCodeStatsOut(BaseModel):
     virtual_contests: Optional[int] = 0
     model_config = ConfigDict(from_attributes=True)
 
+    @field_validator('contest_rating', mode='before')
+    @classmethod
+    def clean_unrated_1500(cls, v):
+        if v is not None:
+            try:
+                if float(v) == 1500.0 or float(v) == 0 or round(float(v)) == 1500:
+                    return None
+            except (ValueError, TypeError):
+                return None
+        return v
+
 class ContestResultOut(BaseModel):
     contest_name: Optional[str] = "Weekly Contest"
     contest_number: Optional[int] = None
@@ -103,6 +114,17 @@ class ContestResultOut(BaseModel):
     top_percentage: Optional[float] = None
     status: Optional[str] = "NOT_ATTENDED"
     fetched_at: Optional[str] = None
+
+    @field_validator('contest_rating', mode='before')
+    @classmethod
+    def clean_unrated_1500(cls, v):
+        if v is not None:
+            try:
+                if float(v) == 1500.0 or float(v) == 0 or round(float(v)) == 1500:
+                    return None
+            except (ValueError, TypeError):
+                return None
+        return v
 
 class CanonicalProfileOut(BaseModel):
     canonical_username: Optional[str] = None
@@ -139,6 +161,17 @@ class CanonicalContestOut(BaseModel):
     most_recent_contest_name: Optional[str] = None
     most_recent_contest_type: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator('contest_rating', mode='before')
+    @classmethod
+    def clean_unrated_1500(cls, v):
+        if v is not None:
+            try:
+                if float(v) == 1500.0 or float(v) == 0 or round(float(v)) == 1500:
+                    return None
+            except (ValueError, TypeError):
+                return None
+        return v
 
 class CanonicalActivityOut(BaseModel):
     total_active_days: Optional[int] = None

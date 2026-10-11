@@ -386,24 +386,24 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       try {
         const keys = Object.keys(localStorage);
         for (const k of keys) {
-          if (k.startsWith('cache_prev_panel_') && !k.endsWith('_v29')) {
+          if (k.startsWith('cache_prev_panel_') && !k.endsWith('_v32')) {
             localStorage.removeItem(k);
           }
         }
         if (isFacultyRole) {
           localStorage.removeItem(`cache_prev_panel_${latestSessionId}`);
         }
-        const localKey = `cache_prev_panel_${userScope}_${latestSessionId}_v29`;
+        const localKey = `cache_prev_panel_${userScope}_${latestSessionId}_v32`;
         const stored = localStorage.getItem(localKey);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed.v === 'v29' && parsed.summary) {
+          if (parsed.v === 'v32' && parsed.summary) {
             setSummary(parsed.summary);
             setLoading(false);
           } else {
             localStorage.removeItem(localKey);
           }
-          if (parsed.v === 'v29' && parsed.records && Array.isArray(parsed.records) && records.length === 0) {
+          if (parsed.v === 'v32' && parsed.records && Array.isArray(parsed.records) && records.length === 0) {
             const safeRecords = parsed.records;
             setRecords(safeRecords);
           }
@@ -648,8 +648,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                 }
               : summaryData;
 
-            localStorage.setItem(`cache_prev_panel_${userScope}_${latestSessionId}_v29`, JSON.stringify({
-              v: 'v29',
+            localStorage.setItem(`cache_prev_panel_${userScope}_${latestSessionId}_v32`, JSON.stringify({
+              v: 'v32',
               summary: {
                 session_id: scopedSummary.sessionId,
                 contest_slug: scopedSummary.contestId || `weekly-contest-${scopedSummary.contestNumber}`,

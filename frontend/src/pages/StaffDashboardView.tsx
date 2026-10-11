@@ -1159,7 +1159,7 @@ export const StaffDashboardView: React.FC = () => {
                       </div>
                       <div className="bg-slate-50 dark:bg-navy-950 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-navy-800">
                         <span className="text-[10px] text-slate-700 dark:text-slate-300 font-black uppercase block">Rating</span>
-                        <span className="font-black text-amber-500 dark:text-amber-400 text-xs">{st.contest_rating ? Math.round(st.contest_rating) : 'N/A'}</span>
+                        <span className="font-black text-amber-500 dark:text-amber-400 text-xs">{st.contest_rating && Number(st.contest_rating) > 0 && Math.round(st.contest_rating) !== 1500 ? Math.round(st.contest_rating) : 'N/A'}</span>
                       </div>
                       <div className="bg-indigo-50 dark:bg-indigo-950/40 px-2.5 py-1 rounded-xl border border-indigo-200 dark:border-indigo-800/60 flex-1 min-w-[100px]">
                         <span className="text-[10px] text-indigo-700 dark:text-indigo-300 font-black uppercase block whitespace-nowrap overflow-hidden text-ellipsis">Sun. Contest</span>
@@ -1326,7 +1326,7 @@ export const StaffDashboardView: React.FC = () => {
                         {solved}
                       </td>
                       <td className="px-5 py-4 font-bold text-amber-500 text-center whitespace-nowrap">
-                        {st.contest_rating ? Math.round(st.contest_rating) : 'N/A'}
+                        {st.contest_rating && Number(st.contest_rating) > 0 && Math.round(st.contest_rating) !== 1500 ? Math.round(st.contest_rating) : 'N/A'}
                       </td>
                       <td className="px-5 py-4 text-center whitespace-nowrap">
                         {st.recent_contest_score ? (
