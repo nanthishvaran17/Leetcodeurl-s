@@ -121,9 +121,31 @@ def fetch_contest_data(contest_slug: str):
 def live_run(contest_slug: str, session_id: int = None):
     # Check students in DB
     db = SessionLocal()
-    students = db.query(Student).filter(Student.leetcode_id.isnot(None), Student.leetcode_id != "").all()
-    student_map = {s.leetcode_id.lower().strip(): s for s in students}
-    print(f"[INFO] Loaded {len(student_map)} students from DB to track.")
+    students = db.query(Student).all()
+    
+    student_map = {}
+    for s in students:
+        candidates = []
+        if s.username:
+            candidates.append(s.username.strip())
+        if s.primary_leetcode_id:
+            candidates.append(s.primary_leetcode_id.strip())
+        if s.leetcode_url:
+            # extract handle from url
+            import re
+            m = re.search(r"leetcode\.com/(?:u/)?([^/?#]+)", s.leetcode_url)
+            if m:
+                candidates.append(m.group(1).strip())
+            else:
+                raw = s.leetcode_url.strip().rstrip("/").split("/")[-1]
+                if raw:
+                    candidates.append(raw)
+        
+        for cand in candidates:
+            if cand:
+                student_map[cand.lower()] = s
+
+    print(f"[INFO] Loaded {len(student_map)} distinct student handles from DB to track.")
     
     # Match session
     ws = None
