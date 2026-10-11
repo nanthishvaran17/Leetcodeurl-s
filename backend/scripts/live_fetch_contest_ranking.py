@@ -152,19 +152,21 @@ def live_run(contest_slug: str, session_id: int = None):
     if session_id:
         ws = db.query(WeeklySession).filter_by(id=session_id).first()
     else:
-        # Match by contest number
         import re
         m = re.search(r'\d+', contest_slug)
         c_num = m.group(0) if m else "523"
         ws = db.query(WeeklySession).filter(
-            (WeeklySession.contest_name.like(f"%{c_num}%")) | 
-            (WeeklySession.title.like(f"%{c_num}%"))
+            (WeeklySession.contest_name.ilike(f"%{c_num}%")) | 
+            (WeeklySession.contest_id.ilike(f"%{c_num}%")) |
+            (WeeklySession.id == 28)
         ).first()
 
     if not ws:
-        print(f"[WARN] WeeklySession not found for {contest_slug}. Creating or using default...")
+        print(f"[WARN] WeeklySession not found for {contest_slug}. Listing sessions:")
+        for s in db.query(WeeklySession).order_by(WeeklySession.id.desc()).limit(5).all():
+            print(f"  - ID {s.id}: contest_name='{s.contest_name}', contest_id='{s.contest_id}'")
     else:
-        print(f"[INFO] Target WeeklySession: {ws.contest_name or ws.title} (ID: {ws.id})")
+        print(f"[INFO] Target WeeklySession: '{ws.contest_name}' (ID: {ws.id})")
 
     session, _ = get_session()
     headers = {
