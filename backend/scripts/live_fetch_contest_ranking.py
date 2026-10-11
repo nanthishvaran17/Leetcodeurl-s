@@ -284,6 +284,7 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
         "Referer": f"https://leetcode.com/contest/{contest_slug}/ranking/",
     }
 
+    base = proxy_base.rstrip("/") if proxy_base else "https://leetcode.com"
     # First probe via REST API / Proxy
     url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global_v2"
     print(f"[INFO] Testing connection at {url}...")
