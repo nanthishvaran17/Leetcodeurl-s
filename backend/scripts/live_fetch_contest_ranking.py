@@ -331,13 +331,29 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
         ws = db.query(WeeklySession).filter_by(id=session_id).first()
     else:
         import re
-        m = re.search(r'\d+', contest_slug)
-        c_num = m.group(0) if m else "523"
-        ws = db.query(WeeklySession).filter(
-            (WeeklySession.contest_name.ilike(f"%{c_num}%")) | 
-            (WeeklySession.contest_id.ilike(f"%{c_num}%")) |
-            (WeeklySession.id == 28)
-        ).first()
+        if contest_slug:
+            m = re.search(r'\d+', contest_slug)
+            c_num = m.group(0) if m else None
+            if c_num:
+                ws = db.query(WeeklySession).filter(
+                    (WeeklySession.contest_name.ilike(f"%{c_num}%")) | 
+                    (WeeklySession.contest_id.ilike(f"%{c_num}%"))
+                ).first()
+        
+        # If still not found, pick the latest active WeeklySession
+        if not ws:
+            ws = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+            if ws and ws.contest_name:
+                m = re.search(r'\d+', ws.contest_name)
+                c_num = m.group(0) if m else "524"
+                contest_slug = f"weekly-contest-{c_num}"
+            elif ws and ws.contest_id:
+                contest_slug = ws.contest_id
+                m = re.search(r'\d+', contest_slug)
+                c_num = m.group(0) if m else "524"
+            else:
+                c_num = "524"
+                contest_slug = f"weekly-contest-{c_num}"
 
     if not ws:
         print(f"[WARN] WeeklySession not found for {contest_slug}. Listing sessions:")
@@ -705,7 +721,7 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--contest", type=str, default="weekly-contest-523")
+    parser.add_argument("--contest", type=str, default=None, help="e.g. weekly-contest-524 (default: auto-detected from DB)")
     parser.add_argument("--session-id", type=int, default=None)
     parser.add_argument("--proxy-url", type=str, default=os.environ.get("LEETCODE_PROXY_URL", None), help="Cloudflare Worker proxy URL")
     args = parser.parse_args()
