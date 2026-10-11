@@ -292,6 +292,8 @@ def run_graphql_direct_fetch(ws, student_map, contest_slug):
 def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     # Check students in DB
     db = SessionLocal()
+    students = db.query(Student).all()
+
     # Build super-normalized student mapping
     import re
     def normalize_handle(h):
