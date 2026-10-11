@@ -452,13 +452,13 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     matched_results = {}
     remaining_targets = set(student_map.keys())
 
-    # Execute batch fetching directly inside Chrome runtime for 100% Cloudflare bypass
+    # Execute batch fetching directly inside Chrome runtime using global_v2 for 100% accurate submissions
     def fetch_pages_batch_in_browser(page_list):
         js_batch = f"""
         var callback = arguments[arguments.length - 1];
         var pages = {page_list};
         var promises = pages.map(function(p) {{
-            return fetch('/contest/api/ranking/{contest_slug}/?pagination=' + p + '&region=global', {{
+            return fetch('/contest/api/ranking/{contest_slug}/?pagination=' + p + '&region=global_v2', {{
                 headers: {{ 'Accept': 'application/json', 'x-requested-with': 'XMLHttpRequest' }}
             }})
             .then(function(r) {{ return r.json(); }})
@@ -482,7 +482,6 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
         
         batch_results = fetch_pages_batch_in_browser(target_pages)
         if not batch_results:
-            # Short pause and retry once
             time.sleep(1)
             batch_results = fetch_pages_batch_in_browser(target_pages) or []
 
@@ -490,8 +489,8 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
             if not p_data or not isinstance(p_data, dict):
                 continue
             ranks = p_data.get("total_rank", [])
-            subs = p_data.get("submissions", {})
-            for entry in ranks:
+            subs = p_data.get("submissions", [])
+            for idx, entry in enumerate(ranks):
                 username = (entry.get("username") or "").strip()
                 user_slug = (entry.get("user_slug") or "").strip()
                 uname_lower = username.lower()
@@ -504,21 +503,18 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
                     matched_key = uslug_lower
 
                 if matched_key:
-                    uid = str(entry.get("data_region", "US")) + "_" + str(entry.get("user_id", ""))
-                    user_subs = {}
-                    if isinstance(subs, dict):
-                        user_subs = subs.get(uid, {})
-                    elif isinstance(subs, list):
-                        # Some versions return list of submission objects
-                        for s_item in subs:
-                            if isinstance(s_item, dict) and str(s_item.get("user_id")) == str(entry.get("user_id")):
-                                user_subs = s_item.get("submissions", {})
-                                break
+                    # Match sub_dict exactly as verified in official ranking
+                    sub_dict = entry.get("submissions") or {}
+                    if not sub_dict and isinstance(subs, list) and idx < len(subs):
+                        sub_dict = subs[idx] or {}
+                    elif not sub_dict and isinstance(subs, dict):
+                        uid = str(entry.get("data_region", "US")) + "_" + str(entry.get("user_id", ""))
+                        sub_dict = subs.get(uid, {})
                     
                     solves = [0, 0, 0, 0]
-                    for idx, qid in enumerate(q_ids[:4]):
-                        if qid in user_subs:
-                            solves[idx] = 1
+                    for q_idx, qid in enumerate(q_ids[:4]):
+                        if str(qid) in sub_dict:
+                            solves[q_idx] = 1
 
                     matched_results[matched_key] = {
                         "username": username,
@@ -527,7 +523,7 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
                         "finish_time": entry.get("finish_time"),
                         "solves": solves,
                     }
-                    print(f"  ✓ Found student: {username} -> Rank #{entry.get('rank')} | Solves: {solves}")
+                    print(f"  ✓ {username} -> Rank #{entry.get('rank')} | Solves: Q{solves[0]}/{solves[1]}/{solves[2]}/{solves[3]}")
                     remaining_targets.discard(matched_key)
 
         print(f"  [Progress] Pages {start_p}-{end_p-1}/{pages} | Found {len(matched_results)} enrolled students so far...")
