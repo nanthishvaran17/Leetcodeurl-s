@@ -311,6 +311,7 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
         candidates = []
         if s.username: candidates.append(s.username)
         if s.primary_leetcode_id: candidates.append(s.primary_leetcode_id)
+        if hasattr(s, 'secondary_leetcode_id') and s.secondary_leetcode_id: candidates.append(s.secondary_leetcode_id)
         if s.leetcode_url:
             m = re.search(r"leetcode\.com/(?:u/)?([^/?#]+)", s.leetcode_url)
             if m: candidates.append(m.group(1))
@@ -455,85 +456,140 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
         js_batch = f"""
         var callback = arguments[arguments.length - 1];
         var pages = {page_list};
-        var promises = pages.map(function(p) {{
-            return fetch('/contest/api/ranking/{contest_slug}/?pagination=' + p + '&region=global_v2', {{
+        var results = [];
+
+        function fetchOne(i) {{
+            if (i >= pages.length) {{
+                callback(results);
+                return;
+            }}
+            var p = pages[i];
+            fetch('/contest/api/ranking/{contest_slug}/?pagination=' + p + '&region=global_v2', {{
                 headers: {{ 'Accept': 'application/json', 'x-requested-with': 'XMLHttpRequest' }}
             }})
-            .then(function(r) {{ return r.json(); }})
-            .catch(function(e) {{ return null; }});
-        }});
-        Promise.all(promises).then(function(results) {{
-            callback(results);
-        }}).catch(function(err) {{
-            callback([]);
-        }});
+            .then(function(res) {{
+                if (res.status === 200) {{
+                    return res.json().then(function(d) {{
+                        results.push({{ page: p, ok: true, data: d }});
+                        setTimeout(function() {{ fetchOne(i + 1); }}, 25);
+                    }});
+                }} else {{
+                    results.push({{ page: p, ok: false, status: res.status }});
+                    setTimeout(function() {{ fetchOne(i + 1); }}, 100);
+                }}
+            }})
+            .catch(function(err) {{
+                results.push({{ page: p, ok: false, error: err.toString() }});
+                setTimeout(function() {{ fetchOne(i + 1); }}, 100);
+            }});
+        }}
+        fetchOne(0);
         """
         try:
             return engine_obj.execute_async_script(js_batch)
         except Exception as e:
+            print(f"  [WARN] Script execution error on pages {page_list}: {e}")
             return []
 
-    batch_size = 15
+    def process_page_data(p_data):
+        if not p_data or not isinstance(p_data, dict):
+            return
+        ranks = p_data.get("total_rank", [])
+        subs = p_data.get("submissions", [])
+        for idx, entry in enumerate(ranks):
+            username = (entry.get("username") or "").strip()
+            user_slug = (entry.get("user_slug") or "").strip()
+            real_name = (entry.get("real_name") or "").strip()
+
+            norm_u = normalize_handle(username)
+            norm_s = normalize_handle(user_slug)
+            norm_r = normalize_handle(real_name)
+
+            student = None
+            if norm_u in student_norm_map: student = student_norm_map[norm_u]
+            elif norm_s in student_norm_map: student = student_norm_map[norm_s]
+            elif norm_r and norm_r in student_norm_map: student = student_norm_map[norm_r]
+
+            if student and student.id not in found_student_ids:
+                found_student_ids.add(student.id)
+
+                sub_dict = entry.get("submissions") or {}
+                if not sub_dict and isinstance(subs, list) and idx < len(subs):
+                    sub_dict = subs[idx] or {}
+                elif not sub_dict and isinstance(subs, dict):
+                    uid = str(entry.get("data_region", "US")) + "_" + str(entry.get("user_id", ""))
+                    sub_dict = subs.get(uid, {})
+                
+                solves = [0, 0, 0, 0]
+                for q_idx, qid in enumerate(q_ids[:4]):
+                    if str(qid) in sub_dict:
+                        solves[q_idx] = 1
+
+                matched_results[student.id] = {
+                    "student": student,
+                    "username": username,
+                    "rank": entry.get("rank"),
+                    "score": entry.get("score"),
+                    "finish_time": entry.get("finish_time"),
+                    "solves": solves,
+                }
+                print(f"  ✓ {student.name} (@{username}) -> Rank #{entry.get('rank')} | Solves: Q{solves[0]}/{solves[1]}/{solves[2]}/{solves[3]}")
+
+    batch_size = 10
+    retry_pages = []
+
     for start_p in range(1, pages + 1, batch_size):
         end_p = min(start_p + batch_size, pages + 1)
         target_pages = list(range(start_p, end_p))
         
         batch_results = fetch_pages_batch_in_browser(target_pages)
-        if not batch_results:
-            time.sleep(1)
-            batch_results = fetch_pages_batch_in_browser(target_pages) or []
+        successful_pages = set()
 
-        for p_data in batch_results:
-            if not p_data or not isinstance(p_data, dict):
-                continue
-            ranks = p_data.get("total_rank", [])
-            subs = p_data.get("submissions", [])
-            for idx, entry in enumerate(ranks):
-                username = (entry.get("username") or "").strip()
-                user_slug = (entry.get("user_slug") or "").strip()
-                real_name = (entry.get("real_name") or "").strip()
+        for item in (batch_results or []):
+            if isinstance(item, dict) and item.get("ok"):
+                p_data = item.get("data")
+                if p_data and isinstance(p_data, dict) and "total_rank" in p_data:
+                    successful_pages.add(item["page"])
+                    process_page_data(p_data)
+            elif isinstance(item, dict) and item.get("status") == 429:
+                print(f"  [WARN] LeetCode rate limit (429) hit on page {item.get('page')}. Cooling down 2s...")
+                time.sleep(2)
 
-                norm_u = normalize_handle(username)
-                norm_s = normalize_handle(user_slug)
-                norm_r = normalize_handle(real_name)
-
-                student = None
-                if norm_u in student_norm_map: student = student_norm_map[norm_u]
-                elif norm_s in student_norm_map: student = student_norm_map[norm_s]
-                elif norm_r and norm_r in student_norm_map: student = student_norm_map[norm_r]
-
-                if student and student.id not in found_student_ids:
-                    found_student_ids.add(student.id)
-
-                    sub_dict = entry.get("submissions") or {}
-                    if not sub_dict and isinstance(subs, list) and idx < len(subs):
-                        sub_dict = subs[idx] or {}
-                    elif not sub_dict and isinstance(subs, dict):
-                        uid = str(entry.get("data_region", "US")) + "_" + str(entry.get("user_id", ""))
-                        sub_dict = subs.get(uid, {})
-                    
-                    solves = [0, 0, 0, 0]
-                    for q_idx, qid in enumerate(q_ids[:4]):
-                        if str(qid) in sub_dict:
-                            solves[q_idx] = 1
-
-                    matched_results[student.id] = {
-                        "student": student,
-                        "username": username,
-                        "rank": entry.get("rank"),
-                        "score": entry.get("score"),
-                        "finish_time": entry.get("finish_time"),
-                        "solves": solves,
-                    }
-                    print(f"  ✓ {student.name} (@{username}) -> Rank #{entry.get('rank')} | Solves: Q{solves[0]}/{solves[1]}/{solves[2]}/{solves[3]}")
+        # Track any missed pages in this batch
+        for p in target_pages:
+            if p not in successful_pages:
+                retry_pages.append(p)
 
         print(f"  [Progress] Pages {start_p}-{end_p-1}/{pages} | Found {len(matched_results)} enrolled students so far...")
-        
-        if len(found_student_ids) >= len(students):
-            print("[SUCCESS] All enrolled students found! Stopping early.")
-            break
-            print("[SUCCESS] All students found! Stopping early.")
-            break
+        time.sleep(0.1)
+
+    # Retry missed/rate-limited pages
+    if retry_pages:
+        print(f"[INFO] Retrying {len(retry_pages)} missing/rate-limited pages...")
+        retry_round = 1
+        while retry_pages and retry_round <= 4:
+            print(f"[INFO] Retry round {retry_round} ({len(retry_pages)} pages remaining)...")
+            time.sleep(2)
+            current_retries = list(retry_pages)
+            retry_pages = []
+
+            for i in range(0, len(current_retries), 5):
+                sub_batch = current_retries[i:i+5]
+                batch_results = fetch_pages_batch_in_browser(sub_batch)
+                successful_pages = set()
+
+                for item in (batch_results or []):
+                    if isinstance(item, dict) and item.get("ok"):
+                        p_data = item.get("data")
+                        if p_data and isinstance(p_data, dict) and "total_rank" in p_data:
+                            successful_pages.add(item["page"])
+                            process_page_data(p_data)
+
+                for p in sub_batch:
+                    if p not in successful_pages:
+                        retry_pages.append(p)
+                time.sleep(0.3)
+            retry_round += 1
 
     print(f"\n[INFO] Total matched students: {len(matched_results)}")
 
@@ -618,6 +674,27 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
         cache.delete(f"contest_results:{ws.id}")
         cache.delete(f"canonical:contest:{ws.id}")
         print("[INFO] Contest cache invalidated successfully.")
+
+        # Save backup solver map JSON
+        try:
+            json_save_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"contest_{c_num}_solver_map.json")
+            saved_dict = {}
+            for sid, res in matched_results.items():
+                saved_dict[res["username"].lower()] = {
+                    "q1": res["solves"][0],
+                    "q2": res["solves"][1],
+                    "q3": res["solves"][2],
+                    "q4": res["solves"][3],
+                    "total_solved": sum(res["solves"]),
+                    "rank": res["rank"],
+                    "score": res["score"],
+                    "participation_status": "PUBLIC_ATTENDED"
+                }
+            with open(json_save_path, "w", encoding="utf-8") as f:
+                json.dump(saved_dict, f, indent=2)
+            print(f"[INFO] Backup solver map saved to {json_save_path}")
+        except Exception as e:
+            print(f"[WARN] Could not write backup solver map: {e}")
     except Exception as e:
         db.rollback()
         print(f"[ERROR] Commit failed: {e}")
