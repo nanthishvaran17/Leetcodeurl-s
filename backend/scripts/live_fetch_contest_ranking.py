@@ -292,31 +292,28 @@ def run_graphql_direct_fetch(ws, student_map, contest_slug):
 def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     # Check students in DB
     db = SessionLocal()
-    students = db.query(Student).all()
-    
-    student_map = {}
+    # Build super-normalized student mapping
+    import re
+    def normalize_handle(h):
+        if not h: return ""
+        return re.sub(r'[^a-zA-Z0-9]', '', str(h)).lower().strip()
+
+    student_norm_map = {}
     for s in students:
         candidates = []
-        if s.username:
-            candidates.append(s.username.strip())
-        if s.primary_leetcode_id:
-            candidates.append(s.primary_leetcode_id.strip())
+        if s.username: candidates.append(s.username)
+        if s.primary_leetcode_id: candidates.append(s.primary_leetcode_id)
         if s.leetcode_url:
-            # extract handle from url
-            import re
             m = re.search(r"leetcode\.com/(?:u/)?([^/?#]+)", s.leetcode_url)
-            if m:
-                candidates.append(m.group(1).strip())
-            else:
-                raw = s.leetcode_url.strip().rstrip("/").split("/")[-1]
-                if raw:
-                    candidates.append(raw)
+            if m: candidates.append(m.group(1))
+            else: candidates.append(s.leetcode_url.strip().rstrip("/").split("/")[-1])
         
         for cand in candidates:
-            if cand:
-                student_map[cand.lower()] = s
+            norm = normalize_handle(cand)
+            if norm:
+                student_norm_map[norm] = s
 
-    print(f"[INFO] Loaded {len(student_map)} distinct student handles from DB to track.")
+    print(f"[INFO] Loaded {len(student_norm_map)} super-normalized student handles from DB to track.")
     
     # Match session
     ws = None
@@ -450,7 +447,7 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     print(f"[INFO] Fetching pages 1 to {pages} from LeetCode LIVE server...")
     
     matched_results = {}
-    remaining_targets = set(student_map.keys())
+    found_student_ids = set()
 
     # Execute batch fetching directly inside Chrome runtime using global_v2 for 100% accurate submissions
     def fetch_pages_batch_in_browser(page_list):
@@ -493,17 +490,20 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
             for idx, entry in enumerate(ranks):
                 username = (entry.get("username") or "").strip()
                 user_slug = (entry.get("user_slug") or "").strip()
-                uname_lower = username.lower()
-                uslug_lower = user_slug.lower()
+                real_name = (entry.get("real_name") or "").strip()
 
-                matched_key = None
-                if uname_lower in remaining_targets:
-                    matched_key = uname_lower
-                elif uslug_lower in remaining_targets:
-                    matched_key = uslug_lower
+                norm_u = normalize_handle(username)
+                norm_s = normalize_handle(user_slug)
+                norm_r = normalize_handle(real_name)
 
-                if matched_key:
-                    # Match sub_dict exactly as verified in official ranking
+                student = None
+                if norm_u in student_norm_map: student = student_norm_map[norm_u]
+                elif norm_s in student_norm_map: student = student_norm_map[norm_s]
+                elif norm_r and norm_r in student_norm_map: student = student_norm_map[norm_r]
+
+                if student and student.id not in found_student_ids:
+                    found_student_ids.add(student.id)
+
                     sub_dict = entry.get("submissions") or {}
                     if not sub_dict and isinstance(subs, list) and idx < len(subs):
                         sub_dict = subs[idx] or {}
@@ -516,15 +516,15 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
                         if str(qid) in sub_dict:
                             solves[q_idx] = 1
 
-                    matched_results[matched_key] = {
+                    matched_results[student.id] = {
+                        "student": student,
                         "username": username,
                         "rank": entry.get("rank"),
                         "score": entry.get("score"),
                         "finish_time": entry.get("finish_time"),
                         "solves": solves,
                     }
-                    print(f"  ✓ {username} -> Rank #{entry.get('rank')} | Solves: Q{solves[0]}/{solves[1]}/{solves[2]}/{solves[3]}")
-                    remaining_targets.discard(matched_key)
+                    print(f"  ✓ {student.name} (@{username}) -> Rank #{entry.get('rank')} | Solves: Q{solves[0]}/{solves[1]}/{solves[2]}/{solves[3]}")
 
         print(f"  [Progress] Pages {start_p}-{end_p-1}/{pages} | Found {len(matched_results)} enrolled students so far...")
         
@@ -543,8 +543,8 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
 
     # Update database
     updated_count = 0
-    for s_lower, res in matched_results.items():
-        student = student_map[s_lower]
+    for sid, res in matched_results.items():
+        student = res["student"]
         solves = res["solves"]
         rank = res["rank"]
         score = res["score"]
