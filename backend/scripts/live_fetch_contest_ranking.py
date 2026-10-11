@@ -34,21 +34,27 @@ if "sqlite" in str(engine.url):
 
 
 def get_session():
-    """Tries undetected Chrome browser first on EC2 with stealth flags."""
+    """Launches full-featured stealth Chrome with complete browser footprint."""
     try:
         import undetected_chromedriver as uc
-        print("[INFO] Launching Stealth Headless Google Chrome Engine on EC2...")
+        print("[INFO] Launching Stealth Google Chrome Engine on EC2...")
         options = uc.ChromeOptions()
         options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument("--start-maximized")
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36")
+        
         driver = uc.Chrome(options=options, version_main=155)
+        # Set realistic timeouts
+        driver.set_page_load_timeout(35)
         return driver, "chrome"
     except Exception as e:
-        print(f"[WARN] Chrome launch note: {e}")
+        print(f"[WARN] Chrome launch exception: {e}")
+        return None, "none"
 
     # Fallback to curl_cffi
     try:
@@ -334,44 +340,74 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
 
     base = proxy_base.rstrip("/") if proxy_base else "https://leetcode.com"
     contest_url = f"https://leetcode.com/contest/{contest_slug}/ranking/"
-    print(f"[INFO] Opening contest ranking page via Headless Chrome to pass Cloudflare: {contest_url}...")
+    print(f"[INFO] Opening LeetCode through Chrome browser engine: https://leetcode.com...")
 
-    cf_cookies = {}
-    if engine_type == "chrome":
+    data = None
+    if engine_type == "chrome" and engine_obj:
         try:
+            # 1. First visit root domain to pass Cloudflare WAF and obtain full cookie set
+            engine_obj.get("https://leetcode.com")
+            time.sleep(4)
+
+            # 2. Navigate to contest ranking page
             engine_obj.get(contest_url)
-            # Give real browser 8 seconds to solve Cloudflare JS challenge
-            time.sleep(8)
-            cookies_list = engine_obj.get_cookies()
-            for c in cookies_list:
-                cf_cookies[c['name']] = c['value']
-            print(f"[SUCCESS] Chrome harvested {len(cf_cookies)} valid session cookies: {list(cf_cookies.keys())}")
+            time.sleep(4)
+
+            # 3. Direct in-browser JavaScript fetch (Bypasses Cloudflare 100% because request is from inside Chrome)
+            js_fetch = f"""
+            var callback = arguments[arguments.length - 1];
+            fetch('/contest/api/ranking/{contest_slug}/?pagination=1&region=global', {{
+                headers: {{
+                    'Accept': 'application/json',
+                    'x-requested-with': 'XMLHttpRequest'
+                }}
+            }})
+            .then(res => res.json())
+            .then(data => callback(data))
+            .catch(err => callback({{ error: err.toString() }}));
+            """
+            print("[INFO] Executing in-browser native JavaScript fetch for contest ranking...")
+            result = engine_obj.execute_async_script(js_fetch)
+            if result and not result.get("error") and "total_rank" in result:
+                data = result
+                print(f"[SUCCESS] Native In-Browser Fetch succeeded! Participants: {data.get('user_num')}")
+            else:
+                print(f"[WARN] In-browser fetch returned: {result}")
         except Exception as e:
-            print(f"[WARN] Chrome cookie extraction note: {e}")
-        finally:
-            try: engine_obj.quit()
+            print(f"[WARN] In-browser fetch exception: {e}")
+
+    # Fallback to requests if in-browser fetch did not catch
+    if not data:
+        # Harvest any cookies available
+        cf_cookies = {}
+        if engine_obj:
+            try:
+                for c in engine_obj.get_cookies():
+                    cf_cookies[c['name']] = c['value']
             except: pass
 
-    # Prepare high-speed requests session using harvested cookies + Chrome UA
-    import requests
-    s = requests.Session()
-    s.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
-        "Referer": contest_url,
-        "Accept": "*/*",
-    })
-    s.cookies.update(cf_cookies)
+        import requests
+        s = requests.Session()
+        s.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+            "Referer": contest_url,
+            "Accept": "*/*",
+        })
+        s.cookies.update(cf_cookies)
 
-    url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global"
-    print(f"[INFO] Fetching Page 1 via authenticated session...")
-    resp = s.get(url, timeout=25)
+        url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global"
+        print(f"[INFO] Testing backup session request to {url}...")
+        resp = s.get(url, timeout=25)
+        if resp.status_code == 200:
+            data = resp.json()
 
-    if resp.status_code != 200:
-        print(f"[ERROR] Could not fetch contest ranking data: HTTP {resp.status_code}")
+    if not data:
+        print("[ERROR] Could not fetch contest ranking data.")
+        if engine_obj:
+            try: engine_obj.quit()
+            except: pass
         db.close()
         return
-
-    data = resp.json()
     user_num = data.get("user_num", 0)
     pages = math.ceil(user_num / 25)
     
