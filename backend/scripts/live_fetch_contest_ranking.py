@@ -505,7 +505,15 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
 
                 if matched_key:
                     uid = str(entry.get("data_region", "US")) + "_" + str(entry.get("user_id", ""))
-                    user_subs = subs.get(uid, {})
+                    user_subs = {}
+                    if isinstance(subs, dict):
+                        user_subs = subs.get(uid, {})
+                    elif isinstance(subs, list):
+                        # Some versions return list of submission objects
+                        for s_item in subs:
+                            if isinstance(s_item, dict) and str(s_item.get("user_id")) == str(entry.get("user_id")):
+                                user_subs = s_item.get("submissions", {})
+                                break
                     
                     solves = [0, 0, 0, 0]
                     for idx, qid in enumerate(q_ids[:4]):
@@ -519,6 +527,7 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
                         "finish_time": entry.get("finish_time"),
                         "solves": solves,
                     }
+                    print(f"  ✓ Found student: {username} -> Rank #{entry.get('rank')} | Solves: {solves}")
                     remaining_targets.discard(matched_key)
 
         print(f"  [Progress] Pages {start_p}-{end_p-1}/{pages} | Found {len(matched_results)} enrolled students so far...")
