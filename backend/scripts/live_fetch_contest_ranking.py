@@ -34,15 +34,17 @@ if "sqlite" in str(engine.url):
 
 
 def get_session():
-    """Tries undetected Chrome browser first on EC2 for 100% Cloudflare bypass."""
+    """Tries undetected Chrome browser first on EC2 with stealth flags."""
     try:
         import undetected_chromedriver as uc
-        print("[INFO] Launching Headless Real Google Chrome Engine on EC2...")
+        print("[INFO] Launching Stealth Headless Google Chrome Engine on EC2...")
         options = uc.ChromeOptions()
         options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36")
         driver = uc.Chrome(options=options, version_main=155)
         return driver, "chrome"
     except Exception as e:
@@ -338,9 +340,10 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     if engine_type == "chrome":
         try:
             engine_obj.get(contest_url)
-            # Wait for Cloudflare turnstile / JS challenge to settle
-            time.sleep(5)
-            for c in engine_obj.get_cookies():
+            # Give real browser 8 seconds to solve Cloudflare JS challenge
+            time.sleep(8)
+            cookies_list = engine_obj.get_cookies()
+            for c in cookies_list:
                 cf_cookies[c['name']] = c['value']
             print(f"[SUCCESS] Chrome harvested {len(cf_cookies)} valid session cookies: {list(cf_cookies.keys())}")
         except Exception as e:
