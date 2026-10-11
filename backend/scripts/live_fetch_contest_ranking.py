@@ -32,29 +32,23 @@ if "sqlite" in str(engine.url):
             pass
 
 
-# Webshare direct authenticated proxies pool
+# Verified working proxies on LeetCode
 WEBSHARE_PROXIES = [
     "http://31.59.20.176:6754",
+    "http://191.96.254.138:6185",
     "http://45.38.107.97:6014",
     "http://64.137.96.74:6641",
-    "http://198.23.243.226:6361",
-    "http://38.154.185.97:6370",
-    "http://84.247.60.125:6095",
-    "http://142.111.67.146:5611",
-    "http://191.96.254.138:6185",
-    "http://31.58.9.4:6077",
-    "http://198.46.161.42:5092",
 ]
 
 def get_session(proxy: str = None):
-    """Creates a session with curl_cffi and working direct proxy."""
+    """Creates a session with curl_cffi and verified working proxy."""
     import random
-    proxy_url = proxy or os.environ.get("CONTEST_PROXY", random.choice(WEBSHARE_PROXIES))
+    proxy_url = proxy or os.environ.get("CONTEST_PROXY", WEBSHARE_PROXIES[0])
     proxies = {"http": proxy_url, "https": proxy_url}
 
     try:
         from curl_cffi import requests as cffi_requests
-        print(f"[INFO] Using curl_cffi (Chrome 120) with Proxy {proxy_url}...")
+        print(f"[INFO] Using curl_cffi (Chrome 120) with Verified Proxy {proxy_url}...")
         s = cffi_requests.Session(impersonate="chrome120")
         s.proxies = proxies
         return s, True
