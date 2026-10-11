@@ -47,7 +47,7 @@ def get_session():
         return s, False
 
 
-def fetch_contest_data(contest_slug: str):
+def fetch_contest_data(contest_slug: str, proxy_base: str = None):
     session, is_cffi = get_session()
     
     headers = {
@@ -58,9 +58,10 @@ def fetch_contest_data(contest_slug: str):
         "Origin": "https://leetcode.com",
     }
     
+    base = proxy_base.rstrip("/") if proxy_base else "https://leetcode.com"
     # Check page 1
-    url = f"https://leetcode.com/contest/api/ranking/{contest_slug}/?pagination=1&region=global_v2"
-    print(f"[INFO] Connecting to LeetCode API for {contest_slug}...")
+    url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global_v2"
+    print(f"[INFO] Connecting to LeetCode API at {url}...")
     
     try:
         resp = session.get(url, headers=headers, timeout=25)
@@ -118,7 +119,7 @@ def fetch_contest_data(contest_slug: str):
     return q_ids, start_ts, pages
 
 
-def live_run(contest_slug: str, session_id: int = None):
+def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     # Check students in DB
     db = SessionLocal()
     students = db.query(Student).all()
@@ -175,8 +176,10 @@ def live_run(contest_slug: str, session_id: int = None):
         "Referer": f"https://leetcode.com/contest/{contest_slug}/ranking/",
     }
 
+    base = proxy_base.rstrip("/") if proxy_base else "https://leetcode.com"
     # First probe
-    url = f"https://leetcode.com/contest/api/ranking/{contest_slug}/?pagination=1&region=global_v2"
+    url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global_v2"
+    print(f"[INFO] Calling API at {url}...")
     resp = session.get(url, headers=headers, timeout=25)
     if resp.status_code != 200:
         print(f"[ERROR] Failed to fetch contest: HTTP {resp.status_code}")
@@ -190,10 +193,11 @@ def live_run(contest_slug: str, session_id: int = None):
     # Questions
     q_ids = [str(q.get("question_id")) for q in data.get("questions", [])]
     if not q_ids:
-        g_resp = session.get(f"https://leetcode.com/contest/api/ranking/{contest_slug}/?pagination=1&region=global", headers=headers, timeout=20)
+        g_resp = session.get(f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global", headers=headers, timeout=20)
         if g_resp.status_code == 200:
             q_ids = [str(q.get("question_id")) for q in g_resp.json().get("questions", [])]
 
+    print(f"[INFO] Total participants: {user_num} | Pages: {pages} | Questions: {q_ids}")
     print(f"[INFO] Fetching pages 1 to {pages} from LeetCode LIVE server...")
     
     matched_results = {}
@@ -203,7 +207,7 @@ def live_run(contest_slug: str, session_id: int = None):
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     def fetch_page(p):
-        p_url = f"https://leetcode.com/contest/api/ranking/{contest_slug}/?pagination={p}&region=global_v2"
+        p_url = f"{base}/contest/api/ranking/{contest_slug}/?pagination={p}&region=global_v2"
         for _ in range(3):
             try:
                 r = session.get(p_url, headers=headers, timeout=15)
@@ -347,6 +351,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--contest", type=str, default="weekly-contest-523")
     parser.add_argument("--session-id", type=int, default=None)
+    parser.add_argument("--proxy-url", type=str, default=os.environ.get("LEETCODE_PROXY_URL", None), help="Cloudflare Worker proxy URL")
     args = parser.parse_args()
 
-    live_run(args.contest, args.session_id)
+    live_run(args.contest, args.session_id, args.proxy_url)
