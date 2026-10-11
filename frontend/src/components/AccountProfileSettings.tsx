@@ -1179,6 +1179,7 @@ export const AccountProfileSettings: React.FC = () => {
 
   // Export Security Audit Log Excel with perfect alignment, styles, and logo using exceljs
   const handleExportSecurityAuditExcel = async () => {
+    const reportCfg = getSecurityReportConfig();
     let notifyToast: any = null;
     try {
       notifyToast = notify.loading('Generating perfect Excel report...', '', { duration: 10000, category: 'ADMIN' });
@@ -1235,8 +1236,6 @@ export const AccountProfileSettings: React.FC = () => {
       }
 
       const colSpan = 7;
-      
-      const reportCfg = getSecurityReportConfig();
 
       // Setup Title Headers - Balanced, compact executive spacing
       worksheet.getRow(1).height = 46;
