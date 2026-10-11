@@ -72,8 +72,8 @@ def fetch_contest_data(contest_slug: str, proxy_base: str = None):
     }
     
     base = proxy_base.rstrip("/") if proxy_base else "https://leetcode.com"
-    # Check page 1
-    url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global_v2"
+    # Use region=global (unrestricted) instead of region=global_v2
+    url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global"
     print(f"[INFO] Connecting to LeetCode API at {url}...")
     
     try:
@@ -333,8 +333,8 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     }
 
     base = proxy_base.rstrip("/") if proxy_base else "https://leetcode.com"
-    # First probe via REST API / Proxy
-    url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global_v2"
+    # First probe via REST API / Proxy with region=global
+    url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global"
     print(f"[INFO] Testing connection at {url}...")
     resp = session.get(url, headers=headers, timeout=25)
     
@@ -349,19 +349,8 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     user_num = data.get("user_num", 0)
     pages = math.ceil(user_num / 25)
     
-    # Questions: probe region=global directly first
-    q_ids = []
-    try:
-        g_resp = session.get(f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global", headers=headers, timeout=20)
-        if g_resp.status_code == 200:
-            q_ids = [str(q.get("question_id")) for q in g_resp.json().get("questions", [])]
-    except Exception:
-        pass
-
-    if not q_ids:
-        q_ids = [str(q.get("question_id")) for q in data.get("questions", [])]
-
-    # Contest 523 fallback questions if LeetCode hides them
+    # Questions
+    q_ids = [str(q.get("question_id")) for q in data.get("questions", [])]
     if not q_ids and "523" in contest_slug:
         q_ids = ["4450", "4433", "4377", "4434"]
 
@@ -375,8 +364,7 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     from curl_cffi import requests as cffi_requests
 
     def fetch_page(p):
-        p_url = f"{base}/contest/api/ranking/{contest_slug}/?pagination={p}&region=global_v2"
-        # Each worker thread gets its own proxy session for 100% thread safety
+        p_url = f"{base}/contest/api/ranking/{contest_slug}/?pagination={p}&region=global"
         chosen_proxy = random.choice(WEBSHARE_PROXIES)
         worker_proxies = {"http": chosen_proxy, "https": chosen_proxy}
         
