@@ -331,40 +331,44 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     }
 
     base = proxy_base.rstrip("/") if proxy_base else "https://leetcode.com"
-    url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global"
-    print(f"[INFO] Testing connection at {url} using {engine_type}...")
+    contest_url = f"https://leetcode.com/contest/{contest_slug}/ranking/"
+    print(f"[INFO] Opening contest ranking page via Headless Chrome to pass Cloudflare: {contest_url}...")
 
-    data = None
+    cf_cookies = {}
     if engine_type == "chrome":
-        import json
         try:
-            engine_obj.get(url)
-            time.sleep(3)
-            page_source = engine_obj.page_source
-            # Chrome extracts raw json or inside pre tag
-            from bs4 import BeautifulSoup
-            soup = BeautifulSoup(page_source, "html.parser")
-            text = soup.find("pre").text if soup.find("pre") else soup.text
-            data = json.loads(text)
-            print("[SUCCESS] Real Chrome bypassed Cloudflare! Data received!")
+            engine_obj.get(contest_url)
+            # Wait for Cloudflare turnstile / JS challenge to settle
+            time.sleep(5)
+            for c in engine_obj.get_cookies():
+                cf_cookies[c['name']] = c['value']
+            print(f"[SUCCESS] Chrome harvested {len(cf_cookies)} valid session cookies: {list(cf_cookies.keys())}")
         except Exception as e:
-            print(f"[WARN] Chrome parse note: {e}")
+            print(f"[WARN] Chrome cookie extraction note: {e}")
+        finally:
             try: engine_obj.quit()
             except: pass
-            engine_obj, engine_type = None, "cffi"
 
-    if not data:
-        # fallback to requests/cffi
-        from curl_cffi import requests as cffi_requests
-        s = cffi_requests.Session(impersonate="chrome120")
-        resp = s.get(url, headers=headers, timeout=25)
-        if resp.status_code == 200:
-            data = resp.json()
+    # Prepare high-speed requests session using harvested cookies + Chrome UA
+    import requests
+    s = requests.Session()
+    s.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+        "Referer": contest_url,
+        "Accept": "*/*",
+    })
+    s.cookies.update(cf_cookies)
 
-    if not data:
-        print("[ERROR] Could not fetch contest ranking data.")
+    url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global"
+    print(f"[INFO] Fetching Page 1 via authenticated session...")
+    resp = s.get(url, timeout=25)
+
+    if resp.status_code != 200:
+        print(f"[ERROR] Could not fetch contest ranking data: HTTP {resp.status_code}")
         db.close()
         return
+
+    data = resp.json()
     user_num = data.get("user_num", 0)
     pages = math.ceil(user_num / 25)
     
@@ -379,19 +383,11 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     matched_results = {}
     remaining_targets = set(student_map.keys())
 
-    import random
-    from curl_cffi import requests as cffi_requests
-
     def fetch_page(p):
         p_url = f"{base}/contest/api/ranking/{contest_slug}/?pagination={p}&region=global"
-        chosen_proxy = random.choice(WEBSHARE_PROXIES)
-        worker_proxies = {"http": chosen_proxy, "https": chosen_proxy}
-        
         for _ in range(3):
             try:
-                s = cffi_requests.Session(impersonate="chrome120")
-                s.proxies = worker_proxies
-                r = s.get(p_url, headers=headers, timeout=18)
+                r = s.get(p_url, timeout=18)
                 if r.status_code == 200:
                     return r.json()
             except Exception:
