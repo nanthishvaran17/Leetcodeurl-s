@@ -345,13 +345,35 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     data = None
     if engine_type == "chrome" and engine_obj:
         try:
-            # 1. First visit root domain to pass Cloudflare WAF and obtain full cookie set
-            engine_obj.get("https://leetcode.com")
-            time.sleep(4)
-
-            # 2. Navigate to contest ranking page
+            # 1. Open ranking page
+            print(f"[INFO] Navigating Chrome to {contest_url}...")
             engine_obj.get(contest_url)
-            time.sleep(4)
+            
+            # 2. Wait and solve Cloudflare turnstile if presented
+            for i in range(12):
+                page_title = engine_obj.title.lower()
+                source = engine_obj.page_source.lower()
+                if "just a moment" in page_title or "verify you are human" in source or "checking your browser" in source:
+                    print(f"  [INFO] Cloudflare challenge detected (attempt {i+1}/12)... waiting for solve...")
+                    time.sleep(2)
+                    # Try clicking turnstile checkbox if present inside shadow root or iframe
+                    try:
+                        frames = engine_obj.find_elements("tag name", "iframe")
+                        for frame in frames:
+                            if "cloudflare" in (frame.get_attribute("src") or "").lower():
+                                engine_obj.switch_to.frame(frame)
+                                chk = engine_obj.find_elements("tag name", "input")
+                                if chk:
+                                    chk[0].click()
+                                    print("  [SUCCESS] Clicked Cloudflare Turnstile checkbox!")
+                                engine_obj.switch_to.default_content()
+                    except:
+                        pass
+                else:
+                    print(f"[SUCCESS] Cloudflare Challenge Passed! Page title: '{engine_obj.title}'")
+                    break
+
+            time.sleep(3)
 
             # 3. Direct in-browser JavaScript fetch (Bypasses Cloudflare 100% because request is from inside Chrome)
             js_fetch = f"""
