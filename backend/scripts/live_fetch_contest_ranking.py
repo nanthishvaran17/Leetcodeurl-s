@@ -34,11 +34,17 @@ if "sqlite" in str(engine.url):
 
 
 def get_session():
-    """Starts a Virtual Desktop Display and runs real desktop Chrome to bypass Cloudflare completely."""
+    """Starts a clean Virtual Desktop Display and runs real desktop Chrome to bypass Cloudflare completely."""
+    import subprocess
+    # Clean up any leftover Chrome or Xvfb instances
+    subprocess.run("pkill -9 -f chrome 2>/dev/null || true", shell=True)
+    subprocess.run("pkill -9 -f Xvfb 2>/dev/null || true", shell=True)
+    time.sleep(1)
+
     vdisplay = None
     try:
         from pyvirtualdisplay import Display
-        print("[INFO] Starting Virtual Desktop Display (1920x1080)...")
+        print("[INFO] Starting Clean Virtual Desktop Display (1920x1080)...")
         vdisplay = Display(visible=0, size=(1920, 1080))
         vdisplay.start()
     except Exception as e:
@@ -352,30 +358,23 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     data = None
     if engine_type == "chrome" and engine_obj:
         try:
-            # 1. Open ranking page
+            # 1. Warm up session on home page (passes Cloudflare WAF without challenges)
+            print("[INFO] Warming up browser session on https://leetcode.com...")
+            engine_obj.get("https://leetcode.com")
+            time.sleep(3)
+
+            # 2. Open contest ranking page
             print(f"[INFO] Navigating Chrome to {contest_url}...")
             engine_obj.get(contest_url)
+            time.sleep(3)
             
-            # 2. Wait and solve Cloudflare turnstile if presented
-            for i in range(12):
+            # 3. Check challenge status
+            for i in range(5):
                 page_title = engine_obj.title.lower()
                 source = engine_obj.page_source.lower()
                 if "just a moment" in page_title or "verify you are human" in source or "checking your browser" in source:
-                    print(f"  [INFO] Cloudflare challenge detected (attempt {i+1}/12)... waiting for solve...")
+                    print(f"  [INFO] Cloudflare challenge settling (attempt {i+1}/5)...")
                     time.sleep(2)
-                    # Try clicking turnstile checkbox if present inside shadow root or iframe
-                    try:
-                        frames = engine_obj.find_elements("tag name", "iframe")
-                        for frame in frames:
-                            if "cloudflare" in (frame.get_attribute("src") or "").lower():
-                                engine_obj.switch_to.frame(frame)
-                                chk = engine_obj.find_elements("tag name", "input")
-                                if chk:
-                                    chk[0].click()
-                                    print("  [SUCCESS] Clicked Cloudflare Turnstile checkbox!")
-                                engine_obj.switch_to.default_content()
-                    except:
-                        pass
                 else:
                     print(f"[SUCCESS] Cloudflare Challenge Passed! Page title: '{engine_obj.title}'")
                     break
