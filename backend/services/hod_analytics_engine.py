@@ -24,6 +24,28 @@ def _is_real_dept(dept_code: Optional[str]) -> bool:
         return True
     return is_production_department(dept_code)
 
+def _canonical_year_code(val: Any) -> str:
+    s = str(val or "").strip().upper()
+    if s in ("I", "1", "1ST", "FIRST", "I YEAR", "1 YEAR", "YEAR 1", "YR 1"):
+        return "I"
+    if s in ("II", "2", "2ND", "SECOND", "II YEAR", "2 YEAR", "YEAR 2", "YR 2"):
+        return "II"
+    if s in ("III", "3", "3RD", "THIRD", "III YEAR", "3 YEAR", "YEAR 3", "YR 3"):
+        return "III"
+    if s in ("IV", "4", "4TH", "FOURTH", "IV YEAR", "4 YEAR", "YEAR 4", "YR 4"):
+        return "IV"
+    return s
+
+def _year_matches(year_level: Any) -> List[str]:
+    c = _canonical_year_code(year_level)
+    years_map_dict = {
+        "I": ["1", "I", "1st", "I Year", "1 Year"],
+        "II": ["2", "II", "2nd", "II Year", "2 Year"],
+        "III": ["3", "III", "3rd", "III Year", "3 Year"],
+        "IV": ["4", "IV", "4th", "IV Year", "4 Year"],
+    }
+    return years_map_dict.get(c, [str(year_level)])
+
 def calculate_department_health_score(
     db: Session,
     current_user: Optional[User] = None,
@@ -55,7 +77,7 @@ def calculate_department_health_score(
             base_q = base_q.filter(Student.department_id.notin_(test_dept_ids))
 
     if year_level and year_level != "ALL":
-        base_q = base_q.filter(Student.year_level == year_level)
+        base_q = base_q.filter(Student.year_level.in_(_year_matches(year_level)))
     if section_id:
         base_q = base_q.filter(Student.section_id == section_id)
         
@@ -89,7 +111,7 @@ def calculate_department_health_score(
         stats_q = stats_q.filter(Student.department_id.notin_(test_dept_ids))
 
     if year_level and year_level != "ALL":
-        stats_q = stats_q.filter(Student.year_level == year_level)
+        stats_q = stats_q.filter(Student.year_level.in_(_year_matches(year_level)))
     if section_id:
         stats_q = stats_q.filter(Student.section_id == section_id)
 
@@ -544,11 +566,20 @@ def calculate_department_kpi_summary(
     if year_level and year_level != "ALL":
         years_map_dict = {
             "I": ["1", "I", "1st", "I Year", "1 Year"],
+            "1": ["1", "I", "1st", "I Year", "1 Year"],
+            "1ST": ["1", "I", "1st", "I Year", "1 Year"],
             "II": ["2", "II", "2nd", "II Year", "2 Year"],
+            "2": ["2", "II", "2nd", "II Year", "2 Year"],
+            "2ND": ["2", "II", "2nd", "II Year", "2 Year"],
             "III": ["3", "III", "3rd", "III Year", "3 Year"],
-            "IV": ["4", "IV", "4th", "IV Year", "4 Year"]
+            "3": ["3", "III", "3rd", "III Year", "3 Year"],
+            "3RD": ["3", "III", "3rd", "III Year", "3 Year"],
+            "IV": ["4", "IV", "4th", "IV Year", "4 Year"],
+            "4": ["4", "IV", "4th", "IV Year", "4 Year"],
+            "4TH": ["4", "IV", "4th", "IV Year", "4 Year"],
         }
-        y_matches = years_map_dict.get(year_level, [year_level])
+        clean_yr_key = str(year_level).upper().replace("YEAR", "").strip()
+        y_matches = years_map_dict.get(clean_yr_key) or years_map_dict.get(str(year_level).upper()) or [year_level]
         st_q = st_q.filter(Student.year_level.in_(y_matches))
     if section_id:
         st_q = st_q.filter(Student.section_id == section_id)

@@ -650,154 +650,148 @@ export const StudentDataIssuesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. MULTI-DIMENSIONAL SMART FILTERING WORKSPACE — FIRST */}
-      <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
-          <div>
-            <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center space-x-2">
-              <Filter className="w-4 h-4 text-indigo-600 dark:text-brand-400" />
-              <span>Multi-Dimensional Issue Filtration Matrix</span>
+      {/* 2. MULTI-DIMENSIONAL SMART FILTERING WORKSPACE — MOBILE-FIRST APP LAYOUT */}
+      <div className="p-3.5 sm:p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        {/* Header with Title & Reset Button */}
+        <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
+          <div className="flex items-center space-x-1.5 min-w-0">
+            <Filter className="w-4 h-4 text-indigo-600 dark:text-brand-400 shrink-0" />
+            <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider truncate">
+              Filter &amp; Search Ledger
             </h3>
-            <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300 font-semibold">
-              Filter students by department, academic year, issue type, or name.
-            </p>
+            {(selectedDept !== 'all' || selectedYear !== 'all' || selectedIssue !== 'all' || searchQuery) && (
+              <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse shrink-0" />
+            )}
           </div>
 
-          <div className="flex items-center sm:justify-end">
-            <button
-              onClick={() => {
-                setSelectedDept('all');
-                setSelectedYear('all');
-                setSelectedIssue('all');
-                setSearchQuery('');
-              }}
-              className="w-full sm:w-auto justify-center px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-800 dark:text-slate-200 text-xs font-black border border-slate-300 dark:border-slate-800 transition-all cursor-pointer flex items-center space-x-1.5 shadow-2xs"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Filters</span>
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              setSelectedDept('all');
+              setSelectedYear('all');
+              setSelectedIssue('all');
+              setSearchQuery('');
+            }}
+            className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-900 dark:hover:bg-navy-800 text-slate-800 dark:text-slate-200 text-xs font-black border border-slate-200 dark:border-slate-800 transition-all cursor-pointer flex items-center space-x-1 shadow-2xs shrink-0 active:scale-95"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Reset</span>
+          </button>
         </div>
 
-        {/* Filter Controls Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Search Input — Top-Level Prominent on Mobile */}
+        <div className="relative flex items-center">
+          <input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Search Name, Reg No (732224CC031)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            autoComplete="off"
+            spellCheck={false}
+            className="w-full h-10 min-h-[40px] pl-9 pr-9 bg-slate-50 dark:bg-navy-900/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-inner text-left"
+          />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
+            <Search className="w-3.5 h-3.5 stroke-[2.5]" />
+          </div>
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute inset-y-0 right-0 z-10 flex items-center px-3 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
+              title="Clear Search"
+            >
+              <XCircle className="w-4 h-4 stroke-[2]" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter Controls Row: 2-Column Mobile Grid, 3-Column Desktop */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
           {/* Department Selector */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center space-x-1">
-              <Building2 className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
-              <span>Department Filter</span>
+          <div className="space-y-1">
+            <label className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center space-x-1 truncate">
+              <Building2 className="w-3 h-3 text-indigo-600 dark:text-brand-400 shrink-0" />
+              <span className="truncate">Department</span>
             </label>
             <GlobalFilter
               label=""
               value={selectedDept}
               onChange={setSelectedDept}
               options={deptFilterOptions}
-              icon={<Building2 size={16} />}
+              icon={<Building2 size={15} />}
               showSearch={true}
-              searchPlaceholder="Search department..."
-              dropdownWidth="min-w-[320px]"
+              searchPlaceholder="Search dept..."
+              dropdownWidth="w-full max-w-[calc(100vw-2rem)] sm:min-w-[320px]"
             />
           </div>
 
           {/* Academic Year Selector */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center space-x-1">
-              <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
-              <span>Academic Year</span>
+          <div className="space-y-1">
+            <label className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center space-x-1 truncate">
+              <GraduationCap className="w-3 h-3 text-indigo-600 dark:text-brand-400 shrink-0" />
+              <span className="truncate">Academic Year</span>
             </label>
             <GlobalFilter
               label=""
               value={selectedYear}
               onChange={setSelectedYear}
               options={yearFilterOptions}
-              icon={<GraduationCap size={16} />}
+              icon={<GraduationCap size={15} />}
               showSearch={false}
-              dropdownWidth="min-w-[280px]"
+              dropdownWidth="w-full max-w-[calc(100vw-2rem)] sm:min-w-[280px]"
             />
           </div>
 
-          {/* Issue Category Selector */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center space-x-1">
-              <Sliders className="w-3.5 h-3.5 text-amber-500" />
-              <span>Issue Category</span>
+          {/* Issue Category Selector — col-span-2 on mobile for full width, 1-col on desktop */}
+          <div className="col-span-2 lg:col-span-1 space-y-1">
+            <label className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center space-x-1 truncate">
+              <Sliders className="w-3 h-3 text-amber-500 shrink-0" />
+              <span className="truncate">Issue Category</span>
             </label>
             <GlobalFilter
               label=""
               value={selectedIssue}
               onChange={setSelectedIssue}
               options={issueFilterOptions}
-              icon={<Sliders size={16} />}
+              icon={<Sliders size={15} />}
               showSearch={true}
               searchPlaceholder="Search issue category..."
-              dropdownWidth="min-w-[340px]"
+              dropdownWidth="w-full max-w-[calc(100vw-2rem)] sm:min-w-[340px]"
             />
-          </div>
-
-          {/* Search Input */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center space-x-1">
-              <Search className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
-              <span>Search Query</span>
-            </label>
-            <div className="relative flex items-center">
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search Name, Reg No (732224CC031)..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                autoComplete="off"
-                spellCheck={false}
-                className="w-full h-11 min-h-[44px] pl-10 pr-9 bg-white dark:bg-navy-950 border-2 border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm text-left"
-              />
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
-                <Search className="w-4 h-4 stroke-[2.5]" />
-              </div>
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute inset-y-0 right-0 z-10 flex items-center px-3 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
-                  title="Clear Search"
-                >
-                  <XCircle className="w-4 h-4 stroke-[2]" />
-                </button>
-              )}
-            </div>
           </div>
         </div>
       </div>
 
-      {/* 3. ADMINISTRATIVE QUICK VIEWS & SAVED PRESETS BAR */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-start space-x-1.5 min-w-0 flex-1">
-            <Bookmark className="w-4 h-4 text-amber-500 shrink-0" />
-            <h3 className="text-xs leading-relaxed font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              Administrative Quick Views &amp; Saved Presets
+      {/* 3. ADMINISTRATIVE QUICK VIEWS & SAVED PRESETS BAR — Sleek App-Style Pill Strip */}
+      <div className="p-3 sm:p-4 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center space-x-1.5 min-w-0">
+            <Bookmark className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <h3 className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+              Quick Views &amp; Presets
             </h3>
           </div>
           <button
             onClick={() => setShowSaveViewModal(true)}
-            className="w-full sm:w-auto justify-center px-3 py-2 bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-300 border border-brand-500/30 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1 shadow-2xs"
+            className="px-2.5 py-1 sm:px-3 sm:py-1.5 bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-300 border border-brand-500/30 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1 shadow-2xs active:scale-95"
           >
-            <span>+ Save Current View</span>
+            <span>+ Save View</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5">
+        {/* Mobile Horizontal Scrolling Strip / Desktop Grid */}
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 sm:grid sm:grid-cols-3 lg:grid-cols-6 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden w-full">
           {savedViews.map((view) => (
             <button
               key={view.id}
               onClick={() => handleApplySavedView(view)}
-              className={`px-3 py-2.5 min-h-[46px] h-full rounded-xl text-[11px] sm:text-xs font-extrabold transition-all border cursor-pointer flex items-center justify-center text-center leading-snug w-full ${
+              className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all border cursor-pointer whitespace-nowrap shrink-0 sm:whitespace-normal sm:h-full flex items-center justify-center text-center active:scale-95 shadow-2xs ${
                 selectedDept === view.dept && selectedYear === view.year && selectedIssue === view.issue && searchQuery === view.search
-                  ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 shadow-sm font-black'
-                  : 'bg-slate-50 hover:bg-slate-100 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'
+                  ? 'bg-amber-500 text-white border-amber-600 shadow-sm font-black'
+                  : 'bg-slate-50 hover:bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'
               }`}
             >
-              <span className="w-full text-center leading-tight line-clamp-2">{view.name}</span>
+              <span>{view.name}</span>
             </button>
           ))}
         </div>
@@ -815,31 +809,37 @@ export const StudentDataIssuesPage: React.FC = () => {
             <span className="text-[10px] sm:text-[11px] text-slate-400 font-bold shrink-0">Click row to filter</span>
           </div>
 
-          <div className="rounded-2xl border border-slate-100 dark:border-slate-800 overflow-x-auto">
-            <table className="w-full min-w-[560px] text-center text-xs table-fixed">
+          <div className="rounded-2xl border border-slate-100 dark:border-slate-800 overflow-x-auto sm:overflow-x-visible">
+            <table className="w-full text-center text-xs table-fixed">
               <thead>
-                <tr className="bg-navy-950 text-white uppercase font-black text-[9px] sm:text-[10px]">
-                  <th className="py-2 px-1.5 sm:px-3 text-center w-[26%]">Dept</th>
-                  <th className="py-2 px-1 sm:px-2 text-center w-[12%]">Total</th>
-                  <th className="py-2 px-1 sm:px-2 text-center text-rose-400 w-[15%]">Sync Fail</th>
-                  <th className="py-2 px-1 sm:px-2 text-center text-purple-400 w-[15%]">No User</th>
-                  <th className="py-2 px-1 sm:px-2 text-center text-sky-400 w-[16%]">Not Started</th>
-                  <th className="py-2 px-1 sm:px-2 text-center text-emerald-400 w-[16%]">Healthy</th>
+                <tr className="bg-navy-950 text-white uppercase font-black text-[8px] sm:text-[10px]">
+                  <th className="py-2 px-1 sm:px-3 text-center w-[23%] sm:w-[26%]">Dept</th>
+                  <th className="py-2 px-0.5 sm:px-2 text-center w-[13%] sm:w-[12%]">Total</th>
+                  <th className="py-2 px-0.5 sm:px-2 text-center text-rose-400 w-[16%] sm:w-[15%]">
+                    <span className="sm:hidden">Fail</span>
+                    <span className="hidden sm:inline">Sync Fail</span>
+                  </th>
+                  <th className="py-2 px-0.5 sm:px-2 text-center text-purple-400 w-[16%] sm:w-[15%]">No User</th>
+                  <th className="py-2 px-0.5 sm:px-2 text-center text-sky-400 w-[16%]">
+                    <span className="sm:hidden">Pending</span>
+                    <span className="hidden sm:inline">Not Started</span>
+                  </th>
+                  <th className="py-2 px-0.5 sm:px-2 text-center text-emerald-400 w-[16%]">Healthy</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-bold text-slate-800 dark:text-slate-200 text-[11px] sm:text-xs">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-bold text-slate-800 dark:text-slate-200 text-[10px] sm:text-xs">
                 {deptBreakdown.map((row, idx) => (
                   <tr
                     key={idx}
                     onClick={() => setSelectedDept(row.department)}
                     className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors cursor-pointer"
                   >
-                    <td className="py-2 px-1.5 sm:px-3 text-center font-extrabold text-slate-900 dark:text-white truncate" title={row.department}>{row.department}</td>
-                    <td className="py-2 px-1 sm:px-2 text-center font-mono">{row.total}</td>
-                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-rose-600 dark:text-rose-400">{row.sync_failed}</td>
-                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-purple-600 dark:text-purple-400">{row.missing_username}</td>
-                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-sky-600 dark:text-sky-400">{row.not_started}</td>
-                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-emerald-600 dark:text-emerald-400">{row.healthy}</td>
+                    <td className="py-2 px-1 sm:px-3 text-center font-extrabold text-slate-900 dark:text-white truncate text-[10px] sm:text-xs" title={row.department}>{row.department}</td>
+                    <td className="py-2 px-0.5 sm:px-2 text-center font-mono text-[10.5px] sm:text-xs">{row.total}</td>
+                    <td className="py-2 px-0.5 sm:px-2 text-center font-mono text-rose-600 dark:text-rose-400 text-[10.5px] sm:text-xs">{row.sync_failed}</td>
+                    <td className="py-2 px-0.5 sm:px-2 text-center font-mono text-purple-600 dark:text-purple-400 text-[10.5px] sm:text-xs">{row.missing_username}</td>
+                    <td className="py-2 px-0.5 sm:px-2 text-center font-mono text-sky-600 dark:text-sky-400 text-[10.5px] sm:text-xs">{row.not_started}</td>
+                    <td className="py-2 px-0.5 sm:px-2 text-center font-mono text-emerald-600 dark:text-emerald-400 text-[10.5px] sm:text-xs">{row.healthy}</td>
                   </tr>
                 ))}
               </tbody>
@@ -857,19 +857,25 @@ export const StudentDataIssuesPage: React.FC = () => {
             <span className="text-[10px] sm:text-[11px] text-slate-400 font-bold shrink-0">Click row to filter</span>
           </div>
 
-          <div className="rounded-2xl border border-slate-100 dark:border-slate-800 overflow-x-auto">
-            <table className="w-full min-w-[560px] text-center text-xs table-fixed">
+          <div className="rounded-2xl border border-slate-100 dark:border-slate-800 overflow-x-auto sm:overflow-x-visible">
+            <table className="w-full text-center text-xs table-fixed">
               <thead>
-                <tr className="bg-navy-950 text-white uppercase font-black text-[9px] sm:text-[10px]">
-                  <th className="py-2 px-1.5 sm:px-3 text-center w-[26%]">Year</th>
-                  <th className="py-2 px-1 sm:px-2 text-center w-[12%]">Total</th>
-                  <th className="py-2 px-1 sm:px-2 text-center text-rose-400 w-[15%]">Sync Fail</th>
-                  <th className="py-2 px-1 sm:px-2 text-center text-purple-400 w-[15%]">No User</th>
-                  <th className="py-2 px-1 sm:px-2 text-center text-sky-400 w-[16%]">Not Started</th>
-                  <th className="py-2 px-1 sm:px-2 text-center text-emerald-400 w-[16%]">Healthy</th>
+                <tr className="bg-navy-950 text-white uppercase font-black text-[8px] sm:text-[10px]">
+                  <th className="py-2 px-1 sm:px-3 text-center w-[23%] sm:w-[26%]">Year</th>
+                  <th className="py-2 px-0.5 sm:px-2 text-center w-[13%] sm:w-[12%]">Total</th>
+                  <th className="py-2 px-0.5 sm:px-2 text-center text-rose-400 w-[16%] sm:w-[15%]">
+                    <span className="sm:hidden">Fail</span>
+                    <span className="hidden sm:inline">Sync Fail</span>
+                  </th>
+                  <th className="py-2 px-0.5 sm:px-2 text-center text-purple-400 w-[16%] sm:w-[15%]">No User</th>
+                  <th className="py-2 px-0.5 sm:px-2 text-center text-sky-400 w-[16%]">
+                    <span className="sm:hidden">Pending</span>
+                    <span className="hidden sm:inline">Not Started</span>
+                  </th>
+                  <th className="py-2 px-0.5 sm:px-2 text-center text-emerald-400 w-[16%]">Healthy</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-bold text-slate-800 dark:text-slate-200 text-[11px] sm:text-xs">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-bold text-slate-800 dark:text-slate-200 text-[10px] sm:text-xs">
                 {yearBreakdown.map((row, idx) => (
                   <tr
                     key={idx}
@@ -879,12 +885,12 @@ export const StudentDataIssuesPage: React.FC = () => {
                     }}
                     className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors cursor-pointer"
                   >
-                    <td className="py-2 px-1.5 sm:px-3 text-center font-extrabold text-slate-900 dark:text-white truncate" title={row.year}>{row.year}</td>
-                    <td className="py-2 px-1 sm:px-2 text-center font-mono">{row.total}</td>
-                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-rose-600 dark:text-rose-400">{row.sync_failed}</td>
-                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-purple-600 dark:text-purple-400">{row.missing_username}</td>
-                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-sky-600 dark:text-sky-400">{row.not_started}</td>
-                    <td className="py-2 px-1 sm:px-2 text-center font-mono text-emerald-600 dark:text-emerald-400">{row.healthy}</td>
+                    <td className="py-2 px-1 sm:px-3 text-center font-extrabold text-slate-900 dark:text-white truncate text-[10px] sm:text-xs" title={row.year}>{row.year}</td>
+                    <td className="py-2 px-0.5 sm:px-2 text-center font-mono text-[10.5px] sm:text-xs">{row.total}</td>
+                    <td className="py-2 px-0.5 sm:px-2 text-center font-mono text-rose-600 dark:text-rose-400 text-[10.5px] sm:text-xs">{row.sync_failed}</td>
+                    <td className="py-2 px-0.5 sm:px-2 text-center font-mono text-purple-600 dark:text-purple-400 text-[10.5px] sm:text-xs">{row.missing_username}</td>
+                    <td className="py-2 px-0.5 sm:px-2 text-center font-mono text-sky-600 dark:text-sky-400 text-[10.5px] sm:text-xs">{row.not_started}</td>
+                    <td className="py-2 px-0.5 sm:px-2 text-center font-mono text-emerald-600 dark:text-emerald-400 text-[10.5px] sm:text-xs">{row.healthy}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1008,45 +1014,63 @@ export const StudentDataIssuesPage: React.FC = () => {
               <p>All records within this selection meet verification standards.</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-4 sm:gap-5">
+            <div className="flex flex-col gap-3.5 sm:gap-4.5">
               {paginatedStudents.map((student) => {
                 const isSelected = selectedStudentIds.includes(student.id);
                 const isVerifyingThis = verifyingRowId === student.id;
+                const isCritical = student.severity === 'CRITICAL';
+                const isWarning = student.severity === 'WARNING';
+                const isInfo = student.severity === 'INFO';
 
                 return (
                   <div
                     key={student.id}
-                    className={`relative overflow-hidden rounded-2xl border transition-all duration-300 p-3 sm:p-4 space-y-2.5 shadow-sm hover:shadow-md ${
+                    className={`relative overflow-hidden rounded-3xl border transition-all duration-300 p-4 sm:p-5 space-y-3 shadow-lg ${
                       isSelected
-                        ? 'bg-gradient-to-br from-indigo-50/90 via-slate-50 to-indigo-50/40 border-indigo-400 dark:from-indigo-950/60 dark:via-navy-950 dark:to-indigo-950/30 dark:border-indigo-600 ring-2 ring-indigo-500/20'
-                        : 'bg-white dark:bg-navy-950 border-slate-200/90 dark:border-navy-800 hover:border-slate-300 dark:hover:border-navy-700'
-                    }`}
+                        ? 'bg-gradient-to-br from-indigo-500/10 via-brand-500/5 to-transparent border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/25 shadow-brand-500/10'
+                        : isCritical
+                        ? 'bg-white/80 dark:bg-slate-900/75 border-rose-200/80 dark:border-rose-500/20 shadow-slate-200/40 dark:shadow-black/40'
+                        : isWarning
+                        ? 'bg-white/80 dark:bg-slate-900/75 border-amber-200/80 dark:border-amber-500/20 shadow-slate-200/40 dark:shadow-black/40'
+                        : 'bg-white/80 dark:bg-slate-900/75 border-slate-200/80 dark:border-white/10 shadow-slate-200/40 dark:shadow-black/40'
+                    } backdrop-blur-xl group`}
                   >
-                    {/* Header: Checkbox + Avatar + Name/Reg/Dept + Severity Badge */}
-                    <div className="flex items-start justify-between gap-2 pt-0.5">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                    {/* Ambient Glow */}
+                    <div className={`absolute -top-12 -right-12 w-36 h-36 rounded-full blur-3xl pointer-events-none ${
+                      isCritical ? 'bg-rose-500/10' : isWarning ? 'bg-amber-500/10' : 'bg-emerald-500/10'
+                    }`} />
+
+                    {/* Header Row: Checkbox, Avatar, Name & Reg, Severity Badge */}
+                    <div className="relative z-10 flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleToggleSelectRow(student.id)}
-                          className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer w-3.5 h-3.5 shrink-0"
+                          className="rounded-md border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer w-4 h-4 shrink-0 transition-all"
                         />
 
                         {/* Initial Avatar Badge */}
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 via-brand-600 to-indigo-700 text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-sm border border-white/20">
+                        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center font-display font-black text-xs sm:text-sm text-white shrink-0 shadow-md ${
+                          isCritical
+                            ? 'bg-gradient-to-br from-rose-500 to-red-600 shadow-rose-500/25'
+                            : isWarning
+                            ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/25'
+                            : 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/25'
+                        }`}>
                           {(student.name || 'S').charAt(0).toUpperCase()}
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4 className="font-black text-slate-900 dark:text-white text-xs sm:text-sm tracking-tight truncate sm:whitespace-normal">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-display font-black text-slate-900 dark:text-white text-sm sm:text-base tracking-tight truncate leading-tight">
                               {student.name}
                             </h4>
-                            <span className="font-mono font-black text-indigo-600 dark:text-amber-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-900/40 text-[10px] shrink-0">
+                            <span className="font-mono font-bold text-brand-600 dark:text-brand-300 bg-brand-500/10 dark:bg-brand-500/15 px-2 py-0.5 rounded-lg border border-brand-500/25 text-[10px] shrink-0">
                               {student.reg_no}
                             </span>
                           </div>
-                          <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 font-bold">
+                          <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-bold mt-0.5">
                             {student.department_short} • {student.year_level}
                           </div>
                         </div>
@@ -1054,45 +1078,45 @@ export const StudentDataIssuesPage: React.FC = () => {
 
                       {/* Severity Badge */}
                       <span
-                        className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider shrink-0 shadow-2xs flex items-center gap-1 ${
-                          student.severity === 'CRITICAL'
-                            ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300 dark:border-rose-800/60'
-                            : student.severity === 'WARNING'
-                            ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60'
-                            : student.severity === 'INFO'
-                            ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300 border border-sky-300 dark:border-sky-800/60'
-                            : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/60'
+                        className={`px-2.5 py-1 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider shrink-0 flex items-center gap-1.5 border shadow-xs ${
+                          isCritical
+                            ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-400/30'
+                            : isWarning
+                            ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-400/30'
+                            : isInfo
+                            ? 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-400/30'
+                            : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-400/30'
                         }`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full ${
-                          student.severity === 'CRITICAL' ? 'bg-rose-500' : student.severity === 'WARNING' ? 'bg-amber-500' : 'bg-emerald-500'
+                          isCritical ? 'bg-rose-500' : isWarning ? 'bg-amber-500' : 'bg-emerald-500'
                         } animate-pulse`}></span>
                         {student.issue_label}
                       </span>
                     </div>
 
                     {/* Handle & URL Status Strip */}
-                    <div className="px-2.5 py-1.5 rounded-xl bg-slate-50/90 dark:bg-navy-900/80 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-2 text-[11px] font-mono shadow-2xs">
-                      <div className="min-w-0 truncate flex items-center gap-1">
-                        <span className="text-slate-400 font-bold">Handle:</span>
+                    <div className="relative z-10 px-3 py-2 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/5 flex items-center justify-between gap-2 text-xs font-mono">
+                      <div className="min-w-0 truncate flex items-center gap-1.5">
+                        <span className="text-slate-400 text-[11px] font-bold">Handle:</span>
                         {student.username ? (
-                          <span className="font-black text-sky-600 dark:text-sky-400 truncate bg-sky-50 dark:bg-sky-950/50 px-1.5 py-0.5 rounded border border-sky-200 dark:border-sky-800/40">
+                          <span className="font-black text-sky-600 dark:text-sky-400 truncate bg-sky-500/10 dark:bg-sky-500/15 px-2 py-0.5 rounded-lg border border-sky-400/30">
                             @{student.username}
                           </span>
                         ) : (
-                          <span className="text-rose-500 italic font-bold text-[10px]">No username</span>
+                          <span className="text-rose-500 italic font-bold text-[11px]">No username configured</span>
                         )}
                       </div>
 
                       <div className="flex items-center gap-1 shrink-0">
                         {student.leetcode_url ? (
                           <span
-                            className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1 ${
+                            className={`px-2.5 py-1 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider flex items-center gap-1 border ${
                               student.url_status === 'VERIFIED'
-                                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
+                                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-400/30'
                                 : student.url_status === 'INVALID'
-                                ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30'
-                                : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30'
+                                ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-400/30'
+                                : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-400/30'
                             }`}
                           >
                             <ShieldCheck className="w-3 h-3" />
@@ -1103,32 +1127,32 @@ export const StudentDataIssuesPage: React.FC = () => {
                               : 'NEEDS CHECK'}
                           </span>
                         ) : (
-                          <span className="text-[9px] text-slate-400">— No URL —</span>
+                          <span className="text-[10px] font-mono text-slate-400">— No URL —</span>
                         )}
                       </div>
                     </div>
 
                     {/* Problem Description & Action Details */}
-                    <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-800 space-y-1.5 shadow-2xs">
-                      <p className="text-slate-900 dark:text-white font-extrabold text-[11.5px] leading-snug">
+                    <div className="relative z-10 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/5 space-y-2">
+                      <p className="text-slate-900 dark:text-white font-black text-xs leading-snug">
                         {student.error_description}
                       </p>
                       
-                      <div className="flex items-center justify-between gap-2 flex-wrap text-[10.5px] pt-1 border-t border-slate-100 dark:border-navy-800">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300 font-black text-[9px] uppercase tracking-wider border border-amber-400/40 shrink-0 flex items-center gap-1">
-                            <AlertCircle className="w-2.5 h-2.5 text-amber-500" />
+                      <div className="flex items-center justify-between gap-2 flex-wrap text-xs pt-1.5 border-t border-slate-200/60 dark:border-white/5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 font-mono font-black text-[9px] uppercase tracking-wider border border-amber-400/30 shrink-0 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3 text-amber-500" />
                             ACTION
                           </span>
-                          <span className="font-extrabold text-slate-800 dark:text-slate-200 truncate">
+                          <span className="font-bold text-slate-700 dark:text-slate-300 truncate">
                             {student.recommended_action}
                           </span>
                         </div>
 
                         {student.last_sync && (
-                          <div className="text-[10px] font-mono flex items-center gap-1 shrink-0">
+                          <div className="text-[10px] font-mono flex items-center gap-1.5 shrink-0">
                             <span className="text-slate-400">Sync:</span>
-                            <span className="text-slate-700 dark:text-slate-300 font-bold bg-slate-100 dark:bg-navy-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-navy-700">
+                            <span className="text-slate-600 dark:text-slate-300 font-bold bg-white dark:bg-white/5 px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-white/10">
                               {student.last_sync}
                             </span>
                           </div>
@@ -1136,14 +1160,14 @@ export const StudentDataIssuesPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Action Buttons Bar */}
-                    <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-slate-100 dark:border-navy-800/80 flex-wrap">
+                    {/* Action Buttons Row — 2026 Sleek Action Bar */}
+                    <div className="relative z-10 flex items-center justify-end gap-2 pt-2 border-t border-slate-200/60 dark:border-white/5 flex-wrap">
                       {student.leetcode_url && (
                         <a
                           href={student.leetcode_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60 text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95"
+                          className="px-3 py-2 min-h-[38px] rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-400/30 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95 touch-manipulation"
                           title="Open profile"
                         >
                           <ExternalLink className="w-3 h-3 shrink-0" />
@@ -1154,7 +1178,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                       {student.leetcode_url && (
                         <button
                           onClick={() => handleCopyUrl(student)}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95"
+                          className="px-3 py-2 min-h-[38px] rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95 touch-manipulation"
                           title="Copy URL"
                         >
                           {copiedId === student.id ? (
@@ -1175,7 +1199,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                         <button
                           onClick={() => handleVerifySingleUrl(student)}
                           disabled={isVerifyingThis}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95 disabled:opacity-50"
+                          className="px-3 py-2 min-h-[38px] rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95 disabled:opacity-50 touch-manipulation"
                         >
                           <ShieldCheck className={`w-3 h-3 shrink-0 ${isVerifyingThis ? 'animate-spin' : ''}`} />
                           <span>Verify</span>
@@ -1184,7 +1208,7 @@ export const StudentDataIssuesPage: React.FC = () => {
 
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOpenRepairModal(student); }}
-                        className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95"
+                        className="px-3 py-2 min-h-[38px] rounded-xl bg-gradient-to-r from-amber-500/15 to-orange-500/15 hover:from-amber-500/25 hover:to-orange-500/25 text-amber-800 dark:text-amber-300 border border-amber-400/35 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95 touch-manipulation"
                       >
                         <Edit3 className="w-3 h-3 shrink-0" />
                         <span>Repair</span>
@@ -1192,7 +1216,7 @@ export const StudentDataIssuesPage: React.FC = () => {
 
                       <button
                         onClick={() => handleRetrySyncSingle(student)}
-                        className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95"
+                        className="px-3 py-2 min-h-[38px] rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-400/30 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95 touch-manipulation"
                       >
                         <RefreshCw className="w-3 h-3 shrink-0" />
                         <span>Retry</span>

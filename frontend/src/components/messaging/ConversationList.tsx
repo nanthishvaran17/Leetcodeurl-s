@@ -381,11 +381,11 @@ export const ConversationList: React.FC<Props> = ({
               const isBusy = Boolean(processingIds[conv.conversationId]);
 
               return (
-              <div key={conv.conversationId} className={clsx("relative px-1.5", isDropdownOpen ? "z-50" : "z-0")}>
+              <div key={conv.conversationId} className={clsx("relative px-1 sm:px-1.5", isDropdownOpen ? "z-50" : "z-0")}>
                 <button
                   onClick={() => onSelect(conv.conversationId)}
                   className={clsx(
-                    "w-full text-left p-2.5 sm:p-3 rounded-2xl transition-all group/item relative flex items-center gap-3 cursor-pointer",
+                    "w-full text-left p-2.5 sm:p-3 rounded-2xl transition-all group/item relative flex items-center gap-2.5 sm:gap-3 cursor-pointer active:scale-[0.99] touch-manipulation",
                     activeId === conv.conversationId
                       ? "bg-indigo-50/90 dark:bg-navy-900 border border-indigo-300/80 dark:border-indigo-600/50 shadow-sm"
                       : "hover:bg-slate-100/80 dark:hover:bg-navy-900/40 border border-transparent"
@@ -393,11 +393,11 @@ export const ConversationList: React.FC<Props> = ({
                 >
                   {/* Avatar with Status Badge */}
                   <div className="relative shrink-0">
-                    <div className={clsx("w-11 h-11 rounded-2xl flex items-center justify-center font-black text-xs sm:text-sm", getAvatarGradient(conv))}>
+                    <div className={clsx("w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center font-black text-xs sm:text-sm shadow-xs", getAvatarGradient(conv))}>
                       {isAi ? (
-                        <Sparkles className="w-5 h-5 text-amber-300" />
+                        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
                       ) : isTransparency ? (
-                        <ShieldCheck className="w-5 h-5 text-emerald-200" />
+                        <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-200" />
                       ) : (
                         <span className="tracking-wider">
                           {getInitials(conv.otherUser.name)}
@@ -406,13 +406,13 @@ export const ConversationList: React.FC<Props> = ({
                     </div>
                     {/* Online status indicator */}
                     {conv.otherUser.isOnline && (
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-navy-950 rounded-full shadow-xs" title="Online now"></div>
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-emerald-500 border-2 border-white dark:border-navy-950 rounded-full shadow-xs" title="Online now"></div>
                     )}
                   </div>
                   
                   {/* Middle Column: Title, Pinned Indicator & Last Message */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center justify-between gap-2 mb-0.5 sm:mb-1">
                       <h3 className={clsx(
                         "text-xs sm:text-sm truncate tracking-tight flex items-center gap-1.5 min-w-0",
                         isUnread ? "font-black text-slate-900 dark:text-white" : "font-bold text-slate-800 dark:text-slate-200",

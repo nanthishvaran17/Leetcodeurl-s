@@ -1200,6 +1200,16 @@ def generate_universal_report(
         yr = payload.year or filters.get("year", "ALL")
         scope = payload.output_scope or filters.get("output_scope", "COLLEGE")
 
+        # Security Enforcement: Strict HOD Role Department Scoping
+        user_role = (getattr(current_user, "role", "") or "").lower().strip()
+        if user_role in ("hod", "department hod", "department_hod"):
+            from backend.services.authorization_service import get_hod_authorized_department_codes
+            auth_codes = get_hod_authorized_department_codes(db, current_user)
+            if auth_codes and (dept in ("ALL", "", None) or dept not in auth_codes):
+                dept = auth_codes[0]
+                filters["department"] = auth_codes[0]
+                filters["dept"] = auth_codes[0]
+
         config = ReportConfig(
             report_type=payload.report_type,
             department=dept,
@@ -2478,7 +2488,10 @@ def download_universal_excel(
                 }
             )
 
-        if rpt_t in (
+        if rpt_t in ("HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL") or dataset.get("histSummary"):
+            from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
+            excel_bytes = export_dynamic_excel(dataset)
+        elif rpt_t in (
             "MASTER_10_SHEET", "FRIDAY_OFFICIAL_CONTEST", "SUNDAY_LIVE_CONTEST",
             "WEEKLY_CONTEST_INTELLIGENCE", "CONTEST_ATTENDANCE_PARTICIPATION",
             "CONTEST_PERFORMANCE_RANKING", "WEEKLY_STUDENT_PERFORMANCE",
@@ -2486,7 +2499,7 @@ def download_universal_excel(
             "FACULTY_CONSOLIDATED", "FACULTY_COORDINATOR_CONSOLIDATED",
             "HOD_DEPARTMENT_INTELLIGENCE", "PRINCIPAL_EXECUTIVE",
             "MANAGEMENT_EXECUTIVE_SUMMARY", "COLLEGE_EXECUTIVE", "DEPARTMENT_PERFORMANCE",
-            "WEEK_ON_WEEK_INTELLIGENCE", "HISTORICAL_CONTEST_INTELLIGENCE"
+            "WEEK_ON_WEEK_INTELLIGENCE"
         ):
             from backend.services.pregenerated_report_service import generate_report_bytes
             filters = {

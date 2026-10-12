@@ -227,29 +227,50 @@ def download_latest_apk():
     )
 
 @router.get("/reports/{filename}")
-def download_direct_report(filename: str, db: Session = Depends(get_db)):
+def download_direct_report(
+    filename: str, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_security_access(["admin", "super admin", "hod", "faculty", "staff", "student"]))
+):
     """
     Direct download endpoint for reports generated and stored in ReportCache.
+    Secured with role-based access control, departmental scoping, and streaming FileResponse.
     """
     from backend.models import ReportCache
     import mimetypes
     
-    record = db.query(ReportCache).filter(ReportCache.filename == filename).first()
-    storage_path = str(record.storage_path) if record and record.storage_path else ""
-    if not record or not storage_path or not os.path.exists(storage_path):
+    # Strip any directory traversal attempt from the request parameter
+    safe_filename = os.path.basename(filename).replace('"', '').replace('\r', '').replace('\n', '')
+    record = db.query(ReportCache).filter(ReportCache.filename == safe_filename).first()
+    if not record or not record.storage_path:
         raise HTTPException(status_code=404, detail="Report data not found.")
         
-    mime_type_str = str(record.mime_type) if record and record.mime_type else (mimetypes.guess_type(storage_path)[0] or "application/octet-stream")
-    
-    with open(storage_path, "rb") as f:
-        file_bytes = f.read()
+    storage_path = os.path.realpath(str(record.storage_path))
+    if not os.path.exists(storage_path) or not os.path.isfile(storage_path):
+        raise HTTPException(status_code=404, detail="Report file missing from disk.")
         
-    return Response(
-        content=file_bytes,
+    # Department / Institution Access Control
+    user_role = str(getattr(current_user, "role", "")).lower().strip()
+    role_alias = {"super admin": "admin", "super_admin": "admin", "administrator": "admin",
+                  "faculty mentor": "faculty", "staff mentor": "staff", "department hod": "hod"}
+    user_role = role_alias.get(user_role, user_role)
+    user_inst = getattr(current_user, "institution_id", None)
+
+    if user_role not in ["admin", "super admin", "super_admin"]:
+        if record.institution_id and user_inst and record.institution_id != user_inst:
+            raise HTTPException(status_code=403, detail="Cross-institution report access forbidden.")
+        if user_role == "hod" and record.department_id and record.department_id != getattr(current_user, "department_id", None):
+            raise HTTPException(status_code=403, detail="Cross-department report access forbidden.")
+        
+    mime_type_str = str(record.mime_type) if record.mime_type else (mimetypes.guess_type(storage_path)[0] or "application/octet-stream")
+    
+    return FileResponse(
+        path=storage_path,
         media_type=mime_type_str,
+        filename=safe_filename,
         headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-            "Cache-Control": "private, no-cache, no-store",
+            "Content-Disposition": f'attachment; filename="{safe_filename}"',
+            "Cache-Control": "private, no-cache, no-store, must-revalidate",
         }
     )
 

@@ -1,5 +1,11 @@
-import React from 'react';
-import { Users, RotateCcw, Eye } from 'lucide-react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { 
+  Users, RotateCcw, Eye, Award, CheckCircle2, 
+  Clock, ArrowRightLeft, UserX, Search, Filter,
+  ShieldCheck, AlertCircle, ChevronRight, X, Activity,
+  ExternalLink, Zap, CheckCircle, TrendingUp
+} from 'lucide-react';
 
 interface FacultyMentorMatrixCardProps {
   staffList: any[];
@@ -11,6 +17,7 @@ interface FacultyMentorMatrixCardProps {
   setSelectedStaffDetail: (staff: any) => void;
   handleUnassignAllForStaff: (id: number, username: string) => void;
   getDeptBadgeStyle: (deptCode: string) => string;
+  onViewActiveMentees?: () => void;
 }
 
 export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = ({
@@ -23,190 +30,338 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
   setSelectedStaffDetail,
   handleUnassignAllForStaff,
   getDeptBadgeStyle,
+  onViewActiveMentees,
 }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showActiveMenteesModal, setShowActiveMenteesModal] = useState<boolean>(false);
+
+  // Computed summary metrics for the mentors
+  const totalStaff = staffList.length;
+  const allocatedStaff = staffList.filter(s => (s.assigned_count || 0) > 0).length;
+  const unallocatedStaff = totalStaff - allocatedStaff;
+  const totalAssignedMentees = staffList.reduce((acc, s) => acc + (s.assigned_count || 0), 0);
+  const totalActiveSolvers = staffList.reduce((acc, s) => acc + ((s as any).active_count || 0), 0);
+  const overallActiveRate = totalAssignedMentees > 0 
+    ? Math.round((totalActiveSolvers / totalAssignedMentees) * 100) 
+    : 0;
+
+  const filteredStaff = staffList.filter((s) => {
+    // Workload filter
+    if (staffWorkloadFilter === 'COMPLETED' || staffWorkloadFilter === 'ALLOCATED') {
+      if ((s.assigned_count || 0) === 0) return false;
+    } else if (staffWorkloadFilter === 'PENDING' || staffWorkloadFilter === 'UNALLOCATED') {
+      if ((s.assigned_count || 0) > 0) return false;
+    }
+    // Search query filter
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      const u = (s.username || '').toLowerCase();
+      const e = (s.email || '').toLowerCase();
+      const d = ((s as any).department_code || '').toLowerCase();
+      return u.includes(q) || e.includes(q) || d.includes(q);
+    }
+    return true;
+  });
+
   return (
     <div
       id="staff-performance-section"
-      className="p-5 space-y-3.5 scroll-mt-20 my-6 rounded-2xl bg-white dark:bg-navy-950 border-2 border-slate-200/80 dark:border-navy-700 shadow-md hover:shadow-lg transition-all"
+      className="stagger-4 relative overflow-hidden rounded-3xl bg-white/95 dark:bg-[#0c1424]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-xl my-6 transition-all"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-navy-800">
-        <div>
-          <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Users size={16} className="text-brand-500" />
-            <span>Faculty Mentors Performance & Progress Matrix</span>
+      {/* Decorative ambient gradient backdrop */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-indigo-500/10 via-brand-500/5 to-transparent rounded-bl-full pointer-events-none blur-2xl" />
+
+      {/* 1. Header & Controls */}
+      <div className="p-5 sm:p-7 border-b border-slate-100 dark:border-white/10 relative z-10 space-y-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-brand-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-display text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
+                  <span>Faculty Mentors Performance &amp; Progress Matrix</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-500/30">
+                    Live Telemetry
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  Track mentorship workload, active solver rates, Sunday contest engagement, and completion across staff members
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Hub Buttons */}
+          <div className="flex flex-wrap items-center gap-2 sm:self-center">
             {staffWorkloadFilter !== 'ALL' && (
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                  staffWorkloadFilter === 'COMPLETED'
-                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                    : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                }`}
+              <button
+                onClick={() => setStaffWorkloadFilter('ALL')}
+                className="min-h-[40px] px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 touch-manipulation"
               >
-                Showing: {staffWorkloadFilter === 'COMPLETED' ? 'Target Achieved (20+)' : 'Pending Target (<20)'}
-              </span>
+                <RotateCcw size={12} className="text-slate-500" />
+                <span>Show All Staff</span>
+              </button>
             )}
-          </h3>
-          <p className="text-xs text-slate-700 dark:text-slate-400">
-            Track mentorship workload, active solver rates, and student completion across staff members
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {staffWorkloadFilter !== 'ALL' && (
             <button
-              onClick={() => setStaffWorkloadFilter('ALL')}
-              className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+              onClick={() => setShowStaffAllocationModal(true)}
+              className="min-h-[40px] px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-indigo-700 hover:from-brand-500 hover:to-indigo-600 text-white font-black text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-indigo-600/20 active:scale-95 touch-manipulation"
             >
-              <RotateCcw size={11} />
-              <span>Show All Staff</span>
+              <Users size={14} className="shrink-0" />
+              <span>Manage Allocation</span>
             </button>
-          )}
-          <button
-            onClick={() => setShowStaffAllocationModal(true)}
-            className="px-3 py-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-600 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+          </div>
+        </div>
+
+        {/* 2. Micro Executive Summary Strip (All Interactive) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 pt-2">
+          {/* Total Mentors Card — Click opens Allocation & Roster Manager */}
+          <div 
+            onClick={() => {
+              setStaffWorkloadFilter('ALL');
+              setShowStaffAllocationModal(true);
+            }}
+            className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/5 hover:border-indigo-500/50 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 transition-all cursor-pointer group active:scale-[0.98] shadow-xs"
+            title="Click to open Faculty Allocation & Mentors Manager"
           >
-            <Users size={13} />
-            <span>Manage Allocation</span>
-          </button>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                Total Mentors
+              </span>
+              <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 opacity-80 group-hover:opacity-100 flex items-center gap-0.5 transition-all">
+                Manage <ChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+              </span>
+            </div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-lg sm:text-xl font-black font-mono text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                {totalStaff}
+              </span>
+              <span className="text-[10px] font-bold text-slate-500">Faculty</span>
+            </div>
+          </div>
+
+          {/* Allocated Mentors Filter Card */}
+          <div 
+            onClick={() => setStaffWorkloadFilter(staffWorkloadFilter === 'COMPLETED' ? 'ALL' : 'COMPLETED')}
+            className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer active:scale-[0.98] shadow-xs ${
+              staffWorkloadFilter === 'COMPLETED'
+                ? 'bg-emerald-500/10 border-emerald-500/40 ring-2 ring-emerald-500/20'
+                : 'bg-slate-50 dark:bg-slate-900/60 border-slate-200/70 dark:border-white/5 hover:border-emerald-500/30'
+            }`}
+            title="Click to toggle filter for Allocated faculty mentors"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Allocated</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            </div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-lg sm:text-xl font-black font-mono text-emerald-600 dark:text-emerald-400">{allocatedStaff}</span>
+              <span className="text-[10px] font-bold text-slate-500">Active Duty</span>
+            </div>
+          </div>
+
+          {/* Unallocated Mentors Filter Card */}
+          <div 
+            onClick={() => setStaffWorkloadFilter(staffWorkloadFilter === 'PENDING' ? 'ALL' : 'PENDING')}
+            className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer active:scale-[0.98] shadow-xs ${
+              staffWorkloadFilter === 'PENDING'
+                ? 'bg-amber-500/10 border-amber-500/40 ring-2 ring-amber-500/20'
+                : 'bg-slate-50 dark:bg-slate-900/60 border-slate-200/70 dark:border-white/5 hover:border-amber-500/30'
+            }`}
+            title="Click to toggle filter for Unallocated faculty mentors"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">Unallocated</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            </div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-lg sm:text-xl font-black font-mono text-amber-600 dark:text-amber-400">{unallocatedStaff}</span>
+              <span className="text-[10px] font-bold text-slate-500">Mentors</span>
+            </div>
+          </div>
+
+          {/* Mentees Active Card — Click opens Active Mentees & Telemetry Modal */}
+          <div 
+            onClick={() => setShowActiveMenteesModal(true)}
+            className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/5 hover:border-indigo-500/50 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 transition-all cursor-pointer group active:scale-[0.98] shadow-xs"
+            title="Click to open Active Mentees & Solver Participation Telemetry"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                Mentees Active
+              </span>
+              <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 opacity-80 group-hover:opacity-100 flex items-center gap-0.5 transition-all">
+                Inspect <ChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+              </span>
+            </div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-lg sm:text-xl font-black font-mono text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-500 transition-colors">
+                {totalActiveSolvers}/{totalAssignedMentees}
+              </span>
+              <span className="text-[10px] font-mono font-bold text-indigo-500">({overallActiveRate}%)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Search Toolbar */}
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search faculty mentor by name, email, or department..."
+            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-medium"
+          />
         </div>
       </div>
 
-      <div className="w-full overflow-x-auto">
+      {/* 4. Table / Responsive Cards Display */}
+      <div className="w-full overflow-x-auto pb-6 sm:pb-8">
         <table className="w-full text-left text-xs border-collapse block md:table">
           <thead className="hidden md:table-header-group">
-            <tr className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 bg-slate-100/90 dark:bg-navy-900 border-b border-slate-300 dark:border-navy-700">
-              <th className="py-2.5 px-3">Faculty Mentor</th>
-              <th className="py-2.5 px-3">Dept</th>
-              <th className="py-2.5 px-3 text-right">Assigned Mentees</th>
-              <th className="py-2.5 px-3 text-right">Active Solvers</th>
-              <th className="py-2.5 px-3 text-center">Sunday Contest</th>
-              <th className="py-2.5 px-3 text-right">Completion Rate</th>
-              <th className="py-2.5 px-3 text-center">Workload Status</th>
-              <th className="py-2.5 px-3 text-center">Action</th>
+            <tr className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 bg-slate-100/70 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-white/10">
+              <th className="py-4 px-4">Faculty Mentor</th>
+              <th className="py-4 px-3">Dept</th>
+              <th className="py-4 px-3 text-center">Assigned</th>
+              <th className="py-4 px-3 text-center">Active Solvers</th>
+              <th className="py-4 px-3 text-center">Sunday Contest</th>
+              <th className="py-4 px-3 text-center">Completion Rate</th>
+              <th className="py-4 px-3 text-center">Workload Status</th>
+              <th className="py-4 px-4 text-center">Actions</th>
             </tr>
           </thead>
-          <tbody className="block md:table-row-group divide-y-0 md:divide-y divide-slate-100 dark:divide-navy-800 font-mono">
-            {(() => {
-              const displayedStaff = staffList.filter((s) => {
-                if (staffWorkloadFilter === 'COMPLETED') return (s.assigned_count || 0) >= 20;
-                if (staffWorkloadFilter === 'PENDING') return (s.assigned_count || 0) < 20;
-                return true;
-              });
-
-              if (displayedStaff.length === 0) {
-                return (
-                  <tr>
-                    <td colSpan={8} className="py-8 text-center text-slate-700 dark:text-slate-400 font-bold">
-                      No staff members match the "{staffWorkloadFilter}" workload filter.
-                    </td>
-                  </tr>
-                );
-              }
-
-              return displayedStaff.map((s) => {
+          <tbody className="block md:table-row-group divide-y-0 md:divide-y divide-slate-100 dark:divide-white/5 font-mono">
+            {filteredStaff.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="py-12 text-center text-slate-500 dark:text-slate-400 font-bold font-sans">
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <UserX className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                    <span>No faculty mentors match the selected criteria.</span>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              filteredStaff.map((s) => {
                 const assigned = s.assigned_count || 0;
-                const maxAllowed = s.max_allowed || 30;
                 const active = (s as any).active_count || 0;
                 const completionRate = assigned > 0 ? Math.round((active / assigned) * 100) : 0;
                 const isSelected = selectedStaff === String(s.id);
                 const deptCode = (s as any).department_code || 'DEPT';
                 const deptBadge = getDeptBadgeStyle(deptCode);
+                const initial = (s.username || 'F').charAt(0).toUpperCase();
 
                 return (
                   <tr
                     key={s.id}
-                    onClick={() => handleFilterByStaff(s.id, s.username)}
-                    className={`block md:table-row hover:bg-brand-50/70 dark:hover:bg-navy-800 cursor-pointer transition-colors bg-white dark:bg-navy-950 mb-4 md:mb-0 p-4 md:p-0 rounded-xl shadow-sm md:shadow-none border border-slate-200 dark:border-none ${
+                    onClick={() => setSelectedStaffDetail(s)}
+                    className={`block md:table-row hover:bg-indigo-50/50 dark:hover:bg-slate-800/40 cursor-pointer transition-colors bg-white dark:bg-transparent mb-3.5 md:mb-0 p-4 md:p-0 rounded-2xl shadow-sm md:shadow-none border border-slate-200/80 dark:border-white/5 md:border-none ${
                       isSelected
-                        ? 'md:bg-brand-50/90 dark:md:bg-navy-800 font-bold ring-2 md:ring-0 ring-brand-500'
+                        ? 'md:bg-indigo-50/80 dark:md:bg-indigo-950/30 ring-2 ring-indigo-500/50 rounded-2xl'
                         : ''
                     }`}
                   >
                     {/* Faculty Mentor Info */}
-                    <td className="flex items-center gap-3 pb-3 md:pb-0 md:py-3 md:px-3 font-bold text-slate-900 dark:text-white font-sans border-b border-slate-100 dark:border-navy-800 md:border-none md:table-cell">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-black flex items-center justify-center text-xs border border-brand-300 dark:border-brand-800 shadow-sm shrink-0">
-                          {s.username ? s.username.charAt(0).toUpperCase() : 'S'}
+                    <td className="flex items-center gap-3 pb-3 md:pb-0 md:py-3.5 md:px-4 font-bold text-slate-900 dark:text-white font-sans border-b border-slate-100 dark:border-white/5 md:border-none md:table-cell">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-brand-500/20 text-indigo-600 dark:text-indigo-400 font-black flex items-center justify-center text-sm border border-indigo-400/30 shadow-sm shrink-0">
+                          {initial}
                         </div>
-                        <div>
-                          <div className="font-extrabold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
+                        <div className="min-w-0">
+                          <div className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5 truncate">
                             <span>{s.username}</span>
                             {isSelected && (
-                              <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-wider shadow-xs">
-                                Active Scope
+                              <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-wider">
+                                Active Filter
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-slate-600 font-mono font-medium">{s.email}</div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-medium truncate">
+                            {s.email}
+                          </div>
                         </div>
                       </div>
                     </td>
 
                     {/* Department Badge */}
-                    <td className="flex items-center justify-between py-2.5 md:py-3 md:px-3 border-b border-slate-50 dark:border-navy-800/50 md:border-none md:table-cell">
-                      <span className="md:hidden text-xs font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">
-                        Dept
+                    <td className="flex items-center justify-between py-2 md:py-3.5 md:px-3 border-b border-slate-50 dark:border-white/5 md:border-none md:table-cell">
+                      <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Department
                       </span>
                       <div className="text-right md:text-left">
-                        <span className={`px-2.5 py-0.5 rounded font-mono text-xs font-extrabold inline-block border shadow-xs ${deptBadge}`}>
+                        <span className={`px-2.5 py-0.5 rounded-lg font-mono text-[11px] font-extrabold inline-block border shadow-xs ${deptBadge}`}>
                           {deptCode}
                         </span>
                       </div>
                     </td>
 
                     {/* Assigned Mentees */}
-                    <td className="flex items-center justify-between py-2.5 md:py-3 md:px-3 text-right font-mono border-b border-slate-50 dark:border-navy-800/50 md:border-none md:table-cell">
-                      <span className="md:hidden text-xs font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">
+                    <td className="flex items-center justify-between py-2 md:py-3.5 md:px-3 text-center font-mono border-b border-slate-50 dark:border-white/5 md:border-none md:table-cell">
+                      <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         Assigned Mentees
                       </span>
-                      <div>
-                        <span className="font-black text-slate-900 dark:text-white text-xs">{assigned}</span>
-                        <span className="text-xs text-slate-700 dark:text-slate-400 font-bold"> / {maxAllowed}</span>
+                      <div className="text-right md:text-center">
+                        {assigned > 0 ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-black">
+                            <span>{assigned}</span>
+                            <span className="text-[10px] text-slate-500 font-sans font-bold">Mentees</span>
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 dark:text-slate-500 font-bold text-xs">0 Mentees</span>
+                        )}
                       </div>
                     </td>
 
                     {/* Active Solvers */}
-                    <td className="flex items-center justify-between py-2.5 md:py-3 md:px-3 text-right font-mono border-b border-slate-50 dark:border-navy-800/50 md:border-none md:table-cell">
-                      <span className="md:hidden text-xs font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">
+                    <td className="flex items-center justify-between py-2 md:py-3.5 md:px-3 text-center font-mono border-b border-slate-50 dark:border-white/5 md:border-none md:table-cell">
+                      <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         Active Solvers
                       </span>
-                      <div>
-                        {active > 0 ? (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-extrabold text-xs inline-flex items-center gap-1 border border-emerald-300 dark:border-emerald-800">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            {active} active
+                      <div className="text-right md:text-center">
+                        {assigned > 0 ? (
+                          <span className={`px-2.5 py-1 rounded-xl font-extrabold text-xs inline-flex items-center gap-1.5 border ${
+                            active === assigned
+                              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                              : active > 0
+                              ? 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${active > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                            <span>{active} / {assigned}</span>
+                            <span className="text-[10px] opacity-80 font-bold">({completionRate}%)</span>
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-600 font-bold text-xs inline-flex items-center gap-1 border border-slate-200 dark:border-navy-700">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                            0 active
+                          <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 font-bold text-xs inline-flex items-center gap-1 border border-slate-200 dark:border-slate-700">
+                            0 / 0
                           </span>
                         )}
                       </div>
                     </td>
 
                     {/* Sunday Contest Attendance */}
-                    <td className="flex items-center justify-between py-2.5 md:py-3 md:px-3 text-center font-mono border-b border-slate-50 dark:border-navy-800/50 md:border-none md:table-cell">
-                      <span className="md:hidden text-xs font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">
+                    <td className="flex items-center justify-between py-2 md:py-3.5 md:px-3 text-center font-mono border-b border-slate-50 dark:border-white/5 md:border-none md:table-cell">
+                      <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         Sunday Contest
                       </span>
-                      <div>
+                      <div className="text-right md:text-center">
                         {assigned > 0 ? (
                           <span
-                            className={`px-2 py-0.5 rounded-full text-xs font-extrabold inline-flex items-center gap-1 border ${
+                            className={`px-2.5 py-1 rounded-xl text-xs font-extrabold inline-flex items-center gap-1 border ${
                               (s.sunday_contest_turnout_pct || 0) >= 80
-                                ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300'
+                                ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30'
                                 : (s.sunday_contest_turnout_pct || 0) >= 50
-                                ? 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950 dark:text-indigo-300'
+                                ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
                                 : (s.sunday_contest_attended || 0) > 0
-                                ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300'
-                                : 'bg-slate-100 text-slate-600 border-slate-300 dark:bg-navy-800 dark:text-slate-400'
+                                ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
                             }`}
                             title={`${s.sunday_contest_session_name || 'Sunday Contest'}: ${s.sunday_contest_attended || 0} of ${assigned} attended`}
                           >
                             <span>
                               {s.sunday_contest_attended ?? 0} / {assigned}
                             </span>
-                            <span className="text-[10px] opacity-75">
+                            <span className="text-[10px] opacity-80">
                               ({s.sunday_contest_turnout_pct ?? 0}%)
                             </span>
                           </span>
@@ -216,13 +371,13 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                       </div>
                     </td>
 
-                    {/* Completion Rate */}
-                    <td className="flex items-center justify-between py-2.5 md:py-3 md:px-3 text-right font-mono border-b border-slate-50 dark:border-navy-800/50 md:border-none md:table-cell">
-                      <span className="md:hidden text-xs font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">
-                        Completion
+                    {/* Completion Rate Gauge */}
+                    <td className="flex items-center justify-between py-2 md:py-3.5 md:px-3 text-center font-mono border-b border-slate-50 dark:border-white/5 md:border-none md:table-cell">
+                      <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Completion Rate
                       </span>
-                      <div className="flex items-center justify-end gap-2 w-1/2 md:w-auto">
-                        <div className="relative w-20 h-2.5 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden border border-slate-200 dark:border-navy-700 shadow-inner">
+                      <div className="flex items-center justify-end md:justify-center gap-2">
+                        <div className="relative w-16 sm:w-20 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner">
                           <div
                             className={`h-full rounded-full transition-all duration-300 ${
                               completionRate >= 80
@@ -235,103 +390,99 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                             }`}
                             style={{ width: `${completionRate}%` }}
                           />
-                          {completionRate === 0 && (
-                            <span className="absolute left-0.5 top-0.5 w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500" />
-                          )}
                         </div>
-                        <span
-                          className={`font-extrabold text-xs ${
-                            completionRate === 0 ? 'text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-white'
-                          }`}
-                        >
+                        <span className={`font-black text-xs ${
+                          completionRate === 0 ? 'text-slate-400' : 'text-slate-800 dark:text-white'
+                        }`}>
                           {completionRate}%
                         </span>
                       </div>
                     </td>
 
                     {/* Workload Status */}
-                    <td className="flex items-center justify-between py-2.5 md:py-3 md:px-3 text-center md:table-cell border-b border-slate-50 dark:border-navy-800/50 md:border-none">
-                      <span className="md:hidden text-xs font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">
-                        Workload
+                    <td className="flex items-center justify-between py-2 md:py-3.5 md:px-3 text-center md:table-cell border-b border-slate-50 dark:border-white/5 md:border-none">
+                      <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Workload Status
                       </span>
-                      <div>
+                      <div className="text-right md:text-center">
                         <span
-                          className={`px-2.5 py-1 rounded-md text-xs font-black border uppercase tracking-tight ${
-                            assigned >= 30
-                              ? 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300'
-                              : assigned >= 20
-                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300'
-                              : assigned > 0
-                              ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300'
-                              : 'bg-slate-100 text-slate-600 border-slate-300 dark:bg-navy-800'
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-black border uppercase tracking-wider ${
+                            assigned === 0
+                              ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                              : active === assigned
+                              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                              : active > 0
+                              ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30'
+                              : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
                           }`}
                         >
-                          {assigned >= 30
-                            ? 'MAX CAPACITY (30)'
-                            : assigned >= 20
-                            ? 'TARGET REACHED (20+)'
-                            : assigned > 0
-                            ? 'WITHIN CAPACITY'
-                            : 'UNALLOCATED (0)'}
+                          {assigned === 0
+                            ? 'UNALLOCATED (0)'
+                            : active === assigned
+                            ? `100% ACTIVE (${assigned})`
+                            : active > 0
+                            ? `ALLOCATED (${assigned})`
+                            : `PENDING (${assigned})`}
                         </span>
                       </div>
                     </td>
 
                     {/* Action Buttons */}
                     <td
-                      className="flex items-center justify-between py-2.5 pt-3 md:py-3 md:px-3 text-center md:table-cell"
+                      className="flex flex-col md:table-cell py-3 md:py-3.5 md:px-4 text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <span className="md:hidden text-xs font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">
-                        Actions
-                      </span>
-                      <div className="flex flex-wrap items-center justify-end md:justify-center gap-2 mt-2 md:mt-0">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleFilterByStaff(s.id, s.username);
-                          }}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer shadow-xs whitespace-nowrap flex items-center gap-1.5 ${
-                            isSelected
-                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30 ring-2 ring-emerald-400'
-                              : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-600/20'
-                          }`}
-                          title={
-                            isSelected
-                              ? 'Currently filtering dashboard by this mentor (Click to reset)'
-                              : `Filter entire dashboard to ${s.username}'s mentees`
-                          }
-                        >
-                          <Eye size={12} />
-                          <span>{isSelected ? 'Active Scope ✓' : 'View Data'}</span>
-                        </button>
+                      <div className="flex flex-wrap items-center justify-end md:justify-center gap-1.5 w-full">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedStaffDetail(s);
                           }}
-                          className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-slate-200 text-xs font-extrabold transition cursor-pointer border border-slate-200 dark:border-navy-700 whitespace-nowrap"
-                          title="Inspect full profile & performance drawer"
+                          className="min-h-[34px] px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-500 hover:to-brand-500 text-white text-xs font-black transition-all cursor-pointer shadow-sm shadow-indigo-600/20 whitespace-nowrap flex items-center justify-center gap-1.5 active:scale-95 touch-manipulation"
+                          title="Open full profile & performance popup drawer"
                         >
-                          Inspect Details →
+                          <Eye size={12} className="shrink-0" />
+                          <span>Inspect</span>
                         </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFilterByStaff(s.id, s.username);
+                          }}
+                          className={`min-h-[34px] px-3 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-1 active:scale-95 touch-manipulation ${
+                            isSelected
+                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30'
+                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
+                          }`}
+                          title={
+                            isSelected
+                              ? 'Currently filtering dashboard by this mentor (Click to reset)'
+                              : `Filter entire dashboard table to ${s.username}'s mentees`
+                          }
+                        >
+                          <span>{isSelected ? 'Active Scope ✓' : 'Filter Scope'}</span>
+                        </button>
+
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setShowStaffAllocationModal(true);
                           }}
-                          className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-slate-200 text-xs font-extrabold transition cursor-pointer border border-slate-200 dark:border-navy-700 whitespace-nowrap"
+                          className="min-h-[34px] px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer border border-slate-200 dark:border-slate-700 whitespace-nowrap flex items-center justify-center touch-manipulation active:scale-95"
                           title="Manage Faculty Allocation"
                         >
-                          Reassign ⇄
+                          <ArrowRightLeft size={11} className="mr-1 text-slate-500" />
+                          Reassign
                         </button>
+
                         {assigned > 0 && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleUnassignAllForStaff(s.id, s.username);
                             }}
-                            className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 text-xs font-extrabold transition cursor-pointer border border-rose-200 dark:border-rose-800/80 whitespace-nowrap"
+                            className="min-h-[34px] px-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 text-xs font-bold transition-all cursor-pointer border border-rose-200 dark:border-rose-900/50 whitespace-nowrap flex items-center justify-center touch-manipulation active:scale-95"
                             title="Unassign All Mentees from this Staff Mentor"
                           >
                             Unassign
@@ -341,12 +492,265 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                     </td>
                   </tr>
                 );
-              });
-            })()}
+              })
+            )}
           </tbody>
         </table>
       </div>
+
+      {/* 5. Matrix Status & Summary Footer Strip */}
+      <div className="px-5 sm:px-7 py-3.5 border-t border-slate-100 dark:border-white/10 bg-slate-50/60 dark:bg-slate-900/40 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
+        <div className="flex items-center gap-2 font-mono text-[11px]">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>
+            Displaying <strong className="text-slate-800 dark:text-slate-200">{filteredStaff.length}</strong> of{' '}
+            <strong className="text-slate-800 dark:text-slate-200">{staffList.length}</strong> faculty mentors
+          </span>
+        </div>
+        <div className="text-[11px] text-slate-400 dark:text-slate-500 font-sans">
+          Click any faculty row to inspect student telemetry
+        </div>
+      </div>
+
+      {/* 5. Active Mentees & Solver Participation Telemetry Modal */}
+      {showActiveMenteesModal && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[100050] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/85 dark:bg-black/90 backdrop-blur-md animate-fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowActiveMenteesModal(false);
+          }}
+        >
+          <div className="w-full sm:max-w-3xl bg-white dark:bg-navy-950 rounded-t-3xl sm:rounded-3xl p-5 sm:p-7 border-t sm:border border-slate-200 dark:border-navy-700 shadow-2xl space-y-5 max-h-[92vh] sm:max-h-[90vh] overflow-y-auto custom-scrollbar animate-modal-content">
+            {/* Mobile Drag Indicator */}
+            <div className="w-12 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto sm:hidden mb-1 shrink-0" />
+
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-3 pb-4 border-b border-slate-100 dark:border-navy-800">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-500/30 flex items-center gap-1.5">
+                    <Activity className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Active Telemetry Matrix</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    {overallActiveRate}% Overall Rate
+                  </span>
+                </div>
+                <h3 className="font-display text-lg sm:text-xl font-black text-slate-950 dark:text-white flex items-center gap-2">
+                  <span>Active Mentees &amp; Solver Participation Telemetry</span>
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 font-sans leading-relaxed">
+                  Real-time activity audit of students actively solving problems across designated faculty mentors
+                </p>
+              </div>
+
+              <button 
+                onClick={() => setShowActiveMenteesModal(false)} 
+                className="p-1.5 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer shrink-0"
+                title="Close modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* 4 Micro Metric Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40">
+                <div className="text-[10px] font-mono uppercase font-bold text-indigo-600 dark:text-indigo-400 flex items-center justify-between">
+                  <span>Active Solvers</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+                <div className="text-xl sm:text-2xl font-black font-mono text-indigo-700 dark:text-indigo-300 mt-1">
+                  {totalActiveSolvers}
+                </div>
+                <div className="text-[10px] text-slate-500 font-sans">Active this cycle</div>
+              </div>
+
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
+                <div className="text-[10px] font-mono uppercase font-bold text-slate-500 dark:text-slate-400">Total Assigned</div>
+                <div className="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white mt-1">
+                  {totalAssignedMentees}
+                </div>
+                <div className="text-[10px] text-slate-500 font-sans">Enrolled mentees</div>
+              </div>
+
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
+                <div className="text-[10px] font-mono uppercase font-bold text-slate-500 dark:text-slate-400">Completion Rate</div>
+                <div className={`text-xl sm:text-2xl font-black font-mono mt-1 ${
+                  overallActiveRate >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
+                  overallActiveRate >= 50 ? 'text-amber-600 dark:text-amber-400' :
+                  'text-rose-600 dark:text-rose-400'
+                }`}>
+                  {overallActiveRate}%
+                </div>
+                <div className="text-[10px] text-slate-500 font-sans">Solver engagement</div>
+              </div>
+
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
+                <div className="text-[10px] font-mono uppercase font-bold text-slate-500 dark:text-slate-400">Active Faculty</div>
+                <div className="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white mt-1">
+                  {allocatedStaff} / {totalStaff}
+                </div>
+                <div className="text-[10px] text-slate-500 font-sans">Assigned mentors</div>
+              </div>
+            </div>
+
+            {/* Faculty Mentor Telemetry Breakdown */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-display font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <Users size={14} className="text-indigo-500" />
+                  <span>Faculty Mentor Telemetry Breakdown</span>
+                </span>
+                <span className="text-[11px] font-mono text-slate-500">
+                  {staffList.filter(s => (s.assigned_count || 0) > 0).length} Mentors with Active Mentees
+                </span>
+              </div>
+
+              <div className="space-y-2.5 max-h-[38vh] overflow-y-auto pr-1 custom-scrollbar">
+                {staffList.filter(s => (s.assigned_count || 0) > 0).length === 0 ? (
+                  <div className="p-6 text-center text-slate-400 text-xs font-bold bg-slate-50 dark:bg-navy-900/40 rounded-2xl border border-slate-200 dark:border-navy-800">
+                    No faculty mentors currently have assigned mentees. Click 'Manage Allocation' to distribute students.
+                  </div>
+                ) : (
+                  staffList
+                    .filter(s => (s.assigned_count || 0) > 0)
+                    .map((s) => {
+                      const assigned = s.assigned_count || 0;
+                      const active = (s as any).active_count || 0;
+                      const rate = assigned > 0 ? Math.round((active / assigned) * 100) : 0;
+                      const deptCode = (s as any).department_code || 'DEPT';
+                      const initial = (s.username || 'F').charAt(0).toUpperCase();
+
+                      return (
+                        <div
+                          key={s.id}
+                          className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-navy-800 bg-slate-50/70 dark:bg-navy-900/60 hover:bg-slate-100/70 dark:hover:bg-navy-800/70 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-brand-500/20 text-indigo-600 dark:text-indigo-400 font-black flex items-center justify-center text-sm border border-indigo-400/30 shadow-xs shrink-0 font-mono">
+                              {initial}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm truncate">
+                                  {s.username}
+                                </span>
+                                <span className={`px-2 py-0.5 rounded-md font-mono text-[10px] font-extrabold border ${getDeptBadgeStyle(deptCode)}`}>
+                                  {deptCode}
+                                </span>
+                              </div>
+                              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                                {s.email}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                            {/* Gauge and Rate */}
+                            <div className="text-right space-y-1">
+                              <div className="flex items-center justify-end gap-1.5 font-mono text-xs font-black">
+                                <span className="text-indigo-600 dark:text-indigo-400">{active}</span>
+                                <span className="text-slate-400">/</span>
+                                <span className="text-slate-700 dark:text-slate-200">{assigned} Active</span>
+                                <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
+                                  rate >= 80 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' :
+                                  rate >= 50 ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' :
+                                  'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                                }`}>
+                                  {rate}%
+                                </span>
+                              </div>
+                              <div className="w-24 sm:w-28 h-1.5 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-300 ${
+                                    rate >= 80 ? 'bg-emerald-500' : rate >= 50 ? 'bg-amber-500' : 'bg-rose-500'
+                                  }`}
+                                  style={{ width: `${rate}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Quick Action Buttons */}
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => {
+                                  setShowActiveMenteesModal(false);
+                                  setSelectedStaffDetail(s);
+                                }}
+                                className="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black transition flex items-center gap-1 shadow-xs cursor-pointer active:scale-95"
+                                title="Open full mentor profile & mentees list"
+                              >
+                                <Eye size={12} />
+                                <span>Inspect</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setShowActiveMenteesModal(false);
+                                  handleFilterByStaff(s.id, s.username);
+                                }}
+                                className="px-2.5 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer active:scale-95"
+                                title="Filter entire dashboard to this mentor"
+                              >
+                                <span>Filter</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
+              </div>
+            </div>
+
+            {/* Modal Actions Footer */}
+            <div className="pt-3 border-t border-slate-100 dark:border-navy-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowActiveMenteesModal(false);
+                    setShowStaffAllocationModal(true);
+                  }}
+                  className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-navy-700 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                >
+                  <Users size={13} />
+                  <span>Manage Allocation Roster</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowActiveMenteesModal(false);
+                    if (onViewActiveMentees) {
+                      onViewActiveMentees();
+                    } else {
+                      document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-brand-600/20 active:scale-95"
+                >
+                  <TrendingUp size={13} />
+                  <span>View Active Solvers in Live Table ↓</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowActiveMenteesModal(false)}
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition cursor-pointer active:scale-95"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
+
 export default FacultyMentorMatrixCard;
+

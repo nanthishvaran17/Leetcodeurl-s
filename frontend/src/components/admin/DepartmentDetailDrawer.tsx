@@ -56,12 +56,12 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="relative w-full max-w-2xl bg-white dark:bg-navy-950 max-h-[92vh] sm:max-h-none sm:h-full shadow-2xl flex flex-col sm:border-l border-slate-200 dark:border-navy-700 rounded-t-3xl sm:rounded-none overflow-hidden"
+          className="relative w-full max-w-3xl bg-white dark:bg-navy-950 h-full sm:h-full shadow-2xl flex flex-col sm:border-l border-slate-200 dark:border-navy-700 rounded-none overflow-hidden"
         >
           {/* Header */}
-          <div className="relative p-4 sm:p-6 border-b border-indigo-200/50 dark:border-indigo-900/50 flex flex-col bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-navy-900 dark:via-navy-950 dark:to-indigo-950 overflow-hidden rounded-t-3xl sm:rounded-none">
-            {/* Mobile Swipe / Drag Handle Indicator */}
-            <div className="w-12 h-1.5 rounded-full bg-indigo-300 dark:bg-indigo-700 mx-auto sm:hidden shrink-0 -mt-1 mb-3 relative z-20" />
+          <div className="relative p-4 sm:p-6 border-b border-indigo-200/50 dark:border-indigo-900/50 flex flex-col bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-navy-900 dark:via-navy-950 dark:to-indigo-950 overflow-hidden rounded-none">
+            {/* Mobile indicator */}
+            <div className="w-12 h-1.5 rounded-full bg-indigo-300 dark:bg-indigo-700 mx-auto sm:hidden shrink-0 -mt-1 mb-2 relative z-20" />
             
             <div className="flex items-start justify-between w-full">
               {/* Background elements */}
@@ -99,7 +99,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
               </div>
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-white dark:hover:bg-navy-800 transition-all hover:shadow-sm border border-transparent hover:border-slate-200 relative z-10 shrink-0"
+                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-white dark:hover:bg-navy-800 transition-all hover:shadow-sm border border-transparent hover:border-slate-200 relative z-10 shrink-0 touch-manipulation active:scale-90 cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -184,26 +184,37 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                       No top performer data available.
                     </div>
                   ) : (
-                    <div className="bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-x-auto">
-                      <table className="w-full min-w-[540px] text-left border-collapse">
+                    <div className="bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-hidden">
+                      <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
-                            <th className="p-3">Rank</th>
-                            <th className="p-3">Student</th>
-                            <th className="p-3">Problems Solved</th>
-                            <th className="p-3">Last Active</th>
+                            <th className="py-2.5 px-2 sm:px-3 w-10 sm:w-14 text-center">Rank</th>
+                            <th className="py-2.5 px-2 sm:px-3">Student</th>
+                            <th className="py-2.5 px-2.5 sm:px-3 text-right">Problems Solved</th>
+                            <th className="py-2.5 px-3 text-right hidden sm:table-cell">Last Active</th>
                           </tr>
                         </thead>
                         <tbody className="text-sm divide-y divide-slate-100 dark:divide-navy-800">
                           {details.top_performers.map(p => (
                             <tr key={p.student_id} className="hover:bg-slate-50 dark:hover:bg-navy-700/50 transition">
-                              <td className="p-3 font-mono font-bold text-slate-400">#{p.rank}</td>
-                              <td className="p-3">
-                                <div className="font-bold text-slate-900 dark:text-white">{p.name}</div>
-                                <div className="text-[11px] text-slate-500 font-mono">{p.register_number}</div>
+                              <td className="py-2.5 px-2 sm:px-3 font-mono font-black text-slate-400 dark:text-slate-500 text-center text-xs sm:text-sm">
+                                #{p.rank}
                               </td>
-                              <td className="p-3 font-mono font-bold text-brand-600">{p.total_solved}</td>
-                              <td className="p-3 text-[11px] text-slate-500">
+                              <td className="py-2.5 px-2 sm:px-3 min-w-0">
+                                <div className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                                  {p.name}
+                                </div>
+                                <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-mono flex items-center gap-1.5 flex-wrap">
+                                  <span>{p.register_number}</span>
+                                  <span className="sm:hidden text-slate-400">
+                                    • {p.last_active ? new Date(p.last_active).toLocaleDateString() : 'N/A'}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-2.5 px-2.5 sm:px-3 font-mono font-black text-xs sm:text-sm text-brand-600 dark:text-brand-400 text-right whitespace-nowrap">
+                                {p.total_solved}
+                              </td>
+                              <td className="py-2.5 px-3 text-[11px] text-slate-500 text-right whitespace-nowrap hidden sm:table-cell">
                                 {p.last_active ? new Date(p.last_active).toLocaleDateString() : 'N/A'}
                               </td>
                             </tr>
@@ -226,41 +237,76 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                       No high-risk students detected.
                     </div>
                   ) : (
-                    <div className="bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-x-auto">
-                      <table className="w-full min-w-[620px] text-left border-collapse">
-                        <thead>
-                          <tr className="bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
-                            <th className="p-3">Student</th>
-                            <th className="p-3">Risk Level</th>
-                            <th className="p-3">Problems Solved</th>
-                            <th className="p-3">Explanation</th>
-                          </tr>
-                        </thead>
-                        <tbody className="text-sm divide-y divide-slate-100 dark:divide-navy-800">
-                          {details.at_risk_students.map(r => (
-                            <tr key={r.student_id} className="hover:bg-slate-50 dark:hover:bg-navy-700/50 transition">
-                              <td className="p-3 min-w-[150px]">
-                                <div className="font-bold text-slate-900 dark:text-white">{r.name}</div>
-                                <div className="text-[11px] text-slate-500 font-mono">{r.register_number}</div>
-                              </td>
-                              <td className="p-3">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${
-                                  r.risk_level === 'CRITICAL' ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-orange-100 text-orange-800 border border-orange-200'
-                                }`}>
-                                  {r.risk_level}
-                                </span>
-                              </td>
-                              <td className="p-3 font-mono font-bold text-slate-700 dark:text-slate-300">
-                                {r.total_solved}
-                              </td>
-                              <td className="p-3 text-[11px] text-slate-500 leading-tight">
-                                {r.explanation || 'No clear signals available.'}
-                              </td>
+                    <>
+                      {/* Mobile Cards View (Zero Horizontal Scroll) */}
+                      <div className="sm:hidden space-y-2.5">
+                        {details.at_risk_students.map(r => (
+                          <div key={r.student_id} className="p-3.5 rounded-2xl bg-slate-50/90 dark:bg-navy-900/90 border border-slate-200 dark:border-navy-700 space-y-2 transition-all active:scale-[0.98] touch-manipulation">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                                  {r.name}
+                                </div>
+                                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                                  {r.register_number}
+                                </div>
+                              </div>
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider shrink-0 ${
+                                r.risk_level === 'CRITICAL' ? 'bg-rose-100 text-rose-800 border border-rose-200 dark:bg-rose-950/70 dark:text-rose-300 dark:border-rose-800' : 'bg-orange-100 text-orange-800 border border-orange-200 dark:bg-orange-950/70 dark:text-orange-300 dark:border-orange-800'
+                              }`}>
+                                {r.risk_level}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs pt-1.5 border-t border-slate-100 dark:border-navy-800/80">
+                              <span className="text-[11px] text-slate-500">Solved:</span>
+                              <span className="font-mono font-black text-slate-800 dark:text-slate-200">{r.total_solved}</span>
+                            </div>
+                            {r.explanation && (
+                              <p className="text-[11px] text-slate-600 dark:text-slate-400 bg-white dark:bg-navy-950 p-2.5 rounded-xl border border-slate-100 dark:border-navy-800/80 leading-relaxed">
+                                {r.explanation}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Desktop / Tablet Table (Full Width) */}
+                      <div className="hidden sm:block bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-hidden">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
+                              <th className="p-3">Student</th>
+                              <th className="p-3">Risk Level</th>
+                              <th className="p-3 text-center">Problems Solved</th>
+                              <th className="p-3">Explanation</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                          </thead>
+                          <tbody className="text-sm divide-y divide-slate-100 dark:divide-navy-800">
+                            {details.at_risk_students.map(r => (
+                              <tr key={r.student_id} className="hover:bg-slate-50 dark:hover:bg-navy-700/50 transition">
+                                <td className="p-3 min-w-[140px]">
+                                  <div className="font-bold text-slate-900 dark:text-white">{r.name}</div>
+                                  <div className="text-[11px] text-slate-500 font-mono">{r.register_number}</div>
+                                </td>
+                                <td className="p-3">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${
+                                    r.risk_level === 'CRITICAL' ? 'bg-rose-100 text-rose-800 border border-rose-200 dark:bg-rose-950/70 dark:text-rose-300 dark:border-rose-800' : 'bg-orange-100 text-orange-800 border border-orange-200 dark:bg-orange-950/70 dark:text-orange-300 dark:border-orange-800'
+                                  }`}>
+                                    {r.risk_level}
+                                  </span>
+                                </td>
+                                <td className="p-3 font-mono font-bold text-slate-700 dark:text-slate-300 text-center">
+                                  {r.total_solved}
+                                </td>
+                                <td className="p-3 text-[11px] text-slate-500 leading-tight">
+                                  {r.explanation || 'No clear signals available.'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
                   )}
                 </div>
               </>

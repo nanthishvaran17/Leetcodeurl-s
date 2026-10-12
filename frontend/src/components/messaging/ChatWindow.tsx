@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Send, ArrowLeft, Loader2, Info, Paperclip, Smile, Check, CheckCheck,
+  Send, ArrowLeft, Loader2, Info, Paperclip, Check, CheckCheck,
   MoreVertical, Reply, Edit2, Trash2, Copy, Share2, X, FileText, Download,
   CornerDownRight, ChevronDown, Sparkles, Palette, Package, FileArchive
 } from 'lucide-react';
@@ -70,7 +70,6 @@ const CHAT_WALLPAPERS: WallpaperOption[] = [
   },
 ];
 
-const LazyEmojiPicker = React.lazy(() => import('emoji-picker-react'));
 
 export interface Message {
   messageId: string;
@@ -117,7 +116,6 @@ interface Props {
   onReportTyping?: (isTyping: boolean) => void;
 }
 
-const QUICK_EMOJIS = ['', '', '', '', '', '', ''];
 
 export const ChatWindow: React.FC<Props> = ({
   conversation,
@@ -161,7 +159,6 @@ export const ChatWindow: React.FC<Props> = ({
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const [newMessagesCount, setNewMessagesCount] = useState(0);
 
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -261,7 +258,6 @@ export const ChatWindow: React.FC<Props> = ({
     setSelectedFile(null);
     setReplyingToMessage(null);
     setEditingMessage(null);
-    setShowEmojiPicker(false);
     
     if (isEdit) {
       setIsSending(true);
@@ -470,32 +466,33 @@ export const ChatWindow: React.FC<Props> = ({
   return (
     <div className={clsx("flex-1 w-full flex flex-col h-full relative overflow-hidden transition-all duration-300", activeWallpaper.bgClass)}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl z-20 shrink-0 shadow-sm">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl z-20 shrink-0 shadow-xs">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             onClick={onBack}
-            className="p-2 -ml-2 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl md:hidden transition-colors cursor-pointer"
+            className="p-2 -ml-1 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl md:hidden transition-colors cursor-pointer active:scale-95 shrink-0"
             title="Back to inbox"
+            aria-label="Back to conversations"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
           </button>
 
-          <div className="relative cursor-pointer group" onClick={onToggleInfo}>
-            <div className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-gradient-to-br from-brand-600 to-indigo-700 flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105">
-              <span className="text-white font-black text-lg md:text-xl">
+          <div className="relative cursor-pointer group shrink-0" onClick={onToggleInfo}>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-2xl sm:rounded-full bg-gradient-to-br from-brand-600 via-indigo-600 to-indigo-700 flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105 active:scale-95">
+              <span className="text-white font-black text-sm sm:text-base md:text-xl">
                 {conversation.otherUser.name.charAt(0).toUpperCase()}
               </span>
             </div>
             {conversation.otherUser.isOnline && (
-              <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-navy-950 rounded-full" title="Online now" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-emerald-500 border-2 border-white dark:border-navy-950 rounded-full" title="Online now" />
             )}
           </div>
 
-          <div>
-            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 tracking-tight">
-              <span>{conversation.otherUser.name}</span>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2 tracking-tight text-xs sm:text-sm md:text-base leading-snug">
+              <span className="truncate">{conversation.otherUser.name}</span>
               <span className={clsx(
-                "text-[10px] px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider",
+                "text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-black uppercase tracking-wider shrink-0",
                 conversation.otherUser.type === 'STAFF'
                   ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/30"
                   : "bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 border border-brand-200/50 dark:border-brand-800/30"
@@ -505,14 +502,14 @@ export const ChatWindow: React.FC<Props> = ({
             </h3>
 
             {isOtherUserTyping ? (
-              <p className="text-xs text-emerald-500 font-extrabold italic animate-pulse flex items-center gap-1">
+              <p className="text-[11px] sm:text-xs text-emerald-500 font-extrabold italic animate-pulse flex items-center gap-1">
                 <span>typing...</span>
               </p>
             ) : (
-              <p className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
-                <span>{conversation.otherUser.department}</span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
+              <p className="text-[10.5px] sm:text-xs text-slate-400 font-medium flex items-center gap-1 sm:gap-1.5 truncate">
+                <span className="truncate">{conversation.otherUser.department}</span>
+                <span className="shrink-0">•</span>
+                <span className="flex items-center gap-1 shrink-0">
                   {conversation.otherUser.isOnline && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />}
                   {conversation.otherUser.isOnline ? 'Online' : 'Offline'}
                 </span>
@@ -740,21 +737,6 @@ export const ChatWindow: React.FC<Props> = ({
                       "absolute top-8 z-30 w-48 bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-100",
                       isMe ? "right-0" : "left-0"
                     )}>
-                      {/* Emoji Quick Bar */}
-                      <div className="flex items-center justify-around pb-1.5 mb-1 border-b border-slate-100 dark:border-slate-800">
-                        {QUICK_EMOJIS.map(emoji => (
-                          <button
-                            key={emoji}
-                            onClick={() => {
-                              onToggleReaction(msg.messageId, emoji);
-                              setActiveMenuMessageId(null);
-                            }}
-                            className="p-1 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-md text-base transition-transform hover:scale-125 cursor-pointer"
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
 
                       <button
                         onClick={() => {
@@ -972,19 +954,9 @@ export const ChatWindow: React.FC<Props> = ({
           </div>
         )}
 
-        {/* Emoji Picker Popup (Lazy Loaded) */}
-        {showEmojiPicker && (
-          <div className="absolute bottom-full left-4 mb-3 z-50 shadow-2xl rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
-            <React.Suspense fallback={<div className="p-4 text-xs font-bold text-slate-400 bg-white dark:bg-slate-900 animate-pulse">Loading Emojis...</div>}>
-              <LazyEmojiPicker
-                onEmojiClick={(data) => setInputText(prev => prev + data.emoji)}
-              />
-            </React.Suspense>
-          </div>
-        )}
 
         {/* WhatsApp Style Form: Unified Input Pill with Send Button Inside */}
-        <form onSubmit={handleSendSubmit} className="flex items-center gap-2 max-w-5xl mx-auto w-full flex-nowrap">
+        <form onSubmit={handleSendSubmit} className="flex items-center gap-1.5 sm:gap-2 max-w-5xl mx-auto w-full flex-nowrap">
           <input
             type="file"
             ref={fileInputRef}
@@ -993,23 +965,16 @@ export const ChatWindow: React.FC<Props> = ({
           />
 
           {/* Unified Input Pill with emoji + attach + text + send all inside */}
-          <div className="flex-1 flex items-center gap-1 sm:gap-2 bg-white dark:bg-[#202c33] border border-slate-200/80 dark:border-slate-700/70 rounded-full px-3 py-1.5 sm:py-2 shadow-sm focus-within:shadow-md focus-within:ring-2 focus-within:ring-[#00a884]/30 focus-within:border-[#00a884] transition-all min-w-0">
-            <button
-              type="button"
-              onClick={() => setShowEmojiPicker(prev => !prev)}
-              className="p-1.5 text-slate-500 hover:text-amber-500 dark:text-slate-400 dark:hover:text-amber-400 rounded-full transition-all shrink-0 cursor-pointer"
-              title="Emoji Picker"
-            >
-              <Smile className="w-5 h-5" />
-            </button>
+          <div className="flex-1 flex items-center gap-1 sm:gap-2 bg-white dark:bg-[#202c33] border border-slate-200/90 dark:border-slate-700/80 rounded-full px-2.5 sm:px-3 py-1 sm:py-1.5 shadow-xs focus-within:shadow-md focus-within:ring-2 focus-within:ring-[#00a884]/30 focus-within:border-[#00a884] transition-all min-w-0">
 
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-1.5 text-slate-500 hover:text-[#00a884] dark:text-slate-400 dark:hover:text-[#00a884] rounded-full transition-all shrink-0 cursor-pointer"
+              className="p-1.5 text-slate-500 hover:text-[#00a884] dark:text-slate-400 dark:hover:text-[#00a884] rounded-full transition-all shrink-0 cursor-pointer active:scale-95"
               title="Attach File"
+              aria-label="Attach File"
             >
-              <Paperclip className="w-5 h-5 transform -rotate-45" />
+              <Paperclip className="w-4 h-4 sm:w-5 sm:h-5 transform -rotate-45" />
             </button>
 
             <input
@@ -1018,7 +983,7 @@ export const ChatWindow: React.FC<Props> = ({
               placeholder={editingMessage ? "Update message..." : "Type a message..."}
               value={inputText}
               onChange={handleInputChange}
-              className="flex-1 px-2 bg-transparent text-sm sm:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none font-medium min-w-0"
+              className="flex-1 px-1.5 sm:px-2 bg-transparent text-xs sm:text-sm md:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none font-medium min-w-0"
             />
 
             {/* Send Button — inside the pill on the right */}
@@ -1026,17 +991,18 @@ export const ChatWindow: React.FC<Props> = ({
               type="submit"
               disabled={(!inputText.trim() && !selectedFile) || isSending}
               className={clsx(
-                "w-9 h-9 rounded-full flex items-center justify-center shrink-0 cursor-pointer transition-all duration-200 active:scale-90",
+                "w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 cursor-pointer transition-all duration-200 active:scale-90",
                 (inputText.trim() || selectedFile) && !isSending
                   ? "bg-[#00a884] hover:bg-[#008f70] text-white shadow-md shadow-[#00a884]/30 scale-100 hover:scale-105"
-                  : "bg-[#00a884]/70 text-white cursor-default"
+                  : "bg-[#00a884]/60 text-white cursor-default"
               )}
               title="Send Message"
+              aria-label="Send Message"
             >
               {isSending ? (
-                <Loader2 className="w-4 h-4 animate-spin text-white" />
+                <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin text-white" />
               ) : (
-                <Send className="w-4 h-4 text-white transform translate-x-0.5" />
+                <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white transform translate-x-0.5" />
               )}
             </button>
           </div>

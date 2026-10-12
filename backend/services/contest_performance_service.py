@@ -215,6 +215,13 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     dept_filter = raw_dept
     year_filter = raw_year
 
+    u_role = (getattr(current_user, "role", "") or "").lower().strip()
+    if u_role in ("hod", "department hod", "department_hod"):
+        from backend.services.authorization_service import get_hod_authorized_department_codes
+        auth_codes = get_hod_authorized_department_codes(db, current_user)
+        if auth_codes and (dept_filter in ("ALL", "", None) or dept_filter not in auth_codes):
+            dept_filter = auth_codes[0]
+
     from sqlalchemy.orm import joinedload
     student_query = db.query(Student).options(joinedload(Student.department)).filter(
         (Student.is_active == True) | (Student.is_active.is_(None))
@@ -835,6 +842,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
 
     department_results: List[Dict[str, Any]] = []
     for d_code, d_rows in dept_groups.items():
+        if dept_filter != "ALL" and d_code != dept_filter:
+            continue
         tot_d = len(d_rows)
         d_parts = [dr for dr in d_rows if dr["status"] in (ContestStatus.PUBLIC_LIVE.value, ContestStatus.VIRTUAL_PRACTICE.value, ContestStatus.PUBLIC_ATTENDED.value, ContestStatus.VIRTUAL_ATTENDED.value)]
         part_cnt = len(d_parts)

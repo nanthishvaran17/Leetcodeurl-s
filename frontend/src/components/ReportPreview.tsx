@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Trophy, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Flame, Filter, Building2, GraduationCap, Target, Printer, ShieldCheck } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Trophy, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Flame, Filter, Building2, GraduationCap, Target, Printer, ShieldCheck, Sparkles, Zap, TrendingUp, UserX, Clock } from 'lucide-react';
 import api from '../services/api';
 import { FullScreenLoadingOverlay } from './ui/FullScreenLoadingOverlay';
 
@@ -327,9 +327,70 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
   const contestSummary = report?.contestSummary || report?.metrics || {};
   const solveDist = report?.solveDistribution || {};
 
+  const userSnapshot = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('user');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const userRole = (userSnapshot?.role || '').trim().toLowerCase();
+  const isHodUser = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(userRole);
+  const authorizedDeptCodes: string[] = useMemo(() => {
+    return (userSnapshot?.authorized_department_codes || []).map((c: string) => c.trim().toUpperCase());
+  }, [userSnapshot]);
+
   const allRows = useMemo(() => {
-    return report?.allStudents || report?.rows || report?.all_students_current || report?.rosters?.all_current || [];
-  }, [report]);
+    let raw = report?.allStudents || report?.rows || report?.all_students_current || report?.rosters?.all_current || [];
+    if (!Array.isArray(raw)) return [];
+    if (isHodUser && authorizedDeptCodes.length > 0) {
+      raw = raw.filter((r: any) => {
+        const d = (r.department || r.dept || r.department_code || '').trim().toUpperCase();
+        return authorizedDeptCodes.some(c => d === c || d.includes(c) || c.includes(d));
+      });
+    }
+    return raw;
+  }, [report, isHodUser, authorizedDeptCodes]);
+
+  const displayDepartmentResults = useMemo(() => {
+    const rawList = report?.departmentResults || [];
+    if (!Array.isArray(rawList)) return [];
+    if (isHodUser && authorizedDeptCodes.length > 0) {
+      return rawList.filter((dr: any) => {
+        const d = (dr.department || '').trim().toUpperCase();
+        return authorizedDeptCodes.some(c => d === c || d.includes(c) || c.includes(d));
+      });
+    }
+    const targetDept = (report?.department || report?.deptFilter || '').trim().toUpperCase();
+    if (targetDept && targetDept !== 'ALL') {
+      return rawList.filter((dr: any) => {
+        const d = (dr.department || '').trim().toUpperCase();
+        return d === targetDept || d.includes(targetDept) || targetDept.includes(d);
+      });
+    }
+    return rawList;
+  }, [report?.departmentResults, report?.department, report?.deptFilter, isHodUser, authorizedDeptCodes]);
+
+  const displayOfficialLeaderboard = useMemo(() => {
+    const rawLb = report?.officialLeaderboard || [];
+    if (!Array.isArray(rawLb)) return [];
+    if (isHodUser && authorizedDeptCodes.length > 0) {
+      return rawLb.filter((lb: any) => {
+        const d = (lb.dept || lb.department || '').trim().toUpperCase();
+        return authorizedDeptCodes.some(c => d === c || d.includes(c) || c.includes(d));
+      });
+    }
+    const targetDept = (report?.department || report?.deptFilter || '').trim().toUpperCase();
+    if (targetDept && targetDept !== 'ALL') {
+      return rawLb.filter((lb: any) => {
+        const d = (lb.dept || lb.department || '').trim().toUpperCase();
+        return d === targetDept || d.includes(targetDept) || targetDept.includes(d);
+      });
+    }
+    return rawLb;
+  }, [report?.officialLeaderboard, report?.department, report?.deptFilter, isHodUser, authorizedDeptCodes]);
 
   // Filter student rows based on active filter (for both Contest and Profile/General reports)
   const displayedStudents = useMemo(() => {
@@ -425,6 +486,79 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
   const toggleFilter = (filterKey: string) => {
     setActiveFilter(prev => prev === filterKey ? null : filterKey);
   };
+
+  // Comprehensive Condition Stats for Summary Breakdown under the tables
+  const conditionStats = useMemo(() => {
+    const students = displayedStudents || [];
+    let s4 = 0, s3 = 0, s2 = 0, s1 = 0, s0 = 0, notAtt = 0;
+    let totalEasy = 0, totalMed = 0, totalHard = 0, totalSolves = 0;
+    let attendedCount = 0;
+
+    students.forEach((s: any) => {
+      const st = (s.status || s.attendance_status || s.attendance || '').toString().trim().toUpperCase();
+      const isPart = ['PUBLIC_ATTENDED', 'VIRTUAL_ATTENDED', 'PUBLIC', 'VIRTUAL', 'PUBLIC_LIVE', 'VIRTUAL_PRACTICE', 'ATTENDED', 'VERIFIED', 'COMPLETED', 'ATTENDED_SOLVED', 'ATTENDED_ZERO'].includes(st) || 
+        (s.contest_solved !== undefined && s.contest_solved !== null && Number(s.contest_solved) >= 0) ||
+        (s.contests_attended !== undefined && Number(s.contests_attended) > 0);
+
+      const cSolved = s.contest_solved !== undefined && s.contest_solved !== null 
+        ? Number(s.contest_solved) 
+        : (s.solved !== undefined && s.solved !== null 
+          ? Number(s.solved) 
+          : (s.total_contest_solved !== undefined && s.total_contest_solved !== null
+            ? Number(s.total_contest_solved)
+            : (s.total_solved !== undefined && s.total_solved !== null ? Number(s.total_solved) : null)));
+
+      if (isPart || (cSolved !== null && cSolved > 0)) {
+        attendedCount++;
+        if (cSolved >= 4) s4++;
+        else if (cSolved === 3) s3++;
+        else if (cSolved === 2) s2++;
+        else if (cSolved === 1) s1++;
+        else s0++;
+      } else {
+        notAtt++;
+      }
+
+      const cDiff = getContestDifficultyBreakdown(s, isContestReport);
+      const e = Number(s.easy ?? s.easy_solved ?? cDiff.easy ?? 0);
+      const m = Number(s.medium ?? s.medium_solved ?? cDiff.medium ?? 0);
+      const h = Number(s.hard ?? s.hard_solved ?? cDiff.hard ?? 0);
+
+      totalEasy += e;
+      totalMed += m;
+      totalHard += h;
+      totalSolves += (cSolved !== null && cSolved > 0 ? cSolved : (e + m + h));
+    });
+
+    // If backend report already provided college/contest-wide solveDist and filter is not active:
+    if (!activeFilter && solveDist && (solveDist.solved4 !== undefined || solveDist.solved3 !== undefined)) {
+      s4 = Number(solveDist.solved4 ?? s4);
+      s3 = Number(solveDist.solved3 ?? s3);
+      s2 = Number(solveDist.solved2 ?? s2);
+      s1 = Number(solveDist.solved1 ?? s1);
+      s0 = Number(solveDist.solved0 ?? s0);
+    }
+
+    if (totalEasy === 0 && report?.metrics?.easySolved) totalEasy = Number(report.metrics.easySolved);
+    if (totalMed === 0 && report?.metrics?.mediumSolved) totalMed = Number(report.metrics.mediumSolved);
+    if (totalHard === 0 && report?.metrics?.hardSolved) totalHard = Number(report.metrics.hardSolved);
+    if (totalSolves === 0 && report?.metrics?.totalSolved) totalSolves = Number(report.metrics.totalSolved);
+
+    return {
+      totalStudents: students.length,
+      attendedCount,
+      notAttendedCount: notAtt,
+      s4,
+      s3,
+      s2,
+      s1,
+      s0,
+      totalEasy,
+      totalMed,
+      totalHard,
+      totalSolves,
+    };
+  }, [displayedStudents, isContestReport, activeFilter, solveDist, report?.metrics]);
 
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -627,25 +761,39 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       className="modal-overlay-responsive animate-modal-backdrop print:bg-white print:p-0 print:static print:w-full print:h-auto print:overflow-visible"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content print:static print:rounded-none print:shadow-none print:border-none print:max-w-full print:w-full print:h-auto print:overflow-visible print:p-0">
+      <div className="modal-container-responsive max-w-6xl bg-white dark:bg-[#080d19] rounded-3xl shadow-2xl border border-slate-200/80 dark:border-white/10 animate-modal-content print:static print:rounded-none print:shadow-none print:border-none print:max-w-full print:w-full print:h-auto print:overflow-visible print:p-0 flex flex-col overflow-hidden">
         
+        {/* Mobile bottom-sheet drag handle */}
+        <div className="pt-2.5 pb-1 bg-slate-950 sm:hidden flex justify-center shrink-0">
+          <div className="w-12 h-1 rounded-full bg-white/25" />
+        </div>
+
         {/* 1. HEADER BANNER */}
-        <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-brand-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0 print:bg-white print:text-black print:border-b-2 print:border-black">
-          <div className="flex items-center space-x-3 min-w-0">
+        <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-slate-950 via-[#0c162c] to-[#091122] text-white flex items-center justify-between shrink-0 border-b border-white/10 print:bg-white print:text-black print:border-b-2 print:border-black">
+          {/* Subtle ambient light glow */}
+          <div className="absolute top-0 right-1/4 w-72 h-72 bg-brand-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+          
+          <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 relative z-10">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-500/20 to-indigo-500/20 border border-brand-400/30 flex items-center justify-center shrink-0 text-brand-300 shadow-inner">
+              <FileText className="w-5 h-5" />
+            </div>
             <div className="min-w-0">
-              <h2 className="font-black text-base sm:text-lg text-white print:text-black flex items-center space-x-2 truncate print:whitespace-normal">
-                <span className="truncate print:whitespace-normal">{cleanReportTitle(report.title || report.reportTitle) || (isContestReport ? `${report.contestName || 'Contest'} Performance Report` : 'Report Preview')}</span>
-                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-extrabold shrink-0 print:hidden">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="font-black text-base sm:text-xl text-white tracking-tight print:text-black truncate print:whitespace-normal">
+                  {cleanReportTitle(report.title || report.reportTitle) || (isContestReport ? `${report.contestName || 'Contest'} Performance Report` : 'Report Preview')}
+                </h2>
+                <span className="inline-flex items-center gap-1.5 text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 font-black tracking-wide shrink-0 shadow-sm print:hidden">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   READY
                 </span>
-              </h2>
-              <p className="text-xs text-brand-200/80 print:text-slate-700 font-medium mt-0.5 truncate print:whitespace-normal">
+              </div>
+              <p className="text-xs text-slate-300/80 print:text-slate-700 font-medium mt-1 truncate print:whitespace-normal flex items-center gap-2">
                 {isContestReport && report.contestName && (
-                  <span className="font-bold text-amber-300 print:text-black mr-2">
+                  <span className="font-black text-amber-300 print:text-black px-2 py-0.5 rounded-lg bg-amber-500/15 border border-amber-400/20">
                     {report.contestName} ({report.contestDate || report.sessionDate || 'Sunday Session'})
                   </span>
                 )}
-                Report ID: <span className="font-mono text-brand-200 print:text-slate-600">{report.reportId || report.report_id}</span>
+                <span>Report ID: <span className="font-mono font-bold text-white/90 print:text-slate-600">{report.reportId || report.report_id}</span></span>
               </p>
             </div>
           </div>
@@ -654,25 +802,25 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
             type="button"
             onClick={onClose}
             aria-label="Close report preview"
-            className="shrink-0 ml-2 px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-bold text-xs flex items-center space-x-1.5 cursor-pointer shadow-sm print:hidden"
+            className="shrink-0 ml-2 px-3.5 py-2 rounded-2xl bg-white/5 hover:bg-rose-500/20 text-slate-200 hover:text-white border border-white/10 hover:border-rose-400/30 transition-all font-black text-xs flex items-center space-x-1.5 cursor-pointer shadow-md print:hidden touch-manipulation active:scale-95 group"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 text-slate-300 group-hover:text-rose-300 transition-colors" />
             <span>Close</span>
           </button>
         </div>
 
         {/* 2. DATASET QUALITY & RECONCILIATION BAR */}
-        <div className="px-5 py-2.5 bg-slate-100 dark:bg-navy-950 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs font-bold shrink-0">
+        <div className="px-4 sm:px-6 py-2.5 bg-slate-50 dark:bg-[#070D18] border-b border-slate-200/80 dark:border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs font-bold shrink-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="flex items-center space-x-1 text-slate-700 dark:text-slate-300 font-black">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="flex items-center space-x-1.5 text-slate-700 dark:text-slate-300 font-black">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
               <span>Dataset Reconciliation:</span>
             </span>
-            <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-mono text-[11px] font-black">
+            <span className="px-2.5 py-0.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 font-mono text-[11px] font-black">
               Roster: {allRows.length} Students
             </span>
             {isContestReport && (
-              <span className="px-2 py-0.5 rounded-md bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 font-mono text-[11px] font-black">
+              <span className="px-2.5 py-0.5 rounded-xl bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/25 font-mono text-[11px] font-black">
                 Participants: {
                   (contestSummary.publicAttended !== undefined || contestSummary.virtualAttended !== undefined)
                     ? (contestSummary.publicAttended || 0) + (contestSummary.virtualAttended || 0)
@@ -683,20 +831,28 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               </span>
             )}
             {activeFilter && (
-              <span className="flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-[11px] font-black">
-                <Filter className="w-3 h-3" />
+              <span className="flex items-center space-x-1.5 px-3 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-[11px] font-black">
+                <Filter className="w-3 h-3 text-amber-500" />
                 <span>Filtered: {displayedStudents.length} of {allRows.length} rows</span>
-                <button onClick={() => setActiveFilter(null)} className="ml-1 hover:text-rose-500 font-black"></button>
+                <button 
+                  type="button" 
+                  onClick={() => setActiveFilter(null)} 
+                  className="ml-1 p-0.5 hover:text-rose-500 font-black touch-manipulation active:scale-90"
+                  aria-label="Clear active filter"
+                >
+                  ✕
+                </button>
               </span>
             )}
           </div>
-          <span className="text-brand-600 dark:text-brand-400 font-mono font-bold text-[11px]">
-            Nandha Engineering College (Autonomous)
-          </span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-brand-500/10 text-brand-700 dark:text-brand-300 font-bold text-[11px] border border-brand-500/20 shadow-xs">
+            <Building2 className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+            <span>Nandha Engineering College (Autonomous)</span>
+          </div>
         </div>
 
         {/* 3. SCROLLABLE REPORT CONTENT */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-6 print:overflow-visible print:h-auto print:p-0 print:space-y-4 print:mt-4">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-6 bg-slate-50/80 dark:bg-[#070D18] print:overflow-visible print:h-auto print:p-0 print:space-y-4 print:mt-4">
 
           {/* CONTEST PERFORMANCE SPECIALIZED VIEW */}
           {isContestReport ? (
@@ -712,74 +868,128 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   <span className="text-[11px] text-slate-900 dark:text-slate-100 font-extrabold">Click any card to filter student details below</span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   
                   {/* Total Students */}
                   <div 
                     onClick={() => setActiveFilter(null)}
-                    className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === null ? 'bg-brand-500/10 border-brand-500 ring-2 ring-brand-500/30' : 'bg-slate-50 dark:bg-navy-950 border-slate-200 dark:border-slate-800 hover:border-brand-400'}`}
+                    className={`relative overflow-hidden p-3.5 sm:p-4 rounded-2xl border flex flex-col justify-between min-h-[105px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                      activeFilter === null 
+                        ? 'bg-gradient-to-br from-indigo-50 via-white to-blue-50/50 dark:from-indigo-950/40 dark:via-slate-900/90 dark:to-slate-950 border-brand-500 ring-2 ring-brand-500/30 shadow-md' 
+                        : 'bg-white/80 dark:bg-slate-900/60 border-slate-200/90 dark:border-white/10 hover:border-brand-400 dark:hover:border-brand-500/50 shadow-xs'
+                    }`}
                   >
-                    <p className="text-xs text-slate-900 dark:text-slate-100 uppercase font-black">Total Students</p>
-                    <p className="text-2xl font-black text-slate-950 dark:text-white mt-1">{contestSummary.totalStudents || allRows.length}</p>
-                    <p className="text-xs text-brand-700 dark:text-brand-300 font-black mt-0.5">All Roster</p>
+                    <div className="flex items-center justify-between gap-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Total Students</span>
+                      <div className="w-6 h-6 rounded-lg bg-brand-500/15 border border-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
+                        <Users className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                    <p className="text-2xl font-black text-slate-950 dark:text-white tracking-tight my-1">{contestSummary.totalStudents || allRows.length}</p>
+                    <span className="inline-flex items-center text-[10px] font-black text-brand-700 dark:text-brand-300 bg-brand-500/10 px-2 py-0.5 rounded-full w-fit border border-brand-500/20">All Roster</span>
                   </div>
 
                   {/* Public Attended */}
                   <div 
                     onClick={() => toggleFilter('PUBLIC_ATTENDED')}
-                    className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === 'PUBLIC_ATTENDED' ? 'bg-emerald-500/20 border-emerald-500 ring-2 ring-emerald-500/30' : 'bg-emerald-500/10 border-emerald-500/30 hover:border-emerald-400'}`}
+                    className={`relative overflow-hidden p-3.5 sm:p-4 rounded-2xl border flex flex-col justify-between min-h-[105px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                      activeFilter === 'PUBLIC_ATTENDED' 
+                        ? 'bg-gradient-to-br from-emerald-50 via-white to-teal-50/50 dark:from-emerald-950/40 dark:via-slate-900/90 dark:to-slate-950 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md' 
+                        : 'bg-white/80 dark:bg-slate-900/60 border-slate-200/90 dark:border-white/10 hover:border-emerald-400 dark:hover:border-emerald-500/50 shadow-xs'
+                    }`}
                   >
-                    <p className="text-xs text-emerald-950 dark:text-emerald-300 uppercase font-black">Public Attended</p>
-                    <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 mt-1">{contestSummary.publicAttended ?? 0}</p>
-                    <p className="text-xs text-emerald-950 dark:text-emerald-300 font-black mt-0.5">
+                    <div className="flex items-center justify-between gap-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Public Attended</span>
+                      <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <UserCheck className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                    <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">{contestSummary.publicAttended ?? 0}</p>
+                    <span className="inline-flex items-center text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full w-fit border border-emerald-500/20">
                       {contestSummary.publicAttendanceRate 
                         ? (String(contestSummary.publicAttendanceRate).endsWith('%') ? contestSummary.publicAttendanceRate : `${contestSummary.publicAttendanceRate}%`)
                         : `${(( (contestSummary.publicAttended || 0) / Math.max(contestSummary.totalStudents || allRows.length, 1) ) * 100).toFixed(1).replace(/\.0$/, '')}%`}
-                    </p>
+                    </span>
                   </div>
 
                   {/* Virtual Attended */}
                   <div 
                     onClick={() => toggleFilter('VIRTUAL_ATTENDED')}
-                    className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === 'VIRTUAL_ATTENDED' ? 'bg-purple-500/20 border-purple-500 ring-2 ring-purple-500/30' : 'bg-purple-500/10 border-purple-500/30 hover:border-purple-400'}`}
+                    className={`relative overflow-hidden p-3.5 sm:p-4 rounded-2xl border flex flex-col justify-between min-h-[105px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                      activeFilter === 'VIRTUAL_ATTENDED' 
+                        ? 'bg-gradient-to-br from-purple-50 via-white to-fuchsia-50/50 dark:from-purple-950/40 dark:via-slate-900/90 dark:to-slate-950 border-purple-500 ring-2 ring-purple-500/30 shadow-md' 
+                        : 'bg-white/80 dark:bg-slate-900/60 border-slate-200/90 dark:border-white/10 hover:border-purple-400 dark:hover:border-purple-500/50 shadow-xs'
+                    }`}
                   >
-                    <p className="text-xs text-purple-950 dark:text-purple-300 uppercase font-black">Virtual Attended</p>
-                    <p className="text-2xl font-black text-purple-800 dark:text-purple-300 mt-1">{contestSummary.virtualAttended ?? 0}</p>
-                    <p className="text-xs text-purple-950 dark:text-purple-300 font-black mt-0.5">
+                    <div className="flex items-center justify-between gap-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">Virtual Attended</span>
+                      <div className="w-6 h-6 rounded-lg bg-purple-500/15 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                    <p className="text-2xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">{contestSummary.virtualAttended ?? 0}</p>
+                    <span className="inline-flex items-center text-[10px] font-black text-purple-800 dark:text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full w-fit border border-purple-500/20">
                       {contestSummary.virtualAttendanceRate 
                         ? (String(contestSummary.virtualAttendanceRate).endsWith('%') ? contestSummary.virtualAttendanceRate : `${contestSummary.virtualAttendanceRate}%`)
                         : `${(( (contestSummary.virtualAttended || 0) / Math.max(contestSummary.totalStudents || allRows.length, 1) ) * 100).toFixed(1).replace(/\.0$/, '')}%`}
-                    </p>
+                    </span>
                   </div>
 
                   {/* Not Attended */}
                   <div 
                     onClick={() => toggleFilter('NOT_ATTENDED')}
-                    className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === 'NOT_ATTENDED' ? 'bg-rose-500/20 border-rose-500 ring-2 ring-rose-500/30' : 'bg-rose-500/10 border-rose-500/30 hover:border-rose-400'}`}
+                    className={`relative overflow-hidden p-3.5 sm:p-4 rounded-2xl border flex flex-col justify-between min-h-[105px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                      activeFilter === 'NOT_ATTENDED' 
+                        ? 'bg-gradient-to-br from-rose-50 via-white to-pink-50/50 dark:from-rose-950/40 dark:via-slate-900/90 dark:to-slate-950 border-rose-500 ring-2 ring-rose-500/30 shadow-md' 
+                        : 'bg-white/80 dark:bg-slate-900/60 border-slate-200/90 dark:border-white/10 hover:border-rose-400 dark:hover:border-rose-500/50 shadow-xs'
+                    }`}
                   >
-                    <p className="text-xs text-rose-950 dark:text-rose-300 uppercase font-black">Not Attended</p>
-                    <p className="text-2xl font-black text-rose-800 dark:text-rose-300 mt-1">{contestSummary.notAttended ?? 0}</p>
-                    <p className="text-xs text-rose-950 dark:text-rose-300 font-black mt-0.5">Absent</p>
+                    <div className="flex items-center justify-between gap-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">Not Attended</span>
+                      <div className="w-6 h-6 rounded-lg bg-rose-500/15 border border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                        <UserX className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                    <p className="text-2xl font-black text-rose-800 dark:text-rose-300 tracking-tight my-1">{contestSummary.notAttended ?? 0}</p>
+                    <span className="inline-flex items-center text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded-full w-fit border border-rose-500/20">Absent</span>
                   </div>
 
                   {/* Pending Username */}
                   <div 
                     onClick={() => toggleFilter('PENDING_USERNAME')}
-                    className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === 'PENDING_USERNAME' ? 'bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/30' : 'bg-amber-500/10 border-amber-500/30 hover:border-amber-400'}`}
+                    className={`relative overflow-hidden p-3.5 sm:p-4 rounded-2xl border flex flex-col justify-between min-h-[105px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                      activeFilter === 'PENDING_USERNAME' 
+                        ? 'bg-gradient-to-br from-amber-50 via-white to-yellow-50/50 dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950 border-amber-500 ring-2 ring-amber-500/30 shadow-md' 
+                        : 'bg-white/80 dark:bg-slate-900/60 border-slate-200/90 dark:border-white/10 hover:border-amber-400 dark:hover:border-amber-500/50 shadow-xs'
+                    }`}
                   >
-                    <p className="text-xs text-amber-950 dark:text-amber-300 uppercase font-black">Pending Username</p>
-                    <p className="text-2xl font-black text-amber-800 dark:text-amber-300 mt-1">{contestSummary.pendingUsername ?? 0}</p>
-                    <p className="text-xs text-amber-950 dark:text-amber-300 font-black mt-0.5">Unlinked</p>
+                    <div className="flex items-center justify-between gap-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Pending Username</span>
+                      <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                        <Clock className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                    <p className="text-2xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">{contestSummary.pendingUsername ?? 0}</p>
+                    <span className="inline-flex items-center text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full w-fit border border-amber-500/20">Unlinked</span>
                   </div>
 
                   {/* Invalid Username */}
                   <div 
                     onClick={() => toggleFilter('INVALID_USERNAME')}
-                    className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === 'INVALID_USERNAME' ? 'bg-orange-500/20 border-orange-500 ring-2 ring-orange-500/30' : 'bg-orange-500/10 border-orange-500/30 hover:border-orange-400'}`}
+                    className={`relative overflow-hidden p-3.5 sm:p-4 rounded-2xl border flex flex-col justify-between min-h-[105px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                      activeFilter === 'INVALID_USERNAME' 
+                        ? 'bg-gradient-to-br from-orange-50 via-white to-red-50/50 dark:from-orange-950/40 dark:via-slate-900/90 dark:to-slate-950 border-orange-500 ring-2 ring-orange-500/30 shadow-md' 
+                        : 'bg-white/80 dark:bg-slate-900/60 border-slate-200/90 dark:border-white/10 hover:border-orange-400 dark:hover:border-orange-500/50 shadow-xs'
+                    }`}
                   >
-                    <p className="text-xs text-orange-950 dark:text-orange-300 uppercase font-black">Invalid Username</p>
-                    <p className="text-2xl font-black text-orange-800 dark:text-orange-300 mt-1">{contestSummary.invalidUsername ?? 0}</p>
-                    <p className="text-xs text-orange-950 dark:text-orange-300 font-black mt-0.5">Invalid</p>
+                    <div className="flex items-center justify-between gap-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-orange-800 dark:text-orange-300">Invalid Username</span>
+                      <div className="w-6 h-6 rounded-lg bg-orange-500/15 border border-orange-500/20 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                    <p className="text-2xl font-black text-orange-800 dark:text-orange-300 tracking-tight my-1">{contestSummary.invalidUsername ?? 0}</p>
+                    <span className="inline-flex items-center text-[10px] font-black text-orange-800 dark:text-orange-300 bg-orange-500/10 px-2 py-0.5 rounded-full w-fit border border-orange-500/20">Invalid</span>
                   </div>
 
                 </div>
@@ -802,61 +1012,115 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     {/* 4 Problems Solved */}
                     <div 
                       onClick={() => toggleFilter('SOLVED_4')}
-                      className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === 'SOLVED_4' ? 'bg-emerald-500/20 border-emerald-500 ring-2 ring-emerald-500/30' : 'bg-emerald-500/10 border-emerald-500/30 hover:border-emerald-400'}`}
+                      className={`relative overflow-hidden p-3.5 sm:p-4 rounded-2xl border flex flex-col justify-between min-h-[105px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                        activeFilter === 'SOLVED_4' 
+                          ? 'bg-gradient-to-br from-emerald-50 via-white to-teal-50/50 dark:from-emerald-950/40 dark:via-slate-900/90 dark:to-slate-950 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md' 
+                          : 'bg-white/80 dark:bg-slate-900/60 border-slate-200/90 dark:border-white/10 hover:border-emerald-400 dark:hover:border-emerald-500/50 shadow-xs'
+                      }`}
                     >
-                      <div className="text-xs font-black text-slate-900 dark:text-slate-100">4 Problems Solved</div>
-                      <div className="text-2xl font-black text-emerald-800 dark:text-emerald-300 mt-1">{solveDist.solved4 ?? report.metrics?.['4 Q Solved'] ?? 0}</div>
-                      <div className="text-xs font-black text-slate-900 dark:text-slate-100 mt-0.5">Students</div>
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">4 Solved (Full)</span>
+                        <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                          <Trophy className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">{solveDist.solved4 ?? report.metrics?.['4 Q Solved'] ?? conditionStats.s4 ?? 0}</p>
+                      <span className="inline-flex items-center text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full w-fit border border-emerald-500/20">Students</span>
                     </div>
 
                     {/* 3 Problems Solved */}
                     <div 
                       onClick={() => toggleFilter('SOLVED_3')}
-                      className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === 'SOLVED_3' ? 'bg-teal-500/20 border-teal-500 ring-2 ring-teal-500/30' : 'bg-teal-500/10 border-teal-500/30 hover:border-teal-400'}`}
+                      className={`relative overflow-hidden p-3.5 sm:p-4 rounded-2xl border flex flex-col justify-between min-h-[105px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                        activeFilter === 'SOLVED_3' 
+                          ? 'bg-gradient-to-br from-teal-50 via-white to-cyan-50/50 dark:from-teal-950/40 dark:via-slate-900/90 dark:to-slate-950 border-teal-500 ring-2 ring-teal-500/30 shadow-md' 
+                          : 'bg-white/80 dark:bg-slate-900/60 border-slate-200/90 dark:border-white/10 hover:border-teal-400 dark:hover:border-teal-500/50 shadow-xs'
+                      }`}
                     >
-                      <div className="text-xs font-black text-slate-900 dark:text-slate-100">3 Problems Solved</div>
-                      <div className="text-2xl font-black text-teal-800 dark:text-teal-300 mt-1">{solveDist.solved3 ?? report.metrics?.['3 Q Solved'] ?? 0}</div>
-                      <div className="text-xs font-black text-slate-900 dark:text-slate-100 mt-0.5">Students</div>
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-teal-800 dark:text-teal-300">3 Solved</span>
+                        <div className="w-6 h-6 rounded-lg bg-teal-500/15 border border-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                          <Target className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <p className="text-2xl font-black text-teal-800 dark:text-teal-300 tracking-tight my-1">{solveDist.solved3 ?? report.metrics?.['3 Q Solved'] ?? conditionStats.s3 ?? 0}</p>
+                      <span className="inline-flex items-center text-[10px] font-black text-teal-800 dark:text-teal-300 bg-teal-500/10 px-2 py-0.5 rounded-full w-fit border border-teal-500/20">Students</span>
                     </div>
 
                     {/* 2 Problems Solved */}
                     <div 
                       onClick={() => toggleFilter('SOLVED_2')}
-                      className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === 'SOLVED_2' ? 'bg-brand-500/20 border-brand-500 ring-2 ring-brand-500/30' : 'bg-brand-500/10 border-brand-500/30 hover:border-brand-400'}`}
+                      className={`relative overflow-hidden p-3.5 sm:p-4 rounded-2xl border flex flex-col justify-between min-h-[105px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                        activeFilter === 'SOLVED_2' 
+                          ? 'bg-gradient-to-br from-indigo-50 via-white to-blue-50/50 dark:from-indigo-950/40 dark:via-slate-900/90 dark:to-slate-950 border-brand-500 ring-2 ring-brand-500/30 shadow-md' 
+                          : 'bg-white/80 dark:bg-slate-900/60 border-slate-200/90 dark:border-white/10 hover:border-brand-400 dark:hover:border-brand-500/50 shadow-xs'
+                      }`}
                     >
-                      <div className="text-xs font-black text-slate-900 dark:text-slate-100">2 Problems Solved</div>
-                      <div className="text-2xl font-black text-brand-800 dark:text-brand-300 mt-1">{solveDist.solved2 ?? report.metrics?.['2 Q Solved'] ?? 0}</div>
-                      <div className="text-xs font-black text-slate-900 dark:text-slate-100 mt-0.5">Students</div>
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">2 Solved</span>
+                        <div className="w-6 h-6 rounded-lg bg-brand-500/15 border border-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
+                          <Zap className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <p className="text-2xl font-black text-brand-800 dark:text-brand-300 tracking-tight my-1">{solveDist.solved2 ?? report.metrics?.['2 Q Solved'] ?? conditionStats.s2 ?? 0}</p>
+                      <span className="inline-flex items-center text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-2 py-0.5 rounded-full w-fit border border-brand-500/20">Students</span>
                     </div>
 
                     {/* 1 Problem Solved */}
                     <div 
                       onClick={() => toggleFilter('SOLVED_1')}
-                      className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === 'SOLVED_1' ? 'bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/30' : 'bg-amber-500/10 border-amber-500/30 hover:border-amber-400'}`}
+                      className={`relative overflow-hidden p-3.5 sm:p-4 rounded-2xl border flex flex-col justify-between min-h-[105px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                        activeFilter === 'SOLVED_1' 
+                          ? 'bg-gradient-to-br from-amber-50 via-white to-yellow-50/50 dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950 border-amber-500 ring-2 ring-amber-500/30 shadow-md' 
+                          : 'bg-white/80 dark:bg-slate-900/60 border-slate-200/90 dark:border-white/10 hover:border-amber-400 dark:hover:border-amber-500/50 shadow-xs'
+                      }`}
                     >
-                      <div className="text-xs font-black text-slate-900 dark:text-slate-100">1 Problem Solved</div>
-                      <div className="text-2xl font-black text-amber-800 dark:text-amber-300 mt-1">{solveDist.solved1 ?? report.metrics?.['1 Q Solved'] ?? 0}</div>
-                      <div className="text-xs font-black text-slate-900 dark:text-slate-100 mt-0.5">Students</div>
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">1 Solved</span>
+                        <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                          <Flame className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <p className="text-2xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">{solveDist.solved1 ?? report.metrics?.['1 Q Solved'] ?? conditionStats.s1 ?? 0}</p>
+                      <span className="inline-flex items-center text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full w-fit border border-amber-500/20">Students</span>
                     </div>
 
                     {/* 0 Problems Solved (Participated) */}
                     <div 
                       onClick={() => toggleFilter('SOLVED_0')}
-                      className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === 'SOLVED_0' ? 'bg-purple-500/20 border-purple-500 ring-2 ring-purple-500/30' : 'bg-purple-500/10 border-purple-500/30 hover:border-purple-400'}`}
+                      className={`relative overflow-hidden p-3.5 sm:p-4 rounded-2xl border flex flex-col justify-between min-h-[105px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                        activeFilter === 'SOLVED_0' 
+                          ? 'bg-gradient-to-br from-purple-50 via-white to-fuchsia-50/50 dark:from-purple-950/40 dark:via-slate-900/90 dark:to-slate-950 border-purple-500 ring-2 ring-purple-500/30 shadow-md' 
+                          : 'bg-white/80 dark:bg-slate-900/60 border-slate-200/90 dark:border-white/10 hover:border-purple-400 dark:hover:border-purple-500/50 shadow-xs'
+                      }`}
                     >
-                      <div className="text-xs font-black text-slate-900 dark:text-slate-100">0 Solved (Attended)</div>
-                      <div className="text-2xl font-black text-purple-800 dark:text-purple-300 mt-1">{solveDist.solved0 ?? 0}</div>
-                      <div className="text-xs font-black text-slate-900 dark:text-slate-100 mt-0.5">Participants</div>
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">0 Solved (Attended)</span>
+                        <div className="w-6 h-6 rounded-lg bg-purple-500/15 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                          <Layers className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <p className="text-2xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">{solveDist.solved0 ?? report.metrics?.['0 Q Solved'] ?? conditionStats.s0 ?? 0}</p>
+                      <span className="inline-flex items-center text-[10px] font-black text-purple-800 dark:text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full w-fit border border-purple-500/20">Participants</span>
                     </div>
 
                     {/* Not Attended */}
                     <div 
                       onClick={() => toggleFilter('NOT_ATTENDED')}
-                      className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between min-h-[96px] transition-all cursor-pointer ${activeFilter === 'NOT_ATTENDED' ? 'bg-rose-500/20 border-rose-500 ring-2 ring-rose-500/30' : 'bg-rose-500/10 border-rose-500/30 hover:border-rose-400'}`}
+                      className={`relative overflow-hidden p-3.5 sm:p-4 rounded-2xl border flex flex-col justify-between min-h-[105px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                        activeFilter === 'NOT_ATTENDED' 
+                          ? 'bg-gradient-to-br from-rose-50 via-white to-pink-50/50 dark:from-rose-950/40 dark:via-slate-900/90 dark:to-slate-950 border-rose-500 ring-2 ring-rose-500/30 shadow-md' 
+                          : 'bg-white/80 dark:bg-slate-900/60 border-slate-200/90 dark:border-white/10 hover:border-rose-400 dark:hover:border-rose-500/50 shadow-xs'
+                      }`}
                     >
-                      <div className="text-xs font-black text-slate-900 dark:text-slate-100">Not Attended</div>
-                      <div className="text-2xl font-black text-rose-800 dark:text-rose-300 mt-1">{solveDist.notParticipated ?? contestSummary.notAttended ?? 0}</div>
-                      <div className="text-xs font-black text-slate-900 dark:text-slate-100 mt-0.5">Absent</div>
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">Not Attended</span>
+                        <div className="w-6 h-6 rounded-lg bg-rose-500/15 border border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                          <UserX className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <p className="text-2xl font-black text-rose-800 dark:text-rose-300 tracking-tight my-1">{solveDist.notParticipated ?? contestSummary.notAttended ?? conditionStats.notAttendedCount ?? 0}</p>
+                      <span className="inline-flex items-center text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded-full w-fit border border-rose-500/20">Absent</span>
                     </div>
 
                   </div>
@@ -975,14 +1239,14 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               )}
 
               {/* Official Leaderboard & Top Performers (Sections 8 & 9 - Friday Official) */}
-              {isFridayOfficial && report.officialLeaderboard && Array.isArray(report.officialLeaderboard) && report.officialLeaderboard.length > 0 && (
+              {isFridayOfficial && displayOfficialLeaderboard && Array.isArray(displayOfficialLeaderboard) && displayOfficialLeaderboard.length > 0 && (
                 <div className="space-y-3 pt-2">
                   <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
                     <span>Official Leaderboard & Top Performers</span>
                   </h3>
                   {/* Mobile Cards View (< sm) */}
                   <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
-                    {report.officialLeaderboard.slice(0, 25).map((lb: any, i: number) => (
+                    {displayOfficialLeaderboard.slice(0, 25).map((lb: any, i: number) => (
                       <div key={i} className="p-3.5 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm space-y-2">
                         <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
                           <div className="flex items-center space-x-2 min-w-0">
@@ -1044,7 +1308,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
-                        {report.officialLeaderboard.slice(0, 25).map((lb: any, i: number) => (
+                        {displayOfficialLeaderboard.slice(0, 25).map((lb: any, i: number) => (
                           <tr key={i} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
                             <td className="px-3.5 py-2.5 text-center align-middle font-black text-amber-500">#{lb.rank}</td>
                             <td className="px-4 py-2.5 text-left align-middle whitespace-nowrap font-bold text-slate-900 dark:text-white">{formatStudentName(lb.student_name || lb.student)}</td>
@@ -1068,14 +1332,14 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               )}
 
               {/* Department-Wise Official Result (Section 10 - Friday Official) */}
-              {isFridayOfficial && report.departmentResults && Array.isArray(report.departmentResults) && report.departmentResults.length > 0 && (
+              {isFridayOfficial && displayDepartmentResults && Array.isArray(displayDepartmentResults) && displayDepartmentResults.length > 0 && (
                 <div className="space-y-3 pt-2">
                   <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
                     <span>Department-Wise Official Result</span>
                   </h3>
                   {/* Mobile Cards View (< sm) */}
                   <div className="block sm:hidden print:hidden space-y-2.5">
-                    {report.departmentResults.map((dr: any, i: number) => (
+                    {displayDepartmentResults.map((dr: any, i: number) => (
                       <div key={i} className="p-3.5 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm space-y-2">
                         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
                           <h4 className="text-xs font-black text-brand-700 dark:text-brand-300">{dr.department}</h4>
@@ -1118,7 +1382,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
-                        {report.departmentResults.map((dr: any, i: number) => (
+                        {displayDepartmentResults.map((dr: any, i: number) => (
                           <tr key={i} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
                             <td className="px-4 py-2.5 font-bold text-brand-600 dark:text-brand-400">{dr.department}</td>
                             <td className="px-3.5 py-2.5 text-center font-bold">{dr.total_students}</td>
@@ -1294,6 +1558,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           <th className="px-3 py-3 text-center align-middle">Contests Attended</th>
                           <th className="px-3 py-3 text-center align-middle font-extrabold">Total Solved</th>
                           <th className="px-3 py-3 text-center align-middle font-extrabold bg-blue-900/40 text-blue-200">Attended Solved</th>
+                          <th className="px-3 py-3 text-center align-middle bg-amber-900/40 text-amber-200">Badges</th>
                           <th className="px-3 py-3 text-center align-middle bg-emerald-900/40 text-emerald-200">Contest Easy</th>
                           <th className="px-3 py-3 text-center align-middle bg-teal-900/40 text-teal-200">Contest Med</th>
                           <th className="px-3 py-3 text-center align-middle bg-purple-900/40 text-purple-200">Contest Hard</th>
@@ -1321,6 +1586,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-950 dark:text-white text-sm">{r.contests_attended_fraction ?? (report.histSummary?.numSessions ? `${r.contests_attended ?? r.total_attended ?? 0}/${report.histSummary.numSessions}` : (r.contests_attended ?? r.total_attended ?? 0))}</td>
                               <td className="px-3 py-2.5 text-center font-mono font-black text-brand-700 dark:text-brand-300 text-sm">{r.total_solved_fraction ?? (report.histSummary?.numSessions ? `${r.total_solved ?? r.totalSolved ?? 0}/${report.histSummary.numSessions * 4}` : (r.total_solved ?? r.totalSolved ?? (cDiff.easy + cDiff.medium + cDiff.hard)))}</td>
                               <td className="px-3 py-2.5 text-center font-mono font-black text-blue-700 dark:text-blue-300 text-sm bg-blue-500/5">{r.attended_solve_fraction ?? ((r.total_attended || r.totalAttended) ? `${r.total_solved ?? r.totalSolved ?? 0}/${(r.total_attended || r.totalAttended || 1) * 4}` : '0/0')}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-300 bg-amber-500/5">{r.badges ?? r.total_badges ?? r.badges_count ?? 0}</td>
                               <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{r.contest_easy ?? cDiff.easy}</td>
                               <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{r.contest_medium ?? cDiff.medium}</td>
                               <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{r.contest_hard ?? cDiff.hard}</td>
@@ -1334,6 +1600,67 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           );
                         })}
                       </tbody>
+                      <tfoot className="bg-[#E6F0FA] dark:bg-[#162747] text-[#1B365D] dark:text-[#E2E8F0] font-black border-t-2 border-[#16324F] sticky bottom-0 z-10">
+                        <tr>
+                          <td colSpan={7} className="px-4 py-3 text-center uppercase tracking-wider font-extrabold text-xs sm:text-sm border-r border-slate-300 dark:border-slate-700">
+                            TOTAL SOLVED COUNT
+                          </td>
+                          {(report.sessionHeaders || []).map((sh: any, shIdx: number) => {
+                            const cNum = String(sh.contestNum || sh.num || sh);
+                            const sumSolves = (report.rows || []).reduce((acc: number, r: any) => {
+                              const wd = (r.weeklyData || []).find((w: any) => String(w.contestNum) === cNum);
+                              return acc + (wd && wd.att ? Number(wd.solved || 0) : 0);
+                            }, 0);
+                            return (
+                              <td key={shIdx} className="px-3 py-3 text-center font-black text-xs sm:text-sm">
+                                {sumSolves}
+                              </td>
+                            );
+                          })}
+                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm">
+                            {(report.rows || []).reduce((acc: number, r: any) => {
+                              const attCnt = Array.isArray(r.weeklyData) 
+                                ? r.weeklyData.filter((w: any) => w.att).length 
+                                : Number(r.contests_attended || r.total_attended || 0);
+                              return acc + attCnt;
+                            }, 0)}
+                          </td>
+                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm">
+                            {(report.rows || []).reduce((acc: number, r: any) => {
+                              const tSol = Number(r.total_solved ?? r.totalSolved ?? (
+                                Array.isArray(r.weeklyData) 
+                                  ? r.weeklyData.filter((w: any) => w.att).reduce((s: number, w: any) => s + Number(w.solved || 0), 0)
+                                  : 0
+                              ));
+                              return acc + tSol;
+                            }, 0)}
+                          </td>
+                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm">
+                            {(report.rows || []).reduce((acc: number, r: any) => {
+                              const attSol = Number(r.total_solved ?? r.totalSolved ?? (
+                                Array.isArray(r.weeklyData) 
+                                  ? r.weeklyData.filter((w: any) => w.att).reduce((s: number, w: any) => s + Number(w.solved || 0), 0)
+                                  : 0
+                              ));
+                              return acc + attSol;
+                            }, 0)}
+                          </td>
+                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm text-amber-600 dark:text-amber-400">
+                            {(report.rows || []).reduce((acc: number, r: any) => acc + Number(r.badges ?? r.total_badges ?? r.badges_count ?? 0), 0)}
+                          </td>
+                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm text-emerald-600 dark:text-emerald-400">
+                            {(report.rows || []).reduce((acc: number, r: any) => acc + Number(r.contest_easy ?? getContestDifficultyBreakdown(r).easy ?? 0), 0)}
+                          </td>
+                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm text-teal-600 dark:text-teal-400">
+                            {(report.rows || []).reduce((acc: number, r: any) => acc + Number(r.contest_medium ?? getContestDifficultyBreakdown(r).medium ?? 0), 0)}
+                          </td>
+                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm text-purple-600 dark:text-purple-400">
+                            {(report.rows || []).reduce((acc: number, r: any) => acc + Number(r.contest_hard ?? getContestDifficultyBreakdown(r).hard ?? 0), 0)}
+                          </td>
+                          <td className="px-3.5 py-3 text-center font-black text-xs sm:text-sm text-slate-400">—</td>
+                          <td className="px-3.5 py-3 text-center font-black text-xs sm:text-sm text-slate-400">—</td>
+                        </tr>
+                      </tfoot>
                     </table>
                   </div>
                 </div>
@@ -1901,7 +2228,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               return r;
                             };
                             return (
-                              <div key={idx} className="p-3.5 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm space-y-2.5">
+                              <div key={idx} className="p-3.5 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-navy-900 shadow-sm space-y-2.5 transition-all active:scale-[0.98] touch-manipulation">
                                 <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
                                   <div className="flex items-center space-x-2 min-w-0">
                                     <span className="px-2.5 py-0.5 rounded-lg text-xs font-mono font-black bg-slate-200 dark:bg-navy-700 text-slate-950 dark:text-white shrink-0">
@@ -2001,27 +2328,136 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               )}
 
               {/* ====== GENERIC REPORTS BELOW (hidden for weekly perf) ====== */}
-              {/* Metrics Overview Cards */}
+              {/* ====== GENERIC REPORTS BELOW (hidden for weekly perf) ====== */}
+              {/* Metrics Overview Cards — 2026 SaaS Glassmorphic Matrix */}
               {!isWeeklyPerformance && report.metrics && (
-                <div className="space-y-3 print:break-inside-avoid">
+                <div className="space-y-3.5 print:break-inside-avoid">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider print:text-black flex items-center space-x-1.5">
-                      <span>Executive Summary Metrics</span>
-                    </h3>
-                    <span className="text-[10px] font-bold text-slate-400 print:hidden">Click any card to filter student table</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 rounded-full bg-brand-500 animate-ping"></div>
+                      <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-widest print:text-black">
+                        Executive Summary Metrics
+                      </h3>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 print:hidden px-2.5 py-1 rounded-full bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 shadow-xs">
+                      Tap tile to filter roster
+                    </span>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                     {Object.entries(report.metrics).map(([key, value]) => {
                       const k = key.toLowerCase();
+                      
                       let fKey: string | null = null;
-                      if (k.includes('active_solver') || k.includes('activesolver') || k === 'active') fKey = 'METRIC_ACTIVE_SOLVERS';
-                      else if (k.includes('verified_solver') || k.includes('verifiedsolver')) fKey = 'METRIC_VERIFIED_SOLVERS';
-                      else if (k.includes('unverified')) fKey = 'METRIC_UNVERIFIED_PROFILES';
-                      else if (k.includes('easy')) fKey = 'METRIC_EASY_SOLVED';
-                      else if (k.includes('medium')) fKey = 'METRIC_MEDIUM_SOLVED';
-                      else if (k.includes('hard')) fKey = 'METRIC_HARD_SOLVED';
-                      else if (k.includes('not_yet_started') || k.includes('zero_solved') || k.includes('unlinked')) fKey = 'METRIC_ZERO_SOLVED';
-                      else if (k.includes('total_student') || k.includes('totalstudent') || k === 'total') fKey = 'TOTAL_STUDENTS';
+                      let icon = <Sparkles className="w-4 h-4" />;
+                      let lightGradient = 'from-indigo-50/90 via-white to-blue-50/50';
+                      let darkGradient = 'dark:from-indigo-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                      let borderColor = 'border-indigo-200/90 dark:border-indigo-500/25 hover:border-indigo-400 dark:hover:border-indigo-500/50';
+                      let iconBox = 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/20';
+                      let numColor = 'text-indigo-950 dark:text-white';
+                      let titleColor = 'text-indigo-800 dark:text-indigo-300';
+                      let chipLabel = 'Roster';
+
+                      if (k.includes('total_student') || k.includes('totalstudent') || k === 'total') {
+                        fKey = 'TOTAL_STUDENTS';
+                        icon = <Users className="w-4 h-4" />;
+                        lightGradient = 'from-indigo-50/90 via-white to-blue-50/50';
+                        darkGradient = 'dark:from-indigo-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-indigo-200/90 dark:border-indigo-500/25 hover:border-indigo-400 dark:hover:border-indigo-500/50';
+                        iconBox = 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/20';
+                        numColor = 'text-indigo-950 dark:text-white';
+                        titleColor = 'text-indigo-800 dark:text-indigo-300';
+                        chipLabel = 'All Enrolled';
+                      } else if (k.includes('verified_solver') || k.includes('verifiedsolver')) {
+                        fKey = 'METRIC_VERIFIED_SOLVERS';
+                        icon = <UserCheck className="w-4 h-4" />;
+                        lightGradient = 'from-emerald-50/90 via-white to-teal-50/50';
+                        darkGradient = 'dark:from-emerald-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-emerald-200/90 dark:border-emerald-500/25 hover:border-emerald-400 dark:hover:border-emerald-500/50';
+                        iconBox = 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+                        numColor = 'text-emerald-950 dark:text-emerald-300';
+                        titleColor = 'text-emerald-800 dark:text-emerald-300';
+                        chipLabel = 'Verified';
+                      } else if (k.includes('unverified')) {
+                        fKey = 'METRIC_UNVERIFIED_PROFILES';
+                        icon = <AlertTriangle className="w-4 h-4" />;
+                        lightGradient = 'from-rose-50/90 via-white to-red-50/50';
+                        darkGradient = 'dark:from-rose-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-rose-200/90 dark:border-rose-500/25 hover:border-rose-400 dark:hover:border-rose-500/50';
+                        iconBox = 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/20';
+                        numColor = 'text-rose-950 dark:text-rose-300';
+                        titleColor = 'text-rose-800 dark:text-rose-300';
+                        chipLabel = 'Attention';
+                      } else if (k.includes('active_solver') || k.includes('activesolver') || k === 'active') {
+                        fKey = 'METRIC_ACTIVE_SOLVERS';
+                        icon = <Flame className="w-4 h-4" />;
+                        lightGradient = 'from-amber-50/90 via-white to-orange-50/50';
+                        darkGradient = 'dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-amber-200/90 dark:border-amber-500/25 hover:border-amber-400 dark:hover:border-amber-500/50';
+                        iconBox = 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20';
+                        numColor = 'text-amber-950 dark:text-amber-300';
+                        titleColor = 'text-amber-800 dark:text-amber-300';
+                        chipLabel = 'Active';
+                      } else if (k.includes('total_solved') || k.includes('totalsolved')) {
+                        fKey = null;
+                        icon = <Trophy className="w-4 h-4" />;
+                        lightGradient = 'from-cyan-50/90 via-white to-blue-50/50';
+                        darkGradient = 'dark:from-cyan-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-cyan-200/90 dark:border-cyan-500/25 hover:border-cyan-400 dark:hover:border-cyan-500/50';
+                        iconBox = 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border-cyan-500/20';
+                        numColor = 'text-cyan-950 dark:text-cyan-300';
+                        titleColor = 'text-cyan-800 dark:text-cyan-300';
+                        chipLabel = 'Aggregate';
+                      } else if (k.includes('average_solved') || k.includes('averagesolved') || k.includes('avg')) {
+                        fKey = null;
+                        icon = <Target className="w-4 h-4" />;
+                        lightGradient = 'from-purple-50/90 via-white to-indigo-50/50';
+                        darkGradient = 'dark:from-purple-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-purple-200/90 dark:border-purple-500/25 hover:border-purple-400 dark:hover:border-purple-500/50';
+                        iconBox = 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/20';
+                        numColor = 'text-purple-950 dark:text-purple-300';
+                        titleColor = 'text-purple-800 dark:text-purple-300';
+                        chipLabel = 'Mean Rate';
+                      } else if (k.includes('easy')) {
+                        fKey = 'METRIC_EASY_SOLVED';
+                        icon = <CheckCircle2 className="w-4 h-4" />;
+                        lightGradient = 'from-emerald-50/90 via-white to-teal-50/50';
+                        darkGradient = 'dark:from-emerald-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-emerald-200/90 dark:border-emerald-500/25 hover:border-emerald-400 dark:hover:border-emerald-500/50';
+                        iconBox = 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+                        numColor = 'text-emerald-950 dark:text-emerald-300';
+                        titleColor = 'text-emerald-800 dark:text-emerald-300';
+                        chipLabel = 'Easy Tier';
+                      } else if (k.includes('medium')) {
+                        fKey = 'METRIC_MEDIUM_SOLVED';
+                        icon = <Layers className="w-4 h-4" />;
+                        lightGradient = 'from-amber-50/90 via-white to-yellow-50/50';
+                        darkGradient = 'dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-amber-200/90 dark:border-amber-500/25 hover:border-amber-400 dark:hover:border-amber-500/50';
+                        iconBox = 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20';
+                        numColor = 'text-amber-950 dark:text-amber-300';
+                        titleColor = 'text-amber-800 dark:text-amber-300';
+                        chipLabel = 'Medium Tier';
+                      } else if (k.includes('hard')) {
+                        fKey = 'METRIC_HARD_SOLVED';
+                        icon = <Zap className="w-4 h-4" />;
+                        lightGradient = 'from-purple-50/90 via-white to-rose-50/50';
+                        darkGradient = 'dark:from-purple-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-purple-200/90 dark:border-purple-500/25 hover:border-purple-400 dark:hover:border-purple-500/50';
+                        iconBox = 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/20';
+                        numColor = 'text-purple-950 dark:text-purple-300';
+                        titleColor = 'text-purple-800 dark:text-purple-300';
+                        chipLabel = 'Hard Tier';
+                      } else if (k.includes('not_yet_started') || k.includes('zero_solved') || k.includes('unlinked')) {
+                        fKey = 'METRIC_ZERO_SOLVED';
+                        icon = <AlertTriangle className="w-4 h-4" />;
+                        lightGradient = 'from-orange-50/90 via-white to-amber-50/50';
+                        darkGradient = 'dark:from-orange-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-orange-200/90 dark:border-orange-500/25 hover:border-orange-400 dark:hover:border-orange-500/50';
+                        iconBox = 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/20';
+                        numColor = 'text-orange-950 dark:text-orange-300';
+                        titleColor = 'text-orange-800 dark:text-orange-300';
+                        chipLabel = 'Zero Solves';
+                      }
 
                       const isSelected = fKey ? (fKey === 'TOTAL_STUDENTS' ? activeFilter === null : activeFilter === fKey) : false;
 
@@ -2036,30 +2472,53 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             }
                           }}
                           role={fKey ? "button" : undefined}
-                          title={fKey ? `Click to filter by ${formatMetricTitle(key)}` : undefined}
-                          className={`p-4 rounded-2xl border text-center transition-all duration-200 print:bg-white print:border-slate-300 print:shadow-none print:break-inside-avoid ${
-                            fKey ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]' : ''
+                          title={fKey ? `Click to filter roster by ${formatMetricTitle(key)}` : undefined}
+                          className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 text-left print:bg-white print:border-slate-300 print:shadow-none print:break-inside-avoid ${
+                            fKey ? 'cursor-pointer hover:-translate-y-1 hover:shadow-xl active:scale-[0.98]' : ''
                           } ${
                             isSelected
-                              ? 'bg-brand-50/90 dark:bg-brand-950/60 border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/30 shadow-md'
-                              : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-950 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm'
-                          }`}
+                              ? 'bg-gradient-to-br from-indigo-500/20 via-brand-500/15 to-transparent dark:from-indigo-500/30 dark:via-brand-500/20 dark:to-transparent border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/40 shadow-xl shadow-brand-500/15'
+                              : `bg-gradient-to-br ${lightGradient} ${darkGradient} ${borderColor} shadow-md shadow-slate-200/50 dark:shadow-black/40`
+                          } backdrop-blur-xl group`}
                         >
-                          <p className={`text-xs uppercase font-black tracking-wider mb-1 print:text-slate-700 ${
-                            isSelected ? 'text-brand-700 dark:text-brand-300' : 'text-slate-900 dark:text-slate-100'
-                          }`}>
-                            {formatMetricTitle(key)}
-                          </p>
-                          <p className={`text-xl font-black print:text-black ${
-                            isSelected ? 'text-brand-900 dark:text-brand-100' : 'text-slate-950 dark:text-white'
+                          {/* Ambient glow in card corner */}
+                          <div className="absolute top-0 right-0 w-24 h-24 bg-current opacity-[0.04] rounded-full blur-xl pointer-events-none" />
+
+                          {/* Top row: Label + Themed Icon Badge */}
+                          <div className="flex items-center justify-between gap-2 mb-2 relative z-10">
+                            <p className={`text-[11px] uppercase font-black tracking-wider truncate print:text-slate-700 ${
+                              isSelected ? 'text-brand-600 dark:text-brand-300' : titleColor
+                            }`}>
+                              {formatMetricTitle(key)}
+                            </p>
+                            <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border shadow-xs transition-transform group-hover:scale-110 ${iconBox}`}>
+                              {icon}
+                            </div>
+                          </div>
+
+                          {/* Middle: Big high-contrast number */}
+                          <p className={`text-2xl sm:text-3xl font-black font-mono tracking-tight print:text-black my-1 relative z-10 ${
+                            isSelected ? 'text-brand-700 dark:text-white' : numColor
                           }`}>
                             {value !== null && value !== undefined ? (typeof value === 'number' && value > 999 ? value.toLocaleString() : String(value)) : "—"}
                           </p>
-                          {isSelected && (
-                            <span className="inline-block mt-1 text-[9px] font-black uppercase text-brand-600 dark:text-brand-300 tracking-wider">
-                              ● Filter Active
+
+                          {/* Bottom: Active status or context chip */}
+                          <div className="mt-2.5 flex items-center justify-between text-[10px] relative z-10">
+                            {isSelected ? (
+                              <span className="inline-flex items-center gap-1.5 font-mono font-black uppercase text-brand-600 dark:text-brand-300 tracking-wider px-2 py-0.5 rounded-full bg-brand-500/20 border border-brand-400/40 shadow-xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></span>
+                                FILTER ACTIVE
+                              </span>
+                            ) : (
+                              <span className="font-mono font-bold text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors uppercase tracking-wider text-[9.5px]">
+                                {fKey ? 'tap to filter' : chipLabel}
+                              </span>
+                            )}
+                            <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 opacity-60">
+                              {chipLabel}
                             </span>
-                          )}
+                          </div>
                         </div>
                       );
                     })}
@@ -2727,23 +3186,343 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
             </div>
           )}
 
+          {/* UNIVERSAL SOLVE CONDITION & DIFFICULTY BREAKDOWN (TABLE FOOTER ANALYSIS) */}
+          <div className="pt-4 space-y-4 print:break-inside-avoid print:mt-6">
+            <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#0c1427] border-2 border-slate-200/90 dark:border-white/10 shadow-xl space-y-5">
+              {/* Header with Title, Report Type Scope & Badges */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/10 pb-4">
+                <div className="flex items-center space-x-3 min-w-0">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/25 border border-white/20">
+                    <Target className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-sm sm:text-base font-black text-slate-950 dark:text-white uppercase tracking-wider">
+                        Solve Condition &amp; Performance Summary
+                      </h3>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20">
+                        {rType || 'UNIVERSAL REPORT'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                      Aggregated solve condition cohorts, problem difficulty metrics &amp; attendance breakdown for table data above.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200">
+                    <Users className="w-3.5 h-3.5 text-brand-500" />
+                    <span>In Scope: {allRows.length} Students</span>
+                  </span>
+                  {activeFilter && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs font-black text-amber-700 dark:text-amber-300">
+                      <Filter className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Filtered View: {conditionStats.totalStudents}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* 1. Problem Solve Distribution Cohorts (4/4, 3/4, 2/4, 1/4, 0/4, Not Attended) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                    <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Contest / Weekly Solve Distribution Cohorts</span>
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                    Click any cohort card to filter students in the table
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+                  {/* 4/4 Solved */}
+                  <div
+                    onClick={() => toggleFilter('SOLVED_4')}
+                    className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                      activeFilter === 'SOLVED_4'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md'
+                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-emerald-400 shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300">4 Solved (4/4)</span>
+                      <Trophy className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    </div>
+                    <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">{conditionStats.s4}</p>
+                    <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full w-fit">
+                      {conditionStats.totalStudents > 0 ? `${((conditionStats.s4 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                    </span>
+                  </div>
+
+                  {/* 3/4 Solved */}
+                  <div
+                    onClick={() => toggleFilter('SOLVED_3')}
+                    className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                      activeFilter === 'SOLVED_3'
+                        ? 'bg-teal-50 dark:bg-teal-950/40 border-teal-500 ring-2 ring-teal-500/30 shadow-md'
+                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-teal-400 shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-[10px] font-black uppercase text-teal-800 dark:text-teal-300">3 Solved (3/4)</span>
+                      <Sparkles className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                    </div>
+                    <p className="text-2xl font-black text-teal-800 dark:text-teal-300 tracking-tight my-1">{conditionStats.s3}</p>
+                    <span className="text-[10px] font-black text-teal-800 dark:text-teal-300 bg-teal-500/10 px-2 py-0.5 rounded-full w-fit">
+                      {conditionStats.totalStudents > 0 ? `${((conditionStats.s3 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                    </span>
+                  </div>
+
+                  {/* 2/4 Solved */}
+                  <div
+                    onClick={() => toggleFilter('SOLVED_2')}
+                    className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                      activeFilter === 'SOLVED_2'
+                        ? 'bg-indigo-50 dark:bg-indigo-950/40 border-brand-500 ring-2 ring-brand-500/30 shadow-md'
+                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-brand-400 shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-[10px] font-black uppercase text-brand-800 dark:text-brand-300">2 Solved (2/4)</span>
+                      <Zap className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
+                    </div>
+                    <p className="text-2xl font-black text-brand-800 dark:text-brand-300 tracking-tight my-1">{conditionStats.s2}</p>
+                    <span className="text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-2 py-0.5 rounded-full w-fit">
+                      {conditionStats.totalStudents > 0 ? `${((conditionStats.s2 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                    </span>
+                  </div>
+
+                  {/* 1/4 Solved */}
+                  <div
+                    onClick={() => toggleFilter('SOLVED_1')}
+                    className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                      activeFilter === 'SOLVED_1'
+                        ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/30 shadow-md'
+                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-amber-400 shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300">1 Solved (1/4)</span>
+                      <Flame className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                    </div>
+                    <p className="text-2xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">{conditionStats.s1}</p>
+                    <span className="text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
+                      {conditionStats.totalStudents > 0 ? `${((conditionStats.s1 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                    </span>
+                  </div>
+
+                  {/* 0/4 Solved (Attended) */}
+                  <div
+                    onClick={() => toggleFilter('SOLVED_0')}
+                    className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                      activeFilter === 'SOLVED_0'
+                        ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 ring-2 ring-purple-500/30 shadow-md'
+                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-purple-400 shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-[10px] font-black uppercase text-purple-800 dark:text-purple-300">0 Solved (Attended)</span>
+                      <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                    </div>
+                    <p className="text-2xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">{conditionStats.s0}</p>
+                    <span className="text-[10px] font-black text-purple-800 dark:text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full w-fit">
+                      {conditionStats.totalStudents > 0 ? `${((conditionStats.s0 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                    </span>
+                  </div>
+
+                  {/* Not Attended / Absent */}
+                  <div
+                    onClick={() => toggleFilter('NOT_ATTENDED')}
+                    className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                      activeFilter === 'NOT_ATTENDED'
+                        ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 ring-2 ring-rose-500/30 shadow-md'
+                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-rose-400 shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-[10px] font-black uppercase text-rose-800 dark:text-rose-300">Not Attended</span>
+                      <UserX className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                    </div>
+                    <p className="text-2xl font-black text-rose-800 dark:text-rose-300 tracking-tight my-1">{conditionStats.notAttendedCount}</p>
+                    <span className="text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded-full w-fit">
+                      {conditionStats.totalStudents > 0 ? `${((conditionStats.notAttendedCount / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Problem Difficulty Solves Split (Easy / Medium / Hard / Total) */}
+              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/10">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Difficulty Solve Distribution (Easy • Medium • Hard)</span>
+                </span>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {/* Easy Solves */}
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col justify-between shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300">Easy Solves</span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">
+                      {conditionStats.totalEasy.toLocaleString()}
+                    </p>
+                    <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400">
+                      Foundational Solves
+                    </span>
+                  </div>
+
+                  {/* Medium Solves */}
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col justify-between shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300">Medium Solves</span>
+                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">
+                      {conditionStats.totalMed.toLocaleString()}
+                    </p>
+                    <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400">
+                      Core Algorithmic Solves
+                    </span>
+                  </div>
+
+                  {/* Hard Solves */}
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex flex-col justify-between shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase text-purple-800 dark:text-purple-300">Hard Solves</span>
+                      <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">
+                      {conditionStats.totalHard.toLocaleString()}
+                    </p>
+                    <span className="text-[10px] font-extrabold text-purple-700 dark:text-purple-400">
+                      High Difficulty Solves
+                    </span>
+                  </div>
+
+                  {/* Total Cumulative Solves */}
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-brand-500/15 border border-brand-500/30 flex flex-col justify-between shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase text-brand-800 dark:text-brand-300">Total Solves</span>
+                      <Zap className="w-4 h-4 text-brand-500" />
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-black text-brand-800 dark:text-brand-300 tracking-tight my-1">
+                      {conditionStats.totalSolves.toLocaleString()}
+                    </p>
+                    <span className="text-[10px] font-extrabold text-brand-700 dark:text-brand-400">
+                      Cumulative Solves
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Official Condition Criteria Reference Strip */}
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>Evaluation Standards: 4/4 (100% Complete) • 3/4 (Advanced) • 2/4 (Intermediate) • 1/4 (Developing) • 0/4 (Participation)</span>
+                </div>
+                {activeFilter && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveFilter(null)}
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-black text-[11px] transition-all cursor-pointer touch-manipulation active:scale-95 shrink-0"
+                  >
+                    <span>Clear Filter ({conditionStats.totalStudents}/{allRows.length})</span>
+                  </button>
+                )}
+              </div>
+
+              {/* 4. Official Academic Coordinator Sign-Off Card */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/90 dark:border-white/10 shadow-xs">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-3.5 border-b border-slate-200/70 dark:border-white/10">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-9 h-9 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center font-black text-sm shrink-0 border border-brand-500/20">
+                      <UserCheck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                        Institutional Coordinator Endorsement
+                      </h4>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                        Official departmental record verification and performance appraisal sign-off
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/25">
+                      <ShieldCheck className="w-3.5 h-3.5 mr-1 text-emerald-600 dark:text-emerald-400" />
+                      Verified Record
+                    </span>
+                    <span className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
+                      Ref: {report?.reportId ? String(report.reportId).slice(0, 8).toUpperCase() : 'INST-LEET'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                      Academic Coordinator / Faculty In-Charge
+                    </span>
+                    <p className="text-sm font-extrabold text-slate-900 dark:text-white">
+                      {report?.coordinator || report?.academicCoordinator || (report?.departmentResults && report.departmentResults[0]?.coordinator) || 'M. Santhoshkumar'}
+                    </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300">
+                      Department Coordinator / Authorized Reviewer
+                    </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                      Department / Batch Scope
+                    </span>
+                    <p className="text-sm font-extrabold text-slate-900 dark:text-white">
+                      {report?.department && report.department !== 'ALL' ? report.department : 'All Academic Departments'}
+                    </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300">
+                      Academic Year 2026–2027 • Standard LeetCode Track
+                    </p>
+                  </div>
+
+                  <div className="space-y-1 md:text-right">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                      Authorized Verification
+                    </span>
+                    <div className="pt-1 flex md:justify-end">
+                      <div className="inline-block border-b-2 border-slate-300 dark:border-white/20 pb-1 w-44 text-center">
+                        <span className="text-xs font-serif italic text-slate-700 dark:text-slate-300">Faculty Signatory</span>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-slate-600 dark:text-slate-400 font-mono">
+                      {report?.generatedAt ? new Date(report.generatedAt).toLocaleDateString(undefined, { dateStyle: 'medium' }) : new Date().toLocaleDateString(undefined, { dateStyle: 'medium' })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* 4. FOOTER / EXPORT ACTIONS */}
-        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0 print:hidden">
+        <div className="p-4 sm:p-5 bg-slate-50/90 dark:bg-[#070D18]/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0 print:hidden">
           <div className="flex items-center space-x-2 text-xs font-bold text-slate-700 dark:text-slate-300">
             <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span className="font-extrabold tracking-wide">Official Institutional Report Dataset</span>
-            <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-700 dark:bg-navy-800 dark:text-slate-300">
+            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-slate-200/80 text-slate-700 dark:bg-white/10 dark:text-slate-200 border border-slate-300/60 dark:border-white/10">
               {allRows.length} Records
             </span>
           </div>
 
-          <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+          <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full md:w-auto justify-end">
             <button
               onClick={() => window.print()}
               type="button"
-              className="hidden sm:flex items-center justify-center space-x-1.5 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105"
+              className="hidden sm:flex items-center justify-center space-x-1.5 px-3.5 py-2.5 min-h-[42px] bg-slate-800 hover:bg-slate-900 text-white rounded-2xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 active:scale-95 touch-manipulation border border-white/10"
               title="Print / Save as PDF from browser"
             >
               <Printer className="w-3.5 h-3.5 shrink-0" />
@@ -2753,7 +3532,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               onClick={() => downloadFile('excel')}
               type="button"
               disabled={isDownloading}
-              className="flex items-center justify-center space-x-1 sm:space-x-1.5 px-2 sm:px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] sm:text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 disabled:opacity-50 min-w-0"
+              className="flex items-center justify-center space-x-1.5 px-3.5 py-2.5 min-h-[42px] bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-600 text-white rounded-2xl text-xs font-black transition-all shadow-lg shadow-emerald-600/25 cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-50 min-w-0 border border-emerald-400/30 touch-manipulation"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">Excel (.xlsx)</span>
@@ -2762,7 +3541,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               onClick={() => downloadFile('pdf')}
               type="button"
               disabled={isDownloading}
-              className="flex items-center justify-center space-x-1 sm:space-x-1.5 px-2 sm:px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[11px] sm:text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 disabled:opacity-50 min-w-0"
+              className="flex items-center justify-center space-x-1.5 px-3.5 py-2.5 min-h-[42px] bg-gradient-to-r from-rose-600 via-rose-700 to-red-700 hover:from-rose-500 hover:to-rose-600 text-white rounded-2xl text-xs font-black transition-all shadow-lg shadow-rose-600/25 cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-50 min-w-0 border border-rose-400/30 touch-manipulation"
             >
               <FileText className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">PDF (.pdf)</span>
@@ -2771,7 +3550,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               onClick={() => downloadFile('word')}
               type="button"
               disabled={isDownloading}
-              className="flex items-center justify-center space-x-1 sm:space-x-1.5 px-2 sm:px-3.5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-[11px] sm:text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 disabled:opacity-50 min-w-0"
+              className="flex items-center justify-center space-x-1.5 px-3.5 py-2.5 min-h-[42px] bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-indigo-600 text-white rounded-2xl text-xs font-black transition-all shadow-lg shadow-indigo-600/25 cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-50 min-w-0 border border-indigo-400/30 touch-manipulation"
             >
               <FileText className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">Word (.docx)</span>

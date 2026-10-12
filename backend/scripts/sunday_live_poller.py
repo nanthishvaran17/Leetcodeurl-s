@@ -149,7 +149,7 @@ def run_live_loop():
             db = SessionLocal()
             for st, new_s in updates_batch:
                 total_solved = len(seen_solves[st.id])
-                print(f"  🔥 {st.name} (@{st.username}) solved {new_s[0]['title']} at {new_s[0]['time']}! Total: {total_solved}")
+                print(f"  [SOLVE] {st.name} (@{st.username}) solved {new_s[0]['title']} at {new_s[0]['time']}! Total: {total_solved}")
 
                 # Update DB
                 wpr = db.query(WeeklyPublicResult).filter_by(session_id=ws.id, student_id=st.id).first()

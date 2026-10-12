@@ -321,7 +321,7 @@ class AIKnowledgeEngine:
                     return {
                         "success": True,
                         "answer": (
-                            "### ️ Official HOD Weekly Performance Report Dispatched\n\n"
+                            "### Official HOD Weekly Performance Report Dispatched\n\n"
                             "**DIRECT ANSWER**: The official institutional summary report has been compiled and emailed to leadership.\n\n"
                             "**KEY EVIDENCE**:\n"
                             f"• Recipient: `{masked_admin}`\n"
@@ -409,7 +409,7 @@ class AIKnowledgeEngine:
             return {
                 "success": True,
                 "answer": (
-                    f"### ️ Institutional Intelligence Briefing\n\n"
+                    f"### Institutional Intelligence Briefing\n\n"
                     f"**DIRECT ANSWER**: Hello. Here is your live institutional brief based on current verified database records:\n\n"
                     f"**KEY EVIDENCE**:\n"
                     f"• **Enrolled Scope**: **{total_students}** active students across **{dept_count}** departments.\n"

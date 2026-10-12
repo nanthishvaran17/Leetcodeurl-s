@@ -1786,20 +1786,50 @@ export const HODCommandCenter: React.FC = () => {
  </div>
 
  {/* Right: Meta + Action */}
- <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 sm:gap-1.5 border-t sm:border-0 border-slate-100 dark:border-navy-800 pt-3 sm:pt-0 shrink-0">
- <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
- Last Activity: <span className="font-semibold text-slate-700 dark:text-slate-300">{lastLiveTimestamp}</span>
+ <div className="flex flex-col sm:items-end justify-between sm:justify-center gap-2.5 border-t sm:border-0 border-slate-200/60 dark:border-white/[0.06] pt-3 sm:pt-0 shrink-0">
+ {/* High-Contrast Live Telemetry Pill */}
+ <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/90 dark:border-white/10 text-xs font-mono shadow-xs">
+ <span className="relative flex h-2 w-2">
+ <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+ <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
  </span>
+ <span className="text-slate-600 dark:text-slate-400 font-semibold">Last Activity:</span>
+ <span className="font-black text-slate-900 dark:text-white tracking-wide">{lastLiveTimestamp}</span>
+ </div>
+
+ {/* High-Contrast Interactive Unassigned Students Actions */}
  {summary?.unassigned_student_count ? (
+ <div className="flex flex-wrap items-center gap-1.5">
+ <button
+ onClick={() => {
+ setAllocationFilter('UNASSIGNED');
+ notify.info(`Filtered directory to ${summary.unassigned_student_count} unassigned students.`, '', { category: 'ALLOCATION' });
+ document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+ }}
+ className="px-3.5 py-1.5 rounded-xl bg-amber-100/90 hover:bg-amber-200/90 dark:bg-amber-950/70 dark:hover:bg-amber-900/80 text-amber-950 dark:text-amber-200 font-extrabold text-xs border border-amber-300 dark:border-amber-700/80 transition-all flex items-center gap-1.5 shadow-xs hover:shadow active:scale-95 cursor-pointer whitespace-nowrap"
+ title="Click to view and filter unassigned students in directory below"
+ >
+ <UserX size={13} className="text-amber-700 dark:text-amber-400 shrink-0" />
+ <span className="font-mono font-black">{summary.unassigned_student_count}</span>
+ <span>Unassigned Students</span>
+ <span className="text-[10px] font-sans font-bold text-amber-800 dark:text-amber-300 underline underline-offset-2 ml-0.5">
+ View List
+ </span>
+ </button>
+
  <button
  onClick={() => setShowStaffAllocationModal(true)}
- className="px-4 py-1.5 rounded-lg bg-amber-50 text-amber-700 font-bold text-xs border border-amber-200 hover:bg-amber-100 transition whitespace-nowrap shadow-xs"
+ className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-black text-xs border border-amber-600/30 transition-all flex items-center gap-1.5 shadow-sm shadow-amber-600/20 active:scale-95 cursor-pointer whitespace-nowrap"
+ title="Open Faculty Allocation Manager to assign students"
  >
- {summary.unassigned_student_count} Unassigned Students
+ <Users size={13} className="shrink-0" />
+ <span>Assign Staff</span>
  </button>
+ </div>
  ) : (
- <span className="px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200">
- All Assigned ✓
+ <span className="px-3.5 py-1.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-300 font-bold text-xs border border-emerald-300 dark:border-emerald-700/60 flex items-center gap-1.5 shadow-xs">
+ <CheckCircle2 size={13} className="text-emerald-600 dark:text-emerald-400" />
+ <span>All Assigned ✓</span>
  </span>
  )}
  </div>
@@ -1873,55 +1903,69 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  </Card>
 
- <Card 
- className={`p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer ${staffWorkloadFilter === 'COMPLETED' ? 'ring-2 ring-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/40' : ''}`}
- onClick={() => {
- if (staffWorkloadFilter === 'COMPLETED') {
-   setStaffWorkloadFilter('ALL');
-   notify.info('Cleared target completed mentor filter.', '', { category: 'ALLOCATION' });
- } else {
-   setStaffWorkloadFilter('COMPLETED');
-   notify.success(`Filtered Faculty Mentors: Target Achieved (20+ mentees).`, '', { category: 'ALLOCATION' });
- }
- document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
- }}
- >
- <div className="flex items-center justify-between text-emerald-600">
- <span className="text-xs font-bold uppercase tracking-wider font-mono">COMPLETED</span>
- <CheckCircle2 size={17} />
- </div>
- <div className="mt-3">
- <div className="font-display text-2xl lg:text-3xl font-extrabold text-emerald-600 font-mono">
- {summary?.kpi_summary?.completed ?? 0}
- </div>
- <div className="text-xs text-emerald-600 dark:text-emerald-500 font-semibold mt-1">Target Achieved</div>
- </div>
- </Card>
+  <Card 
+    className={`p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${selectedStatus === 'COMPLETED' ? 'ring-2 ring-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40' : ''}`}
+    onClick={() => {
+      if (selectedStatus === 'COMPLETED') {
+        setSelectedStatus('ALL');
+        setAllocationFilter('ALL');
+        notify.info('Cleared target completed filter. Showing all students.', '', { category: 'ALLOCATION' });
+      } else {
+        setSelectedStatus('COMPLETED');
+        setAllocationFilter('ALLOCATED');
+        notify.success(`Viewing ${summary?.kpi_summary?.completed ?? 0} students who achieved target (10+ solved).`, '', { category: 'ALLOCATION' });
+      }
+      document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+    }}
+  >
+    <div className="flex items-center justify-between text-emerald-600">
+      <span className="text-xs font-bold uppercase tracking-wider font-mono">COMPLETED</span>
+      <CheckCircle2 size={17} />
+    </div>
+    <div className="mt-3">
+      <div className="font-display text-2xl lg:text-3xl font-extrabold text-emerald-600 font-mono">
+        {summary?.kpi_summary?.completed ?? 0}
+      </div>
+      <div className="flex items-center justify-between text-xs text-emerald-600 dark:text-emerald-500 font-semibold mt-1">
+        <span>Target Achieved</span>
+        <span className="text-[10px] font-mono font-bold group-hover:underline flex items-center gap-0.5">
+          View {summary?.kpi_summary?.completed ?? 0} →
+        </span>
+      </div>
+    </div>
+  </Card>
 
- <Card 
- className={`p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer ${staffWorkloadFilter === 'PENDING' ? 'ring-2 ring-amber-500 bg-amber-50/50 dark:bg-amber-950/40' : ''}`}
- onClick={() => {
- if (staffWorkloadFilter === 'PENDING') {
-   setStaffWorkloadFilter('ALL');
-   notify.info('Cleared pending mentor filter.', '', { category: 'ALLOCATION' });
- } else {
-   setStaffWorkloadFilter('PENDING');
-   notify.success(`Filtered Faculty Mentors: Pending Target (< 20 mentees).`, '', { category: 'ALLOCATION' });
- }
- document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
- }}
- >
- <div className="flex items-center justify-between text-amber-600">
- <span className="text-xs font-bold uppercase tracking-wider font-mono">PENDING</span>
- <Clock size={17} />
- </div>
- <div className="mt-3">
- <div className="font-display text-2xl lg:text-3xl font-extrabold text-amber-600 font-mono">
- {summary?.kpi_summary?.pending ?? 0}
- </div>
- <div className="text-xs text-amber-600 dark:text-amber-500 font-semibold mt-1">In Progress</div>
- </div>
- </Card>
+  <Card 
+    className={`p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${selectedStatus === 'PENDING' ? 'ring-2 ring-amber-500 bg-amber-50/70 dark:bg-amber-950/40' : ''}`}
+    onClick={() => {
+      if (selectedStatus === 'PENDING') {
+        setSelectedStatus('ALL');
+        setAllocationFilter('ALL');
+        notify.info('Cleared pending target filter. Showing all students.', '', { category: 'ALLOCATION' });
+      } else {
+        setSelectedStatus('PENDING');
+        setAllocationFilter('ALLOCATED');
+        notify.warning(`Viewing ${summary?.kpi_summary?.pending ?? 0} students with target in progress (< 10 solved).`, '', { category: 'ALLOCATION' });
+      }
+      document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+    }}
+  >
+    <div className="flex items-center justify-between text-amber-600">
+      <span className="text-xs font-bold uppercase tracking-wider font-mono">PENDING</span>
+      <Clock size={17} />
+    </div>
+    <div className="mt-3">
+      <div className="font-display text-2xl lg:text-3xl font-extrabold text-amber-600 font-mono">
+        {summary?.kpi_summary?.pending ?? 0}
+      </div>
+      <div className="flex items-center justify-between text-xs text-amber-600 dark:text-amber-500 font-semibold mt-1">
+        <span>In Progress</span>
+        <span className="text-[10px] font-mono font-bold group-hover:underline flex items-center gap-0.5">
+          View {summary?.kpi_summary?.pending ?? 0} →
+        </span>
+      </div>
+    </div>
+  </Card>
 
  <Card 
  className="p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer !bg-slate-900 text-white border-slate-800"
@@ -2176,11 +2220,21 @@ export const HODCommandCenter: React.FC = () => {
  <h2 className="font-display text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
  <span>Live Student Activity</span>
  <span className="text-xs font-mono font-normal text-slate-600 dark:text-slate-400">({studentsTotal} students in scope)</span>
- {allocationFilter !== 'ALL' && (
+ {(allocationFilter !== 'ALL' || selectedStatus !== 'ALL') && (
    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-     allocationFilter === 'ALLOCATED' ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+     selectedStatus === 'COMPLETED'
+       ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+       : selectedStatus === 'PENDING'
+       ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+       : allocationFilter === 'ALLOCATED'
+       ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300'
+       : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
    }`}>
-     Showing: {allocationFilter === 'ALLOCATED' ? 'Allocated Only' : 'Unassigned Only'}
+     Showing: {
+       selectedStatus === 'COMPLETED' ? 'Target Achieved (10+ Solved)' :
+       selectedStatus === 'PENDING' ? 'Target In Progress (< 10 Solved)' :
+       allocationFilter === 'ALLOCATED' ? 'Allocated Only' : 'Unassigned Only'
+     }
    </span>
  )}
  </h2>
@@ -2188,10 +2242,15 @@ export const HODCommandCenter: React.FC = () => {
  </div>
 
           <div className="flex items-center gap-2">
-            {allocationFilter !== 'ALL' && (
+            {(allocationFilter !== 'ALL' || selectedStatus !== 'ALL') && (
               <button
-                onClick={() => setAllocationFilter('ALL')}
+                onClick={() => {
+                  setAllocationFilter('ALL');
+                  setSelectedStatus('ALL');
+                  setStudentsPage(1);
+                }}
                 className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+                title="Reset filters and show all students"
               >
                 <RotateCcw size={12} />
                 <span>Show All</span>
@@ -2560,14 +2619,14 @@ export const HODCommandCenter: React.FC = () => {
  {d.performance_trend === '↑' ? '↑' : d.performance_trend === '↓' ? '↓' : '—'}
  </span>
  </div>
- <div className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">{d.completion_rate || 0}% comp</div>
+ <div className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">{d.active_score || 0}/100 score</div>
  </div>
 
  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-slate-100 dark:border-navy-800 shadow-sm">
  <div className="text-xs text-slate-600 dark:text-slate-400 font-semibold uppercase">Mentors</div>
  <div className="font-extrabold text-slate-900 dark:text-white mt-0.5">{d.faculty_mentors || 0}</div>
  <div className="text-xs text-slate-700 dark:text-slate-400 font-bold">
- {d.at_risk_students ? <span className="text-rose-500 font-black">{d.at_risk_students} risk</span> : '0 risk'}
+ {d.faculty_mentors && d.faculty_mentors > 0 && d.student_count > 0 ? `1:${Math.round(d.student_count / d.faculty_mentors)} ratio` : 'Active'}
  </div>
  </div>
  </div>
@@ -2587,8 +2646,7 @@ export const HODCommandCenter: React.FC = () => {
  <th className="py-2.5 px-3 text-right">Active Score</th>
  <th className="py-2.5 px-3 text-center">Engagement</th>
  <th className="py-2.5 px-3 text-right">Avg Solved</th>
- <th className="py-2.5 px-3 text-right">Completion</th>
- <th className="py-2.5 px-3 text-right">At-Risk</th>
+
  <th className="py-2.5 px-3 text-right">Mentors</th>
  <th className="py-2.5 px-3 text-center">Health</th>
  <th className="py-2.5 px-3 text-center rounded-tr-lg">Action</th>
@@ -2655,23 +2713,7 @@ export const HODCommandCenter: React.FC = () => {
  </span>
  </div>
  </td>
- <td className="py-3 px-3 text-right">
- <div className="flex flex-col items-end gap-1">
- <span className="font-extrabold text-slate-900 dark:text-white text-xs">{d.completion_rate || 0}%</span>
- <div className="w-16 bg-slate-200 dark:bg-navy-900 rounded-full h-1.5 overflow-hidden">
- <div className="bg-gradient-to-r from-indigo-500 to-purple-600 h-1.5 rounded-full" style={{ width: `${d.completion_rate || 0}%` }} />
- </div>
- </div>
- </td>
- <td className="py-3 px-3 text-right">
- {d.at_risk_students ? (
- <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 font-extrabold text-xs border border-rose-500/30">
- {d.at_risk_students}
- </span>
- ) : (
- <span className="text-slate-600 dark:text-slate-400 text-xs font-bold">-</span>
- )}
- </td>
+
  <td className="py-3 px-3 text-right">
  <div className="font-extrabold text-slate-900 dark:text-white text-xs">{d.faculty_mentors || 0}</div>
  {d.faculty_mentors && d.faculty_mentors > 0 && d.student_count > 0 ? (

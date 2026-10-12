@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Trophy, FileSpreadsheet, FileText, Printer } from 'lucide-react';
 import { CoordinatorWeeklyReport, ColumnDef } from './CoordinatorWeeklyReport';
 import { triggerBrowserAnchorDownload, sanitizeFilename } from '../../services/download/downloadUtils';
 
@@ -170,7 +171,7 @@ export const All17ReportsManager: React.FC = () => {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200">
           <div>
             <h1 className="text-xl font-black text-slate-900 flex items-center gap-2">
-              🏆 Official College 17-Report Generator
+              <Trophy className="w-5 h-5 text-amber-500" /> Official College 17-Report Generator
             </h1>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
               Select any report. Every single sheet uses the exact <b>Nandha College Master Template</b> with Dual Logos & Format!
@@ -183,19 +184,19 @@ export const All17ReportsManager: React.FC = () => {
               onClick={exportToExcel}
               className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 px-3.5 rounded-lg text-xs shadow flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              📊 Export to Excel (.xls)
+              <FileSpreadsheet className="w-4 h-4" /> Export to Excel (.xls)
             </button>
             <button 
               onClick={exportToCSV}
               className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-3.5 rounded-lg text-xs shadow flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              📄 Export CSV
+              <FileText className="w-4 h-4" /> Export CSV
             </button>
             <button 
               onClick={() => window.print()}
               className="bg-slate-900 hover:bg-black text-white font-bold py-2 px-3.5 rounded-lg text-xs shadow flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              🖨️ Print / Save PDF (A4)
+              <Printer className="w-4 h-4" /> Print / Save PDF (A4)
             </button>
           </div>
         </div>

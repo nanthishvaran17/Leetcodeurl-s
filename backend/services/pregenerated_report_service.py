@@ -133,9 +133,13 @@ def get_or_create_report(
     user_role = (getattr(current_user, "role", "") or "").lower().strip()
     user_dept = str(getattr(current_user, "department_id", "ALL"))
     if user_role in ("hod", "department hod", "department_hod"):
-        from backend.services.authorization_service import get_hod_authorized_department_ids
+        from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
         h_ids = get_hod_authorized_department_ids(db, current_user)
         user_dept = ",".join(map(str, sorted(h_ids))) if h_ids else user_dept
+        auth_codes = get_hod_authorized_department_codes(db, current_user)
+        if auth_codes and (clean_filters.get("department") in (None, "ALL", "") or clean_filters.get("dept") in (None, "ALL", "")):
+            clean_filters["department"] = auth_codes[0]
+            clean_filters["dept"] = auth_codes[0]
     user_scope = f"{user_role}:{user_dept}" if current_user else "ALL"
 
     ext_info = EXT_MEDIA_TYPES.get(format.lower().strip(), ("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
@@ -526,8 +530,32 @@ def generate_report_bytes(
             res = asyncio.run(report_gen.generate_complete_report(contest_id))  # type: ignore
         return res["excel_bytes"]
 
+    # 2.5 Historical Contest Intelligence Engine
+    if rpt in ("HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"):
+        from backend.services.hist_intel_service import build_hist_intel_report
+        from backend.services.report_models import ReportConfig
+        from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
+        from backend.exporters.dynamic_pdf_exporter import export_dynamic_pdf
+        from backend.exporters.dynamic_word_exporter import export_dynamic_word
+        from backend.exporters.dynamic_csv_exporter import export_dynamic_csv
+        config = ReportConfig(
+            report_type="HISTORICAL_CONTEST_INTELLIGENCE",
+            department=dept,
+            year=year,
+            filters=flt
+        )
+        ds = build_hist_intel_report(db, config)
+        if fmt in ("excel", "xlsx"):
+            return export_dynamic_excel(ds)
+        elif fmt == "pdf":
+            return export_dynamic_pdf(ds)
+        elif fmt in ("word", "docx"):
+            return export_dynamic_word(ds)
+        elif fmt == "csv":
+            return export_dynamic_csv(ds)
+
     # 3. Master Institutional Workbook Engine (ONLY for Master 10-Sheet Workbook)
-    if fmt in ("excel", "xlsx") and rpt in ("MASTER_10_SHEET", "10_SHEET", "MASTER_WORKBOOK", "WEEK_ON_WEEK_INTELLIGENCE", "HISTORICAL_CONTEST_INTELLIGENCE"):
+    if fmt in ("excel", "xlsx") and rpt in ("MASTER_10_SHEET", "10_SHEET", "MASTER_WORKBOOK", "WEEK_ON_WEEK_INTELLIGENCE"):
         from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
         c_id = flt.get("session_id") or flt.get("contest_id")
         return generate_master_10_sheet_workbook(db, current_user=current_user, contest_id=c_id, department=dept, year=year, report_type=rpt)

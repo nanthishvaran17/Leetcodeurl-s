@@ -455,7 +455,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     Constructs a 16-sheet Principal-ready intelligence report using strictly Times New Roman.
     """
     rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
-    if any(k in rpt_t for k in ("WEEK_ON_WEEK", "WOW")) or dataset.get("wowSummary"):
+    if any(k in rpt_t for k in ("WEEK_ON_WEEK", "WOW", "HISTORICAL")) or dataset.get("wowSummary") or dataset.get("histSummary") or dataset.get("sessionHeaders"):
         from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
         return export_dynamic_excel(dataset)
 

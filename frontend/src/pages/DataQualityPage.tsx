@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { 
   ShieldCheck, CheckCircle2, AlertTriangle, XCircle, RefreshCw, 
   Layers, Search, FileText, AlertCircle, Sparkles, ExternalLink, Clock,
-  Building2, GraduationCap, RotateCcw
+  Building2, GraduationCap, RotateCcw, ChevronRight, Eye, UserCheck, UserX,
+  Wifi, Zap, User, ArrowRight, Check, SlidersHorizontal, Filter, Globe
 } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
@@ -10,7 +11,62 @@ import { useDepartments } from '../contexts/DepartmentContext';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import { GlobalFilter } from '../components/GlobalFilter';
 
-export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }> = ({ onNavigateTab }) => {
+const StudentProfilePage = lazy(() => import('./StudentProfilePage').then(m => ({ default: m.StudentProfilePage })));
+
+const getInitials = (name: string) => {
+  if (!name) return '??';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
+const getStatusConfig = (status: string) => {
+  switch (status) {
+    case 'VALID_PROFILE':
+      return {
+        label: 'VALID PROFILE',
+        bg: 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30',
+        dot: 'bg-emerald-500'
+      };
+    case 'MISSING_USERNAME':
+      return {
+        label: 'MISSING HANDLE',
+        bg: 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30',
+        dot: 'bg-amber-500'
+      };
+    case 'PROFILE_NOT_FOUND':
+      return {
+        label: 'NOT FOUND (404)',
+        bg: 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border-rose-500/30',
+        dot: 'bg-rose-500'
+      };
+    case 'INVALID_PROFILE_URL':
+      return {
+        label: 'INVALID URL',
+        bg: 'bg-orange-500/15 text-orange-800 dark:text-orange-300 border-orange-500/30',
+        dot: 'bg-orange-500'
+      };
+    case 'NETWORK_ERROR':
+      return {
+        label: 'NETWORK SYNC',
+        bg: 'bg-cyan-500/15 text-cyan-800 dark:text-cyan-300 border-cyan-500/30',
+        dot: 'bg-cyan-500'
+      };
+    default:
+      return {
+        label: (status || 'UNKNOWN').replace(/_/g, ' '),
+        bg: 'bg-slate-500/15 text-slate-800 dark:text-slate-300 border-slate-500/30',
+        dot: 'bg-slate-400'
+      };
+  }
+};
+
+interface DataQualityPageProps {
+  onNavigateTab?: (tab: string) => void;
+  onSelectStudent?: (student: any) => void;
+}
+
+export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab, onSelectStudent }) => {
   const { notify } = useNotification();
   const { departments } = useDepartments();
   const [data, setData] = useState<any>(null);
@@ -21,6 +77,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
+  const [selectedStudentForProfile, setSelectedStudentForProfile] = useState<any | null>(null);
 
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [page, setPage] = useState<number>(1);
@@ -102,59 +159,86 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
     return true;
   });
 
+  const handleStudentClick = (item: any) => {
+    const studentObj = {
+      id: item.id || item.reg_no,
+      name: item.name,
+      reg_no: item.reg_no,
+      username: item.username || '',
+      leetcode_url: item.leetcode_url || '',
+      department: item.department || { code: item.dept, name: item.dept },
+      dept: item.dept,
+      year_level: item.year_level || item.year || 'III',
+      stats: item.stats || {
+        total_solved: 0,
+        sync_status: item.status === 'VALID_PROFILE' ? 'verified' : 'pending'
+      }
+    };
+    if (onSelectStudent) {
+      onSelectStudent(studentObj);
+    } else {
+      setSelectedStudentForProfile(studentObj);
+    }
+  };
+
   return (
-    <div className="w-full space-y-6 sm:space-y-8 animate-fade-in pb-12 font-sans px-0 max-w-full overflow-hidden">
+    <div className="w-full space-y-4 sm:space-y-6 md:space-y-8 animate-fade-in pb-16 font-sans px-0 max-w-full">
       
       {/* Hero Banner with Rich Styling */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-4 sm:p-6 md:p-8 shadow-lg border border-brand-500/30">
 
-        <div className="relative z-10 flex items-center justify-between flex-wrap gap-6">
-          <div className="space-y-3 max-w-3xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl sm:rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black tracking-wider leading-snug">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
+          <div className="space-y-2 sm:space-y-3 max-w-3xl">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black tracking-wider leading-snug">
               <span>DATA INTEGRITY & PROFILE HEALTH • REALTIME AUDIT BOARD</span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
               Data Quality & <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-orange-300 to-rose-300">Profile Health Dashboard</span>
             </h1>
 
-            <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
+            <p className="text-xs sm:text-sm text-slate-300 font-medium sm:font-bold tracking-wide">
               Monitor missing links, invalid profile URLs, profile not found errors, and network anomalies across all institutional student records.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 w-full lg:w-auto shrink-0 pt-2 lg:pt-0">
             {lastAuditTime && (
-              <span className="hidden sm:flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-xs font-mono font-bold">
-                <Clock className="w-3.5 h-3.5 text-emerald-400" />
+              <div className="flex items-center space-x-2 px-3 py-2 rounded-2xl bg-white/10 border border-white/15 text-slate-200 text-xs font-mono font-bold shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <Clock className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
                 <span>Audited: {lastAuditTime}</span>
-              </span>
+              </div>
             )}
 
-            {onNavigateTab && (
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center w-full sm:w-auto">
+              {onNavigateTab && (
+                <button
+                  type="button"
+                  onClick={() => onNavigateTab('data-issues')}
+                  className="px-4 py-2.5 min-h-[44px] bg-gradient-to-r from-rose-600 via-rose-500 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-xs font-black rounded-2xl shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center space-x-2 cursor-pointer active:scale-95 border border-rose-400/30 touch-manipulation"
+                >
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span className="truncate">Data Issues &amp; Recovery</span>
+                </button>
+              )}
+
               <button
-                onClick={() => onNavigateTab('data-issues')}
-                className="px-4 py-2.5 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white text-xs font-black rounded-xl shadow-lg shadow-rose-600/30 transition-all flex items-center space-x-2 cursor-pointer transform hover:scale-105"
+                type="button"
+                onClick={() => fetchQualityData(true)}
+                disabled={refreshing}
+                className="px-4 py-2.5 min-h-[44px] bg-white/10 hover:bg-white/20 active:bg-white/25 text-white text-xs font-black rounded-2xl border border-white/20 transition-all backdrop-blur-md flex items-center justify-center space-x-2 cursor-pointer active:scale-95 shadow-xs touch-manipulation disabled:opacity-50"
               >
-                <AlertCircle className="w-4 h-4" />
-                <span>Open Student Data Issues & Recovery</span>
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''} shrink-0 text-brand-300`} />
+                <span>{refreshing ? 'Auditing...' : 'Run Quality Audit'}</span>
               </button>
-            )}
-
-            <button
-              onClick={() => fetchQualityData(true)}
-              disabled={refreshing}
-              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-black rounded-xl border border-white/20 transition-all backdrop-blur-md flex items-center space-x-2 cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-              <span>{refreshing ? 'Auditing Live...' : 'Run Quality Audit'}</span>
-            </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Scope Filter Controls */}
-      <div className="bg-white dark:bg-navy-950 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-navy-800 shadow-md flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-4 w-full overflow-hidden">
+      {/* Scope Filter Controls - 2026 SaaS Glassmorphic Bar */}
+      <div className="bg-white/90 dark:bg-navy-950/90 backdrop-blur-xl p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-3 sm:gap-4 w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5 flex-1 w-full max-w-3xl min-w-0">
           {/* Department Filter */}
           <PremiumDepartmentSelect
@@ -184,8 +268,9 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
 
         {(selectedDept !== 'ALL' || selectedYear !== 'ALL') && (
           <button
+            type="button"
             onClick={() => { setSelectedDept('ALL'); setSelectedYear('ALL'); }}
-            className="text-xs font-bold text-rose-500 hover:text-rose-700 flex items-center justify-center space-x-1 cursor-pointer bg-rose-50 dark:bg-rose-950/40 px-3.5 py-2.5 rounded-2xl border border-rose-200 dark:border-rose-800 shadow-xs transition-all shrink-0 self-start sm:self-end"
+            className="text-xs font-black text-rose-600 dark:text-rose-400 hover:text-rose-700 flex items-center justify-center space-x-1.5 cursor-pointer bg-rose-50 dark:bg-rose-950/40 px-4 py-2.5 min-h-[44px] rounded-2xl border border-rose-200 dark:border-rose-800 shadow-xs transition-all shrink-0 self-stretch sm:self-end touch-manipulation active:scale-95"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset Filters</span>
@@ -193,76 +278,131 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
         )}
       </div>
 
-      {/* Metrics Snapshot Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+      {/* Metrics Snapshot Grid — 5 2026 SaaS Bento Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        {/* 1. Health Score */}
         <div 
           onClick={() => setFilterCategory('ALL')}
-          className={`p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer ${filterCategory === 'ALL' ? 'ring-2 ring-emerald-400 scale-[1.03]' : 'hover:scale-[1.01]'}`}
-          style={{ background: 'linear-gradient(135deg, #064e3b15, #06543515)', borderColor: 'rgba(16,185,129,0.25)' }}
+          className={`relative overflow-hidden p-4 sm:p-5 rounded-3xl border flex flex-col justify-between min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+            filterCategory === 'ALL' 
+              ? 'bg-gradient-to-br from-emerald-50 via-white to-teal-50/50 dark:from-emerald-950/40 dark:via-slate-900/90 dark:to-slate-950 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md shadow-emerald-500/10' 
+              : 'bg-white/90 dark:bg-[#0c1324] border-slate-200/90 dark:border-white/10 hover:border-emerald-400 dark:hover:border-emerald-500/50 shadow-xs'
+          }`}
         >
-          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#34d399' }}>Health Score</p>
-          <p className="text-3xl font-black" style={{ color: '#10b981' }}>{healthScore}%</p>
-          <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>Roster Accuracy Index</p>
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Health Score</span>
+            <div className="w-7 h-7 rounded-xl bg-emerald-500/15 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">{healthScore}%</p>
+          <span className="inline-flex items-center text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2.5 py-0.5 rounded-full w-fit border border-emerald-500/20">
+            Roster Accuracy
+          </span>
         </div>
 
+        {/* 2. Valid Profiles */}
         <div 
           onClick={() => setFilterCategory('VALID')}
-          className={`p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer ${filterCategory === 'VALID' ? 'ring-2 ring-emerald-400 scale-[1.03]' : 'hover:scale-[1.01]'}`}
-          style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderColor: 'rgba(16,185,129,0.4)' }}
+          className={`relative overflow-hidden p-4 sm:p-5 rounded-3xl border flex flex-col justify-between min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+            filterCategory === 'VALID' 
+              ? 'bg-gradient-to-br from-indigo-50 via-white to-blue-50/50 dark:from-indigo-950/40 dark:via-slate-900/90 dark:to-slate-950 border-brand-500 ring-2 ring-brand-500/30 shadow-md shadow-indigo-500/10' 
+              : 'bg-white/90 dark:bg-[#0c1324] border-slate-200/90 dark:border-white/10 hover:border-brand-400 dark:hover:border-brand-500/50 shadow-xs'
+          }`}
         >
-          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#34d399' }}>Valid Profiles</p>
-          <p className="text-3xl font-black text-white">
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">Valid Profiles</span>
+            <div className="w-7 h-7 rounded-xl bg-brand-500/15 border border-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white tracking-tight my-1">
             {data?.valid_profiles || 0}
-            {data?.total_students ? <span className="text-sm font-semibold text-slate-400 font-mono"> / {data.total_students}</span> : null}
+            {data?.total_students ? <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 font-mono"> / {data.total_students}</span> : null}
           </p>
-          <p className="text-[11px] font-bold text-emerald-400">Strictly Identity Mapped (Click to View)</p>
+          <span className="inline-flex items-center text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-2.5 py-0.5 rounded-full w-fit border border-brand-500/20">
+            Strictly Mapped
+          </span>
         </div>
 
+        {/* 3. Missing Links */}
         <div 
           onClick={() => setFilterCategory('MISSING')}
-          className={`p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer ${filterCategory === 'MISSING' ? 'ring-2 ring-amber-400 scale-[1.03]' : 'hover:scale-[1.01]'}`}
-          style={{ background: 'linear-gradient(135deg, #1a150815, #2a221015)', borderColor: 'rgba(245,158,11,0.25)' }}
+          className={`relative overflow-hidden p-4 sm:p-5 rounded-3xl border flex flex-col justify-between min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+            filterCategory === 'MISSING' 
+              ? 'bg-gradient-to-br from-amber-50 via-white to-orange-50/50 dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950 border-amber-500 ring-2 ring-amber-500/30 shadow-md shadow-amber-500/10' 
+              : 'bg-white/90 dark:bg-[#0c1324] border-slate-200/90 dark:border-white/10 hover:border-amber-400 dark:hover:border-amber-500/50 shadow-xs'
+          }`}
         >
-          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#fbbf24' }}>Missing Links</p>
-          <p className="text-3xl font-black" style={{ color: '#f59e0b' }}>{data?.missing_links || 0}</p>
-          <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>No Username Set</p>
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Missing Links</span>
+            <div className="w-7 h-7 rounded-xl bg-amber-500/15 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl sm:text-3xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">{data?.missing_links || 0}</p>
+          <span className="inline-flex items-center text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2.5 py-0.5 rounded-full w-fit border border-amber-500/20">
+            No Username Set
+          </span>
         </div>
 
+        {/* 4. Profile Not Found */}
         <div 
           onClick={() => setFilterCategory('NOT_FOUND')}
-          className={`p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer ${filterCategory === 'NOT_FOUND' ? 'ring-2 ring-rose-400 scale-[1.03]' : 'hover:scale-[1.01]'}`}
-          style={{ background: 'linear-gradient(135deg, #1a080815, #2a101015)', borderColor: 'rgba(239,68,68,0.25)' }}
+          className={`relative overflow-hidden p-4 sm:p-5 rounded-3xl border flex flex-col justify-between min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+            filterCategory === 'NOT_FOUND' 
+              ? 'bg-gradient-to-br from-rose-50 via-white to-red-50/50 dark:from-rose-950/40 dark:via-slate-900/90 dark:to-slate-950 border-rose-500 ring-2 ring-rose-500/30 shadow-md shadow-rose-500/10' 
+              : 'bg-white/90 dark:bg-[#0c1324] border-slate-200/90 dark:border-white/10 hover:border-rose-400 dark:hover:border-rose-500/50 shadow-xs'
+          }`}
         >
-          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#f87171' }}>Profile Not Found</p>
-          <p className="text-3xl font-black" style={{ color: '#ef4444' }}>{data?.profile_not_found || 0}</p>
-          <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>Invalid Username on LeetCode</p>
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">Profile Not Found</span>
+            <div className="w-7 h-7 rounded-xl bg-rose-500/15 border border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+              <UserX className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl sm:text-3xl font-black text-rose-800 dark:text-rose-300 tracking-tight my-1">{data?.profile_not_found || 0}</p>
+          <span className="inline-flex items-center text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-2.5 py-0.5 rounded-full w-fit border border-rose-500/20">
+            Invalid on LeetCode
+          </span>
         </div>
 
+        {/* 5. Network / Sync */}
         <div 
           onClick={() => setFilterCategory('NETWORK')}
-          className={`p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer ${filterCategory === 'NETWORK' ? 'ring-2 ring-brand-400 scale-[1.03]' : 'hover:scale-[1.01]'}`}
-          style={{ background: 'linear-gradient(135deg, #0c1a2e15, #0f254015)', borderColor: 'rgba(59,130,246,0.25)' }}
+          className={`col-span-2 sm:col-span-1 relative overflow-hidden p-4 sm:p-5 rounded-3xl border flex flex-col justify-between min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+            filterCategory === 'NETWORK' 
+              ? 'bg-gradient-to-br from-cyan-50 via-white to-blue-50/50 dark:from-cyan-950/40 dark:via-slate-900/90 dark:to-slate-950 border-cyan-500 ring-2 ring-cyan-500/30 shadow-md shadow-cyan-500/10' 
+              : 'bg-white/90 dark:bg-[#0c1324] border-slate-200/90 dark:border-white/10 hover:border-cyan-400 dark:hover:border-cyan-500/50 shadow-xs'
+          }`}
         >
-          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#60a5fa' }}>Network / Sync</p>
-          <p className="text-3xl font-black" style={{ color: '#3b82f6' }}>{data?.network_errors || 0}</p>
-          <p className="text-[11px] font-bold" style={{ color: '#6b7280' }}>Temporary / Retryable</p>
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-cyan-800 dark:text-cyan-300">Network / Sync</span>
+            <div className="w-7 h-7 rounded-xl bg-cyan-500/15 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
+              <Wifi className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl sm:text-3xl font-black text-cyan-800 dark:text-cyan-300 tracking-tight my-1">{data?.network_errors || 0}</p>
+          <span className="inline-flex items-center text-[10px] font-black text-cyan-800 dark:text-cyan-300 bg-cyan-500/10 px-2.5 py-0.5 rounded-full w-fit border border-cyan-500/20">
+            Retryable Anomalies
+          </span>
         </div>
       </div>
 
       {/* Profile Attention & Quality Issues Board */}
-      <div className="border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-950 p-4 sm:p-6 space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="border border-slate-200/90 dark:border-white/10 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-950 p-4 sm:p-6 space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-4 pb-2 border-b border-slate-100 dark:border-white/10">
           <div className="space-y-1">
             <h3 className="text-sm font-black uppercase text-slate-900 dark:text-white flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 text-amber-500" />
-              <span>Profile Attention & Data Quality Roster ({filteredIssues.length} Items Displayed)</span>
+              <span>Profile Attention &amp; Data Quality Roster ({filteredIssues.length} Items Displayed)</span>
             </h3>
-            <p className="text-xs text-slate-500 font-medium">Filter by category or search name, register number, or issue flag.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Filter by category or search name, register number, or issue flag.</p>
           </div>
 
           {/* Interactive Search & Filter Controls */}
-          <div className="flex items-center gap-2 flex-wrap w-full xl:w-auto">
-            <div className="relative flex-1 sm:flex-initial flex items-center">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full xl:w-auto">
+            <div className="relative flex-1 min-w-[200px]">
               <input
                 type="text"
                 placeholder="Search name, reg no..."
@@ -270,10 +410,10 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoComplete="off"
                 spellCheck={false}
-                className="pl-9 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 w-full sm:w-60 shadow-sm text-left transition-all"
+                className="pl-9 pr-8 py-2.5 min-h-[44px] rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-navy-900/60 text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 w-full shadow-xs transition-all"
               />
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
-                <Search className="w-3.5 h-3.5 stroke-[2.5]" />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-400">
+                <Search className="w-4 h-4 stroke-[2.5]" />
               </div>
               {searchQuery && (
                 <button
@@ -282,39 +422,44 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
                   className="absolute inset-y-0 right-0 z-10 flex items-center px-2.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors"
                   title="Clear search"
                 >
-                  <XCircle className="w-3.5 h-3.5 stroke-[2]" />
+                  <XCircle className="w-4 h-4 stroke-[2]" />
                 </button>
               )}
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-navy-950 p-1.5 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 text-[11px] font-bold overflow-x-auto max-w-full shadow-2xs scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-2 mb-1">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-900 p-1.5 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 text-[11px] font-bold overflow-x-auto max-w-full shadow-2xs scrollbar-none">
               <button
+                type="button"
                 onClick={() => { setFilterCategory('ALL'); setPage(1); }}
-                className={`px-3 py-1.5 rounded-xl transition-all shrink-0 cursor-pointer ${filterCategory === 'ALL' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
+                className={`px-3 py-1.5 min-h-[36px] rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'ALL' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
               >
                 All ({issuesList.length})
               </button>
               <button
+                type="button"
                 onClick={() => { setFilterCategory('VALID'); setPage(1); }}
-                className={`px-3 py-1.5 rounded-xl transition-all shrink-0 cursor-pointer ${filterCategory === 'VALID' ? 'bg-emerald-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'}`}
+                className={`px-3 py-1.5 min-h-[36px] rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'VALID' ? 'bg-emerald-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'}`}
               >
                 Valid ({data?.valid_profiles || 0})
               </button>
               <button
+                type="button"
                 onClick={() => { setFilterCategory('MISSING'); setPage(1); }}
-                className={`px-3 py-1.5 rounded-xl transition-all shrink-0 cursor-pointer ${filterCategory === 'MISSING' ? 'bg-amber-500 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'}`}
+                className={`px-3 py-1.5 min-h-[36px] rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'MISSING' ? 'bg-amber-500 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'}`}
               >
                 Missing ({data?.missing_links || 0})
               </button>
               <button
+                type="button"
                 onClick={() => { setFilterCategory('NOT_FOUND'); setPage(1); }}
-                className={`px-3 py-1.5 rounded-xl transition-all shrink-0 cursor-pointer ${filterCategory === 'NOT_FOUND' ? 'bg-rose-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400'}`}
+                className={`px-3 py-1.5 min-h-[36px] rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'NOT_FOUND' ? 'bg-rose-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400'}`}
               >
                 Not Found ({data?.profile_not_found || 0})
               </button>
               <button
+                type="button"
                 onClick={() => { setFilterCategory('NETWORK'); setPage(1); }}
-                className={`px-3 py-1.5 rounded-xl transition-all shrink-0 cursor-pointer ${filterCategory === 'NETWORK' ? 'bg-indigo-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400'}`}
+                className={`px-3 py-1.5 min-h-[36px] rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'NETWORK' ? 'bg-cyan-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400'}`}
               >
                 Network ({data?.network_errors || 0})
               </button>
@@ -330,45 +475,95 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
 
         {filteredIssues.length > 0 ? (
           <>
-            {/* Mobile Issue Cards (Spacious, 100% width, No empty spaces) */}
+            {/* Mobile Issue Cards (2026 SaaS Bento Cards) */}
             <div className="block md:hidden space-y-3.5 my-3">
-              {filteredIssues.slice((page - 1) * pageSize, page * pageSize).map((item: any, idx: number) => (
-                <div
-                  key={idx}
-                  className="rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 p-4 pb-4.5 shadow-sm space-y-3"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
-                        {item.name}
-                      </h4>
-                      <div className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                        {item.reg_no}
+              {filteredIssues.slice((page - 1) * pageSize, page * pageSize).map((item: any, idx: number) => {
+                const statusCfg = getStatusConfig(item.status);
+                const initials = getInitials(item.name);
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => handleStudentClick(item)}
+                    className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#0c1324] border border-slate-200/90 dark:border-white/10 p-4 sm:p-5 shadow-md shadow-slate-200/40 dark:shadow-black/40 space-y-3.5 cursor-pointer hover:border-brand-500/50 transition-all duration-200 active:scale-[0.98] touch-manipulation group"
+                  >
+                    {/* Top Row: Avatar + Student Info + Department */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center space-x-3 min-w-0 flex-1">
+                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md shadow-brand-500/20 border border-white/20">
+                          {initials}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-black text-sm text-slate-950 dark:text-white truncate group-hover:text-brand-500 transition-colors">
+                            {item.name}
+                          </h4>
+                          <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500 dark:text-slate-400 font-mono font-bold">
+                            <span>{item.reg_no}</span>
+                            {(item.year_level || item.year) && (
+                              <>
+                                <span>•</span>
+                                <span>Year {item.year_level || item.year}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <span className="px-2.5 py-1 rounded-xl bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/25 font-black text-xs shrink-0 font-mono">
+                        {item.dept}
+                      </span>
+                    </div>
+
+                    {/* Middle Row: 2 Micro Bento Tiles (Diagnostic & Handle) */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {/* Status Tile */}
+                      <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/70 dark:border-white/[0.06] space-y-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                          Audit Status
+                        </span>
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full font-black text-[10px] border ${statusCfg.bg}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot} animate-pulse`} />
+                          <span className="truncate">{statusCfg.label}</span>
+                        </span>
+                      </div>
+
+                      {/* Handle Tile */}
+                      <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/70 dark:border-white/[0.06] space-y-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                          LeetCode Profile
+                        </span>
+                        {item.username ? (
+                          <span className="inline-flex items-center gap-1 font-mono font-bold text-amber-600 dark:text-amber-400 truncate max-w-full text-[11px]">
+                            <Globe className="w-3 h-3 shrink-0" />
+                            <span className="truncate">@{item.username}</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 font-mono text-rose-500 font-bold text-[10px]">
+                            <AlertCircle className="w-3 h-3 shrink-0" />
+                            <span>No Handle</span>
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <span className="px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 font-black text-xs shrink-0">
-                      {item.dept}
-                    </span>
-                  </div>
 
-                  <div className="flex items-center justify-between gap-2 pt-3 pb-0.5 border-t border-slate-100 dark:border-slate-800 text-xs">
-                    <span className={`px-2.5 py-1 rounded-full font-black text-[10px] truncate max-w-[55%] ${
-                      item.status === 'VALID_PROFILE'
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30'
-                        : item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL'
-                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-500/30'
-                        : item.status === 'NETWORK_ERROR'
-                        ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-500/30'
-                        : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/30'
-                    }`}>
-                      {item.issue}
-                    </span>
-                    <span className="text-right font-bold text-slate-600 dark:text-slate-300 text-[11px] truncate">
-                      {item.action_required || (item.status === 'VALID_PROFILE' ? 'Verified Record' : item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL' ? 'Assign LeetCode Handle' : 'Audit Profile')}
-                    </span>
+                    {/* Issue Detail & Action Callout */}
+                    <div className="p-3 rounded-2xl bg-gradient-to-r from-slate-50 to-indigo-50/30 dark:from-white/[0.03] dark:to-white/[0.01] border border-slate-200/70 dark:border-white/[0.06] flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[10px] text-slate-400 uppercase font-black block">Action Item</span>
+                        <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate block">
+                          {item.action_required || (item.status === 'VALID_PROFILE' ? 'Verified Record' : 'Audit & Resolve Profile')}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="px-3.5 py-1.5 min-h-[36px] rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-black text-xs shadow-sm flex items-center gap-1.5 shrink-0 group-hover:translate-x-0.5 transition-transform touch-manipulation active:scale-95"
+                      >
+                        <span>Inspect</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Desktop Table View */}
@@ -385,9 +580,18 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                   {filteredIssues.slice((page - 1) * pageSize, page * pageSize).map((item: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
-                      <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-white">{item.reg_no}</td>
-                      <td className="px-4 py-2.5 font-semibold text-slate-800 dark:text-slate-200">{item.name}</td>
+                    <tr 
+                      key={idx} 
+                      onClick={() => handleStudentClick(item)}
+                      className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors cursor-pointer group"
+                    >
+                      <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-white font-mono">{item.reg_no}</td>
+                      <td className="px-4 py-2.5 font-semibold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                        <div className="flex items-center gap-1.5">
+                          <span>{item.name}</span>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0" />
+                        </div>
+                      </td>
                       <td className="px-4 py-2.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{item.dept}</td>
                       <td className="px-4 py-2.5">
                         <span className={`px-3 py-1 rounded-full font-black text-[10px] ${
@@ -485,6 +689,30 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
         )}
       </div>
 
+      {/* Fallback Student Profile Modal (if rendered standalone) */}
+      {selectedStudentForProfile && (
+        <div
+          className="fixed inset-0 z-[999999] flex items-start justify-center p-3 sm:p-4 pt-3 sm:pt-20 pb-3 sm:pb-6 overflow-y-auto bg-slate-950/85 backdrop-blur-md animate-fade-in"
+          style={{ zIndex: 999999 }}
+          onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudentForProfile(null); }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Student profile for ${selectedStudentForProfile.name}`}
+            className="w-full max-w-6xl rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden my-0 sm:my-auto h-[calc(100dvh-1.5rem)] sm:h-auto max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100vh-5rem)] text-slate-900 dark:text-slate-100 animate-modal-content isolate bg-white dark:bg-navy-900"
+          >
+            <Suspense fallback={<div className="p-12 text-center font-bold text-slate-500">Loading profile...</div>}>
+              <StudentProfilePage
+                student={selectedStudentForProfile}
+                onBack={() => setSelectedStudentForProfile(null)}
+              />
+            </Suspense>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
+

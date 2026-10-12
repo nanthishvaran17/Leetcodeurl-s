@@ -212,10 +212,12 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
 
           {/* Card Center: Avatar & Student Details */}
           <div className="text-center space-y-3 py-2 flex-1 flex flex-col justify-center min-w-0">
-            <div className="relative w-22 h-22 sm:w-24 sm:h-24 mx-auto shrink-0">
-              <div className="absolute inset-0 bg-gradient-to-br from-brand-400/25 to-indigo-500/25 rounded-full blur-xl animate-pulse-subtle"></div>
-              <div className="relative w-22 h-22 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-brand-500 via-indigo-600 to-navy-900 text-white font-extrabold text-2xl sm:text-3xl flex items-center justify-center shadow-md border-2 border-white dark:border-navy-800">
-                {student.name ? student.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2) : <User className="w-9 h-9" />}
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto shrink-0 aspect-square flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-brand-400/30 to-indigo-500/30 blur-lg pointer-events-none" />
+              <div className="relative w-20 h-20 sm:w-24 sm:h-24 aspect-square rounded-full bg-gradient-to-br from-brand-500 via-indigo-600 to-navy-900 text-white font-extrabold text-2xl sm:text-3xl flex items-center justify-center shadow-lg border-2 border-white dark:border-navy-800 shrink-0 select-none overflow-hidden">
+                <span className="leading-none tracking-normal font-black text-center flex items-center justify-center">
+                  {student.name ? student.name.trim().split(/\s+/).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : <User className="w-8 h-8 sm:w-9 sm:h-9" />}
+                </span>
               </div>
             </div>
 

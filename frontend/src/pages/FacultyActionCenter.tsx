@@ -259,22 +259,22 @@ const KPICard: React.FC<{
     pink: {
       cardBg: 'bg-rose-50/70 dark:bg-rose-950/30',
       cardBorder: 'border-rose-200 dark:border-rose-900/50',
-      activeRing: 'ring-2 ring-rose-500 border-rose-500 shadow-md shadow-rose-500/15 bg-rose-100/70 dark:bg-rose-950/50',
-      iconBg: 'bg-rose-100 dark:bg-rose-900/60',
+      activeRing: 'ring-2 ring-rose-500 border-rose-500 shadow-glass-dark bg-rose-500/15',
+      iconBg: 'bg-rose-500/15',
       iconText: 'text-rose-600 dark:text-rose-400',
-      numText: 'text-rose-700 dark:text-rose-300',
-      labelText: 'text-rose-900 dark:text-rose-200',
+      numText: 'text-rose-600 dark:text-rose-400',
+      labelText: 'text-rose-700 dark:text-rose-300',
       subText: 'text-rose-600/80 dark:text-rose-400/80',
       hoverBorder: 'hover:border-rose-400 dark:hover:border-rose-500/60'
     },
     violet: {
       cardBg: 'bg-purple-50/70 dark:bg-purple-950/30',
       cardBorder: 'border-purple-200 dark:border-purple-900/50',
-      activeRing: 'ring-2 ring-purple-500 border-purple-500 shadow-md shadow-purple-500/15 bg-purple-100/70 dark:bg-purple-950/50',
-      iconBg: 'bg-purple-100 dark:bg-purple-900/60',
+      activeRing: 'ring-2 ring-purple-500 border-purple-500 shadow-glass-dark bg-purple-500/15',
+      iconBg: 'bg-purple-500/15',
       iconText: 'text-purple-600 dark:text-purple-400',
-      numText: 'text-purple-700 dark:text-purple-300',
-      labelText: 'text-purple-900 dark:text-purple-200',
+      numText: 'text-purple-600 dark:text-purple-400',
+      labelText: 'text-purple-700 dark:text-purple-300',
       subText: 'text-purple-600/80 dark:text-purple-400/80',
       hoverBorder: 'hover:border-purple-400 dark:hover:border-purple-500/60'
     }
@@ -284,26 +284,24 @@ const KPICard: React.FC<{
   return (
     <button
       onClick={onClick}
-      className={`flex-1 min-w-[130px] sm:min-w-[145px] text-left rounded-2xl p-3 sm:p-4 border transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer relative overflow-hidden group shadow-xs ${
-        theme.cardBg
-      } ${
+      className={`flex-none w-[136px] sm:w-[145px] md:flex-1 md:w-auto snap-start text-left rounded-2xl p-3 sm:p-4 glass-panel border transition-all duration-300 transform hover:-translate-y-1 hover:shadow-glass cursor-pointer relative overflow-hidden group active:scale-95 ${
         active
-          ? theme.activeRing
+          ? `${theme.activeRing}`
           : `${theme.cardBorder} ${theme.hoverBorder}`
       }`}
     >
       <div className="flex items-center justify-between gap-2 mb-1.5 sm:mb-2">
         <div className="flex items-center gap-1.5">
-          <span className={`p-1 rounded-lg sm:p-1.5 sm:rounded-xl ${theme.iconBg} ${theme.iconText} transition-colors shrink-0 shadow-xs`}>
+          <span className={`p-1 rounded-lg sm:p-1.5 sm:rounded-xl ${theme.iconBg} ${theme.iconText} transition-transform group-hover:scale-110 shrink-0 shadow-xs`}>
             {React.cloneElement(icon as React.ReactElement, { size: 13 })}
           </span>
           <span className={`text-[10px] sm:text-[11px] font-black uppercase tracking-wider ${theme.labelText} transition-colors truncate`}>
             {label}
           </span>
         </div>
-        {active && <span className="w-2.5 h-2.5 rounded-full bg-current animate-ping opacity-75 shrink-0" />}
+        {active && <span className="w-2 h-2 rounded-full bg-current animate-pulse opacity-90 shrink-0" />}
       </div>
-      <div className={`text-2xl sm:text-3xl font-black tracking-tight leading-none ${theme.numText}`}>
+      <div className={`text-2xl sm:text-3xl font-black font-mono tracking-tight leading-none ${theme.numText}`}>
         {value}
       </div>
       {subtitle ? (
@@ -578,6 +576,11 @@ const UpdateModal: React.FC<{
     >
       <div className="w-full max-w-2xl max-h-[92vh] sm:max-h-[88vh] flex flex-col rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700/80 shadow-2xl shadow-indigo-950/30 overflow-hidden my-auto min-h-0">
 
+        {/* Mobile bottom-sheet drag handle */}
+        <div className="pt-2.5 pb-1 bg-slate-950 sm:hidden flex justify-center shrink-0">
+          <div className="w-12 h-1 rounded-full bg-white/25" />
+        </div>
+
         {/* Unified Scroll Container (Header + Signal Banner + Form Body) */}
         <div className="overflow-y-auto flex-1 min-h-0 custom-scrollbar overscroll-contain touch-pan-y">
 
@@ -830,7 +833,7 @@ const UpdateModal: React.FC<{
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-2xl bg-slate-200/80 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 text-xs font-black transition cursor-pointer"
+            className="px-5 py-2.5 min-h-[44px] rounded-2xl bg-slate-200/80 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 text-xs font-black transition cursor-pointer touch-manipulation active:scale-95"
           >
             Cancel
           </button>
@@ -838,7 +841,7 @@ const UpdateModal: React.FC<{
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 min-h-[44px] rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 active:scale-95 transition-all cursor-pointer disabled:opacity-50 touch-manipulation"
           >
             <Send size={14} />
             <span>{saving ? 'Saving Action Details...' : 'Save Changes'}</span>
@@ -1012,27 +1015,29 @@ export const FacultyActionCenter: React.FC = () => {
 
   return (
     <div className="space-y-6 md:space-y-7 pb-12 animate-fade-in font-sans">
-      {/* Executive Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30 mb-6">
+      {/* Executive Header Banner (Authoritative Dark OLED Gradient in all modes for crystal-clear readability) */}
+      <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 shadow-2xl border border-indigo-500/30 mb-6 bg-gradient-to-br from-[#070a14] via-[#0d1424] to-[#121128] text-white">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/4 w-64 h-64 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
+            <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black shadow-xs">
               <span>STUDENT INTERVENTION & MENTORING</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight flex items-center gap-3">
-              Faculty <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-amber-300 to-brand-300">Action Center</span>
+            <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight flex items-center gap-3 text-white drop-shadow-sm">
+              <span className="text-white">Faculty</span> <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-amber-300 to-brand-300">Action Center</span>
             </h1>
 
-            <p className="text-xs md:text-sm text-slate-300 font-medium leading-relaxed">
+            <p className="text-xs md:text-sm text-slate-200 font-medium leading-relaxed">
               {kpis?.subtitle || 'Real-time student intervention & mentoring management · Detect, Prioritize, Assign, Resolve'}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
             {syncMsg && (
-              <span className={`text-xs font-bold px-3 py-1.5 rounded-xl bg-navy-900/90 border border-slate-700/80 ${syncMsg.includes('failed') ? 'text-rose-400' : 'text-emerald-400'}`}>
+              <span className={`text-xs font-bold px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 ${syncMsg.includes('failed') ? 'text-rose-400' : 'text-emerald-400'}`}>
                 {syncMsg}
               </span>
             )}
@@ -1040,7 +1045,7 @@ export const FacultyActionCenter: React.FC = () => {
               type="button"
               onClick={handleSync}
               disabled={syncing}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-glass hover:shadow-indigo-500/25 transition-all duration-300 cursor-pointer disabled:opacity-50 border border-white/10 active:scale-95"
             >
               <RefreshCw size={14} className={syncing ? 'animate-spin text-amber-300' : 'text-amber-300'} />
               <span>{syncing ? 'Resyncing All Data...' : 'Force Sync'}</span>
@@ -1049,9 +1054,9 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards (2026 Bento Matrix / Mobile Horizontal Snap Carousel) */}
       {kpis && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 mb-6">
+        <div className="flex md:grid overflow-x-auto no-scrollbar snap-x snap-mandatory py-1 md:py-0 pb-2 md:pb-0 gap-2.5 sm:gap-3.5 md:grid-cols-4 lg:grid-cols-8 mb-5 sm:mb-6 scroll-smooth">
           <KPICard label="Critical" value={kpis.critical_count} colorTheme="red"
             icon={<ShieldAlert size={14} strokeWidth={2.5} />} active={kpiFilter === 'Critical'} onClick={() => applyKPIFilter('Critical', 'priority')} subtitle="Immediate action" />
           <KPICard label="High" value={kpis.high_count} colorTheme="orange"
@@ -1299,24 +1304,24 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* Mobile Intervention Cards (Compact, 100% width, no wasted space) */}
-          <div className="block md:hidden space-y-3 mt-6">
+          {/* Mobile Intervention Cards (Compact, 100% width, 2026 Bento Glass Cards) */}
+          <div className="block md:hidden space-y-3.5 mt-6">
             {items.map((item) => {
               const statusCls = STATUS_CONFIG[item.status] || 'bg-slate-100 text-slate-600 border border-slate-200';
               const isExpanded = expandedRow === item.id;
               return (
                 <div
                   key={item.id}
-                  className="rounded-2xl bg-white dark:bg-navy-850 border border-slate-200 dark:border-navy-700 p-3.5 shadow-sm space-y-2.5 transition-all"
+                  className="rounded-2xl bg-white dark:bg-navy-900 border border-slate-200/80 dark:border-navy-800 p-4 shadow-sm hover:shadow-md space-y-3 transition-all duration-300"
                 >
                   {/* Top: Student Details + Priority & Status */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <h4 className="font-bold text-sm text-slate-800 dark:text-white truncate">
+                      <h4 className="font-extrabold text-sm text-slate-800 dark:text-white truncate">
                         {item.student_name}
                       </h4>
-                      <div className="text-[11.5px] font-bold text-slate-600 dark:text-slate-300 truncate mt-0.5">
-                        <span className="font-mono font-black text-slate-800 dark:text-slate-100">{item.reg_no}</span> · {item.department_code} · {formatYearLevel(item.year_level)}
+                      <div className="text-[11.5px] font-bold text-slate-600 dark:text-slate-400 truncate mt-0.5">
+                        <span className="font-mono font-black text-brand-400">{item.reg_no}</span> · {item.department_code} · {formatYearLevel(item.year_level)}
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
@@ -1328,16 +1333,16 @@ export const FacultyActionCenter: React.FC = () => {
                   </div>
 
                   {/* Stats & Signal Grid */}
-                  <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-navy-900/60 p-2.5 rounded-xl text-xs border border-slate-100 dark:border-navy-800">
+                  <div className="grid grid-cols-2 gap-2 bg-white/5 p-2.5 rounded-xl text-xs border border-white/[0.06]">
                     <div>
-                      <div className="text-[10px] uppercase font-black text-slate-700 dark:text-slate-300">Coding Stats</div>
+                      <div className="text-[10px] uppercase font-black text-slate-400">Coding Stats</div>
                       <div className="font-mono font-bold text-slate-800 dark:text-slate-100 mt-0.5 text-[11.5px]">
-                        Solved: {item.total_solved} <span className="text-slate-600 dark:text-slate-300 font-semibold">| R: {item.current_rating || 0}</span>
+                        Solved: <span className="text-emerald-400 font-black">{item.total_solved}</span> <span className="text-slate-500 font-semibold">| R: {item.current_rating || 0}</span>
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] uppercase font-black text-slate-700 dark:text-slate-300">Signal Trigger</div>
-                      <div className="font-bold text-slate-800 dark:text-slate-200 truncate mt-0.5 text-[11.5px]" title={item.signal_type}>
+                      <div className="text-[10px] uppercase font-black text-slate-400">Signal Trigger</div>
+                      <div className="font-bold text-amber-400 truncate mt-0.5 text-[11.5px]" title={item.signal_type}>
                         {formatSignalLabel(item.signal_type)}
                       </div>
                     </div>
@@ -1346,60 +1351,62 @@ export const FacultyActionCenter: React.FC = () => {
                   {/* Mentor & Due Date Row */}
                   <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300">
                     <div className="flex items-center gap-1.5 truncate max-w-[60%]">
-                      <User size={12} className="text-slate-500 dark:text-slate-400 shrink-0" />
+                      <User size={12} className="text-slate-400 shrink-0" />
                       <span className="truncate font-bold text-slate-800 dark:text-slate-200 text-[11.5px]">
                         {item.assigned_faculty_name || 'Unassigned'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-[11px] font-mono shrink-0 text-slate-700 dark:text-slate-300 font-bold">
-                      <Calendar size={12} className="text-slate-500 dark:text-slate-400" />
+                    <div className="flex items-center gap-1 text-[11px] font-mono shrink-0 text-slate-400 font-bold">
+                      <Calendar size={12} className="text-slate-400" />
                       <span>{formatDate(item.due_date)}</span>
                     </div>
                   </div>
 
                   {/* Buttons Row */}
-                  <div className="flex items-center gap-2 pt-0.5">
+                  <div className="flex items-center gap-2 pt-1">
                     <button
                       onClick={() => setUpdateItem(item)}
-                      className="flex-1 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white transition-all font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                      className="flex-1 min-h-[44px] py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 text-white transition-all font-black text-xs shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95 border border-white/20 touch-manipulation"
                     >
-                      <Zap size={12} />
+                      <Zap size={14} className="fill-white/20 shrink-0" />
                       <span>Take Action</span>
                     </button>
                     <button
                       onClick={() => setViewItem(item)}
                       title="View Student Coding Profile"
-                      className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-700 hover:bg-slate-200 dark:hover:bg-navy-600 text-slate-600 dark:text-slate-300 transition text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                      className="min-h-[44px] py-2.5 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 transition-all text-xs font-black flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation shadow-xs group"
                     >
-                      <Eye size={13} />
+                      <div className="w-5 h-5 rounded-md bg-indigo-500/15 dark:bg-indigo-500/25 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <Eye size={13} className="text-indigo-600 dark:text-indigo-400 stroke-[2.5]" />
+                      </div>
                       <span>Profile</span>
                     </button>
                     <button
                       onClick={() => setExpandedRow(isExpanded ? null : item.id)}
-                      className="p-2 rounded-xl border border-slate-200 dark:border-navy-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-navy-800 transition text-xs cursor-pointer"
+                      className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 hover:bg-slate-100 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 transition-colors text-xs flex items-center justify-center cursor-pointer active:scale-95 touch-manipulation shrink-0"
                       title="Toggle details"
                     >
-                      {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
                   </div>
 
                   {/* Expanded Detail on Mobile */}
                   {isExpanded && (
-                    <div className="pt-2 border-t border-slate-100 dark:border-navy-800 space-y-1.5 text-xs">
+                    <div className="pt-2.5 border-t border-white/[0.06] space-y-2 text-xs">
                       <div>
-                        <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Recommended Action</div>
-                        <div className="text-brand-600 dark:text-brand-400 font-semibold mt-0.5">{item.recommended_action || '—'}</div>
+                        <div className="text-[10px] font-bold uppercase text-slate-400">Recommended Action</div>
+                        <div className="text-brand-400 font-semibold mt-0.5">{item.recommended_action || '—'}</div>
                       </div>
                       {item.action_taken && (
                         <div>
-                          <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Action Taken</div>
-                          <div className="text-slate-700 dark:text-slate-300 mt-0.5">{item.action_taken}</div>
+                          <div className="text-[10px] font-bold uppercase text-slate-400">Action Taken</div>
+                          <div className="text-slate-300 mt-0.5">{item.action_taken}</div>
                         </div>
                       )}
                       {item.faculty_notes && (
                         <div>
-                          <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Faculty Notes</div>
-                          <div className="text-slate-700 dark:text-slate-300 mt-0.5">{item.faculty_notes}</div>
+                          <div className="text-[10px] font-bold uppercase text-slate-400">Faculty Notes</div>
+                          <div className="text-slate-300 mt-0.5">{item.faculty_notes}</div>
                         </div>
                       )}
                     </div>
@@ -1409,7 +1416,7 @@ export const FacultyActionCenter: React.FC = () => {
             })}
           </div>
 
-          <div className="hidden md:block table-responsive-container rounded-2xl bg-white dark:bg-navy-850 border border-slate-200 dark:border-navy-700 backdrop-blur-sm shadow-sm overflow-x-auto mt-6">
+          <div className="hidden md:block table-responsive-container rounded-2xl glass-panel shadow-glass border-white/[0.08] overflow-x-auto mt-6">
             <table className="w-full table-fixed min-w-[1150px]">
               <colgroup>
                 <col style={{ width: '25%' }} />
@@ -1421,7 +1428,7 @@ export const FacultyActionCenter: React.FC = () => {
                 <col style={{ width: '7%' }} />
                 <col style={{ width: '12%' }} />
               </colgroup>
-              <thead className="table-header-group border-b border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950">
+              <thead className="table-header-group border-b border-white/[0.08] bg-white/[0.03]">
                 <tr>
                   {[['Student', 'student_name'], ['Priority', 'priority_score'], ['Stats', ''], ['Signal', ''], ['Status', 'status'], ['Faculty', ''], ['Due', 'due_date'], ['Actions', '']].map(([label, col]) => (
                     <th key={label} className={`${thCls} ${col ? 'cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none' : ''}`} onClick={() => col && toggleSort(col)}>

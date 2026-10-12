@@ -412,14 +412,14 @@ export const StaffDashboardView: React.FC = () => {
         <div 
           onClick={() => handleCardFilterClick('ACTIVE')}
           title="Click to filter active solvers"
-          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'ACTIVE'
-              ? 'bg-emerald-50/90 dark:bg-emerald-950/50 border-emerald-500 ring-2 ring-emerald-500/40 shadow-emerald-500/10'
-              : 'bg-white dark:bg-navy-900 border-slate-200/90 dark:border-navy-700/80 hover:border-emerald-300 dark:hover:border-emerald-600'
+              ? 'bg-emerald-50/90 dark:bg-emerald-950/50 border-emerald-500 ring-2 ring-emerald-500/30 shadow-emerald-500/10'
+              : 'glass-panel hover:border-emerald-500/40'
           }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
-            <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
               Active
             </span>
             <div className="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
@@ -427,13 +427,13 @@ export const StaffDashboardView: React.FC = () => {
             </div>
           </div>
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <h3 className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight font-display">
               {activeCount}
             </h3>
           </div>
-          <p className="mt-2.5 text-xs font-extrabold text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+          <p className="mt-2.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
             <span>Active Solvers</span>
-            {filterStatus === 'ACTIVE' && <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black">(Filtered)</span>}
+            {filterStatus === 'ACTIVE' && <span className="text-[10px] font-bold">(Filtered)</span>}
           </p>
         </div>
 
@@ -441,14 +441,14 @@ export const StaffDashboardView: React.FC = () => {
         <div 
           onClick={() => handleCardFilterClick('COMPLETED')}
           title="Click to filter students with 100+ solved"
-          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'COMPLETED'
-              ? 'bg-purple-50/90 dark:bg-purple-950/50 border-purple-500 ring-2 ring-purple-500/40 shadow-purple-500/10'
-              : 'bg-white dark:bg-navy-900 border-slate-200/90 dark:border-navy-700/80 hover:border-purple-300 dark:hover:border-purple-600'
+              ? 'bg-purple-50/90 dark:bg-purple-950/50 border-purple-500 ring-2 ring-purple-500/30 shadow-purple-500/10'
+              : 'glass-panel hover:border-purple-500/40'
           }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
-            <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
               Completed
             </span>
             <div className="p-1.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0">
@@ -456,13 +456,13 @@ export const StaffDashboardView: React.FC = () => {
             </div>
           </div>
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <h3 className="text-2xl sm:text-3xl font-black text-purple-600 dark:text-purple-400 tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tight font-display">
               {completedCount}
             </h3>
           </div>
-          <p className="mt-2.5 text-xs font-extrabold text-purple-700 dark:text-purple-300 flex items-center gap-1">
+          <p className="mt-2.5 text-xs font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1">
             <span>Target Achieved</span>
-            {filterStatus === 'COMPLETED' && <span className="text-[10px] text-purple-600 dark:text-purple-400 font-black">(Filtered)</span>}
+            {filterStatus === 'COMPLETED' && <span className="text-[10px] font-bold">(Filtered)</span>}
           </p>
         </div>
 
@@ -470,14 +470,14 @@ export const StaffDashboardView: React.FC = () => {
         <div 
           onClick={() => handleCardFilterClick('ATTENTION')}
           title="Click to filter students needing attention"
-          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'ATTENTION'
-              ? 'bg-amber-50/90 dark:bg-amber-950/50 border-amber-500 ring-2 ring-amber-500/40 shadow-amber-500/10'
-              : 'bg-white dark:bg-navy-900 border-slate-200/90 dark:border-navy-700/80 hover:border-amber-300 dark:hover:border-amber-600'
+              ? 'bg-amber-50/90 dark:bg-amber-950/50 border-amber-500 ring-2 ring-amber-500/30 shadow-amber-500/10'
+              : 'glass-panel hover:border-amber-500/40'
           }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
-            <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
               Attention
             </span>
             <div className="p-1.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
@@ -485,13 +485,13 @@ export const StaffDashboardView: React.FC = () => {
             </div>
           </div>
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <h3 className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-amber-600 dark:text-amber-400 tracking-tight font-display">
               {attentionCount}
             </h3>
           </div>
-          <p className="mt-2.5 text-xs font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1">
+          <p className="mt-2.5 text-xs font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
             <span>Needs Action</span>
-            {filterStatus === 'ATTENTION' && <span className="text-[10px] text-amber-600 dark:text-amber-400 font-black">(Filtered)</span>}
+            {filterStatus === 'ATTENTION' && <span className="text-[10px] font-bold">(Filtered)</span>}
           </p>
         </div>
 
@@ -499,14 +499,14 @@ export const StaffDashboardView: React.FC = () => {
         <div 
           onClick={() => handleCardFilterClick('UNRESPONSIVE')}
           title="Click to filter students who haven't solved anything in a week"
-          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'UNRESPONSIVE'
-              ? 'bg-orange-50/90 dark:bg-orange-950/50 border-orange-500 ring-2 ring-orange-500/40 shadow-orange-500/10'
-              : 'bg-white dark:bg-navy-900 border-slate-200/90 dark:border-navy-700/80 hover:border-orange-300 dark:hover:border-orange-600'
+              ? 'bg-orange-50/90 dark:bg-orange-950/50 border-orange-500 ring-2 ring-orange-500/30 shadow-orange-500/10'
+              : 'glass-panel hover:border-orange-500/40'
           }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
-            <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
               Unresponsive
             </span>
             <div className="p-1.5 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 shrink-0">
@@ -514,28 +514,28 @@ export const StaffDashboardView: React.FC = () => {
             </div>
           </div>
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <h3 className="text-2xl sm:text-3xl font-black text-orange-600 dark:text-orange-400 tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-orange-600 dark:text-orange-400 tracking-tight font-display">
               {unresponsiveCount}
             </h3>
           </div>
-          <p className="mt-2.5 text-xs font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1">
-            <span>Needs Action</span>
-            {filterStatus === 'ATTENTION' && <span className="text-[10px] text-amber-600 dark:text-amber-400 font-black">(Filtered)</span>}
+          <p className="mt-2.5 text-xs font-semibold text-orange-600 dark:text-orange-400 flex items-center gap-1">
+            <span>7+ Days Inactive</span>
+            {filterStatus === 'UNRESPONSIVE' && <span className="text-[10px] font-bold">(Filtered)</span>}
           </p>
         </div>
 
-        {/* 5. At Risk */}
+        {/* 6. At Risk */}
         <div 
           onClick={() => handleCardFilterClick('AT_RISK')}
           title="Click to filter at-risk students"
-          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'AT_RISK'
-              ? 'bg-rose-50/90 dark:bg-rose-950/50 border-rose-500 ring-2 ring-rose-500/40 shadow-rose-500/10'
-              : 'bg-white dark:bg-navy-900 border-slate-200/90 dark:border-navy-700/80 hover:border-rose-300 dark:hover:border-rose-600'
+              ? 'bg-rose-50/90 dark:bg-rose-950/50 border-rose-500 ring-2 ring-rose-500/30 shadow-rose-500/10'
+              : 'glass-panel hover:border-rose-500/40'
           }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
-            <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
               At Risk
             </span>
             <div className="p-1.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0">
@@ -543,28 +543,28 @@ export const StaffDashboardView: React.FC = () => {
             </div>
           </div>
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <h3 className="text-2xl sm:text-3xl font-black text-rose-600 dark:text-rose-400 tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-rose-600 dark:text-rose-400 tracking-tight font-display">
               {atRiskCount}
             </h3>
           </div>
-          <p className="mt-2.5 text-xs font-extrabold text-rose-700 dark:text-rose-300 flex items-center gap-1">
-            <span>Immediate Follow-Up</span>
-            {filterStatus === 'AT_RISK' && <span className="text-[10px] text-rose-600 dark:text-rose-400 font-black">(Filtered)</span>}
+          <p className="mt-2.5 text-xs font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1">
+            <span>Follow-Up</span>
+            {filterStatus === 'AT_RISK' && <span className="text-[10px] font-bold">(Filtered)</span>}
           </p>
         </div>
 
-        {/* 6. Avg Progress */}
+        {/* 7. Avg Progress */}
         <div 
           onClick={() => handleCardFilterClick('IN_PROGRESS')}
           title="Click to filter students in progress towards 100 target"
-          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'IN_PROGRESS'
-              ? 'bg-sky-50/90 dark:bg-sky-950/50 border-sky-500 ring-2 ring-sky-500/40 shadow-sky-500/10'
-              : 'bg-white dark:bg-navy-900 border-slate-200/90 dark:border-navy-700/80 hover:border-sky-300 dark:hover:border-sky-600'
+              ? 'bg-sky-50/90 dark:bg-sky-950/50 border-sky-500 ring-2 ring-sky-500/30 shadow-sky-500/10'
+              : 'glass-panel hover:border-sky-500/40'
           }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
-            <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
               Avg Progress
             </span>
             <div className="p-1.5 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 shrink-0">
@@ -572,13 +572,13 @@ export const StaffDashboardView: React.FC = () => {
             </div>
           </div>
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight font-display">
               {targetProgressPct}%
             </h3>
-            <span className="text-xs font-black text-slate-500 dark:text-slate-400">/ 100 Target</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">/ 100 Target</span>
           </div>
           <div className="mt-2 space-y-1">
-            <div className="w-full bg-slate-100 dark:bg-navy-800 rounded-full h-1.5 overflow-hidden">
+            <div className="w-full bg-slate-100 dark:bg-white/[0.08] rounded-full h-1.5 overflow-hidden">
               <div
                 className="bg-gradient-to-r from-sky-500 to-indigo-500 h-1.5 rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(Number(targetProgressPct) || 0, 100)}%` }}

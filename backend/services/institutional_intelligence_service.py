@@ -863,7 +863,7 @@ I can show specific student progress assigned to any faculty member."""
             else:
                 rows = "\n".join([f"| {i+1} | **{s.name}** | `{s.reg_no}` | {s.department.code if s.department else 'N/A'} |" for i, s in enumerate(inactive_students[:20])])
                 more_msg = f"\n\n*...and {len(inactive_students) - 20} more inactive students.*" if len(inactive_students) > 20 else ""
-                markdown_resp = f"### ️ Inactive Students Audit\n\nFound **{len(inactive_students)} inactive solvers** (0 verified submissions in current cycle) out of {in_scope_count} students:\n\n| # | Student Name | Register Number | Department |\n|---|---|---|---|\n{rows}{more_msg}"
+                markdown_resp = f"### Inactive Students Audit\n\nFound **{len(inactive_students)} inactive solvers** (0 verified submissions in current cycle) out of {in_scope_count} students:\n\n| # | Student Name | Register Number | Department |\n|---|---|---|---|\n{rows}{more_msg}"
 
             return {
                 "query": query,

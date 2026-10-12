@@ -463,7 +463,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     || lcValidation.status === 'validating';
 
   return (
-    <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-0 animate-fade-in font-sans pb-12">
+    <div className="space-y-5 sm:space-y-6 pt-0 animate-fade-in font-sans pb-12">
 
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">

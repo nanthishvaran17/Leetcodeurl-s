@@ -744,13 +744,26 @@ def get_data_quality(
             valid_count += 1
 
         issues_list.append({
+            "id": s.id,
             "reg_no": s.reg_no or f"ID-{s.id}",
             "name": s.name,
+            "username": s.username or "",
+            "leetcode_url": s.leetcode_url or "",
             "dept": dept_code,
+            "department": {"code": dept_code, "name": s.department.name if s.department else dept_code},
             "year": s.year_level or "III",
+            "year_level": s.year_level or "III",
             "status": status,
             "issue": issue_desc,
-            "action_required": action_req
+            "action_required": action_req,
+            "stats": {
+                "total_solved": stats.total_solved if stats else 0,
+                "easy_solved": stats.easy_solved if stats else 0,
+                "medium_solved": stats.medium_solved if stats else 0,
+                "hard_solved": stats.hard_solved if stats else 0,
+                "contest_rating": stats.contest_rating if stats else 0,
+                "sync_status": stats.sync_status if stats else "pending",
+            } if stats else None
         })
 
     # Sort so action-required items appear at the top, followed by verified valid profiles

@@ -23,6 +23,7 @@ import {
   ExternalLink,
   ArrowRight,
   FileText,
+  Calendar,
   X
 } from 'lucide-react';
 import api from '../services/api';
@@ -976,56 +977,67 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   return (
     <div className="space-y-6">
 
-      {/* Top Banner Card */}
-      <div className="p-6 rounded-3xl bg-[#0b1120] text-white border border-slate-800/90 shadow-2xl flex flex-wrap items-center justify-between gap-4 mb-4">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2 flex-wrap">
+      {/* Top Banner Card — Modern Glassmorphic Tech Aesthetic */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-6 border border-indigo-500/30 shadow-2xl mb-4">
+        {/* Glow ambient background elements */}
+        <div className="pointer-events-none absolute -top-12 -right-12 w-48 h-48 bg-indigo-500/15 blur-3xl rounded-full" />
+        <div className="pointer-events-none absolute -bottom-12 -left-12 w-48 h-48 bg-brand-500/10 blur-3xl rounded-full" />
 
-            <span className="text-xs text-slate-300 font-mono font-bold">
-              Target: {summary?.target_date_ist || '—'}
-            </span>
-            {wsStatus === 'LIVE' ? (
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[11px] font-mono font-bold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>LIVE SYNC ACTIVE</span>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1.5 max-w-2xl">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 border border-white/15 text-slate-200 text-[11px] font-mono font-bold">
+                <Calendar className="w-3 h-3 text-indigo-400" />
+                <span>Target: {summary?.target_date_ist || '—'}</span>
               </span>
-            ) : (
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-mono font-bold flex items-center gap-1">
-                <WifiOff className="w-3 h-3" />
-                <span>AUTO-POLLING ACTIVE</span>
+
+              {wsStatus === 'LIVE' ? (
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono font-black flex items-center gap-1.5 shadow-xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>LIVE SYNC ACTIVE</span>
+                </span>
+              ) : (
+                <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-black flex items-center gap-1.5 shadow-xs">
+                  <WifiOff className="w-3 h-3 text-amber-400" />
+                  <span>AUTO-POLLING ACTIVE</span>
+                </span>
+              )}
+            </div>
+
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight flex items-center gap-2">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-indigo-200">
+                {summary?.contest_title || (sessionId ? `Weekly Contest ${sessionId}` : 'Weekly Contest')}
               </span>
-            )}
+            </h2>
+
+            <p className="text-xs sm:text-[13px] text-slate-300 font-medium leading-relaxed">
+              Authoritative question-level contest telemetry • 08:00 AM – 09:30 AM IST Official Window • Realtime Ingestion
+            </p>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
-            <span>{summary?.contest_title || (sessionId ? `Weekly Contest ${sessionId}` : 'Weekly Contest')}</span>
-          </h2>
-          <p className="text-xs text-slate-400">
-            Authoritative question-level contest telemetry • 08:00 AM – 09:30 AM IST Official Window • Realtime Ingestion
-          </p>
-        </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            onClick={() => fetchPreviousWeekData(true)}
-            disabled={syncing}
-            className="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
-          >
-            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-            <span>{syncing ? 'Re-Syncing Live...' : 'Force Live Re-Sync'}</span>
-          </button>
+          <div className="flex items-center gap-2 flex-wrap self-start md:self-center">
+            <button
+              onClick={() => fetchPreviousWeekData(true)}
+              disabled={syncing}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+              <span>{syncing ? 'Re-Syncing Live...' : 'Force Live Re-Sync'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Disconnection Notice if completely offline */}
       {wsStatus !== 'LIVE' && (
-        <div className="p-3.5 sm:p-4 my-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-between shadow-sm">
+        <div className="p-3.5 sm:p-4 my-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 shrink-0 text-indigo-500" />
             <span>Realtime Auto-Sync active in background • Last sync: {lastSyncAt || 'Live'}</span>
           </div>
           <button
             onClick={() => fetchPreviousWeekData(false, true)}
-            className="px-3 py-1 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-500 transition cursor-pointer"
+            className="px-3 py-1 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-500 transition cursor-pointer shadow-xs active:scale-95"
           >
             Sync Now
           </button>
@@ -1039,127 +1051,139 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         </div>
       )}
 
-      {/* Summary KPI Cards Grid — Matching Exact Pastel Palette & High-Contrast Typography */}
+      {/* Summary KPI Cards Grid — Perfectly Balanced Symmetrical Grid (2-col mobile with full-width 5th card, 5-col desktop) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {/* Card 1: PUBLIC / LIVE */}
         {/* Card 1: PUBLIC / LIVE */}
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('PUBLIC'); }}
-          className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+          className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group active:scale-[0.98] ${
             selectedTypeFilter === 'PUBLIC'
-              ? 'bg-[#eefbf4] dark:bg-emerald-950/60 border-emerald-500 ring-2 ring-emerald-500/40 shadow-lg scale-[1.02]'
-              : 'bg-[#eefbf4] dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/50 hover:border-emerald-400'
+              ? 'bg-gradient-to-br from-emerald-50 to-emerald-100/80 dark:from-emerald-950/70 dark:to-emerald-900/50 border-emerald-500 ring-2 ring-emerald-500/40 shadow-lg scale-[1.01]'
+              : 'bg-emerald-50/50 dark:bg-emerald-950/25 border-emerald-200/80 dark:border-emerald-800/40 hover:border-emerald-400 hover:shadow-md'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300 tracking-wider">Public / Live</span>
-              {selectedTypeFilter === 'PUBLIC' && (
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-600 text-white">Active</span>
-              )}
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[10.5px] font-black uppercase text-emerald-800 dark:text-emerald-300 tracking-wider">Public / Live</span>
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <Award className="w-3.5 h-3.5" />
             </div>
-            <Award className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <p className="text-3xl sm:text-4xl font-black font-mono text-[#0fa958] dark:text-emerald-400 mt-2">
-            {dynamicMetrics.PUBLIC}
-          </p>
+          <div className="mt-2.5 flex items-baseline justify-between">
+            <p className="text-2xl sm:text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400">
+              {dynamicMetrics.PUBLIC}
+            </p>
+            {selectedTypeFilter === 'PUBLIC' && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-600 text-white">Active</span>
+            )}
+          </div>
         </button>
 
         {/* Card 2: VIRTUAL PRACTICE */}
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('VIRTUAL'); }}
-          className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+          className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group active:scale-[0.98] ${
             selectedTypeFilter === 'VIRTUAL'
-              ? 'bg-[#f8f4fe] dark:bg-purple-950/60 border-purple-500 ring-2 ring-purple-500/40 shadow-lg scale-[1.02]'
-              : 'bg-[#f8f4fe] dark:bg-purple-950/30 border-purple-200 dark:border-purple-800/50 hover:border-purple-400'
+              ? 'bg-gradient-to-br from-purple-50 to-purple-100/80 dark:from-purple-950/70 dark:to-purple-900/50 border-purple-500 ring-2 ring-purple-500/40 shadow-lg scale-[1.01]'
+              : 'bg-purple-50/50 dark:bg-purple-950/25 border-purple-200/80 dark:border-purple-800/40 hover:border-purple-400 hover:shadow-md'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase text-purple-800 dark:text-purple-300 tracking-wider">Virtual Practice</span>
-              {selectedTypeFilter === 'VIRTUAL' && (
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-purple-600 text-white">Active</span>
-              )}
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[10.5px] font-black uppercase text-purple-800 dark:text-purple-300 tracking-wider">Virtual Practice</span>
+            <div className="w-7 h-7 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+              <Sparkles className="w-3.5 h-3.5" />
             </div>
-            <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
           </div>
-          <p className="text-3xl sm:text-4xl font-black font-mono text-[#8b5cf6] dark:text-purple-400 mt-2">
-            {dynamicMetrics.VIRTUAL}
-          </p>
+          <div className="mt-2.5 flex items-baseline justify-between">
+            <p className="text-2xl sm:text-3xl font-black font-mono text-purple-600 dark:text-purple-400">
+              {dynamicMetrics.VIRTUAL}
+            </p>
+            {selectedTypeFilter === 'VIRTUAL' && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-purple-600 text-white">Active</span>
+            )}
+          </div>
         </button>
 
         {/* Card 3: NOT ATTENDED */}
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('NOT_PARTICIPATED'); }}
-          className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+          className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group active:scale-[0.98] ${
             selectedTypeFilter === 'NOT_PARTICIPATED'
-              ? 'bg-[#fef2f2] dark:bg-rose-950/60 border-rose-500 ring-2 ring-rose-500/40 shadow-lg scale-[1.02]'
-              : 'bg-[#fef2f2] dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/50 hover:border-rose-400'
+              ? 'bg-gradient-to-br from-rose-50 to-rose-100/80 dark:from-rose-950/70 dark:to-rose-900/50 border-rose-500 ring-2 ring-rose-500/40 shadow-lg scale-[1.01]'
+              : 'bg-rose-50/50 dark:bg-rose-950/25 border-rose-200/80 dark:border-rose-800/40 hover:border-rose-400 hover:shadow-md'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase text-rose-800 dark:text-rose-300 tracking-wider">Not Attended</span>
-              {selectedTypeFilter === 'NOT_PARTICIPATED' && (
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-rose-600 text-white">Active</span>
-              )}
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[10.5px] font-black uppercase text-rose-800 dark:text-rose-300 tracking-wider">Not Attended</span>
+            <div className="w-7 h-7 rounded-lg bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+              <UserX className="w-3.5 h-3.5" />
             </div>
-            <UserX className="w-4 h-4 text-rose-500 dark:text-rose-400" />
           </div>
-          <p className="text-3xl sm:text-4xl font-black font-mono text-[#f43f5e] dark:text-rose-400 mt-2">
-            {dynamicMetrics.NOT_PARTICIPATED}
-          </p>
+          <div className="mt-2.5 flex items-baseline justify-between">
+            <p className="text-2xl sm:text-3xl font-black font-mono text-rose-600 dark:text-rose-400">
+              {dynamicMetrics.NOT_PARTICIPATED}
+            </p>
+            {selectedTypeFilter === 'NOT_PARTICIPATED' && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-rose-600 text-white">Active</span>
+            )}
+          </div>
         </button>
 
         {/* Card 4: PENDING VERIFICATION */}
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('NOT_VERIFIED'); }}
-          className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+          className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group active:scale-[0.98] ${
             selectedTypeFilter === 'NOT_VERIFIED'
-              ? 'bg-[#fffbeb] dark:bg-amber-950/60 border-amber-500 ring-2 ring-amber-500/40 shadow-lg scale-[1.02]'
-              : 'bg-[#fffbeb] dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50 hover:border-amber-400'
+              ? 'bg-gradient-to-br from-amber-50 to-amber-100/80 dark:from-amber-950/70 dark:to-amber-900/50 border-amber-500 ring-2 ring-amber-500/40 shadow-lg scale-[1.01]'
+              : 'bg-amber-50/50 dark:bg-amber-950/25 border-amber-200/80 dark:border-amber-800/40 hover:border-amber-400 hover:shadow-md'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300 tracking-wider">Pending Verification</span>
-              {selectedTypeFilter === 'NOT_VERIFIED' && (
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-600 text-white">Active</span>
-              )}
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[10.5px] font-black uppercase text-amber-800 dark:text-amber-300 tracking-wider">Pending Verification</span>
+            <div className="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <HelpCircle className="w-3.5 h-3.5" />
             </div>
-            <HelpCircle className="w-4 h-4 text-amber-500 dark:text-amber-400" />
           </div>
-          <p className="text-3xl sm:text-4xl font-black font-mono text-[#d97706] dark:text-amber-400 mt-2">
-            {dynamicMetrics.NOT_VERIFIED}
-          </p>
+          <div className="mt-2.5 flex items-baseline justify-between">
+            <p className="text-2xl sm:text-3xl font-black font-mono text-amber-600 dark:text-amber-400">
+              {dynamicMetrics.NOT_VERIFIED}
+            </p>
+            {selectedTypeFilter === 'NOT_VERIFIED' && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-600 text-white">Active</span>
+            )}
+          </div>
         </button>
 
-        {/* Card 5: NO LEETCODE HANDLE */}
+        {/* Card 5: NO LEETCODE HANDLE — col-span-2 on mobile so NO awkward gaps! */}
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('MISSING_LEETCODE_USERNAME'); }}
-          className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+          className={`col-span-2 sm:col-span-1 p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-row sm:flex-col justify-between items-center sm:items-stretch group active:scale-[0.98] ${
             selectedTypeFilter === 'MISSING_LEETCODE_USERNAME'
-              ? 'bg-slate-100 dark:bg-slate-800/90 border-slate-500 ring-2 ring-slate-500/40 shadow-lg scale-[1.02]'
-              : 'bg-[#f8fafc] dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 hover:border-slate-400'
+              ? 'bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border-slate-500 ring-2 ring-slate-500/40 shadow-lg scale-[1.01]'
+              : 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-400 hover:shadow-md'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-300 tracking-wider">No LeetCode Handle</span>
-              {selectedTypeFilter === 'MISSING_LEETCODE_USERNAME' && (
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-slate-700 dark:bg-slate-300 text-white dark:text-slate-900">Active</span>
-              )}
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-slate-500/15 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-3.5 h-3.5" />
             </div>
-            <AlertTriangle className={`w-4 h-4 ${selectedTypeFilter === 'MISSING_LEETCODE_USERNAME' ? 'text-slate-700 dark:text-slate-200' : 'text-slate-500 dark:text-slate-400'}`} />
+            <div>
+              <span className="text-[10.5px] font-black uppercase text-slate-800 dark:text-slate-300 tracking-wider block">No LeetCode Handle</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium sm:hidden">Unlinked Profiles</span>
+            </div>
           </div>
-          <p className="text-3xl sm:text-4xl font-black font-mono text-[#334155] dark:text-slate-200 mt-2">
-            {dynamicMetrics.MISSING_LEETCODE_USERNAME}
-          </p>
+          <div className="mt-0 sm:mt-2.5 flex items-baseline gap-2">
+            <p className="text-2xl sm:text-3xl font-black font-mono text-slate-800 dark:text-slate-200">
+              {dynamicMetrics.MISSING_LEETCODE_USERNAME}
+            </p>
+            {selectedTypeFilter === 'MISSING_LEETCODE_USERNAME' && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-slate-700 text-white">Active</span>
+            )}
+          </div>
         </button>
       </div>
 
@@ -1255,9 +1279,9 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       </div>
 
       {/* Mobile-Friendly Cards View (block md:hidden, no horizontal table scroll) */}
-      <div className="flex flex-col gap-4 md:hidden">
+      <div className="flex flex-col gap-3.5 md:hidden">
         {filteredRecords.length === 0 ? (
-          <div className="p-8 text-center rounded-2xl bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-navy-800 text-slate-400 text-xs">
+          <div className="p-8 text-center rounded-2xl bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-navy-800 text-slate-400 text-xs font-bold">
             No participation records found matching your active filters.
           </div>
         ) : (
@@ -1275,69 +1299,102 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
               <div
                 key={`${r.student_id}-${idx}`}
                 onClick={() => setSelectedForensicRecord(r)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer bg-white dark:bg-navy-900 shadow-sm hover:shadow-md space-y-3 overflow-hidden ${
+                className={`p-4 rounded-2xl border transition-all cursor-pointer bg-white dark:bg-navy-900 shadow-xs hover:shadow-lg space-y-3 relative overflow-hidden active:scale-[0.99] group ${
                   r.recently_updated
-                    ? 'border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/20'
-                    : 'border-slate-200/90 dark:border-navy-800 hover:border-brand-400'
+                    ? 'border-emerald-500 bg-emerald-50/15 dark:bg-emerald-950/20 ring-1 ring-emerald-500/30'
+                    : 'border-slate-200 dark:border-navy-800 hover:border-brand-500/50'
                 }`}
               >
                 {/* Header: Rank + Student Name + Status Pill */}
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-start justify-between gap-2.5">
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <span className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-900 dark:text-white font-mono font-black text-xs flex items-center justify-center shrink-0 border border-slate-200 dark:border-navy-700">
-                      {rankIndex}
+                    <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-50 to-brand-50 dark:from-navy-800 dark:to-indigo-950 text-indigo-700 dark:text-indigo-300 font-mono font-black text-xs flex items-center justify-center shrink-0 border border-indigo-200/80 dark:border-indigo-800 shadow-2xs">
+                      #{rankIndex}
                     </span>
-                    <h4 className="font-black text-sm text-slate-950 dark:text-white truncate tracking-tight">
-                      {r.student_name}
-                    </h4>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-black text-sm text-slate-900 dark:text-white truncate tracking-tight group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                        {r.student_name}
+                      </h4>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono font-bold mt-0.5">
+                        <span>{r.reg_no}</span>
+                        {cleanYear && <span className="text-slate-400">• {cleanYear}</span>}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="shrink-0">
                     {isPublic && (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shadow-2xs whitespace-nowrap">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30 shadow-2xs whitespace-nowrap flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         LIVE
                       </span>
                     )}
                     {isVirtual && (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-2xs whitespace-nowrap">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-500/30 shadow-2xs whitespace-nowrap flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                         VIRTUAL
                       </span>
                     )}
                     {isAbsent && (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 shadow-2xs whitespace-nowrap">
-                        NOT PARTICIPATED
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300/60 dark:border-rose-800 shadow-2xs whitespace-nowrap">
+                        NOT ATTENDED
                       </span>
                     )}
                     {(isMissingHandle || isPending) && (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shadow-2xs whitespace-nowrap">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300/60 dark:border-amber-800 shadow-2xs whitespace-nowrap">
                         {isMissingHandle ? 'NO HANDLE' : 'PENDING'}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Sub-Header: Reg No + Year + Department Badge (Full width, wrapping allowed, never cut off!) */}
-                <div className="flex items-center flex-wrap gap-1.5 text-xs text-slate-600 dark:text-slate-300 font-mono font-bold pl-[38px]">
-                  <span className="shrink-0">{r.reg_no}</span>
-                  {cleanYear && <span className="shrink-0 text-slate-400">• {cleanYear}</span>}
-                  {r.department_name && (() => {
-                    const deptInfo = getDeptInfo(r.department_name);
-                    return (
-                      <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase border shrink-0 whitespace-nowrap ${deptInfo.color}`}>
-                        {deptInfo.code || r.department_name}
-                      </span>
-                    );
-                  })()}
+                {/* Tags Strip: Dept + LeetCode Handle */}
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-navy-800/80 text-xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {r.department_name && (() => {
+                      const deptInfo = getDeptInfo(r.department_name);
+                      return (
+                        <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase border shrink-0 whitespace-nowrap ${deptInfo.color}`}>
+                          {deptInfo.code || r.department_name}
+                        </span>
+                      );
+                    })()}
+                    {r.leetcode_username ? (
+                      <a
+                        href={`https://leetcode.com/u/${r.leetcode_username}/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="font-mono text-brand-600 dark:text-brand-400 hover:underline font-bold text-xs truncate inline-flex items-center gap-0.5"
+                      >
+                        <span>@{r.leetcode_username}</span>
+                        <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                      </a>
+                    ) : (
+                      <span className="font-mono text-slate-400 italic text-xs font-semibold">No Handle</span>
+                    )}
+                  </div>
+
+                  {(isPublic || isVirtual) && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10.5px] font-mono font-black border border-indigo-500/20 shrink-0">
+                      <Clock className="w-3 h-3 text-indigo-500" />
+                      <span>{formatContestTime(r)}</span>
+                    </span>
+                  )}
                 </div>
 
-                {/* Middle: Q1-Q4 Solve Question Pills - Ultra High Contrast */}
-                <div className="p-3 rounded-2xl bg-slate-100/90 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-2">
+                {/* Middle: Q1-Q4 Solve Question Pills - Ultra High Contrast & Visual Excellence */}
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 space-y-2">
                   <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                    <span className="flex items-center gap-1.5 text-[11px]">
+                    <span className="flex items-center gap-1.5 text-[11px] text-slate-700 dark:text-slate-300">
                       <span className="w-2 h-2 rounded-full bg-brand-500 inline-block animate-pulse"></span>
                       SOLVE MATRIX
                     </span>
-                    <span className="text-[11px] font-mono text-slate-700 dark:text-slate-300 font-bold">
+                    <span className={`text-[10px] font-mono font-black px-2 py-0.5 rounded-full border ${
+                      r.problems_solved > 0
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-500/30'
+                        : 'bg-slate-200/70 text-slate-600 dark:bg-navy-800 dark:text-slate-400 border-transparent'
+                    }`}>
                       {r.problems_solved} / 4 SOLVED
                     </span>
                   </div>
@@ -1351,48 +1408,22 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                     ].map(q => (
                       <div
                         key={q.label}
-                        className={`py-1.5 px-1 sm:px-2 rounded-xl flex items-center justify-center gap-1 text-xs text-center border transition-all ${
+                        className={`py-2 px-1 rounded-xl flex items-center justify-center gap-1 text-xs text-center border transition-all ${
                           q.val
-                            ? 'bg-emerald-600 text-white border-emerald-500 shadow-xs font-black'
-                            : 'bg-white dark:bg-navy-900 text-slate-950 dark:text-white border-slate-300/90 dark:border-navy-700 shadow-2xs font-black'
+                            ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-500 shadow-xs font-black'
+                            : 'bg-white dark:bg-navy-900 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-navy-800 font-bold'
                         }`}
                       >
-                        <span className={`text-[11px] ${q.val ? 'text-emerald-100 font-bold' : 'text-slate-700 dark:text-slate-300 font-bold'}`}>
-                          {q.label}:
+                        <span className={`text-[11px] font-bold ${q.val ? 'text-emerald-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                          {q.label}
                         </span>
-                        <span className={`text-xs ${q.val ? 'text-white font-black' : 'text-slate-950 dark:text-white font-black'}`}>
-                          {q.val ? '1' : '0'}
-                        </span>
+                        {q.val ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+                        ) : (
+                          <span className="text-[11px] font-black text-slate-300 dark:text-slate-600">—</span>
+                        )}
                       </div>
                     ))}
-                  </div>
-                </div>
-
-                {/* Bottom Row: LeetCode Handle + Timing */}
-                <div className="flex items-center justify-between gap-2 pt-0.5 text-xs">
-                  <div className="min-w-0 truncate">
-                    {r.leetcode_username ? (
-                      <a
-                        href={`https://leetcode.com/u/${r.leetcode_username}/`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={e => e.stopPropagation()}
-                        className="font-mono text-brand-600 dark:text-brand-400 hover:underline font-black text-xs truncate inline-block"
-                      >
-                        @{r.leetcode_username}
-                      </a>
-                    ) : (
-                      <span className="font-mono text-slate-500 italic text-xs font-semibold">No Handle</span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0 font-mono">
-                    {(isPublic || isVirtual) && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[11px] font-black border border-indigo-500/20">
-                        <Clock className="w-3.5 h-3.5 text-indigo-500" />
-                        <span>{formatContestTime(r)}</span>
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>

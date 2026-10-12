@@ -70,7 +70,7 @@ export const StudentDashboardView: React.FC = () => {
   const hasActivityData = (studentData?.weekly_progress || 0) > 0 || (studentData?.streak_count || 0) > 0 || (studentData?.consistency_score || 0) > 0;
 
   return (
-    <div className="space-y-8 py-2">
+    <div className="space-y-8 pt-0 pb-8">
 
       {/* Student Welcome Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-brand-950 text-white p-4 sm:p-6 md:p-8 shadow-lg border border-brand-500/30">

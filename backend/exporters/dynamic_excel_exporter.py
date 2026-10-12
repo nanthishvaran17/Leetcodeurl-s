@@ -76,7 +76,31 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         or "wowSummary" in dataset
     )
 
+    report_type = str(dataset.get("reportType") or dataset.get("report_type") or "").upper().strip()
+    is_historical = (report_type in ("HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL", "HIST_INTEL")) or ("weeklyData" in first_row)
+
     def _row_rank_sort_key(r):
+        if is_historical:
+            wd = r.get("weeklyData", [])
+            latest_sol = _safe_int(wd[-1].get("solved", 0)) if (isinstance(wd, list) and len(wd) > 0) else 0
+            latest_score = _safe_int(wd[-1].get("score", 0)) if (isinstance(wd, list) and len(wd) > 0) else 0
+            tot_sol = _safe_int(r.get("totalSolved") or r.get("total_solved") or 0)
+            tot_att = _safe_int(r.get("totalAttended") or r.get("contests_attended") or 0)
+            g_rnk = _safe_int(r.get("global_rank") or r.get("contest_global_ranking") or r.get("profile_rank"))
+            has_rank = (g_rnk > 0)
+            c_rat = _safe_float(r.get("contest_rating") or r.get("rating"))
+            has_rat = (c_rat > 0 and c_rat != 1500.0)
+            return (
+                -latest_sol,                     # 1. Today's contest solved count first (4, 3, 2, 1, 0)
+                -latest_score,                   # 2. Today's contest score
+                -tot_sol,                        # 3. Overall historical solved
+                -tot_att,                        # 4. Total contests attended
+                0 if has_rank else 1,            # 5. Global rank
+                g_rnk if has_rank else 99999999,
+                -c_rat if has_rat else 99999,
+                str(r.get("name") or r.get("student_name") or "")
+            )
+
         p_easy = _safe_int(r.get("easy") if r.get("easy") is not None else r.get("easy_solved"))
         p_med = _safe_int(r.get("medium") if r.get("medium") is not None else r.get("medium_solved"))
         p_hard = _safe_int(r.get("hard") if r.get("hard") is not None else r.get("hard_solved"))
@@ -108,6 +132,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         rows = sorted(rows, key=_wow_sort_key)
     else:
         rows = sorted(rows, key=_row_rank_sort_key)
+        for i, r in enumerate(rows, 1):
+            r["s_no"] = i
 
     # Enable grid lines & A4 Landscape fit-to-1-page-wide setup
     ws.sheet_view.showGridLines = True
@@ -291,6 +317,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 ("Contests Attended", ["contests_attended_fraction", "contests_attended", "total_attended", "totalattended", "total_attendance", "attended_contests", "contests_att"]),
                 ("Total Solved", ["total_solved_fraction", "contest_solved", "solved", "solved_str", "problems_solved", "overall_total_solved", "totalsolved", "total_solved"]),
                 ("Attended Solved", ["attended_solve_fraction", "attended_solve", "attended_solved", "attended_contests_solved"]),
+                ("Solved %", ["solve_pct", "solved_pct", "consistencyPct", "consistency_pct", "attendance_rate", "solve_rate"]),
+                ("Badges", ["badges", "total_badges", "badges_count", "badge_count", "unlocked_badges_count"]),
                 ("Contest Easy", ["contest_easy", "contest_easy_solved", "c_easy"]),
                 ("Contest Medium", ["contest_medium", "contest_medium_solved", "c_medium"]),
                 ("Contest Hard", ["contest_hard", "contest_hard_solved", "c_hard"]),
@@ -531,6 +559,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         "global rank", "total time", "weekly contest", "session date", "batch cohort",
         "easy", "medium", "hard", "college rank",
         "total attended", "contests attended", "total solved", "attended solved", "attended solve", "consistency pct",
+        "badges", "total badges", "badge count",
         "prev q1", "prev q2", "prev q3", "prev q4", "prev solved", "prev score",
         "curr q1", "curr q2", "curr q3", "curr q4", "curr solved", "curr score",
         "solved delta", "trend", "delta", "δ solved"
@@ -874,10 +903,11 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 else:
                     cell.font = FONT_NEUTRAL
 
-            # Consistency Pct: native percentage number format
-            if title_lower == "consistency pct":
+            # Consistency Pct / Solved %: native percentage number format
+            if title_lower in ("consistency pct", "solved %", "solve %", "solve rate %"):
                 if isinstance(val, (int, float)) and val >= 0:
-                    cell.number_format = '0.0%' if (val * 100) % 1 != 0 else '0%'
+                    cell.value = (val / 100.0) if val > 1.0 else float(val)
+                    cell.number_format = '0.0%'
                 else:
                     cell.value = "—"
             # Global Rank: number format with thousand separator, no decimals
@@ -909,7 +939,228 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
         ws.row_dimensions[r_idx].height = 22
 
-    # Auto-adjust column widths cleanly with generous padding for filter buttons & long text
+    # =========================================================================
+    # ROW: CONSOLIDATION SUMMARY BLOCK UNDER EACH COLUMN (Historical / Contest Reports)
+    # Breakdown: TOTAL SOLVED, BOYS SOLVED, GIRLS SOLVED, DAY SCHOLARS SOLVED, HOSTELERS SOLVED
+    # =========================================================================
+    if is_historical or is_single_contest:
+        # Determine demographic merge boundary: merge from Col 1 up to first contest/metric column - 1
+        first_metric_col = 1
+        for col_idx, (title, raw_key) in enumerate(selected_cols, 1):
+            if str(raw_key).startswith("__weekly__") or title in ("Q1", "Q2", "Q3", "Q4", "Contests Attended", "Total Solved"):
+                first_metric_col = col_idx
+                break
+        
+        merge_end_col = max(first_metric_col - 1, 1)
+
+        FEMALE_KEYWORDS = (
+            "SHREE", "DEVI", "PRIYA", "SRI", "DHARSHINI", "VARSHINI", "JANANI", "SOWMIYA",
+            "SHARMILA", "POOMITHA", "RITHIKA", "RITHANIKA", "KIRUTHIKAA", "AMRUTHA", "DHANUSHYA",
+            "HARDIKA", "INIYA", "LAKSANA", "NETHRA", "NIVETHYTHA", "NIVETHA", "PRITHIKA",
+            "RADHISRI", "SUPRIYA", "VEDHASREE", "YAZHINI", "GAYATHRI", "KAVYA", "SNEHA",
+            "SWETHA", "NANDHINI", "ABINAYA", "KEERTHANA", "PAVITHRA", "ANANYA", "DEEPIKA",
+            "ARCHANA", "HARINI", "MONISHA", "SANDHIYA", "SUBHASHINI", "SUBASHREE", "BHUVANESHWARI",
+            "SOUNDARYA", "AISWARYA", "AISHWARYA", "MEENA", "KARTHIKA", "DIVYA", "POOJA",
+            "MADHUMITHA", "MITHRA", "SWATHI", "THANANYA", "SUSHMITHA", "LAVANYA", "HEMA",
+            "PREETHI", "RESHMA", "SARANYA", "SUJITHA", "SUGANYA", "RAMYA", "REVATHI", "GOWRI",
+            "PRIYADHARSHINI", "AARATHANA", "AARSIKA", "SAHANAJ", "SURUTHI", "SUSITHA",
+            "GOWRIPRIYA", "JAYASRI", "JEEVITHA", "PRADEEPA", "THARANYA", "SUVATHI",
+            "KANISHAA", "KANISKA", "JANARANSHINI", "MOWNAVARTHINI", "SRIVIDHYA", "STEFFY",
+            "SUBITHA", "ABIRAMI", "CHRISTINA", "SHRUTI"
+        )
+        MALE_OVERRIDE = ("SELVAN", "SANJAY", "SRIDHAR")
+
+        def _is_girl_student(r: dict) -> bool:
+            g = str(r.get("gender") or "").strip().upper()
+            if g in ("F", "FEMALE", "GIRL", "WOMAN"):
+                return True
+            if g in ("M", "MALE", "BOY", "MAN"):
+                return False
+            name = str(r.get("name") or r.get("student_name") or "").strip().upper()
+            if any(m in name for m in MALE_OVERRIDE):
+                return False
+            return any(f in name for f in FEMALE_KEYWORDS)
+
+        def _is_hosteler_student(r: dict) -> bool:
+            acc = str(r.get("accommodation") or r.get("accom") or r.get("accommodation_type") or "").strip().upper()
+            return "HOSTEL" in acc or acc == "H"
+
+        consolidation_configs = [
+            {
+                "label": "TOTAL SOLVED COUNT",
+                "filter": lambda r: True,
+                "fill_color": "E6F0FA",
+                "font_color": "1B365D",
+                "font_size": 10.5,
+                "bold": True,
+            },
+            {
+                "label": "BOYS SOLVED COUNT",
+                "filter": lambda r: not _is_girl_student(r),
+                "fill_color": "FFFFFF",
+                "font_color": "1B365D",
+                "font_size": 10.0,
+                "bold": True,
+            },
+            {
+                "label": "GIRLS SOLVED COUNT",
+                "filter": lambda r: _is_girl_student(r),
+                "fill_color": "F8FAFC",
+                "font_color": "1B365D",
+                "font_size": 10.0,
+                "bold": True,
+            },
+            {
+                "label": "DAY SCHOLARS (D) SOLVED COUNT",
+                "filter": lambda r: not _is_hosteler_student(r),
+                "fill_color": "FFFFFF",
+                "font_color": "1B365D",
+                "font_size": 10.0,
+                "bold": True,
+            },
+            {
+                "label": "HOSTELERS (H) SOLVED COUNT",
+                "filter": lambda r: _is_hosteler_student(r),
+                "fill_color": "F8FAFC",
+                "font_color": "1B365D",
+                "font_size": 10.0,
+                "bold": True,
+            },
+        ]
+
+        _DOUBLE_BOTTOM_BORDER = Border(
+            left=Side(style='thin', color='B0C4DE'),
+            right=Side(style='thin', color='B0C4DE'),
+            top=Side(style='thin', color='B0C4DE'),
+            bottom=Side(style='double', color='1B365D')
+        )
+
+        # Leave 2 clean blank rows before the consolidation summary box
+        blank_gap_rows = 2
+        for g in range(1, blank_gap_rows + 1):
+            ws.row_dimensions[r_idx + g].height = 16
+
+        start_summary_row = r_idx + 1 + blank_gap_rows
+
+        for cfg_idx, cfg in enumerate(consolidation_configs):
+            tot_row_idx = start_summary_row + cfg_idx
+            ws.row_dimensions[tot_row_idx].height = 24
+            
+            sub_rows = [r for r in rows if cfg["filter"](r)]
+            row_fill = PatternFill(start_color=cfg["fill_color"], end_color=cfg["fill_color"], fill_type="solid")
+            row_font = Font(name=FONT_TNR, size=cfg["font_size"], bold=cfg["bold"], color=cfg["font_color"])
+            is_last_summary = (cfg_idx == len(consolidation_configs) - 1)
+            row_border = _DOUBLE_BOTTOM_BORDER if is_last_summary else _THIN_BORDER
+
+            # 1. Pre-style every cell across the entire row before merging
+            for c in range(1, cols + 1):
+                cell = ws.cell(row=tot_row_idx, column=c)
+                cell.fill = row_fill
+                cell.border = row_border
+                cell.font = row_font
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+
+            # 2. Set label and merge demographic columns
+            ws.cell(row=tot_row_idx, column=1, value=cfg["label"])
+            if merge_end_col > 1:
+                ws.merge_cells(start_row=tot_row_idx, start_column=1, end_row=tot_row_idx, end_column=merge_end_col)
+
+            # 3. Calculate and populate metric column totals for this sub-cohort
+            for col_idx, (title, raw_key) in enumerate(selected_cols, 1):
+                if col_idx <= merge_end_col:
+                    continue
+                
+                c_cell = ws.cell(row=tot_row_idx, column=col_idx)
+                
+                # Weekly contest column totals
+                if str(raw_key).startswith("__weekly__"):
+                    c_num = raw_key.split("__weekly__")[1]
+                    col_sum = sum(
+                        int(w.get("solved", 0)) for r in sub_rows
+                        for w in r.get("weeklyData", [])
+                        if str(w.get("contestNum")) == c_num and w.get("att")
+                    )
+                    c_cell.value = col_sum
+                    c_cell.number_format = '#,##0'
+                elif title in ("Q1", "Q2", "Q3", "Q4"):
+                    q_k = title.lower()
+                    q_sum = sum(
+                        1 for r in sub_rows
+                        if str(r.get(q_k) or r.get(f"{q_k}_display") or "").strip() in ("1", "1.0", "True")
+                        or str(r.get(q_k) or r.get(f"{q_k}_display") or "").strip().startswith("1 (")
+                    )
+                    c_cell.value = q_sum
+                    c_cell.number_format = '#,##0'
+                elif title in ("Contests Attended",):
+                    col_att = sum(
+                        sum(1 for w in r.get("weeklyData", []) if w.get("att")) if isinstance(r.get("weeklyData"), list)
+                        else int(r.get("contests_attended") or r.get("total_attended") or 0)
+                        for r in sub_rows
+                    )
+                    c_cell.value = col_att
+                    c_cell.number_format = '#,##0'
+                elif title in ("Total Solved",):
+                    col_tot = sum(
+                        int(r.get("total_solved_raw") if r.get("total_solved_raw") is not None else (r.get("total_solved") if isinstance(r.get("total_solved"), (int, float)) else 0))
+                        for r in sub_rows
+                    )
+                    if col_tot == 0 and is_historical:
+                        col_tot = sum(
+                            sum(int(w.get("solved", 0)) for w in r.get("weeklyData", []) if w.get("att"))
+                            for r in sub_rows if isinstance(r.get("weeklyData"), list)
+                        )
+                    c_cell.value = col_tot
+                    c_cell.number_format = '#,##0'
+                elif title in ("Attended Solved",):
+                    col_att_sol = sum(
+                        int(r.get("total_solved_raw") if r.get("total_solved_raw") is not None else (r.get("total_solved") if isinstance(r.get("total_solved"), (int, float)) else 0))
+                        for r in sub_rows
+                    )
+                    c_cell.value = col_att_sol
+                    c_cell.number_format = '#,##0'
+                elif title in ("Solved %", "Solve %"):
+                    tot_cohort_sol = sum(
+                        int(r.get("total_solved_raw") if r.get("total_solved_raw") is not None else (r.get("total_solved") if isinstance(r.get("total_solved"), (int, float)) else 0))
+                        for r in rows
+                    )
+                    if tot_cohort_sol == 0 and is_historical:
+                        tot_cohort_sol = sum(
+                            sum(int(w.get("solved", 0)) for w in r.get("weeklyData", []) if w.get("att"))
+                            for r in rows if isinstance(r.get("weeklyData"), list)
+                        )
+                    sub_sol = sum(
+                        int(r.get("total_solved_raw") if r.get("total_solved_raw") is not None else (r.get("total_solved") if isinstance(r.get("total_solved"), (int, float)) else 0))
+                        for r in sub_rows
+                    )
+                    if sub_sol == 0 and is_historical:
+                        sub_sol = sum(
+                            sum(int(w.get("solved", 0)) for w in r.get("weeklyData", []) if w.get("att"))
+                            for r in sub_rows if isinstance(r.get("weeklyData"), list)
+                        )
+                    if tot_cohort_sol > 0:
+                        c_cell.value = round(sub_sol / tot_cohort_sol, 3)
+                        c_cell.number_format = '0.0%'
+                    else:
+                        c_cell.value = "0.0%"
+                elif title in ("Badges",):
+                    col_badges = sum(int(r.get("badges") or r.get("total_badges") or 0) for r in sub_rows)
+                    c_cell.value = col_badges
+                    c_cell.number_format = '#,##0'
+                elif title in ("Contest Easy", "Easy"):
+                    col_easy = sum(int(r.get("contest_easy") or r.get("contest_easy_solved") or 0) for r in sub_rows)
+                    c_cell.value = col_easy
+                    c_cell.number_format = '#,##0'
+                elif title in ("Contest Medium", "Medium"):
+                    col_med = sum(int(r.get("contest_medium") or r.get("contest_medium_solved") or 0) for r in sub_rows)
+                    c_cell.value = col_med
+                    c_cell.number_format = '#,##0'
+                elif title in ("Contest Hard", "Hard"):
+                    col_hard = sum(int(r.get("contest_hard") or r.get("contest_hard_solved") or 0) for r in sub_rows)
+                    c_cell.value = col_hard
+                    c_cell.number_format = '#,##0'
+                else:
+                    c_cell.value = "—"
+
     header_row_idx = r_hdr
     ws.row_dimensions[header_row_idx].height = 45
     for col_idx, col in enumerate(ws.columns, 1):
@@ -972,6 +1223,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             final_width = 18
         elif h_lower in ("attendance %", "attendance_rate", "attendance pct"):
             final_width = 13
+        elif h_lower in ("solved %", "solve %", "solve rate %", "solved rate %", "consistency pct"):
+            final_width = 10.5
         elif h_lower in ("5 w solved", "5-w solved", "solved_5w", "w5_solved"):
             final_width = 11
         elif h_lower in ("global rank", "college rank", "rank"):

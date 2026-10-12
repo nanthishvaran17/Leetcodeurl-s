@@ -684,7 +684,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   }, [selectedDept, departments, user]);
 
   return (
-    <div className="space-y-4 sm:space-y-6 pt-0 sm:pt-1 pb-6">
+    <div className="space-y-4 sm:space-y-6 pt-0 pb-6">
 
       {/* Hero Section — 2026 Bento Glass Architecture */}
       <motion.div
@@ -698,16 +698,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="absolute bottom-0 left-1/3 -mb-20 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-4xl space-y-6">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-slate-200 text-xs font-semibold backdrop-blur-xl shadow-glass">
-              <CollegeLogo size={20} className="w-5 h-5 shrink-0" />
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-slate-200 text-xs font-semibold backdrop-blur-xl shadow-glass">
               <span className="tracking-wide">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>
             </div>
-            <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold shadow-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>2026 INTELLIGENCE ENGINE</span>
-            </span>
-          </div>
 
           <div className="space-y-3">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.15] font-display">
@@ -722,13 +715,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 pt-1">
+          <div className="flex items-center gap-2 pt-1 overflow-x-auto no-scrollbar py-0.5 sm:flex-wrap">
             {['Real-time Telemetry', 'Contest Forensics', 'Sunday Automated Audits', 'Faculty Mentor Matrix'].map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold tracking-wide bg-white/[0.04] border border-white/[0.08] text-slate-300 backdrop-blur-sm shadow-2xs hover:border-white/20 transition-colors"
+                className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold tracking-wide bg-white/[0.04] border border-white/[0.08] text-slate-300 backdrop-blur-sm shadow-2xs hover:border-white/20 transition-colors whitespace-nowrap shrink-0"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mr-2" />
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mr-2 shrink-0" />
                 {tag}
               </span>
             ))}
@@ -963,26 +956,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         })()}
       </div>
 
-      {/* Filters Control Bar — 2026 Glass Architecture */}
-      <div className="glass-panel p-5 sm:p-7 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] shadow-subtle space-y-4 sm:space-y-6 relative z-30 overflow-visible">
+      {/* Filters Control Bar — 2026 Mobile-Optimized Glass Architecture */}
+      <div className="glass-panel p-3.5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] shadow-subtle space-y-3.5 sm:space-y-5 relative z-30 overflow-visible">
 
         {/* Header with Title & Controls */}
-        <div className="flex items-center justify-between flex-wrap gap-3 sm:gap-4 border-b border-slate-100 dark:border-white/[0.06] pb-3 sm:pb-4">
-          <div className="space-y-1">
-            <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center space-x-2 font-display">
-              <Filter className="w-4 h-4 text-brand-500" />
-              <span>Student Performance Showcase</span>
+        <div className="flex items-center justify-between gap-2.5 border-b border-slate-100 dark:border-white/[0.06] pb-2.5 sm:pb-3.5">
+          <div className="space-y-0.5 min-w-0">
+            <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white flex items-center space-x-1.5 font-display truncate">
+              <Filter className="w-4 h-4 text-brand-500 shrink-0" />
+              <span className="truncate">Student Performance Showcase</span>
             </h3>
-            <p className="text-xs text-slate-700 dark:text-slate-200 font-bold">
+            <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 font-medium truncate hidden sm:block">
               Filter student records by Department, Academic Year, and LeetCode Problem Solved Range
             </p>
           </div>
 
-          <div className="flex items-center space-x-2.5">
+          <div className="flex items-center space-x-2 shrink-0">
             {/* View Mode Switch */}
             <button
               onClick={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
-              className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 transition-all cursor-pointer shadow-sm flex items-center justify-center"
+              className="p-2 sm:p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 transition-all cursor-pointer shadow-2xs flex items-center justify-center active:scale-95 touch-manipulation"
               title={viewMode === 'cards' ? 'Switch to Table View' : 'Switch to Grid View'}
             >
               {viewMode === 'cards' ? (
@@ -995,122 +988,125 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {/* Reset Filters Button */}
             <button
               onClick={handleResetFilters}
-              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black border border-slate-300 dark:border-slate-700 transition-all cursor-pointer shadow-sm"
+              className="flex items-center space-x-1 px-3 py-2 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black border border-slate-300 dark:border-slate-700 transition-all cursor-pointer shadow-2xs active:scale-95 touch-manipulation shrink-0"
               title="Reset all filters to default"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
-              <span>Reset Filters</span>
+              <RotateCcw className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400 shrink-0" />
+              <span>Reset</span>
             </button>
           </div>
         </div>
 
-        {/* 5 Filter & Search Controls — Pixel-Perfect Uniform Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5 sm:gap-4">
+        {/* Search Bar on Top Full-Width for instant mobile accessibility */}
+        <div className="relative">
+          <input
+            id="landing-name-search"
+            type="text"
+            autoComplete="off"
+            spellCheck={false}
+            value={nameSearch}
+            onChange={(e) => {
+              setNameSearch(e.target.value);
+              setDisplayCount(32);
+            }}
+            placeholder="Search name, reg no (e.g. 732224CC031)..."
+            className="w-full h-11 min-h-[44px] bg-slate-50 dark:bg-navy-950/95 text-slate-900 dark:text-white text-xs font-semibold py-2 px-3.5 pl-9 pr-8 rounded-2xl border border-slate-200/90 dark:border-white/[0.08] shadow-inner focus:outline-none focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20 placeholder-slate-400 dark:placeholder-slate-500 truncate transition-all text-left"
+          />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
+            <Search className="w-4 h-4 stroke-[2.5]" />
+          </div>
+          {nameSearch && (
+            <button
+              type="button"
+              onClick={() => { setNameSearch(''); setDisplayCount(32); }}
+              className="absolute inset-y-0 right-0 flex items-center px-3 z-10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+              title="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter Controls: 2-Column Mobile Grid, 4-Column on Desktop */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
 
           {/* 1. Department Filter */}
-          {isFacultyRole ? (
-            <CustomDropdown
-              id="faculty-department-filter"
-              label="Mentee Scope"
-              options={[
-                { value: 'all', label: 'My Allocated Mentees' },
-                ...departments.map((d: any) => ({
-                  value: d.code || d.name,
-                  label: d.name || d.code
-                }))
-              ]}
-              value={selectedDept}
-              onChange={(val) => {
-                setSelectedDept(val);
-                setDisplayCount(32);
-              }}
-              icon={Building2}
-              align="left"
-            />
-          ) : (
-            <PremiumDepartmentSelect
-              selectedDept={selectedDept === 'all' ? 'ALL' : selectedDept}
-              onChange={(val) => {
-                setSelectedDept(val === 'ALL' ? 'all' : val);
-                setDisplayCount(32);
-              }}
-              useIdAsValue={false}
-            />
-          )}
-
-          {/* 2. Academic Year Filter */}
-          <CustomDropdown
-            id="academic-year-filter"
-            label="Academic Year"
-            options={yearOptions}
-            value={yearLevel}
-            onChange={(val) => {
-              setYearLevel(val);
-              setDisplayCount(32);
-            }}
-            icon={GraduationCap}
-            align="left"
-          />
-
-          {/* 3. Name Search */}
-          <div className="col-span-2 sm:col-span-1 flex flex-col space-y-1.5 min-w-0 w-full">
-            <label htmlFor="landing-name-search" className="block text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider truncate flex items-center h-4 leading-4 m-0 p-0">
-              Search Student Name
-            </label>
-            <div className="relative">
-              <input
-                id="landing-name-search"
-                type="text"
-                autoComplete="off"
-                spellCheck={false}
-                value={nameSearch}
-                onChange={(e) => {
-                  setNameSearch(e.target.value);
+          <div className="min-w-0">
+            {isFacultyRole ? (
+              <CustomDropdown
+                id="faculty-department-filter"
+                label="Mentee Scope"
+                options={[
+                  { value: 'all', label: 'My Allocated Mentees' },
+                  ...departments.map((d: any) => ({
+                    value: d.code || d.name,
+                    label: d.name || d.code
+                  }))
+                ]}
+                value={selectedDept}
+                onChange={(val) => {
+                  setSelectedDept(val);
                   setDisplayCount(32);
                 }}
-                placeholder="Search name, reg no..."
-                className="w-full h-11 min-h-[44px] bg-white/95 dark:bg-navy-950/95 text-slate-900 dark:text-white text-xs font-semibold py-2 px-3.5 pl-9 pr-8 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-subtle focus:outline-none focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20 placeholder-slate-400 dark:placeholder-slate-500 truncate transition-all text-left backdrop-blur-md"
+                icon={Building2}
+                align="left"
               />
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
-                <Search className="w-4 h-4 stroke-[2.5]" />
-              </div>
-              {nameSearch && (
-                <button
-                  type="button"
-                  onClick={() => { setNameSearch(''); setDisplayCount(32); }}
-                  className="absolute inset-y-0 right-0 flex items-center px-2.5 z-10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-                  title="Clear search"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
+            ) : (
+              <PremiumDepartmentSelect
+                selectedDept={selectedDept === 'all' ? 'ALL' : selectedDept}
+                onChange={(val) => {
+                  setSelectedDept(val === 'ALL' ? 'all' : val);
+                  setDisplayCount(32);
+                }}
+                useIdAsValue={false}
+              />
+            )}
           </div>
 
-          {/* 4. Performance Range Filter */}
-          <CustomDropdown
-            id="performance-range-filter"
-            label="Performance Range"
-            options={performanceOptions}
-            value={solvedFilter}
-            onChange={(val) => {
-              setSolvedFilter(val);
-              setDisplayCount(32);
-            }}
-            icon={Trophy}
-            align="right"
-          />
+          {/* 2. Academic Year Filter */}
+          <div className="min-w-0">
+            <CustomDropdown
+              id="academic-year-filter"
+              label="Academic Year"
+              options={yearOptions}
+              value={yearLevel}
+              onChange={(val) => {
+                setYearLevel(val);
+                setDisplayCount(32);
+              }}
+              icon={GraduationCap}
+              align="left"
+            />
+          </div>
 
-          {/* 5. Sort Students */}
-          <CustomDropdown
-            id="sort-students-filter"
-            label="Sort Ranking"
-            options={sortOptions}
-            value={sortBy}
-            onChange={(val) => setSortBy(val)}
-            icon={ArrowUpDown}
-            align="right"
-          />
+          {/* 3. Performance Range Filter */}
+          <div className="min-w-0">
+            <CustomDropdown
+              id="performance-range-filter"
+              label="Performance Range"
+              options={performanceOptions}
+              value={solvedFilter}
+              onChange={(val) => {
+                setSolvedFilter(val);
+                setDisplayCount(32);
+              }}
+              icon={Trophy}
+              align="left"
+            />
+          </div>
+
+          {/* 4. Sort Students */}
+          <div className="min-w-0">
+            <CustomDropdown
+              id="sort-students-filter"
+              label="Sort Ranking"
+              options={sortOptions}
+              value={sortBy}
+              onChange={(val) => setSortBy(val)}
+              icon={ArrowUpDown}
+              align="right"
+            />
+          </div>
 
         </div>
 
@@ -1290,12 +1286,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <p className="text-xs text-slate-800 dark:text-slate-200 font-extrabold">
                     Showing <span className="font-black text-brand-600 dark:text-brand-400">{Math.min(displayCount, sortedList.length)}</span> of <span className="font-black text-slate-900 dark:text-white">{sortedList.length}</span> Students
                   </p>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:space-x-3 w-full sm:w-auto px-4 sm:px-0">
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setDisplayCount(prev => prev + 32)}
-                      className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-600/30 transition-all cursor-pointer"
+                      className="w-full sm:w-auto min-h-[44px] flex items-center justify-center px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-600/30 transition-all cursor-pointer touch-manipulation"
                     >
                       <span>Load More Students (+32)</span>
                     </motion.button>
@@ -1303,7 +1299,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       whileHover={{ scale: 1.04 }}
                       whileTap={{ scale: 0.96 }}
                       onClick={() => setDisplayCount(sortedList.length)}
-                      className="px-5 py-3 rounded-2xl glass-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+                      className="w-full sm:w-auto min-h-[44px] flex items-center justify-center px-5 py-3 rounded-2xl glass-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all cursor-pointer touch-manipulation"
                     >
                       Show All {sortedList.length} Students
                     </motion.button>

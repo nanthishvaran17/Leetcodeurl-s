@@ -15,6 +15,7 @@ from backend.services.report_validators import validate_data_quality
 from backend.services.contest_performance_service import build_contest_performance_report
 from backend.services.report_registry import get_report_definition
 from backend.services.data_version_service import get_current_data_version
+from backend.config.report_config import get_coordinator_for_department
 
 logger = logging.getLogger(__name__)
 
@@ -81,9 +82,15 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
     user_role = (getattr(current_user, "role", "") or "").lower().strip()
     user_dept = str(getattr(current_user, "department_id", "") or "")
     if user_role in ("hod", "department hod", "department_hod"):
-        from backend.services.authorization_service import get_hod_authorized_department_ids
+        from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
         h_ids = get_hod_authorized_department_ids(db, current_user)
         user_dept = ",".join(map(str, sorted(h_ids))) if h_ids else user_dept
+        auth_codes = get_hod_authorized_department_codes(db, current_user)
+        if auth_codes and (config.department in ("ALL", "", None) or config.department not in auth_codes):
+            config.department = auth_codes[0]
+            if config.filters:
+                config.filters["department"] = auth_codes[0]
+                config.filters["dept"] = auth_codes[0]
     data_ver = get_current_data_version(db)
 
     raw_key = json.dumps({
@@ -364,6 +371,7 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         sol = d_info["total_solved"]
         d_info["avg_solved"] = round(sol / max(act, 1), 2)
         d_info["attendance_pct"] = round((act / max(tot, 1)) * 100, 2)
+        d_info["coordinator"] = get_coordinator_for_department(d_code)
         dept_summary_list.append(d_info)
 
     # ── Year-wise Breakdown (per-year aggregation across all filtered students) ──
@@ -510,10 +518,63 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         "highestRating": highest_rating
     }
 
+    # Universal Solve Cohort Distribution calculation
+    s_4 = 0
+    s_3 = 0
+    s_2 = 0
+    s_1 = 0
+    s_0 = 0
+    s_not_att = 0
+
+    for s in students:
+        st = (getattr(s, "status", "") or getattr(s, "attendance_status", "") or getattr(s, "attendance", "") or "").strip().upper()
+        is_part = st in ("PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "PUBLIC", "VIRTUAL", "PUBLIC_LIVE", "VIRTUAL_PRACTICE", "ATTENDED", "VERIFIED", "COMPLETED", "ATTENDED_SOLVED", "ATTENDED_ZERO") or (getattr(s, "contest_solved", None) is not None and getattr(s, "contest_solved", 0) >= 0)
+        c_sol = getattr(s, "contest_solved", None)
+        if c_sol is None:
+            c_sol = getattr(s, "solved", None)
+        if c_sol is None:
+            c_sol = getattr(s, "total_contest_solved", None)
+        if c_sol is None:
+            c_sol = getattr(s, "total_solved", 0) or 0
+        c_sol = int(c_sol or 0)
+
+        if is_part or c_sol > 0:
+            if c_sol >= 4:
+                s_4 += 1
+            elif c_sol == 3:
+                s_3 += 1
+            elif c_sol == 2:
+                s_2 += 1
+            elif c_sol == 1:
+                s_1 += 1
+            else:
+                s_0 += 1
+        else:
+            s_not_att += 1
+
+    solve_dist_dict = {
+        "solved4": s_4,
+        "solved3": s_3,
+        "solved2": s_2,
+        "solved1": s_1,
+        "solved0": s_0,
+        "atLeast1Solved": s_4 + s_3 + s_2 + s_1,
+        "zeroSolvedParticipated": s_0,
+        "notParticipated": s_not_att
+    }
+
+    metrics_dict["4 Q Solved"] = s_4
+    metrics_dict["3 Q Solved"] = s_3
+    metrics_dict["2 Q Solved"] = s_2
+    metrics_dict["1 Q Solved"] = s_1
+    metrics_dict["0 Q Solved"] = s_0
+
     if config.report_type in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST"):
         metrics_dict["totalParticipations"] = len(participations_dict)
         metrics_dict["contestName"] = resolved_cname
         metrics_dict["sessionDate"] = resolved_cdate
+
+    dept_coord = get_coordinator_for_department(config.department)
 
     dataset = {
         "reportId": report_id,
@@ -521,6 +582,9 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         "title": title,
         "contestName": resolved_cname,
         "sessionDate": resolved_cdate,
+        "coordinator": dept_coord,
+        "academicCoordinator": dept_coord,
+        "solveDistribution": solve_dist_dict,
         "generatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "verifiedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "dataStatus": "READY" if total_students > 0 else "PARTIAL",

@@ -18,7 +18,6 @@ import { useScrollLock } from './hooks/useScrollLock';
 import { StudentProfileSkeleton } from './components/StudentProfileSkeleton';
 import { StudentShareCardModal } from './components/StudentShareCardModal';
 import { MobileFilterDrawer } from './components/MobileFilterDrawer';
-import { MobileBottomNav } from './components/MobileBottomNav';
 
 const LandingPage = safeLazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
 import { LoginPage } from './pages/LoginPage';
@@ -907,7 +906,7 @@ export const App: React.FC = () => {
       <div className={`flex-1 w-full mx-auto relative ${
         activeTab === 'messages'
           ? 'pt-0 pb-0 px-0 max-w-full overflow-hidden h-[calc(100dvh-56px)] sm:h-[calc(100dvh-60px)]'
-          : 'pt-1 sm:pt-2 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 px-2 sm:px-3 max-w-full'
+          : 'pt-3.5 sm:pt-4 pb-6 px-2.5 sm:px-4 max-w-full'
       }`}>
         
         {/* Slide-out Sidebar Drawer */}
@@ -1004,7 +1003,7 @@ export const App: React.FC = () => {
 
               {activeTab === 'quality' && (
                 isTabAllowed('quality')
-                  ? <DataQualityPage onNavigateTab={handleTabChange} />
+                  ? <DataQualityPage onNavigateTab={handleTabChange} onSelectStudent={handleSelectStudent} />
                   : renderAccessDenied('Data Quality Board')
               )}
 
@@ -1077,13 +1076,6 @@ export const App: React.FC = () => {
 
       </div>
 
-      {/* Modern Swiggy/Uber-grade Mobile Bottom Navigation */}
-      <MobileBottomNav
-        activeTab={activeTab}
-        setActiveTab={handleTabChange}
-        isAuthenticated={isAuthenticated}
-        userRole={user?.role}
-      />
 
       {/* Keyboard Shortcuts Guide Modal */}
       <KeyboardShortcutsModal

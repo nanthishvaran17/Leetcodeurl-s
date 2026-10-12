@@ -233,6 +233,59 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           </div>
         </div>
 
+        {/* Quick Mobile Horizontal Swipeable Chips (1-Tap Fast Filter) */}
+        <div className="flex md:hidden flex-col gap-2 pt-1 pb-1 border-t border-slate-100 dark:border-navy-800">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
+            <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">Dept:</span>
+            {[
+              { id: 'all', label: 'All Depts' },
+              ...departments.slice(0, 6).map(d => ({ id: String(d.id), label: d.code || d.name }))
+            ].map(d => {
+              const isSelected = selectedDept === d.id || (d.id === 'all' && (selectedDept === 'all' || selectedDept === 'ALL'));
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => { setSelectedDept(d.id); setDisplayCount(32); }}
+                  className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
+                    isSelected
+                      ? 'bg-brand-600 text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700'
+                  }`}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
+            <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">Year:</span>
+            {[
+              { value: 'all', label: 'All Years' },
+              { value: '2', label: 'II Year' },
+              { value: '3', label: 'III Year' },
+              { value: '4', label: 'IV Year' }
+            ].map(y => {
+              const isSelected = yearLevel === y.value;
+              return (
+                <button
+                  key={y.value}
+                  type="button"
+                  onClick={() => { setYearLevel(y.value); setDisplayCount(32); }}
+                  className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
+                    isSelected
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700'
+                  }`}
+                >
+                  {y.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* 5 Filter & Search Controls — Auto-Fitting Responsive 2-Column Grid on Mobile */}
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 sm:gap-2.5 items-start">
 

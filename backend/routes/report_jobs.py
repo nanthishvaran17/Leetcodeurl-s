@@ -417,17 +417,22 @@ def download_report_job_file(
     if job.status != "COMPLETED":
         raise HTTPException(status_code=400, detail="Job is not completed yet")
         
-    if not job.file_path or not os.path.exists(job.file_path):
+    if not job.file_path:
+        raise HTTPException(status_code=404, detail="Report file missing from job record")
+        
+    canonical_path = os.path.realpath(str(job.file_path))
+    if not os.path.exists(canonical_path) or not os.path.isfile(canonical_path):
         raise HTTPException(status_code=404, detail="Report file missing from disk")
         
     from backend.models import ReportCache
     cache_rec = db.query(ReportCache).filter(ReportCache.storage_path == job.file_path).first()
     if cache_rec and cache_rec.filename:
-        filename = cache_rec.filename
+        raw_filename = cache_rec.filename
     else:
-        filename = os.path.basename(job.file_path)
+        raw_filename = os.path.basename(job.file_path)
         
-    ext = filename.split(".")[-1].lower()
+    clean_filename = os.path.basename(raw_filename).replace('"', '').replace('\r', '').replace('\n', '').strip() or "report"
+    ext = clean_filename.split(".")[-1].lower() if "." in clean_filename else ""
     
     ext_media_types = {
         "pdf": "application/pdf",
@@ -440,11 +445,11 @@ def download_report_job_file(
     media_type = ext_media_types.get(ext, "application/octet-stream")
     
     return FileResponse(
-        path=job.file_path,
+        path=canonical_path,
         media_type=media_type,
-        filename=filename,  # type: ignore
+        filename=clean_filename,
         headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Disposition": f'attachment; filename="{clean_filename}"',
             "Cache-Control": "private, no-cache, no-store, must-revalidate",
         }
     )

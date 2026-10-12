@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import api from '../../services/api';
-import { FileText, Download, Loader2, CheckCircle2, AlertCircle, User, Grid } from 'lucide-react';
+import { 
+  FileText, Download, Loader2, CheckCircle2, AlertCircle, User, Grid,
+  ShieldCheck, Sparkles, Award, Lock, Check, Fingerprint
+} from 'lucide-react';
 import { downloadManager } from '../../services/download/downloadManager';
+import { formatDepartmentCode, deriveDepartmentFromRegNo } from '../../utils/filterUtils';
 
 interface ReportsAnalyticsProps {
   studentId?: number;
@@ -81,127 +85,206 @@ export const ReportsAnalyticsView: React.FC<ReportsAnalyticsProps> = ({
   ];
 
   return (
-    <div className="space-y-8 animate-fade-in mt-4 max-w-4xl mx-auto">
+    <div className="space-y-6 animate-fade-in mt-2 max-w-4xl mx-auto">
       
-      <div className="bg-gradient-to-br from-white to-slate-50/50 dark:from-navy-900 dark:to-navy-800/80 rounded-2xl border border-slate-200/80 dark:border-navy-700/60 shadow-md overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-400 via-brand-500 to-brand-600"></div>
-        <div className="bg-slate-50/50 dark:bg-navy-800/30 p-4 border-b border-slate-100/80 dark:border-navy-700/50 flex items-center justify-between backdrop-blur-sm">
-          <div>
-            <h3 className="font-bold text-slate-700 dark:text-slate-300 text-xs tracking-widest uppercase">Target Student</h3>
+      {/* Target Student Header Card — 2026 Glassmorphic Identity Panel */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900/90 via-[#0d1527] to-[#070b14] rounded-3xl border border-white/10 p-5 sm:p-6 text-white shadow-2xl shadow-indigo-950/40 backdrop-blur-xl">
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500/15 blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-brand-500/10 blur-3xl rounded-full pointer-events-none" />
+
+        <div className="relative z-10 flex items-center justify-between pb-3.5 mb-4 border-b border-white/[0.08]">
+          <div className="flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
+            <span className="text-[11px] font-mono font-black uppercase tracking-widest text-indigo-300">
+              Institutional Report Engine
+            </span>
           </div>
-          <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200/50 dark:border-emerald-500/20">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-[10px] font-bold tracking-wider text-emerald-700 dark:text-emerald-400">ISOLATED MODE</span>
-          </div>
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 flex items-center gap-1.5 shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            ACTIVE STUDENT
+          </span>
         </div>
-        <div className="p-6 flex items-center gap-5">
-          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/40 dark:to-brand-800/20 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-2xl shrink-0 border border-brand-200/50 dark:border-brand-700/50 shadow-inner">
-            {studentName ? studentName.charAt(0) : 'S'}
+
+        <div className="relative z-10 flex items-center gap-4 sm:gap-5">
+          <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-indigo-500 via-brand-600 to-purple-600 text-white flex items-center justify-center font-display font-black text-2xl sm:text-3xl shrink-0 border border-white/20 shadow-xl shadow-indigo-500/25">
+            {studentName ? studentName.charAt(0).toUpperCase() : 'S'}
           </div>
-          <div>
-            <h4 className="font-extrabold text-slate-900 dark:text-white text-xl tracking-tight">{studentName || 'Unknown Student'}</h4>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm text-slate-500 font-medium mt-1.5">
-              <span className="text-slate-700 dark:text-slate-300 bg-white dark:bg-navy-800 px-2.5 py-1 rounded-md font-bold font-mono border border-slate-200 dark:border-navy-600 shadow-sm whitespace-nowrap">{regNo || studentId}</span>
-              <span className="text-slate-300 dark:text-slate-600 font-bold hidden sm:inline">•</span>
-              <span className="text-slate-600 dark:text-slate-400 w-full sm:w-auto">{deptName || 'Department'}</span>
+          <div className="min-w-0 flex-1">
+            <h4 className="font-display font-black text-white text-lg sm:text-2xl tracking-tight truncate leading-tight">
+              {studentName || 'Unknown Student'}
+            </h4>
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <span className="px-2.5 py-0.5 rounded-lg font-mono text-xs font-black bg-white/10 text-indigo-200 border border-white/15 backdrop-blur-md">
+                {regNo || studentId}
+              </span>
+              <span className="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-indigo-500/20 text-indigo-200 border border-indigo-400/30">
+                {formatDepartmentCode(deptName) || deriveDepartmentFromRegNo(regNo) || deptName || 'CSE(CS)'}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-navy-900 p-8 rounded-2xl border border-slate-200/80 dark:border-navy-700/60 shadow-lg shadow-slate-200/20 dark:shadow-none">
+      {/* Main Form Configuration Panel */}
+      <div className="bg-white/80 dark:bg-slate-900/70 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 backdrop-blur-xl space-y-8">
         
-        <div className="space-y-10">
-          
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 font-bold text-xs">1</div>
-              <label className="block text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">Select Report Type</label>
+        {/* Step 1: Report Type Grid */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-brand-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-md shadow-brand-500/25">
+                1
+              </div>
+              <label className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                Select Report Type
+              </label>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {reportTypes.map((rt) => (
+            <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">
+              3 FORMATS AVAILABLE
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+            {reportTypes.map((rt) => {
+              const isSelected = reportType === rt.id;
+              return (
                 <button
                   key={rt.id}
+                  type="button"
                   onClick={() => setReportType(rt.id)}
-                  className={`relative p-5 rounded-xl border text-left transition-all duration-200 group ${
-                    reportType === rt.id 
-                      ? 'bg-gradient-to-b from-brand-50 to-white dark:from-brand-900/30 dark:to-navy-900 border-brand-400 dark:border-brand-500 shadow-md shadow-brand-500/10 scale-[1.02]' 
-                      : 'bg-white dark:bg-navy-900 border-slate-200 dark:border-navy-700 hover:border-brand-300 dark:hover:border-navy-500 hover:shadow-md hover:-translate-y-0.5'
+                  className={`group relative p-5 rounded-2xl text-left transition-all duration-200 cursor-pointer overflow-hidden border touch-manipulation active:scale-[0.98] ${
+                    isSelected 
+                      ? 'bg-gradient-to-br from-indigo-500/10 via-brand-500/5 to-transparent dark:from-indigo-500/20 dark:via-brand-500/10 dark:to-transparent border-indigo-500 dark:border-indigo-400 shadow-xl shadow-indigo-500/15 -translate-y-0.5' 
+                      : 'bg-slate-50/70 dark:bg-white/[0.03] border-slate-200/80 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20 hover:-translate-y-0.5'
                   }`}
                 >
-                  {reportType === rt.id && (
-                    <div className="absolute top-0 right-0 -mt-2 -mr-2 bg-brand-500 text-white rounded-full p-1 shadow-sm">
-                      <CheckCircle2 className="w-4 h-4" />
+                  {isSelected && (
+                    <div className="absolute top-3.5 right-3.5 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-brand-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/30">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
                     </div>
                   )}
-                  <div className={`mb-4 p-2.5 w-fit rounded-xl transition-colors ${reportType === rt.id ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300 shadow-inner' : 'bg-slate-50 text-slate-500 dark:bg-navy-800 dark:text-slate-400 group-hover:bg-slate-100 dark:group-hover:bg-navy-700'}`}>
+
+                  <div className={`mb-3.5 p-3 w-fit rounded-xl transition-all ${
+                    isSelected 
+                      ? 'bg-gradient-to-br from-indigo-500 to-brand-600 text-white shadow-md shadow-indigo-500/25' 
+                      : 'bg-slate-200/60 dark:bg-white/5 text-slate-600 dark:text-slate-400 group-hover:scale-105'
+                  }`}>
                     {rt.icon}
                   </div>
-                  <h5 className={`font-extrabold text-sm mb-1.5 tracking-wide ${reportType === rt.id ? 'text-brand-700 dark:text-brand-400' : 'text-slate-800 dark:text-slate-200'}`}>{rt.title}</h5>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{rt.subtitle}</p>
+
+                  <h5 className={`font-black text-sm tracking-wide mb-1 ${
+                    isSelected ? 'text-indigo-600 dark:text-indigo-300' : 'text-slate-900 dark:text-white'
+                  }`}>
+                    {rt.title}
+                  </h5>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                    {rt.subtitle}
+                  </p>
                 </button>
-              ))}
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Step 2: Output Format (PDF Institutional Vector Export) - Simple & Clean */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-brand-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-md shadow-brand-500/25">
+              2
             </div>
+            <label className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+              Output Format
+            </label>
           </div>
 
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 font-bold text-xs">2</div>
-              <label className="block text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">Output Format</label>
-            </div>
-            <div className="w-full">
-              <div className="flex items-center justify-start p-4 rounded-xl border border-rose-200 dark:border-rose-900/30 bg-gradient-to-r from-rose-50 to-white dark:from-rose-950/20 dark:to-navy-900 text-rose-700 dark:text-rose-400 shadow-sm gap-4 transition-all hover:shadow-md">
-                <div className="bg-rose-100 dark:bg-rose-900/40 p-2.5 rounded-lg">
-                  <FileText className="w-6 h-6 text-rose-600 dark:text-rose-500 shrink-0" />
-                </div>
-                <div>
-                  <div className="text-sm font-extrabold tracking-wide">PDF Document</div>
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">Institutional Vector PDF Export</div>
-                </div>
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border-2 border-indigo-500/60 dark:border-indigo-400/50 flex items-center justify-between gap-4 transition-all">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="w-11 h-11 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h5 className="font-bold text-sm text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                  <span>Institutional Vector PDF</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    A4 • 300 DPI
+                  </span>
+                </h5>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
+                  High-res accredited report with verification stamp and official crest watermark
+                </p>
               </div>
             </div>
+
+            <div className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <Check className="w-3.5 h-3.5 stroke-[3]" />
+            </div>
           </div>
+        </div>
 
-          {(error || success) && (
-            <div className="pt-2">
-              {error && (
-                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-700 dark:text-red-400 rounded-xl flex items-start text-sm font-medium">
-                  <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
-                  <p>{error}</p>
+        {/* Feedback Alerts — Ultra-Rich Glass Architecture */}
+        {(error || success) && (
+          <div className="pt-1 animate-fade-in">
+            {error && (
+              <div className="p-4 sm:p-5 bg-gradient-to-r from-rose-950/70 via-red-950/50 to-rose-900/30 border border-rose-500/40 text-rose-200 rounded-2xl sm:rounded-3xl flex items-center gap-3.5 shadow-xl shadow-rose-950/30 backdrop-blur-xl">
+                <div className="p-2.5 rounded-2xl bg-rose-500/20 text-rose-300 border border-rose-400/30 shrink-0">
+                  <AlertCircle className="w-5 h-5" />
                 </div>
-              )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-black text-white">Generation Alert</p>
+                  <p className="text-xs text-rose-300/90 font-medium mt-0.5">{error}</p>
+                </div>
+              </div>
+            )}
 
-              {success && (
-                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-xl flex items-start text-sm font-medium">
-                  <CheckCircle2 className="w-5 h-5 mr-3 flex-shrink-0" />
-                  <p>{success}</p>
+            {success && (
+              <div className="p-4 sm:p-5 bg-gradient-to-r from-emerald-950/80 via-teal-950/60 to-emerald-900/40 border border-emerald-500/40 text-emerald-100 rounded-2xl sm:rounded-3xl flex items-center justify-between gap-3.5 shadow-xl shadow-emerald-950/40 backdrop-blur-xl">
+                <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                  <div className="p-2.5 rounded-2xl bg-emerald-500/25 text-emerald-300 border border-emerald-400/30 shrink-0 shadow-inner">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-black text-white">PDF Report Downloaded Successfully!</p>
+                    <p className="text-xs text-emerald-300/90 font-medium mt-0.5">Accredited Vector PDF compiled with embedded verification stamp &amp; watermark.</p>
+                  </div>
                 </div>
+                <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 font-mono text-xs font-bold shrink-0">
+                  DONE
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 3: Generate & Download CTA — Ultra-premium 2026 Luminous Button */}
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={handleGenerateReport}
+            disabled={loading}
+            className="w-full min-h-[62px] py-4 px-6 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:via-indigo-500 hover:to-purple-500 active:scale-[0.99] text-white rounded-2xl sm:rounded-3xl font-black text-sm sm:text-base tracking-wider uppercase shadow-2xl shadow-indigo-600/40 hover:shadow-indigo-600/60 border border-white/20 transition-all duration-300 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed group relative overflow-hidden touch-manipulation"
+          >
+            {/* Shimmer sweep */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+            
+            <div className="relative z-10 flex items-center justify-center gap-3.5 w-full">
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 shrink-0 animate-spin text-white" />
+                  <span className="font-sans font-black tracking-wide">COMPILING HIGH-RES VECTOR PDF ARCHIVE...</span>
+                </>
+              ) : (
+                <>
+                  <div className="p-1.5 rounded-xl bg-white/20 backdrop-blur-md shadow-inner border border-white/20">
+                    <Download className="w-5 h-5 shrink-0 text-white group-hover:translate-y-0.5 transition-transform" />
+                  </div>
+                  <div className="flex flex-col items-start sm:items-center text-left sm:text-center">
+                    <span className="font-sans font-black tracking-wider leading-none">GENERATE &amp; DOWNLOAD REPORT</span>
+                    <span className="text-[10px] text-indigo-200 font-mono font-bold tracking-widest uppercase mt-1">Official Accredited Document • Lossless Vector</span>
+                  </div>
+                </>
               )}
             </div>
-          )}
-
-          <div className="pt-4 border-t border-slate-100 dark:border-navy-800">
-            <button
-              onClick={handleGenerateReport}
-              disabled={loading}
-              className="w-full min-h-[54px] py-3.5 px-6 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 active:scale-[0.99] text-white rounded-xl font-black text-sm sm:text-[15px] tracking-wide shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-85 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed group overflow-hidden relative"
-            >
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
-              <div className="relative flex items-center justify-center gap-3 sm:gap-3.5 w-full">
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 shrink-0 animate-spin text-white" />
-                    <span className="whitespace-nowrap truncate font-black">GENERATING PDF REPORT...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform text-white" />
-                    <span className="whitespace-nowrap truncate font-black">GENERATE & DOWNLOAD</span>
-                  </>
-                )}
-              </div>
-            </button>
-          </div>
+          </button>
         </div>
       </div>
     </div>

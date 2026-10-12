@@ -335,7 +335,13 @@ api.get = async function (url: string, config?: any) {
   }
 
   const key = getRequestKey(url, config);
-  const cached = responseCache.get(key);
+  let cached = responseCache.get(key);
+  if (!cached) {
+    const sessionData = getCachedData(key, url);
+    if (sessionData !== null) {
+      cached = responseCache.get(key);
+    }
+  }
   
   // URL-based cancellation (only if explicitly requested via config.cancelPrior or if caller passed a signal)
   const baseUrl = url.split('?')[0];

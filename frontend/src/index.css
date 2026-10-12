@@ -117,10 +117,22 @@
     }
   }
 
-  /* GPU Hardware Acceleration for Zero-Lag Smooth Interactions */
+  /* Zero-Tap-Delay & Native Touch Feedback across all Mobile Browsers & Android WebViews */
   button,
+  a,
   input,
-  select {
+  select,
+  textarea,
+  [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* GPU Hardware Acceleration for Modals, Sticky Bars, and Drawers */
+  .fixed,
+  .sticky,
+  [role="dialog"],
+  .modal-container {
     backface-visibility: hidden;
     transform: translateZ(0);
   }

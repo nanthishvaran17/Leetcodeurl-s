@@ -72,8 +72,8 @@ class DownloadManager {
 
       // 3. GENERATE REPORT VIA API (Axios Blob Request)
       // Note: We DO NOT emit notifyStart before the server responds successfully!
-        const queryParams = { ...options.params, _t: Date.now() };
-        const response = await api.request({
+      const queryParams = { ...options.params, _t: Date.now() };
+      const response = await api.request({
         url: endpoint,
         method: options.method || 'GET',
         params: queryParams,
@@ -142,11 +142,12 @@ class DownloadManager {
           reportId: options.params?.report_id || options.params?.reportId
         });
 
+        // Zero-latency instant dispatch (5ms for event loop microtick)
         setTimeout(() => {
           if (writeResult.uri) {
             shareOrOpenFile(writeResult.uri, effectiveFilename, mimeType);
           }
-        }, 250);
+        }, 5);
 
         return { success: true, downloadId };
       }
@@ -182,7 +183,7 @@ class DownloadManager {
       // Auto cleanup active download record after short grace window
       setTimeout(() => {
         this.activeDownloads.delete(downloadId);
-      }, 3000);
+      }, 1500);
     }
   }
 
@@ -190,12 +191,12 @@ class DownloadManager {
    * Async Job Engine Download Flow
    * Posts to /api/report-jobs, polls status, and downloads when complete.
    */
-  async downloadJob(options: { 
-    report_type: string; 
-    format: string; 
-    filters?: any; 
+  async downloadJob(options: {
+    report_type: string;
+    format: string;
+    filters?: any;
     filename?: string;
-    onStateChange?: (state: DownloadState) => void 
+    onStateChange?: (state: DownloadState) => void
   }): Promise<{ success: boolean; downloadId: string; error?: string }> {
     const startTime = performance.now();
     const endpoint = '/api/report-jobs';
@@ -224,7 +225,7 @@ class DownloadManager {
 
     try {
       const authHeaders = await getAuthHeaders();
-      
+
       // 1. Create Job
       const createRes = await api.post(endpoint, {
         report_type: options.report_type,
@@ -247,22 +248,22 @@ class DownloadManager {
       } else {
         this.updateState(state, options.onStateChange);
 
-        // 2. Poll Status with fast adaptive interval (150ms initial delay)
+        // 2. Poll Status with high-speed adaptive interval (80ms initial delay)
         let isComplete = false;
-        let pollDelay = 150;
+        let pollDelay = 80;
         let pollAttempts = 0;
-        
+
         while (!isComplete) {
           await new Promise(r => setTimeout(r, pollDelay));
           pollAttempts++;
-          if (pollAttempts > 3) pollDelay = Math.min(pollDelay + 250, 1000); // Back off gradually up to 1s max
-          
+          if (pollAttempts > 2) pollDelay = Math.min(pollDelay + 150, 800); // Back off gradually up to 800ms max
+
           const statusRes = await api.get(`${endpoint}/${jobId}?_t=${Date.now()}`, {
             headers: { ...authHeaders }
           });
-          
+
           const jobStatus = statusRes.data?.status;
-          
+
           if (jobStatus === 'COMPLETED') {
             isComplete = true;
             state.status = 'DOWNLOADING';
@@ -279,7 +280,7 @@ class DownloadManager {
 
       // 3. Download the actual file
       const downloadUrl = `${endpoint}/${jobId}/download`;
-      
+
       const response = await api.request({
         url: downloadUrl,
         method: 'GET',
@@ -331,7 +332,7 @@ class DownloadManager {
           if (writeResult.uri) {
             shareOrOpenFile(writeResult.uri, effectiveFilename, mimeType);
           }
-        }, 250);
+        }, 5);
 
         return { success: true, downloadId: jobId };
       }
@@ -364,7 +365,7 @@ class DownloadManager {
     } finally {
       setTimeout(() => {
         this.activeDownloads.delete(downloadId);
-      }, 5000);
+      }, 2000);
     }
   }
 
@@ -431,7 +432,7 @@ class DownloadManager {
 
         setTimeout(() => {
           shareOrOpenFile(writeResult.uri, safeFilename, effectiveMime);
-        }, 250);
+        }, 5);
 
         return { success: true, downloadId };
       }

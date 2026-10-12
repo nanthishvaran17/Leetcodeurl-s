@@ -399,7 +399,7 @@ export const AuditLogPage: React.FC = () => {
 
 
   return (
-    <div className="space-y-6 pt-2 pb-16 animate-slideUp">
+    <div className="space-y-6 pt-0 pb-16 animate-slideUp">
       
       {/* HEADER */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-5 sm:p-6 md:p-8 shadow-2xl border border-indigo-500/20">
@@ -423,7 +423,7 @@ export const AuditLogPage: React.FC = () => {
           <div className="grid grid-cols-2 gap-2.5 w-full xl:w-auto shrink-0 self-start xl:self-center">
             <button
               onClick={handlePrintAuditLogReport}
-              className="inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-2 sm:px-5 py-2.5 h-11 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-2xl text-[11px] sm:text-xs font-black transition-all cursor-pointer backdrop-blur-md border border-white/15 shadow-sm whitespace-nowrap"
+              className="inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-2 sm:px-5 py-2.5 h-11 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-2xl text-[11px] sm:text-xs font-black transition-all cursor-pointer backdrop-blur-md border border-white/15 shadow-sm whitespace-nowrap touch-manipulation"
               title="Print Audit Log Report"
             >
               <Printer className="w-4 h-4 text-amber-300" />
@@ -432,7 +432,7 @@ export const AuditLogPage: React.FC = () => {
             <button
               onClick={handleExportAuditLogsExcel}
               disabled={exportingExcel}
-              className="inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-2 sm:px-5 py-2.5 h-11 bg-emerald-600/80 hover:bg-emerald-500 active:scale-95 disabled:opacity-60 text-white rounded-2xl text-[11px] sm:text-xs font-black shadow-lg shadow-emerald-600/20 transition-all cursor-pointer border border-emerald-400/30 whitespace-nowrap"
+              className="inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-2 sm:px-5 py-2.5 h-11 bg-emerald-600/80 hover:bg-emerald-500 active:scale-95 disabled:opacity-60 text-white rounded-2xl text-[11px] sm:text-xs font-black shadow-lg shadow-emerald-600/20 transition-all cursor-pointer border border-emerald-400/30 whitespace-nowrap touch-manipulation"
               title="Export formatted Excel report with clean column widths"
             >
               <Download className={`w-4 h-4 text-emerald-200 ${exportingExcel ? 'animate-spin' : ''}`} />
@@ -441,7 +441,7 @@ export const AuditLogPage: React.FC = () => {
             <button
               onClick={() => fetchLogs()}
               disabled={loading}
-              className="col-span-2 inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-3 sm:px-5 py-2.5 h-11 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white rounded-2xl text-[11px] sm:text-xs font-black shadow-lg shadow-indigo-600/25 transition-all cursor-pointer active:scale-95 border border-indigo-400/30 whitespace-nowrap"
+              className="col-span-2 inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-3 sm:px-5 py-2.5 h-11 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white rounded-2xl text-[11px] sm:text-xs font-black shadow-lg shadow-indigo-600/25 transition-all cursor-pointer active:scale-95 border border-indigo-400/30 whitespace-nowrap touch-manipulation"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               <span>{loading ? 'Refreshing...' : 'Refresh Logs'}</span>
@@ -668,35 +668,29 @@ export const AuditLogPage: React.FC = () => {
             </table>
 
             {/* Mobile Cards View */}
-            <div className="md:hidden space-y-0">
-              {logs.map((log, idx) => {
+            <div className="md:hidden p-3 sm:p-4 space-y-3 bg-slate-50/60 dark:bg-navy-950/40">
+              {logs.map((log) => {
                 const actionStyle = getActionStyle(log.action);
                 return (
                   <div
                     key={`mob-${log.id}`}
                     onClick={() => setSelectedLog(log)}
-                    className={`p-4 cursor-pointer transition-all hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20 active:scale-[0.99] ${
-                      idx !== 0 ? 'border-t border-slate-100 dark:border-slate-800/70' : ''
-                    }`}
+                    className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200/80 dark:border-navy-800 shadow-xs hover:shadow-md cursor-pointer transition-all active:scale-[0.98] touch-manipulation space-y-3"
                   >
-                    {/* Row 1: Audit ID + Action + Status */}
-                    <div className="flex flex-col items-stretch gap-2 mb-2.5">
+                    {/* Header: Audit ID & Status */}
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-navy-800 pb-2">
                       <div className="flex items-center space-x-1.5 min-w-0">
                         <Eye className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                        <span className="font-mono font-extrabold text-indigo-600 dark:text-indigo-400 text-[11px] truncate">{log.audit_id}</span>
+                        <span className="font-mono font-extrabold text-indigo-600 dark:text-indigo-400 text-xs truncate">{log.audit_id}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase font-mono border ${actionStyle.bg}`}>
-                          {actionStyle.icon}
-                          {log.action}
-                        </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {log.status === 'SUCCESS' ? (
-                          <span className="inline-flex items-center space-x-0.5 px-2 py-0.5 rounded-md text-[9px] font-black bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800">
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800">
                             <CheckCircle2 className="w-2.5 h-2.5" />
                             <span>SUCCESS</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center space-x-0.5 px-2 py-0.5 rounded-md text-[9px] font-black bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-800">
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200/80 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-800">
                             <AlertTriangle className="w-2.5 h-2.5" />
                             <span>{log.status}</span>
                           </span>
@@ -704,28 +698,37 @@ export const AuditLogPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Row 2: Admin identity */}
-                    <div className="flex items-center gap-2.5 mb-2">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900/40 dark:to-violet-900/40 border border-indigo-200/60 dark:border-indigo-700/40 flex items-center justify-center shrink-0">
-                        <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-extrabold text-slate-900 dark:text-white text-xs truncate">{log.admin_name}</div>
-                        <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 font-mono truncate">{log.admin_email}</div>
-                      </div>
-                    </div>
+                    {/* Action & Admin Row */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase font-mono border ${actionStyle.bg}`}>
+                        {actionStyle.icon}
+                        <span>{log.action}</span>
+                      </span>
 
-                    {/* Row 3: Description */}
-                    <div className="font-bold text-slate-700 dark:text-slate-200 text-xs leading-relaxed mb-2.5 line-clamp-2">
-                      {log.description || '—'}
-                    </div>
-
-                    {/* Row 4: Role + Timestamp Pill */}
-                    <div className="flex justify-between items-center gap-2">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-black border ${getRoleStyle(log.admin_role)}`}>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-black border ${getRoleStyle(log.admin_role)}`}>
                         {formatRoleBadge(log.admin_role)}
                       </span>
-                      <span className="font-mono font-black text-slate-700 dark:text-slate-200 text-[11px] bg-slate-100 dark:bg-navy-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-navy-700">
+                    </div>
+
+                    {/* Description Box */}
+                    <div className="p-2.5 rounded-xl bg-slate-50/90 dark:bg-navy-950/70 border border-slate-100 dark:border-navy-800">
+                      <p className="font-bold text-slate-800 dark:text-slate-100 text-xs leading-relaxed line-clamp-2">
+                        {log.description || '—'}
+                      </p>
+                    </div>
+
+                    {/* Footer: Admin info & Timestamp */}
+                    <div className="flex items-center justify-between gap-2 pt-1 text-[11px]">
+                      <div className="flex items-center space-x-2 min-w-0 flex-1">
+                        <div className="w-6 h-6 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                          <User className="w-3 h-3" />
+                        </div>
+                        <div className="min-w-0 truncate">
+                          <span className="font-black text-slate-900 dark:text-white truncate block">{log.admin_name}</span>
+                          <span className="text-[10px] font-mono text-slate-400 truncate block">{log.admin_email}</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-slate-500 dark:text-slate-400 text-[10px] bg-slate-100 dark:bg-navy-800 px-2 py-1 rounded-lg shrink-0 border border-slate-200/60 dark:border-navy-700">
                         {formatAuditDate(log.created_at)}
                       </span>
                     </div>
@@ -749,6 +752,9 @@ export const AuditLogPage: React.FC = () => {
           }}
         >
           <div className="modal-container-responsive max-w-xl w-full max-h-[85vh] sm:max-h-[90vh] flex flex-col bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl animate-modal-content overflow-hidden">
+            {/* Mobile Drag Indicator */}
+            <div className="w-10 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto my-2 sm:hidden shrink-0" />
+
             {/* Modal Header */}
             <div className="flex items-center justify-between p-5 sm:p-6 pb-4 border-b border-slate-100 dark:border-navy-800 flex-shrink-0">
               <div className="flex items-center space-x-2.5">
@@ -767,7 +773,7 @@ export const AuditLogPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedLog(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer"
+                className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer touch-manipulation active:scale-90"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -892,7 +898,7 @@ export const AuditLogPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedLog(null)}
-                className="px-6 py-2.5 bg-slate-900 dark:bg-navy-800 hover:bg-slate-800 dark:hover:bg-navy-700 text-white font-black rounded-2xl text-xs transition-colors cursor-pointer shadow-md"
+                className="px-6 py-2.5 min-h-[44px] bg-slate-900 dark:bg-navy-800 hover:bg-slate-800 dark:hover:bg-navy-700 text-white font-black rounded-2xl text-xs transition-colors cursor-pointer shadow-md touch-manipulation active:scale-95"
               >
                 Close Inspection
               </button>

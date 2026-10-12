@@ -650,10 +650,10 @@ def get_student_intelligence(
     if acc_rate and acc_rate >= 50.0: strengths.append(f" Healthy submission acceptance rate ({acc_rate:.1f}%)")
 
     areas_to_watch = []
-    if acc_rate and acc_rate < 40.0: areas_to_watch.append(f"️ Submission acceptance rate is below average ({acc_rate:.1f}%)")
-    if not c_attended or c_attended == 0: areas_to_watch.append("️ Contest participation could improve")
-    if hrd < 10 and med >= 50: areas_to_watch.append("️ Hard problem ratio is lower than Medium")
-    if isinstance(current_streak, int) and current_streak < 3: areas_to_watch.append(f"️ Current activity streak is low ({current_streak} days)")
+    if acc_rate and acc_rate < 40.0: areas_to_watch.append(f"Submission acceptance rate is below average ({acc_rate:.1f}%)")
+    if not c_attended or c_attended == 0: areas_to_watch.append("Contest participation could improve")
+    if hrd < 10 and med >= 50: areas_to_watch.append("Hard problem ratio is lower than Medium")
+    if isinstance(current_streak, int) and current_streak < 3: areas_to_watch.append(f"Current activity streak is low ({current_streak} days)")
 
     # 11. HR Decision Summary
     perf_sc = scoring["performance_score"]

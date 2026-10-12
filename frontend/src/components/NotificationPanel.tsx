@@ -81,9 +81,9 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
   };
 
   return (
-    <div className="relative overflow-hidden border-b border-slate-100 dark:border-navy-800/60 last:border-0">
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-navy-800 shadow-xs hover:shadow-md transition-shadow">
       {/* RIGHT bg: Delete (revealed on left-swipe - dragging right to left) */}
-      <div className="absolute inset-y-0 right-0 w-1/2 flex items-center justify-end bg-rose-500 z-0 px-5">
+      <div className="absolute inset-y-0 right-0 w-1/2 flex items-center justify-end bg-rose-500 z-0 px-5 rounded-r-2xl">
         <div className="flex flex-col items-center gap-1 text-white">
           <Trash2 size={20} />
           <span className="text-[10px] font-black">Delete</span>
@@ -91,7 +91,7 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
       </div>
 
       {/* LEFT bg: Archive (revealed on right-swipe - dragging left to right) */}
-      <div className="absolute inset-y-0 left-0 w-1/2 flex items-center justify-start bg-blue-500 z-0 px-5">
+      <div className="absolute inset-y-0 left-0 w-1/2 flex items-center justify-start bg-blue-500 z-0 px-5 rounded-l-2xl">
         <div className="flex flex-col items-center gap-1 text-white">
           <Archive size={20} />
           <span className="text-[10px] font-black">Archive</span>
@@ -125,7 +125,7 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
         </div>
 
         <div className={`flex-1 min-w-0 pr-2 ${n.isRead ? 'opacity-75' : ''}`}>
-          <div className="flex items-center justify-between gap-2 mb-0.5">
+          <div className="flex items-center justify-between gap-2 mb-1 pr-4">
             <h4 className={`text-xs sm:text-sm line-clamp-2 leading-snug ${!n.isRead ? 'text-slate-900 dark:text-white font-extrabold' : 'text-slate-600 dark:text-slate-300 font-bold'}`}>
               {n.title}
             </h4>
@@ -158,7 +158,7 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
             )}
           </div>
 
-          <p className={`text-xs leading-relaxed whitespace-pre-line line-clamp-6 ${!n.isRead ? 'text-slate-700 dark:text-slate-200 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
+          <p className={`text-xs leading-relaxed whitespace-pre-line line-clamp-6 mt-1.5 ${!n.isRead ? 'text-slate-700 dark:text-slate-200 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
             {n.message}
           </p>
 
@@ -653,7 +653,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100 dark:divide-navy-800/60 pb-3 sm:pb-0">
+                <div className="p-3 sm:p-4 space-y-3 bg-slate-50/50 dark:bg-navy-950/40 pb-6">
                   {notifications.map((n) => (
                     <NotificationItem
                       key={n.id}

@@ -28,7 +28,8 @@ import {
   CheckCircle2,
   BarChart2,
   X,
-  RotateCw
+  RotateCw,
+  Crown
 } from 'lucide-react';
 import api from '../services/api';
 import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
@@ -426,84 +427,89 @@ export const GrowthIntelligencePage: React.FC = () => {
         </div>
       )}
 
-      {/* College Aggregate Delta Metrics KPI Grid (2x2 grid on mobile, 4 columns on XL) */}
+      {/* College Aggregate Delta Metrics KPI Grid — Luxury 2026 Bento Grid */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         
-        <div className="glass-card p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-emerald-500/30 bg-white dark:bg-navy-950 shadow-xl space-y-1.5 sm:space-y-2">
-          <div className="flex items-center justify-between text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider gap-1">
-            <span className="text-emerald-600 dark:text-emerald-400 truncate">Total Solved Growth</span>
-            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-              <TrendingUp className="w-3.5 h-3.5 sm:w-5 sm:h-5 stroke-[2.5]" />
+        {/* 1. Total Solved Growth */}
+        <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-[#0a1120] dark:via-[#0c162c] dark:to-[#0a1120] border border-emerald-500/30 dark:border-emerald-500/25 shadow-xl shadow-emerald-500/5 space-y-2 backdrop-blur-xl transition-all hover:scale-[1.01]">
+          <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider gap-2">
+            <span className="text-emerald-700 dark:text-emerald-300 truncate">Total Solved Growth</span>
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30 shadow-xs">
+              <TrendingUp className="w-4 h-4 stroke-[2.5]" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+          <div className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white font-mono">
             {collegeDelta?.delta_total ?? 0}
           </div>
-          <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">Problems solved in selected period</p>
+          <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate">Problems solved in selected period</p>
         </div>
 
-        <div className="glass-card p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-emerald-500/20 bg-white dark:bg-navy-950 shadow-xl space-y-1.5 sm:space-y-2">
-          <div className="flex items-center justify-between text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider gap-1">
-            <span className="text-emerald-600 dark:text-emerald-400 truncate">Easy Solved</span>
-            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-              <TrendingUp className="w-3.5 h-3.5 sm:w-5 sm:h-5 stroke-[2.5]" />
+        {/* 2. Easy Solved */}
+        <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-[#0a1120] dark:via-[#0c162c] dark:to-[#0a1120] border border-emerald-500/25 dark:border-emerald-500/20 shadow-xl shadow-emerald-500/5 space-y-2 backdrop-blur-xl transition-all hover:scale-[1.01]">
+          <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider gap-2">
+            <span className="text-emerald-700 dark:text-emerald-300 truncate">Easy Solved</span>
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30 shadow-xs">
+              <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">
+          <div className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-emerald-600 dark:text-emerald-400 font-mono">
             {collegeDelta?.easy_solved ?? 0}
           </div>
-          <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">Foundation skill building</p>
+          <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate">Foundation skill building</p>
         </div>
 
-        <div className="glass-card p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-amber-500/20 bg-white dark:bg-navy-950 shadow-xl space-y-1.5 sm:space-y-2">
-          <div className="flex items-center justify-between text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider gap-1">
-            <span className="text-amber-600 dark:text-amber-400 truncate">Medium Solved</span>
-            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
-              <TrendingUp className="w-3.5 h-3.5 sm:w-5 sm:h-5 stroke-[2.5]" />
+        {/* 3. Medium Solved */}
+        <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-[#0a1120] dark:via-[#1c1508] dark:to-[#0a1120] border border-amber-500/25 dark:border-amber-500/20 shadow-xl shadow-amber-500/5 space-y-2 backdrop-blur-xl transition-all hover:scale-[1.01]">
+          <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider gap-2">
+            <span className="text-amber-700 dark:text-amber-300 truncate">Medium Solved</span>
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30 shadow-xs">
+              <Zap className="w-4 h-4 stroke-[2.5]" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400">
+          <div className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-amber-600 dark:text-amber-400 font-mono">
             {collegeDelta?.medium_solved ?? 0}
           </div>
-          <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">Interview readiness problems</p>
+          <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate">Interview readiness problems</p>
         </div>
 
-        <div className="glass-card p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-rose-500/20 bg-white dark:bg-navy-950 shadow-xl space-y-1.5 sm:space-y-2">
-          <div className="flex items-center justify-between text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider gap-1">
-            <span className="text-rose-600 dark:text-rose-400 truncate">Hard Solved</span>
-            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0">
-              <TrendingUp className="w-3.5 h-3.5 sm:w-5 sm:h-5 stroke-[2.5]" />
+        {/* 4. Hard Solved */}
+        <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-[#0a1120] dark:via-[#1f0e13] dark:to-[#0a1120] border border-rose-500/25 dark:border-rose-500/20 shadow-xl shadow-rose-500/5 space-y-2 backdrop-blur-xl transition-all hover:scale-[1.01]">
+          <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider gap-2">
+            <span className="text-rose-700 dark:text-rose-300 truncate">Hard Solved</span>
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500/20 to-red-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/30 shadow-xs">
+              <Flame className="w-4 h-4 stroke-[2.5]" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-rose-600 dark:text-rose-400">
+          <div className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-rose-600 dark:text-rose-400 font-mono">
             {collegeDelta?.hard_solved ?? 0}
           </div>
-          <p className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 line-clamp-1">Advanced DSA mastery</p>
+          <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate">Advanced DSA mastery</p>
         </div>
 
       </div>
 
       {/* Main Section: Top Improvers Leaderboard */}
-      <div className="glass-card p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 shadow-lg space-y-5">
+      <div className="relative overflow-hidden rounded-[2rem] sm:rounded-3xl border border-slate-200/90 dark:border-white/10 bg-white/95 dark:bg-[#0c1322]/95 p-4 sm:p-6 lg:p-7 shadow-2xl backdrop-blur-2xl space-y-5">
         
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+        {/* Leaderboard Header & Interactive Filters */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-white/[0.08] pb-5">
+          <div className="flex items-center space-x-3.5">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 text-amber-500 border border-amber-500/30 shadow-md shadow-amber-500/10">
               <Flame className="w-6 h-6 fill-amber-500" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-900 dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                 Biggest Improvers Leaderboard
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
                 Showing top performance growth for: <span className="font-extrabold text-brand-600 dark:text-brand-400">{period === 'today' ? 'Today' : period === '7d' ? 'Last 7 Days' : period === '30d' ? 'Last 30 Days' : 'All Time'}</span>
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 self-stretch md:self-auto">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5">
             {/* Live Leaderboard Search Box */}
-            <div className="relative flex items-center shrink-0 w-full sm:w-auto min-w-[260px] sm:min-w-[300px]">
+            <div className="relative flex items-center flex-1 sm:flex-initial min-w-0 sm:min-w-[280px]">
               <Search className="w-4 h-4 text-brand-600 dark:text-brand-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10 stroke-[2.5]" />
               <input
                 type="text"
@@ -511,13 +517,13 @@ export const GrowthIntelligencePage: React.FC = () => {
                 onChange={(e) => setLeaderboardSearch(e.target.value)}
                 placeholder="Search solver, reg no, username..."
                 style={{ textAlign: 'left', paddingLeft: '2.5rem' }}
-                className="w-full text-left pl-10 pr-8 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-900/60 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-xs"
+                className="w-full text-left pl-10 pr-8 py-2.5 min-h-[42px] text-xs font-semibold rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.04] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-xs"
               />
               {leaderboardSearch && (
                 <button
                   type="button"
                   onClick={() => setLeaderboardSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded-md cursor-pointer z-10"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-md cursor-pointer z-10"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -525,41 +531,41 @@ export const GrowthIntelligencePage: React.FC = () => {
             </div>
 
             {/* Rank By Sort Mode Toggle */}
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-1 bg-slate-50 dark:bg-navy-900/60 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2">Rank By</span>
-              <button
-                onClick={() => { setSortMode('total'); setImprovers(prev => sortImprovers(prev, 'total')); }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                  sortMode === 'total'
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800'
-                }`}
-              >
-                Total
-              </button>
+            <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-white/[0.05] p-1 rounded-xl border border-slate-200/80 dark:border-white/10 shrink-0">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider px-2">Rank</span>
               <button
                 onClick={() => { setSortMode('growth'); setImprovers(prev => sortImprovers(prev, 'growth')); }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                className={`px-3 py-1.5 min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
                   sortMode === 'growth'
-                    ? 'bg-brand-600 text-white shadow-md shadow-brand-600/20'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800'
+                    ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/25'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 Growth
               </button>
+              <button
+                onClick={() => { setSortMode('total'); setImprovers(prev => sortImprovers(prev, 'total')); }}
+                className={`px-3 py-1.5 min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
+                  sortMode === 'total'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/25'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Total
+              </button>
             </div>
 
             {/* Display Limit Selector Pills */}
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-1 bg-slate-50 dark:bg-navy-900/60 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2">Show</span>
-              {[10, 25, 50, 100, 'ALL'].map((limitVal) => (
+            <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-white/[0.05] p-1 rounded-xl border border-slate-200/80 dark:border-white/10 shrink-0">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider px-2">Show</span>
+              {[10, 25, 50, 'ALL'].map((limitVal) => (
                 <button
                   key={String(limitVal)}
                   onClick={() => setDisplayLimit(limitVal as any)}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                  className={`px-2.5 py-1.5 min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
                     displayLimit === limitVal
                       ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   {limitVal === 'ALL' ? 'All' : limitVal}
@@ -568,25 +574,25 @@ export const GrowthIntelligencePage: React.FC = () => {
             </div>
 
             {/* Active Solvers Pill */}
-            <div className="flex items-center shrink-0 h-[36px] px-4 bg-brand-50/50 dark:bg-brand-900/20 border border-brand-200/60 dark:border-brand-800/50 rounded-xl text-brand-700 dark:text-brand-400 font-black text-[11px] uppercase tracking-wider">
-              {collegeDelta?.active_students ?? 0} Solvers
+            <div className="flex items-center justify-center shrink-0 min-h-[42px] px-4 bg-brand-500/10 border border-brand-500/25 rounded-xl text-brand-700 dark:text-brand-300 font-black text-xs uppercase tracking-wider shadow-xs">
+              {collegeDelta?.active_students ?? improvers.length} Solvers
             </div>
           </div>
         </div>
 
         {loading ? (
-          <div className="text-center py-16 text-slate-500 dark:text-slate-400 text-sm font-bold animate-pulse space-y-2">
-            <BarChart2 className="w-8 h-8 mx-auto text-brand-500 animate-bounce" />
-            <p>Calculating growth metrics & delta velocity...</p>
+          <div className="text-center py-20 text-slate-500 dark:text-slate-400 text-sm font-bold animate-pulse space-y-3">
+            <BarChart2 className="w-10 h-10 mx-auto text-brand-500 animate-bounce" />
+            <p>Calculating verified growth metrics &amp; delta velocity...</p>
           </div>
         ) : filteredImprovers.length === 0 ? (
-          <div className="text-center py-16 text-slate-500 dark:text-slate-400 text-xs font-semibold bg-slate-50 dark:bg-navy-950/40 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 space-y-2">
+          <div className="text-center py-16 text-slate-500 dark:text-slate-400 text-xs font-semibold bg-slate-50 dark:bg-white/[0.02] rounded-3xl border border-dashed border-slate-300 dark:border-white/10 space-y-3">
             <p>{leaderboardSearch ? `No solvers matching "${leaderboardSearch}" found.` : 'No activity found for the selected filters.'}</p>
             {leaderboardSearch && (
               <button
                 type="button"
                 onClick={() => setLeaderboardSearch('')}
-                className="px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold text-xs border border-brand-200 dark:border-brand-800 hover:bg-brand-100 transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 font-black text-xs border border-brand-500/20 hover:bg-brand-500/20 transition-all cursor-pointer"
               >
                 Clear Search Filter
               </button>
@@ -594,44 +600,71 @@ export const GrowthIntelligencePage: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Mobile Leaderboard Cards (Compact, Full-width, Low Vertical Scroll) */}
-            <div className="block md:hidden space-y-3">
+            {/* Mobile Leaderboard Cards — 2026 SaaS Luxury Redesign */}
+            <div className="block md:hidden space-y-3.5">
               {(displayLimit === 'ALL' ? filteredImprovers : filteredImprovers.slice(0, Number(displayLimit))).map((imp, idx) => {
                 const isExpanded = String(expandedStudentId) === String(imp.student_id);
+                const initials = (imp.name || 'Student')
+                  .split(' ')
+                  .map((n: string) => n[0])
+                  .slice(0, 2)
+                  .join('')
+                  .toUpperCase();
+
+                const isTop1 = idx === 0;
+                const isTop2 = idx === 1;
+                const isTop3 = idx === 2;
+
                 return (
                   <div
                     key={imp.student_id}
-                    className={`rounded-2xl bg-white dark:bg-navy-950 border transition-all p-3.5 shadow-sm space-y-2.5 ${
+                    className={`relative overflow-hidden rounded-2xl bg-white/95 dark:bg-[#0b1220]/95 border transition-all p-4 shadow-sm space-y-3.5 backdrop-blur-xl touch-manipulation ${
                       isExpanded
-                        ? 'border-brand-500 ring-2 ring-brand-500/20 bg-brand-50/20 dark:bg-navy-900/80'
-                        : 'border-slate-200 dark:border-slate-800'
+                        ? 'border-brand-500 ring-2 ring-brand-500/25 bg-brand-500/[0.04] dark:bg-[#0f172a]'
+                        : isTop1
+                        ? 'border-amber-400/50 bg-gradient-to-b from-amber-500/[0.04] to-transparent dark:from-amber-500/[0.06] hover:border-amber-400'
+                        : isTop2
+                        ? 'border-slate-300/60 bg-gradient-to-b from-slate-200/[0.04] to-transparent dark:from-white/[0.03] hover:border-slate-400'
+                        : isTop3
+                        ? 'border-amber-700/50 bg-gradient-to-b from-amber-700/[0.04] to-transparent dark:from-amber-700/[0.06] hover:border-amber-600'
+                        : 'border-slate-200/90 dark:border-white/10 hover:border-brand-500/30'
                     }`}
                   >
-                    {/* Header row: Rank, Student Info, Dept & Year */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    {/* Header Row: Rank Jewel, Avatar, Name & Reg No, Dept / Year */}
+                    <div className="flex items-start justify-between gap-2.5">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        
+                        {/* Rank Badge */}
                         <div className="shrink-0">
-                          {idx === 0 ? (
-                            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black shadow-xs text-xs">
-                              #1
+                          {isTop1 ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/25 text-xs ring-1 ring-amber-400/60">
+                              <Crown className="w-3.5 h-3.5 fill-slate-950 shrink-0" />
+                              <span>#1</span>
                             </span>
-                          ) : idx === 1 ? (
-                            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-xl bg-gradient-to-r from-slate-200 to-slate-300 text-slate-900 font-black shadow-xs text-xs">
-                              #2
+                          ) : isTop2 ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-slate-200 via-white to-slate-300 text-slate-900 font-black shadow-xs text-xs ring-1 ring-slate-300/60">
+                              <span>#2</span>
                             </span>
-                          ) : idx === 2 ? (
-                            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-700 to-amber-800 text-amber-100 font-black shadow-xs text-xs">
-                              #3
+                          ) : isTop3 ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-amber-50 font-black shadow-xs text-xs ring-1 ring-amber-600/60">
+                              <span>#3</span>
                             </span>
                           ) : (
-                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-extrabold text-xs">
+                            <span className="inline-flex items-center justify-center min-w-[32px] px-2 py-1 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-black text-xs">
                               #{idx + 1}
                             </span>
                           )}
                         </div>
+
+                        {/* Initials Avatar */}
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-500/20 to-purple-500/20 text-brand-600 dark:text-brand-300 font-black text-xs flex items-center justify-center border border-brand-500/30 shrink-0 shadow-2xs">
+                          {initials}
+                        </div>
+
+                        {/* Name & Credentials */}
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
-                            <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
+                            <h4 className="font-black text-sm text-slate-900 dark:text-white truncate">
                               {imp.name}
                             </h4>
                             {imp.profile_url && (
@@ -641,13 +674,13 @@ export const GrowthIntelligencePage: React.FC = () => {
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
                                 title="Open LeetCode Profile"
-                                className="text-slate-400 hover:text-amber-500 shrink-0"
+                                className="text-slate-400 hover:text-amber-500 transition-colors shrink-0"
                               >
-                                <ArrowUpRight className="w-3 h-3" />
+                                <ArrowUpRight className="w-3.5 h-3.5" />
                               </a>
                             )}
                           </div>
-                          <div className="flex items-center gap-1.5 text-[11px] font-mono">
+                          <div className="flex items-center gap-2 text-[11px] font-mono mt-0.5">
                             <span className="font-bold text-brand-600 dark:text-brand-400 truncate">
                               {imp.reg_no}
                             </span>
@@ -658,111 +691,99 @@ export const GrowthIntelligencePage: React.FC = () => {
                             )}
                           </div>
                         </div>
+
                       </div>
 
-                      <span className="shrink-0 px-2.5 py-1 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-[11px]">
+                      {/* Dept & Year Pill */}
+                      <span className="shrink-0 px-2.5 py-1 rounded-xl bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20 font-black text-[10px]">
                         {imp.department_code} • {imp.year_level}{!imp.year_level.toLowerCase().includes('year') ? ' Year' : ''}
                       </span>
                     </div>
 
-                    {/* Solved Stats & Growth Delta Grid */}
-                    <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-navy-900/60 p-2.5 rounded-xl text-xs">
-                      <div>
-                        <div className="text-[10px] uppercase font-black text-indigo-600 dark:text-indigo-400">Total Solved</div>
-                        <div className="font-mono font-black text-slate-900 dark:text-white mt-0.5 text-sm">
+                    {/* Solved Stats & Growth Delta Bento */}
+                    <div className="grid grid-cols-2 gap-2.5 bg-slate-50/90 dark:bg-white/[0.03] p-3 rounded-2xl border border-slate-200/70 dark:border-white/[0.06]">
+                      <div className="space-y-0.5">
+                        <div className="text-[10px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400">Total Solved</div>
+                        <div className="font-mono font-black text-lg text-slate-900 dark:text-white">
                           {imp.total_solved}
                         </div>
                       </div>
-                      <div>
-                        <div className="text-[10px] uppercase font-black text-emerald-600 dark:text-emerald-400">Growth (+Delta)</div>
-                        <div className="mt-0.5">
+                      <div className="space-y-0.5 text-right">
+                        <div className="text-[10px] uppercase font-black tracking-wider text-emerald-600 dark:text-emerald-400">Growth (+Delta)</div>
+                        <div className="inline-flex items-center gap-1 font-mono font-black text-lg text-emerald-600 dark:text-emerald-400">
                           {imp.delta_solved > 0 ? (
-                            <span className="font-bold text-emerald-600 dark:text-emerald-400 text-xs">
-                              +{imp.delta_solved}
-                            </span>
+                            <>
+                              <TrendingUp className="w-4 h-4 stroke-[2.5]" />
+                              <span>+{imp.delta_solved}</span>
+                            </>
                           ) : imp.delta_solved < 0 ? (
-                            <span className="font-bold text-rose-600 dark:text-rose-400 text-xs">
-                              {imp.delta_solved}
-                            </span>
+                            <span className="text-rose-600 dark:text-rose-400">{imp.delta_solved}</span>
                           ) : (
-                            <span className="font-bold text-slate-500 text-xs">0</span>
+                            <span className="text-slate-400">0</span>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Breakdown Pills & Action */}
-                    <div className="flex items-center justify-between gap-2 pt-0.5">
-                      <div className="flex flex-wrap items-center gap-1 text-[10px] font-black">
-                        <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                          {imp.easy_solved} E (+{imp.delta_easy})
-                        </span>
-                        <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                          {imp.medium_solved} M (+{imp.delta_medium})
-                        </span>
-                        <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
-                          {imp.hard_solved} H (+{imp.delta_hard})
-                        </span>
+                    {/* Difficulty Velocity 3-Pill Grid */}
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-0.5">
+                        <div className="text-[9px] font-black uppercase text-emerald-700 dark:text-emerald-300">Easy</div>
+                        <div className="font-mono font-black text-xs text-emerald-900 dark:text-emerald-100">
+                          {imp.easy_solved} <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">(+{imp.delta_easy})</span>
+                        </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
-                        className={`px-3 py-1.5 text-xs font-black rounded-xl transition-all flex items-center gap-1 shadow-sm shrink-0 cursor-pointer ${
-                          isExpanded
-                            ? 'bg-rose-600 text-white'
-                            : 'bg-brand-600 hover:bg-brand-700 text-white'
-                        }`}
-                      >
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>{isExpanded ? 'Close' : 'Timeline'}</span>
-                      </button>
+                      <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-0.5">
+                        <div className="text-[9px] font-black uppercase text-amber-700 dark:text-amber-300">Medium</div>
+                        <div className="font-mono font-black text-xs text-amber-900 dark:text-amber-100">
+                          {imp.medium_solved} <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">(+{imp.delta_medium})</span>
+                        </div>
+                      </div>
+
+                      <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 space-y-0.5">
+                        <div className="text-[9px] font-black uppercase text-rose-700 dark:text-rose-300">Hard</div>
+                        <div className="font-mono font-black text-xs text-rose-900 dark:text-rose-100">
+                          {imp.hard_solved} <span className="text-[10px] text-rose-600 dark:text-rose-400 font-bold">(+{imp.delta_hard})</span>
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Timeline Action Trigger Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
+                      className={`w-full py-2.5 min-h-[42px] text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer touch-manipulation active:scale-[0.98] ${
+                        isExpanded
+                          ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20'
+                          : 'bg-slate-100 hover:bg-brand-500/10 dark:bg-white/[0.06] dark:hover:bg-brand-500/20 text-slate-800 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-300 border border-slate-200/80 dark:border-white/10'
+                      }`}
+                    >
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{isExpanded ? 'Close Timeline Drawer' : 'Time Machine Timeline'}</span>
+                      {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                    </button>
 
                     {/* Expanded Time Machine Details on Mobile */}
                     {isExpanded && (
-                      <div className="pt-3 border-t border-slate-200 dark:border-navy-800 space-y-4">
+                      <div className="pt-3.5 border-t border-slate-200/80 dark:border-white/[0.08] space-y-4 animate-in fade-in slide-in-from-top-2">
                         {/* Header & Details Strip */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm">
+                        <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-white dark:bg-[#0a1120] border border-slate-200 dark:border-white/10 shadow-xs">
                           <div className="space-y-0.5">
-                            <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
-                              Active Filter Time Window
+                            <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                              Time Window
                             </h5>
-                            <p className="text-xs text-brand-600 dark:text-brand-400 font-bold uppercase">
+                            <p className="text-xs text-brand-600 dark:text-brand-400 font-black uppercase">
                               {period === 'today' ? 'Today' : period === '7d' ? 'Last 7 Days' : period === '30d' ? 'Last 30 Days' : 'All Time'}
                             </p>
                           </div>
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); setExpandedStudentId(null); }}
-                            className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 hover:bg-rose-500 hover:text-white transition-colors text-xs font-bold"
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-rose-500 hover:text-white transition-all text-xs font-black"
                           >
                             Close
                           </button>
-                        </div>
-
-                        {/* Growth Breakdown Grid */}
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div className="p-2.5 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm">
-                            <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300">Total Solved</span>
-                            <div className="text-base font-black text-slate-900 dark:text-white mt-0.5">{imp.total_solved}</div>
-                          </div>
-                          <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/40 shadow-sm">
-                            <span className="text-[9px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400">Period Delta</span>
-                            <div className="text-base font-black text-indigo-900 dark:text-indigo-100 mt-0.5">+{imp.delta_solved}</div>
-                          </div>
-                          <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 shadow-sm">
-                            <span className="text-[9px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400">Easy</span>
-                            <div className="text-sm font-black text-emerald-900 dark:text-emerald-100 mt-0.5">
-                              {imp.easy_solved} <span className="text-[10px] font-bold text-emerald-600">(+{imp.delta_easy})</span>
-                            </div>
-                          </div>
-                          <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 shadow-sm">
-                            <span className="text-[9px] font-extrabold uppercase text-amber-600 dark:text-amber-400">Medium</span>
-                            <div className="text-sm font-black text-amber-900 dark:text-amber-100 mt-0.5">
-                              {imp.medium_solved} <span className="text-[10px] font-bold text-amber-600">(+{imp.delta_medium})</span>
-                            </div>
-                          </div>
                         </div>
 
                         {/* Snapshot History Table on Mobile */}
@@ -773,13 +794,13 @@ export const GrowthIntelligencePage: React.FC = () => {
                           </h6>
 
                           {historyLoading ? (
-                            <div className="p-4 text-center text-xs font-bold text-slate-500 animate-pulse">
+                            <div className="p-6 text-center text-xs font-bold text-slate-500 animate-pulse">
                               Loading history snapshots...
                             </div>
                           ) : historySnapshots.length > 0 ? (
-                            <div className="rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-950 max-w-full overflow-hidden shadow-xs">
+                            <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0a1120] max-w-full overflow-hidden shadow-xs">
                               <table className="w-full text-left text-[11px] table-fixed">
-                                <thead className="bg-slate-100 dark:bg-navy-900/80 text-slate-700 dark:text-slate-300 uppercase font-black text-[9px] border-b border-slate-200 dark:border-navy-800">
+                                <thead className="bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 uppercase font-black text-[9px] border-b border-slate-200/80 dark:border-white/10">
                                   <tr>
                                     <th className="py-2.5 px-3 w-[38%]">Date</th>
                                     <th className="py-2.5 px-2 text-center w-[20%]">Solved</th>
@@ -787,9 +808,9 @@ export const GrowthIntelligencePage: React.FC = () => {
                                     <th className="py-2.5 px-3 text-right w-[22%]">Rating</th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-200 dark:divide-navy-800/80 font-mono text-[10px]">
+                                <tbody className="divide-y divide-slate-200/80 dark:divide-white/[0.06] font-mono text-[10px]">
                                   {historySnapshots.map((snap) => (
-                                    <tr key={snap.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors">
+                                    <tr key={snap.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors">
                                       <td className="py-2.5 px-3 font-sans font-bold text-slate-800 dark:text-slate-200 truncate">
                                         {new Date(snap.captured_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                       </td>
@@ -797,14 +818,16 @@ export const GrowthIntelligencePage: React.FC = () => {
                                       <td className="py-2.5 px-2 text-center font-black text-emerald-600 dark:text-emerald-400">
                                         {snap.delta_total > 0 ? `+${snap.delta_total}` : snap.delta_total === snap.total_solved ? 'Base' : '0'}
                                       </td>
-                                      <td className="py-2.5 px-3 text-right text-slate-700 dark:text-slate-300 font-bold truncate">{snap.contest_rating && Number(snap.contest_rating) > 0 && Math.round(Number(snap.contest_rating)) !== 1500 ? Math.round(Number(snap.contest_rating)) : '—'}</td>
+                                      <td className="py-2.5 px-3 text-right text-slate-700 dark:text-slate-300 font-bold truncate">
+                                        {snap.contest_rating && Number(snap.contest_rating) > 0 && Math.round(Number(snap.contest_rating)) !== 1500 ? Math.round(Number(snap.contest_rating)) : '—'}
+                                      </td>
                                     </tr>
                                   ))}
                                 </tbody>
                               </table>
                             </div>
                           ) : (
-                            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-xs font-bold text-center">
+                            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-bold text-center">
                               No history snapshots available yet.
                             </div>
                           )}

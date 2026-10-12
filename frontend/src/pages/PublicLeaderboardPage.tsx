@@ -166,50 +166,50 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
 
       {/* TOP 3 PODIUM */}
       {top3.length >= 3 && (
-        <div className="glass-card p-5 sm:p-8 rounded-3xl border border-amber-500/20 bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent shadow-xl space-y-6">
-          <h2 className="text-center font-black text-sm sm:text-base text-slate-900 dark:text-white flex items-center justify-center space-x-2">
-            <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 fill-amber-500 shrink-0" />
+        <div className="glass-card p-4 sm:p-8 rounded-3xl border border-amber-500/25 bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent shadow-xl space-y-4 sm:space-y-6">
+          <h2 className="text-center font-black text-xs sm:text-base text-slate-900 dark:text-white flex items-center justify-center space-x-2">
+            <Trophy className="w-4 h-4 sm:w-6 sm:h-6 text-amber-500 fill-amber-500 shrink-0" />
             <span className="truncate tracking-wider uppercase font-black">INSTITUTION TOP 3 RANKERS</span>
-            <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 fill-amber-500 shrink-0" />
+            <Trophy className="w-4 h-4 sm:w-6 sm:h-6 text-amber-500 fill-amber-500 shrink-0" />
           </h2>
 
-          <div className="grid grid-cols-3 items-end justify-items-center max-w-2xl mx-auto gap-1.5 sm:gap-6">
+          {/* Desktop & Tablet Podium (sm and up) */}
+          <div className="hidden sm:grid grid-cols-3 items-end justify-items-center max-w-2xl mx-auto gap-3 sm:gap-6">
             {MEDAL_CONFIGS.map(cfg => {
               const s = top3[cfg.rank - 1];
               if (!s) return null;
               return (
                 <div
-                  key={s.id}
-                  className={`${cfg.order} w-full flex flex-col items-center space-y-2 sm:space-y-3 cursor-pointer group bg-white/70 dark:bg-navy-900/70 backdrop-blur-md p-1.5 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-navy-700/80 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-200`}
+                  key={`podium-desk-${s.id}`}
+                  className={`${cfg.order} w-full flex flex-col items-center space-y-2 sm:space-y-3 cursor-pointer group bg-white/70 dark:bg-navy-900/70 backdrop-blur-md p-3 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-navy-700/80 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-200`}
                   onClick={() => onSelectStudent?.(s)}
                 >
-                  {/* Medal Crown */}
-                  <div className={`text-xl sm:text-3xl ${cfg.rank === 1 ? 'animate-bounce' : ''}`}>{cfg.emoji}</div>
+                  {/* Medal Label Pill */}
+                  <div className={`text-xs font-black inline-block tracking-wider uppercase ${cfg.textColor}`}>{cfg.label}</div>
 
                   {/* Avatar */}
-                  <div className={`w-12 h-12 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br ${cfg.color} flex items-center justify-center text-white font-black text-lg sm:text-2xl shadow-xl border-2 ${cfg.borderColor} group-hover:scale-105 transition-transform`}>
+                  <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br ${cfg.color} flex items-center justify-center text-white font-black text-xl sm:text-2xl shadow-xl border-2 ${cfg.borderColor} group-hover:scale-105 transition-transform`}>
                     {s.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                   </div>
 
                   {/* Info */}
-                  <div className="text-center space-y-0.5 sm:space-y-1 w-full px-0.5">
-                    <div className={`text-[9px] sm:text-xs font-black inline-block tracking-wider uppercase ${cfg.textColor}`}>{cfg.label}</div>
-                    <div className="text-[10px] sm:text-base font-black text-slate-900 dark:text-white truncate w-full mx-auto" title={s.name}>{s.name}</div>
-                    <div className="text-[9px] sm:text-xs text-slate-600 dark:text-slate-300 font-mono font-bold truncate">{s.reg_no}</div>
-                    <div className="pt-0.5 sm:pt-1 flex justify-center w-full">
+                  <div className="text-center space-y-1 w-full px-1">
+                    <div className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate w-full mx-auto" title={s.name}>{s.name}</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-300 font-mono font-bold truncate">{s.reg_no}</div>
+                    <div className="pt-1 flex justify-center w-full">
                       {(() => {
                         const derivedYear = deriveYearLevelFromRegNo(s.reg_no, s.year_level);
                         const deptCode = s.department?.code || s.department?.name || 'DEPT';
                         return (
-                          <span className={`inline-flex justify-center items-center px-1 sm:px-2.5 py-0.5 rounded-lg text-[8px] sm:text-xs font-black border max-w-full truncate ${getDeptBadgeStyle(deptCode)}`}>
+                          <span className={`inline-flex justify-center items-center px-2.5 py-0.5 rounded-lg text-xs font-black border max-w-full truncate ${getDeptBadgeStyle(deptCode)}`}>
                             {deptCode} • {derivedYear} Yr
                           </span>
                         );
                       })()}
                     </div>
-                    <div className="pt-0.5 sm:pt-1 flex justify-center w-full">
-                      <span className="px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-black text-[9px] sm:text-xs border border-emerald-500/20 inline-block whitespace-nowrap shadow-2xs max-w-full">
-                        {s.stats?.total_solved || 0}
+                    <div className="pt-1 flex justify-center w-full">
+                      <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-black text-xs border border-emerald-500/20 inline-block whitespace-nowrap shadow-2xs max-w-full">
+                        {s.stats?.total_solved || 0} Solved
                       </span>
                     </div>
                     {s.username && (
@@ -218,7 +218,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
                           href={`https://leetcode.com/u/${s.username}/`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center space-x-1 text-[10px] sm:text-xs text-brand-500 hover:text-brand-600 font-mono truncate max-w-full font-bold"
+                          className="inline-flex items-center space-x-1 text-xs text-brand-500 hover:text-brand-600 font-mono truncate max-w-full font-bold"
                           onClick={e => e.stopPropagation()}
                         >
                           <span className="truncate">@{s.username}</span>
@@ -229,8 +229,77 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
                   </div>
 
                   {/* Podium Stand */}
-                  <div className={`w-full max-w-[80px] sm:max-w-[110px] rounded-2xl ${cfg.rank === 1 ? 'h-10 sm:h-14 bg-gradient-to-b from-amber-400 to-amber-500' : cfg.rank === 2 ? 'h-7 sm:h-10 bg-gradient-to-b from-slate-400 to-slate-500' : 'h-5 sm:h-8 bg-gradient-to-b from-orange-500 to-amber-600'} flex items-center justify-center text-white font-black text-xs sm:text-sm shadow-md mt-2`}>
+                  <div className={`w-full max-w-[110px] rounded-2xl ${cfg.rank === 1 ? 'h-12 sm:h-14 bg-gradient-to-b from-amber-400 to-amber-500' : cfg.rank === 2 ? 'h-9 sm:h-10 bg-gradient-to-b from-slate-400 to-slate-500' : 'h-7 sm:h-8 bg-gradient-to-b from-orange-500 to-amber-600'} flex items-center justify-center text-white font-black text-sm shadow-md mt-2`}>
                     #{cfg.rank}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Mobile Dedicated Stacked Cards View (Clean, comfortable, no squishing) */}
+          <div className="sm:hidden space-y-2.5">
+            {[1, 2, 3].map(rankNum => {
+              const cfg = MEDAL_CONFIGS.find(c => c.rank === rankNum) || MEDAL_CONFIGS[0];
+              const s = top3[rankNum - 1];
+              if (!s) return null;
+              const derivedYear = deriveYearLevelFromRegNo(s.reg_no, s.year_level);
+              const deptCode = s.department?.code || s.department?.name || 'DEPT';
+
+              return (
+                <div
+                  key={`podium-mob-${s.id}`}
+                  onClick={() => onSelectStudent?.(s)}
+                  className={`p-3.5 rounded-2xl bg-white dark:bg-navy-900 border ${
+                    rankNum === 1
+                      ? 'border-amber-400/80 shadow-md shadow-amber-500/10 ring-1 ring-amber-400/30'
+                      : rankNum === 2
+                      ? 'border-slate-300 dark:border-slate-700 shadow-xs'
+                      : 'border-orange-300/80 dark:border-orange-800 shadow-xs'
+                  } transition-all active:scale-[0.98] touch-manipulation cursor-pointer flex items-center justify-between gap-3`}
+                >
+                  {/* Left: Rank Badge + Avatar */}
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="relative shrink-0">
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cfg.color} flex items-center justify-center text-white font-black text-base shadow-md border ${cfg.borderColor}`}>
+                        {s.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                      </div>
+                      <span className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full ${rankNum === 1 ? 'bg-amber-500 text-white' : rankNum === 2 ? 'bg-slate-500 text-white' : 'bg-orange-500 text-white'} text-[10px] font-black flex items-center justify-center shadow-xs border border-white dark:border-navy-900`}>
+                        #{rankNum}
+                      </span>
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`text-[9px] font-black px-1.5 py-0.2 rounded uppercase ${cfg.textColor}`}>
+                          {cfg.label}
+                        </span>
+                        <span className={`px-1.5 py-0.2 rounded text-[9px] font-black border ${getDeptBadgeStyle(deptCode)}`}>
+                          {deptCode} • {derivedYear} Yr
+                        </span>
+                      </div>
+                      <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate mt-0.5" title={s.name}>
+                        {s.name}
+                      </h4>
+                      <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-bold truncate">
+                        {s.reg_no}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right: Solved Count & LeetCode Handle */}
+                  <div className="text-right shrink-0 flex flex-col items-end justify-center">
+                    <span className="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono tracking-tight bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                      {s.stats?.total_solved || 0}
+                    </span>
+                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider mt-0.5">
+                      Solved
+                    </span>
+                    {s.username && (
+                      <span className="text-[10px] font-mono font-bold text-brand-500 truncate max-w-[90px] block mt-0.5">
+                        @{s.username}
+                      </span>
+                    )}
                   </div>
                 </div>
               );

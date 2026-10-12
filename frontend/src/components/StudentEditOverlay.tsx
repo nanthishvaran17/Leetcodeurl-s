@@ -625,6 +625,9 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         className="w-full h-full sm:h-auto max-h-[100dvh] sm:max-h-[88vh] max-w-xl my-auto bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden mobile-responsive-modal animate-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Drag Indicator */}
+        <div className="w-10 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto my-2 sm:hidden shrink-0" />
+
         {/* Fixed Header */}
         <div className="px-4 py-3.5 sm:px-6 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0 z-20 shadow-md safe-area-pt">
           <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
@@ -643,7 +646,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
             type="button"
             onClick={handleAttemptClose}
             title="Close"
-            className="p-2 rounded-xl bg-white/10 hover:bg-rose-500/80 active:scale-95 transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0 ml-2"
+            className="p-2 rounded-xl bg-white/10 hover:bg-rose-500/80 active:scale-95 transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0 ml-2 touch-manipulation"
           >
             <X className="w-5 h-5" />
           </button>
@@ -935,14 +938,14 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
               type="button"
               onClick={handleAttemptClose}
               disabled={isSaving}
-              className="flex-1 sm:flex-initial px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl sm:rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 active:scale-95 transition-all cursor-pointer min-h-[48px] flex items-center justify-center shadow-xs"
+              className="flex-1 sm:flex-initial px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl sm:rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 active:scale-95 transition-all cursor-pointer min-h-[48px] flex items-center justify-center shadow-xs touch-manipulation"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="flex-1 sm:flex-initial px-5 py-3 sm:px-7 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 active:scale-95 text-white text-xs sm:text-sm font-black shadow-lg flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer transition-all min-h-[48px]"
+              className="flex-1 sm:flex-initial px-5 py-3 sm:px-7 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 active:scale-95 text-white text-xs sm:text-sm font-black shadow-lg flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer transition-all min-h-[48px] touch-manipulation"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
@@ -961,14 +964,14 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowUnsavedPrompt(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-navy-900 text-xs font-bold text-slate-700 dark:text-slate-300 min-h-[42px] cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-navy-900 text-xs font-bold text-slate-700 dark:text-slate-300 min-h-[42px] cursor-pointer touch-manipulation active:scale-95"
                 >
                   Stay
                 </button>
                 <button
                   type="button"
                   onClick={() => { setShowUnsavedPrompt(false); onClose(); }}
-                  className="flex-1 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-xs font-bold text-white min-h-[42px] cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-xs font-bold text-white min-h-[42px] cursor-pointer touch-manipulation active:scale-95"
                 >
                   Discard
                 </button>

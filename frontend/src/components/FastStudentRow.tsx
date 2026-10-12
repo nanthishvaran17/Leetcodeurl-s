@@ -1,6 +1,6 @@
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { useStudentEntity } from '../stores/studentLiveStore';
-import { Clock, AlertCircle, Trophy, Flame, Award, TrendingUp, RefreshCw, Trash2, Edit3, Eye, ExternalLink } from 'lucide-react';
+import { Clock, AlertCircle, Trophy, Flame, Award, TrendingUp, RefreshCw, Trash2, Edit3, Eye, ExternalLink, ChevronRight, MoreHorizontal, Check } from 'lucide-react';
 import { formatStudentYearBadge } from '../utils/filterUtils';
 
 function getRankBadge(rank?: number) {
@@ -144,103 +144,100 @@ export const FastStudentRow = memo(({
       }}
       className="flex flex-col md:flex-row p-0 md:py-3.5 md:px-0 gap-0 hover:bg-slate-50/80 dark:hover:bg-navy-900/50 transition-all duration-150 group font-medium text-xs md:border-b border-slate-200/80 dark:border-navy-800/60 cursor-pointer w-full min-w-full md:min-w-[1100px] items-stretch md:items-center bg-transparent rounded-2xl md:rounded-none mb-3 md:mb-0 min-h-0 md:min-h-[68px]"
     >
-      {/* MOBILE LAYOUT (CONSUMER-GRADE SWIGGY/UBER CARD DESIGN) */}
-      <div className="flex md:hidden flex-col w-full bg-white dark:bg-navy-900 rounded-2xl border border-slate-200/90 dark:border-navy-700/80 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.3)] hover:shadow-lg transition-all duration-200 relative overflow-hidden active:scale-[0.99] touch-manipulation">
-
-        {/* Card Header & Identity */}
-        <div className="flex items-start gap-3 p-3.5">
-          <div className="flex items-center justify-center pt-1" onClick={(e) => e.stopPropagation()}>
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={() => toggleStudent(student.id)}
-              className="rounded-lg border-slate-300 text-brand-600 focus:ring-brand-500 w-[18px] h-[18px] cursor-pointer"
-            />
+      {/* MOBILE LAYOUT (2026 SaaS LUXURY LEADERBOARD CARD) */}
+      <div 
+        onClick={(e) => onView(student, e)}
+        className={`flex md:hidden flex-col w-full bg-white dark:bg-[#0c1424] rounded-2xl border transition-all duration-200 relative overflow-hidden shadow-xs hover:shadow-md active:scale-[0.99] touch-manipulation cursor-pointer ${
+          isSelected 
+            ? 'border-brand-500 ring-2 ring-brand-500/30 bg-brand-500/[0.04] dark:bg-brand-950/20' 
+            : 'border-slate-200/90 dark:border-white/10 hover:border-brand-500/40'
+        }`}
+      >
+        {/* Main Card Body */}
+        <div className="flex items-center gap-3 p-3.5">
+          {/* Avatar with Tap-to-Select Micro Toggle */}
+          <div 
+            onClick={(e) => { e.stopPropagation(); toggleStudent(student.id); }}
+            className="relative shrink-0 cursor-pointer group/avatar"
+            title="Tap to select student"
+          >
+            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-xs shadow-md transition-all ${
+              isSelected 
+                ? 'bg-brand-600 text-white ring-2 ring-brand-500 ring-offset-2' 
+                : 'bg-gradient-to-br from-brand-600 via-indigo-600 to-purple-600 text-white shadow-brand-500/20'
+            }`}>
+              {isSelected ? (
+                <Check size={18} strokeWidth={3} />
+              ) : (
+                (student.name || 'User')
+                  .split(' ')
+                  .map((n: string) => n[0])
+                  .slice(0, 2)
+                  .join('')
+                  .toUpperCase()
+              )}
+            </div>
           </div>
 
-          {/* Student Avatar */}
-          <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-600 via-indigo-600 to-violet-600 text-white font-black text-base flex items-center justify-center shadow-md shadow-brand-500/25 ring-2 ring-white dark:ring-navy-800">
-            {student.name.charAt(0).toUpperCase()}
-          </div>
-
-          {/* Name, Reg & Dept */}
+          {/* Student Identity */}
           <div className="flex flex-col min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-1.5">
-              <span className="font-extrabold text-[14px] leading-snug text-slate-900 dark:text-white truncate tracking-tight">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-black text-sm text-slate-900 dark:text-white truncate">
                 {student.name}
               </span>
-              <div className="shrink-0 flex items-center">
-                {isSolver ? getRankBadge(effectiveCollegeRank) : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400">Unranked</span>}
+              <div className="shrink-0">
+                {isSolver ? getRankBadge(effectiveCollegeRank) : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-500">Unranked</span>}
               </div>
             </div>
 
-            <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
-              <span className="font-mono text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                {student.reg_no}
-              </span>
-              <span className="text-slate-300 dark:text-slate-600 text-[10px]">•</span>
-              <span className="text-[10px] font-extrabold tracking-tight text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-navy-800/80 px-1.5 py-0.5 rounded-md">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate">
+              <span className="font-bold text-slate-700 dark:text-slate-300">{student.reg_no}</span>
+              <span>•</span>
+              <span className="px-1.5 py-0.5 rounded-md bg-brand-500/10 text-brand-700 dark:text-brand-300 font-bold text-[10px] border border-brand-500/20">
                 {getDeptCode(student)} {formatStudentYearBadge(student)}
               </span>
             </div>
 
             {student.username && (
-              <span className="font-mono text-[11px] font-bold text-brand-600 dark:text-brand-400 truncate mt-1">
+              <span className="text-[11px] font-bold text-brand-600 dark:text-brand-400 truncate mt-0.5">
                 @{student.username}
               </span>
             )}
           </div>
         </div>
 
-        {/* Card Stats & Action Bar */}
-        <div className="flex items-center justify-between gap-2 w-full px-3.5 py-2.5 bg-slate-50/90 dark:bg-navy-950/70 border-t border-slate-100 dark:border-navy-800/80">
-          <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-1 px-2 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-              <span className="text-[8.5px] font-black uppercase tracking-wider">SOLVED</span>
-              <span className="text-[12px] font-black font-mono">{totalSolved ?? '—'}</span>
+        {/* Card Metrics & Quick Action Bar */}
+        <div className="flex items-center justify-between px-3.5 py-2.5 bg-slate-50/90 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.06]">
+          <div className="flex items-center gap-2">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+              <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">SOLVED</span>
+              <span className="text-xs font-black font-mono">{totalSolved ?? '—'}</span>
             </div>
-            <div className="flex items-center gap-1 px-2 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
-              <span className="text-[8.5px] font-black uppercase tracking-wider">RATING</span>
-              <span className="text-[12px] font-black font-mono">
-                {getContestRatingDisplay(student)}
-              </span>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300">
+              <span className="text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">RATING</span>
+              <span className="text-xs font-black font-mono">{getContestRatingDisplay(student)}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0 ml-auto" onClick={(e) => e.stopPropagation()}>
-            <button 
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} 
-              className="w-[32px] h-[32px] rounded-xl text-slate-600 hover:text-brand-600 bg-white dark:bg-navy-800 hover:bg-brand-50 flex items-center justify-center cursor-pointer transition-all border border-slate-200/80 dark:border-navy-700 shadow-xs active:scale-90" 
-              title="View Profile"
-            >
-              <Eye className="w-3.5 h-3.5" />
-            </button>
-            <button 
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }} 
-              className="w-[32px] h-[32px] rounded-xl text-slate-600 hover:text-amber-600 bg-white dark:bg-navy-800 hover:bg-amber-50 flex items-center justify-center cursor-pointer transition-all border border-slate-200/80 dark:border-navy-700 shadow-xs active:scale-90" 
-              title="Edit Student"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-            </button>
+          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
             {onRefresh && (
-              <button 
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRefresh((student || initialStudent).id); }} 
-                disabled={isSyncing} 
-                className={`w-[32px] h-[32px] rounded-xl bg-white dark:bg-navy-800 flex items-center justify-center cursor-pointer transition-all border border-slate-200/80 dark:border-navy-700 shadow-xs active:scale-90 ${isSyncing ? 'text-brand-500' : 'text-slate-600 hover:text-emerald-600 hover:bg-emerald-50'}`} 
-                title="Refresh LeetCode Stats"
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRefresh((student || initialStudent).id); }}
+                disabled={isSyncing}
+                className="min-h-[40px] min-w-[40px] rounded-xl text-slate-500 hover:text-emerald-600 bg-white dark:bg-navy-800 flex items-center justify-center border border-slate-200/80 dark:border-white/10 shadow-2xs active:scale-95 touch-manipulation cursor-pointer"
+                title="Refresh Stats"
+                aria-label="Refresh Stats"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                <RefreshCw size={15} className={isSyncing ? 'animate-spin text-brand-500' : ''} />
               </button>
             )}
-            {onDelete && (
-              <button 
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(student, e); }} 
-                className="w-[32px] h-[32px] rounded-xl text-slate-500 hover:text-rose-600 bg-white dark:bg-navy-800 hover:bg-rose-50 flex items-center justify-center cursor-pointer transition-all border border-slate-200/80 dark:border-navy-700 shadow-xs active:scale-90" 
-                title="Delete Student"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            )}
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 active:bg-brand-800 text-white font-black text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all touch-manipulation cursor-pointer"
+            >
+              <span>Profile</span>
+              <ChevronRight size={14} strokeWidth={2.5} />
+            </button>
           </div>
         </div>
       </div>

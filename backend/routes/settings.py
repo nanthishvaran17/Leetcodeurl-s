@@ -34,15 +34,22 @@ DEFAULT_SYSTEM_SETTINGS = {
     "ENABLE_AUTO_SUNDAY_SESSION": "true",
     "AUTO_START_SNAPSHOT": "true",
     "AUTO_FINAL_SNAPSHOT": "true",
+    "AUTO_FINALIZATION_SNAPSHOT": "true",
     "AUTO_FINALIZE": "true",
     "LOCK_FINALIZED_SESSIONS": "true",
     "ALLOW_MANUAL_REFETCH": "true",
+    "GRACE_PERIOD_MINS": "10",
 
-    # 2. Contest Data Sync
+    # 2. Contest Data Sync & Engine
     "AUTO_CONTEST_SYNC": "true",
     "HISTORICAL_ARCHIVE_SYNC": "true",
     "FETCH_TIMEOUT": "30",
     "RETRY_COUNT": "3",
+    "PARALLEL_CONCURRENCY": "8",
+    "CONTEST_POLL_INTERVAL": "5",
+    "SHOW_CONTEST_BANNER": "true",
+    "AUTO_FLAG_SUSPICIOUS": "true",
+    "STRICT_ZERO_SCORE_GUARD": "true",
 
     # 3. Data Accuracy & Integrity Rules (Locked System Specs)
     "AUTHENTIC_DATA_ONLY": "LOCKED_ON",
@@ -56,7 +63,7 @@ DEFAULT_SYSTEM_SETTINGS = {
     "DB_API_UI_CONSISTENCY_VALIDATION": "ON",
 
     # 4. Email Report Dispatch & SMTP Configuration
-    "REPORT_RECIPIENT_EMAILS": "hod.cyber@college.edu, hod.iot@college.edu",
+    "REPORT_RECIPIENT_EMAILS": "nanthishvaran17@gmail.com",
     "SMTP_HOST": "smtp.gmail.com",
     "SMTP_PORT": "587",
     "SMTP_USERNAME": "nanthishvaran17@gmail.com",
@@ -64,7 +71,9 @@ DEFAULT_SYSTEM_SETTINGS = {
     "SMTP_ENCRYPTION": "TLS",
     "SENDER_EMAIL": "nanthishvaran17@gmail.com",
     "SENDER_NAME": "Nandha Engineering College Contest Engine",
+    "AUTO_DISPATCH_REPORTS": "true",
     "AUTO_EMAIL_AFTER_FINALIZE": "true",
+    "AUTO_BACKUP_ON_FINALIZE": "true",
     "ATTACH_EXCEL": "true",
     "ATTACH_PDF": "true",
     "ATTACH_WORD": "true",
@@ -114,14 +123,40 @@ def update_admin_settings(
     current_user=Depends(get_current_user)
 ):
     # Validation rules
-    start_t = settings_data.get("SESSION_START", "08:00")
-    end_t = settings_data.get("SESSION_END", "09:30")
+    start_t = str(settings_data.get("SESSION_START", "08:00")).strip()
+    end_t = str(settings_data.get("SESSION_END", "09:30")).strip()
     if start_t >= end_t:
         raise HTTPException(status_code=400, detail="Start Time must be earlier than End Time.")
 
-    tz = settings_data.get("TIMEZONE", "Asia/Kolkata")
-    if tz != "Asia/Kolkata":
+    tz = str(settings_data.get("TIMEZONE", "Asia/Kolkata")).strip()
+    if not tz.startswith("Asia/Kolkata"):
         raise HTTPException(status_code=400, detail="System timezone is strictly locked to Asia/Kolkata.")
+    # Normalize to canonical format
+    settings_data["TIMEZONE"] = "Asia/Kolkata"
+
+    # Dual-sync complementary flags so both frontend and worker see consistent state
+    if "AUTO_FINALIZATION_SNAPSHOT" in settings_data:
+        val = str(settings_data["AUTO_FINALIZATION_SNAPSHOT"])
+        settings_data["AUTO_FINAL_SNAPSHOT"] = val
+        settings_data["AUTO_FINALIZE"] = val
+    elif "AUTO_FINAL_SNAPSHOT" in settings_data:
+        settings_data["AUTO_FINALIZATION_SNAPSHOT"] = str(settings_data["AUTO_FINAL_SNAPSHOT"])
+
+    if "AUTO_DISPATCH_REPORTS" in settings_data:
+        settings_data["AUTO_EMAIL_AFTER_FINALIZE"] = str(settings_data["AUTO_DISPATCH_REPORTS"])
+    elif "AUTO_EMAIL_AFTER_FINALIZE" in settings_data:
+        settings_data["AUTO_DISPATCH_REPORTS"] = str(settings_data["AUTO_EMAIL_AFTER_FINALIZE"])
+
+    if "AUTO_BACKUP_ON_FINALIZE" in settings_data:
+        settings_data["AUTO_BACKUP"] = str(settings_data["AUTO_BACKUP_ON_FINALIZE"])
+    elif "AUTO_BACKUP" in settings_data:
+        settings_data["AUTO_BACKUP_ON_FINALIZE"] = str(settings_data["AUTO_BACKUP"])
+
+    int_keys = (
+        "PROGRESS_THRESHOLD", "FETCH_TIMEOUT", "RETRY_COUNT", "SMTP_PORT", 
+        "BACKUP_RETENTION", "ADMIN_SESSION_TIMEOUT", "EMAIL_RETRY_COUNT", 
+        "PARALLEL_CONCURRENCY", "GRACE_PERIOD_MINS", "CONTEST_POLL_INTERVAL"
+    )
 
     for key, raw_val in settings_data.items():
         if key in ("SMTP_PASSWORD_MASKED", "LAST_UPDATED_AT"):
@@ -129,7 +164,7 @@ def update_admin_settings(
         if key == "SMTP_PASSWORD" and (raw_val == "••••••••" or not str(raw_val).strip()):
             continue  # Do not overwrite with masked placeholder
 
-        if key in ("PROGRESS_THRESHOLD", "FETCH_TIMEOUT", "RETRY_COUNT", "SMTP_PORT", "BACKUP_RETENTION", "ADMIN_SESSION_TIMEOUT", "EMAIL_RETRY_COUNT"):
+        if key in int_keys:
             try:
                 raw_val = int(raw_val)
             except (ValueError, TypeError):

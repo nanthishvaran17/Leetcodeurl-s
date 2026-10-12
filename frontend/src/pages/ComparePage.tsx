@@ -10,6 +10,7 @@ import api from '../services/api';
 import { StudentData } from '../components/LeaderboardTable';
 import { getCachedStudents } from '../utils/rosterCache';
 import { useDepartments } from '../contexts/DepartmentContext';
+import { deriveYearLevelFromRegNo, normalizeAcademicYear } from '../utils/filterUtils';
 
 export const ComparePage: React.FC = () => {
   // Mode: STUDENT vs GROUP
@@ -30,6 +31,7 @@ export const ComparePage: React.FC = () => {
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
 
+  const [allStudents, setAllStudents] = useState<StudentData[]>(() => getCachedStudents());
   const [students, setStudents] = useState<StudentData[]>(() => getCachedStudents());
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -70,6 +72,23 @@ export const ComparePage: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Fetch full student cohort once to ensure accurate college-wide group analytics
+  useEffect(() => {
+    const fetchFullCohort = async () => {
+      try {
+        const res = await api.get('/students');
+        const list = Array.isArray(res.data) ? res.data : (res.data?.items || []);
+        if (list.length > 0) {
+          const sorted = [...list].sort((a: StudentData, b: StudentData) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0));
+          setAllStudents(sorted);
+        }
+      } catch (err) {
+        console.error('Failed to fetch full student cohort:', err);
+      }
+    };
+    fetchFullCohort();
+  }, []);
+
   // Group Comparison Selection keys
   const [groupAKey, setGroupAKey] = useState<string>('');
   const [groupBKey, setGroupBKey] = useState<string>('');
@@ -92,14 +111,22 @@ export const ComparePage: React.FC = () => {
       url += params.join('&');
 
       const res = await api.get(url);
-      const sorted = res.data.sort((a: StudentData, b: StudentData) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0));
+      const list = Array.isArray(res.data) ? res.data : (res.data?.items || []);
+      const sorted = [...list].sort((a: StudentData, b: StudentData) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0));
       setStudents(sorted);
 
       if (sorted.length >= 2) {
-        if (!studentAId) setStudentAId(sorted[0].id);
-        if (!studentBId) setStudentBId(sorted[1].id);
+        if (!studentAId || !sorted.some(s => s.id === studentAId)) {
+          setStudentAId(sorted[0].id);
+          setStudentA(sorted[0]);
+        }
+        if (!studentBId || !sorted.some(s => s.id === studentBId)) {
+          setStudentBId(sorted[1].id);
+          setStudentB(sorted[1]);
+        }
+      } else if (sorted.length === 1) {
+        setStudentAId(sorted[0].id);
         setStudentA(sorted[0]);
-        setStudentB(sorted[1]);
       }
     } catch (err) {
       console.error(err);
@@ -108,86 +135,123 @@ export const ComparePage: React.FC = () => {
     }
   };
 
+  // Helper to reliably extract student canonical academic year ('I' | 'II' | 'III' | 'IV')
+  const getStudentYear = (s: StudentData): 'I' | 'II' | 'III' | 'IV' => {
+    return deriveYearLevelFromRegNo(s.reg_no, s.year_level || (s as any).year);
+  };
+
+  // The cohort used for group comparisons is always the full college cohort
+  const cohort = useMemo(() => {
+    return allStudents.length > 0 ? allStudents : students;
+  }, [allStudents, students]);
+
   // Build unique Group options dynamically based on current dimension
   const groupOptions = useMemo(() => {
     if (groupDimension === 'DEPT') {
-      return departments.map(d => ({
-        key: String(d.id),
-        label: `${d.name} (${d.code}) - All Years`,
-        pillText: d.code,
-        cleanLabel: `${d.name} — All Years`
-      }));
+      return departments.map(d => {
+        const count = cohort.filter(s => Number(s.department_id || s.department?.id) === Number(d.id)).length;
+        return {
+          key: String(d.id),
+          label: `${d.name} (${d.code}) — ${count} Students`,
+          pillText: d.code,
+          cleanLabel: `${d.name} (${d.code})`,
+          studentCount: count
+        };
+      }).filter(item => item.studentCount > 0);
     } else if (groupDimension === 'DEPT_YEAR') {
       // Combined Department & Year Combo
-      const list: { key: string; label: string; pillText: string; cleanLabel: string }[] = [];
+      const list: { key: string; label: string; pillText: string; cleanLabel: string; studentCount: number }[] = [];
       const yearLabels: Record<string, string> = {
-        'II': 'II Year (2nd Yr)',
-        'III': 'III Year (3rd Yr)',
-        'IV': 'IV Year (Final Yr)'
+        'II': '2nd Yr',
+        'III': '3rd Yr',
+        'IV': 'Final Yr'
       };
-      const years = ['II', 'III', 'IV'];
+      const years: ('II' | 'III' | 'IV')[] = ['II', 'III', 'IV'];
 
-      years.forEach(yr => {
-        departments.forEach(d => {
-          list.push({
-            key: `${d.id}_${yr}`,
-            label: `${yearLabels[yr]} ${d.code} — ${d.name}`,
-            pillText: d.code,
-            cleanLabel: `${yearLabels[yr]} • ${d.name}`
-          });
+      departments.forEach(d => {
+        years.forEach(yr => {
+          const count = cohort.filter(s => {
+            const dId = s.department_id || s.department?.id;
+            return Number(dId) === Number(d.id) && getStudentYear(s) === yr;
+          }).length;
+
+          if (count > 0) {
+            list.push({
+              key: `${d.id}_${yr}`,
+              label: `${d.code} • ${yearLabels[yr]} (${count} Students)`,
+              pillText: `${d.code} • ${yr}`,
+              cleanLabel: `${d.code} • ${yearLabels[yr]} (${d.name})`,
+              studentCount: count
+            });
+          }
         });
       });
       return list;
     } else if (groupDimension === 'YEAR') {
-      return [
-        { key: 'II', label: 'II Year (Batch 2025 - 2029)', pillText: '2ND', cleanLabel: 'II Year (Batch 2025 – 2029)' },
-        { key: 'III', label: 'III Year (Batch 2024 - 2028)', pillText: '3RD', cleanLabel: 'III Year (Batch 2024 – 2028)' },
-        { key: 'IV', label: 'IV Year (Batch 2023 - 2027)', pillText: '4TH', cleanLabel: 'IV Year (Batch 2023 – 2027)' },
+      const yearDefs: { key: 'II' | 'III' | 'IV'; label: string; pillText: string; cleanLabel: string }[] = [
+        { key: 'II', label: 'II Year (Batch 2025 – 2029)', pillText: '2ND YR', cleanLabel: 'II Year (Batch 2025 – 2029)' },
+        { key: 'III', label: 'III Year (Batch 2024 – 2028)', pillText: '3RD YR', cleanLabel: 'III Year (Batch 2024 – 2028)' },
+        { key: 'IV', label: 'IV Year (Batch 2023 – 2027)', pillText: '4TH YR', cleanLabel: 'IV Year (Batch 2023 – 2027)' },
       ];
+      return yearDefs.map(y => {
+        const count = cohort.filter(s => getStudentYear(s) === y.key).length;
+        return {
+          ...y,
+          label: `${y.cleanLabel} — ${count} Students`,
+          studentCount: count
+        };
+      }).filter(y => y.studentCount > 0);
     } else {
       // SECTION
-      const secMap = new Map<string, { label: string; pillText: string; cleanLabel: string }>();
-      students.forEach(s => {
+      const secMap = new Map<string, { label: string; pillText: string; cleanLabel: string; studentCount: number }>();
+      cohort.forEach(s => {
         const dId = s.department_id || s.department?.id || 1;
         const dCode = s.department?.code || 'DEPT';
         const dName = s.department?.name || dCode;
-        const yr = s.year_level || 'III';
-        const secName = s.section?.name || 'A';
+        const yr = getStudentYear(s);
+        const secName = (s.section?.name || 'A').toUpperCase().trim();
         const key = `${dId}_${yr}_${secName}`;
-        const label = `${dCode} - ${yr} Year (${secName})`;
-        if (!secMap.has(key)) {
+        const existing = secMap.get(key);
+        if (existing) {
+          existing.studentCount += 1;
+        } else {
           secMap.set(key, {
-            label,
-            pillText: `${dCode}`,
-            cleanLabel: `${yr} Year • Section ${secName} (${dName})`
+            label: `${dCode} - ${yr} Year (${secName})`,
+            pillText: `${dCode} • Sec ${secName}`,
+            cleanLabel: `${dCode} • ${yr} Year • Sec ${secName} (${dName})`,
+            studentCount: 1
           });
         }
       });
-      return Array.from(secMap.entries()).map(([key, item]) => ({ key, ...item }));
+      return Array.from(secMap.entries()).map(([key, item]) => ({
+        key,
+        ...item,
+        label: `${item.label} — ${item.studentCount} Students`
+      }));
     }
-  }, [groupDimension, departments, students]);
+  }, [groupDimension, departments, cohort]);
 
-  // Default Group A and Group B selection when options change
-  // Always ensure A != B to prevent identical group display
+  // Default Group A and Group B selection when options or dimension changes
   useEffect(() => {
-    if (groupDimension === 'DEPT_YEAR' && departments.length >= 2) {
-      // Default: II Year Dept1 vs II Year Dept2
-      const dept1 = departments[0];
-      const dept2 = departments[1];
-      if (dept1 && dept2) {
-        setGroupAKey(`${dept1.id}_II`);
-        setGroupBKey(`${dept2.id}_II`);
-        return;
+    if (!groupOptions || groupOptions.length === 0) return;
+
+    const hasA = groupOptions.some(g => g.key === groupAKey);
+    const hasB = groupOptions.some(g => g.key === groupBKey);
+
+    if (!hasA || !hasB || groupAKey === groupBKey) {
+      if (groupOptions.length >= 2) {
+        setGroupAKey(groupOptions[0].key);
+        setGroupBKey(groupOptions[1].key);
+      } else if (groupOptions.length === 1) {
+        setGroupAKey(groupOptions[0].key);
+        setGroupBKey(groupOptions[0].key);
       }
     }
-    if (groupOptions.length >= 2) {
-      setGroupAKey(groupOptions[0].key);
-      setGroupBKey(groupOptions[1].key);
-    } else if (groupOptions.length === 1) {
-      setGroupAKey(groupOptions[0].key);
-      setGroupBKey(groupOptions[0].key);
-    }
   }, [groupDimension, groupOptions]);
+
+  const handleDimensionChange = (dim: 'DEPT' | 'DEPT_YEAR' | 'YEAR' | 'SECTION') => {
+    setGroupDimension(dim);
+  };
 
   // Filtered lists for Student Search
   const filteredStudentsA = useMemo(() => {
@@ -245,20 +309,21 @@ export const ComparePage: React.FC = () => {
 
     if (groupDimension === 'DEPT') {
       const dId = Number(key);
-      groupStudents = students.filter(s => (s.department_id || s.department?.id) === dId);
+      groupStudents = cohort.filter(s => Number(s.department_id || s.department?.id) === dId);
     } else if (groupDimension === 'DEPT_YEAR') {
       const [dIdStr, yr] = key.split('_');
       const dId = Number(dIdStr);
-      groupStudents = students.filter(s => (s.department_id || s.department?.id) === dId && s.year_level === yr);
+      groupStudents = cohort.filter(s => Number(s.department_id || s.department?.id) === dId && getStudentYear(s) === yr);
     } else if (groupDimension === 'YEAR') {
-      groupStudents = students.filter(s => s.year_level === key);
+      groupStudents = cohort.filter(s => getStudentYear(s) === key);
     } else {
       // SECTION
-      const [dId, yr, secName] = key.split('_');
-      groupStudents = students.filter(s =>
-        String(s.department_id || s.department?.id) === dId &&
-        s.year_level === yr &&
-        (s.section?.name || 'A') === secName
+      const [dIdStr, yr, secName] = key.split('_');
+      const dId = Number(dIdStr);
+      groupStudents = cohort.filter(s =>
+        Number(s.department_id || s.department?.id) === dId &&
+        getStudentYear(s) === yr &&
+        (s.section?.name || 'A').toUpperCase().trim() === (secName || 'A').toUpperCase().trim()
       );
     }
 
@@ -280,7 +345,7 @@ export const ComparePage: React.FC = () => {
 
     return {
       key,
-      label: labelObj ? labelObj.label : key,
+      label: labelObj ? (labelObj.cleanLabel || labelObj.label) : key,
       total_students,
       total_solved,
       avg_solved,
@@ -306,50 +371,60 @@ export const ComparePage: React.FC = () => {
   return (
     <div className="space-y-8 py-2">
       
-      {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-brand-500/30">
+      {/* Header Banner — Ultra-Modern Comparison Arena */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] text-white p-5 sm:p-7 md:p-8 shadow-2xl border border-indigo-500/30">
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-gradient-to-br from-indigo-500/20 via-brand-500/15 to-transparent blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] md:text-xs font-black uppercase tracking-widest">
-              <span>Comparison Arena</span>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/15 border border-brand-400/30 text-brand-300 text-[11px] font-black uppercase tracking-wider shadow-sm">
+                <Swords className="w-3.5 h-3.5 text-brand-400" />
+                <span>Comparison Arena</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.06] text-slate-200 text-[11px] font-semibold border border-white/10">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{compareMode === 'STUDENT' ? 'Student Head-to-Head' : 'Cohort & Batch Telemetry'}</span>
+              </span>
             </div>
 
-            {/* Mode Switcher Buttons */}
-            <div className="flex items-center p-1 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
-              <button
-                onClick={() => setCompareMode('STUDENT')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
-                  compareMode === 'STUDENT'
-                    ? 'bg-gradient-to-r from-brand-500 to-indigo-600 text-white shadow-lg scale-105'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                <User className="w-3.5 h-3.5" />
-                <span>Student vs Student</span>
-              </button>
-
-              <button
-                onClick={() => setCompareMode('GROUP')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
-                  compareMode === 'GROUP'
-                    ? 'bg-gradient-to-r from-brand-500 to-indigo-600 text-white shadow-lg scale-105'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Group & Batch Comparison</span>
-              </button>
-            </div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-black tracking-tight text-white uppercase">
+              {compareMode === 'STUDENT' ? (
+                <>STUDENT <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-indigo-300 to-purple-400">VERSUS ARENA</span></>
+              ) : (
+                <>GROUP & BATCH <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-indigo-300 to-purple-400">ANALYTICS</span></>
+              )}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-400 font-medium max-w-2xl">
+              Side-by-side metric comparison, difficulty distribution, contest ratings, and weekly consistency streaks.
+            </p>
           </div>
 
-          <div>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight">
-              {compareMode === 'STUDENT' ? 'Student Head-to-Head Comparison Arena' : 'Group & Batch Aggregate Analytics'}
-            </h1>
-            <p className="text-xs md:text-sm text-slate-300 font-bold mt-1">
-              Analyze side-by-side performance metrics, total problem counts, difficulty breakdown, contest ratings, and weekly streaks across students.
-            </p>
+          {/* Mode Switcher Buttons */}
+          <div className="flex items-center p-1 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shrink-0 self-start md:self-center shadow-lg">
+            <button
+              onClick={() => setCompareMode('STUDENT')}
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                compareMode === 'STUDENT'
+                  ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-900/40'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Student vs Student</span>
+            </button>
+
+            <button
+              onClick={() => setCompareMode('GROUP')}
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                compareMode === 'GROUP'
+                  ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-900/40'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Group & Batch</span>
+            </button>
           </div>
         </div>
       </div>
@@ -358,15 +433,18 @@ export const ComparePage: React.FC = () => {
       {compareMode === 'STUDENT' && (
         <div className="space-y-6">
           {/* Filter Controls Bar */}
-          <div className={`glass-card p-6 rounded-3xl border space-y-4 shadow-xl relative ${deptOpen || yearOpen ? 'z-50' : 'z-10'}`}>
-            <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+          <div className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 relative ${deptOpen || yearOpen ? 'z-50' : 'z-10'}`}>
+            <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-slate-100 dark:border-navy-800">
+              <h3 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
                 <Filter className="w-4 h-4 text-brand-500" />
-                <span>Filter Students by Department & Academic Year</span>
+                <span>Scope: Cohort Filter</span>
               </h3>
+              <span className="text-[11px] font-bold text-slate-500 font-mono">
+                {students.length} Candidates Available
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               
               {/* Department Filter — Premium Custom Dropdown */}
               <div className="z-20">
@@ -379,17 +457,17 @@ export const ComparePage: React.FC = () => {
 
               {/* Year Filter — Premium Custom Dropdown */}
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Select Academic Year Level</label>
+                <label className="block text-xs font-black text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">Academic Year Level</label>
                 <div className={`relative ${yearOpen ? 'z-30' : 'z-10'}`}>
                   <button
                     type="button"
                     onClick={() => { setYearOpen(p => !p); setDeptOpen(false); setFighterAOpen(false); setFighterBOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${
-                      yearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-200 dark:border-slate-800 hover:border-brand-300'
+                    className={`w-full flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-xs ${
+                      yearOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400'
                     }`}
                   >
-                    <GraduationCap className="w-3.5 h-3.5 text-brand-500 shrink-0" />
-                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">
+                    <GraduationCap className="w-4 h-4 text-brand-500 shrink-0" />
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">
                       {selectedYear}
                     </span>
                     <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
@@ -398,7 +476,7 @@ export const ComparePage: React.FC = () => {
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {yearOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl shadow-xl max-h-64 overflow-y-auto">
                       {[
                         { value: 'ALL', code: 'ALL', label: 'All Academic Years' },
                         { value: '2',  code: 'II',  label: 'II Year (Batch 2025 - 2029)' },
@@ -410,8 +488,8 @@ export const ComparePage: React.FC = () => {
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { setSelectedYear(opt.value); setYearOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
-                            selectedYear === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors cursor-pointer ${
+                            selectedYear === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-900'
                           }`}
                         >
                           <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -428,13 +506,18 @@ export const ComparePage: React.FC = () => {
           </div>
 
           {/* Student Selectors (With Search Box for Fighter A & Fighter B) */}
-          <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 relative ${fighterAOpen || fighterBOpen ? 'z-40' : 'z-10'}`}>
+          <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 relative ${fighterAOpen || fighterBOpen ? 'z-40' : 'z-10'}`}>
             
             {/* Select Student A */}
-            <div className="glass-card p-5 rounded-3xl border border-brand-500/30 space-y-3 bg-brand-50/20 dark:bg-brand-950/20 shadow-md">
-              <div className="flex items-center justify-between text-xs font-extrabold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
-                <span>Select Fighter 1 (Student A)</span>
-                <span className="bg-brand-500/20 px-2.5 py-0.5 rounded-full border border-brand-500/30">Fighter A</span>
+            <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-brand-500/40 bg-gradient-to-br from-brand-50/40 via-white to-indigo-50/30 dark:from-navy-950 dark:via-navy-900/60 dark:to-indigo-950/30 space-y-3 shadow-lg">
+              <div className="flex items-center justify-between text-xs font-black text-brand-600 dark:text-brand-400 uppercase tracking-wider">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
+                  Select Fighter 1 (Student A)
+                </span>
+                <span className="bg-brand-500/20 text-brand-600 dark:text-brand-300 px-2.5 py-0.5 rounded-full border border-brand-500/30 font-black text-[10px]">
+                  FIGHTER A
+                </span>
               </div>
 
               {/* Search Box Input */}
@@ -442,10 +525,10 @@ export const ComparePage: React.FC = () => {
                 <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
                 <input
                   type="text"
-                  placeholder={isMobile ? "Search Student A..." : "Search Student A by Name, Register No, or LeetCode Handle"}
+                  placeholder="Search Student A by Name, Reg No..."
                   value={searchA}
                   onChange={(e) => setSearchA(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-950 text-slate-900 dark:text-white border-brand-400/40 focus:ring-2 focus:ring-brand-500 outline-none shadow-inner"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border text-xs font-bold bg-white dark:bg-navy-950 text-slate-900 dark:text-white border-brand-300 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none shadow-xs transition"
                 />
               </div>
 
@@ -454,11 +537,11 @@ export const ComparePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => { setFighterAOpen(p => !p); setFighterBOpen(false); setDeptOpen(false); setYearOpen(false); }}
-                  className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none shadow-sm ${
-                    fighterAOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-brand-400/40 hover:border-brand-400'
+                  className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-xs cursor-pointer ${
+                    fighterAOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     <User className="w-4 h-4 text-brand-500 shrink-0" />
                     {studentA ? (
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 min-w-0 flex-1">
@@ -470,7 +553,7 @@ export const ComparePage: React.FC = () => {
                           <span className="text-[10px] text-slate-400 font-mono shrink-0">({studentA.reg_no})</span>
                         </div>
                         <div className="shrink-0 self-start sm:self-auto">
-                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+                          <span className="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
                             {studentA.stats?.total_solved || 0} Solved
                           </span>
                         </div>
@@ -483,7 +566,7 @@ export const ComparePage: React.FC = () => {
                 </button>
 
                 {fighterAOpen && (
-                  <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-brand-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
+                  <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-brand-200 dark:border-navy-700 rounded-xl shadow-xl max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
                     {filteredStudentsA.length === 0 ? (
                       <div className="p-4 text-center text-xs font-bold text-slate-400">No matching student found</div>
                     ) : (
@@ -493,11 +576,11 @@ export const ComparePage: React.FC = () => {
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { handleSelectA(Number(s.id)); setFighterAOpen(false); }}
-                          className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left transition-colors ${
-                            studentAId === s.id ? 'bg-brand-50/70 dark:bg-brand-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
+                          className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 text-left transition-colors cursor-pointer ${
+                            studentAId === s.id ? 'bg-brand-50/70 dark:bg-brand-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-900'
                           }`}
                         >
-                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
                             <span className="px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-300 font-mono font-black text-[10px] shrink-0">
                               #{s.college_rank || '—'}
                             </span>
@@ -510,11 +593,11 @@ export const ComparePage: React.FC = () => {
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center gap-1.5 shrink-0">
                             <span className="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                               {s.stats?.total_solved || 0} Solved
                             </span>
-                            {studentAId === s.id && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
+                            {studentAId === s.id && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
                           </div>
                         </button>
                       ))
@@ -524,14 +607,14 @@ export const ComparePage: React.FC = () => {
               </div>
 
               {/* Quick Select Preset Buttons */}
-              <div className="flex items-center gap-2 pt-1 overflow-x-auto custom-scrollbar max-w-full pb-0.5">
+              <div className="flex items-center gap-1.5 pt-1 overflow-x-auto custom-scrollbar max-w-full pb-0.5">
                 <span className="text-[10px] text-slate-400 font-bold shrink-0">Quick Select:</span>
                 {students.slice(0, 3).map((s) => (
                   <button
                     key={s.id}
                     type="button"
                     onClick={() => handleSelectA(Number(s.id))}
-                    className="px-2.5 py-1 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 text-[10px] font-black border border-brand-500/20 hover:bg-brand-500 hover:text-white transition-all cursor-pointer flex items-center space-x-1 whitespace-nowrap shrink-0"
+                    className="px-2.5 py-1 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 text-[10px] font-black border border-brand-500/20 hover:bg-brand-500 hover:text-white transition-all cursor-pointer flex items-center space-x-1 whitespace-nowrap shrink-0"
                   >
                     <span>{s.name} (#{s.college_rank || '—'})</span>
                   </button>
@@ -540,10 +623,15 @@ export const ComparePage: React.FC = () => {
             </div>
 
             {/* Select Student B */}
-            <div className="glass-card p-5 rounded-3xl border border-indigo-500/30 space-y-3 bg-indigo-50/20 dark:bg-indigo-950/20 shadow-md">
-              <div className="flex items-center justify-between text-xs font-extrabold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-                <span>Select Fighter 2 (Student B)</span>
-                <span className="bg-indigo-500/20 px-2.5 py-0.5 rounded-full border border-indigo-500/30">Fighter B</span>
+            <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-indigo-500/40 bg-gradient-to-br from-indigo-50/40 via-white to-purple-50/30 dark:from-navy-950 dark:via-navy-900/60 dark:to-purple-950/30 space-y-3 shadow-lg">
+              <div className="flex items-center justify-between text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                  Select Fighter 2 (Student B)
+                </span>
+                <span className="bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 px-2.5 py-0.5 rounded-full border border-indigo-500/30 font-black text-[10px]">
+                  FIGHTER B
+                </span>
               </div>
 
               {/* Search Box Input */}
@@ -551,10 +639,10 @@ export const ComparePage: React.FC = () => {
                 <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
                 <input
                   type="text"
-                  placeholder={isMobile ? "Search Student B..." : "Search Student B by Name, Register No, or LeetCode Handle"}
+                  placeholder="Search Student B by Name, Reg No..."
                   value={searchB}
                   onChange={(e) => setSearchB(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-950 text-slate-900 dark:text-white border-indigo-400/40 focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border text-xs font-bold bg-white dark:bg-navy-950 text-slate-900 dark:text-white border-indigo-300 dark:border-navy-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none shadow-xs transition"
                 />
               </div>
 
@@ -563,11 +651,11 @@ export const ComparePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => { setFighterBOpen(p => !p); setFighterAOpen(false); setDeptOpen(false); setYearOpen(false); }}
-                  className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none shadow-sm ${
-                    fighterBOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20' : 'border-indigo-400/40 hover:border-indigo-400'
+                  className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-xs cursor-pointer ${
+                    fighterBOpen ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-navy-700 hover:border-indigo-400'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     <User className="w-4 h-4 text-indigo-500 shrink-0" />
                     {studentB ? (
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 min-w-0 flex-1">
@@ -579,7 +667,7 @@ export const ComparePage: React.FC = () => {
                           <span className="text-[10px] text-slate-400 font-mono shrink-0">({studentB.reg_no})</span>
                         </div>
                         <div className="shrink-0 self-start sm:self-auto">
-                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+                          <span className="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
                             {studentB.stats?.total_solved || 0} Solved
                           </span>
                         </div>
@@ -592,7 +680,7 @@ export const ComparePage: React.FC = () => {
                 </button>
 
                 {fighterBOpen && (
-                  <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-indigo-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
+                  <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-indigo-200 dark:border-navy-700 rounded-xl shadow-xl max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
                     {filteredStudentsB.length === 0 ? (
                       <div className="p-4 text-center text-xs font-bold text-slate-400">No matching student found</div>
                     ) : (
@@ -602,11 +690,11 @@ export const ComparePage: React.FC = () => {
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { handleSelectB(Number(s.id)); setFighterBOpen(false); }}
-                          className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left transition-colors ${
-                            studentBId === s.id ? 'bg-indigo-50/70 dark:bg-indigo-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
+                          className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 text-left transition-colors cursor-pointer ${
+                            studentBId === s.id ? 'bg-indigo-50/70 dark:bg-indigo-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-900'
                           }`}
                         >
-                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
                             <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-mono font-black text-[10px] shrink-0">
                               #{s.college_rank || '—'}
                             </span>
@@ -619,11 +707,11 @@ export const ComparePage: React.FC = () => {
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center gap-1.5 shrink-0">
                             <span className="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                               {s.stats?.total_solved || 0} Solved
                             </span>
-                            {studentBId === s.id && <Check className="w-4 h-4 text-indigo-500 shrink-0" />}
+                            {studentBId === s.id && <Check className="w-3.5 h-3.5 text-indigo-500 shrink-0" />}
                           </div>
                         </button>
                       ))
@@ -633,14 +721,14 @@ export const ComparePage: React.FC = () => {
               </div>
 
               {/* Quick Select Preset Buttons */}
-              <div className="flex items-center gap-2 pt-1 overflow-x-auto custom-scrollbar max-w-full pb-0.5">
+              <div className="flex items-center gap-1.5 pt-1 overflow-x-auto custom-scrollbar max-w-full pb-0.5">
                 <span className="text-[10px] text-slate-400 font-bold shrink-0">Quick Select:</span>
                 {students.slice(1, 4).map((s) => (
                   <button
                     key={s.id}
                     type="button"
                     onClick={() => handleSelectB(Number(s.id))}
-                    className="px-2.5 py-1 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-black border border-indigo-500/20 hover:bg-indigo-500 hover:text-white transition-all cursor-pointer flex items-center space-x-1 whitespace-nowrap shrink-0"
+                    className="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-black border border-indigo-500/20 hover:bg-indigo-500 hover:text-white transition-all cursor-pointer flex items-center space-x-1 whitespace-nowrap shrink-0"
                   >
                     <span>{s.name} (#{s.college_rank || '—'})</span>
                   </button>
@@ -957,26 +1045,28 @@ export const ComparePage: React.FC = () => {
               </div>
 
               {/* Sub-Dimension Tabs */}
-              <div className="flex items-center space-x-2 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-2xl border flex-wrap gap-1">
+              <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex-wrap">
                 
                 <button
-                  onClick={() => setGroupDimension('DEPT_YEAR')}
-                  className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  type="button"
+                  onClick={() => handleDimensionChange('DEPT_YEAR')}
+                  className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
                     groupDimension === 'DEPT_YEAR'
-                      ? 'bg-gradient-to-r from-brand-500 to-indigo-600 text-white shadow-md'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-brand-500'
+                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/25 ring-1 ring-brand-400/40'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-brand-500 hover:bg-slate-200/50 dark:hover:bg-white/5'
                   }`}
                 >
-                  <Layers className="w-3.5 h-3.5 text-amber-400" />
+                  <Layers className="w-3.5 h-3.5" />
                   <span>By Dept & Year Batch</span>
                 </button>
 
                 <button
-                  onClick={() => setGroupDimension('DEPT')}
-                  className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  type="button"
+                  onClick={() => handleDimensionChange('DEPT')}
+                  className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
                     groupDimension === 'DEPT'
-                      ? 'bg-brand-500 text-white shadow-md'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-brand-500'
+                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/25 ring-1 ring-brand-400/40'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-brand-500 hover:bg-slate-200/50 dark:hover:bg-white/5'
                   }`}
                 >
                   <Building2 className="w-3.5 h-3.5" />
@@ -984,11 +1074,12 @@ export const ComparePage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => setGroupDimension('YEAR')}
-                  className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  type="button"
+                  onClick={() => handleDimensionChange('YEAR')}
+                  className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
                     groupDimension === 'YEAR'
-                      ? 'bg-brand-500 text-white shadow-md'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-brand-500'
+                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/25 ring-1 ring-brand-400/40'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-brand-500 hover:bg-slate-200/50 dark:hover:bg-white/5'
                   }`}
                 >
                   <GraduationCap className="w-3.5 h-3.5" />
@@ -996,11 +1087,12 @@ export const ComparePage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => setGroupDimension('SECTION')}
-                  className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  type="button"
+                  onClick={() => handleDimensionChange('SECTION')}
+                  className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
                     groupDimension === 'SECTION'
-                      ? 'bg-brand-500 text-white shadow-md'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-brand-500'
+                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/25 ring-1 ring-brand-400/40'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-brand-500 hover:bg-slate-200/50 dark:hover:bg-white/5'
                   }`}
                 >
                   <School className="w-3.5 h-3.5" />
@@ -1031,17 +1123,22 @@ export const ComparePage: React.FC = () => {
                 />
 
                 {groupDimension === 'DEPT_YEAR' && (
-                  <div className="flex items-center space-x-2 pt-1">
-                    <span className="text-[10px] text-slate-400 font-bold">Quick Pick A:</span>
-                    <button
-                      onClick={() => {
-                        const opt = groupOptions.find(g => g.key.endsWith('II') && departments[0] && g.key.startsWith(String(departments[0].id)));
-                        if (opt) setGroupAKey(opt.key);
-                      }}
-                      className="px-2 py-0.5 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-300 text-[10px] font-bold hover:bg-brand-500 hover:text-white transition-all cursor-pointer"
-                    >
-                      2nd Year {departments[0]?.code || 'Dept 1'}
-                    </button>
+                  <div className="flex items-center space-x-2 pt-1 flex-wrap">
+                    <span className="text-[10px] text-slate-400 font-bold">Quick Pick:</span>
+                    {groupOptions.slice(0, 3).map(opt => (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => setGroupAKey(opt.key)}
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          groupAKey === opt.key
+                            ? 'bg-brand-500 text-white shadow-xs'
+                            : 'bg-brand-500/10 text-brand-600 dark:text-brand-300 hover:bg-brand-500 hover:text-white'
+                        }`}
+                      >
+                        {opt.pillText}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -1065,17 +1162,22 @@ export const ComparePage: React.FC = () => {
                 />
 
                 {groupDimension === 'DEPT_YEAR' && (
-                  <div className="flex items-center space-x-2 pt-1">
-                    <span className="text-[10px] text-slate-400 font-bold">Quick Pick B:</span>
-                    <button
-                      onClick={() => {
-                        const opt = groupOptions.find(g => g.key.endsWith('II') && departments[1] && g.key.startsWith(String(departments[1].id)));
-                        if (opt) setGroupBKey(opt.key);
-                      }}
-                      className="px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 text-[10px] font-bold hover:bg-indigo-500 hover:text-white transition-all cursor-pointer"
-                    >
-                      2nd Year {departments[1]?.code || 'Dept 2'}
-                    </button>
+                  <div className="flex items-center space-x-2 pt-1 flex-wrap">
+                    <span className="text-[10px] text-slate-400 font-bold">Quick Pick:</span>
+                    {groupOptions.slice(1, 4).map(opt => (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => setGroupBKey(opt.key)}
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          groupBKey === opt.key
+                            ? 'bg-indigo-500 text-white shadow-xs'
+                            : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-500 hover:text-white'
+                        }`}
+                      >
+                        {opt.pillText}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -1282,7 +1384,17 @@ export const ComparePage: React.FC = () => {
               </div>
 
             </div>
-          ) : null}
+          ) : (
+            <div className="glass-card p-10 rounded-3xl border border-slate-200 dark:border-slate-800 text-center space-y-3 shadow-lg">
+              <Building2 className="w-10 h-10 text-brand-500 mx-auto animate-pulse" />
+              <h4 className="text-base font-bold text-slate-800 dark:text-slate-200">
+                Select Cohort Groups to Compare
+              </h4>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Select two groups from the dropdowns above or use the Quick Pick buttons to view side-by-side metric distribution and leaderboards.
+              </p>
+            </div>
+          )}
 
         </div>
       )}

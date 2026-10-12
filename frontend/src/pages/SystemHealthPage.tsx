@@ -705,8 +705,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           {/* Left Column: Institutional Header & Status */}
           <div className="space-y-3 max-w-xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="flex items-center px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                 PRODUCTION
               </span>
               <span className="px-3 py-1 rounded-full text-xs font-bold text-slate-300 bg-white/10 backdrop-blur-md border border-white/15">

@@ -136,52 +136,88 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
         <div className="space-y-6 pb-6">
           
           {/* Week Comparison Summary Card */}
-          <div className="bg-gradient-to-r from-brand-600 to-indigo-600 p-5 sm:p-6 rounded-2xl text-white shadow-lg relative">
+          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900/90 via-slate-900 to-slate-950 p-6 sm:p-7 rounded-3xl text-white shadow-2xl shadow-indigo-950/50 border border-indigo-500/20 backdrop-blur-xl">
+            <div className="absolute -top-24 -right-24 w-80 h-80 bg-brand-500/20 blur-3xl rounded-full pointer-events-none"></div>
+            <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-indigo-500/15 blur-3xl rounded-full pointer-events-none"></div>
+
             {loading && !data && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-brand-900/20 backdrop-blur-sm rounded-2xl">
-                <Loader2 className="w-8 h-8 animate-spin text-white" />
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/60 backdrop-blur-md rounded-3xl">
+                <Loader2 className="w-8 h-8 animate-spin text-brand-400" />
               </div>
             )}
-            <h3 className="font-bold text-brand-100 mb-4 uppercase tracking-wider text-xs">This Week vs Last Week</h3>
+            
+            <div className="relative z-10 flex items-center justify-between mb-5">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
+                <h3 className="font-mono text-[11px] font-black uppercase tracking-widest text-indigo-300">
+                  Weekly Cadence Benchmark
+                </h3>
+              </div>
+              <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-white/10 text-indigo-200 border border-white/10">
+                Delta Analysis
+              </span>
+            </div>
+
             {weekComparison ? (
-              <div className="flex flex-wrap items-center gap-8">
-                <div>
-                  <p className="text-brand-200 text-sm">Solved This Week</p>
-                  <p className="text-4xl font-black mt-1">{weekComparison.thisWeek}</p>
+              <div className="relative z-10 flex flex-wrap items-center gap-6 sm:gap-10">
+                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+                  <p className="text-[11px] font-black uppercase tracking-wider text-indigo-200/80">Solved This Week</p>
+                  <p className="text-4xl sm:text-5xl font-black mt-1 tracking-tight text-white">{weekComparison.thisWeek}</p>
                 </div>
-                <div>
-                  <p className="text-brand-200 text-sm">Solved Last Week</p>
-                  <p className="text-2xl font-bold mt-1 text-indigo-200">{weekComparison.lastWeek}</p>
+                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+                  <p className="text-[11px] font-black uppercase tracking-wider text-indigo-200/80">Solved Last Week</p>
+                  <p className="text-3xl sm:text-4xl font-black mt-1 tracking-tight text-indigo-200">{weekComparison.lastWeek}</p>
                 </div>
-                <div className={`flex items-center px-3 py-1.5 rounded-lg font-bold text-sm ${weekComparison.diff > 0 ? 'bg-emerald-500/20 text-emerald-300' : weekComparison.diff < 0 ? 'bg-rose-500/20 text-rose-300' : 'bg-white/10 text-white'}`}>
-                  {weekComparison.diff > 0 ? <TrendingUp className="w-4 h-4 mr-1.5" /> : weekComparison.diff < 0 ? <TrendingDown className="w-4 h-4 mr-1.5" /> : <Minus className="w-4 h-4 mr-1.5" />}
-                  {Math.abs(weekComparison.percent).toFixed(1)}% {weekComparison.diff > 0 ? 'Increase' : weekComparison.diff < 0 ? 'Decrease' : 'No Change'}
+                <div className={`flex items-center px-4 py-2 rounded-2xl font-black text-sm border backdrop-blur-md shadow-lg ${
+                  weekComparison.diff > 0 
+                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300 shadow-emerald-500/10' 
+                    : weekComparison.diff < 0 
+                      ? 'bg-rose-500/15 border-rose-500/30 text-rose-300 shadow-rose-500/10' 
+                      : 'bg-white/10 border-white/15 text-white'
+                }`}>
+                  {weekComparison.diff > 0 ? (
+                    <TrendingUp className="w-4 h-4 mr-2 text-emerald-400" />
+                  ) : weekComparison.diff < 0 ? (
+                    <TrendingDown className="w-4 h-4 mr-2 text-rose-400" />
+                  ) : (
+                    <Minus className="w-4 h-4 mr-2" />
+                  )}
+                  <span className="font-sans text-base mr-1.5">{Math.abs(weekComparison.percent).toFixed(1)}%</span>
+                  <span className="text-xs uppercase tracking-wider opacity-80">
+                    {weekComparison.diff > 0 ? 'Increase' : weekComparison.diff < 0 ? 'Decrease' : 'No Change'}
+                  </span>
                 </div>
               </div>
             ) : (
-              <p className="text-brand-200 text-sm">Insufficient historical data to compare weekly performance.</p>
+              <p className="relative z-10 text-indigo-200/80 text-sm">Insufficient historical data to compare weekly performance.</p>
             )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* 1. Rating Trend */}
-            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col relative">
+            <div className="bg-white/80 dark:bg-slate-900/70 p-6 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 flex flex-col relative backdrop-blur-xl">
               {loading && !data && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-navy-950/50 backdrop-blur-sm rounded-2xl">
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm rounded-3xl">
                   <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
                 </div>
               )}
-              <h3 className="font-bold text-slate-800 dark:text-white mb-4">Rating Trend</h3>
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-brand-500"></div>
+                  <h3 className="font-bold text-sm tracking-wide text-slate-900 dark:text-white uppercase">Rating Trend</h3>
+                </div>
+                <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">LEETCODE CONTESTS</span>
+              </div>
               {trendData.length > 0 ? (
                 <div className="flex-1 min-h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} minTickGap={30} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} domain={['auto', 'auto']} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.15} />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} dy={10} minTickGap={30} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} domain={['auto', 'auto']} />
                       <Tooltip contentStyle={tooltipStyle} />
-                      <Line type="monotone" dataKey="rating" name="Contest Rating" stroke="#3b82f6" strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 0 }} />
+                      <Line type="monotone" dataKey="rating" name="Contest Rating" stroke="#6366f1" strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 0, fill: '#6366f1' }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -189,26 +225,32 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
             </div>
 
             {/* 2. Problems Solved Trend */}
-            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col relative">
+            <div className="bg-white/80 dark:bg-slate-900/70 p-6 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 flex flex-col relative backdrop-blur-xl">
               {loading && !data && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-navy-950/50 backdrop-blur-sm rounded-2xl">
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm rounded-3xl">
                   <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
                 </div>
               )}
-              <h3 className="font-bold text-slate-800 dark:text-white mb-4">Problems Solved Trend</h3>
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                  <h3 className="font-bold text-sm tracking-wide text-slate-900 dark:text-white uppercase">Problems Solved Trend</h3>
+                </div>
+                <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">CUMULATIVE</span>
+              </div>
               {trendData.length > 0 ? (
                 <div className="flex-1 min-h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorSolved" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0.02}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} minTickGap={30} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.15} />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} dy={10} minTickGap={30} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
                       <Tooltip contentStyle={tooltipStyle} />
                       <Area type="monotone" dataKey="total_solved" name="Total Solved" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorSolved)" />
                     </AreaChart>

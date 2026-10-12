@@ -1,4 +1,5 @@
 import React from 'react';
+import { FileText, Printer } from 'lucide-react';
 
 export interface ExecutiveReportProps {
   contestTitle?: string;
@@ -106,12 +107,12 @@ export const ExecutiveIntelligenceReport: React.FC<ExecutiveReportProps> = ({
       >
         {/* Printable Control Bar */}
         <div className="no-print p-2 bg-slate-800 text-white flex justify-between items-center px-4 max-w-[1200px] mx-auto rounded-t-md text-xs font-sans">
-          <span className="font-semibold">📄 Report Preview & Print Mode</span>
+          <span className="font-semibold flex items-center gap-1.5"><FileText className="w-4 h-4 text-slate-300" /> Report Preview & Print Mode</span>
           <button 
             onClick={() => window.print()}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded shadow transition-all flex items-center gap-1 cursor-pointer"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded shadow transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            🖨️ Print / Save as PDF (A4)
+            <Printer className="w-3.5 h-3.5" /> Print / Save as PDF (A4)
           </button>
         </div>
 

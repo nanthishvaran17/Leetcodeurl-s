@@ -113,6 +113,13 @@ def fetch_normalized_students(
     
     session_id = kwargs.get("session_id")
 
+    u_role = (getattr(current_user, "role", "") or "").lower().strip()
+    if u_role in ("hod", "department hod", "department_hod"):
+        from backend.services.authorization_service import get_hod_authorized_department_codes
+        auth_codes = get_hod_authorized_department_codes(db, current_user)
+        if auth_codes and (dept_filter in ("ALL", "", None) or dept_filter not in auth_codes):
+            dept_filter = auth_codes[0]
+
     canon_dept = resolve_dept_canonical(dept_filter)
     canon_year = (year_filter or "ALL").upper().strip()
     canon_sec = (section_filter or "ALL").upper().strip()

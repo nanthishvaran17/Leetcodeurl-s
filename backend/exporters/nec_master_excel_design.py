@@ -268,33 +268,41 @@ def apply_master_college_identity(
         cell.fill = FILL_LIGHT_BG
         cell.border = BORDER_GRID
 
+    # Department Full Title Lookup
+    dept_clean = str(department or "").strip().upper()
+    if "CSE(CS)" in dept_clean or "CSE (CS)" in dept_clean or dept_clean == "CS":
+        dept_full_name = "COMPUTER SCIENCE AND ENGINEERING (CYBER SECURITY)"
+    elif dept_clean == "CSE":
+        dept_full_name = "COMPUTER SCIENCE AND ENGINEERING"
+    elif dept_clean == "IT":
+        dept_full_name = "INFORMATION TECHNOLOGY"
+    elif dept_clean in ("AIDS", "AI&DS", "AI & DS"):
+        dept_full_name = "ARTIFICIAL INTELLIGENCE AND DATA SCIENCE"
+    elif dept_clean == "ECE":
+        dept_full_name = "ELECTRONICS AND COMMUNICATION ENGINEERING"
+    elif dept_clean == "EEE":
+        dept_full_name = "ELECTRICAL AND ELECTRONICS ENGINEERING"
+    elif dept_clean == "MECH":
+        dept_full_name = "MECHANICAL ENGINEERING"
+    elif dept_clean == "CIVIL":
+        dept_full_name = "CIVIL ENGINEERING"
+    elif dept_clean in ("ALL", "ALL DEPARTMENTS", "NONE", ""):
+        dept_full_name = "ALL DEPARTMENTS"
+    else:
+        dept_full_name = dept_clean
+
     if custom_dept_header:
         ws["A3"] = custom_dept_header
     elif not show_cohort:
-        dept_clean = str(department or "").strip().upper()
-        if "CSE(CS)" in dept_clean or "CSE (CS)" in dept_clean or dept_clean == "CS":
-            ws["A3"] = "DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING (CYBER SECURITY)"
-        elif dept_clean == "CSE":
-            ws["A3"] = "DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING"
-        elif dept_clean == "IT":
-            ws["A3"] = "DEPARTMENT OF INFORMATION TECHNOLOGY"
-        elif dept_clean in ("AIDS", "AI&DS"):
-            ws["A3"] = "DEPARTMENT OF ARTIFICIAL INTELLIGENCE AND DATA SCIENCE"
-        elif dept_clean == "ECE":
-            ws["A3"] = "DEPARTMENT OF ELECTRONICS AND COMMUNICATION ENGINEERING"
-        elif dept_clean == "EEE":
-            ws["A3"] = "DEPARTMENT OF ELECTRICAL AND ELECTRONICS ENGINEERING"
-        elif dept_clean == "MECH":
-            ws["A3"] = "DEPARTMENT OF MECHANICAL ENGINEERING"
-        elif dept_clean in ("ALL", "ALL DEPARTMENTS", "NONE", ""):
+        if dept_full_name == "ALL DEPARTMENTS":
             ws["A3"] = "INSTITUTIONAL MASTER REPORT • ALL DEPARTMENTS"
         else:
-            ws["A3"] = f"DEPARTMENT OF {dept_clean}"
+            ws["A3"] = f"DEPARTMENT OF {dept_full_name}"
     else:
-        if dept_str == "ALL DEPARTMENTS" and year_str == "ALL YEARS":
-            ws["A3"] = "INSTITUTIONAL MASTER REPORT • ALL DEPARTMENTS & COHORTS"
+        if dept_full_name == "ALL DEPARTMENTS" and year_str == "ALL YEARS":
+            ws["A3"] = "INSTITUTIONAL MASTER REPORT • ALL DEPARTMENTS"
         else:
-            ws["A3"] = f"DEPARTMENT OF {dept_str} • COHORT: {year_str}"
+            ws["A3"] = f"DEPARTMENT OF {dept_full_name}"
     ws["A3"].font = FONT_DEPT_HEADER
     ws["A3"].alignment = ALIGN_CENTER
     ws.row_dimensions[3].height = 22

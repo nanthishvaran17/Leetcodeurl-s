@@ -472,7 +472,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     n !== null && n !== undefined && !isNaN(n) ? n.toLocaleString() : fallback;
 
   return (
-    <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-2 pb-24 md:pb-8 animate-page-enter w-full">
+    <div className="space-y-5 sm:space-y-6 pt-0 pb-24 md:pb-8 animate-page-enter w-full">
       
       {/* 1. INSTITUTIONAL PERFORMANCE OVERVIEW */}
       <div className="stagger-1 relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900/95 to-indigo-950/90 text-white p-4 sm:p-7 lg:p-8 shadow-2xl border border-slate-700/80 dark:border-brand-500/30">
@@ -503,45 +503,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     ? 'Unable to load student data. Please retry.'
                     : `${canonicalTotal !== null ? canonicalTotal.toLocaleString() : totalStudents.toLocaleString()} enrolled students across all departments • Live sync, contest verification, & automated reporting.`}
             </p>
-
-            {/* Embedded Live Metric Pills */}
-            <div className="pt-1 flex flex-col gap-2 text-xs font-bold">
-              {/* Row 1: Enrolled + Active Profiles */}
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="min-w-0 px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">
-                  <Users className="w-3.5 h-3.5 text-brand-400" />
-                  <span className="text-slate-300 whitespace-nowrap">Enrolled:</span>
-                  <span className="text-white font-extrabold">{fmtCount(canonicalTotal ?? totalStudents)}</span>
-                </div>
-                <div className="min-w-0 px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-slate-300 whitespace-nowrap">Active Profiles:</span>
-                  <span className="text-emerald-400 font-extrabold">{fmtCount(activeStudents)}</span>
-                </div>
-              </div>
-              {/* Row 2: Post-9:30 Solvers + Contest Rate */}
-              <div className="flex items-center gap-1.5">
-                <div className="min-w-0 px-2 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span className="text-slate-300 whitespace-nowrap">Post-9:30 Solvers:</span>
-                  <span className="text-amber-400 font-extrabold">{fmtCount(actualContestSolvers)}</span>
-                </div>
-                <div className="min-w-0 px-2 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-1.5">
-                  <PieChart className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                  <span className="text-slate-300 whitespace-nowrap">Contest Rate:</span>
-                  <span className="text-indigo-300 font-extrabold">{contestParticipationRate}%</span>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Right: Action Buttons — 2×2 grid on mobile, flex row on ≥640px */}
-          <div className="w-full lg:w-auto shrink-0 pt-2 lg:pt-0">
+          <div className="w-full lg:w-auto shrink-0 pt-1 lg:pt-0">
             {studentsError && (
               <div className="mb-2">
                 <button
                   onClick={() => refetchStudents()}
-                  className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-lg flex items-center justify-center space-x-2 transition-all cursor-pointer focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                  className="w-full sm:w-auto min-h-[46px] px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-lg flex items-center justify-center space-x-2 transition-all cursor-pointer focus:ring-2 focus:ring-rose-500 focus:outline-none"
                   aria-label="Retry loading student roster data"
                   title="Retry loading student roster data"
                 >
@@ -554,7 +524,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <button
                 onClick={handleStartSync}
                 disabled={isSyncing}
-                className="relative min-w-0 w-full overflow-hidden min-h-[44px] px-2.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md border border-blue-400/40 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-blue-500 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
+                className="relative min-w-0 w-full overflow-hidden min-h-[46px] px-3 sm:px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black text-xs shadow-lg shadow-indigo-600/25 border border-indigo-400/40 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 touch-manipulation active:scale-95 group"
                 aria-label="Fetch live LeetCode statistics"
                 title="Synchronize live profile statistics for all students"
               >
@@ -564,7 +534,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
               <button
                 onClick={onOpenImport}
-                className="relative min-w-0 w-full overflow-hidden min-h-[44px] px-2.5 sm:px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs shadow-md border border-slate-600 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer focus:ring-2 focus:ring-brand-500 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
+                className="relative min-w-0 w-full overflow-hidden min-h-[46px] px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-white font-black text-xs shadow-md border border-slate-600/80 flex items-center justify-center space-x-2 transition-all cursor-pointer touch-manipulation active:scale-95 group"
                 aria-label="Import student roster from Excel"
                 title="Upload Excel roster (.xlsx) to parse, validate, and update student profiles"
               >
@@ -575,7 +545,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <button
                 onClick={handleExportExcel}
                 disabled={isExportingExcel}
-                className="relative min-w-0 w-full overflow-hidden min-h-[44px] px-2.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md border border-emerald-400/40 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-emerald-400 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
+                className="relative min-w-0 w-full overflow-hidden min-h-[46px] px-3 sm:px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-600/20 border border-emerald-400/40 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-70 touch-manipulation active:scale-95 group"
                 aria-label="Export raw student roster to Excel"
                 title="Export current active student roster & raw LeetCode statistics to Excel workbook (.xlsx)"
               >
@@ -583,7 +553,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   <>
                     <RefreshCw className="w-4 h-4 text-white animate-spin shrink-0" />
                     <span className="truncate tracking-wide font-black text-white">Exporting...</span>
-                    <span className="absolute bottom-0 left-0 right-0 h-1 bg-white/40 animate-pulse" />
                   </>
                 ) : (
                   <>
@@ -599,15 +568,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <button
                 onClick={handleGenerateReport}
                 disabled={generatingReport}
-                className="relative min-w-0 w-full overflow-hidden min-h-[44px] px-2.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-white font-extrabold text-xs shadow-md border border-amber-300/40 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-amber-400 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
+                className="relative min-w-0 w-full overflow-hidden min-h-[46px] px-3 sm:px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-white font-black text-xs shadow-lg shadow-amber-500/20 border border-amber-300/40 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-70 touch-manipulation active:scale-95 group"
                 aria-label="Generate official weekly institutional report"
-                title="Instant download of pre-generated 8-sheet weekly performance tracker & PDF summary"
+                title="Instant download of pre-generated weekly performance tracker & PDF summary"
               >
                 {generatingReport ? (
                   <>
                     <RefreshCw className="w-4 h-4 text-white animate-spin shrink-0" />
-                    <span className="truncate tracking-wide font-black text-white">Rendering PDF...</span>
-                    <span className="absolute bottom-0 left-0 right-0 h-1 bg-white/40 animate-pulse" />
+                    <span className="truncate tracking-wide font-black text-white">Rendering...</span>
                   </>
                 ) : (
                   <>
@@ -620,6 +588,123 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. EXECUTIVE BENTO KPI METRICS — 2026 Luxury Glassmorphic Architecture */}
+      <div className="stagger-2 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* Metric 1: Total Enrolled */}
+        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white/80 dark:bg-[#0c1424]/90 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-lg shadow-slate-200/50 dark:shadow-none hover:border-brand-500/50 dark:hover:border-brand-500/40 transition-all duration-300">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-brand-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-brand-500/20 transition-all duration-300" />
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-brand-500/15 to-indigo-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 flex items-center justify-center shadow-sm">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-300 border border-brand-200/60 dark:border-brand-500/20">
+              Institutional
+            </span>
+          </div>
+          <div className="space-y-1">
+            <div className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Enrolled Roster
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-display font-black text-slate-900 dark:text-white tracking-tight">
+                {fmtCount(canonicalTotal ?? totalStudents)}
+              </span>
+              <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">Students</span>
+            </div>
+            <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 pt-0.5 truncate">
+              {departments.length > 0 ? `${departments.length} Departments Covered` : 'Verified Roster Identity'}
+            </p>
+          </div>
+        </div>
+
+        {/* Metric 2: Active Profiles */}
+        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white/80 dark:bg-[#0c1424]/90 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-lg shadow-slate-200/50 dark:shadow-none hover:border-emerald-500/50 dark:hover:border-emerald-500/40 transition-all duration-300">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-emerald-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-emerald-500/20 transition-all duration-300" />
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shadow-sm">
+              <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Live Sync</span>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Active Profiles
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-display font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+                {fmtCount(activeStudents)}
+              </span>
+              <span className="text-[11px] font-black font-mono text-emerald-500 dark:text-emerald-400">
+                {totalStudents > 0 ? `${Math.round((activeStudents / totalStudents) * 1000) / 10}%` : ''}
+              </span>
+            </div>
+            <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 pt-0.5 truncate">
+              Synchronized LeetCode Handles
+            </p>
+          </div>
+        </div>
+
+        {/* Metric 3: Post-9:30 Solvers */}
+        <div 
+          onClick={() => onNavigateTab('post930')}
+          className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white/80 dark:bg-[#0c1424]/90 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-lg shadow-slate-200/50 dark:shadow-none hover:border-amber-500/50 dark:hover:border-amber-500/40 transition-all duration-300 cursor-pointer active:scale-[0.99]"
+        >
+          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-amber-500/20 transition-all duration-300" />
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shadow-sm">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-500/20">
+              Verified Solves
+            </span>
+          </div>
+          <div className="space-y-1">
+            <div className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Post-9:30 Solvers
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-display font-black text-amber-600 dark:text-amber-400 tracking-tight">
+                {fmtCount(actualContestSolvers)}
+              </span>
+              <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">Sunday</span>
+            </div>
+            <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 pt-0.5 truncate">
+              Timestamp Authenticated • View Solvers →
+            </p>
+          </div>
+        </div>
+
+        {/* Metric 4: Contest Rate */}
+        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white/80 dark:bg-[#0c1424]/90 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-lg shadow-slate-200/50 dark:shadow-none hover:border-indigo-500/50 dark:hover:border-indigo-500/40 transition-all duration-300">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-indigo-500/20 transition-all duration-300" />
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-indigo-500/15 to-purple-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shadow-sm">
+              <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-500/20">
+              Contest Pace
+            </span>
+          </div>
+          <div className="space-y-1">
+            <div className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Contest Rate
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-display font-black text-indigo-600 dark:text-indigo-300 tracking-tight">
+                {contestParticipationRate}%
+              </span>
+              <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">Cohort</span>
+            </div>
+            <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 pt-0.5 truncate">
+              Weekly Contest Engagement Index
+            </p>
           </div>
         </div>
       </div>
@@ -824,8 +909,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
         ) : (
           <div>
-            {/* MOBILE DEPARTMENT CARDS (< 768px) */}
-            <div className="block md:hidden divide-y divide-slate-100 dark:divide-navy-800">
+            {/* MOBILE DEPARTMENT CARDS (< 768px) — Luxury Bento Redesign */}
+            <div className="block md:hidden space-y-3">
               {departments
                 .filter((dept: any) => {
                   const code = (dept.department_code || dept.code || '').toUpperCase();
@@ -840,46 +925,51 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   return (a.department_code || '').localeCompare(b.department_code || '');
                 })
                 .map((dept: any) => (
-                  <div key={dept.department_code || dept.department_id} className="py-4 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="space-y-0.5 min-w-0 flex-1">
-                        <div className="font-black text-sm text-slate-900 dark:text-white">
-                          {dept.department_code}
+                  <div key={dept.department_code || dept.department_id} className="p-4 rounded-2xl bg-white dark:bg-[#0a1120] border border-slate-200/90 dark:border-white/10 shadow-xs space-y-3.5 transition-all hover:border-brand-500/30">
+                    {/* Header Row */}
+                    <div className="flex items-start justify-between gap-2.5">
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded-lg bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20 font-black text-xs font-mono">
+                            {dept.department_code}
+                          </span>
                         </div>
-                        <div className="text-xs text-slate-700 dark:text-slate-200 font-semibold break-words whitespace-normal leading-snug">
+                        <div className="text-xs text-slate-700 dark:text-slate-300 font-bold leading-snug">
                           {dept.department_name}
                         </div>
                       </div>
-                      <div className="text-right shrink-0">
-                        <span className="text-xs text-slate-700 dark:text-slate-200 uppercase font-extrabold block">Students</span>
-                        <span className="text-base font-black text-slate-900 dark:text-white">{dept.total_students}</span>
+                      <div className="text-right shrink-0 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-white/[0.05] border border-slate-200/80 dark:border-white/10">
+                        <span className="text-[9px] text-slate-500 uppercase font-black block tracking-wider">Students</span>
+                        <span className="text-sm font-black text-slate-900 dark:text-white font-mono">{dept.total_students}</span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 text-xs text-center">
-                      <div className="p-2 rounded-xl bg-slate-100/90 dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
-                        <span className="text-xs text-slate-700 dark:text-slate-200 font-extrabold block uppercase">Active</span>
-                        <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
+                    {/* 3-Metric Bento Grid */}
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-0.5">
+                        <span className="text-[9px] text-emerald-700 dark:text-emerald-300 font-black block uppercase tracking-wider">Active</span>
+                        <span className="font-mono font-black text-sm text-emerald-600 dark:text-emerald-400">
                           {dept.active_students ?? dept.active_count ?? Math.round(((dept.participation_rate || 0) / 100) * dept.total_students)}
                         </span>
                       </div>
-                      <div className="p-2 rounded-xl bg-slate-100/90 dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
-                        <span className="text-xs text-slate-700 dark:text-slate-200 font-extrabold block uppercase">Weekly Attended</span>
-                        <span className="font-extrabold text-indigo-600 dark:text-indigo-400">
+                      <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 space-y-0.5">
+                        <span className="text-[9px] text-indigo-700 dark:text-indigo-300 font-black block uppercase tracking-wider">Contest</span>
+                        <span className="font-mono font-black text-sm text-indigo-600 dark:text-indigo-400">
                           {dept.contest_attended || 0}
                         </span>
                       </div>
-                      <div className="p-2 rounded-xl bg-slate-100/90 dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
-                        <span className="text-xs text-slate-700 dark:text-slate-200 font-extrabold block uppercase">Attended %</span>
-                        <span className="font-black text-indigo-600 dark:text-indigo-400">
+                      <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 space-y-0.5">
+                        <span className="text-[9px] text-purple-700 dark:text-purple-300 font-black block uppercase tracking-wider">Rate</span>
+                        <span className="font-mono font-black text-sm text-purple-600 dark:text-purple-400">
                           {dept.total_students > 0 ? Math.round(((dept.contest_attended || 0) / dept.total_students) * 100) : 0}%
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-1 gap-2">
+                    {/* Top Performer & Action Row */}
+                    <div className="flex items-center justify-between pt-1 gap-2 border-t border-slate-100 dark:border-white/[0.06]">
                       <div className="text-xs min-w-0 flex-1">
-                        <span className="text-xs text-slate-700 dark:text-slate-200 font-extrabold uppercase block">Top Performer</span>
+                        <span className="text-[9px] text-slate-500 dark:text-slate-400 font-black uppercase tracking-wider block">Top Performer</span>
                         <button
                           type="button"
                           onClick={() => {
@@ -889,16 +979,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                               onSelectStudent({ id: dept.top_student_id, reg_no: String(dept.top_student_id), name: dept.top_student_name } as any);
                             }
                           }}
-                          className={`font-bold text-amber-600 dark:text-amber-400 truncate block text-left ${dept.top_student_id && onSelectStudent ? 'hover:underline cursor-pointer' : ''}`}
+                          className={`font-black text-xs text-amber-600 dark:text-amber-400 truncate block text-left ${dept.top_student_id && onSelectStudent ? 'hover:underline cursor-pointer' : ''}`}
                         >
                           {dept.top_student_name || '—'}
                         </button>
                       </div>
                       <button
                         onClick={() => onNavigateTab('departments')}
-                        className="px-3 py-1.5 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 hover:bg-brand-500 hover:text-white font-extrabold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0"
+                        className="px-3 py-2 min-h-[38px] rounded-xl bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 hover:text-brand-500 font-black text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 touch-manipulation active:scale-95 border border-brand-500/20 flex items-center gap-1"
                       >
-                        View Department Report →
+                        <span>Report</span>
+                        <span>→</span>
                       </button>
                     </div>
                   </div>

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { 
-  ShieldCheck, Lock, Activity, Clock, RefreshCw, Mail, Database, 
+import {
+  ShieldCheck, Lock, Activity, Clock, RefreshCw, Mail, Database,
   AlertTriangle, Save, CheckCircle2, XCircle, ArrowRight, Layers,
   Shield, Server, FileText, CheckCircle, FileSpreadsheet, Archive,
-  Send, Fingerprint, Search, Filter, Download, Upload, Eye, 
+  Send, Fingerprint, Search, Filter, Download, Upload, Eye,
   Check, HardDrive, Terminal, Sparkles, SlidersHorizontal, UserCheck,
   Camera, Play, ShieldAlert, ChevronRight, Info, X, Copy, Code, Zap, FileCode, Bell, RotateCcw, Trash2, User
 } from 'lucide-react';
@@ -172,14 +172,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ initialSection }) =>
   useEffect(() => {
     if (!initialSettings || Object.keys(initialSettings).length === 0) return;
     const diffs: string[] = [];
-    Object.keys(settings).forEach(key => {
-      if (key === 'SMTP_PASSWORD_MASKED' || key === 'LAST_UPDATED_AT') return;
-      if (String(settings[key]) !== String(initialSettings[key])) {
+    const allKeys = new Set([...Object.keys(settings), ...Object.keys(initialSettings)]);
+    allKeys.forEach(key => {
+      if (key === 'SMTP_PASSWORD_MASKED' || key === 'LAST_UPDATED_AT' || key === 'worker_heartbeat') return;
+      if (String(settings[key] ?? '') !== String(initialSettings[key] ?? '')) {
         diffs.push(key);
       }
     });
     setChangedKeys(diffs);
   }, [settings, initialSettings]);
+
+  const handleDiscardChanges = () => {
+    setSettings({ ...initialSettings });
+    setChangedKeys([]);
+    notify.info('Changes Discarded', 'Reverted all unsaved configuration values back to previous state.', { category: 'ADMIN SETTINGS' });
+  };
 
   // Unsaved changes unload prompt
   useEffect(() => {
@@ -217,10 +224,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ initialSection }) =>
   const fetchSystemHealth = async () => {
     setIsProbing(true);
     setSystemHealth(null);
-    
+
     try {
       const res = await api.get('/settings/system-health');
-      
+
       if (res.data && res.data.components) {
         setSystemHealth(res.data);
         setLastProbed(new Date());
@@ -302,7 +309,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ initialSection }) =>
 
     try {
       await api.post('/settings', settings);
-      
+
       const diffSummary = changedKeys.map(k => `${k}: ${initialSettings[k] || 'default'} → ${settings[k]}`).join(', ');
       setSaveDiffMsg(`Configuration saved successfully. Changed (${changedKeys.length}): ${diffSummary}`);
       setTimeout(() => setSaveDiffMsg(null), 6000);
@@ -572,7 +579,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ initialSection }) =>
 
     const jsonStr = JSON.stringify(payload, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
-    const filename = `Data_Integrity_Audit_Report_${new Date().toISOString().slice(0,10)}.json`;
+    const filename = `Data_Integrity_Audit_Report_${new Date().toISOString().slice(0, 10)}.json`;
     triggerDownload(blob, filename, 'application/json');
     notify.success('Audit Report Exported', 'Data Integrity Evidence JSON downloaded successfully.', { category: 'DATA INTEGRITY' });
   };
@@ -613,7 +620,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
 
     const jsonStr = JSON.stringify(payload, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
-    const filename = `Rule_Certificate_${(rule.id || 'RULE').toUpperCase()}_${new Date().toISOString().slice(0,10)}.json`;
+    const filename = `Rule_Certificate_${(rule.id || 'RULE').toUpperCase()}_${new Date().toISOString().slice(0, 10)}.json`;
     triggerDownload(blob, filename, 'application/json');
     notify.success('Certificate Exported', `Compliance certificate for '${rule.label}' exported as JSON.`, { category: 'DATA INTEGRITY' });
   };
@@ -670,7 +677,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
 
   return (
     <div className="space-y-6 pb-16 text-xs text-slate-800 dark:text-slate-200">
-      
+
       {/* 1. RICH INSTITUTIONAL PAGE HEADER BANNER */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
@@ -692,7 +699,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
             </h1>
 
             <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
-              {isAdmin 
+              {isAdmin
                 ? 'Manage institutional parameters, staff profiles & access, system synchronization health, and background data integrity checks.'
                 : 'Manage your personal staff details, profile photo, contact number, date of birth, and security credentials.'}
             </p>
@@ -791,11 +798,10 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
               type="button"
               onClick={fetchSystemHealth}
               disabled={isProbing}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all shadow-md active:scale-95 cursor-pointer shrink-0 mt-3 sm:mt-0 ${
-                isProbing
+              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all shadow-md active:scale-95 cursor-pointer shrink-0 mt-3 sm:mt-0 ${isProbing
                   ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 cursor-not-allowed'
                   : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-500/25 border border-brand-500'
-              }`}
+                }`}
             >
               <RefreshCw className={`w-3.5 h-3.5 text-white ${isProbing ? 'animate-spin' : ''}`} />
               <span>{isProbing ? 'Probing...' : 'Probe Now'}</span>
@@ -821,8 +827,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
               return (
                 <div
                   key={`${item.key}-${probeKey}`}
-                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 shadow-2xs ${
-                    isChecking
+                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 shadow-2xs ${isChecking
                       ? 'bg-slate-50 dark:bg-navy-900/60 border-slate-200 dark:border-navy-700'
                       : isHealthy
                         ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-emerald-400/60 dark:border-emerald-600/60 hover:border-emerald-500'
@@ -831,14 +836,13 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                           : isFailed
                             ? 'bg-rose-500/5 dark:bg-rose-950/20 border-rose-400/60 dark:border-rose-600/60'
                             : 'bg-slate-50 dark:bg-navy-900/60 border-slate-200 dark:border-navy-700'
-                  }`}
+                    }`}
                   style={{
                     animation: probeKey > 0 ? `card-pop 0.35s cubic-bezier(0.4,0,0.2,1) ${idx * 40}ms both` : 'none'
                   }}
                 >
                   <span className="text-[10.5px] uppercase font-black text-slate-900 dark:text-white tracking-wider truncate w-full text-center">{item.label}</span>
-                  <span className={`font-black text-[10px] mt-2 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${
-                    isChecking
+                  <span className={`font-black text-[10px] mt-2 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${isChecking
                       ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 animate-pulse'
                       : isHealthy
                         ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
@@ -847,7 +851,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                           : isOffline || isUnknown
                             ? 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30'
                             : 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30'
-                  }`}>
+                    }`}>
                     {isChecking && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />}
                     {isHealthy && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
                     {isChecking ? 'Checking' : isHealthy ? 'Healthy' : isDegraded ? 'Degraded' : isOffline ? 'Offline' : isUnknown ? 'Unknown' : isFailed ? 'Failed' : 'Healthy'}
@@ -905,27 +909,26 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
             { id: 'maintenance', label: 'Maintenance', icon: Server },
             { id: 'security', label: 'Security Activity', icon: Lock }
           ]
-          .filter(tab => !settingsSearch.trim() || tab.label.toLowerCase().includes(settingsSearch.toLowerCase()))
-          .map(tab => {
-            const Icon = tab.icon;
-            const isActive = activeSectionFilter === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveSectionFilter(tab.id)}
-                className={`w-full min-w-0 px-3 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer text-left ${
-                  isActive
-                    ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25 ring-2 ring-brand-500/30'
-                    : 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-200/80 dark:border-slate-800'
-                }`}
-                title={tab.label}
-              >
-                <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-brand-500'}`} />
-                <span className="truncate">{tab.label}</span>
-              </button>
-            );
-          })}
+            .filter(tab => !settingsSearch.trim() || tab.label.toLowerCase().includes(settingsSearch.toLowerCase()))
+            .map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeSectionFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveSectionFilter(tab.id)}
+                  className={`w-full min-w-0 px-3 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer text-left ${isActive
+                      ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25 ring-2 ring-brand-500/30'
+                      : 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-200/80 dark:border-slate-800'
+                    }`}
+                  title={tab.label}
+                >
+                  <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-brand-500'}`} />
+                  <span className="truncate">{tab.label}</span>
+                </button>
+              );
+            })}
         </div>
       </div>
 
@@ -972,11 +975,11 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
         {/* 4. SECTION I — WEEKLY AUTOMATION & SCHEDULING SUITE */}
         {activeSectionFilter === 'automation' && (
           <div className="space-y-6 animate-fade-in">
-            
+
             {/* Live Scheduler Execution & Status Control Header */}
             <div className="p-6 rounded-3xl bg-gradient-to-r from-brand-900 via-indigo-950 to-navy-950 text-white shadow-2xl border border-brand-500/30 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
-              
+
               <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 relative z-10">
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
@@ -1388,11 +1391,10 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                 Sync Modes & Guard Protocols
               </label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <label className={`flex items-start space-x-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                  settings.AUTO_CONTEST_SYNC === 'true'
+                <label className={`flex items-start space-x-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${settings.AUTO_CONTEST_SYNC === 'true'
                     ? 'border-indigo-300 dark:border-indigo-700/80 bg-indigo-50/40 dark:bg-indigo-950/20 shadow-xs ring-1 ring-indigo-500/20'
                     : 'border-slate-200 dark:border-navy-700 bg-slate-50/40 dark:bg-navy-900/30 opacity-75'
-                }`}>
+                  }`}>
                   <input
                     type="checkbox"
                     checked={settings.AUTO_CONTEST_SYNC === 'true'}
@@ -1407,11 +1409,10 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                   </div>
                 </label>
 
-                <label className={`flex items-start space-x-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                  settings.HISTORICAL_ARCHIVE_SYNC === 'true'
+                <label className={`flex items-start space-x-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${settings.HISTORICAL_ARCHIVE_SYNC === 'true'
                     ? 'border-indigo-300 dark:border-indigo-700/80 bg-indigo-50/40 dark:bg-indigo-950/20 shadow-xs ring-1 ring-indigo-500/20'
                     : 'border-slate-200 dark:border-navy-700 bg-slate-50/40 dark:bg-navy-900/30 opacity-75'
-                }`}>
+                  }`}>
                   <input
                     type="checkbox"
                     checked={settings.HISTORICAL_ARCHIVE_SYNC === 'true'}
@@ -1426,11 +1427,10 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                   </div>
                 </label>
 
-                <label className={`flex items-start space-x-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                  settings.STRICT_ZERO_SCORE_GUARD !== 'false'
+                <label className={`flex items-start space-x-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${settings.STRICT_ZERO_SCORE_GUARD !== 'false'
                     ? 'border-indigo-300 dark:border-indigo-700/80 bg-indigo-50/40 dark:bg-indigo-950/20 shadow-xs ring-1 ring-indigo-500/20'
                     : 'border-slate-200 dark:border-navy-700 bg-slate-50/40 dark:bg-navy-900/30 opacity-75'
-                }`}>
+                  }`}>
                   <input
                     type="checkbox"
                     checked={settings.STRICT_ZERO_SCORE_GUARD !== 'false'}
@@ -1569,97 +1569,97 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
             {/* 9 Production Integrity Rule Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 text-xs relative z-10">
               {[
-                { 
+                {
                   id: 'authentic',
-                  label: 'Authentic Contest Data Only', 
-                  value: 'LOCKED ON', 
-                  bg: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-900 dark:text-emerald-200', 
+                  label: 'Authentic Contest Data Only',
+                  value: 'LOCKED ON',
+                  bg: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-900 dark:text-emerald-200',
                   pill: 'bg-emerald-600 text-white',
                   icon: ShieldCheck,
                   desc: 'Ingests only authentic LeetCode public contest APIs & certificates. Hard block on unverified numbers.'
                 },
-                { 
+                {
                   id: 'synthetic',
-                  label: 'Synthetic / Mock Data', 
-                  value: 'LOCKED OFF', 
-                  bg: 'bg-rose-500/15 border-rose-500/40 text-rose-900 dark:text-rose-200', 
+                  label: 'Synthetic / Mock Data',
+                  value: 'LOCKED OFF',
+                  bg: 'bg-rose-500/15 border-rose-500/40 text-rose-900 dark:text-rose-200',
                   pill: 'bg-rose-600 text-white',
                   icon: ShieldAlert,
                   desc: 'Zero mock or placeholder student rosters permitted in production DB. Strictly locked off.'
                 },
-                { 
+                {
                   id: 'equality',
-                  label: 'Question Equality (Q1+Q2+Q3+Q4 = Solved)', 
-                  value: 'ENFORCED', 
-                  bg: 'bg-brand-500/15 border-brand-500/40 text-brand-900 dark:text-brand-200', 
+                  label: 'Question Equality (Q1+Q2+Q3+Q4 = Solved)',
+                  value: 'ENFORCED',
+                  bg: 'bg-brand-500/15 border-brand-500/40 text-brand-900 dark:text-brand-200',
                   pill: 'bg-brand-600 text-white',
                   icon: CheckCircle2,
                   desc: 'Sum of individual question solves must mathematically equal total contest solved count.'
                 },
-                { 
+                {
                   id: 'student_iso',
-                  label: 'Student + Contest Isolation', 
-                  value: 'ENFORCED', 
-                  bg: 'bg-cyan-500/15 border-cyan-500/40 text-cyan-900 dark:text-cyan-200', 
+                  label: 'Student + Contest Isolation',
+                  value: 'ENFORCED',
+                  bg: 'bg-cyan-500/15 border-cyan-500/40 text-cyan-900 dark:text-cyan-200',
                   pill: 'bg-cyan-600 text-white',
                   icon: UserCheck,
                   desc: 'Guarantees 1-to-1 unique pairing per student and session to prevent cross-account bleed.'
                 },
-                { 
+                {
                   id: 'session_iso',
-                  label: 'Session + Contest Isolation', 
-                  value: 'ENFORCED', 
-                  bg: 'bg-blue-500/15 border-blue-500/40 text-blue-900 dark:text-blue-200', 
+                  label: 'Session + Contest Isolation',
+                  value: 'ENFORCED',
+                  bg: 'bg-blue-500/15 border-blue-500/40 text-blue-900 dark:text-blue-200',
                   pill: 'bg-blue-600 text-white',
                   icon: Layers,
                   desc: 'Strict isolation between weekly contest sessions; historical snapshots cannot mutate.'
                 },
-                { 
+                {
                   id: 'duplicate_det',
-                  label: 'Duplicate Result Detection', 
-                  value: 'ENFORCED', 
-                  bg: 'bg-amber-500/15 border-amber-500/40 text-amber-900 dark:text-amber-200', 
+                  label: 'Duplicate Result Detection',
+                  value: 'ENFORCED',
+                  bg: 'bg-amber-500/15 border-amber-500/40 text-amber-900 dark:text-amber-200',
                   pill: 'bg-amber-600 text-white',
                   icon: AlertTriangle,
                   desc: 'Automated unique constraint verification across database indices (0 duplicates allowed).'
                 },
-                { 
+                {
                   id: 'sentinel_det',
-                  label: 'Sentinel Value Detection', 
-                  value: 'ENFORCED', 
-                  bg: 'bg-purple-500/15 border-purple-500/40 text-purple-900 dark:text-purple-200', 
+                  label: 'Sentinel Value Detection',
+                  value: 'ENFORCED',
+                  bg: 'bg-purple-500/15 border-purple-500/40 text-purple-900 dark:text-purple-200',
                   pill: 'bg-purple-600 text-white',
                   icon: Eye,
                   desc: 'Rejects placeholder values like -1, fake 0, or 9999 scores across all leaderboard calculations.'
                 },
-                { 
+                {
                   id: 'leakage_det',
-                  label: 'Cross-Contest Leakage Detection', 
-                  value: 'ENFORCED', 
-                  bg: 'bg-teal-500/15 border-teal-500/40 text-teal-900 dark:text-teal-200', 
+                  label: 'Cross-Contest Leakage Detection',
+                  value: 'ENFORCED',
+                  bg: 'bg-teal-500/15 border-teal-500/40 text-teal-900 dark:text-teal-200',
                   pill: 'bg-teal-600 text-white',
                   icon: Lock,
                   desc: 'Prevents score leakage between distinct contest numbers (e.g. Weekly 519 vs 520).'
                 },
-                { 
+                {
                   id: 'parity',
-                  label: 'DB → API → UI Parity', 
-                  value: 'ENFORCED', 
-                  bg: 'bg-indigo-500/15 border-indigo-500/40 text-indigo-900 dark:text-indigo-200', 
+                  label: 'DB → API → UI Parity',
+                  value: 'ENFORCED',
+                  bg: 'bg-indigo-500/15 border-indigo-500/40 text-indigo-900 dark:text-indigo-200',
                   pill: 'bg-indigo-600 text-white',
                   icon: Database,
                   desc: 'Guarantees 100% data row alignment between SQLite DB tables, REST API JSON, and React UI.'
                 },
               ].map(rule => {
                 const IconComponent = rule.icon;
-                const backendRule = integrityAuditData?.rules?.find((r: any) => 
+                const backendRule = integrityAuditData?.rules?.find((r: any) =>
                   r.rule.toLowerCase().includes(rule.id) || r.rule.toLowerCase().includes(rule.label.toLowerCase())
                 );
                 const isPassed = backendRule ? backendRule.passed : true;
 
                 return (
-                  <div 
-                    key={rule.label} 
+                  <div
+                    key={rule.label}
                     onClick={() => setSelectedIntegrityRule({ ...rule, backendRule })}
                     className={`p-3.5 rounded-2xl border ${rule.bg} font-bold transition-all hover:scale-[1.02] hover:shadow-md cursor-pointer flex flex-col justify-between gap-2.5 group`}
                   >
@@ -2176,12 +2176,12 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
       {/* 12. SECTION IX — ADVANCED SYSTEM MAINTENANCE & PRIVILEGED OPERATIONS ENGINE */}
       {activeSectionFilter === 'maintenance' && (
         <div className="space-y-6 mt-6 animate-fade-in">
-          
+
           {/* Top Hero Banner */}
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-brand-950/80 text-white p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.4)] border border-slate-800/80">
             <div className="absolute -top-24 -right-24 w-96 h-96 bg-brand-500/15 rounded-full blur-[80px] pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-brand-500/20 to-transparent" />
-            
+
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-3 max-w-2xl min-w-0">
                 <div className="flex items-center gap-3 flex-wrap">
@@ -2484,7 +2484,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
       {selectedIntegrityRule && typeof document !== 'undefined' && createPortal(
         <div className="modal-overlay-responsive animate-modal-backdrop">
           <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-950 border border-emerald-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 animate-modal-content">
-            
+
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-4 border-b border-slate-200 dark:border-navy-800 pb-4">
               <div className="flex items-center space-x-3 min-w-0">
@@ -2536,11 +2536,10 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                     key={tab.id}
                     type="button"
                     onClick={() => setInspectorTab(tab.id as any)}
-                    className={`flex-1 min-w-[110px] px-3 py-2 rounded-xl font-bold text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      isActive
+                    className={`flex-1 min-w-[110px] px-3 py-2 rounded-xl font-bold text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer ${isActive
                         ? 'bg-brand-600 text-white shadow-md font-black'
                         : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800'
-                    }`}
+                      }`}
                   >
                     <TabIcon className="w-3.5 h-3.5" />
                     <span>{tab.label}</span>
@@ -2753,6 +2752,50 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                 Close Rule Inspector
               </button>
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* FLOATING ACTION BAR FOR UNSAVED CHANGES */}
+      {changedKeys.length > 0 && typeof document !== 'undefined' && createPortal(
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[99999] w-[95%] max-w-2xl bg-slate-900/95 dark:bg-navy-950/95 text-white p-3.5 sm:p-4 rounded-2xl border-2 border-amber-500/60 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl animate-fade-in flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
+            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
+              <AlertTriangle className="w-5 h-5 animate-pulse" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-black text-xs text-white">
+                  {changedKeys.length} Unsaved Configuration {changedKeys.length === 1 ? 'Change' : 'Changes'}
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono text-[10px] font-bold">
+                  PENDING SAVE
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 truncate max-w-md">
+                {changedKeys.slice(0, 4).join(', ')}{changedKeys.length > 4 ? ` +${changedKeys.length - 4} more` : ''}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={handleDiscardChanges}
+              className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs border border-slate-700 transition-all cursor-pointer"
+            >
+              Discard
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 sm:flex-initial px-5 py-2 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-black text-xs shadow-lg shadow-brand-500/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+            >
+              {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              <span>{saving ? 'Saving...' : 'Save Configuration'}</span>
+            </button>
           </div>
         </div>,
         document.body

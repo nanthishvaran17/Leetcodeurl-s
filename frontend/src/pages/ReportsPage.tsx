@@ -1,5 +1,5 @@
-import React, { useState, useEffect, startTransition } from 'react';
-import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock, Building2, GraduationCap, ChevronDown, Check, Target, Loader2, Trophy, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useMemo, startTransition } from 'react';
+import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock, Building2, GraduationCap, ChevronDown, Check, Target, Loader2, Trophy, RefreshCw, Search } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api, { getApiUrl } from '../services/api';
 import { ReportPreview } from '../components/ReportPreview';
@@ -30,7 +30,24 @@ export const ReportsPage: React.FC = () => {
   const [activeUniversalPreviewData, setActiveUniversalPreviewData] = useState<any>(null);
   const [isGeneratingUniversal, setIsGeneratingUniversal] = useState<boolean>(false);
   const [selectedReportType, setSelectedReportType] = useState<string>('STUDENT_PERFORMANCE');
-  const [selectedDept, setSelectedDept] = useState<string>('ALL');
+
+  const userRole = (user?.role || '').trim().toLowerCase();
+  const isHodUser = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(userRole);
+  const hodDeptDefault = useMemo(() => {
+    if (!isHodUser) return 'ALL';
+    const codes = user?.authorized_department_codes || [];
+    if (codes.length > 0) return codes[0];
+    return (user as any)?.department_code || 'ALL';
+  }, [user, isHodUser]);
+
+  const [selectedDept, setSelectedDept] = useState<string>(() => hodDeptDefault);
+
+  useEffect(() => {
+    if (isHodUser && hodDeptDefault !== 'ALL' && (selectedDept === 'ALL' || !selectedDept)) {
+      setSelectedDept(hodDeptDefault);
+    }
+  }, [isHodUser, hodDeptDefault, selectedDept]);
+
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
   const [selectedOutputScope, setSelectedOutputScope] = useState<string>('COLLEGE');
   const [selectedSessionId, setSelectedSessionId] = useState<string>('latest');
@@ -43,6 +60,7 @@ export const ReportsPage: React.FC = () => {
   const [rptScopeOpen, setRptScopeOpen] = useState<boolean>(false);
   const [rptTypeOpen, setRptTypeOpen] = useState<boolean>(false);
   const [rptSessionOpen, setRptSessionOpen] = useState<boolean>(false);
+  const [rptSearch, setRptSearch] = useState<string>('');
 
   // Floating Center Delete Modal & Toast States
   const [deleteModalItem, setDeleteModalItem] = useState<DeleteItemInfo | null>(null);
@@ -56,9 +74,10 @@ export const ReportsPage: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (navigator.onLine) {
+        const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
         api.post('/reports/generate', {
           report_type: selectedReportType,
-          department: selectedDept,
+          department: effDept,
           year: selectedYear,
           output_scope: selectedOutputScope,
           filters: { session_id: selectedSessionId }
@@ -66,7 +85,7 @@ export const ReportsPage: React.FC = () => {
       }
     }, 250);
     return () => clearTimeout(timer);
-  }, [selectedReportType, selectedDept, selectedYear, selectedOutputScope, selectedSessionId]);
+  }, [selectedReportType, selectedDept, selectedYear, selectedOutputScope, selectedSessionId, isHodUser, hodDeptDefault]);
 
   useEffect(() => {
     if (deleteModalItem || showCertModal || activeUniversalPreviewId || showSyncModal) {
@@ -192,11 +211,15 @@ export const ReportsPage: React.FC = () => {
     setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
 
     // Parse query params from endpoint to filters first
+    const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
     const urlParts = endpoint.split('?');
-    const filters: any = { department: selectedDept, year: selectedYear, output_scope: selectedOutputScope, session_id: selectedSessionId };
+    const filters: any = { department: effDept, year: selectedYear, output_scope: selectedOutputScope, session_id: selectedSessionId };
     if (urlParts.length > 1) {
       const params = new URLSearchParams(urlParts[1]);
       params.forEach((val, key) => { filters[key] = val; });
+    }
+    if (isHodUser && (filters.department === 'ALL' || !filters.department)) {
+      filters.department = hodDeptDefault;
     }
 
     // Map report_type and format dynamically
@@ -242,7 +265,8 @@ export const ReportsPage: React.FC = () => {
 
   const getActiveFilterQueryParams = (extraParams?: Record<string, string>) => {
     const params = new URLSearchParams();
-    if (selectedDept && selectedDept !== 'ALL') params.append('department', selectedDept);
+    const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
+    if (effDept && effDept !== 'ALL') params.append('department', effDept);
     if (selectedYear && selectedYear !== 'ALL') params.append('year', selectedYear);
     if (selectedOutputScope && selectedOutputScope !== 'ALL') params.append('output_scope', selectedOutputScope);
     if (selectedReportType) params.append('report_type', selectedReportType);
@@ -351,7 +375,8 @@ export const ReportsPage: React.FC = () => {
 
     try {
       const reportType = overrideType || selectedReportType;
-      const department = overrideFilters?.department || selectedDept;
+      const rawDept = overrideFilters?.department || selectedDept;
+      const department = (isHodUser && (rawDept === 'ALL' || !rawDept)) ? hodDeptDefault : rawDept;
       const year = overrideFilters?.year || selectedYear;
       const output_scope = overrideFilters?.output_scope || selectedOutputScope;
 
@@ -559,15 +584,15 @@ export const ReportsPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6 sm:space-y-8 pt-1 sm:pt-0 pb-10 animate-fade-in">
+    <div className="space-y-6 sm:space-y-8 pt-0 pb-10 animate-fade-in">
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 shadow-lg border border-brand-500/30">
 
-        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-3 max-w-2xl">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="space-y-2 sm:space-y-3 max-w-2xl">
 
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight uppercase">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight uppercase">
               {['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? (
                 <>
                   MY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">EXPORT SUITE</span>
@@ -579,90 +604,92 @@ export const ReportsPage: React.FC = () => {
               )}
             </h1>
 
-            <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
+            <p className="text-xs md:text-sm text-slate-300 font-medium sm:font-bold tracking-wide">
               {['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())
                 ? "Download individual formatted Excel workbooks and reports for your assigned students."
                 : "Download individual formatted Excel workbooks, executive PDF summaries, and dispatch automated Sunday email reports to management"}
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto shrink-0 mt-2 sm:mt-0">
+          <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2.5 sm:gap-3 w-full md:w-auto shrink-0 pt-2 sm:pt-0">
             <button
               onClick={handleTriggerSync}
-              className="flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-bold shadow-lg shadow-emerald-600/30 transition-all transform hover:scale-105 cursor-pointer w-full sm:w-auto shrink-0"
+              className="flex items-center justify-center space-x-2 px-3.5 sm:px-5 py-2.5 min-h-[44px] bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-bold shadow-lg shadow-emerald-600/30 transition-all transform active:scale-95 cursor-pointer w-full sm:w-auto shrink-0 touch-manipulation"
             >
-              <RefreshCw className="w-4 h-4" />
-              <span>Live Sync</span>
+              <RefreshCw className="w-4 h-4 shrink-0" />
+              <span className="truncate">Live Sync</span>
             </button>
             <button
               onClick={() => setShowCertModal(true)}
-              className="flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all transform hover:scale-105 cursor-pointer w-full sm:w-auto shrink-0"
+              className="flex items-center justify-center space-x-2 px-3.5 sm:px-5 py-2.5 min-h-[44px] bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all transform active:scale-95 cursor-pointer w-full sm:w-auto shrink-0 touch-manipulation"
             >
-              <Award className="w-4 h-4" />
-              <span>Generate Merit Certificates</span>
+              <Award className="w-4 h-4 shrink-0" />
+              <span className="truncate">Merit Certificates</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Main Tab Navigation */}
-      <div className="flex items-center gap-3 bg-slate-100 dark:bg-navy-950 p-2.5 rounded-2xl max-w-fit border border-slate-200 dark:border-slate-800 flex-wrap mt-4 mb-8 sm:mb-10 shadow-sm">
+      <div className="flex items-center gap-2 sm:gap-3 bg-slate-100 dark:bg-navy-950 p-1.5 sm:p-2.5 rounded-2xl w-full sm:max-w-fit border border-slate-200 dark:border-slate-800 flex-nowrap overflow-x-auto mt-2 mb-6 sm:mb-10 shadow-sm scrollbar-none">
         <button
           onClick={() => startTransition(() => setActiveTab('reports'))}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'reports'
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 sm:px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap touch-manipulation active:scale-95 ${activeTab === 'reports'
               ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
         >
-          <FileSpreadsheet className="w-4 h-4" />
-          <span>Exports & Download Hub</span>
+          <FileSpreadsheet className="w-4 h-4 shrink-0" />
+          <span>Exports &amp; Hub</span>
         </button>
 
         <button
           onClick={() => startTransition(() => setActiveTab('email'))}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email'
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 sm:px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap touch-manipulation active:scale-95 ${activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email'
               ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
         >
-          <Mail className="w-4 h-4 text-emerald-400" />
-          <span>Email Operations Center</span>
+          <Mail className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>Email Operations</span>
         </button>
       </div>
+
+
 
       {activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email' ? (
         <EmailDeliveryTab defaultSection="manual" />
       ) : (
         <>
 
-          {/* Universal Institutional Reports Section */}
-          <div className={`glass-card p-4 sm:p-5 rounded-3xl border border-brand-500/30 dark:border-brand-500/20 shadow-lg space-y-4 bg-gradient-to-r from-brand-500/5 via-cyan-500/5 to-transparent relative mt-2 ${rptTypeOpen || rptYearOpen || rptScopeOpen ? 'z-50' : 'z-10'}`}>
-            <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-800/80 pb-3">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-brand-500/20 to-indigo-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/30 shadow-xs">
-                  <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-brand-600 dark:text-brand-400" />
+          {/* Universal Institutional Reports Section — Clean Solid Architecture */}
+          <div className={`p-4 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-white/10 shadow-2xl shadow-indigo-950/20 space-y-5 bg-white dark:bg-[#0b101e] relative mt-2 ${rptTypeOpen || rptYearOpen || rptScopeOpen || rptSessionOpen ? 'z-50' : 'z-10'}`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-white/[0.08] pb-4">
+              <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-brand-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-brand-500/25 border border-white/20">
+                  <Layers className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
-                      Universal Reports & Analytics
+                      Universal Reports & Intelligence
                     </h2>
-                    <span className="inline-flex px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-700 dark:text-brand-300 text-[9px] sm:text-[10px] font-black border border-brand-500/30 whitespace-nowrap">
-                      Institutional Engine
+                    <span className="inline-flex px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 text-[10px] font-mono font-bold border border-emerald-400/30 whitespace-nowrap">
+                      LIVE ENGINE
                     </span>
                   </div>
-                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium truncate sm:whitespace-normal">
-                    Standardized datasets viewable via <span className="font-extrabold text-slate-700 dark:text-slate-200">Preview</span>, <span className="font-extrabold text-brand-600 dark:text-brand-400">Excel (.xlsx)</span>, <span className="font-extrabold text-rose-600 dark:text-rose-400">PDF (.pdf)</span>, & <span className="font-extrabold text-indigo-600 dark:text-indigo-400">Word (.docx)</span>.
+                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    Standardized export datasets for <span className="font-bold text-slate-700 dark:text-slate-200">Preview</span>, <span className="font-bold text-brand-600 dark:text-brand-400">Excel</span>, <span className="font-bold text-rose-600 dark:text-rose-400">PDF</span>, & <span className="font-bold text-indigo-600 dark:text-indigo-400">Word</span>.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Unified Report Builder Form Controls */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 p-5 bg-white/70 dark:bg-navy-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-inner items-start">
+            {/* Unified Report Builder Form Controls — Mobile Friendly Responsive Grid */}
+            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4.5 p-3.5 sm:p-5 bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-inner items-start relative ${rptTypeOpen || rptYearOpen || rptSessionOpen ? 'z-[100]' : 'z-20'}`}>
 
               {/* 1. Report Type — Premium Dropdown with Custom Colored Badges */}
-              <div className={`flex flex-col space-y-1.5 min-w-0 w-full relative transition-all ${rptTypeOpen ? 'z-[100]' : 'z-[35]'}`}>
+              <div className={`flex flex-col space-y-1.5 min-w-0 w-full relative transition-all ${rptTypeOpen ? 'z-[100]' : 'z-[10]'}`}>
                 <span className="block text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider truncate">
                   Report Type
                 </span>
@@ -796,8 +823,11 @@ export const ReportsPage: React.FC = () => {
                               <button
                                 key={opt.value}
                                 type="button"
-                                onMouseDown={(e) => e.preventDefault()}
-                                onClick={() => { setSelectedReportType(opt.value); setRptTypeOpen(false); }}
+                                onClick={() => {
+                                  setSelectedReportType(opt.value);
+                                  setRptTypeOpen(false);
+                                  setRptSearch('');
+                                }}
                                 className={`w-full flex items-center gap-2.5 pl-3 pr-3 py-2.5 rounded-xl text-left transition-all duration-150 group cursor-pointer relative ${
                                   isSelected
                                     ? 'bg-gradient-to-r from-brand-500/12 to-transparent border border-brand-400/40 dark:border-brand-500/40 shadow-sm'
@@ -834,7 +864,7 @@ export const ReportsPage: React.FC = () => {
                         {/* Trigger Button */}
                         <button
                           type="button"
-                          onClick={() => { setRptTypeOpen(p => !p); setRptYearOpen(false); setRptScopeOpen(false); }}
+                          onClick={() => { setRptTypeOpen(p => !p); setRptYearOpen(false); setRptScopeOpen(false); setRptSessionOpen(false); }}
                           className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 h-12 min-h-[48px] rounded-2xl bg-white dark:bg-navy-950 border-2 text-left transition-all duration-200 focus:outline-none cursor-pointer ${
                             rptTypeOpen
                               ? 'border-brand-500 ring-4 ring-brand-500/15 shadow-lg shadow-brand-500/10'
@@ -855,35 +885,92 @@ export const ReportsPage: React.FC = () => {
 
                         {/* Dropdown Panel */}
                         {rptTypeOpen && (
-                          <div className="absolute z-[200] top-full left-0 right-0 sm:right-auto mt-2 w-full sm:w-[500px] md:w-[740px] max-w-[calc(100vw-32px)] rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-700/60 shadow-[0_30px_80px_-10px_rgba(0,0,0,0.25)] dark:shadow-[0_30px_80px_-10px_rgba(0,0,0,0.75)] animate-in fade-in slide-in-from-top-3 duration-200">
-                            {/* Dropdown header bar */}
-                            <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 bg-gradient-to-r from-[#1e2233] via-[#1a1f35] to-[#1e2233] border-b-2 border-brand-500/40" style={{background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'}}>
-                              <div className="flex items-center gap-2 min-w-0">
-                                <div className="w-7 h-7 rounded-xl bg-brand-500/25 border border-brand-400/30 flex items-center justify-center shrink-0">
-                                  <LayoutTemplate className="w-4 h-4 text-brand-300" />
-                                </div>
-                                <span className="text-xs sm:text-sm font-black text-white tracking-wide truncate">Select Report Type</span>
-                              </div>
-                              <span className="text-[10px] sm:text-[11px] font-bold text-white bg-brand-500/30 border border-brand-400/40 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
-                                {allOpts.length} Reports
-                              </span>
-                            </div>
-                            {/* Two-column body */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 max-h-[55vh] sm:max-h-[65vh] overflow-y-auto overscroll-contain">
-                              {/* LEFT: Contest Reports */}
-                              <div className="p-3.5 sm:p-5 bg-slate-50/90 dark:bg-navy-900/60 backdrop-blur-xl border-r-0 md:border-r border-slate-200/60 dark:border-slate-700/40">
-                                {reportCategories.length > 0 && renderCategory(reportCategories[0])}
-                              </div>
-                              {/* RIGHT: Performance, Consolidated, Executive */}
-                              <div className="p-3.5 sm:p-5 bg-white/95 dark:bg-navy-950/90 backdrop-blur-xl flex flex-col gap-y-4 sm:gap-y-5">
-                                {reportCategories.slice(1).map(cat => (
-                                  <div key={cat.title}>
-                                    {renderCategory(cat)}
+                          <>
+                            {/* Backdrop click to dismiss on mobile & desktop - clean transparent dismissal */}
+                            <div 
+                              className="fixed inset-0 z-[190] bg-transparent" 
+                              onClick={() => { setRptTypeOpen(false); setRptSearch(''); }} 
+                            />
+                            <div className="absolute z-[200] top-full left-0 right-0 sm:right-auto mt-2 w-full sm:w-[500px] md:w-[740px] max-w-full sm:max-w-[calc(100vw-3rem)] rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-[#0c1222] border-2 border-slate-200 dark:border-slate-700 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.95)] animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col max-h-[min(480px,calc(100vh-140px))]">
+                              {/* Dropdown header bar */}
+                              <div className="flex items-center justify-between px-3.5 sm:px-5 py-3 bg-gradient-to-r from-[#111827] via-[#1e293b] to-[#111827] border-b border-brand-500/40 shrink-0">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-brand-500/25 border border-brand-400/30 flex items-center justify-center shrink-0">
+                                    <LayoutTemplate className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-300" />
                                   </div>
-                                ))}
+                                  <span className="text-xs sm:text-sm font-black text-white tracking-wide truncate">Select Report Type</span>
+                                </div>
+                                <span className="text-[10px] sm:text-[11px] font-bold text-white bg-brand-500/30 border border-brand-400/40 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
+                                  {allOpts.length} Reports
+                                </span>
                               </div>
+
+                              {/* Search Bar */}
+                              <div className="px-3.5 sm:px-5 py-2 bg-slate-900/95 border-b border-slate-700/80 flex items-center gap-2 shrink-0">
+                                <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <input
+                                  type="text"
+                                  value={rptSearch}
+                                  onChange={(e) => setRptSearch(e.target.value)}
+                                  placeholder="Filter reports by name (e.g. contest, hod, faculty)..."
+                                  className="w-full bg-transparent text-xs text-white placeholder-slate-400 outline-none font-medium"
+                                  autoFocus
+                                />
+                                {rptSearch && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setRptSearch('')}
+                                    className="text-[10px] text-slate-300 hover:text-white px-1.5 py-0.5 rounded bg-white/10"
+                                  >
+                                    Clear
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Two-column body on desktop, single column on mobile - constrained height & visible scrolling */}
+                              {(() => {
+                                const displayedCategories = rptSearch.trim()
+                                  ? reportCategories.map(cat => ({
+                                      ...cat,
+                                      options: cat.options.filter((opt: any) => 
+                                        opt.label.toLowerCase().includes(rptSearch.toLowerCase()) ||
+                                        opt.value.toLowerCase().includes(rptSearch.toLowerCase())
+                                      )
+                                    })).filter(cat => cat.options.length > 0)
+                                  : reportCategories;
+
+                                return (
+                                  <div 
+                                    className="grid grid-cols-1 md:grid-cols-2 flex-1 min-h-0 overflow-y-auto divide-y md:divide-y-0 divide-slate-100 dark:divide-slate-800 bg-white dark:bg-[#0c1222] pb-6 custom-scrollbar"
+                                    style={{
+                                      maxHeight: '340px',
+                                      scrollbarWidth: 'thin',
+                                      scrollbarColor: '#6366f1 rgba(15, 23, 42, 0.4)'
+                                    }}
+                                  >
+                                    {/* LEFT: Contest Reports */}
+                                    <div className="p-3 sm:p-5 bg-slate-50 dark:bg-[#0f172a] border-r-0 md:border-r border-slate-200/80 dark:border-slate-800">
+                                      {displayedCategories.find(c => c.title === 'A. CONTEST REPORTS') && 
+                                        renderCategory(displayedCategories.find(c => c.title === 'A. CONTEST REPORTS'))}
+                                    </div>
+                                    {/* RIGHT: Performance, Consolidated, Executive */}
+                                    <div className="p-3 sm:p-5 bg-white dark:bg-[#0c1222] flex flex-col gap-y-3.5 sm:gap-y-5">
+                                      {displayedCategories.filter(c => c.title !== 'A. CONTEST REPORTS').map(cat => (
+                                        <div key={cat.title}>
+                                          {renderCategory(cat)}
+                                        </div>
+                                      ))}
+                                      {displayedCategories.length === 0 && (
+                                        <div className="p-6 text-center text-xs text-slate-500 dark:text-slate-400">
+                                          No reports found matching "{rptSearch}".
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                             </div>
-                          </div>
+                          </>
                         )}
                       </>
                     );
@@ -892,7 +979,7 @@ export const ReportsPage: React.FC = () => {
               </div>
 
               {/* 2. Department — Premium Dropdown */}
-              <div className="flex flex-col min-w-0 w-full z-[30]">
+              <div className="flex flex-col min-w-0 w-full z-[10]">
                 <PremiumDepartmentSelect
                   selectedDept={selectedDept}
                   onChange={setSelectedDept}
@@ -902,15 +989,21 @@ export const ReportsPage: React.FC = () => {
               </div>
 
               {/* 3. Year / Batch — Premium Dropdown */}
-              <div className="flex flex-col space-y-1.5 min-w-0 w-full relative z-[25]">
+              <div className={`flex flex-col space-y-1.5 min-w-0 w-full relative transition-all ${rptYearOpen ? 'z-[100]' : 'z-[10]'}`}>
                 <span className="block text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider truncate">Year / Batch</span>
                 <div className={`relative ${rptYearOpen ? 'z-30' : 'z-10'}`}>
                   <button
                     type="button"
-                    onClick={() => { setRptYearOpen(p => !p); setRptTypeOpen(false); setRptScopeOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3.5 py-2 h-11 min-h-[44px] rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none cursor-pointer ${rptYearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-200 dark:border-slate-700 hover:border-brand-300'}`}
+                    onClick={() => { setRptYearOpen(p => !p); setRptTypeOpen(false); setRptScopeOpen(false); setRptSessionOpen(false); }}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 h-12 min-h-[48px] rounded-2xl bg-white dark:bg-navy-950 border-2 text-left transition-all duration-200 focus:outline-none cursor-pointer ${
+                      rptYearOpen 
+                        ? 'border-brand-500 ring-4 ring-brand-500/15 shadow-lg shadow-brand-500/10' 
+                        : 'border-slate-200 dark:border-slate-700 hover:border-brand-400 dark:hover:border-brand-500 shadow-sm hover:shadow-md'
+                    }`}
                   >
-                    <GraduationCap className="w-4 h-4 text-brand-500 shrink-0" />
+                    <div className="p-1.5 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 shrink-0">
+                      <GraduationCap className="w-4 h-4" />
+                    </div>
                     {selectedYear === 'ALL' ? (
                       <span className="text-[10px] font-black px-2 py-0.5 rounded-md shrink-0 border text-slate-700 bg-slate-100 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700">ALL</span>
                     ) : selectedYear === '2' ? (
@@ -921,46 +1014,57 @@ export const ReportsPage: React.FC = () => {
                       <span className="text-[10px] font-black px-2 py-0.5 rounded-md shrink-0 border text-amber-700 bg-amber-100 border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700">IV</span>
                     )}
                     <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
-                      {selectedYear === 'ALL' ? 'All Academic Years' : selectedYear === '2' ? 'Year (2025–2029)' : selectedYear === '3' ? 'Year (2024–2028)' : 'Year (2023–2027)'}
+                      {selectedYear === 'ALL' ? 'All Academic Years' : selectedYear === '2' ? 'II Year' : selectedYear === '3' ? 'III Year' : 'IV Year'}
                     </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptYearOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptYearOpen ? 'rotate-180 text-brand-500' : ''}`} />
                   </button>
                   {rptYearOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto p-1.5 space-y-1">
-                      {[
-                        { value: 'ALL', code: 'ALL', label: 'All Academic Years', pillColor: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700' },
-                        { value: '2', code: 'II', label: 'Year II (2025–2029)', pillColor: 'bg-sky-100 text-sky-700 border-sky-300 dark:bg-sky-900/60 dark:text-sky-200 dark:border-sky-700' },
-                        { value: '3', code: 'III', label: 'Year III (2024–2028)', pillColor: 'bg-violet-100 text-violet-700 border-violet-300 dark:bg-violet-900/60 dark:text-violet-200 dark:border-violet-700' },
-                        { value: '4', code: 'IV', label: 'Year IV (2023–2027)', pillColor: 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700' },
-                      ].map(opt => {
-                        const isSelected = selectedYear === opt.value;
-                        return (
-                          <button key={opt.value} type="button"
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => { setSelectedYear(opt.value); setRptYearOpen(false); }}
-                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${isSelected ? 'bg-brand-600 text-white font-black shadow-md shadow-brand-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
-                          >
-                            <span className={`w-12 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : opt.pillColor}`}>{opt.code}</span>
-                            <span className={`text-xs truncate flex-1 ${isSelected ? 'font-black text-white' : 'font-semibold text-slate-700 dark:text-slate-200'}`}>{opt.label}</span>
-                            {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <>
+                      <div 
+                        className="fixed inset-0 z-[190] bg-transparent" 
+                        onClick={() => setRptYearOpen(false)} 
+                      />
+                      <div className="absolute z-[200] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl max-h-64 overflow-y-auto p-2 space-y-1">
+                        {[
+                          { value: 'ALL', code: 'ALL', label: 'All Academic Years', pillColor: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700' },
+                          { value: '2', code: 'II', label: 'II Year', pillColor: 'bg-sky-100 text-sky-700 border-sky-300 dark:bg-sky-900/60 dark:text-sky-200 dark:border-sky-700' },
+                          { value: '3', code: 'III', label: 'III Year', pillColor: 'bg-violet-100 text-violet-700 border-violet-300 dark:bg-violet-900/60 dark:text-violet-200 dark:border-violet-700' },
+                          { value: '4', code: 'IV', label: 'IV Year', pillColor: 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700' },
+                        ].map(opt => {
+                          const isSelected = selectedYear === opt.value;
+                          return (
+                            <button key={opt.value} type="button"
+                              onClick={() => { setSelectedYear(opt.value); setRptYearOpen(false); }}
+                              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all ${isSelected ? 'bg-brand-600 text-white font-black shadow-md shadow-brand-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
+                            >
+                              <span className={`w-12 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : opt.pillColor}`}>{opt.code}</span>
+                              <span className={`text-xs truncate flex-1 ${isSelected ? 'font-black text-white' : 'font-semibold text-slate-700 dark:text-slate-200'}`}>{opt.label}</span>
+                              {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
 
               {/* 4. Report Date / Snapshot — Premium Dropdown */}
-              <div className="flex flex-col space-y-1.5 min-w-0 w-full relative z-[20]">
+              <div className={`flex flex-col space-y-1.5 min-w-0 w-full relative transition-all ${rptSessionOpen ? 'z-[100]' : 'z-[10]'}`}>
                 <span className="block text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider truncate">Report Date</span>
-                <div className={`relative ${rptSessionOpen ? 'z-30' : 'z-10'}`}>
+                <div className={`relative ${rptSessionOpen ? 'z-50' : 'z-10'}`}>
                   <button
                     type="button"
                     onClick={() => { setRptSessionOpen(p => !p); setRptYearOpen(false); setRptTypeOpen(false); setRptScopeOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3.5 py-2 h-11 min-h-[44px] rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none cursor-pointer ${rptSessionOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-200 dark:border-slate-700 hover:border-brand-300'}`}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 h-12 min-h-[48px] rounded-2xl bg-white dark:bg-navy-950 border-2 text-left transition-all duration-200 focus:outline-none cursor-pointer ${
+                      rptSessionOpen 
+                        ? 'border-brand-500 ring-4 ring-brand-500/15 shadow-lg shadow-brand-500/10' 
+                        : 'border-slate-200 dark:border-slate-700 hover:border-brand-400 dark:hover:border-brand-500 shadow-sm hover:shadow-md'
+                    }`}
                   >
-                    <Clock className="w-4 h-4 text-brand-500 shrink-0" />
+                    <div className="p-1.5 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 shrink-0">
+                      <Clock className="w-4 h-4" />
+                    </div>
                     {(() => {
                       const sel = availableSundays.find(s => s.session_id === selectedSessionId) || availableSundays[0];
                       if (!sel) return <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">Latest Date</span>;
@@ -987,10 +1091,15 @@ export const ReportsPage: React.FC = () => {
                         </>
                       );
                     })()}
-                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptSessionOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptSessionOpen ? 'rotate-180 text-brand-500' : ''}`} />
                   </button>
                   {rptSessionOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl max-h-[400px] overflow-y-auto p-1.5 space-y-1 custom-scrollbar">
+                    <>
+                      <div 
+                        className="fixed inset-0 z-[190] bg-transparent" 
+                        onClick={() => setRptSessionOpen(false)} 
+                      />
+                      <div className="absolute z-[300] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-950 border border-slate-200/90 dark:border-slate-700 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] max-h-[380px] overflow-y-auto p-2 space-y-1 custom-scrollbar">
                       {availableSundays.map(opt => {
                         const isSelected = selectedSessionId === opt.session_id;
                         const formatDate = (d: string) => {
@@ -1006,7 +1115,6 @@ export const ReportsPage: React.FC = () => {
                         const isBiweekly = opt.contest_type === 'biweekly' || (opt.label && opt.label.toLowerCase().includes('biweekly'));
                         return (
                           <button key={opt.session_id} type="button"
-                            onMouseDown={(e) => e.preventDefault()}
                             onClick={() => { setSelectedSessionId(opt.session_id); setRptSessionOpen(false); }}
                             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${isSelected ? 'bg-brand-600 text-white font-black shadow-md shadow-brand-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
                           >
@@ -1028,21 +1136,30 @@ export const ReportsPage: React.FC = () => {
                         </div>
                       )}
                     </div>
-                  )}
+                  </>
+                )}
                 </div>
               </div>
 
             </div>
 
-            <div className="flex justify-end pt-4 border-t border-slate-200 dark:border-navy-800">
+            {/* Action Bar Footer */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-5 border-t border-slate-200/80 dark:border-white/10 relative z-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-xs text-slate-600 dark:text-slate-300 font-semibold truncate w-full sm:w-auto">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span className="text-[11px] sm:text-xs truncate">
+                  Active Filter: <span className="font-black text-slate-900 dark:text-white">{selectedDept === 'ALL' ? 'All Departments' : selectedDept}</span> • <span className="font-black text-indigo-600 dark:text-indigo-400">{selectedYear === 'ALL' ? 'All Batches' : `${selectedYear === '2' ? 'II' : selectedYear === '3' ? 'III' : 'IV'} Year`}</span>
+                </span>
+              </div>
+
               <button
                 type="button"
                 onClick={() => handleGenerateUniversalReport()}
                 disabled={isGeneratingUniversal}
-                className="flex items-center space-x-2.5 px-6 py-2.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-700 hover:to-purple-700 disabled:opacity-50 text-white font-black text-xs sm:text-sm rounded-xl shadow-xl shadow-brand-500/25 transition-all transform hover:scale-[1.02] cursor-pointer"
+                className="w-full sm:w-auto min-h-[48px] flex items-center justify-center space-x-2.5 px-7 py-3 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:via-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white font-black text-xs sm:text-sm tracking-wide rounded-2xl shadow-xl shadow-brand-500/25 hover:shadow-brand-500/40 border border-brand-400/30 transition-all active:scale-95 cursor-pointer touch-manipulation group"
               >
-                <Sparkles className={`w-4 h-4 ${isGeneratingUniversal ? 'animate-spin' : ''}`} />
-                <span>{isGeneratingUniversal ? 'Opening Preview...' : 'Generate Preview'}</span>
+                <Sparkles className={`w-4 h-4 text-brand-200 group-hover:rotate-12 transition-transform shrink-0 ${isGeneratingUniversal ? 'animate-spin' : ''}`} />
+                <span className="font-sans font-black">{isGeneratingUniversal ? 'Opening Preview...' : 'Generate Preview'}</span>
               </button>
             </div>
           </div>

@@ -23,7 +23,7 @@ def _contest_num(sess: WeeklySession) -> Optional[int]:
 
 def _is_attended(status: Any) -> bool:
     s = str(status or "").upper()
-    return s in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE", "ATTENDED_ZERO", "ATTENDED_SOLVED")
+    return s in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "OFFICIAL_ATTENDED", "PUBLIC_LIVE", "LIVE", "ATTENDED_ZERO", "ATTENDED_SOLVED")
 
 
 def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
@@ -76,6 +76,10 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
         contest_sessions = []
         for sess in valid_sessions:
             num = _contest_num(sess)
+            name_u = (sess.contest_name or "").upper()
+            # Only include official weekly contests in historical tracking (exclude Biweekly e.g. 193)
+            if "BIWEEKLY" in name_u:
+                continue
             if num is not None:
                 contest_sessions.append((num, sess))
             else:
@@ -187,6 +191,8 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
             total_solved_frac = f"{total_solved_all}/{max_possible_problems}"
             attended_solved_frac = f"{total_solved_all}/{max_attended_problems}" if total_attended > 0 else "0/0"
 
+            solve_pct = round((total_solved_all / max(max_attended_problems, 1)) * 100, 1) if total_attended > 0 else 0.0
+
             rows.append({
                 "s_no": idx,
                 "reg_no": s.reg_no,
@@ -214,8 +220,29 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
                 "total_badges": badge_map.get(s.id, 0),
                 "badges_count": badge_map.get(s.id, 0),
                 "consistencyPct": consistency_pct,
+                "solve_pct": solve_pct,
+                "solved_pct": solve_pct,
                 "weeklyData": weekly_data,
             })
+
+        # Sort roster rows by today's / latest contest performance, then overall totals
+        def _hist_sort_key(r):
+            wd = r.get("weeklyData", [])
+            latest_sol = wd[-1].get("solved", 0) if wd else 0
+            latest_score = wd[-1].get("score", 0) if wd else 0
+            tot_sol = int(r.get("totalSolved") or 0)
+            tot_att = int(r.get("totalAttended") or 0)
+            return (
+                -latest_sol,
+                -latest_score,
+                -tot_sol,
+                -tot_att,
+                str(r.get("name") or "")
+            )
+
+        rows.sort(key=_hist_sort_key)
+        for i, r in enumerate(rows, 1):
+            r["s_no"] = i
 
         # 6. Overall summary
         total = len(roster)

@@ -15,6 +15,10 @@ def is_production_department(code: str, name: str = "") -> bool:
         if kw in code_upper or kw in name_upper:
             return False
 
+    # Generic unspecialized 'CSE' is a test fixture department; live college departments are CSE(CS), CSE(IOT), IT
+    if code_upper == "CSE" or name_upper == "COMPUTER SCIENCE AND ENGINEERING":
+        return False
+
     return True
 
 

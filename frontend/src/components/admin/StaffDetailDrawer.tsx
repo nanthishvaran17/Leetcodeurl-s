@@ -75,15 +75,16 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   return createPortal(
     <div className="fixed inset-0 z-[999999] flex justify-center items-end sm:justify-end sm:items-stretch bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in p-0" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="w-full max-w-xl h-[92vh] sm:h-[100dvh] bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden flex flex-col rounded-t-3xl sm:rounded-none">
-        {/* Mobile Swipe / Drag Handle Indicator */}
-        <div className="w-12 h-1.5 rounded-full bg-white/40 mx-auto sm:hidden shrink-0 mt-3 -mb-1 z-30" />
 
         {/* Hero Header Profile Section */}
-        <div className="relative bg-gradient-to-br from-slate-950 via-blue-950 to-brand-900 text-white overflow-hidden shrink-0 border-b border-white/10">
+        <div className="relative bg-gradient-to-br from-slate-950 via-blue-950 to-brand-900 text-white overflow-hidden shrink-0 border-b border-white/10 rounded-t-3xl sm:rounded-none">
           <div className="absolute inset-0 opacity-20 pointer-events-none [background-image:linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.16)_48%,transparent_49%),linear-gradient(30deg,transparent_0%,rgba(56,189,248,0.18)_48%,transparent_49%)] [background-size:180px_180px]" />
 
+          {/* Mobile Swipe / Drag Handle Indicator inside dark header */}
+          <div className="w-12 h-1.5 rounded-full bg-white/30 mx-auto sm:hidden shrink-0 mt-3 -mb-1 relative z-30" />
+
           {/* Actions top right */}
-          <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
+          <div className="absolute top-3.5 sm:top-4 right-4 flex items-center gap-2 z-20">
             {onFilterDashboard && (
               <button
                 onClick={() => {
@@ -107,7 +108,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
           </div>
 
           {/* Avatar + Info */}
-          <div className="flex items-center gap-4 px-6 pt-6 pb-5 relative z-10 pr-14">
+          <div className="flex items-center gap-4 px-6 pt-4 sm:pt-6 pb-5 relative z-10 pr-14">
             <div
               className={`relative shrink-0 ${staff.profile_photo ? 'cursor-pointer active:scale-95 hover:scale-105 transition-transform' : ''}`}
               onClick={() => { if (staff.profile_photo) setShowPhotoZoom(true); }}
@@ -178,20 +179,22 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
               </span>
             </h4>
             <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
-              {/* Assigned Capacity */}
+              {/* Assigned Mentees */}
               <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm shadow-slate-200/50 dark:shadow-black/10 relative overflow-hidden">
                 <Gauge className="absolute -right-2 -top-2 text-blue-50 dark:text-navy-800" size={58} />
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Assigned Capacity</div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Assigned Mentees</div>
                 <div className="text-xl font-black text-slate-900 dark:text-white">
-                  {assignedCount} <span className="text-xs text-slate-400 font-normal">/ {staff.max_allowed || 30}</span>
+                  {assignedCount} <span className="text-xs text-slate-400 font-normal">{assignedCount === 1 ? 'student' : 'students'}</span>
                 </div>
                 <div className="mt-2 text-[10px] font-bold">
-                  {assignedCount >= (staff.max_allowed || 30) ? (
-                    <span className="text-purple-700 bg-purple-100 dark:bg-purple-950 dark:text-purple-300 px-2.5 py-1 rounded-full border border-purple-300">MAX CAPACITY</span>
-                  ) : assignedCount >= 20 ? (
-                    <span className="text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-300">TARGET REACHED</span>
+                  {assignedCount === 0 ? (
+                    <span className="text-slate-600 bg-slate-100 dark:bg-navy-800 dark:text-slate-400 px-2.5 py-1 rounded-full border border-slate-200 dark:border-navy-700">UNALLOCATED (0)</span>
+                  ) : activeCount === assignedCount ? (
+                    <span className="text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-300">100% ACTIVE</span>
+                  ) : activeCount > 0 ? (
+                    <span className="text-blue-700 bg-blue-100 dark:bg-blue-950 dark:text-blue-300 px-2.5 py-1 rounded-full border border-blue-300">ALLOCATED COHORT</span>
                   ) : (
-                    <span className="text-blue-700 bg-blue-100 dark:bg-blue-950 dark:text-blue-300 px-2.5 py-1 rounded-full border border-blue-300">WITHIN CAPACITY</span>
+                    <span className="text-amber-700 bg-amber-100 dark:bg-amber-950 dark:text-amber-300 px-2.5 py-1 rounded-full border border-amber-300">PENDING ACTIVITY</span>
                   )}
                 </div>
               </div>
@@ -291,8 +294,8 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                     <RefreshCw size={11} className="animate-spin" /> Loading mentees...
                   </span>
                 ) : (
-                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 sm:hidden flex items-center gap-1">
-                    ↔ Swipe Table
+                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                    <span className="hidden md:inline">↔ Swipe Table</span>
                   </span>
                 )}
               </div>
@@ -300,120 +303,242 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
 
             <div className="rounded-2xl border border-slate-200 dark:border-navy-800 overflow-hidden bg-white dark:bg-navy-900 shadow-sm">
               {mentees.length === 0 ? (
-                <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-xs font-semibold">
-                  {loadingMentees ? 'Fetching assigned mentees data...' : 'No students assigned to this faculty mentor yet.'}
+                <div className="p-8 text-center flex flex-col items-center justify-center space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-navy-800 text-slate-400 dark:text-slate-500 flex items-center justify-center">
+                    <Users size={22} />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-sm font-black text-slate-800 dark:text-slate-200">
+                      {loadingMentees ? 'Fetching assigned mentees...' : 'No Students Assigned Yet'}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+                      {loadingMentees
+                        ? 'Retrieving cohort records from the database...'
+                        : 'This faculty mentor currently has 0 allocated mentees. Click below to assign students.'}
+                    </p>
+                  </div>
+                  {!loadingMentees && (
+                    <button
+                      onClick={onManageAllocation}
+                      className="mt-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-black shadow-md shadow-brand-600/25 transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Users size={13} />
+                      <span>Allocate Students Now</span>
+                    </button>
+                  )}
                 </div>
               ) : (
-                <div className="max-h-80 overflow-y-auto overflow-x-auto touch-pan-x scrollbar-thin">
-                  <table className="w-full min-w-[500px] text-left text-xs border-collapse">
-                    <thead className="bg-slate-100/90 dark:bg-navy-800/90 backdrop-blur-sm text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 sticky top-0 z-10 border-b border-slate-200 dark:border-navy-700">
-                      <tr>
-                        <th className="py-2.5 px-3 text-left min-w-[130px]">Student Info</th>
-                        <th className="py-2.5 px-2 text-center whitespace-nowrap min-w-[80px]">Year & Dept</th>
-                        <th className="py-2.5 px-2 text-right whitespace-nowrap min-w-[70px]">Solved</th>
-                        <th className="py-2.5 px-2 text-center whitespace-nowrap min-w-[105px]" title="Sunday Contest Performance">
-                          Sunday Contest
-                        </th>
-                        <th className="py-2.5 px-2.5 text-center whitespace-nowrap min-w-[75px]">Status</th>
-                        {onSelectStudent && <th className="py-2.5 px-2 text-center whitespace-nowrap min-w-[70px]">Action</th>}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-navy-800 font-sans">
-                      {mentees.map(s => {
-                        const isStudentActive = (s.total_solved || 0) > 0 || s.is_active || s.status === 'ACTIVE';
-                        const isContestAttended = s.contest_attended || (s.contest_standing && s.contest_standing !== '—' && s.contest_standing !== 'Absent' && s.contest_standing !== 'Not Attended');
-                        return (
-                          <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/80 transition-colors">
-                            {/* Student Info */}
-                            <td className="py-2.5 px-3 min-w-0">
-                              <div className="font-extrabold text-slate-900 dark:text-white text-[11px] leading-tight truncate max-w-[140px] sm:max-w-[170px]" title={s.name}>
+                <>
+                  {/* MOBILE VIEW (Smooth vertical touch cards, ZERO horizontal scrolling or clipping) */}
+                  <div className="block md:hidden divide-y divide-slate-100 dark:divide-navy-800 max-h-[380px] overflow-y-auto overscroll-contain">
+                    {mentees.map(s => {
+                      const isStudentActive = (s.total_solved || 0) > 0 || s.is_active || s.status === 'ACTIVE';
+                      const isContestAttended = s.contest_attended || (s.contest_standing && s.contest_standing !== '—' && s.contest_standing !== 'Absent' && s.contest_standing !== 'Not Attended');
+                      const standing = s.contest_standing;
+                      const isFraction = standing && /^\d+\/\d+$/.test(standing);
+                      const isRank = standing && /^\d+$/.test(standing);
+
+                      return (
+                        <div
+                          key={s.id}
+                          onClick={() => onSelectStudent && onSelectStudent(s)}
+                          className="p-3.5 hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors space-y-2.5 cursor-pointer"
+                        >
+                          {/* Row 1: Student Name, Reg No & Status */}
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="font-extrabold text-slate-900 dark:text-white text-xs leading-snug truncate" title={s.name}>
                                 {s.name}
                               </div>
-                              <div className="text-[9.5px] font-mono font-bold text-amber-600 dark:text-amber-400 mt-0.5 tracking-tight truncate">
+                              <div className="text-[10.5px] font-mono font-bold text-amber-600 dark:text-amber-400 mt-0.5">
                                 {s.reg_no}
                               </div>
-                            </td>
-
-                            {/* Year & Dept */}
-                            <td className="py-2.5 px-2 text-center whitespace-nowrap">
-                              <div className="font-extrabold text-slate-800 dark:text-slate-200 text-[11px] leading-tight">
-                                {s.year_level || 'N/A'}
-                              </div>
-                              {s.department_code && (
-                                <div className="text-[9px] font-mono font-bold text-slate-600 dark:text-slate-400 leading-tight mt-0.5">
-                                  ({s.department_code})
-                                </div>
-                              )}
-                            </td>
-
-                            {/* Solved Count */}
-                            <td className="py-2.5 px-2 text-right whitespace-nowrap">
-                              <div className="font-black text-slate-900 dark:text-white text-xs">
-                                {s.total_solved || 0}
-                              </div>
-                              {s.easy_solved !== undefined && (
-                                <div className="text-[8.5px] font-mono font-medium text-slate-600 dark:text-slate-400 mt-0.5">
-                                  {s.easy_solved}E/{s.medium_solved || 0}M/{s.hard_solved || 0}H
-                                </div>
-                              )}
-                            </td>
-
-                            {/* Sunday Contest — Score fraction pill */}
-                            <td className="py-2.5 px-2 text-center whitespace-nowrap">
-                              {isContestAttended ? (() => {
-                                // Parse rank/score from contest_standing if available (e.g. "1/4", "Rank 3")
-                                const standing = s.contest_standing;
-                                const isFraction = standing && /^\d+\/\d+$/.test(standing);
-                                const isRank = standing && /^\d+$/.test(standing);
-                                return (
-                                  <span
-                                    title={standing || 'Attended'}
-                                    className="inline-flex items-center justify-center min-w-[38px] px-2.5 py-0.5 rounded-full bg-blue-500 dark:bg-blue-600 text-white text-[10px] font-black shadow-sm shadow-blue-500/30"
-                                  >
-                                    {isFraction || isRank
-                                      ? standing
-                                      : 'Attended'}
-                                  </span>
-                                );
-                              })() : (
-                                <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-400 dark:text-slate-500 text-[9px] font-bold border border-slate-200 dark:border-navy-700">
-                                  —
-                                </span>
-                              )}
-                            </td>
-
-                            {/* Status */}
-                            <td className="py-2.5 px-2.5 text-center whitespace-nowrap">
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
                               {isStudentActive ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[9.5px] font-extrabold border border-emerald-200/80 dark:border-emerald-800/80 shadow-2xs">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-200/80 dark:border-emerald-800/80 shadow-2xs">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                                   <span>Active</span>
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 text-[9.5px] font-bold border border-slate-200 dark:border-navy-700">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 text-[10px] font-bold border border-slate-200 dark:border-navy-700">
                                   <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
                                   <span>Inactive</span>
                                 </span>
                               )}
-                            </td>
-
-                            {/* Optional Action */}
-                            {onSelectStudent && (
-                              <td className="py-2.5 px-1.5 text-center whitespace-nowrap">
+                              {onSelectStudent && (
                                 <button
-                                  onClick={() => onSelectStudent(s)}
-                                  className="px-2 py-0.5 rounded-lg bg-brand-50 hover:bg-brand-600 text-brand-700 hover:text-white dark:bg-brand-950 dark:text-brand-300 dark:hover:bg-brand-600 font-bold text-[9.5px] transition cursor-pointer border border-brand-200 dark:border-brand-800"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onSelectStudent(s);
+                                  }}
+                                  className="px-2 py-0.5 rounded-lg bg-brand-50 hover:bg-brand-600 text-brand-700 hover:text-white dark:bg-brand-950 dark:text-brand-300 dark:hover:bg-brand-600 text-[10px] font-bold transition border border-brand-200 dark:border-brand-800"
                                 >
                                   Inspect →
                                 </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Row 2: 3-Pill Clean Metrics */}
+                          <div className="grid grid-cols-3 gap-2 text-center pt-0.5">
+                            {/* Year & Dept */}
+                            <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200/70 dark:border-navy-800 flex flex-col justify-center">
+                              <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Cohort</span>
+                              <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 truncate mt-0.5">
+                                {s.year_level || 'N/A'}
+                              </span>
+                              {s.department_code && (
+                                <span className="text-[9px] font-mono font-bold text-slate-500 dark:text-slate-400 truncate">
+                                  {s.department_code}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Solved Problems */}
+                            <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200/70 dark:border-navy-800 flex flex-col justify-center">
+                              <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Solved</span>
+                              <span className="text-[12px] font-black text-slate-900 dark:text-white font-mono mt-0.5">
+                                {s.total_solved || 0}
+                              </span>
+                              {s.easy_solved !== undefined && (
+                                <span className="text-[8.5px] font-mono font-medium text-slate-500 dark:text-slate-400 truncate">
+                                  {s.easy_solved}E/{s.medium_solved || 0}M/{s.hard_solved || 0}H
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Sunday Contest */}
+                            <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200/70 dark:border-navy-800 flex flex-col justify-center items-center">
+                              <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Contest</span>
+                              <div className="mt-0.5">
+                                {isContestAttended ? (
+                                  <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-blue-500 dark:bg-blue-600 text-white text-[10px] font-black shadow-xs">
+                                    {isFraction || isRank ? standing : 'Attended'}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-400 dark:text-slate-500 font-bold text-xs">—</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* DESKTOP VIEW (Table view for md screens and above) */}
+                  <div className="hidden md:block max-h-80 overflow-y-auto overflow-x-auto scrollbar-thin">
+                    <table className="w-full min-w-[500px] text-left text-xs border-collapse">
+                      <thead className="bg-slate-100/90 dark:bg-navy-800/90 backdrop-blur-sm text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 sticky top-0 z-10 border-b border-slate-200 dark:border-navy-700">
+                        <tr>
+                          <th className="py-2.5 px-3 text-left min-w-[130px]">Student Info</th>
+                          <th className="py-2.5 px-2 text-center whitespace-nowrap min-w-[80px]">Year & Dept</th>
+                          <th className="py-2.5 px-2 text-right whitespace-nowrap min-w-[70px]">Solved</th>
+                          <th className="py-2.5 px-2 text-center whitespace-nowrap min-w-[105px]" title="Sunday Contest Performance">
+                            Sunday Contest
+                          </th>
+                          <th className="py-2.5 px-2.5 text-center whitespace-nowrap min-w-[75px]">Status</th>
+                          {onSelectStudent && <th className="py-2.5 px-2 text-center whitespace-nowrap min-w-[70px]">Action</th>}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-navy-800 font-sans">
+                        {mentees.map(s => {
+                          const isStudentActive = (s.total_solved || 0) > 0 || s.is_active || s.status === 'ACTIVE';
+                          const isContestAttended = s.contest_attended || (s.contest_standing && s.contest_standing !== '—' && s.contest_standing !== 'Absent' && s.contest_standing !== 'Not Attended');
+                          return (
+                            <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/80 transition-colors">
+                              {/* Student Info */}
+                              <td className="py-2.5 px-3 min-w-0">
+                                <div className="font-extrabold text-slate-900 dark:text-white text-[11px] leading-tight truncate max-w-[140px] sm:max-w-[170px]" title={s.name}>
+                                  {s.name}
+                                </div>
+                                <div className="text-[9.5px] font-mono font-bold text-amber-600 dark:text-amber-400 mt-0.5 tracking-tight truncate">
+                                  {s.reg_no}
+                                </div>
                               </td>
-                            )}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+
+                              {/* Year & Dept */}
+                              <td className="py-2.5 px-2 text-center whitespace-nowrap">
+                                <div className="font-extrabold text-slate-800 dark:text-slate-200 text-[11px] leading-tight">
+                                  {s.year_level || 'N/A'}
+                                </div>
+                                {s.department_code && (
+                                  <div className="text-[9px] font-mono font-bold text-slate-600 dark:text-slate-400 leading-tight mt-0.5">
+                                    ({s.department_code})
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* Solved Count */}
+                              <td className="py-2.5 px-2 text-right whitespace-nowrap">
+                                <div className="font-black text-slate-900 dark:text-white text-xs">
+                                  {s.total_solved || 0}
+                                </div>
+                                {s.easy_solved !== undefined && (
+                                  <div className="text-[8.5px] font-mono font-medium text-slate-600 dark:text-slate-400 mt-0.5">
+                                    {s.easy_solved}E/{s.medium_solved || 0}M/{s.hard_solved || 0}H
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* Sunday Contest — Score fraction pill */}
+                              <td className="py-2.5 px-2 text-center whitespace-nowrap">
+                                {isContestAttended ? (() => {
+                                  // Parse rank/score from contest_standing if available (e.g. "1/4", "Rank 3")
+                                  const standing = s.contest_standing;
+                                  const isFraction = standing && /^\d+\/\d+$/.test(standing);
+                                  const isRank = standing && /^\d+$/.test(standing);
+                                  return (
+                                    <span
+                                      title={standing || 'Attended'}
+                                      className="inline-flex items-center justify-center min-w-[38px] px-2.5 py-0.5 rounded-full bg-blue-500 dark:bg-blue-600 text-white text-[10px] font-black shadow-sm shadow-blue-500/30"
+                                    >
+                                      {isFraction || isRank
+                                        ? standing
+                                        : 'Attended'}
+                                    </span>
+                                  );
+                                })() : (
+                                  <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-400 dark:text-slate-500 text-[9px] font-bold border border-slate-200 dark:border-navy-700">
+                                    —
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Status */}
+                              <td className="py-2.5 px-2.5 text-center whitespace-nowrap">
+                                {isStudentActive ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[9.5px] font-extrabold border border-emerald-200/80 dark:border-emerald-800/80 shadow-2xs">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                    <span>Active</span>
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 text-[9.5px] font-bold border border-slate-200 dark:border-navy-700">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
+                                    <span>Inactive</span>
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Optional Action */}
+                              {onSelectStudent && (
+                                <td className="py-2.5 px-1.5 text-center whitespace-nowrap">
+                                  <button
+                                    onClick={() => onSelectStudent(s)}
+                                    className="px-2 py-0.5 rounded-lg bg-brand-50 hover:bg-brand-600 text-brand-700 hover:text-white dark:bg-brand-950 dark:text-brand-300 dark:hover:bg-brand-600 font-bold text-[9.5px] transition cursor-pointer border border-brand-200 dark:border-brand-800"
+                                  >
+                                    Inspect →
+                                  </button>
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
           </div>
