@@ -167,15 +167,17 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
       className={`w-full min-h-[360px] flex flex-col perspective-1000 cursor-pointer group min-w-0 rounded-3xl select-none touch-manipulation ${auraClass}`}
       onClick={() => setIsFlipped(f => !f)}
     >
-      <div
-        className={`relative w-full h-full min-h-[360px] flex flex-col duration-500 transform-style-3d transition-transform ease-out-expo ${
-          isFlipped ? 'rotate-y-180' : 'rotate-y-0'
-        }`}
+      <motion.div
+        animate={{ rotateY: isFlipped ? 180 : 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        style={{ transformStyle: 'preserve-3d' }}
+        className="relative w-full h-full min-h-[360px] flex flex-col"
       >
         {/* FRONT SIDE — 2026 Holographic Glass Student Card */}
         <div 
-          className={`absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] shadow-subtle hover:shadow-glass-dark backface-hidden rotate-y-0 flex flex-col justify-between bg-white/95 dark:bg-navy-900/95 backdrop-blur-xl transition-opacity duration-300 ${
-            isFlipped ? 'pointer-events-none opacity-0 invisible' : 'pointer-events-auto opacity-100 visible z-10'
+          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+          className={`absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] shadow-subtle hover:shadow-glass-dark flex flex-col justify-between bg-white/95 dark:bg-navy-900/95 backdrop-blur-xl transition-opacity duration-200 ${
+            isFlipped ? 'pointer-events-none opacity-0' : 'pointer-events-auto opacity-100 z-10'
           }`}
         >
 
@@ -259,8 +261,14 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
 
         {/* BACK SIDE */}
         <div 
-          className={`absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-slate-100 dark:border-navy-800 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] backface-hidden rotate-y-180 flex flex-col bg-white dark:bg-navy-950/95 backdrop-blur-2xl transition-opacity duration-300 ${
-            isFlipped ? 'pointer-events-auto opacity-100 visible z-20' : 'pointer-events-none opacity-0 invisible z-0'
+          style={{ 
+            backfaceVisibility: 'hidden', 
+            WebkitBackfaceVisibility: 'hidden',
+            transform: 'rotateY(180deg)',
+            WebkitTransform: 'rotateY(180deg)'
+          }}
+          className={`absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-slate-100 dark:border-navy-800 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] flex flex-col bg-white dark:bg-navy-950/95 backdrop-blur-2xl transition-opacity duration-200 ${
+            isFlipped ? 'pointer-events-auto opacity-100 z-20' : 'pointer-events-none opacity-0 z-0'
           }`}
         >
 
@@ -404,7 +412,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           </div>
 
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

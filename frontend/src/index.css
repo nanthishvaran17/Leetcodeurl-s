@@ -1645,4 +1645,37 @@ body {
   background: rgba(255, 255, 255, 0.25);
 }
 
+/* ==========================================================================
+   2026 Mobile Experience Engine (Touch, Insets, Tactile Feedback, Glass Dock)
+   ========================================================================== */
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  html, body {
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-safe-bottom {
+    padding-bottom: max(5.5rem, calc(4.5rem + env(safe-area-inset-bottom)));
+  }
+
+  .mobile-tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .mobile-card-interactive {
+    touch-action: manipulation;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mobile-card-interactive:active {
+    transform: scale(0.98);
+  }
+}
+
 

@@ -58,49 +58,52 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
           className="relative w-full max-w-2xl bg-white dark:bg-navy-950 max-h-[92vh] sm:max-h-none sm:h-full shadow-2xl flex flex-col sm:border-l border-slate-200 dark:border-navy-700 rounded-t-3xl sm:rounded-none overflow-hidden"
         >
-          {/* Mobile Swipe / Drag Handle Indicator */}
-          <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700 mx-auto sm:hidden shrink-0 mt-3 mb-1" />
           {/* Header */}
-          <div className="relative p-4 sm:p-6 border-b border-indigo-200/50 dark:border-indigo-900/50 flex items-start justify-between bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-navy-900 dark:via-navy-950 dark:to-indigo-950 overflow-hidden">
-            {/* Background elements */}
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-10 left-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative p-4 sm:p-6 border-b border-indigo-200/50 dark:border-indigo-900/50 flex flex-col bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-navy-900 dark:via-navy-950 dark:to-indigo-950 overflow-hidden rounded-t-3xl sm:rounded-none">
+            {/* Mobile Swipe / Drag Handle Indicator */}
+            <div className="w-12 h-1.5 rounded-full bg-indigo-300 dark:bg-indigo-700 mx-auto sm:hidden shrink-0 -mt-1 mb-3 relative z-20" />
             
-            <div className="flex items-start gap-3 sm:gap-4 relative z-10 w-full pr-2 sm:pr-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
-                <Building2 size={24} className="sm:hidden" />
-                <Building2 size={28} className="hidden sm:block" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-lg sm:text-2xl font-display font-black leading-tight break-words bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-300 dark:to-purple-300">
-                    {department.department_name}
-                  </h2>
-                  <span className="px-2.5 py-1 text-[10px] font-black font-mono rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50 shadow-sm shrink-0">
-                    {department.department_code}
-                  </span>
+            <div className="flex items-start justify-between w-full">
+              {/* Background elements */}
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-10 left-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+              
+              <div className="flex items-start gap-3 sm:gap-4 relative z-10 w-full pr-2 sm:pr-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+                  <Building2 size={24} className="sm:hidden" />
+                  <Building2 size={28} className="hidden sm:block" />
                 </div>
-                <div className="flex flex-wrap items-center gap-2 mt-2 text-sm">
-                  <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase shadow-sm border ${
-                    department.health_status === 'Excellent' ? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800' :
-                    department.health_status === 'Healthy' ? 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800' :
-                    department.health_status === 'Needs Attention' ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800' :
-                    'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
-                  }`}>
-                    {department.health_status}
-                  </span>
-                  <span className="text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center gap-1 bg-white/50 dark:bg-navy-900/50 px-2 py-0.5 rounded-full border border-slate-200 dark:border-navy-700 shrink-0">
-                    Rank <span className="text-indigo-600 dark:text-indigo-400 font-black">#{department.rank}</span> Institutionally
-                  </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-lg sm:text-2xl font-display font-black leading-tight break-words bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-300 dark:to-purple-300">
+                      {department.department_name}
+                    </h2>
+                    <span className="px-2.5 py-1 text-[10px] font-black font-mono rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50 shadow-sm shrink-0">
+                      {department.department_code}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mt-2 text-sm">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase shadow-sm border ${
+                      department.health_status === 'Excellent' ? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800' :
+                      department.health_status === 'Healthy' ? 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800' :
+                      department.health_status === 'Needs Attention' ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800' :
+                      'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
+                    }`}>
+                      {department.health_status}
+                    </span>
+                    <span className="text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center gap-1 bg-white/50 dark:bg-navy-900/50 px-2 py-0.5 rounded-full border border-slate-200 dark:border-navy-700 shrink-0">
+                      Rank <span className="text-indigo-600 dark:text-indigo-400 font-black">#{department.rank}</span> Institutionally
+                    </span>
+                  </div>
                 </div>
               </div>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-white dark:hover:bg-navy-800 transition-all hover:shadow-sm border border-transparent hover:border-slate-200 relative z-10 shrink-0"
+              >
+                <X size={20} />
+              </button>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-white dark:hover:bg-navy-800 transition-all hover:shadow-sm border border-transparent hover:border-slate-200 relative z-10 shrink-0"
-            >
-              <X size={20} />
-            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 sm:space-y-8 stylish-scrollbar">
