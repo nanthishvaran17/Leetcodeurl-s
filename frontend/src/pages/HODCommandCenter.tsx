@@ -7,7 +7,7 @@ import {
  Zap, BookOpen, RotateCcw, ShieldCheck, Clock, Download,
  SlidersHorizontal, ChevronRight, FileSpreadsheet, FileText,
  HelpCircle, Eye, Compass, Target, PieChart, Layers, BrainCircuit,
- Award, Flame, Filter, ChevronDown, Check, AlertCircle, ArrowRight,
+ Award, Flame, Filter, ChevronDown, ChevronUp, Check, AlertCircle, ArrowRight,
  Sliders, User, CheckCircle, XCircle, ExternalLink, Calendar, Info,
  UserPlus, UserMinus, Shuffle, Printer, Share2, TrendingDown, Minus
 } from 'lucide-react';
@@ -1147,6 +1147,7 @@ export const HODCommandCenter: React.FC = () => {
  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
  const [allocationFilter, setAllocationFilter] = useState<'ALL' | 'ALLOCATED' | 'UNASSIGNED'>('ALL');
  const [staffWorkloadFilter, setStaffWorkloadFilter] = useState<'ALL' | 'PENDING' | 'COMPLETED'>('ALL');
+  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
 
  // Summary & Metadata
  const [summary, setSummary] = useState<CommandCenterSummary | null>(null);
@@ -1580,14 +1581,6 @@ export const HODCommandCenter: React.FC = () => {
  </div>
 
  <div className="grid grid-cols-2 items-center gap-2.5 w-full sm:w-auto sm:flex sm:flex-wrap sm:justify-end">
- {/* Live Status Pill */}
- {wsConnected && (
- <div className="col-span-2 inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-emerald-950/60 text-emerald-400 text-xs font-mono font-bold border border-emerald-800/60 shadow-inner sm:col-span-auto">
- <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
- <span>LIVE • {lastLiveTimestamp}</span>
- </div>
- )}
-
  {/* Quick Faculty Matrix Button */}
  <button
  onClick={() => {
@@ -1621,7 +1614,7 @@ export const HODCommandCenter: React.FC = () => {
  {/* Refresh Button */}
  <button
  onClick={() => { setRefreshing(true); clearApiCache(); loadScopedData(false, true); loadStudents(); }}
- className="col-span-2 inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 border border-slate-700/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95 sm:col-span-auto"
+ className="inline-flex min-w-0 items-center justify-center gap-2 h-9 px-2.5 sm:px-3.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 border border-slate-700/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
  >
  <RotateCcw size={14} className={refreshing ? 'animate-spin' : ''} />
  <span>Refresh</span>
@@ -1630,139 +1623,187 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  </div>
 
- {/* 2. EXECUTIVE MULTI-SCOPE FILTER BAR */}
- <div className="p-3 sm:p-4 rounded-2xl bg-white/90 dark:bg-navy-950/90 backdrop-blur-md border border-slate-200/80 dark:border-navy-800 shadow-sm space-y-2.5">
-   <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-navy-900">
-     <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-       <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-600 dark:text-brand-400 shrink-0" />
-       <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white truncate">
-         Active Oversight Scope
-       </span>
-       <span className="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 font-bold truncate">
-         {scopeDeptCode} • {scopeStaffName}
-       </span>
-     </div>
-     {(selectedDept !== 'ALL' || selectedStaff !== 'ALL' || selectedYear !== 'ALL' || selectedSection !== 'ALL' || selectedStatus !== 'ALL' || allocationFilter !== 'ALL' || staffWorkloadFilter !== 'ALL') && (
-       <button
-         onClick={() => {
-           setSelectedDept('ALL');
-           setSelectedStaff('ALL');
-           setSelectedYear('ALL');
-           setSelectedSection('ALL');
-           setSelectedStatus('ALL');
-           setAllocationFilter('ALL');
-           setStaffWorkloadFilter('ALL');
-         }}
-         className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 transition cursor-pointer shrink-0"
-       >
-         <RotateCcw size={12} />
-         <span>Reset All Filters</span>
-       </button>
-     )}
-   </div>
+  {/* 2. EXECUTIVE MULTI-SCOPE FILTER BAR */}
+  {(() => {
+    const activeFilterCount = [
+      selectedDept !== 'ALL',
+      selectedStaff !== 'ALL',
+      selectedYear !== 'ALL',
+      selectedSection !== 'ALL',
+      selectedStatus !== 'ALL',
+      allocationFilter !== 'ALL',
+      staffWorkloadFilter !== 'ALL'
+    ].filter(Boolean).length;
 
-   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-3.5">
-     {/* 1. Department Scope */}
-     <div className="space-y-1.5 min-w-0">
-       <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
-         Department Scope
-       </label>
-       <GlobalFilter
-         value={selectedDept}
-         onChange={val => {
-           setSelectedDept(val);
-           setSelectedStaff('ALL');
-         }}
-         dropdownWidth="min-w-[280px] sm:min-w-[320px]"
-         searchPlaceholder="Search department..."
-         options={deptOptions}
-         icon={<Building2 className="w-4 h-4 text-brand-500" />}
-       />
-     </div>
+    return (
+      <div className="rounded-2xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-md border border-slate-200/90 dark:border-navy-800 shadow-sm overflow-hidden transition-all duration-200">
+        {/* Toggle Header */}
+        <div 
+          onClick={() => setIsFilterOpen(prev => !prev)}
+          className="p-3 sm:p-4 flex items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-50/80 dark:hover:bg-navy-900/50 transition-colors"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsFilterOpen(prev => !prev); } }}
+          aria-expanded={isFilterOpen}
+        >
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-wrap">
+            <div className="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/20">
+              <Filter className="w-4 h-4" />
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 min-w-0">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white truncate">
+                Active Oversight Scope
+              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] sm:text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 font-bold">
+                  {scopeDeptCode} • {scopeStaffName}
+                </span>
+                {activeFilterCount > 0 && (
+                  <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-500 dark:text-brand-400 border border-brand-400/30">
+                    {activeFilterCount} Filter{activeFilterCount > 1 ? 's' : ''} Applied
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
 
-     {/* 2. Staff Mentor Scope */}
-     <div className="space-y-1.5 min-w-0">
-       <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
-         Faculty Mentor
-       </label>
-       <GlobalFilter
-         value={selectedStaff}
-         onChange={val => setSelectedStaff(val)}
-         dropdownWidth="min-w-[280px] sm:min-w-[320px]"
-         searchPlaceholder="Search staff mentor..."
-         options={staffOptions}
-         icon={<User className="w-4 h-4 text-indigo-500" />}
-       />
-     </div>
+          <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+            {activeFilterCount > 0 && (
+              <button
+                type="button"                onClick={() => {
+                  setSelectedDept('ALL');
+                  setSelectedStaff('ALL');
+                  setSelectedYear('ALL');
+                  setSelectedSection('ALL');
+                  setSelectedStatus('ALL');
+                  setAllocationFilter('ALL');
+                  setStaffWorkloadFilter('ALL');
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 rounded-xl transition cursor-pointer"
+                title="Reset all active filters to default"
+              >
+                <RotateCcw size={12} />
+                <span className="hidden sm:inline">Reset All</span>
+              </button>
+            )}
 
-     {/* 3. Academic Year */}
-     <div className="space-y-1.5 min-w-0">
-       <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
-         Cohort Year
-       </label>
-       <GlobalFilter
-         value={selectedYear}
-         onChange={val => setSelectedYear(val)}
-         dropdownWidth="min-w-[220px] sm:min-w-[250px]"
-         options={yearOptions}
-         icon={<Calendar className="w-4 h-4 text-amber-500" />}
-       />
-     </div>
+            <button
+              type="button"
+              onClick={() => setIsFilterOpen(prev => !prev)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-300 border border-brand-500/20 hover:border-brand-500/40 transition-all cursor-pointer shadow-xs active:scale-95"
+            >
+              <SlidersHorizontal size={13} />
+              <span>{isFilterOpen ? 'Hide Filters' : 'Show Filters'}</span>
+              {isFilterOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+          </div>
+        </div>
 
-     {/* 4. Section */}
-     <div className="space-y-1.5 min-w-0">
-       <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
-         Section / Cohort
-       </label>
-       <GlobalFilter
-         value={selectedSection}
-         onChange={val => setSelectedSection(val)}
-         dropdownWidth="min-w-[220px] sm:min-w-[250px]"
-         options={sectionOptions}
-         icon={<Layers className="w-4 h-4 text-purple-500" />}
-       />
-     </div>
+        {/* Collapsible Filter Body */}
+        {isFilterOpen && (
+          <div className="p-3.5 sm:p-4 pt-2 border-t border-slate-100 dark:border-navy-900 bg-slate-50/50 dark:bg-navy-900/30 space-y-3 animate-in fade-in duration-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-3.5">
+              {/* 1. Department Scope */}
+              <div className="space-y-1.5 min-w-0">
+                <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
+                  Department Scope
+                </label>
+                <GlobalFilter
+                  value={selectedDept}
+                  onChange={val => {
+                    setSelectedDept(val);
+                    setSelectedStaff('ALL');
+                  }}
+                  dropdownWidth="min-w-[280px] sm:min-w-[320px]"
+                  searchPlaceholder="Search department..."
+                  options={deptOptions}
+                  icon={<Building2 className="w-4 h-4 text-brand-500" />}
+                />
+              </div>
 
-     {/* 5. Solver Status */}
-     <div className="space-y-1.5 min-w-0">
-       <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
-         Solver Status
-       </label>
-       <GlobalFilter
-         value={selectedStatus}
-         onChange={val => setSelectedStatus(val)}
-         dropdownWidth="min-w-[220px] sm:min-w-[250px]"
-         options={statusOptions}
-         icon={<Activity className="w-4 h-4 text-emerald-500" />}
-       />
-     </div>
+              {/* 2. Staff Mentor Scope */}
+              <div className="space-y-1.5 min-w-0">
+                <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
+                  Faculty Mentor
+                </label>
+                <GlobalFilter
+                  value={selectedStaff}
+                  onChange={val => setSelectedStaff(val)}
+                  dropdownWidth="min-w-[280px] sm:min-w-[320px]"
+                  searchPlaceholder="Search staff mentor..."
+                  options={staffOptions}
+                  icon={<User className="w-4 h-4 text-indigo-500" />}
+                />
+              </div>
 
-     {/* 6. Mobile Quick Reset Filter Button */}
-     <div className="space-y-1.5 min-w-0 flex flex-col justify-end lg:hidden">
-       <label className="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate invisible select-none">
-         Reset
-       </label>
-       <button
-         type="button"
-         onClick={() => {
-           setSelectedDept('ALL');
-           setSelectedStaff('ALL');
-           setSelectedYear('ALL');
-           setSelectedSection('ALL');
-           setSelectedStatus('ALL');
-           setAllocationFilter('ALL');
-           setStaffWorkloadFilter('ALL');
-         }}
-         disabled={selectedDept === 'ALL' && selectedStaff === 'ALL' && selectedYear === 'ALL' && selectedSection === 'ALL' && selectedStatus === 'ALL' && allocationFilter === 'ALL' && staffWorkloadFilter === 'ALL'}
-         className="h-11 min-h-[44px] px-3.5 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-navy-900 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-black transition-all cursor-pointer shadow-xs active:scale-95"
-         title="Reset all active filters to default"
-       >
-         <RotateCcw size={13} className="text-rose-500 shrink-0" />
-         <span className="truncate">Reset All Filters</span>
-       </button>
-     </div>
-   </div>
- </div>
+              {/* 3. Academic Year */}
+              <div className="space-y-1.5 min-w-0">
+                <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
+                  Cohort Year
+                </label>
+                <GlobalFilter
+                  value={selectedYear}
+                  onChange={val => setSelectedYear(val)}
+                  dropdownWidth="min-w-[220px] sm:min-w-[250px]"
+                  options={yearOptions}
+                  icon={<Calendar className="w-4 h-4 text-amber-500" />}
+                />
+              </div>
+
+              {/* 4. Section */}
+              <div className="space-y-1.5 min-w-0">
+                <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
+                  Section / Cohort
+                </label>
+                <GlobalFilter
+                  value={selectedSection}
+                  onChange={val => setSelectedSection(val)}
+                  dropdownWidth="min-w-[220px] sm:min-w-[250px]"
+                  options={sectionOptions}
+                  icon={<Layers className="w-4 h-4 text-purple-500" />}
+                />
+              </div>
+
+              {/* 5. Solver Status */}
+              <div className="space-y-1.5 min-w-0">
+                <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
+                  Solver Status
+                </label>
+                <GlobalFilter
+                  value={selectedStatus}
+                  onChange={val => setSelectedStatus(val)}
+                  dropdownWidth="min-w-[220px] sm:min-w-[250px]"
+                  options={statusOptions}
+                  icon={<Activity className="w-4 h-4 text-emerald-500" />}
+                />
+              </div>
+            </div>
+
+            {/* Mobile Reset Action */}
+            <div className="flex justify-end pt-1 lg:hidden">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDept('ALL');
+                  setSelectedStaff('ALL');
+                  setSelectedYear('ALL');
+                  setSelectedSection('ALL');
+                  setSelectedStatus('ALL');
+                  setAllocationFilter('ALL');
+                  setStaffWorkloadFilter('ALL');
+                }}
+                disabled={activeFilterCount === 0}
+                className="h-9 px-3 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-black transition-all cursor-pointer shadow-xs active:scale-95"
+              >
+                <RotateCcw size={12} className="text-rose-500 shrink-0" />
+                <span>Reset All Filters</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  })()}
 
  {/* 3. STUDENT COHORT SUMMARY BANNER */}
  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 px-5 sm:px-6 py-4 sm:py-5 rounded-2xl bg-white dark:bg-navy-950 border-2 border-slate-200/80 dark:border-navy-700 shadow-sm">
