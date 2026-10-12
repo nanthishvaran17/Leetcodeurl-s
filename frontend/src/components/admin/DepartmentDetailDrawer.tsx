@@ -42,7 +42,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
 
   return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-[999999] flex justify-end">
+      <div className="fixed inset-0 z-[999999] flex items-end sm:items-stretch justify-center sm:justify-end p-0">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -52,12 +52,14 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
         />
         
         <motion.div
-          initial={{ x: '100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '100%' }}
+          initial={{ y: '100%', opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="relative w-full max-w-2xl bg-white dark:bg-navy-950 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-navy-700"
+          className="relative w-full max-w-2xl bg-white dark:bg-navy-950 max-h-[92vh] sm:max-h-none sm:h-full shadow-2xl flex flex-col sm:border-l border-slate-200 dark:border-navy-700 rounded-t-3xl sm:rounded-none overflow-hidden"
         >
+          {/* Mobile Swipe / Drag Handle Indicator */}
+          <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700 mx-auto sm:hidden shrink-0 mt-3 mb-1" />
           {/* Header */}
           <div className="relative p-4 sm:p-6 border-b border-indigo-200/50 dark:border-indigo-900/50 flex items-start justify-between bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-navy-900 dark:via-navy-950 dark:to-indigo-950 overflow-hidden">
             {/* Background elements */}

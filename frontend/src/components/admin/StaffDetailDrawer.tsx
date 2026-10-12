@@ -75,6 +75,8 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   return createPortal(
     <div className="fixed inset-0 z-[999999] flex justify-center items-end sm:justify-end sm:items-stretch bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in p-0" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="w-full max-w-xl h-[92vh] sm:h-[100dvh] bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden flex flex-col rounded-t-3xl sm:rounded-none">
+        {/* Mobile Swipe / Drag Handle Indicator */}
+        <div className="w-12 h-1.5 rounded-full bg-white/40 mx-auto sm:hidden shrink-0 mt-3 -mb-1 z-30" />
 
         {/* Hero Header Profile Section */}
         <div className="relative bg-gradient-to-br from-slate-950 via-blue-950 to-brand-900 text-white overflow-hidden shrink-0 border-b border-white/10">

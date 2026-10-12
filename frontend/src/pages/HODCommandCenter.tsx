@@ -1144,6 +1144,8 @@ export const HODCommandCenter: React.FC = () => {
  const [selectedYear, setSelectedYear] = useState<string>('ALL');
  const [selectedSection, setSelectedSection] = useState<string>('ALL');
  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+ const [allocationFilter, setAllocationFilter] = useState<'ALL' | 'ALLOCATED' | 'UNASSIGNED'>('ALL');
+ const [staffWorkloadFilter, setStaffWorkloadFilter] = useState<'ALL' | 'PENDING' | 'COMPLETED'>('ALL');
 
  // Summary & Metadata
  const [summary, setSummary] = useState<CommandCenterSummary | null>(null);
@@ -1273,7 +1275,8 @@ export const HODCommandCenter: React.FC = () => {
  staff_id: staffId,
  year_level: yearLevel,
  section: section,
- status_filter: selectedStatus !== 'ALL' ? selectedStatus : undefined
+ status_filter: selectedStatus !== 'ALL' ? selectedStatus : undefined,
+ allocation_filter: allocationFilter !== 'ALL' ? allocationFilter : undefined
  });
  setStudents(res.students || []);
  setStudentsTotal(res.total || 0);
@@ -1283,7 +1286,7 @@ export const HODCommandCenter: React.FC = () => {
  } finally {
  setStudentsLoading(false);
  }
- }, [studentsPage, studentsSearch, selectedDept, selectedStaff, selectedYear, selectedSection, selectedStatus, isMobile]);
+ }, [studentsPage, studentsSearch, selectedDept, selectedStaff, selectedYear, selectedSection, selectedStatus, allocationFilter, isMobile]);
 
  const isFirstMount = useRef(true);
 
@@ -1295,7 +1298,7 @@ export const HODCommandCenter: React.FC = () => {
  loadScopedData(isFirstMount.current);
  isFirstMount.current = false;
  setStudentsPage(1);
- }, [selectedStaff, selectedDept, selectedYear, selectedSection, selectedStatus, loadScopedData]);
+ }, [selectedStaff, selectedDept, selectedYear, selectedSection, selectedStatus, allocationFilter, loadScopedData]);
 
  useEffect(() => {
  loadStudents();
@@ -1577,17 +1580,24 @@ export const HODCommandCenter: React.FC = () => {
 
  <div className="grid grid-cols-2 items-center gap-2.5 w-full sm:w-auto sm:flex sm:flex-wrap sm:justify-end">
  {/* Live Status Pill */}
- {wsConnected ? (
+ {wsConnected && (
  <div className="col-span-2 inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-emerald-950/60 text-emerald-400 text-xs font-mono font-bold border border-emerald-800/60 shadow-inner sm:col-span-auto">
  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
  <span>LIVE • {lastLiveTimestamp}</span>
  </div>
- ) : (
- <div className="col-span-2 inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-xl bg-amber-950/60 text-amber-400 text-xs font-mono font-bold border border-amber-800/60 shadow-inner sm:col-span-auto">
- <AlertTriangle size={14} />
- <span>RECONNECTING...</span>
- </div>
  )}
+
+ {/* Quick Faculty Matrix Button */}
+ <button
+ onClick={() => {
+   document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
+ }}
+ className="inline-flex min-w-0 items-center justify-center gap-2 h-9 px-2.5 sm:px-3.5 rounded-xl bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-300 border border-indigo-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+ title="Jump to Faculty Mentors Performance & Progress Matrix"
+ >
+ <Users size={14} />
+ <span>Faculty Matrix</span>
+ </button>
 
  {/* HOD Staff Allocation Manager Button */}
  <button
@@ -1631,7 +1641,7 @@ export const HODCommandCenter: React.FC = () => {
          {scopeDeptCode} • {scopeStaffName}
        </span>
      </div>
-     {(selectedDept !== 'ALL' || selectedStaff !== 'ALL' || selectedYear !== 'ALL' || selectedSection !== 'ALL' || selectedStatus !== 'ALL') && (
+     {(selectedDept !== 'ALL' || selectedStaff !== 'ALL' || selectedYear !== 'ALL' || selectedSection !== 'ALL' || selectedStatus !== 'ALL' || allocationFilter !== 'ALL' || staffWorkloadFilter !== 'ALL') && (
        <button
          onClick={() => {
            setSelectedDept('ALL');
@@ -1639,6 +1649,8 @@ export const HODCommandCenter: React.FC = () => {
            setSelectedYear('ALL');
            setSelectedSection('ALL');
            setSelectedStatus('ALL');
+           setAllocationFilter('ALL');
+           setStaffWorkloadFilter('ALL');
          }}
          className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 transition cursor-pointer shrink-0"
        >
@@ -1737,8 +1749,10 @@ export const HODCommandCenter: React.FC = () => {
            setSelectedYear('ALL');
            setSelectedSection('ALL');
            setSelectedStatus('ALL');
+           setAllocationFilter('ALL');
+           setStaffWorkloadFilter('ALL');
          }}
-         disabled={selectedDept === 'ALL' && selectedStaff === 'ALL' && selectedYear === 'ALL' && selectedSection === 'ALL' && selectedStatus === 'ALL'}
+         disabled={selectedDept === 'ALL' && selectedStaff === 'ALL' && selectedYear === 'ALL' && selectedSection === 'ALL' && selectedStatus === 'ALL' && allocationFilter === 'ALL' && staffWorkloadFilter === 'ALL'}
          className="h-11 min-h-[44px] px-3.5 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-navy-900 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-black transition-all cursor-pointer shadow-xs active:scale-95"
          title="Reset all active filters to default"
        >
@@ -1793,9 +1807,11 @@ export const HODCommandCenter: React.FC = () => {
  {/* 4. SIX AUTHORITATIVE HOD KPI CARDS */}
  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 sm:gap-6 lg:gap-6 mb-8 sm:mb-10">
  <Card 
- className="p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+ className={`p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer ${staffWorkloadFilter === 'ALL' && selectedStaff === 'ALL' && allocationFilter === 'ALL' && selectedStatus === 'ALL' ? '' : ''}`}
  onClick={() => {
- setShowStaffAllocationModal(true);
+ setStaffWorkloadFilter('ALL');
+ notify.info(`Showing all faculty mentors (${summary?.kpi_summary?.total_staff ?? staffList.length}).`, '', { category: 'ALLOCATION' });
+ document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
  }}
  >
  <div className="flex items-center justify-between text-slate-700 dark:text-slate-400">
@@ -1811,9 +1827,11 @@ export const HODCommandCenter: React.FC = () => {
  </Card>
 
  <Card 
- className={`p-6 flex flex-col justify-between min-h-[145px] cursor-pointer transition-all hover:-translate-y-1 hover:shadow-xl ${selectedStatus === 'ALL' ? 'ring-2 ring-slate-400 bg-slate-50 dark:bg-navy-800' : ''}`}
+ className={`p-6 flex flex-col justify-between min-h-[145px] cursor-pointer transition-all hover:-translate-y-1 hover:shadow-xl ${selectedStatus === 'ALL' && allocationFilter === 'ALL' ? 'ring-2 ring-slate-400 bg-slate-50 dark:bg-navy-800' : ''}`}
  onClick={() => {
  setSelectedStatus('ALL');
+ setAllocationFilter('ALL');
+ notify.info(`Showing all enrolled students in scope (${summary?.kpi_summary?.total_students ?? totalInScope}).`, '', { category: 'ALLOCATION' });
  document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
  }}
  >
@@ -1830,8 +1848,15 @@ export const HODCommandCenter: React.FC = () => {
  </Card>
 
  <Card 
- className="p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+ className={`p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer ${allocationFilter === 'ALLOCATED' ? 'ring-2 ring-brand-500 bg-brand-50/50 dark:bg-brand-950/40' : ''}`}
  onClick={() => {
+ if (allocationFilter === 'ALLOCATED') {
+   setAllocationFilter('ALL');
+   notify.info('Cleared allocated filter. Showing all students.', '', { category: 'ALLOCATION' });
+ } else {
+   setAllocationFilter('ALLOCATED');
+   notify.success(`Filtering to only ${summary?.kpi_summary?.total_allocated ?? activeInScope} allocated students.`, '', { category: 'ALLOCATION' });
+ }
  document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
  }}
  >
@@ -1848,10 +1873,16 @@ export const HODCommandCenter: React.FC = () => {
  </Card>
 
  <Card 
- className="p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+ className={`p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer ${staffWorkloadFilter === 'COMPLETED' ? 'ring-2 ring-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/40' : ''}`}
  onClick={() => {
- setSelectedStatus('ACTIVE');
- document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+ if (staffWorkloadFilter === 'COMPLETED') {
+   setStaffWorkloadFilter('ALL');
+   notify.info('Cleared target completed mentor filter.', '', { category: 'ALLOCATION' });
+ } else {
+   setStaffWorkloadFilter('COMPLETED');
+   notify.success(`Filtered Faculty Mentors: Target Achieved (20+ mentees).`, '', { category: 'ALLOCATION' });
+ }
+ document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
  }}
  >
  <div className="flex items-center justify-between text-emerald-600">
@@ -1867,10 +1898,16 @@ export const HODCommandCenter: React.FC = () => {
  </Card>
 
  <Card 
- className="p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+ className={`p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer ${staffWorkloadFilter === 'PENDING' ? 'ring-2 ring-amber-500 bg-amber-50/50 dark:bg-amber-950/40' : ''}`}
  onClick={() => {
- setSelectedStatus('INACTIVE');
- document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+ if (staffWorkloadFilter === 'PENDING') {
+   setStaffWorkloadFilter('ALL');
+   notify.info('Cleared pending mentor filter.', '', { category: 'ALLOCATION' });
+ } else {
+   setStaffWorkloadFilter('PENDING');
+   notify.success(`Filtered Faculty Mentors: Pending Target (< 20 mentees).`, '', { category: 'ALLOCATION' });
+ }
+ document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
  }}
  >
  <div className="flex items-center justify-between text-amber-600">
@@ -2122,14 +2159,30 @@ export const HODCommandCenter: React.FC = () => {
  <Card id="student-directory-section" className="p-5 space-y-4 scroll-mt-20">
  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
  <div>
- <h2 className="font-display text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+ <h2 className="font-display text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
  <span>Live Student Activity</span>
  <span className="text-xs font-mono font-normal text-slate-600 dark:text-slate-400">({studentsTotal} students in scope)</span>
+ {allocationFilter !== 'ALL' && (
+   <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+     allocationFilter === 'ALLOCATED' ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+   }`}>
+     Showing: {allocationFilter === 'ALLOCATED' ? 'Allocated Only' : 'Unassigned Only'}
+   </span>
+ )}
  </h2>
  <p className="text-xs text-slate-700 dark:text-slate-400">Realtime problem solves and contest question completions</p>
  </div>
 
           <div className="flex items-center gap-2">
+            {allocationFilter !== 'ALL' && (
+              <button
+                onClick={() => setAllocationFilter('ALL')}
+                className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+              >
+                <RotateCcw size={12} />
+                <span>Show All</span>
+              </button>
+            )}
             <div className="relative min-w-[240px] flex items-center">
               <input
                 value={studentsSearch}
@@ -2739,14 +2792,31 @@ export const HODCommandCenter: React.FC = () => {
 
  {/* 8. FACULTY MENTORS PERFORMANCE & COMPLETION MATRIX */}
  <Card id="staff-performance-section" className="p-5 space-y-3.5 scroll-mt-20 mt-6">
- <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-navy-800">
  <div>
  <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
  <Users size={16} className="text-brand-500" />
  <span>Faculty Mentors Performance & Progress Matrix</span>
+ {staffWorkloadFilter !== 'ALL' && (
+   <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+     staffWorkloadFilter === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+   }`}>
+     Showing: {staffWorkloadFilter === 'COMPLETED' ? 'Target Achieved (20+)' : 'Pending Target (<20)'}
+   </span>
+ )}
  </h3>
  <p className="text-xs text-slate-700 dark:text-slate-400">Track mentorship workload, active solver rates, and student completion across staff members</p>
  </div>
+ <div className="flex items-center gap-2">
+ {staffWorkloadFilter !== 'ALL' && (
+   <button
+     onClick={() => setStaffWorkloadFilter('ALL')}
+     className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+   >
+     <RotateCcw size={11} />
+     <span>Show All Staff</span>
+   </button>
+ )}
  <button
  onClick={() => setShowStaffAllocationModal(true)}
  className="px-3 py-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-600 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
@@ -2754,6 +2824,7 @@ export const HODCommandCenter: React.FC = () => {
  <Users size={13} />
  <span>Manage Allocation</span>
  </button>
+ </div>
  </div>
 
  <div className="w-full">
@@ -2771,12 +2842,24 @@ export const HODCommandCenter: React.FC = () => {
  </tr>
  </thead>
  <tbody className="block md:table-row-group divide-y-0 md:divide-y divide-slate-100 dark:divide-navy-800 font-mono">
- {staffList.length === 0 ? (
- <tr>
- <td colSpan={8} className="py-8 text-center text-slate-700 dark:text-slate-400 font-bold">No staff members found for the selected scope.</td>
- </tr>
- ) : (
- staffList.map(s => {
+ {(() => {
+   const displayedStaff = staffList.filter(s => {
+     if (staffWorkloadFilter === 'COMPLETED') return (s.assigned_count || 0) >= 20;
+     if (staffWorkloadFilter === 'PENDING') return (s.assigned_count || 0) < 20;
+     return true;
+   });
+
+   if (displayedStaff.length === 0) {
+     return (
+       <tr>
+         <td colSpan={8} className="py-8 text-center text-slate-700 dark:text-slate-400 font-bold">
+           No staff members match the "{staffWorkloadFilter}" workload filter.
+         </td>
+       </tr>
+     );
+   }
+
+   return displayedStaff.map(s => {
  const assigned = s.assigned_count || 0;
  const maxAllowed = s.max_allowed || 30;
  const active = (s as any).active_count || 0;
@@ -2947,8 +3030,8 @@ export const HODCommandCenter: React.FC = () => {
  </td>
  </tr>
  );
- })
- )}
+ });
+ })()}
  </tbody>
  </table>
  </div>
