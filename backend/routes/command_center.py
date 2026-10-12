@@ -415,6 +415,11 @@ def get_students(
                 FacultyStudentAssignment.is_active == True
             )
         )
+    elif allocation_filter == "ALLOCATED":
+        q = q.join(
+            FacultyStudentAssignment,
+            and_(FacultyStudentAssignment.student_id == Student.id, FacultyStudentAssignment.is_active == True)
+        )
     elif allocation_filter == "UNASSIGNED":
         q = q.outerjoin(
             FacultyStudentAssignment,
@@ -1174,11 +1179,16 @@ def get_report_data(
 
     role_clean = (current_user.role or "").strip().lower()
 
-    # HOD: always override with their own department — never trust client
-    if role_clean == "hod":
-        if not current_user.department_id:
-            return {"error": "HOD has no department assigned.", "items": [], "total": 0}
-        eff_dept_id = current_user.department_id
+    # HOD: respect multi-dept allocations and authorized departments
+    if role_clean in ("hod", "department hod", "department_hod"):
+        from backend.services.authorization_service import get_hod_authorized_department_ids
+        hod_dept_ids = get_hod_authorized_department_ids(db, current_user)
+        if dept_id and dept_id in hod_dept_ids:
+            eff_dept_id = dept_id
+        elif hod_dept_ids:
+            eff_dept_id = hod_dept_ids[0]
+        else:
+            eff_dept_id = getattr(current_user, "department_id", None)
     elif role_clean in ("faculty", "staff"):
         # Faculty: scope is always their assigned students, dept is advisory only
         eff_dept_id = current_user.department_id or dept_id

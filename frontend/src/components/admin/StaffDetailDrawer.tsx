@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { StaffRecord, StudentRecord, getCommandCenterStudents } from '../../services/commandCenterService';
-import { Users, X, Code, CheckCircle, Clock, Calendar, Mail, Briefcase, Activity, RefreshCw, Gauge, Trophy, Sparkles } from 'lucide-react';
+import { Users, X, Code, CheckCircle, Clock, Calendar, Mail, Briefcase, Activity, RefreshCw, Gauge, Trophy, Sparkles, Target, Eye } from 'lucide-react';
 
 interface StaffDetailDrawerProps {
   staff: StaffRecord | null;
@@ -9,6 +9,7 @@ interface StaffDetailDrawerProps {
   onClose: () => void;
   onManageAllocation: () => void;
   onSelectStudent?: (student: StudentRecord) => void;
+  onFilterDashboard?: (staffId: number) => void;
 }
 
 export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({ 
@@ -16,7 +17,8 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   studentList, 
   onClose, 
   onManageAllocation,
-  onSelectStudent
+  onSelectStudent,
+  onFilterDashboard
 }) => {
   if (!staff) return null;
 
@@ -78,13 +80,29 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
         <div className="relative bg-gradient-to-br from-slate-950 via-blue-950 to-brand-900 text-white overflow-hidden shrink-0 border-b border-white/10">
           <div className="absolute inset-0 opacity-20 pointer-events-none [background-image:linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.16)_48%,transparent_49%),linear-gradient(30deg,transparent_0%,rgba(56,189,248,0.18)_48%,transparent_49%)] [background-size:180px_180px]" />
 
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-10 h-10 p-2.5 bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white rounded-xl backdrop-blur-md transition cursor-pointer z-20 border border-white/10"
-          >
-            <X size={18} />
-          </button>
+          {/* Actions top right */}
+          <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
+            {onFilterDashboard && (
+              <button
+                onClick={() => {
+                  onFilterDashboard(staff.id);
+                  onClose();
+                }}
+                className="px-3 py-2 bg-brand-500/30 hover:bg-brand-500/50 text-white rounded-xl backdrop-blur-md transition cursor-pointer text-xs font-black flex items-center gap-1.5 border border-white/20 shadow-sm"
+                title="Filter Main Dashboard to this Mentor"
+              >
+                <Eye size={14} className="text-brand-300" />
+                <span className="hidden sm:inline">Filter Dashboard</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="w-10 h-10 p-2.5 bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white rounded-xl backdrop-blur-md transition cursor-pointer border border-white/10"
+              title="Close drawer"
+            >
+              <X size={18} />
+            </button>
+          </div>
 
           {/* Avatar + Info */}
           <div className="flex items-center gap-4 px-6 pt-6 pb-5 relative z-10 pr-14">
@@ -400,20 +418,34 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-slate-200 dark:border-navy-700 bg-white/95 dark:bg-navy-950/95 backdrop-blur-md flex justify-between items-center gap-3 shrink-0 safe-area-pb">
+        <div className="p-4 border-t border-slate-200 dark:border-navy-700 bg-white/95 dark:bg-navy-950/95 backdrop-blur-md flex flex-wrap justify-between items-center gap-2.5 shrink-0 safe-area-pb">
           <button 
             onClick={onClose}
-            className="px-4 py-2 bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition cursor-pointer border border-slate-200 dark:border-navy-700"
+            className="px-4 py-2.5 bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition cursor-pointer border border-slate-200 dark:border-navy-700"
           >
             Close Drawer
           </button>
-          <button 
-            onClick={onManageAllocation}
-            className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-extrabold transition shadow-lg shadow-brand-600/25 cursor-pointer flex items-center gap-1.5"
-          >
-            <Users size={14} />
-            <span>Manage Allocation</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {onFilterDashboard && (
+              <button
+                onClick={() => {
+                  onFilterDashboard(staff.id);
+                  onClose();
+                }}
+                className="px-4 py-2.5 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+              >
+                <Eye size={14} />
+                <span>Filter Dashboard</span>
+              </button>
+            )}
+            <button 
+              onClick={onManageAllocation}
+              className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-extrabold transition shadow-lg shadow-brand-600/25 cursor-pointer flex items-center gap-1.5"
+            >
+              <Users size={14} />
+              <span>Manage Allocation</span>
+            </button>
+          </div>
         </div>
       </div>
 

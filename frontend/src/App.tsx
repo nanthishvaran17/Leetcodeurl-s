@@ -18,6 +18,7 @@ import { useScrollLock } from './hooks/useScrollLock';
 import { StudentProfileSkeleton } from './components/StudentProfileSkeleton';
 import { StudentShareCardModal } from './components/StudentShareCardModal';
 import { MobileFilterDrawer } from './components/MobileFilterDrawer';
+import { MobileBottomNav } from './components/MobileBottomNav';
 
 const LandingPage = safeLazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
 import { LoginPage } from './pages/LoginPage';
@@ -1074,8 +1075,15 @@ export const App: React.FC = () => {
           </ErrorBoundary>
         </main>
 
-
       </div>
+
+      {/* Modern Swiggy/Uber-grade Mobile Bottom Navigation */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        setActiveTab={handleTabChange}
+        isAuthenticated={isAuthenticated}
+        userRole={user?.role}
+      />
 
       {/* Keyboard Shortcuts Guide Modal */}
       <KeyboardShortcutsModal

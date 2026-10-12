@@ -55,7 +55,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   ];
 
   return (
-    <div className="fixed inset-[#000000] z-50 flex items-end sm:items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in">
       <div 
         className="w-full max-w-md bg-white dark:bg-navy-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200/80 dark:border-navy-800 overflow-hidden flex flex-col max-h-[85vh] transition-transform duration-300"
         role="dialog"

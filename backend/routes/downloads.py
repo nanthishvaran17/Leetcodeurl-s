@@ -285,6 +285,26 @@ def _dispatch_internal_endpoint(
         file_bytes = generate_report_bytes(db, report_type="HOD_DEPARTMENT_INTELLIGENCE", format="xlsx", filters=merged_params, current_user=user)
         return file_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "HOD_Department_Intelligence_Report.xlsx"
 
+    # 2b. HOD Command Center Custom Excel Exports
+    elif clean_endpoint in ("/api/command-center/reports/export-excel", "/command-center/reports/export-excel"):
+        from backend.routes.command_center import export_command_center_report_excel
+        raw_dept_id = merged_params.get("dept_id")
+        dept_id_val = int(raw_dept_id) if raw_dept_id is not None and str(raw_dept_id).isdigit() else None
+        raw_staff_id = merged_params.get("staff_id")
+        staff_id_val = int(raw_staff_id) if raw_staff_id is not None and str(raw_staff_id).isdigit() else None
+        
+        resp = export_command_center_report_excel(
+            report_type=merged_params.get("report_type", "EXECUTIVE"),
+            dept_id=dept_id_val,
+            year_level=merged_params.get("year_level"),
+            section=merged_params.get("section"),
+            staff_id=staff_id_val,
+            status_filter=merged_params.get("status_filter"),
+            db=db,
+            current_user=user
+        )
+        return resp.body, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "Command_Center_Report.xlsx"
+
     # 3. Faculty Consolidated Performance Excel
     elif clean_endpoint == "/api/reports/staff":
         file_bytes = generate_report_bytes(db, report_type="FACULTY_CONSOLIDATED", format="xlsx", filters=merged_params, current_user=user)

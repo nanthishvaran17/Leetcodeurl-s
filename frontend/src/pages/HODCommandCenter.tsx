@@ -89,9 +89,11 @@ const StudentDetailDrawer: React.FC<{
  if (!student) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[999999] flex justify-end bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
- <div className="w-full max-w-md h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl rounded-l-3xl p-4 sm:p-6 pt-6 sm:pt-7 overflow-y-auto space-y-6 flex flex-col justify-between">
- <div className="space-y-6">
+    <div className="fixed inset-0 z-[999999] flex items-end sm:items-stretch justify-center sm:justify-end bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in p-0" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="w-full max-w-md max-h-[92vh] sm:max-h-none sm:h-full bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl rounded-t-3xl sm:rounded-none sm:rounded-l-3xl p-4 sm:p-6 pt-3 sm:pt-7 overflow-y-auto space-y-6 flex flex-col justify-between">
+        {/* Mobile Swipe / Drag Handle Indicator */}
+        <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700 mx-auto sm:hidden shrink-0 mb-1" />
+        <div className="space-y-6">
  {/* Header */}
  <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-navy-800">
  <div>
@@ -327,7 +329,9 @@ const StaffAllocationModal: React.FC<{
 
  return createPortal(
  <div className="modal-overlay-responsive z-[10000] animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
- <div className="modal-container-responsive bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 w-full max-w-4xl">
+ <div className="modal-container-responsive mobile-responsive-modal bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh]">
+        {/* Mobile Swipe Drag Handle */}
+        <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700 mx-auto sm:hidden shrink-0 mt-3 mb-1" />
  {/* Modal Header */}
  <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
  <div className="flex items-center gap-3">
@@ -1368,6 +1372,20 @@ export const HODCommandCenter: React.FC = () => {
  setConfirmUnassignTarget({ id: staffId, name: staffName });
  };
 
+ const handleFilterByStaff = (staffId: number, staffName?: string) => {
+   if (selectedStaff === String(staffId)) {
+     setSelectedStaff('ALL');
+     notify.info(`Cleared staff filter. Showing all faculty mentors.`, '', { category: 'ALLOCATION' });
+   } else {
+     setSelectedStaff(String(staffId));
+     notify.success(`Dashboard scoped to ${staffName || 'selected faculty'}.`, '', { category: 'ALLOCATION' });
+     setTimeout(() => {
+       const el = document.getElementById('student-directory-section') || document.getElementById('student-cohort-section');
+       el?.scrollIntoView({ behavior: 'smooth' });
+     }, 100);
+   }
+ };
+
  const executeUnassignAll = async () => {
  if (!confirmUnassignTarget) return;
  setConfirmUnassignLoading(true);
@@ -1508,7 +1526,7 @@ export const HODCommandCenter: React.FC = () => {
   ];
 
  return (
- <div className="max-w-full w-full box-border space-y-8 sm:space-y-10 md:space-y-12 pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
+ <div className="max-w-full w-full box-border space-y-8 sm:space-y-10 md:space-y-12 pb-24 md:pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
 
 
 
@@ -2770,7 +2788,7 @@ export const HODCommandCenter: React.FC = () => {
  return (
  <tr
  key={s.id}
- onClick={() => setSelectedStaffDetail(s)}
+ onClick={() => handleFilterByStaff(s.id, s.username)}
  className={`block md:table-row hover:bg-brand-50/70 dark:hover:bg-navy-800 cursor-pointer transition-colors bg-white dark:bg-navy-950 mb-4 md:mb-0 p-4 md:p-0 rounded-xl shadow-sm md:shadow-none border border-slate-200 dark:border-none ${isSelected ? 'md:bg-brand-50/90 dark:md:bg-navy-800 font-bold ring-2 md:ring-0 ring-brand-500' : ''}`}
  >
  {/* Faculty Mentor Info */}
@@ -2780,7 +2798,14 @@ export const HODCommandCenter: React.FC = () => {
  {s.username ? s.username.charAt(0).toUpperCase() : 'S'}
  </div>
  <div>
- <div className="font-extrabold text-slate-900 dark:text-white text-xs">{s.username}</div>
+ <div className="font-extrabold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
+   <span>{s.username}</span>
+   {isSelected && (
+     <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-wider shadow-xs">
+       Active Scope
+     </span>
+   )}
+ </div>
  <div className="text-xs text-slate-600 font-mono font-medium">{s.email}</div>
  </div>
  </div>
@@ -2884,12 +2909,21 @@ export const HODCommandCenter: React.FC = () => {
  <span className="md:hidden text-xs font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">Actions</span>
  <div className="flex flex-wrap items-center justify-end md:justify-center gap-2 mt-2 md:mt-0">
  <button
+   onClick={(e) => { e.stopPropagation(); handleFilterByStaff(s.id, s.username); }}
+   className={`px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer shadow-xs whitespace-nowrap flex items-center gap-1.5 ${
+     isSelected 
+       ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30 ring-2 ring-emerald-400' 
+       : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-600/20'
+   }`}
+   title={isSelected ? 'Currently filtering dashboard by this mentor (Click to reset)' : `Filter entire dashboard to ${s.username}'s mentees`}
+ >
+   <Eye size={12} />
+   <span>{isSelected ? 'Active Scope ✓' : 'View Data'}</span>
+ </button>
+ <button
  onClick={(e) => { e.stopPropagation(); setSelectedStaffDetail(s); }}
- className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer shadow-xs whitespace-nowrap ${
- isSelected 
- ? 'bg-brand-600 text-white shadow-brand-600/30' 
- : 'bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 dark:bg-brand-950 dark:text-brand-300 dark:hover:bg-brand-600 border border-brand-200 dark:border-brand-800'
- }`}
+ className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-slate-200 text-xs font-extrabold transition cursor-pointer border border-slate-200 dark:border-navy-700 whitespace-nowrap"
+ title="Inspect full profile & performance drawer"
  >
  Inspect Details →
  </button>
@@ -2943,6 +2977,7 @@ export const HODCommandCenter: React.FC = () => {
  setSelectedStaffDetail(null);
  setShowStaffAllocationModal(true);
  }}
+ onFilterDashboard={(staffId) => handleFilterByStaff(staffId, selectedStaffDetail?.username)}
  />
 
  {/* HOD Staff Allocation Manager Modal */}

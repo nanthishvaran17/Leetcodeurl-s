@@ -23,9 +23,14 @@ def resolve_scope(
         
     # Department Head Access
     if role in ["hod", "department head", "dept head"]:
-        if not current_user.department_id:
-            return []
-        students = db.query(Student.id).filter(Student.department_id == current_user.department_id).all()
+        from backend.services.authorization_service import get_hod_authorized_department_ids
+        dept_ids = get_hod_authorized_department_ids(db, current_user)
+        if not dept_ids and getattr(current_user, "department_id", None):
+            dept_ids = [current_user.department_id]
+        if not dept_ids:
+            students = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+            return [s.id for s in students]
+        students = db.query(Student.id).filter(Student.department_id.in_(dept_ids)).all()
         return [s.id for s in students]
         
     # Faculty / Mentor Access

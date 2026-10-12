@@ -36,7 +36,10 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
         user_req = job.requested_by if job else None
         real_user = None
         if user_req:
-            real_user = db.query(User).filter((User.email == user_req) | (User.username == user_req)).first()
+            real_user = db.query(User).filter(
+                (User.email.ilike(user_req)) | 
+                (User.username.ilike(user_req))
+            ).first()
 
         class AuthorizedJobContext:
             def __init__(self, inst_id, dept_id, role, email, user_id=None):
@@ -269,7 +272,7 @@ def create_report_job(
     job_id = f"EXP-{uuid.uuid4().hex[:8].upper()}"
     
     rep_type = payload.get("report_type", "UNKNOWN")
-    user_identifier = getattr(current_user, "email", "public_user")
+    user_identifier = (getattr(current_user, "email", None) or getattr(current_user, "username", None) or "public_user")
     institution_id = getattr(current_user, "institution_id", "NEC")
     department_id = getattr(current_user, "department_id", None)
     role = getattr(current_user, "role", None)

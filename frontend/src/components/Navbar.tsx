@@ -186,21 +186,21 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Auth Profile / Login */}
               {isAuthenticated && user ? (
-                <div className="hidden sm:flex items-center space-x-2 sm:space-x-3 pl-2 sm:pl-3 border-l border-slate-200 dark:border-navy-700">
+                <div className="flex items-center space-x-1.5 sm:space-x-3 pl-1.5 sm:pl-3 border-l border-slate-200 dark:border-navy-700">
                   <button
                     type="button"
                     onClick={() => setActiveTab('account-settings')}
-                    className="flex items-center space-x-1.5 flex-shrink-0 hover:opacity-85 transition-all cursor-pointer p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 text-left"
+                    className="flex items-center space-x-1.5 flex-shrink-0 hover:opacity-85 transition-all cursor-pointer p-0.5 sm:p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 text-left active:scale-95"
                     title="Open Account & Profile Settings"
                   >
                     {(user.photoURL || (user as any).profile_photo) ? (
                       <img
                         src={user.photoURL || (user as any).profile_photo}
                         alt={user.full_name || user.displayName || user.name || user.username}
-                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-brand-500 object-contain p-0.5 bg-white dark:bg-navy-900"
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-brand-500 object-contain p-0.5 bg-white dark:bg-navy-900 shadow-xs"
                       />
                     ) : (
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-brand-600 text-white font-black text-xs flex items-center justify-center uppercase">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-brand-600 text-white font-black text-xs flex items-center justify-center uppercase shadow-xs">
                         {(user.full_name || user.displayName || user.name || user.username || 'U')[0]}
                       </div>
                     )}
@@ -216,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowLogoutConfirm(true)}
-                    className="px-2.5 py-1.5 sm:px-3 sm:py-2 flex-shrink-0 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors flex items-center space-x-1.5 cursor-pointer min-w-[44px] min-h-[44px] sm:min-w-auto sm:min-h-auto justify-center"
+                    className="hidden sm:flex px-2.5 py-1.5 sm:px-3 sm:py-2 flex-shrink-0 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors items-center space-x-1.5 cursor-pointer min-w-[44px] min-h-[44px] sm:min-w-auto sm:min-h-auto justify-center"
                     title="Sign Out"
                   >
                     <LogOut className="w-4 h-4 text-rose-500" />

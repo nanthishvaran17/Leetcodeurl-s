@@ -618,7 +618,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               <List
                 height={typeof window !== 'undefined' && window.innerWidth < 768 ? 600 : 800}
                 itemCount={paginatedStudents.length}
-                itemSize={typeof window !== 'undefined' && window.innerWidth < 768 ? 160 : 68}
+                itemSize={typeof window !== 'undefined' && window.innerWidth < 768 ? 136 : 68}
                 width="100%"
                 itemData={paginatedStudents}
                 style={{ overflowX: 'hidden' }}

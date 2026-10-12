@@ -132,6 +132,10 @@ def get_or_create_report(
 
     user_role = (getattr(current_user, "role", "") or "").lower().strip()
     user_dept = str(getattr(current_user, "department_id", "ALL"))
+    if user_role in ("hod", "department hod", "department_hod"):
+        from backend.services.authorization_service import get_hod_authorized_department_ids
+        h_ids = get_hod_authorized_department_ids(db, current_user)
+        user_dept = ",".join(map(str, sorted(h_ids))) if h_ids else user_dept
     user_scope = f"{user_role}:{user_dept}" if current_user else "ALL"
 
     ext_info = EXT_MEDIA_TYPES.get(format.lower().strip(), ("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
@@ -165,6 +169,8 @@ def get_or_create_report(
             cached = db.query(ReportCache).filter(
                 ReportCache.institution_id == institution_id,
                 ReportCache.week_id == clean_week_id,
+                ReportCache.report_type == report_type,
+                ReportCache.user_scope == user_scope,
                 ReportCache.file_type == format,
                 ReportCache.status == "READY",
                 ReportCache.data_version == curr_version

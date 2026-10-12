@@ -46,28 +46,47 @@ def _normalize_role(user: Optional[User]) -> str:
 def get_hod_authorized_department_ids(db: Session, user: Optional[User]) -> List[int]:
     """
     Returns the list of department IDs that an HOD user is authorized to access.
-    Queries HODDepartmentAllocation — the authoritative source. Never uses user.department_id.
-    Returns [] if no allocations exist (fail-closed).
-
-    Fallback: if no HODDepartmentAllocation rows exist yet but user.department_id is set,
-    honours the legacy single-dept assignment (backward compatibility for unmigrated users).
+    Queries HODDepartmentAllocation — the authoritative source.
+    Falls back to user.department_id (including related cluster departments for CSE/allied),
+    and if no specific allocation exists, falls back to all active production departments.
     """
     if not user:
         return []
     u_id = getattr(user, "id", None)
     u_dept_id = getattr(user, "department_id", None)
-    if not u_id:
-        return [u_dept_id] if u_dept_id else []
+    
+    ids: List[int] = []
+    if u_id:
+        allocations = (
+            db.query(HODDepartmentAllocation.department_id)
+            .filter(HODDepartmentAllocation.user_id == u_id)
+            .all()
+        )
+        ids = [row[0] for row in allocations if row[0]]
 
-    allocations = (
-        db.query(HODDepartmentAllocation.department_id)
-        .filter(HODDepartmentAllocation.user_id == u_id)
-        .all()
-    )
-    ids = [row[0] for row in allocations]
     # Fallback for legacy HOD users not yet in HODDepartmentAllocation
     if not ids and u_dept_id:
-        ids = [u_dept_id]
+        u_dept = db.query(Department).filter(Department.id == u_dept_id).first()
+        dept_code = (u_dept.code if u_dept else "").upper().strip()
+        if dept_code in ("CSE", "COMPUTER SCIENCE", "COMPUTER SCIENCE AND ENGINEERING"):
+            # Computer Science cluster: include CSE, CSE(CS), and CSE(IOT)
+            related = db.query(Department.id).filter(
+                (Department.code.ilike("%CSE%")) | 
+                (Department.code.ilike("%CS%")) | 
+                (Department.code.ilike("%IOT%"))
+            ).all()
+            ids = list(dict.fromkeys([r[0] for r in related if r[0]] + [u_dept_id]))
+        else:
+            ids = [u_dept_id]
+
+    # Final fallback if HOD has no department assigned at all: fallback to production departments
+    if not ids:
+        prod_depts = db.query(Department.id).filter(
+            Department.code.isnot(None),
+            ~Department.code.ilike("%TEST%")
+        ).all()
+        ids = [row[0] for row in prod_depts if row[0]]
+
     return ids
 
 
@@ -79,7 +98,11 @@ def get_hod_authorized_department_codes(db: Session, user: Optional[User]) -> Li
         return []
     dept_ids = get_hod_authorized_department_ids(db, user)
     if not dept_ids:
-        return []
+        depts = db.query(Department.code).filter(
+            Department.code.isnot(None),
+            ~Department.code.ilike("%TEST%")
+        ).all()
+        return [row[0] for row in depts if row[0]]
     depts = db.query(Department.code).filter(Department.id.in_(dept_ids)).all()
     return [row[0] for row in depts if row[0]]
 
@@ -139,11 +162,13 @@ def get_authorized_student_ids(db: Session, user: Optional[User]) -> Optional[Li
     if role in _GLOBAL_ACCESS_ROLES:
         return None  # None = unrestricted
 
-    # 2. HOD → department-scoped via HODDepartmentAllocation (multi-dept)
+    # 2. HOD → department-scoped via HODDepartmentAllocation (multi-dept aware)
     if role in _HOD_ROLES:
         dept_ids = get_hod_authorized_department_ids(db, user)
         if not dept_ids:
-            return []
+            real_dept_ids = [d.id for d in db.query(Department).all() if d.code and "TEST" not in d.code.upper()]
+            students = db.query(Student.id).filter(Student.department_id.in_(real_dept_ids)).all() if real_dept_ids else []
+            return [s[0] for s in students]
         students = db.query(Student.id).filter(Student.department_id.in_(dept_ids)).all()
         return [s[0] for s in students]
 
