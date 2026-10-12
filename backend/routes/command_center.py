@@ -550,8 +550,19 @@ def get_students(
         if is_active_solver and weekly_delta >= 5:
             status_label = "IMPROVING"
 
-        if status_filter and status_filter != "ALL" and status_label != status_filter:
-            continue
+        if status_filter and status_filter != "ALL":
+            if status_filter == "PENDING" and total_solved >= 10:
+                continue
+            elif status_filter == "COMPLETED" and total_solved < 10:
+                continue
+            elif status_filter == "AT_RISK" and total_solved > 0:
+                continue
+            elif status_filter == "INACTIVE" and is_active_solver:
+                continue
+            elif status_filter == "ACTIVE" and not is_active_solver:
+                continue
+            elif status_filter == "IMPROVING" and not (is_active_solver and weekly_delta >= 5):
+                continue
 
         results.append({
             "id":                  s.id,
