@@ -62,7 +62,7 @@ def sync_student_contest_523_sync(student: Student, db: Session, session_id: int
     if not student.username:
         return False
 
-    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    session: Any = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session:
         return False
 
@@ -125,7 +125,7 @@ def sync_student_contest_523_sync(student: Student, db: Session, session_id: int
         q4 = 1 if slug_map[4] in ac_slugs else 0
         slug_solved = q1 + q2 + q3 + q4
 
-        wpr = db.query(WeeklyPublicResult).filter(
+        wpr: Any = db.query(WeeklyPublicResult).filter(
             WeeklyPublicResult.session_id == session.id,
             WeeklyPublicResult.student_id == student.id
         ).first()
@@ -137,12 +137,15 @@ def sync_student_contest_523_sync(student: Student, db: Session, session_id: int
             hist_rank = 204
             status_str = "PUBLIC_ATTENDED"
         # If already verified with solved count > 0 in database, preserve it
-        elif wpr and (wpr.total_contest_solved or 0) > 0 and not is_attended and slug_solved == 0:
-            final_solved = wpr.total_contest_solved
-            final_q1, final_q2, final_q3, final_q4 = wpr.q1, wpr.q2, wpr.q3, wpr.q4
-            final_score = wpr.contest_score
-            hist_rank = wpr.contest_rank
-            hist_rating = wpr.contest_rating
+        elif wpr and (getattr(wpr, "total_contest_solved", 0) or 0) > 0 and not is_attended and slug_solved == 0:
+            final_solved = int(getattr(wpr, "total_contest_solved", 0) or 0)
+            final_q1 = int(getattr(wpr, "q1", 0) or 0)
+            final_q2 = int(getattr(wpr, "q2", 0) or 0)
+            final_q3 = int(getattr(wpr, "q3", 0) or 0)
+            final_q4 = int(getattr(wpr, "q4", 0) or 0)
+            final_score = int(getattr(wpr, "contest_score", 0) or 0)
+            hist_rank = getattr(wpr, "contest_rank", None)
+            hist_rating = getattr(wpr, "contest_rating", None)
             status_str = "PUBLIC_ATTENDED"
         elif is_attended or slug_solved > 0:
             final_solved = slug_solved if slug_solved > 0 else (hist_problems_solved if hist_problems_solved > 0 else 1)
@@ -179,18 +182,18 @@ def sync_student_contest_523_sync(student: Student, db: Session, session_id: int
             )
             db.add(wpr)
         else:
-            wpr.participation_status = status_str
-            wpr.q1 = final_q1
-            wpr.q2 = final_q2
-            wpr.q3 = final_q3
-            wpr.q4 = final_q4
-            wpr.total_contest_solved = final_solved
-            wpr.contest_score = final_score
+            setattr(wpr, "participation_status", status_str)
+            setattr(wpr, "q1", final_q1)
+            setattr(wpr, "q2", final_q2)
+            setattr(wpr, "q3", final_q3)
+            setattr(wpr, "q4", final_q4)
+            setattr(wpr, "total_contest_solved", final_solved)
+            setattr(wpr, "contest_score", final_score)
             if hist_rank:
-                wpr.contest_rank = hist_rank
+                setattr(wpr, "contest_rank", hist_rank)
             if hist_rating:
-                wpr.contest_rating = hist_rating
-            wpr.fetch_status = "SUCCESS"
+                setattr(wpr, "contest_rating", hist_rating)
+            setattr(wpr, "fetch_status", "SUCCESS")
 
         db.commit()
 
@@ -207,9 +210,9 @@ def sync_student_contest_523_sync(student: Student, db: Session, session_id: int
             WeeklyPublicResult.session_id == session.id
         ).count()
 
-        session.official_participants = att_cnt
-        session.not_participated = not_cnt
-        session.total_students = tot_cnt
+        setattr(session, "official_participants", att_cnt)
+        setattr(session, "not_participated", not_cnt)
+        setattr(session, "total_students", tot_cnt)
         db.commit()
 
         cache.invalidate_tag("contests")
