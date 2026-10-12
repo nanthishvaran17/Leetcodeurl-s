@@ -227,14 +227,14 @@ def generate_single_sheet_contest_excel(
         elif s.get("cutoff") is not None:
             raw_cutoff = s.get("cutoff")
             
-        cutoff_disp: Any = "—"
+        cutoff_disp: Any = ""
         if raw_cutoff is not None:
             try:
                 c_num = float(raw_cutoff)
                 if c_num > 0 and c_num == c_num: # check positive and not NaN
                     cutoff_disp = round(c_num, 2)
             except (ValueError, TypeError):
-                cutoff_disp = "—"
+                cutoff_disp = ""
                 
         # Aggregate global column counts
         sum_q1 += q1
