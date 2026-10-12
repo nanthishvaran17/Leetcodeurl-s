@@ -62,11 +62,11 @@ def generate_single_sheet_contest_excel(
     c_match = re.search(r'\d+', contest_name)
     c_num = c_match.group(0) if c_match else ""
     if c_num:
-        single_sheet_title = f"STUDENT CONTEST PERFORMANCE OF WEEKLY CONTEST {c_num}"
+        single_sheet_title = f"STUDENT PERFORMANCE OF WEEKLY CONTEST {c_num}"
     elif contest_name:
-        single_sheet_title = f"STUDENT CONTEST PERFORMANCE OF {contest_name.upper()}"
+        single_sheet_title = f"STUDENT PERFORMANCE OF {contest_name.upper()}"
     else:
-        single_sheet_title = "STUDENT CONTEST PERFORMANCE"
+        single_sheet_title = "STUDENT PERFORMANCE"
 
     # Resolve Full Department Name (no year cohort)
     dept_clean = str(dept or "").strip().upper()
