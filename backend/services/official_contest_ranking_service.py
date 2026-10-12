@@ -285,7 +285,7 @@ class OfficialContestRankingService:
                 db.add(wpr)
 
             if is_solver and data:
-                wpr.participation_status = "PUBLIC"
+                wpr.participation_status = "PUBLIC_ATTENDED"
                 wpr.fetch_status = "SUCCESS"
                 wpr.confidence = "VERIFIED"
                 wpr.q1 = data.get("q1", 0)

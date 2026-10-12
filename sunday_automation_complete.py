@@ -458,7 +458,25 @@ def run_sunday_automation(contest_slug=None, contest_date=None, dispatch_email=T
     
     students = load_students_roster()
     print(f" Loaded {len(students)} student roster records.")
-    
+
+    # Synchronize database directly from official LeetCode Contest Ranking API
+    try:
+        from backend.database import SessionLocal
+        from backend.models import WeeklySession
+        from backend.services.official_contest_ranking_service import OfficialContestRankingService
+        import asyncio
+        with SessionLocal() as db_session:
+            ws_target = db_session.query(WeeklySession).filter(
+                (WeeklySession.contest_id.ilike(f"%{contest_slug}%")) |
+                (WeeklySession.contest_name.ilike(f"%{contest_num}%"))
+            ).first()
+            if ws_target:
+                print(f"[AUTO-SYNC] Scanning official LeetCode contest rankings for Session {ws_target.id} ({contest_slug})...")
+                asyncio.run(OfficialContestRankingService.scan_and_sync_contest(ws_target.id, db_session))
+                print(f"[AUTO-SYNC] Official LeetCode contest rankings successfully synchronized into database!")
+    except Exception as e:
+        print(f"[WARN] Official contest ranking sync note: {e}")
+
     results = process_students_with_timestamps(students, contest_slug, contest_date)
     reports = generate_two_reports(results, contest_slug, contest_date)
     
