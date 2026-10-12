@@ -161,20 +161,51 @@ def get_student_profile(username):
 def load_students_roster():
     """Load normalized student roster from students.xlsx or database"""
     if os.path.exists(STUDENTS_EXCEL_PATH):
-        df = pd.read_excel(STUDENTS_EXCEL_PATH)
-        students = []
-        for idx, row in df.iterrows():
-            u = str(row.get("LeetCodeUsername", "") or "").strip()
-            if u == "nan" or not u:
-                u = ""
-            students.append({
-                "roll_number": str(row.get("RollNumber", f"REG_{idx+1}")),
-                "name": str(row.get("Name", "Unknown")),
-                "year": str(row.get("Year", "III")),
-                "department": str(row.get("Department", "CSE")),
-                "username": u
-            })
-        return students
+        try:
+            df = pd.read_excel(STUDENTS_EXCEL_PATH)
+            students = []
+            for idx, row in df.iterrows():
+                u = str(row.get("LeetCodeUsername", "") or "").strip()
+                if u == "nan" or not u:
+                    u = ""
+                students.append({
+                    "roll_number": str(row.get("RollNumber", f"REG_{idx+1}")),
+                    "name": str(row.get("Name", "Unknown")),
+                    "year": str(row.get("Year", "III")),
+                    "department": str(row.get("Department", "CSE")),
+                    "username": u
+                })
+            if students:
+                return students
+        except Exception as e:
+            print(f"Warning: Failed to load from Excel: {e}")
+
+    # Fallback to active Database
+    try:
+        from backend.database import SessionLocal
+        from backend.models import Student
+        with SessionLocal() as db:
+            db_students = db.query(Student).filter(
+                (Student.is_active == True) | (Student.is_active.is_(None))
+            ).all()
+            if db_students:
+                roster = []
+                for s in db_students:
+                    dept = "CSE"
+                    if getattr(s, "department", None):
+                        dept = s.department.code or s.department.name or "CSE"
+                    username = (s.username or s.primary_leetcode_id or "").strip()
+                    roster.append({
+                        "roll_number": str(s.reg_no or f"REG_{s.id}"),
+                        "name": str(s.name or "Unknown"),
+                        "year": str(s.year_level or "III"),
+                        "department": str(dept),
+                        "username": username
+                    })
+                return roster
+    except Exception as e:
+        print(f"Warning: Failed to load students from database: {e}")
+
     return []
 
 def fetch_profile_contest_data(username, contest_slug):
@@ -403,10 +434,20 @@ def generate_two_reports(results, contest_slug, contest_date):
 # AUTOMATED SUNDAY PIPELINE RUNNER
 # ============================================
 
-def run_sunday_automation(contest_slug="weekly-contest-514", contest_date=None, dispatch_email=True):
+def run_sunday_automation(contest_slug=None, contest_date=None, dispatch_email=True):
     """Executes the complete Sunday automation pipeline"""
     if contest_date is None:
-        contest_date = datetime.now(IST)
+        now_ist = datetime.now(IST)
+        days_since_sunday = (now_ist.weekday() + 1) % 7
+        sunday_dt = now_ist - timedelta(days=days_since_sunday)
+        contest_date = sunday_dt.replace(hour=8, minute=0, second=0, microsecond=0)
+
+    if contest_slug is None:
+        ref_date = datetime(2026, 8, 9, tzinfo=IST)
+        ref_contest = 514
+        weeks_diff = (contest_date.date() - ref_date.date()).days // 7
+        contest_num = ref_contest + weeks_diff
+        contest_slug = f"weekly-contest-{contest_num}"
     
     print("\n" + "=" * 70)
     print(" SUNDAY AUTOMATION PIPELINE EXECUTING")
@@ -421,10 +462,21 @@ def run_sunday_automation(contest_slug="weekly-contest-514", contest_date=None, 
     results = process_students_with_timestamps(students, contest_slug, contest_date)
     reports = generate_two_reports(results, contest_slug, contest_date)
     
+    total = reports.get('total', 0)
+    live_cnt = reports.get('live', 0)
+    virt_cnt = reports.get('virtual', 0)
+    not_att_cnt = reports.get('not_attended', 0)
+
+    live_pct = round(live_cnt / total * 100, 1) if total > 0 else 0.0
+    virt_pct = round(virt_cnt / total * 100, 1) if total > 0 else 0.0
+    not_att_pct = round(not_att_cnt / total * 100, 1) if total > 0 else 0.0
+
     print(f"\n Summary Stats:")
-    print(f"  • 🟢 LIVE (Official):    {reports['live']} ({round(reports['live']/reports['total']*100, 1)}%)")
-    print(f"  • 🟣 VIRTUAL (Post 9:30): {reports['virtual']} ({round(reports['virtual']/reports['total']*100, 1)}%)")
-    print(f"  •  NOT ATTENDED:        {reports['not_attended']} ({round(reports['not_attended']/reports['total']*100, 1)}%)")
+    print(f"  • 🟢 LIVE (Official):    {live_cnt} ({live_pct}%)")
+    print(f"  • 🟣 VIRTUAL (Post 9:30): {virt_cnt} ({virt_pct}%)")
+    print(f"  •  NOT ATTENDED:        {not_att_cnt} ({not_att_pct}%)")
+    if total == 0:
+        print("  ⚠️ Notice: Total student roster is 0. Excel reports generated with empty dataset.")
     print(f"\n Saved Excel Reports:")
     print(f"  • Internal: {reports['internal_file']}")
     print(f"  • External: {reports['external_file']}")
@@ -459,18 +511,18 @@ def run_sunday_automation(contest_slug="weekly-contest-514", contest_date=None, 
                 </tr>
                 <tr>
                     <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold;">🟢 LIVE (Official)</td>
-                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{reports['live']}</td>
-                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{round(reports['live']/reports['total']*100, 1)}%</td>
+                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{live_cnt}</td>
+                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{live_pct}%</td>
                 </tr>
                 <tr>
                     <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold;">🟣 VIRTUAL</td>
-                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{reports['virtual']}</td>
-                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{round(reports['virtual']/reports['total']*100, 1)}%</td>
+                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{virt_cnt}</td>
+                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{virt_pct}%</td>
                 </tr>
                 <tr>
                     <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold;"> NOT ATTENDED</td>
-                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{reports['not_attended']}</td>
-                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{round(reports['not_attended']/reports['total']*100, 1)}%</td>
+                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{not_att_cnt}</td>
+                    <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;">{not_att_pct}%</td>
                 </tr>
             </table>
             <p style="margin-top: 20px; font-size: 13px; color: #64748b;">
@@ -536,14 +588,17 @@ def start_scheduler():
 
 def main():
     parser = argparse.ArgumentParser(description="Complete Sunday Automation - Dual Reports with Timestamps")
-    parser.add_argument("--contest", default="weekly-contest-514", help="Contest slug")
-    parser.add_argument("--date", default="2026-08-09", help="Contest date (YYYY-MM-DD)")
+    parser.add_argument("--contest", default=None, help="Contest slug (defaults to dynamic weekly contest)")
+    parser.add_argument("--date", default=None, help="Contest date (YYYY-MM-DD, defaults to most recent Sunday)")
     parser.add_argument("--no-email", action="store_true", help="Skip email dispatch")
     parser.add_argument("--schedule", action="store_true", help="Start persistent scheduler daemon")
     
     args = parser.parse_args()
     
-    contest_date = datetime.strptime(args.date, "%Y-%m-%d").replace(tzinfo=IST)
+    contest_date = None
+    if args.date:
+        contest_date = datetime.strptime(args.date, "%Y-%m-%d").replace(tzinfo=IST)
+
     run_sunday_automation(
         contest_slug=args.contest,
         contest_date=contest_date,

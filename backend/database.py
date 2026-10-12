@@ -61,8 +61,12 @@ if ("postgresql" in db_url or "postgres" in db_url):
         try:
             from backend.logger import logger as _log
             _log.warning(f"[DB_FALLBACK] PostgreSQL host '{hostname}' unreachable ({_net_exc}). Falling back to local SQLite: {db_url}")
+            if "supabase.co" in hostname and hostname.startswith("db."):
+                _log.warning("[DB_FALLBACK] Note: Direct Supabase hostname 'db.*.supabase.co' is IPv6-only. In IPv4 environments (such as GitHub Actions runners or certain cloud hosts), use the Supabase Connection Pooler: aws-0-[region].pooler.supabase.com:6543 or Neon Database URL.")
         except Exception:
             print(f"[DB_FALLBACK] PostgreSQL host '{hostname}' unreachable ({_net_exc}). Falling back to local SQLite: {db_url}")
+            if "supabase.co" in hostname and hostname.startswith("db."):
+                print("[DB_FALLBACK] Note: Direct Supabase hostname 'db.*.supabase.co' is IPv6-only. In IPv4 environments (such as GitHub Actions runners or certain cloud hosts), use the Supabase Connection Pooler: aws-0-[region].pooler.supabase.com:6543 or Neon Database URL.")
 
 from sqlalchemy.pool import NullPool
 

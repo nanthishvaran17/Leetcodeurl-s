@@ -1116,9 +1116,13 @@ def create_student(
         def _bg_sync_new_student():
             from backend.database import SessionLocal as _SL
             from backend.services.live_sync_service import sync_single_student as _sss
+            from backend.services.auto_contest_sync_service import sync_student_contest_523_sync
             _bg_db = _SL()
             try:
                 _sss(student_id_for_sync, _bg_db)  # type: ignore
+                st_obj = _bg_db.query(Student).filter(Student.id == student_id_for_sync).first()
+                if st_obj:
+                    sync_student_contest_523_sync(st_obj, _bg_db)
             except Exception as _e:
                 logger.warning(f"[CREATE_STUDENT_SYNC] Background sync note for student_id={student_id_for_sync}: {_e}")
             finally:

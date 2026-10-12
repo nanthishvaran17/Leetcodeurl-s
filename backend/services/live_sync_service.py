@@ -1280,6 +1280,14 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
         db.commit()  # type: ignore
         student = db.query(Student).filter(Student.id == student_id).first()  # type: ignore
 
+        # Automatically sync Contest 523 for this student if available
+        try:
+            from backend.services.auto_contest_sync_service import sync_student_contest_523_sync
+            if student:
+                sync_student_contest_523_sync(student, db)
+        except Exception as _ce:
+            logger.warning(f"[AUTO_CONTEST_SYNC] single sync hook note: {_ce}")
+
         # Invalidate application level cache
         try:  # type: ignore
             from backend.cache import cache  # type: ignore
