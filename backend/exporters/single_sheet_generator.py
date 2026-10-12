@@ -93,7 +93,7 @@ def generate_single_sheet_contest_excel(
         "S.No", 
         "Reg No", 
         "Name", 
-        "Accommodation",
+        "Accommodation\n(D/H)",
         "Cutoff",
         "Q1\n(Easy)", 
         "Q2\n(Medium)", 
@@ -175,10 +175,12 @@ def generate_single_sheet_contest_excel(
         elif s.get("hostel_dayscholar"):
             raw_acc = str(s.get("hostel_dayscholar")).strip()
         
-        if "HOSTEL" in raw_acc.upper():
-            acc_val = "Hostel"
+        if "HOSTEL" in raw_acc.upper() or raw_acc.upper() == "H":
+            acc_val = "H"
+            acc_is_hostel = True
         else:
-            acc_val = "Day Scholar"
+            acc_val = "D"
+            acc_is_hostel = False
             
         # 12th Cutoff determination
         raw_cutoff = None
@@ -207,7 +209,7 @@ def generate_single_sheet_contest_excel(
         
         # Aggregate accommodation statistics
         is_attended = (solved_count > 0)
-        target_group = hostel_stats if acc_val == "Hostel" else ds_stats
+        target_group = hostel_stats if acc_is_hostel else ds_stats
         target_group["count"] += 1
         if is_attended:
             target_group["attended"] += 1
@@ -308,10 +310,10 @@ def generate_single_sheet_contest_excel(
     row_idx += 1
     
     # Row 1: Hostel
-    h_pct = f"{(hostel_stats['attended'] / hostel_stats['count'] * 100):.1f}%" if hostel_stats['count'] > 0 else "0.0%"
+    h_pct_num = (hostel_stats['attended'] / hostel_stats['count']) if hostel_stats['count'] > 0 else 0.0
     h_row = [
         1,
-        "Hostel",
+        "Hostel (H)",
         hostel_stats["count"],
         hostel_stats["attended"],
         hostel_stats["q1"],
@@ -319,7 +321,7 @@ def generate_single_sheet_contest_excel(
         hostel_stats["q3"],
         hostel_stats["q4"],
         hostel_stats["total_solved"],
-        h_pct
+        h_pct_num
     ]
     ws.row_dimensions[row_idx].height = 20
     for c_idx, val in enumerate(h_row, 1):
@@ -327,13 +329,15 @@ def generate_single_sheet_contest_excel(
         cell.font = font_data
         cell.alignment = align_center
         cell.border = grid_border
+        if c_idx == 10:
+            cell.number_format = '0.0%'
     row_idx += 1
     
     # Row 2: Day Scholar
-    ds_pct = f"{(ds_stats['attended'] / ds_stats['count'] * 100):.1f}%" if ds_stats['count'] > 0 else "0.0%"
+    ds_pct_num = (ds_stats['attended'] / ds_stats['count']) if ds_stats['count'] > 0 else 0.0
     ds_row = [
         2,
-        "Day Scholar",
+        "Day Scholar (D)",
         ds_stats["count"],
         ds_stats["attended"],
         ds_stats["q1"],
@@ -341,7 +345,7 @@ def generate_single_sheet_contest_excel(
         ds_stats["q3"],
         ds_stats["q4"],
         ds_stats["total_solved"],
-        ds_pct
+        ds_pct_num
     ]
     ws.row_dimensions[row_idx].height = 20
     for c_idx, val in enumerate(ds_row, 1):
@@ -349,12 +353,14 @@ def generate_single_sheet_contest_excel(
         cell.font = font_data
         cell.alignment = align_center
         cell.border = grid_border
+        if c_idx == 10:
+            cell.number_format = '0.0%'
     row_idx += 1
     
     # Row 3: Total Summary
     total_roster_cnt = len(students)
     total_attended_cnt = hostel_stats["attended"] + ds_stats["attended"]
-    tot_pct = f"{(total_attended_cnt / total_roster_cnt * 100):.1f}%" if total_roster_cnt > 0 else "0.0%"
+    tot_pct_num = (total_attended_cnt / total_roster_cnt) if total_roster_cnt > 0 else 0.0
     tot_summary_row = [
         "",
         "TOTAL",
@@ -365,7 +371,7 @@ def generate_single_sheet_contest_excel(
         sum_q3,
         sum_q4,
         sum_total_solved,
-        tot_pct
+        tot_pct_num
     ]
     ws.row_dimensions[row_idx].height = 22
     for c_idx, val in enumerate(tot_summary_row, 1):
@@ -374,10 +380,12 @@ def generate_single_sheet_contest_excel(
         cell.fill = fill_total_row
         cell.alignment = align_center
         cell.border = grid_border
+        if c_idx == 10:
+            cell.number_format = '0.0%'
     row_idx += 1
         
-    # Apply column widths tailored for 10 columns
-    widths = [8, 16, 30, 16, 12, 12, 13, 13, 12, 14]
+    # Apply compact column widths tailored for 10 columns (no unnecessary width)
+    widths = [8, 15, 26, 9, 10, 10, 11, 11, 10, 12]
     for col_idx, width in enumerate(widths, 1):
         col_letter = get_column_letter(col_idx)
         ws.column_dimensions[col_letter].width = width
