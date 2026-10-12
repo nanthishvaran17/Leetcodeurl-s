@@ -268,9 +268,19 @@ class OfficialContestRankingService:
         not_attended_count = 0
         dept_counts: Dict[str, int] = {}
 
+        by_username = {v.get("username", "").strip().lower(): v for v in scanned_data.values() if v.get("username")}
+        by_short_reg = {k.replace("7322", ""): v for k, v in scanned_data.items()}
+
         for s in students:
-            is_solver = s.reg_no in scanned_data
-            data = scanned_data.get(s.reg_no)
+            norm_reg = (s.reg_no or "").strip().upper()
+            short_reg = norm_reg.replace("7322", "")
+            data = (
+                scanned_data.get(norm_reg) or 
+                scanned_data.get(f"7322{short_reg}") or 
+                by_short_reg.get(short_reg) or 
+                (by_username.get(s.username.strip().lower()) if s.username else None)
+            )
+            is_solver = bool(data)
 
             wpr = existing_wpr.get(s.id)
             if not wpr:
