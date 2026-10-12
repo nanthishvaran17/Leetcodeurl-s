@@ -27,8 +27,14 @@ function createWindow() {
     icon: iconPath
   });
 
+  const distIndexPath = path.join(__dirname, '../dist/index.html');
+
   if (app.isPackaged) {
-    win.loadURL('app://./index.html');
+    if (require('fs').existsSync(distIndexPath)) {
+      win.loadFile(distIndexPath);
+    } else {
+      win.loadURL('app://./index.html');
+    }
   } else {
     win.loadURL('http://localhost:5173');
   }
@@ -41,7 +47,6 @@ app.whenReady().then(() => {
     if (!filePath || filePath === '/' || filePath.startsWith('?')) {
       filePath = 'index.html';
     }
-    // Clean query params or hash
     const cleanPath = filePath.split('?')[0].split('#')[0];
     const targetFile = path.extname(cleanPath) ? cleanPath : 'index.html';
     const resolvedPath = path.join(__dirname, '../dist', targetFile);

@@ -167,5 +167,7 @@ apply_indexes.py
 # Electron Desktop Builds & Installers
 dist-electron/
 frontend/dist-electron/
+dist-windows-exe/
+frontend/release-builds/
 *.exe
 
