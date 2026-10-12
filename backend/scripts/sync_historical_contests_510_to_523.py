@@ -22,8 +22,9 @@ import httpx
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 
-# Ensure backend can be imported
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+# Ensure backend can be imported from project root
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+sys.path.insert(0, "/var/www/leetcode-tracker")
 
 from backend.database import SessionLocal
 from backend.models import Student, WeeklySession, WeeklyPublicResult, PreviousWeekParticipationRecord
