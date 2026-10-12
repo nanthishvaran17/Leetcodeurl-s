@@ -158,7 +158,7 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
                 "total_rows": 0
             }
 
-        auto_mappings, confidence_map, unmapped = detect_column_headers(raw_headers)
+        auto_mappings, confidence_map, unmapped = detect_column_headers(raw_headers, df=df)
 
         effective_mapping = {**auto_mappings, **(custom_mapping or {})}
 
@@ -543,7 +543,7 @@ def commit_smart_excel_import(
         if df.empty:
             return {"success": False, "error": "Uploaded Excel file is empty."}
 
-        auto_mappings, _, _ = detect_column_headers(raw_headers)
+        auto_mappings, _, _ = detect_column_headers(raw_headers, df=df)
         effective_mapping = {**auto_mappings, **(custom_mapping or {})}
 
         canonical_to_raw = {}
@@ -639,10 +639,24 @@ def commit_smart_excel_import(
                 continue
             seen_reg_nos.add(reg_no)
 
-            norm_year, _ = normalize_year_value(raw_year)
-            norm_batch, _ = normalize_batch_value(raw_batch)
-            dept_code, dept_id, _, _ = normalize_department_value(raw_dept, dept_master)
+            norm_year, year_conf = normalize_year_value(raw_year)
+            norm_batch, batch_conf = normalize_batch_value(raw_batch)
+            dept_code, dept_id, dept_conf, _ = normalize_department_value(raw_dept, dept_master)
             lc_url, lc_username = normalize_leetcode_url(raw_lc_url)
+
+            # Auto-decode from Register Number if missing/low confidence (e.g. 23CC -> IV Year, Batch 2023-2027, CSE(CS))
+            from backend.services.excel_intelligence_engine import decode_reg_no_attributes
+            decoded_attrs = decode_reg_no_attributes(reg_no)
+
+            if (not raw_year or year_conf in ("LOW", "NONE")) and decoded_attrs.get("year"):
+                norm_year = decoded_attrs["year"]
+
+            if (not raw_batch or batch_conf == "LOW") and decoded_attrs.get("batch"):
+                norm_batch = decoded_attrs["batch"]
+
+            if (not raw_dept or dept_conf == "LOW") and decoded_attrs.get("department"):
+                d_code = decoded_attrs["department"]
+                dept_code, dept_id, _, _ = normalize_department_value(d_code, dept_master)
 
             # Resolve department_id if missing to guarantee NOT NULL constraint
             if not dept_id and dept_code in dept_master:

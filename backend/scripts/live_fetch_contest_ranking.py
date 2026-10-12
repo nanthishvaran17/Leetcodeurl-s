@@ -15,6 +15,7 @@ import time
 import math
 import json
 import argparse
+from typing import Optional, Any, Tuple
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -69,20 +70,19 @@ def get_session():
         return driver, "chrome", vdisplay
     except Exception as e:
         print(f"[WARN] Chrome launch exception: {e}")
-        return None, "none", vdisplay
 
     # Fallback to curl_cffi
     try:
         from curl_cffi import requests as cffi_requests
         s = cffi_requests.Session(impersonate="chrome120")
-        return s, "cffi"
+        return s, "cffi", vdisplay
     except ImportError:
         import requests
-        return requests.Session(), "requests"
+        return requests.Session(), "requests", vdisplay
 
 
-def fetch_contest_data(contest_slug: str, proxy_base: str = None):
-    session, is_cffi = get_session()
+def fetch_contest_data(contest_slug: str, proxy_base: Optional[str] = None):
+    session, is_cffi, vdisplay = get_session()
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
@@ -97,6 +97,10 @@ def fetch_contest_data(contest_slug: str, proxy_base: str = None):
     url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global"
     print(f"[INFO] Connecting to LeetCode API at {url}...")
     
+    if session is None:
+        print("[ERROR] No valid HTTP session available.")
+        return None, None
+
     try:
         resp = session.get(url, headers=headers, timeout=25)
     except Exception as e:
@@ -143,7 +147,8 @@ def fetch_contest_data(contest_slug: str, proxy_base: str = None):
             g_resp = session.get(f"https://leetcode.com/contest/api/ranking/{contest_slug}/?pagination=1&region=global", headers=headers, timeout=20)
             if g_resp.status_code == 200:
                 g_data = g_resp.json()
-                q_ids = [str(q.get("question_id")) for q in g_data.get("questions", [])]
+                if isinstance(g_data, dict):
+                    q_ids = [str(q.get("question_id")) for q in g_data.get("questions", []) if isinstance(q, dict)]
         except Exception:
             pass
 
@@ -262,29 +267,35 @@ def run_graphql_direct_fetch(ws, student_map, contest_slug):
 
         wpr = db.query(WeeklyPublicResult).filter_by(session_id=ws.id, student_id=sid).first()
         if wpr:
-            wpr.attended = True
-            wpr.official_rank = rank
-            wpr.official_score = score
-            if problems > 0 and wpr.solved_count == 0:
-                wpr.solved_count = problems
+            setattr(wpr, "participation_status", "PUBLIC_ATTENDED")
+            setattr(wpr, "contest_rank", rank)
+            setattr(wpr, "contest_score", score)
+            if problems > 0 and (getattr(wpr, "total_contest_solved", 0) or 0) == 0:
+                setattr(wpr, "total_contest_solved", problems)
         else:
             wpr = WeeklyPublicResult(
                 session_id=ws.id,
                 student_id=sid,
-                attended=True,
-                official_rank=rank,
-                official_score=score,
-                solved_count=problems
+                reg_no=getattr(st, "reg_no", ""),
+                name=getattr(st, "name", ""),
+                dept=getattr(st, "department_name", "") or (st.department.code if getattr(st, "department", None) else "CSE"),
+                year=getattr(st, "year_level", "") or "III",
+                participation_status="PUBLIC_ATTENDED",
+                contest_rank=rank,
+                contest_score=score,
+                total_contest_solved=problems,
+                fetch_status="SUCCESS",
+                confidence="VERIFIED"
             )
             db.add(wpr)
 
         pw = db.query(PreviousWeekParticipationRecord).filter_by(student_id=sid, session_id=ws.id).first()
         if pw:
-            pw.participation_type = "PUBLIC"
-            pw.official_rank = rank
-            pw.official_score = score
-            if problems > 0 and pw.problems_solved == 0:
-                pw.problems_solved = problems
+            setattr(pw, "participation_type", "PUBLIC")
+            setattr(pw, "official_rank", rank)
+            setattr(pw, "official_score", score)
+            if problems > 0 and (getattr(pw, "problems_solved", 0) or 0) == 0:
+                setattr(pw, "problems_solved", problems)
 
     try:
         db.commit()
@@ -296,7 +307,7 @@ def run_graphql_direct_fetch(ws, student_map, contest_slug):
         db.close()
 
 
-def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
+def live_run(contest_slug: Optional[str] = None, session_id: Optional[int] = None, proxy_base: Optional[str] = None):
     # Check students in DB
     db = SessionLocal()
     students = db.query(Student).all()
@@ -310,13 +321,14 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     student_norm_map = {}
     for s in students:
         candidates = []
-        if s.username: candidates.append(s.username)
-        if s.primary_leetcode_id: candidates.append(s.primary_leetcode_id)
-        if hasattr(s, 'secondary_leetcode_id') and s.secondary_leetcode_id: candidates.append(s.secondary_leetcode_id)
-        if s.leetcode_url:
-            m = re.search(r"leetcode\.com/(?:u/)?([^/?#]+)", s.leetcode_url)
+        if getattr(s, "username", None): candidates.append(str(getattr(s, "username")))
+        if getattr(s, "primary_leetcode_id", None): candidates.append(str(getattr(s, "primary_leetcode_id")))
+        if getattr(s, "secondary_leetcode_id", None): candidates.append(str(getattr(s, "secondary_leetcode_id")))
+        lc_url = str(getattr(s, "leetcode_url", "") or "")
+        if lc_url:
+            m = re.search(r"leetcode\.com/(?:u/)?([^/?#]+)", lc_url)
             if m: candidates.append(m.group(1))
-            else: candidates.append(s.leetcode_url.strip().rstrip("/").split("/")[-1])
+            else: candidates.append(lc_url.strip().rstrip("/").split("/")[-1])
         
         for cand in candidates:
             norm = normalize_handle(cand)
@@ -327,33 +339,39 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
     
     # Match session
     ws = None
+    c_num = "523"
     if session_id:
         ws = db.query(WeeklySession).filter_by(id=session_id).first()
+        if ws:
+            m = re.search(r'\d+', str(getattr(ws, "contest_id", "") or getattr(ws, "contest_name", "") or ""))
+            if m:
+                c_num = m.group(0)
     else:
-        import re
         if contest_slug:
-            m = re.search(r'\d+', contest_slug)
-            c_num = m.group(0) if m else None
-            if c_num:
-                ws = db.query(WeeklySession).filter(
-                    (WeeklySession.contest_name.ilike(f"%{c_num}%")) | 
-                    (WeeklySession.contest_id.ilike(f"%{c_num}%"))
-                ).first()
+            m = re.search(r'\d+', str(contest_slug))
+            c_num = m.group(0) if m else "523"
+            ws = db.query(WeeklySession).filter(
+                (WeeklySession.contest_name.ilike(f"%{c_num}%")) | 
+                (WeeklySession.contest_id.ilike(f"%{c_num}%"))
+            ).first()
         
         # If still not found, pick the latest active WeeklySession
         if not ws:
             ws = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
-            if ws and ws.contest_name:
-                m = re.search(r'\d+', ws.contest_name)
-                c_num = m.group(0) if m else "524"
+            if ws and getattr(ws, "contest_name", None):
+                m = re.search(r'\d+', str(getattr(ws, "contest_name", "")))
+                c_num = m.group(0) if m else "523"
                 contest_slug = f"weekly-contest-{c_num}"
-            elif ws and ws.contest_id:
-                contest_slug = ws.contest_id
+            elif ws and getattr(ws, "contest_id", None):
+                contest_slug = str(getattr(ws, "contest_id", ""))
                 m = re.search(r'\d+', contest_slug)
-                c_num = m.group(0) if m else "524"
+                c_num = m.group(0) if m else "523"
             else:
-                c_num = "524"
+                c_num = "523"
                 contest_slug = f"weekly-contest-{c_num}"
+
+    if not contest_slug:
+        contest_slug = f"weekly-contest-{c_num}"
 
     if not ws:
         print(f"[WARN] WeeklySession not found for {contest_slug}. Listing sessions:")
@@ -503,7 +521,9 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
         fetchOne(0);
         """
         try:
-            return engine_obj.execute_async_script(js_batch)
+            if hasattr(engine_obj, "execute_async_script"):
+                return engine_obj.execute_async_script(js_batch)
+            return []
         except Exception as e:
             print(f"  [WARN] Script execution error on pages {page_list}: {e}")
             return []
@@ -539,7 +559,7 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
                 
                 solves = [0, 0, 0, 0]
                 for q_idx, qid in enumerate(q_ids[:4]):
-                    if str(qid) in sub_dict:
+                    if qid in sub_dict:
                         solves[q_idx] = 1
 
                 matched_results[student.id] = {
@@ -630,6 +650,10 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
             wpr = WeeklyPublicResult(
                 session_id=ws.id,
                 student_id=student.id,
+                reg_no=getattr(student, "reg_no", ""),
+                name=getattr(student, "name", ""),
+                dept=getattr(student, "department_name", "") or (student.department.code if getattr(student, "department", None) else "CSE"),
+                year=getattr(student, "year_level", "") or "III",
                 participation_status="PUBLIC_ATTENDED",
                 q1=solves[0],
                 q2=solves[1],
@@ -643,33 +667,35 @@ def live_run(contest_slug: str, session_id: int = None, proxy_base: str = None):
             )
             db.add(wpr)
         else:
-            wpr.participation_status = "PUBLIC_ATTENDED"
-            wpr.q1 = solves[0]
-            wpr.q2 = solves[1]
-            wpr.q3 = solves[2]
-            wpr.q4 = solves[3]
-            wpr.total_contest_solved = total_solved
-            wpr.contest_score = score or 0
-            wpr.contest_rank = rank
-            wpr.confidence = "VERIFIED"
-            wpr.fetch_status = "SUCCESS"
+            setattr(wpr, "participation_status", "PUBLIC_ATTENDED")
+            setattr(wpr, "q1", solves[0])
+            setattr(wpr, "q2", solves[1])
+            setattr(wpr, "q3", solves[2])
+            setattr(wpr, "q4", solves[3])
+            setattr(wpr, "total_contest_solved", total_solved)
+            setattr(wpr, "contest_score", score or 0)
+            setattr(wpr, "contest_rank", rank)
+            setattr(wpr, "confidence", "VERIFIED")
+            setattr(wpr, "fetch_status", "SUCCESS")
 
         # PreviousWeekParticipationRecord
         pw = db.query(PreviousWeekParticipationRecord).filter_by(student_id=student.id, session_id=ws.id).first()
         if pw:
-            pw.participation_type = "PUBLIC"
-            pw.problems_solved = total_solved
-            pw.official_score = score or 0
-            pw.official_rank = rank
-            pw.q1 = solves[0]
-            pw.q2 = solves[1]
-            pw.q3 = solves[2]
-            pw.q4 = solves[3]
+            setattr(pw, "participation_type", "PUBLIC")
+            setattr(pw, "problems_solved", total_solved)
+            setattr(pw, "official_score", score or 0)
+            setattr(pw, "official_rank", rank)
+            setattr(pw, "q1", solves[0])
+            setattr(pw, "q2", solves[1])
+            setattr(pw, "q3", solves[2])
+            setattr(pw, "q4", solves[3])
         else:
             pw = PreviousWeekParticipationRecord(
                 student_id=student.id,
                 session_id=ws.id,
-                contest_name=ws.contest_name or ws.title,
+                contest_id=str(getattr(ws, "contest_id", "") or contest_slug),
+                contest_slug=contest_slug,
+                contest_title=str(getattr(ws, "contest_name", "") or contest_slug),
                 participation_type="PUBLIC",
                 problems_solved=total_solved,
                 official_score=score or 0,

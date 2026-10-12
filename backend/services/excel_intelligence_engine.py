@@ -80,10 +80,10 @@ def decode_reg_no_attributes(reg_no_val: Any) -> Dict[str, Optional[str]]:
     """
     Intelligently decodes Year, Batch, and Department from institutional Register Number.
     Handles college pattern rules:
-      732223... -> IV Year (2023-2027)
-      732224... -> III Year (2024-2028)
-      732225... -> II Year (2025-2029)
-      732226... -> I Year (2026-2030)
+      23... / 732223... -> IV Year (2023-2027)
+      24... / 732224... -> III Year (2024-2028)
+      25... / 732225... -> II Year (2025-2029)
+      26... / 732226... -> I Year (2026-2030)
       CS/CC -> CSE(CS), CI/IOT -> CSE(IOT), IT -> IT, AI/AD/AIDS -> AIDS, EC/ECE -> ECE
     """
     reg = normalize_reg_no(reg_no_val)
@@ -91,14 +91,19 @@ def decode_reg_no_attributes(reg_no_val: Any) -> Dict[str, Optional[str]]:
     if not reg:
         return result
 
-    # 1. Decode Year and Batch from 7322YY pattern or starting digits 23/24/25/26
+    # 1. Decode Year and Batch from 7322YY pattern or starting batch digits 22/23/24/25/26/27 (e.g. 23CC001)
     year_match = re.search(r'7322(\d{2})', reg)
     if not year_match:
-        year_match = re.search(r'\b(23|24|25|26)\d{4,}', reg)
+        year_match = re.search(r'^(?:7322)?(22|23|24|25|26|27)', reg)
+    if not year_match:
+        year_match = re.search(r'\b(22|23|24|25|26|27)[A-Z0-9]', reg)
 
     if year_match:
         yr_code = year_match.group(1)
-        if yr_code == "23":
+        if yr_code == "22":
+            result["year"] = "IV Year"
+            result["batch"] = "2022-2026"
+        elif yr_code == "23":
             result["year"] = "IV Year"
             result["batch"] = "2023-2027"
         elif yr_code == "24":
@@ -110,6 +115,9 @@ def decode_reg_no_attributes(reg_no_val: Any) -> Dict[str, Optional[str]]:
         elif yr_code == "26":
             result["year"] = "I Year"
             result["batch"] = "2026-2030"
+        elif yr_code == "27":
+            result["year"] = "I Year"
+            result["batch"] = "2027-2031"
 
     # 2. Decode Department branch from reg_no sub-string
     if any(b in reg for b in ["CC", "CYBER"]):
@@ -143,11 +151,11 @@ def normalize_year_value(val: Any) -> Tuple[str, str]:
     Returns (canonical_year_str, confidence_level)
     """
     if val is None or pd.isna(val):
-        return ("III Year", "LOW")
+        return ("", "NONE")
     
     s = str(val).strip().upper()
     if not s:
-        return ("III Year", "LOW")
+        return ("", "NONE")
     
     # Strip common suffixes
     s_clean = re.sub(r'[\s_\-\.\,]+', ' ', s).strip()
@@ -162,10 +170,10 @@ def normalize_year_value(val: Any) -> Tuple[str, str]:
         return ("IV Year", "HIGH")
 
     # Partial digit check
-    if "1" in s_clean: return ("I Year", "MEDIUM")
-    if "2" in s_clean: return ("II Year", "MEDIUM")
-    if "3" in s_clean: return ("III Year", "MEDIUM")
-    if "4" in s_clean: return ("IV Year", "MEDIUM")
+    if "4" in s_clean or "IV" in s_clean: return ("IV Year", "MEDIUM")
+    if "3" in s_clean or "III" in s_clean: return ("III Year", "MEDIUM")
+    if "2" in s_clean or "II" in s_clean: return ("II Year", "MEDIUM")
+    if "1" in s_clean or "I" in s_clean: return ("I Year", "MEDIUM")
 
     return (s, "LOW")
 
@@ -235,6 +243,13 @@ def normalize_department_value(val: Any, existing_depts: Dict[str, Any]) -> Tupl
             if "AIDS" in str(key).upper():  # type: ignore
                 return (getattr(dept_obj, 'code', None) or key, getattr(dept_obj, 'id', None), "HIGH", False)
 
+    # Guard against student names accidentally passed as department
+    # Student names typically have spaces, initials like ' T', ' P', or 'S.' and len >= 4
+    if len(raw_dept.split()) >= 2 or re.search(r'[\s\.]+[A-Z]$', dept_upper) or re.search(r'^[A-Z]\.[\sA-Z]+$', dept_upper):
+        if not any(k in dept_upper for k in ["ENGINEERING", "TECHNOLOGY", "SCIENCE", "DEPARTMENT", "CSE", "ECE", "EEE", "MECH", "CIVIL", "IT", "AIDS", "CS"]):
+            # This is a student name, NOT a department! Fallback safely to CSE without polluting department master
+            return ("CSE", None, "LOW", False)
+
     # Flag as newly discovered department
     return (raw_dept.upper(), None, "HIGH", True)
 
@@ -255,9 +270,15 @@ def normalize_leetcode_url(val: Any) -> Tuple[Optional[str], Optional[str]]:
         return (f"https://leetcode.com/u/{username.lower()}/", username.lower())
     return (s, None)
 
-def detect_column_headers(raw_headers: List[str]) -> Tuple[Dict[str, str], Dict[str, str], List[str]]:
+SERIAL_NO_PATTERNS = {
+    "s_no", "sno", "sl_no", "slno", "sr_no", "srno", "serial_no", 
+    "serial_number", "no", "no_", "order", "index", "s_num", "snum", "sl"
+}
+
+def detect_column_headers(raw_headers: List[str], df: Optional[pd.DataFrame] = None) -> Tuple[Dict[str, str], Dict[str, str], List[str]]:
     """
-    Analyzes raw Excel sheet headers and maps them to internal canonical fields.
+    Analyzes raw Excel sheet headers and column data to map them to internal canonical fields.
+    Intelligently handles Serial Numbers (S.No), Roll Numbers, Names, LeetCode links, and Departments.
     Returns: (mapped_columns, confidence_map, unmapped_headers)
     """
     mapped_columns: Dict[str, str] = {}
@@ -269,10 +290,58 @@ def detect_column_headers(raw_headers: List[str]) -> Tuple[Dict[str, str], Dict[
     for h in raw_headers:
         clean_h = str(h).strip().lower().replace(" ", "_").replace(".", "").replace("-", "_")  # type: ignore
 
+        # 0. Serial number check (S.No / Sl.No / No should NEVER map to reg_no or name)
+        if clean_h in SERIAL_NO_PATTERNS:
+            mapped_columns[h] = "exclude"
+            confidence_map[h] = "HIGH"
+            continue
+
+        # 1. Content-based deep inspection if dataframe is available
+        if df is not None and h in df.columns:
+            sample_vals = [str(x).strip() for x in df[h].dropna().head(25).tolist() if str(x).strip() and str(x).strip().lower() != "nan"]
+            if sample_vals:
+                # Pure sequential integers: 1, 2, 3, 4, 5... (Serial Number)
+                if all(v.isdigit() and int(v) < 1000 for v in sample_vals):
+                    mapped_columns[h] = "exclude"
+                    confidence_map[h] = "HIGH"
+                    continue
+
+                # Roll / Register numbers (e.g. 23CC001, 732223CS001, 24IT021)
+                reg_matches = sum(1 for v in sample_vals if re.match(r'^(?:7322)?\d{2}[A-Z0-9]{3,8}$', v.upper()))
+                if reg_matches / len(sample_vals) >= 0.5 and "reg_no" not in used_canonicals:
+                    mapped_columns[h] = "reg_no"
+                    confidence_map[h] = "HIGH"
+                    used_canonicals.add("reg_no")
+                    continue
+
+                # LeetCode profile links
+                lc_matches = sum(1 for v in sample_vals if "leetcode.com" in v.lower())
+                if lc_matches / len(sample_vals) >= 0.4 and "leetcode_url" not in used_canonicals:
+                    mapped_columns[h] = "leetcode_url"
+                    confidence_map[h] = "HIGH"
+                    used_canonicals.add("leetcode_url")
+                    continue
+
+                # Email addresses
+                email_matches = sum(1 for v in sample_vals if "@" in v and "." in v)
+                if email_matches / len(sample_vals) >= 0.5 and "email" not in used_canonicals:
+                    mapped_columns[h] = "email"
+                    confidence_map[h] = "HIGH"
+                    used_canonicals.add("email")
+                    continue
+
+                # Student Names (Alphabetic with spaces / initials, no numbers)
+                name_matches = sum(1 for v in sample_vals if re.match(r'^[A-Za-z\s\.\,\']+$', v) and len(v) >= 3 and v.upper() not in ["CSE", "ECE", "EEE", "IT", "MECH", "CIVIL", "AIDS"])
+                if name_matches / len(sample_vals) >= 0.6 and "name" not in used_canonicals:
+                    mapped_columns[h] = "name"
+                    confidence_map[h] = "HIGH"
+                    used_canonicals.add("name")
+                    continue
+
         matched_field = None
         confidence = "LOW"
 
-        # 1. Exact or Synonym match
+        # 2. Exact or Synonym match
         for field_key, meta in CANONICAL_FIELDS.items():
             if field_key in used_canonicals:
                 continue
@@ -284,13 +353,13 @@ def detect_column_headers(raw_headers: List[str]) -> Tuple[Dict[str, str], Dict[
             if matched_field:
                 break
 
-        # 2. Substring match fallback
-        if not matched_field:
+        # 3. Substring match fallback (guarded against short serial tokens)
+        if not matched_field and len(clean_h) >= 4 and clean_h not in SERIAL_NO_PATTERNS:
             for field_key, meta in CANONICAL_FIELDS.items():
                 if field_key in used_canonicals:
                     continue
                 for syn in meta["synonyms"]:
-                    if syn in clean_h or clean_h in syn:
+                    if len(syn) >= 4 and (syn in clean_h or clean_h in syn):
                         matched_field = field_key
                         confidence = "MEDIUM"
                         break
