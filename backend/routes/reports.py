@@ -1986,10 +1986,24 @@ def _get_dataset_for_id(
                 else:
                     rows = []
             elif role_clean in _HOD_ROLES:
-                from backend.services.authorization_service import get_hod_authorized_department_ids
+                from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
+                from backend.services.contest_performance_service import matches_dept
                 hod_dept_ids = get_hod_authorized_department_ids(db, current_user)
-                if hod_dept_ids:
-                    rows = [r for r in rows if (r.get("department_id") or r.get("dept_id")) in hod_dept_ids]
+                hod_dept_codes = get_hod_authorized_department_codes(db, current_user)
+                if hod_dept_ids or hod_dept_codes:
+                    def _check_hod_match(r_item):
+                        r_did = r_item.get("department_id") or r_item.get("dept_id")
+                        if r_did is not None:
+                            try:
+                                if int(r_did) in hod_dept_ids:
+                                    return True
+                            except (ValueError, TypeError):
+                                pass
+                        r_code = str(r_item.get("dept") or r_item.get("department") or "").strip().upper()
+                        if r_code and hod_dept_codes:
+                            return any(matches_dept(r_code, "", c, r_did) for c in hod_dept_codes)
+                        return False
+                    rows = [r for r in rows if _check_hod_match(r)]
 
         dataset["report_type"] = report_type
         dataset["rows"] = rows
@@ -2121,12 +2135,25 @@ def _get_dataset_for_id(
                     else:
                         all_raw_rows = []
                 elif role_clean in _HOD_ROLES:
-                    # HOD: filter by department
-                    from backend.services.authorization_service import get_hod_authorized_department_ids
+                    # HOD: filter by department (matches both department_id and department code)
+                    from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
+                    from backend.services.contest_performance_service import matches_dept
                     hod_dept_ids = get_hod_authorized_department_ids(db, current_user)
-                    if hod_dept_ids:
-                        hod_dept_ids_str = {str(d) for d in hod_dept_ids}
-                        all_raw_rows = [r for r in all_raw_rows if str(r.get("department_id") or "") in hod_dept_ids_str]
+                    hod_dept_codes = get_hod_authorized_department_codes(db, current_user)
+                    if hod_dept_ids or hod_dept_codes:
+                        def _check_hod_canonical_match(r_item):
+                            r_did = r_item.get("department_id") or r_item.get("dept_id")
+                            if r_did is not None:
+                                try:
+                                    if int(r_did) in hod_dept_ids:
+                                        return True
+                                except (ValueError, TypeError):
+                                    pass
+                            r_code = str(r_item.get("dept") or r_item.get("department") or "").strip().upper()
+                            if r_code and hod_dept_codes:
+                                return any(matches_dept(r_code, "", c, r_did) for c in hod_dept_codes)
+                            return False
+                        all_raw_rows = [r for r in all_raw_rows if _check_hod_canonical_match(r)]
 
             # Apply caller's active filters
             def _resolve_canonical(dept_name: str) -> str:
