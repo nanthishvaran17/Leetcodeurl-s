@@ -27,31 +27,37 @@ function createWindow() {
     icon: iconPath
   });
 
-  const distIndexPath = path.join(__dirname, '../dist/index.html');
-
   if (app.isPackaged) {
-    if (require('fs').existsSync(distIndexPath)) {
-      win.loadFile(distIndexPath);
-    } else {
-      win.loadURL('app://./index.html');
-    }
+    win.loadURL('app://./index.html');
   } else {
     win.loadURL('http://localhost:5173');
   }
 }
 
 app.whenReady().then(() => {
-  // Protocol handler for loading packaged Vite dist files with SPA fallback
+  // Protocol handler for loading packaged Vite dist files with SPA fallback and absolute asset support
   protocol.handle('app', (request) => {
-    let filePath = request.url.replace(/^app:\/\/(\.\/)?/, '');
-    if (!filePath || filePath === '/' || filePath.startsWith('?')) {
-      filePath = 'index.html';
-    }
-    const cleanPath = filePath.split('?')[0].split('#')[0];
-    const targetFile = path.extname(cleanPath) ? cleanPath : 'index.html';
-    const resolvedPath = path.join(__dirname, '../dist', targetFile);
+    const parsed = new URL(request.url);
+    let pathname = decodeURIComponent(parsed.pathname);
 
-    return net.fetch(url.pathToFileURL(resolvedPath).toString());
+    // If root or empty, serve index.html
+    if (!pathname || pathname === '/' || pathname === '/index.html') {
+      pathname = 'index.html';
+    }
+
+    // Strip leading slashes
+    pathname = pathname.replace(/^\/+/, '');
+
+    const cleanPath = pathname.split('?')[0].split('#')[0];
+    const resolvedPath = path.join(__dirname, '../dist', cleanPath);
+
+    if (require('fs').existsSync(resolvedPath) && !require('fs').statSync(resolvedPath).isDirectory()) {
+      return net.fetch(url.pathToFileURL(resolvedPath).toString());
+    }
+
+    // Fallback to index.html for SPA client-side routes
+    const fallbackPath = path.join(__dirname, '../dist/index.html');
+    return net.fetch(url.pathToFileURL(fallbackPath).toString());
   });
 
   createWindow();

@@ -2816,14 +2816,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </button>
               
               <AnimatePresence>
-                {showExportMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.97 }}
-                    transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                    className="fixed bottom-4 left-4 right-4 z-[9999] sm:absolute sm:top-[calc(100%+8px)] sm:bottom-auto sm:left-auto sm:right-0 sm:w-[380px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] p-3.5 space-y-2 focus:outline-none select-none sm:origin-top-right"
-                  >
+                {showExportMenu && (() => {
+                  const exportMenuContent = (
+                    <>
                     {/* SECTION 1: ACTIONS */}
                     <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800">
                       <div className="px-3 pt-1 pb-1.5 flex items-center space-x-2">
@@ -3008,8 +3003,66 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         </div>
                       </button>
                     </div>
-                  </motion.div>
-                )}
+                    </>
+                  );
+
+                  return (
+                    <>
+                      {/* Desktop Anchored Dropdown */}
+                      <div className="hidden sm:block">
+                        <motion.div
+                          initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                          transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                          className="absolute top-[calc(100%+8px)] right-0 w-[380px] z-[9999] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] p-3.5 space-y-2 focus:outline-none select-none origin-top-right"
+                        >
+                          {exportMenuContent}
+                        </motion.div>
+                      </div>
+
+                      {/* Mobile High-Z-Index Modal Action Sheet via Portal */}
+                      {typeof document !== 'undefined' && createPortal(
+                        <div 
+                          className="sm:hidden fixed inset-0 z-[99999] bg-slate-950/80 backdrop-blur-sm flex flex-col justify-end p-3 animate-fade-in"
+                          onClick={() => setShowExportMenu(false)}
+                        >
+                          <motion.div
+                            initial={{ opacity: 0, y: 40 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 40 }}
+                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full max-h-[85vh] overflow-y-auto rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-3"
+                          >
+                            {/* Mobile Modal Header */}
+                            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                                  <Download className="w-4 h-4 stroke-[2.5]" />
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-black text-slate-900 dark:text-white leading-tight">Actions & Export Hub</h4>
+                                  <p className="text-[10px] text-slate-500 font-medium">Download reports or trigger notifications</p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setShowExportMenu(false)}
+                                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
+                            </div>
+
+                            {exportMenuContent}
+                          </motion.div>
+                        </div>,
+                        document.body
+                      )}
+                    </>
+                  );
+                })()}
               </AnimatePresence>
             </div>
 
