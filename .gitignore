@@ -168,5 +168,4 @@ apply_indexes.py
 dist-electron/
 frontend/dist-electron/
 *.exe
-*.blockmap
-contest_523_authentic_scanned_solvers.json
+
