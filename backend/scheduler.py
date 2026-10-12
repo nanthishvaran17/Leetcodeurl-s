@@ -707,6 +707,23 @@ async def friday_0400_rating_rank_sync_job():
         db.close()
 
 
+@with_global_lock('friday_0500_official_rating_sync_job', timeout_minutes=45)
+async def friday_0500_official_rating_sync_job():
+    """
+    Scheduled for every Friday at 05:00 AM IST (Asia/Kolkata):
+    Fetches official LeetCode contest rating & ranking history for all active students,
+    updates Student.stats, WeeklyPublicResult, recalculates college-wide leaderboards/badges,
+    clears all Redis/RAM caches, and broadcasts WebSocket refresh events to all frontend pages.
+    """
+    logger.info("[SCHEDULER] Friday 05:00 AM IST: Official LeetCode Rating & Global Rerank Sync STARTING...")
+    try:
+        from backend.services.friday_rating_sync_service import run_friday_rating_sync
+        await run_friday_rating_sync()
+        logger.info("[SCHEDULER] Friday 05:00 AM Official Rating Sync COMPLETED successfully.")
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Error in friday_0500_official_rating_sync_job: {e}", exc_info=True)
+
+
 @with_global_lock('friday_weekly_window_polling_job', timeout_minutes=30)
 async def friday_weekly_window_polling_job():
     """
@@ -1115,6 +1132,16 @@ def start_scheduler():
         replace_existing=True,
         max_instances=1, coalesce=True, misfire_grace_time=3600
     )
+
+    # Friday 05:00 AM IST — Official LeetCode Contest Rating & Global Rerank Sync
+    scheduler.add_job(
+        friday_0500_official_rating_sync_job,
+        CronTrigger(day_of_week='fri', hour=5, minute=0, timezone=IST),
+        id='friday_0500_official_rating_sync',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
+
 
     # Friday 07:00 AM IST — Morning LeetCode Rating Sync Check
     scheduler.add_job(
