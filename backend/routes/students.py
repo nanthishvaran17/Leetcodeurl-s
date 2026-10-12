@@ -986,7 +986,7 @@ def get_student_detail(student_id: str, request: Request, db: Session = Depends(
     )
 
     if student.stats:
-        is_invalid_prof = bool(
+        is_invalid_prof = (
             student.stats.sync_status in ("invalid_username", "invalid_profile") or
             student.stats.status in ("INVALID_USERNAME", "INVALID_PROFILE", "404_NOT_FOUND") or
             student.stats.error_code in ("PROFILE_NOT_FOUND", "INVALID_USERNAME")

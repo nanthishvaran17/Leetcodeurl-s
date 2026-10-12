@@ -3728,6 +3728,24 @@ def send_contest_student_reminders(
     }
 
 
+@router.post("/trigger-friday-rating-sync")
+async def trigger_friday_official_rating_sync(
+    background_tasks: BackgroundTasks,
+    current_user = Depends(require_security_access(resource_name="Official Rating Sync", required_roles=["admin", "super admin"]))
+):
+    """
+    Triggers the Friday 5:00 AM IST Official LeetCode Rating & Global Rank Sync on demand.
+    Updates all students' official contest ratings, histories, deltas, and college-wide leaderboards.
+    """
+    from backend.services.friday_rating_sync_service import sync_friday_ratings
+    background_tasks.add_task(sync_friday_ratings)
+    return {
+        "success": True,
+        "message": "Official Friday Contest Rating & Global Reranking sync initiated in background."
+    }
+
+
+
 
 
 

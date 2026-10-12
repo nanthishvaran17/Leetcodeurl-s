@@ -592,12 +592,21 @@ def start_scheduler():
         trigger=CronTrigger(day_of_week='mon', hour=7, minute=0),
         id='monday_0700_final_dispatch'
     )
+
+    # Friday 5:00 AM IST - Official LeetCode Rating & Global Rerank Sync
+    from backend.services.friday_rating_sync_service import sync_friday_ratings
+    scheduler.add_job(
+        sync_friday_ratings,
+        trigger=CronTrigger(day_of_week='fri', hour=5, minute=0),
+        id='friday_0500_official_ratings'
+    )
     
     scheduler.start()
     print("\n Automated Scheduler Active in Asia/Kolkata timezone:")
     print("   Sunday 08:00 AM - Contest Tracking Begins")
     print("   Sunday 09:30 AM - Live Contest Ends & Snapshot")
     print("   Monday 07:00 AM - Dual Reports Generation & Email Dispatch")
+    print("   Friday 05:00 AM - Official LeetCode Contest Ratings & Global Reranking")
     return scheduler
 
 # ============================================
