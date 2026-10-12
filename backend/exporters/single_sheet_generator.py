@@ -124,12 +124,12 @@ def generate_single_sheet_contest_excel(
     thin_side = Side(style='thin', color='000000')
     grid_border = Border(left=thin_side, right=thin_side, top=thin_side, bottom=thin_side)
     
-    # 10 Columns: S.No, Reg No, Name, Accommodation, Cutoff, Q1(Easy), Q2(Medium), Q3(Medium), Q4(Hard), Total Solved
+    # 10 Columns: S.No, Reg No, Name, Acc, Cutoff, Q1(Easy), Q2(Medium), Q3(Medium), Q4(Hard), Total Solved
     headers = [
         "S.No", 
         "Reg No", 
         "Name", 
-        "Accommodation",
+        "Acc",
         "Cutoff",
         "Q1\n(Easy)", 
         "Q2\n(Medium)", 
@@ -420,8 +420,8 @@ def generate_single_sheet_contest_excel(
             cell.number_format = '0.0%'
     row_idx += 1
         
-    # Apply compact column widths tailored for 10 columns (Accommodation width 15 for clean single line)
-    widths = [8, 15, 26, 15, 10, 10, 11, 11, 10, 12]
+    # Apply compact column widths tailored for 10 columns (Acc width 7 for ultra-compact layout)
+    widths = [8, 15, 26, 7, 9, 10, 11, 11, 10, 12]
     for col_idx, width in enumerate(widths, 1):
         col_letter = get_column_letter(col_idx)
         ws.column_dimensions[col_letter].width = width
