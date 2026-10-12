@@ -171,22 +171,22 @@ async def run_friday_rating_sync():
                                             break
                                     break
 
-                        if matching_hist and matching_hist.get("attended"):
-                            wpr = db.query(WeeklyPublicResult).filter(
-                                WeeklyPublicResult.session_id == session.id,
-                                WeeklyPublicResult.student_id == s.id
-                            ).first()
+                        wpr = db.query(WeeklyPublicResult).filter(
+                            WeeklyPublicResult.session_id == session.id,
+                            WeeklyPublicResult.student_id == s.id
+                        ).first()
 
-                            hist_r = float(matching_hist.get("rating") or 0.0) if matching_hist.get("rating") else None
-                            hist_rk = int(matching_hist.get("ranking") or 0) if matching_hist.get("ranking") else None
+                        if wpr:
+                            hist_r = float(matching_hist.get("rating") or 0.0) if (matching_hist and matching_hist.get("rating")) else official_rating
+                            hist_rk = int(matching_hist.get("ranking") or 0) if (matching_hist and matching_hist.get("ranking")) else global_rank
 
-                            if wpr:
-                                if hist_r:
-                                    wpr.contest_rating = round(hist_r, 1)
-                                    if prev_hist and prev_hist.get("rating"):
-                                        wpr.rating_change = round(hist_r - float(prev_hist["rating"]), 1)
-                                if hist_rk:
-                                    wpr.contest_rank = hist_rk
+                            if hist_r:
+                                wpr.contest_rating = round(hist_r, 1)
+                                if prev_hist and prev_hist.get("rating"):
+                                    wpr.rating_change = round(hist_r - float(prev_hist["rating"]), 1)
+                            if hist_rk:
+                                wpr.contest_rank = hist_rk
+                            if matching_hist and matching_hist.get("attended"):
                                 wpr.participation_status = "PUBLIC_ATTENDED"
 
                     updated_count += 1

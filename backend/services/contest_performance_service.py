@@ -602,21 +602,22 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 return "—"
             try:
                 num = float(v_str)
-                if math.isnan(num) or num <= 0 or round(num) == 1500:
+                if math.isnan(num) or num <= 0:
                     return "—"
                 return f"{round(num):,}"
             except (ValueError, TypeError):
                 return "—"
 
         c_global_rank = getattr(st_profile, "contest_global_ranking", None) if st_profile else None
-        s_global_rank = c_global_rank  # Deprecate profile ranking; use authentic contest ranking exclusively
+        p_site_rank = getattr(st_profile, "public_profile_ranking", None) if st_profile else None
+        s_global_rank = c_global_rank or p_site_rank
 
         if rank_val is None and st_profile:
-            rank_val = c_global_rank
+            rank_val = c_global_rank or p_site_rank
 
-        if (rating_val is None or (isinstance(rating_val, (int, float)) and (rating_val <= 0 or round(float(rating_val)) == 1500))) and st_profile:
+        if (rating_val is None or (isinstance(rating_val, (int, float)) and rating_val <= 0)) and st_profile:
             r_st = getattr(st_profile, "contest_rating", None)
-            if r_st is not None and float(r_st or 0) > 0 and round(float(r_st)) != 1500:
+            if r_st is not None and float(r_st or 0) > 0:
                 rating_val = float(r_st)
             else:
                 rating_val = None
@@ -624,7 +625,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         disp_rank = _clean_rank_val(rank_val)
         disp_rating = _clean_rating_val(rating_val)
         disp_site_rank = _clean_rank_val(s_global_rank)
-        disp_contest_rank = _clean_rank_val(c_global_rank)
+        disp_contest_rank = _clean_rank_val(c_global_rank or p_site_rank)
 
         is_virt = status in (ContestStatus.VIRTUAL_PRACTICE.value, ContestStatus.VIRTUAL_ATTENDED.value, "VIRTUAL")
         is_live = is_att and not is_virt

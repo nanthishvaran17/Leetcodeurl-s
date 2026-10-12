@@ -2,7 +2,7 @@ import datetime
 import hashlib
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, BackgroundTasks
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, cast
 from pydantic import BaseModel
 
 from backend.database import get_db
