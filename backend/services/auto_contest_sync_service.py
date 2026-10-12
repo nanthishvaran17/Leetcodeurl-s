@@ -53,18 +53,32 @@ query userContestAndSubs($username: String!) {
 }
 """
 
-def sync_student_contest_523_sync(student: Student, db: Session, session_id: int = 14) -> bool:
+def sync_student_contest_sync(student: Student, db: Session, session_id: Optional[int] = None) -> bool:
     """
-    Synchronously fetches LeetCode GraphQL for Contest 523 and updates
-    WeeklyPublicResult and session 14 counts immediately.
-    Returns True if student participated in Contest 523.
+    Synchronously fetches LeetCode GraphQL for the target/latest Weekly Contest
+    and updates WeeklyPublicResult and session counts immediately.
+    Automatically resolves contest number (e.g. 523, 524, etc.) dynamically.
     """
     if not student.username:
         return False
 
-    session: Any = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    # Automatically resolve the latest relevant session (Session 14 for 523, Session 17 for 524, etc.)
+    if session_id:
+        session: Any = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    else:
+        # Default to latest session that is either LIVE, SCHEDULED, or the most recent FINALIZED
+        session: Any = db.query(WeeklySession).filter(
+            WeeklySession.contest_id.ilike("%weekly-contest%")
+        ).order_by(WeeklySession.id.desc()).first()
+
     if not session:
         return False
+
+    # Dynamically extract contest number from contest_id (e.g. 'weekly-contest-523' -> 523, 'weekly-contest-524' -> 524)
+    import re
+    match = re.search(r"(\d+)", session.contest_id or session.contest_name or "")
+    contest_number = int(match.group(1)) if match else 523
+    contest_str = str(contest_number)
 
     try:
         headers = {
@@ -72,7 +86,7 @@ def sync_student_contest_523_sync(student: Student, db: Session, session_id: int
             "Content-Type": "application/json",
             "Referer": "https://leetcode.com"
         }
-        logger.info(f"[AUTO_CONTEST_SYNC] Querying LeetCode for student {student.reg_no} ({student.username})...")
+        logger.info(f"[AUTO_CONTEST_SYNC] Querying LeetCode for student {student.reg_no} ({student.username}) for Contest {contest_number} (Session {session.id})...")
         with httpx.Client(timeout=8.0) as client:
             resp = client.post(
                 "https://leetcode.com/graphql",
@@ -93,7 +107,7 @@ def sync_student_contest_523_sync(student: Student, db: Session, session_id: int
         c_history = None
         for h in hist:
             c_title = (h.get("contest") or {}).get("title") or ""
-            if "523" in c_title:
+            if contest_str in c_title:
                 c_history = h
                 break
 
@@ -103,7 +117,7 @@ def sync_student_contest_523_sync(student: Student, db: Session, session_id: int
         hist_rating = c_history.get("rating") if c_history else None
         logger.info(f"[AUTO_CONTEST_SYNC] {student.username} history: is_attended={is_attended}, hist_solved={hist_problems_solved}, rank={hist_rank}")
 
-        prob_set = ContestProblemAccuracyEngine.resolve_official_problem_set(523)
+        prob_set = ContestProblemAccuracyEngine.resolve_official_problem_set(contest_number)
         official_problems = prob_set.problems
         slug_map = {
             1: normalize_slug(official_problems[0].title_slug),
@@ -216,9 +230,12 @@ def sync_student_contest_523_sync(student: Student, db: Session, session_id: int
         db.commit()
 
         cache.invalidate_tag("contests")
-        logger.info(f"[AUTO_CONTEST_SYNC] Student {student.reg_no} synced for Contest 523: status={status_str}, solved={final_solved}, rank={hist_rank}. Session 14 total official: {att_cnt}")
+        logger.info(f"[AUTO_CONTEST_SYNC] Student {student.reg_no} synced for Contest {contest_number}: status={status_str}, solved={final_solved}, rank={hist_rank}. Session {session.id} total official: {att_cnt}")
         return status_str == "PUBLIC_ATTENDED"
 
     except Exception as ex:
-        logger.warning(f"[AUTO_CONTEST_SYNC] Error syncing student {student.reg_no} for Contest 523: {ex}")
+        logger.warning(f"[AUTO_CONTEST_SYNC] Error syncing student {student.reg_no} for Contest: {ex}")
         return False
+
+# Backwards compatibility alias
+sync_student_contest_523_sync = sync_student_contest_sync
