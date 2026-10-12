@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink, Trophy, CheckCircle2, User, Trash2, ShieldCheck, Clock, AlertCircle, Loader, Crown, Award } from 'lucide-react';
+import { ExternalLink, Trophy, CheckCircle2, User, Trash2, ShieldCheck, Clock, AlertCircle, Loader, Crown, Award, RotateCcw } from 'lucide-react';
 import { StudentData } from './LeaderboardTable';
 import { useStudentEntity } from '../stores/studentLiveStore';
 import { formatStudentYearBadge, formatDepartmentCode, deriveDepartmentFromRegNo } from '../utils/filterUtils';
@@ -163,18 +163,21 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
       effectiveRank === 3 ? 'bronze-aura ring-2 ring-amber-600/50' : '';
 
   return (
-    <motion.div
-      whileHover={{ y: -6 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className={`w-full min-h-[360px] flex flex-col perspective-1000 cursor-pointer group min-w-0 rounded-3xl ${auraClass}`}
-      onClick={() => setIsFlipped(!isFlipped)}
+    <div
+      className={`w-full min-h-[360px] flex flex-col perspective-1000 cursor-pointer group min-w-0 rounded-3xl select-none touch-manipulation ${auraClass}`}
+      onClick={() => setIsFlipped(f => !f)}
     >
       <div
-        className={`relative w-full h-full min-h-[360px] flex flex-col duration-500 transform-style-3d transition-transform ease-out-expo ${isFlipped ? 'rotate-y-180' : ''
-          }`}
+        className={`relative w-full h-full min-h-[360px] flex flex-col duration-500 transform-style-3d transition-transform ease-out-expo ${
+          isFlipped ? 'rotate-y-180' : 'rotate-y-0'
+        }`}
       >
         {/* FRONT SIDE — 2026 Holographic Glass Student Card */}
-        <div className="absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] shadow-subtle hover:shadow-glass-dark backface-hidden flex flex-col justify-between bg-white/90 dark:bg-navy-900/80 backdrop-blur-xl transform translate-z-0 will-change-transform transition-all group">
+        <div 
+          className={`absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] shadow-subtle hover:shadow-glass-dark backface-hidden rotate-y-0 flex flex-col justify-between bg-white/95 dark:bg-navy-900/95 backdrop-blur-xl transition-opacity duration-300 ${
+            isFlipped ? 'pointer-events-none opacity-0 invisible' : 'pointer-events-auto opacity-100 visible z-10'
+          }`}
+        >
 
           {/* Card Top: Rank & Department Pill */}
           <div className="flex items-center justify-between gap-2">
@@ -207,16 +210,12 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
 
           {/* Card Center: Avatar & Student Details */}
           <div className="text-center space-y-3 py-2 flex-1 flex flex-col justify-center min-w-0">
-            <motion.div
-              whileHover={{ scale: 1.06, rotate: 3 }}
-              transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              className="relative w-22 h-22 sm:w-24 sm:h-24 mx-auto shrink-0"
-            >
+            <div className="relative w-22 h-22 sm:w-24 sm:h-24 mx-auto shrink-0">
               <div className="absolute inset-0 bg-gradient-to-br from-brand-400/25 to-indigo-500/25 rounded-full blur-xl animate-pulse-subtle"></div>
               <div className="relative w-22 h-22 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-brand-500 via-indigo-600 to-navy-900 text-white font-extrabold text-2xl sm:text-3xl flex items-center justify-center shadow-md border-2 border-white dark:border-navy-800">
-                {student.name ? student.name.split(' ').map(n => n[0]).join('').slice(0, 2) : <User className="w-9 h-9" />}
+                {student.name ? student.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2) : <User className="w-9 h-9" />}
               </div>
-            </motion.div>
+            </div>
 
             <div className="min-w-0 px-1 pt-1">
               <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white truncate max-w-full tracking-tight font-display" title={student.name}>
@@ -259,7 +258,11 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
         </div>
 
         {/* BACK SIDE */}
-        <div className="absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-slate-100 dark:border-navy-800 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] backface-hidden rotate-y-180 flex flex-col bg-white dark:bg-navy-950/90 backdrop-blur-2xl transform translate-z-0 will-change-transform">
+        <div 
+          className={`absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-slate-100 dark:border-navy-800 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] backface-hidden rotate-y-180 flex flex-col bg-white dark:bg-navy-950/95 backdrop-blur-2xl transition-opacity duration-300 ${
+            isFlipped ? 'pointer-events-auto opacity-100 visible z-20' : 'pointer-events-none opacity-0 invisible z-0'
+          }`}
+        >
 
           {/* Top Header */}
           <div className="flex items-center justify-between pb-3 shrink-0">
@@ -272,7 +275,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="text-slate-400 hover:text-brand-500 transition-colors shrink-0"
+              className="text-slate-400 hover:text-brand-500 transition-colors shrink-0 p-1"
               title={student.username ? `View ${student.username} on LeetCode` : 'No LeetCode ID'}
             >
               <ExternalLink className="w-4 h-4" />
@@ -372,6 +375,19 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
               <span>View Profile</span>
             </button>
 
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsFlipped(false);
+              }}
+              className="px-3 min-h-[40px] flex items-center justify-center rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer active:scale-95"
+              title="Flip to Front"
+            >
+              <RotateCcw className="w-3.5 h-3.5 mr-1" />
+              <span>Back</span>
+            </button>
+
             {onDeleteStudent && (
               <button
                 type="button"
@@ -389,7 +405,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
 
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
