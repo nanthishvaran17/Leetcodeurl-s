@@ -123,10 +123,14 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
         ).all()
         pub_map: Dict[tuple, WeeklyPublicResult] = {(pr.student_id, pr.session_id): pr for pr in pub_results}
 
-        # Do not filter out contests with 0 valid attendances to avoid gaps
-        # (user explicitly requested 516 to 521 to be shown even if no data)
-        # We just keep all contest_sessions intact.
-        pass
+        # 3b. Pre-query LeetCode badge counts for all students in roster
+        from backend.models import LeetCodeBadge
+        from sqlalchemy import func
+        roster_ids = [s.id for s in roster]
+        badge_rows = db.query(LeetCodeBadge.student_id, func.count(LeetCodeBadge.id)).filter(
+            LeetCodeBadge.student_id.in_(roster_ids)
+        ).group_by(LeetCodeBadge.student_id).all() if roster_ids else []
+        badge_map = {sid: cnt for sid, cnt in badge_rows}
 
         # 4. Build session headers list
         session_headers = []
@@ -206,6 +210,9 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
                 "attended_solve": attended_solved_frac,
                 "attended_solve_fraction": attended_solved_frac,
                 "attended_solved": attended_solved_frac,
+                "badges": badge_map.get(s.id, 0),
+                "total_badges": badge_map.get(s.id, 0),
+                "badges_count": badge_map.get(s.id, 0),
                 "consistencyPct": consistency_pct,
                 "weeklyData": weekly_data,
             })
