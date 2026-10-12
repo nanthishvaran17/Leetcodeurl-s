@@ -1262,6 +1262,7 @@ export const HODCommandCenter: React.FC = () => {
  // Load Students List
  const loadStudents = useCallback(async () => {
  setStudentsLoading(true);
+ clearApiCache();
  const deptId = selectedDept !== 'ALL' ? Number(selectedDept) : undefined;
  const staffId = selectedStaff !== 'ALL' ? Number(selectedStaff) : undefined;
  const yearLevel = selectedYear !== 'ALL' ? selectedYear : undefined;
