@@ -3258,15 +3258,31 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <CheckCircle2 className={`w-4 h-4 ${attOpen ? 'stroke-[2.5]' : 'stroke-[2]'}`} />
               </div>
 
-              <div className="flex-1 min-w-0 relative z-10">
-                <p className={`text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${attOpen ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-emerald-400 dark:group-hover:text-emerald-300'}`}>Attendance Status</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className={`w-2 h-2 rounded-full shrink-0 shadow-sm ${({ 'ALL':'bg-slate-400','ALL_ATTENDED':'bg-indigo-500','PUBLIC_ATTENDED':'bg-emerald-500','VIRTUAL_ATTENDED':'bg-purple-500','PUBLIC_NOT_ATTENDED':'bg-rose-400','DATA_ERROR':'bg-amber-500' } as any)[selectedAttendanceFilter] || 'bg-slate-400'}`} />
-                  <span className={`text-[13px] font-bold truncate transition-colors duration-300 ${attOpen ? 'text-emerald-950 dark:text-emerald-100' : 'text-slate-900 dark:text-slate-100 group-hover:text-emerald-900 dark:group-hover:text-emerald-200'}`}>
-                    {({ 'ALL':'All Statuses','ALL_ATTENDED':'Participated','PUBLIC_ATTENDED':'Public Attended','VIRTUAL_ATTENDED':'Virtual Attended','PUBLIC_NOT_ATTENDED':'Not Attended','DATA_ERROR':'Data Errors' } as any)[selectedAttendanceFilter] || 'All Statuses'}
-                  </span>
-                </div>
-              </div>
+              {(() => {
+                const ATT_OPTIONS = [
+                  { value: 'ALL',                 label: 'All Statuses',    code: 'ALL',  color: 'text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-300' },
+                  { value: 'ALL_ATTENDED',        label: 'Participated',    code: 'PART', color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
+                  { value: 'PUBLIC_ATTENDED',     label: 'Public Attended', code: 'PUB',  color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
+                  { value: 'VIRTUAL_ATTENDED',    label: 'Virtual Attended',code: 'VIRT', color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
+                  { value: 'PUBLIC_NOT_ATTENDED', label: 'Not Attended',    code: 'ABS',  color: 'text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300' },
+                  { value: 'DATA_ERROR',          label: 'Data Errors',     code: 'ERR',  color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
+                ];
+                const selectedAtt = ATT_OPTIONS.find(o => o.value === selectedAttendanceFilter) || ATT_OPTIONS[0];
+
+                return (
+                  <div className="flex-1 min-w-0 relative z-10">
+                    <p className={`text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${attOpen ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-emerald-400 dark:group-hover:text-emerald-300'}`}>Attendance Status</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 shadow-sm transition-all duration-300 ${selectedAtt.color}`}>
+                        {selectedAtt.code}
+                      </span>
+                      <span className={`text-[13px] font-bold truncate transition-colors duration-300 ${attOpen ? 'text-emerald-950 dark:text-emerald-100' : 'text-slate-900 dark:text-slate-100 group-hover:text-emerald-900 dark:group-hover:text-emerald-200'}`}>
+                        {selectedAtt.label}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
               <ChevronDown className={`w-4 h-4 transition-transform duration-300 relative z-10 ${attOpen ? 'rotate-180 text-emerald-500' : 'text-slate-400 group-hover:text-emerald-400'}`} />
             </button>
             <AnimatePresence>
@@ -3279,12 +3295,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 className="absolute z-50 top-full left-0 right-0 mt-2.5 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/80 dark:border-navy-700/80 rounded-2xl shadow-[0_20px_60px_-12px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_60px_-12px_rgba(0,0,0,0.6)] overflow-hidden p-1.5"
               >
                 {[
-                  { value: 'ALL',                label: 'All Statuses',    code: 'ALL',  dot: 'bg-slate-400',    color: 'text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-300' },
-                  { value: 'ALL_ATTENDED',       label: 'Participated',    code: 'PART', dot: 'bg-indigo-500',   color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
-                  { value: 'PUBLIC_ATTENDED',    label: 'Public Attended', code: 'PUB',  dot: 'bg-emerald-500', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
-                  { value: 'VIRTUAL_ATTENDED',   label: 'Virtual Attended',code: 'VIRT', dot: 'bg-purple-500',  color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
-                  { value: 'PUBLIC_NOT_ATTENDED',label: 'Not Attended',    code: 'ABS',  dot: 'bg-rose-400',   color: 'text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300' },
-                  { value: 'DATA_ERROR',         label: 'Data Errors',     code: 'ERR',  dot: 'bg-amber-500',  color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
+                  { value: 'ALL',                label: 'All Statuses',    code: 'ALL',  color: 'text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-300' },
+                  { value: 'ALL_ATTENDED',       label: 'Participated',    code: 'PART', color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
+                  { value: 'PUBLIC_ATTENDED',    label: 'Public Attended', code: 'PUB',  color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
+                  { value: 'VIRTUAL_ATTENDED',   label: 'Virtual Attended',code: 'VIRT', color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
+                  { value: 'PUBLIC_NOT_ATTENDED',label: 'Not Attended',    code: 'ABS',  color: 'text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300' },
+                  { value: 'DATA_ERROR',         label: 'Data Errors',     code: 'ERR',  color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
                 ].map(opt => {
                   const isSelected = selectedAttendanceFilter === opt.value;
                   return (
@@ -3304,7 +3320,6 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     }`}>
                       <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
                     </div>
-                    <span className={`w-2 h-2 rounded-full shrink-0 shadow-sm ${opt.dot}`} />
                     <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 shadow-sm ${opt.color}`}>{opt.code}</span>
                     <span className={`text-xs truncate flex-1 ${
                       isSelected ? 'font-extrabold text-emerald-900 dark:text-emerald-200' : 'font-semibold text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100'
