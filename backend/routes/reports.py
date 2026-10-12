@@ -368,20 +368,22 @@ def download_official_college_summary_excel(
         raise HTTPException(status_code=500, detail="Unable to generate report. Please try again.")
 
 @router.get("/download-contest-single-sheet")
-def download_contest_single_sheet_excel(
+def download_contest_single_sheet(
     department: Optional[str] = Query("ALL"),
     dept: Optional[str] = Query("ALL"),
     year: Optional[str] = Query("ALL"),
     year_level: Optional[str] = Query("ALL"),
     attendance: Optional[str] = Query("ALL"),
     session_id: Optional[str] = Query("latest"),
+    format: Optional[str] = Query("excel"),
     db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="Download Single Sheet Excel", dept_scoped=True))
+    current_user = Depends(require_security_access(resource_name="Download Single Sheet Report", dept_scoped=True))
 ):
     eff_dept = (department or "ALL") if (department and department != "ALL") else ((dept or "ALL") if (dept and dept != "ALL") else "ALL")
     eff_year = (year_level or "ALL") if (year_level and year_level != "ALL") else ((year or "ALL") if (year and year != "ALL") else "ALL")
     eff_att = attendance if attendance and attendance != "ALL" else "ALL"
     eff_session_id = session_id or "latest"
+    eff_fmt = (format or "excel").lower().strip()
 
     dataset, r_filename = _get_dataset_for_id(
         report_id=eff_session_id,
@@ -396,9 +398,6 @@ def download_contest_single_sheet_excel(
         current_user=current_user
     )
 
-    from backend.exporters.single_sheet_generator import generate_single_sheet_contest_excel
-    excel_bytes = generate_single_sheet_contest_excel(db, dataset, eff_session_id)
-    
     contest_name = str(dataset.get("contest_name") or dataset.get("contestName") or dataset.get("title") or "Weekly Contest")
     import re
     match = re.search(r'\d+', contest_name)
@@ -408,12 +407,48 @@ def download_contest_single_sheet_excel(
     from backend.services.weekly_session_resolver import resolve_target_weekly_session
     t_session = resolve_target_weekly_session(db, eff_session_id)
     date_str = str(t_session.session_date).replace(".", "-") if t_session and getattr(t_session, 'session_date', None) else ""
-    out_filename = f"NEC_W{c_num}_{d_str}_{y_str}_{date_str}.xlsx" if date_str else f"NEC_W{c_num}_{d_str}_{y_str}.xlsx"
-    return Response(
-        content=excel_bytes,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f'attachment; filename="{out_filename}"'}
-    )
+    base_name = f"NEC_W{c_num}_{d_str}_{y_str}_{date_str}" if date_str else f"NEC_W{c_num}_{d_str}_{y_str}"
+
+    if eff_fmt == "pdf":
+        from backend.exporters.dynamic_pdf_exporter import export_dynamic_pdf
+        pdf_bytes = export_dynamic_pdf(dataset)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="{base_name}.pdf"'}
+        )
+    elif eff_fmt in ("word", "docx"):
+        from backend.exporters.dynamic_word_exporter import export_dynamic_word
+        word_bytes = export_dynamic_word(dataset)
+        return Response(
+            content=word_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f'attachment; filename="{base_name}.docx"'}
+        )
+    elif eff_fmt == "zip":
+        from backend.exporters.zip_exporter import export_zip_bundle_from_dataset
+        zip_bytes = export_zip_bundle_from_dataset(dataset)
+        return Response(
+            content=zip_bytes,
+            media_type="application/zip",
+            headers={"Content-Disposition": f'attachment; filename="{base_name}.zip"'}
+        )
+    elif eff_fmt == "csv":
+        from backend.exporters.dynamic_csv_exporter import export_dynamic_csv
+        csv_bytes = export_dynamic_csv(dataset)
+        return Response(
+            content=csv_bytes,
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{base_name}.csv"'}
+        )
+    else:
+        from backend.exporters.single_sheet_generator import generate_single_sheet_contest_excel
+        excel_bytes = generate_single_sheet_contest_excel(db, dataset, eff_session_id)
+        return Response(
+            content=excel_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{base_name}.xlsx"'}
+        )
 
 @router.get("/download")
 def download_master_10_sheet_excel(

@@ -1366,18 +1366,25 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
     const dateStr = selSession?.sessionDate ? `_${selSession.sessionDate.replace(/\./g, '-')}` : '';
     const filename = `NEC_W${contestNum}_${deptSlug}_${yearSlug}${attSlug}${dateStr}.${ext}`;
+    const mimeType = format === 'pdf' ? 'application/pdf'
+      : format === 'word' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      : format === 'zip' ? 'application/zip'
+      : format === 'csv' ? 'text/csv'
+      : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    const formatLabel = format.toUpperCase();
 
     try {
       const res = await downloadManager.download({
         endpoint: url,
         filename,
+        mimeType,
       });
       if (!res.success) {
         setNotification({
           isOpen: true,
           type: 'error',
-          title: 'Excel Report Generation Failed',
-          message: res.error || 'Failed to generate Excel report.'
+          title: `${formatLabel} Report Generation Failed`,
+          message: res.error || `Failed to generate ${formatLabel} report.`
         });
       }
     } catch (err: any) {
@@ -1385,8 +1392,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       setNotification({
         isOpen: true,
         type: 'error',
-        title: 'Excel Report Generation Failed',
-        message: err.message || 'Failed to generate Excel report.'
+        title: `${formatLabel} Report Generation Failed`,
+        message: err.message || `Failed to generate ${formatLabel} report.`
       });
     }
   };
@@ -2067,11 +2074,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     setShowAdminMonitor(false);
                   }
                 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700 text-white text-xs font-bold rounded-xl border border-white/10 transition-all cursor-pointer shadow-sm"
+                className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md border active:scale-[0.98] ${
+                  showAdminMonitor
+                    ? 'bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white border-rose-400/40 shadow-rose-950/40'
+                    : 'bg-gradient-to-r from-brand-600 via-indigo-600 to-blue-600 hover:from-brand-500 hover:to-blue-500 text-white border-brand-400/30 shadow-brand-950/40 hover:shadow-brand-500/20 hover:border-brand-400/50'
+                }`}
                 title="Toggle Live Contest Monitor"
               >
-                <Activity className="w-3.5 h-3.5 text-brand-400" />
-                <span>{showAdminMonitor ? 'Hide Monitor' : 'Live Monitor'}</span>
+                <Activity className={`w-4 h-4 ${showAdminMonitor ? 'text-white' : 'text-emerald-300 animate-pulse'}`} />
+                <span>{showAdminMonitor ? 'Hide Live Monitor ✕' : 'Live Monitor ⚡'}</span>
               </button>
             )}
           </div>

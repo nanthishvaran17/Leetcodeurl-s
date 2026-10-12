@@ -280,6 +280,27 @@ def _dispatch_internal_endpoint(
         file_bytes = generate_report_bytes(db, report_type="MASTER_10_SHEET", format="xlsx", filters=merged_params, current_user=user)
         return file_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "Weekly_LeetCode_Master_Report.xlsx"
 
+    # 1b. Contest Single Sheet / Multi-Format Exports (Excel, PDF, Word, ZIP, CSV)
+    elif clean_endpoint in ("/api/reports/download-contest-single-sheet", "/reports/download-contest-single-sheet"):
+        from backend.routes.reports import download_contest_single_sheet
+        resp = download_contest_single_sheet(
+            department=merged_params.get("department"),
+            dept=merged_params.get("dept"),
+            year=merged_params.get("year"),
+            year_level=merged_params.get("year_level"),
+            attendance=merged_params.get("attendance"),
+            session_id=merged_params.get("session_id", "latest"),
+            format=merged_params.get("format", "excel"),
+            db=db,
+            current_user=user
+        )
+        out_fn = default_filename
+        if resp.headers and "Content-Disposition" in resp.headers:
+            cd = resp.headers["Content-Disposition"]
+            if 'filename="' in cd:
+                out_fn = cd.split('filename="')[1].rstrip('"')
+        return bytes(resp.body), str(resp.media_type or "application/octet-stream"), out_fn
+
     # 2. HOD Department Intelligence Excel
     elif clean_endpoint == "/api/reports/hod":
         file_bytes = generate_report_bytes(db, report_type="HOD_DEPARTMENT_INTELLIGENCE", format="xlsx", filters=merged_params, current_user=user)
