@@ -57,16 +57,52 @@ def generate_single_sheet_contest_excel(
     dept = dataset.get("deptFilter") or dataset.get("department") or "ALL"
     year = dataset.get("yearFilter") or dataset.get("year") or "ALL"
     
-    # Apply Master College Identity Header (10 columns)
+    # Resolve Contest Title
+    import re
+    c_match = re.search(r'\d+', contest_name)
+    c_num = c_match.group(0) if c_match else ""
+    if c_num:
+        single_sheet_title = f"STUDENT CONTEST PERFORMANCE OF WEEKLY CONTEST {c_num}"
+    elif contest_name:
+        single_sheet_title = f"STUDENT CONTEST PERFORMANCE OF {contest_name.upper()}"
+    else:
+        single_sheet_title = "STUDENT CONTEST PERFORMANCE"
+
+    # Resolve Full Department Name (no year cohort)
+    dept_clean = str(dept or "").strip().upper()
+    if "CSE(CS)" in dept_clean or "CSE (CS)" in dept_clean or dept_clean == "CS":
+        dept_full_title = "DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING (CYBER SECURITY)"
+    elif dept_clean == "CSE":
+        dept_full_title = "DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING"
+    elif dept_clean == "IT":
+        dept_full_title = "DEPARTMENT OF INFORMATION TECHNOLOGY"
+    elif dept_clean in ("AIDS", "AI&DS"):
+        dept_full_title = "DEPARTMENT OF ARTIFICIAL INTELLIGENCE AND DATA SCIENCE"
+    elif dept_clean == "ECE":
+        dept_full_title = "DEPARTMENT OF ELECTRONICS AND COMMUNICATION ENGINEERING"
+    elif dept_clean == "EEE":
+        dept_full_title = "DEPARTMENT OF ELECTRICAL AND ELECTRONICS ENGINEERING"
+    elif dept_clean == "MECH":
+        dept_full_title = "DEPARTMENT OF MECHANICAL ENGINEERING"
+    elif dept_clean in ("ALL", "ALL DEPARTMENTS", "NONE", ""):
+        dept_full_title = "INSTITUTIONAL MASTER REPORT • ALL DEPARTMENTS"
+    else:
+        dept_full_title = f"DEPARTMENT OF {dept_clean}"
+
+    # Apply Master College Identity Header (10 columns, no cohort year, no generated timestamp)
     next_row = apply_master_college_identity(
         ws=ws,
-        report_title="Student Contest Performance Single Sheet",
+        report_title=single_sheet_title,
         department=dept,
         year=year,
         contest_name=contest_name,
         session_date=contest_date,
         total_roster=len(students),
-        cols=10
+        cols=10,
+        show_cohort=False,
+        show_generated_time=False,
+        custom_dept_header=dept_full_title,
+        exact_report_title=single_sheet_title
     )
     
     # Styles
@@ -93,7 +129,7 @@ def generate_single_sheet_contest_excel(
         "S.No", 
         "Reg No", 
         "Name", 
-        "Accommodation\n(D/H)",
+        "Accommodation",
         "Cutoff",
         "Q1\n(Easy)", 
         "Q2\n(Medium)", 
@@ -384,8 +420,8 @@ def generate_single_sheet_contest_excel(
             cell.number_format = '0.0%'
     row_idx += 1
         
-    # Apply compact column widths tailored for 10 columns (no unnecessary width)
-    widths = [8, 15, 26, 9, 10, 10, 11, 11, 10, 12]
+    # Apply compact column widths tailored for 10 columns (Accommodation width 15 for clean single line)
+    widths = [8, 15, 26, 15, 10, 10, 11, 11, 10, 12]
     for col_idx, width in enumerate(widths, 1):
         col_letter = get_column_letter(col_idx)
         ws.column_dimensions[col_letter].width = width

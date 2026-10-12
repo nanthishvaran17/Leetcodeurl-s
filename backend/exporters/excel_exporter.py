@@ -377,6 +377,21 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
         pub_res = _fmt_res(s.get("public_result") or s.get("current_week_result"))
         last_res = _fmt_res(s.get("last_public_result") or s.get("last_week_result"))
 
+        # Resolve contest rating and global rank
+        c_rating = "—"
+        for rk in ("contest_rating", "rating", "rating_val"):
+            rv = s.get(rk)
+            if rv is not None and str(rv).strip() not in ("—", "None", "nan", "NaN", "null", "", "0", "1500", "1500.0"):
+                c_rating = rv
+                break
+
+        g_rank = "—"
+        for rk in ("global_rank", "contest_global_ranking", "contest_global_rank", "contest_rank", "profile_rank"):
+            gv = s.get(rk)
+            if gv is not None and str(gv).strip() not in ("—", "None", "nan", "NaN", "null", "", "0", "5000001", "5,000,001", "N/A"):
+                g_rank = gv
+                break
+
         vals = [
             s.get("s_no") or idx,
             str(s.get("reg_no") or s.get("register_no") or ""),
@@ -387,8 +402,8 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
             s.get("medium") if s.get("medium") is not None else "—",
             s.get("hard") if s.get("hard") is not None else "—",
             s.get("total_solved") if s.get("total_solved") is not None else "—",
-            s.get("contest_rating") if s.get("contest_rating") is not None else s.get("rating") if s.get("rating") is not None else "—",
-            s.get("global_rank") if s.get("global_rank") is not None else s.get("contest_global_ranking") if s.get("contest_global_ranking") is not None else "—",
+            c_rating,
+            g_rank,
             str(s.get("category") or "—"),
             pub_res,
             last_res

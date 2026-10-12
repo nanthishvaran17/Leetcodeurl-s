@@ -485,12 +485,25 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     easy_cnt = int(s.get("easy") or 0)
     med_cnt = int(s.get("medium") or 0)
     hard_cnt = int(s.get("hard") or 0)
-    rating_val = str(s.get("contest_rating") or s.get("rating") or "—")
+    raw_rat = s.get("contest_rating") or s.get("rating")
+    if raw_rat is not None and str(raw_rat).strip() not in ("—", "None", "nan", "NaN", "null", "", "0", "1500", "1500.0"):
+        try:
+            r_num = round(float(str(raw_rat).replace(",", "")))
+            rating_val = f"{r_num:,}" if r_num > 0 and r_num != 1500 else "—"
+        except (ValueError, TypeError):
+            rating_val = str(raw_rat)
+    else:
+        rating_val = "—"
+
     raw_col_rank = str(s.get("college_rank") or s.get("rank") or "N/A")
     rank_val = f"#{raw_col_rank}" if (raw_col_rank != "N/A" and not raw_col_rank.startswith("#")) else raw_col_rank
 
-    raw_glob_rank = str(s.get("global_rank") or "N/A")
-    global_rank = f"#{raw_glob_rank}" if (raw_glob_rank != "N/A" and not raw_glob_rank.startswith("#")) else raw_glob_rank
+    raw_glob = s.get("global_rank") or s.get("contest_global_ranking") or s.get("profile_rank") or s.get("public_profile_ranking")
+    if raw_glob is not None and str(raw_glob).strip() not in ("—", "None", "nan", "NaN", "null", "", "0", "N/A"):
+        clean_num = re.sub(r'[^0-9]', '', str(raw_glob))
+        global_rank = f"#{int(clean_num):,}" if clean_num and int(clean_num) > 0 and int(clean_num) != 5000001 else "—"
+    else:
+        global_rank = "—"
 
     streak_val = f"{s.get('active_streak', 0)} Days"
     contests_val = str(s.get("contests_attended") or len(s.get("contest_history", [])) or 0)
@@ -1029,10 +1042,24 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
             norm_chrono_p4.append(c)
         contest_history = list(reversed(norm_chrono_p4))
 
-    rating_val = str(s.get("contest_rating") or s.get("rating") or "—")
+    raw_rat = s.get("contest_rating") or s.get("rating")
+    if raw_rat is not None and str(raw_rat).strip() not in ("—", "None", "nan", "NaN", "null", "", "0", "1500", "1500.0"):
+        try:
+            r_num = round(float(str(raw_rat).replace(",", "")))
+            rating_val = f"{r_num:,}" if r_num > 0 and r_num != 1500 else "—"
+        except (ValueError, TypeError):
+            rating_val = str(raw_rat)
+    else:
+        rating_val = "—"
+
     contests_cnt = str(len(contest_history))
-    raw_glob_rank = str(s.get("global_rank") or "N/A")
-    global_rank = f"#{raw_glob_rank}" if (raw_glob_rank != "N/A" and not raw_glob_rank.startswith("#")) else raw_glob_rank
+
+    raw_glob = s.get("global_rank") or s.get("contest_global_ranking") or s.get("profile_rank") or s.get("public_profile_ranking")
+    if raw_glob is not None and str(raw_glob).strip() not in ("—", "None", "nan", "NaN", "null", "", "0", "N/A"):
+        clean_num = re.sub(r'[^0-9]', '', str(raw_glob))
+        global_rank = f"#{int(clean_num):,}" if clean_num and int(clean_num) > 0 and int(clean_num) != 5000001 else "—"
+    else:
+        global_rank = "—"
 
     matrix_kpis = [
         [

@@ -552,6 +552,18 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                         break
             else:
                 val = r.get(raw_key)
+                if title == "Global Rank":
+                    for rk in ("global_rank", "contest_global_ranking", "contest_global_rank", "contest_rank", "profile_rank", "public_profile_ranking"):
+                        v_try = r.get(rk)
+                        if v_try is not None and str(v_try).strip() not in ("—", "None", "nan", "NaN", "null", "", "0", "5000001", "5,000,001", "N/A"):
+                            val = v_try
+                            break
+                elif title == "Contest Rating":
+                    for rk in ("contest_rating", "rating", "rating_val", "contest_rating_after"):
+                        v_try = r.get(rk)
+                        if v_try is not None and str(v_try).strip() not in ("—", "None", "nan", "NaN", "null", "", "0", "1500", "1500.0", "1500.7", "N/A"):
+                            val = v_try
+                            break
 
             if is_wow:
                 title_lower = title.lower().strip()
@@ -667,14 +679,14 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                         val = "—"
             elif title in ("Contest Rating", "Global Rank"):
                 val_str = str(val or "").strip()
-                if val in (1500, 1500.0, 1500.7, "1500", "1500.0", 5000001, "5,000,001") or val_str in ("—", "None", "nan", "NaN", "null", "", "0"):
-                    val = 0  # use 0 so cell is numeric blank, styled separately
+                if val in (1500, 1500.0, 1500.7, "1500", "1500.0", 5000001, "5,000,001") or val_str in ("—", "None", "nan", "NaN", "null", "", "0", "N/A"):
+                    val = "—"
                 elif title == "Global Rank":
                     num = _safe_int(val)
-                    val = num if num > 0 else 0
+                    val = num if (num > 0 and num != 5000001) else "—"
                 elif title == "Contest Rating":
                     num = round(_safe_float(val))
-                    val = num if num > 0 and num != 1500 else 0
+                    val = num if num > 0 and num != 1500 else "—"
 
             elif title in ("Total Solved", "Solved", "Contest Solved"):
                 if is_single_contest:
@@ -851,14 +863,14 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                     cell.value = int(val)
                     cell.number_format = '#,##0'
                 else:
-                    cell.value = None
+                    cell.value = "—"
             # Contest Rating: integer number format
             elif title_lower == "contest rating":
                 if isinstance(val, (int, float)) and float(val) > 0 and round(float(val)) != 1500:
                     cell.value = round(float(val))
                     cell.number_format = '#,##0'
                 else:
-                    cell.value = None
+                    cell.value = "—"
             # 12th Cutoff: 1 decimal place numeric
             elif title_lower in ("12th cutoff", "cutoff", "12th cut-off"):
                 if isinstance(val, (int, float)) and float(val) > 0:

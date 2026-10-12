@@ -129,7 +129,11 @@ def apply_master_college_identity(
     contest_name: str = "",
     session_date: str = "",
     total_roster: int = 0,
-    cols: int = 14
+    cols: int = 14,
+    show_cohort: bool = True,
+    show_generated_time: bool = True,
+    custom_dept_header: Optional[str] = None,
+    exact_report_title: Optional[str] = None
 ) -> int:
     """
     Applies the Master Institutional Header (Rows 1-5) based on Faculty Consolidated Design:
@@ -263,22 +267,50 @@ def apply_master_college_identity(
         cell.fill = FILL_LIGHT_BG
         cell.border = BORDER_GRID
 
-    if dept_str == "ALL DEPARTMENTS" and year_str == "ALL YEARS":
-        ws["A3"] = "INSTITUTIONAL MASTER REPORT • ALL DEPARTMENTS & COHORTS"
+    if custom_dept_header:
+        ws["A3"] = custom_dept_header
+    elif not show_cohort:
+        dept_clean = str(department or "").strip().upper()
+        if "CSE(CS)" in dept_clean or "CSE (CS)" in dept_clean or dept_clean == "CS":
+            ws["A3"] = "DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING (CYBER SECURITY)"
+        elif dept_clean == "CSE":
+            ws["A3"] = "DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING"
+        elif dept_clean == "IT":
+            ws["A3"] = "DEPARTMENT OF INFORMATION TECHNOLOGY"
+        elif dept_clean in ("AIDS", "AI&DS"):
+            ws["A3"] = "DEPARTMENT OF ARTIFICIAL INTELLIGENCE AND DATA SCIENCE"
+        elif dept_clean == "ECE":
+            ws["A3"] = "DEPARTMENT OF ELECTRONICS AND COMMUNICATION ENGINEERING"
+        elif dept_clean == "EEE":
+            ws["A3"] = "DEPARTMENT OF ELECTRICAL AND ELECTRONICS ENGINEERING"
+        elif dept_clean == "MECH":
+            ws["A3"] = "DEPARTMENT OF MECHANICAL ENGINEERING"
+        elif dept_clean in ("ALL", "ALL DEPARTMENTS", "NONE", ""):
+            ws["A3"] = "INSTITUTIONAL MASTER REPORT • ALL DEPARTMENTS"
+        else:
+            ws["A3"] = f"DEPARTMENT OF {dept_clean}"
     else:
-        ws["A3"] = f"DEPARTMENT OF {dept_str} • COHORT: {year_str}"
+        if dept_str == "ALL DEPARTMENTS" and year_str == "ALL YEARS":
+            ws["A3"] = "INSTITUTIONAL MASTER REPORT • ALL DEPARTMENTS & COHORTS"
+        else:
+            ws["A3"] = f"DEPARTMENT OF {dept_str} • COHORT: {year_str}"
     ws["A3"].font = FONT_DEPT_HEADER
     ws["A3"].alignment = ALIGN_CENTER
     ws.row_dimensions[3].height = 22
 
     # Row 4: Report Title Light Blue Box (100% Dynamic)
-    clean_title = str(report_title or "INSTITUTIONAL REPORT").strip().upper()
-    if year_bracket in clean_title:
-        clean_title_full = clean_title
-    elif "REPORT" not in clean_title:
-        clean_title_full = f"{clean_title} REPORT ({year_bracket})"
+    if exact_report_title:
+        clean_title_full = exact_report_title.strip().upper()
+    elif not show_cohort:
+        clean_title_full = str(report_title or "INSTITUTIONAL REPORT").strip().upper()
     else:
-        clean_title_full = f"{clean_title} ({year_bracket})"
+        clean_title = str(report_title or "INSTITUTIONAL REPORT").strip().upper()
+        if year_bracket in clean_title:
+            clean_title_full = clean_title
+        elif "REPORT" not in clean_title:
+            clean_title_full = f"{clean_title} REPORT ({year_bracket})"
+        else:
+            clean_title_full = f"{clean_title} ({year_bracket})"
 
     ws.merge_cells(f"A4:{last_col_letter}4")
     for c in range(1, cols + 1):
@@ -290,7 +322,7 @@ def apply_master_college_identity(
     ws["A4"].alignment = ALIGN_CENTER
     ws.row_dimensions[4].height = 24
 
-    # Row 5: Metadata Strip (100% Dynamic Session Date, Department, Year, Roster, Generated Timestamp in IST)
+    # Row 5: Metadata Strip (100% Dynamic Session Date, Department, Year, Roster, Optional Generated Timestamp in IST)
     now_ist = datetime.datetime.now(IST_TZ)
     date_str = str(session_date or "").strip()
     if not date_str or date_str.upper() in ("LATEST", "NONE", "ALL"):
@@ -303,8 +335,11 @@ def apply_master_college_identity(
         elif "-" in date_str:
             date_str = date_str.replace("-", ".")
 
-    gen_time_str = now_ist.strftime("%d %b %Y, %I:%M:%S %p IST")
-    meta_text = f"Session Date: {date_str} | Department: {dept_str} | Year: {year_str} | Total Roster: {total_roster} Students | Generated: {gen_time_str}"
+    if not show_generated_time:
+        meta_text = f"Session Date: {date_str} | Department: {dept_str} | Year: {year_str} | Total Roster: {total_roster} Students"
+    else:
+        gen_time_str = now_ist.strftime("%d %b %Y, %I:%M:%S %p IST")
+        meta_text = f"Session Date: {date_str} | Department: {dept_str} | Year: {year_str} | Total Roster: {total_roster} Students | Generated: {gen_time_str}"
     
     ws.merge_cells(f"A5:{last_col_letter}5")
     for c in range(1, cols + 1):
