@@ -288,8 +288,9 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
             # 3. Historical: Add Center Summary Metrics (between weekly contests and Global Rank)
             HIST_CENTER_METRICS = [
-                ("Contests Attended", ["contests_attended", "total_attended", "totalattended", "total_attendance", "attended_contests", "contests_att"]),
-                ("Total Solved", ["contest_solved", "solved", "solved_str", "problems_solved", "overall_total_solved", "totalsolved", "total_solved"]),
+                ("Contests Attended", ["contests_attended_fraction", "contests_attended", "total_attended", "totalattended", "total_attendance", "attended_contests", "contests_att"]),
+                ("Total Solved", ["total_solved_fraction", "contest_solved", "solved", "solved_str", "problems_solved", "overall_total_solved", "totalsolved", "total_solved"]),
+                ("Attended Solved", ["attended_solve_fraction", "attended_solve", "attended_solved", "attended_contests_solved"]),
                 ("Contest Easy", ["contest_easy", "contest_easy_solved", "c_easy"]),
                 ("Contest Medium", ["contest_medium", "contest_medium_solved", "c_medium"]),
                 ("Contest Hard", ["contest_hard", "contest_hard_solved", "c_hard"]),
@@ -418,7 +419,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         contest_name=session_date or "",
         session_date=session_date or "",
         total_roster=len(rows),
-        cols=cols
+        cols=cols,
+        show_generated_time=False
     )
 
 
@@ -528,7 +530,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         "q1", "q2", "q3", "q4", "solved", "score", "contest rating", 
         "global rank", "total time", "weekly contest", "session date", "batch cohort",
         "easy", "medium", "hard", "college rank",
-        "total attended", "total solved", "consistency pct",
+        "total attended", "contests attended", "total solved", "attended solved", "attended solve", "consistency pct",
         "prev q1", "prev q2", "prev q3", "prev q4", "prev solved", "prev score",
         "curr q1", "curr q2", "curr q3", "curr q4", "curr solved", "curr score",
         "solved delta", "trend", "delta", "δ solved"
@@ -702,18 +704,24 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                     else:
                         val = _safe_int(r.get("contest_solved") or r.get("solved") or r.get("total_solved"))
                 elif is_historical:
-                    weekly_sum = 0
-                    if isinstance(r.get("weeklyData"), list):
-                        for w in r.get("weeklyData", []):
-                            if w.get("att"):
-                                weekly_sum += _safe_int(w.get("solved"))
-                    if weekly_sum > 0:
-                        val = weekly_sum
+                    if r.get("total_solved_fraction"):
+                        val = r.get("total_solved_fraction")
                     else:
-                        c_easy = _safe_int(r.get("contest_easy") if r.get("contest_easy") is not None else r.get("contest_easy_solved"))
-                        c_med = _safe_int(r.get("contest_medium") if r.get("contest_medium") is not None else r.get("contest_medium_solved"))
-                        c_hard = _safe_int(r.get("contest_hard") if r.get("contest_hard") is not None else r.get("contest_hard_solved"))
-                        val = c_easy + c_med + c_hard if (c_easy + c_med + c_hard) > 0 else _safe_int(r.get("contest_solved") or r.get("solved") or r.get("total_solved"))
+                        weekly_sum = 0
+                        tot_sessions = len(r.get("weeklyData", [])) if isinstance(r.get("weeklyData"), list) else 0
+                        if isinstance(r.get("weeklyData"), list):
+                            for w in r.get("weeklyData", []):
+                                if w.get("att"):
+                                    weekly_sum += _safe_int(w.get("solved"))
+                        if tot_sessions > 0:
+                            val = f"{weekly_sum}/{tot_sessions * 4}"
+                        elif weekly_sum > 0:
+                            val = weekly_sum
+                        else:
+                            c_easy = _safe_int(r.get("contest_easy") if r.get("contest_easy") is not None else r.get("contest_easy_solved"))
+                            c_med = _safe_int(r.get("contest_medium") if r.get("contest_medium") is not None else r.get("contest_medium_solved"))
+                            c_hard = _safe_int(r.get("contest_hard") if r.get("contest_hard") is not None else r.get("contest_hard_solved"))
+                            val = c_easy + c_med + c_hard if (c_easy + c_med + c_hard) > 0 else _safe_int(r.get("contest_solved") or r.get("solved") or r.get("total_solved"))
                 else:
                     # General / Profile / Coordinator / Student Performance Report:
                     # Total Solved represents overall lifetime problems solved (Easy + Medium + Hard)
@@ -753,10 +761,25 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                     if v4 in ("1", "1.0", "True") or v4.startswith("1 ("):
                         val = 1
             elif title == "Contests Attended":
-                if isinstance(r.get("weeklyData"), list) and len(r.get("weeklyData")) > 0:
+                if is_historical:
+                    if r.get("contests_attended_fraction"):
+                        val = r.get("contests_attended_fraction")
+                    elif isinstance(r.get("weeklyData"), list) and len(r.get("weeklyData")) > 0:
+                        att_cnt = sum(1 for w in r.get("weeklyData", []) if w.get("att"))
+                        val = f"{att_cnt}/{len(r.get('weeklyData'))}"
+                    else:
+                        val = _safe_int(r.get("contests_attended") if r.get("contests_attended") is not None else r.get("total_attended"))
+                elif isinstance(r.get("weeklyData"), list) and len(r.get("weeklyData")) > 0:
                     val = sum(1 for w in r.get("weeklyData", []) if w.get("att"))
                 else:
                     val = _safe_int(r.get("contests_attended") if r.get("contests_attended") is not None else r.get("total_attended"))
+            elif title in ("Attended Solved", "Attended Solve"):
+                if r.get("attended_solve_fraction"):
+                    val = r.get("attended_solve_fraction")
+                elif isinstance(r.get("weeklyData"), list):
+                    weekly_sum = sum(_safe_int(w.get("solved")) for w in r.get("weeklyData", []) if w.get("att"))
+                    att_cnt = sum(1 for w in r.get("weeklyData", []) if w.get("att"))
+                    val = f"{weekly_sum}/{att_cnt * 4}" if att_cnt > 0 else "0/0"
             elif title == "12th Cutoff":
                 c_val = r.get("twelfth_cutoff") if r.get("twelfth_cutoff") is not None else r.get("cutoff")
                 if c_val is not None and str(c_val).strip() not in ("—", "None", "", "nan", "NaN"):
@@ -1190,4 +1213,32 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
     output = io.BytesIO()
     wb.save(output)
-    return output.getvalue()
+    raw_excel_bytes = output.getvalue()
+    
+    # Suppress Excel's green triangle warning (number stored as text, evalError, etc.)
+    try:
+        import zipfile
+        import re
+        zin = zipfile.ZipFile(io.BytesIO(raw_excel_bytes), 'r')
+        zout_buf = io.BytesIO()
+        zout = zipfile.ZipFile(zout_buf, 'w', compression=zipfile.ZIP_DEFLATED)
+        
+        for item in zin.infolist():
+            content = zin.read(item.filename)
+            if item.filename.startswith('xl/worksheets/sheet') and item.filename.endswith('.xml'):
+                text = content.decode('utf-8')
+                if '<ignoredErrors>' not in text:
+                    ie_xml = '<ignoredErrors><ignoredError sqref="A1:ZZ20000" numberStoredAsText="1" twoDigitTextYear="1" evalError="1"/></ignoredErrors>'
+                    match = re.search(r'(<(?:drawing|legacyDrawing|picture|tableParts|extLst)[\s>])', text)
+                    if match:
+                        pos = match.start()
+                        text = text[:pos] + ie_xml + text[pos:]
+                    else:
+                        text = text.replace('</worksheet>', f'{ie_xml}</worksheet>')
+                zout.writestr(item, text.encode('utf-8'))
+            else:
+                zout.writestr(item, content)
+        zout.close()
+        return zout_buf.getvalue()
+    except Exception:
+        return raw_excel_bytes

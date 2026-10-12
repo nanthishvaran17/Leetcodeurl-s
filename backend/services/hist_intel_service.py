@@ -173,7 +173,15 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
                     total_solved_all += actual_solved
 
             # Consistency score: % of sessions attended
-            consistency_pct = round((total_attended / max(len(contest_sessions), 1)) * 100, 1)
+            total_sessions = len(contest_sessions)
+            consistency_pct = round((total_attended / max(total_sessions, 1)) * 100, 1)
+
+            max_possible_problems = total_sessions * 4
+            max_attended_problems = total_attended * 4
+
+            contests_att_frac = f"{total_attended}/{total_sessions}"
+            total_solved_frac = f"{total_solved_all}/{max_possible_problems}"
+            attended_solved_frac = f"{total_solved_all}/{max_attended_problems}" if total_attended > 0 else "0/0"
 
             rows.append({
                 "s_no": idx,
@@ -185,12 +193,19 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
                 "twelfth_cutoff": getattr(s, "twelfth_cutoff", None),
                 "cutoff": getattr(s, "twelfth_cutoff", None),
                 "username": s.username or "Unlinked",
+                "total_in_range": total_sessions,
+                "totalInRange": total_sessions,
                 "totalAttended": total_attended,
                 "total_attended": total_attended,
                 "contests_attended": total_attended,
+                "contests_attended_fraction": contests_att_frac,
                 "totalSolved": total_solved_all,
                 "total_solved": total_solved_all,
                 "contest_solved": total_solved_all,
+                "total_solved_fraction": total_solved_frac,
+                "attended_solve": attended_solved_frac,
+                "attended_solve_fraction": attended_solved_frac,
+                "attended_solved": attended_solved_frac,
                 "consistencyPct": consistency_pct,
                 "weeklyData": weekly_data,
             })

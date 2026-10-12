@@ -256,7 +256,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-navy-950/75 backdrop-blur-sm"
+            className="fixed inset-0 bg-navy-950/65 backdrop-blur-md"
             onClick={onClose}
           />
           
@@ -266,28 +266,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', stiffness: 350, damping: 32 }}
-            className="relative w-[78vw] max-w-[285px] sm:max-w-[300px] h-full shadow-2xl bg-white dark:bg-navy-950 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] px-3.5 sm:px-4 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200 dark:border-navy-800"
+            className="relative w-[80vw] max-w-[290px] sm:max-w-[310px] h-full shadow-2xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-2xl pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] px-3.5 sm:px-4 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200/80 dark:border-white/[0.08]"
           >
             {/* Region 1: Fixed Compact Header */}
-            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-navy-800/80 shrink-0 mb-0.5 relative z-10">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/[0.06] shrink-0 mb-1 relative z-10">
               <button 
                 type="button"
                 onClick={() => {
                   setActiveTab('dashboard');
                   onClose();
                 }}
-                className="flex items-center space-x-2.5 p-1 -m-1 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-900/80 active:scale-[0.98] transition-all text-left cursor-pointer min-w-0 group"
+                className="flex items-center space-x-2.5 p-1 -m-1 rounded-xl hover:bg-slate-100/80 dark:hover:bg-white/[0.05] active:scale-[0.98] transition-all text-left cursor-pointer min-w-0 group"
                 title="Return to Institutional Dashboard"
               >
-                <div className="shrink-0 transition-transform group-hover:scale-105">
+                <div className="shrink-0 transition-transform group-hover:scale-105 p-1 rounded-xl bg-slate-100/60 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.08]">
                   <CollegeLogo size={32} />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-xs sm:text-[13px] font-black text-slate-900 dark:text-white uppercase tracking-wider truncate leading-tight group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                  <span className="text-xs sm:text-[13px] font-extrabold text-slate-900 dark:text-white uppercase tracking-wider truncate leading-tight group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors font-display">
                     Nandha Intelligence
                   </span>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] sm:text-[10.5px] font-black tracking-wider text-brand-600 dark:text-brand-400 uppercase truncate">
+                    <span className="text-[10px] sm:text-[10.5px] font-bold tracking-wider text-brand-600 dark:text-brand-400 uppercase truncate">
                       Institutional Platform
                     </span>
                   </div>
@@ -296,7 +296,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-900 cursor-pointer min-w-[38px] min-h-[38px] flex items-center justify-center transition-colors shrink-0 ml-1"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100/80 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/[0.06] cursor-pointer min-w-[38px] min-h-[38px] flex items-center justify-center transition-all shrink-0 ml-1 active:scale-95 border border-transparent hover:border-slate-200/60 dark:hover:border-white/10"
                 title="Close Navigation Menu"
                 aria-label="Close Navigation Menu"
               >
@@ -305,14 +305,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             </div>
 
             {/* Region 2: Independently Scrollable Menu (Compact & Crisp) */}
-            <div className="space-y-4 sm:space-y-5 overflow-y-auto pr-0.5 flex-1 min-h-0 custom-scrollbar overscroll-contain py-1.5 relative z-10">
+            <div className="space-y-4 sm:space-y-5 overflow-y-auto pr-0.5 flex-1 min-h-0 custom-scrollbar overscroll-contain py-2 relative z-10">
               {sections.map((section, sIdx) => (
                 <div key={sIdx} className="space-y-1.5">
-                  <div className="px-1 pb-0.5 flex items-center justify-between">
-                    <span className="text-[11px] font-mono font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                  <div className="px-1.5 pb-1 flex items-center justify-between">
+                    <span className="text-[10.5px] font-mono font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                       {section.title}
                     </span>
-                    <span className="w-6 h-px bg-slate-300 dark:bg-navy-700 shrink-0" />
+                    <span className="w-6 h-px bg-slate-200 dark:bg-white/[0.08] shrink-0" />
                   </div>
 
                   <nav className="space-y-1">
@@ -343,20 +343,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                           }}
                           className={`w-full min-h-[46px] sm:min-h-[50px] flex items-center justify-between px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-left cursor-pointer select-none transition-all duration-200 group active:scale-[0.98] ${
                             isActive
-                              ? 'bg-brand-600 text-white font-bold shadow-sm shadow-brand-500/20 border border-brand-400/30'
-                              : 'text-slate-800 dark:text-slate-100 hover:bg-slate-100/90 dark:hover:bg-navy-900/90 hover:text-brand-600 dark:hover:text-brand-400'
+                              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold shadow-md shadow-brand-500/25 border border-brand-400/30'
+                              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-white/[0.05] hover:text-brand-600 dark:hover:text-brand-400 border border-transparent'
                           }`}
                         >
                           {/* Left Icon + Label */}
                           <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0 flex-1 pr-1.5 relative z-10">
-                            <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 ${
+                            <div className={`w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 ${
                               isActive 
                                 ? 'bg-white/20 text-white shadow-inner scale-105' 
-                                : 'bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-200 group-hover:bg-brand-50 dark:group-hover:bg-navy-800 group-hover:text-brand-600 dark:group-hover:text-brand-300 shadow-xs'
+                                : 'bg-slate-100/90 dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 group-hover:bg-brand-500/10 dark:group-hover:bg-brand-500/20 group-hover:text-brand-600 dark:group-hover:text-brand-300 shadow-xs'
                             }`}>
                               <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0 transition-transform duration-200" />
                             </div>
-                            <span className={`text-xs sm:text-[13px] tracking-normal leading-tight whitespace-nowrap truncate transition-colors ${
+                            <span className={`text-xs sm:text-[13px] tracking-tight leading-tight whitespace-nowrap truncate transition-colors ${
                               isActive ? 'font-bold text-white' : 'font-semibold'
                             }`}>
                               {item.label}

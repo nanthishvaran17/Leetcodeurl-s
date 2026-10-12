@@ -1259,12 +1259,13 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             </div>
                           </div>
                           <div className="text-right shrink-0">
-                            <span className="text-xs font-black text-brand-700 dark:text-brand-300 block">{r.totalSolved} Solved</span>
+                            <span className="text-xs font-black text-brand-700 dark:text-brand-300 block">{r.total_solved_fraction || `${r.totalSolved} Solved`}</span>
+                            {r.attended_solve_fraction && <span className="text-[10px] font-black text-blue-700 dark:text-blue-300 block">Attended: {r.attended_solve_fraction}</span>}
                             <span className={`text-[10px] font-black ${r.consistencyPct >= 75 ? 'text-emerald-700 dark:text-emerald-300' : r.consistencyPct >= 40 ? 'text-amber-700 dark:text-amber-300' : 'text-rose-700 dark:text-rose-300'}`}>{r.consistencyPct}% Consistency</span>
                           </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5 text-[10px] bg-slate-100 dark:bg-navy-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
-                          <span className="text-slate-900 dark:text-slate-100 font-black mr-1">Sessions ({r.totalAttended} Attended):</span>
+                          <span className="text-slate-900 dark:text-slate-100 font-black mr-1">Sessions ({r.contests_attended_fraction || `${r.totalAttended} Attended`}):</span>
                           {(r.weeklyData || []).map((wd: any, widx: number) => (
                             <span key={widx} className={`px-1.5 py-0.5 rounded-md font-mono font-black ${wd.att ? (wd.solved >= 3 ? 'bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-400' : wd.solved >= 1 ? 'bg-brand-100 text-brand-950 dark:bg-brand-950 dark:text-brand-200 border border-brand-400' : 'bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-200 border border-amber-400') : 'bg-rose-100 text-rose-950 dark:bg-rose-950 dark:text-rose-200 border border-rose-400'}`}>
                               C{widx + 1}: {wd.att ? wd.solved : '—'}
@@ -1292,6 +1293,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           ))}
                           <th className="px-3 py-3 text-center align-middle">Contests Attended</th>
                           <th className="px-3 py-3 text-center align-middle font-extrabold">Total Solved</th>
+                          <th className="px-3 py-3 text-center align-middle font-extrabold bg-blue-900/40 text-blue-200">Attended Solved</th>
                           <th className="px-3 py-3 text-center align-middle bg-emerald-900/40 text-emerald-200">Contest Easy</th>
                           <th className="px-3 py-3 text-center align-middle bg-teal-900/40 text-teal-200">Contest Med</th>
                           <th className="px-3 py-3 text-center align-middle bg-purple-900/40 text-purple-200">Contest Hard</th>
@@ -1316,8 +1318,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                   {wd.att ? wd.solved : '—'}
                                 </td>
                               ))}
-                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-950 dark:text-white text-sm">{r.contests_attended ?? r.total_attended ?? r.totalAttended ?? 0}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-black text-brand-700 dark:text-brand-300 text-sm">{r.total_solved ?? r.totalSolved ?? (cDiff.easy + cDiff.medium + cDiff.hard)}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-950 dark:text-white text-sm">{r.contests_attended_fraction ?? (report.histSummary?.numSessions ? `${r.contests_attended ?? r.total_attended ?? 0}/${report.histSummary.numSessions}` : (r.contests_attended ?? r.total_attended ?? 0))}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-brand-700 dark:text-brand-300 text-sm">{r.total_solved_fraction ?? (report.histSummary?.numSessions ? `${r.total_solved ?? r.totalSolved ?? 0}/${report.histSummary.numSessions * 4}` : (r.total_solved ?? r.totalSolved ?? (cDiff.easy + cDiff.medium + cDiff.hard)))}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-blue-700 dark:text-blue-300 text-sm bg-blue-500/5">{r.attended_solve_fraction ?? ((r.total_attended || r.totalAttended) ? `${r.total_solved ?? r.totalSolved ?? 0}/${(r.total_attended || r.totalAttended || 1) * 4}` : '0/0')}</td>
                               <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{r.contest_easy ?? cDiff.easy}</td>
                               <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{r.contest_medium ?? cDiff.medium}</td>
                               <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{r.contest_hard ?? cDiff.hard}</td>

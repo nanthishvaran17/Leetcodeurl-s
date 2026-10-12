@@ -301,28 +301,30 @@ export const StaffDashboardView: React.FC = () => {
 
       <LiveContestPanel />
 
-      {/* Staff Mentoring Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-4 sm:p-6 md:p-8 shadow-lg border border-indigo-500/30">
+      {/* Staff Mentoring Header Banner — 2026 Bento Architecture */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] text-white p-5 sm:p-7 md:p-8 shadow-2xl border border-white/[0.08]">
+        {/* Ambient Radial Mesh Glow */}
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 rounded-full bg-gradient-to-br from-indigo-500/15 via-brand-500/10 to-transparent blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-3.5 flex-1 min-w-0 max-w-full">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-black border border-indigo-400/30">
+          <div className="space-y-3 flex-1 min-w-0 max-w-full">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/[0.06] text-slate-200 text-xs font-semibold border border-white/10 backdrop-blur-xl shadow-glass">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>MY MENTORING DASHBOARD</span>
             </div>
             <AnimatedWelcomeHeading
-              className="text-white uppercase max-w-full"
+              className="text-white uppercase max-w-full font-display font-extrabold"
               nameClassName="text-indigo-300 font-extrabold"
             />
-            <p className="text-sm md:text-base text-slate-300 font-medium pt-1">Your mentoring dashboard is ready.</p>
-            <p className="text-xs text-slate-300 flex items-center gap-2">
+            <p className="text-sm md:text-base text-slate-300 font-normal pt-0.5">Faculty mentoring & student portfolio intelligence deck.</p>
+            <div className="text-xs text-slate-400 flex flex-wrap items-center gap-2 pt-0.5">
               <span>Restricted Portfolio • Monitoring {totalAssignedCount === 0 ? '0' : totalAssignedCount} Assigned Students</span>
               {lastSyncTime && (
                 <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                   Last Live Sync: {lastSyncTime} IST
                 </span>
               )}
-            </p>
+            </div>
           </div>
 
           <div className="flex items-center space-x-3">
@@ -330,7 +332,7 @@ export const StaffDashboardView: React.FC = () => {
               type="button"
               onClick={handleLiveSync}
               disabled={liveSyncing}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 active:scale-[0.98] text-white text-xs font-black shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
+              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-indigo-700 hover:from-brand-500 hover:to-indigo-600 active:scale-[0.98] text-white text-xs font-bold shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
             >
               <Zap className={`w-4 h-4 ${liveSyncing ? 'animate-bounce text-amber-400' : 'text-amber-300'}`} />
               <span>{liveSyncing ? 'Fetching Live Data...' : 'FETCH LIVE DATA'}</span>
@@ -340,7 +342,7 @@ export const StaffDashboardView: React.FC = () => {
               type="button"
               onClick={fetchMentoringData}
               disabled={loading}
-              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 flex items-center space-x-2 transition-all cursor-pointer"
+              className="px-4 py-3 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] text-white text-xs font-semibold border border-white/10 flex items-center space-x-2 transition-all cursor-pointer backdrop-blur-md"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               <span>Refresh Portfolio</span>
@@ -350,7 +352,7 @@ export const StaffDashboardView: React.FC = () => {
 
         {/* Live Sync Status Banner */}
         {syncStatusMsg && (
-          <div className="mt-4 p-3 rounded-2xl bg-white/10 border border-white/15 text-xs font-bold flex items-center justify-between animate-fade-in">
+          <div className="mt-4 p-3 rounded-2xl bg-white/[0.08] border border-white/15 text-xs font-semibold flex items-center justify-between animate-fade-in backdrop-blur-md">
             <div className="flex items-center space-x-2">
               <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
               <span>{syncStatusMsg}</span>
@@ -366,40 +368,40 @@ export const StaffDashboardView: React.FC = () => {
         )}
       </div>
 
-      {/* Interactive Summary KPI Grid */}
+      {/* Interactive Summary KPI Grid — 2026 Bento Matrix */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-3.5 sm:gap-4">
 
         {/* 1. Assigned (All) */}
         <div 
           onClick={() => handleCardFilterClick('ALL')}
           title="Click to view all assigned students"
-          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'ALL'
-              ? 'bg-indigo-50/90 dark:bg-indigo-950/50 border-indigo-500 ring-2 ring-indigo-500/40 shadow-indigo-500/10'
-              : 'bg-white dark:bg-navy-900 border-slate-200/90 dark:border-navy-700/80 hover:border-indigo-300 dark:hover:border-indigo-600'
+              ? 'bg-indigo-50/90 dark:bg-indigo-950/50 border-brand-500 ring-2 ring-brand-500/30 shadow-indigo-500/10'
+              : 'glass-panel hover:border-brand-500/40'
           }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
-            <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
               My Assigned
             </span>
-            <div className="p-1.5 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0">
+            <div className="p-1.5 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 shrink-0">
               <Users className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight font-display">
               {totalAssignedCount}
             </h3>
-            <span className="text-xs font-extrabold text-slate-600 dark:text-slate-400">Students</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Students</span>
           </div>
           <div className="mt-2.5 flex items-center">
-            <span className={`text-[10px] font-black tracking-wide px-2 py-0.5 rounded-lg border ${
+            <span className={`text-[9.5px] font-bold tracking-wide px-2 py-0.5 rounded-full border ${
               totalAssignedCount === (summary?.max_capacity || 30)
-                ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
+                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400'
                 : (totalAssignedCount > (summary?.max_capacity || 30)
-                    ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
-                    : 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800')
+                    ? 'bg-rose-500/10 text-rose-600 border-rose-500/20 dark:text-rose-400'
+                    : 'bg-brand-500/10 text-brand-600 border-brand-500/20 dark:text-brand-400')
             }`}>
               {totalAssignedCount === 0 ? 'NO ASSIGNMENTS' : (summary?.workload_status || (totalAssignedCount === (summary?.max_capacity || 30) ? 'AT CAPACITY' : 'WITHIN CAPACITY'))}
             </span>

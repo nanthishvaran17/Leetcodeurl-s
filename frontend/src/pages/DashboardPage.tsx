@@ -472,7 +472,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     n !== null && n !== undefined && !isNaN(n) ? n.toLocaleString() : fallback;
 
   return (
-    <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-2 pb-2 animate-page-enter w-full">
+    <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-2 pb-24 md:pb-8 animate-page-enter w-full">
       
       {/* 1. INSTITUTIONAL PERFORMANCE OVERVIEW */}
       <div className="stagger-1 relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900/95 to-indigo-950/90 text-white p-4 sm:p-7 lg:p-8 shadow-2xl border border-slate-700/80 dark:border-brand-500/30">

@@ -133,7 +133,8 @@ def apply_master_college_identity(
     show_cohort: bool = True,
     show_generated_time: bool = True,
     custom_dept_header: Optional[str] = None,
-    exact_report_title: Optional[str] = None
+    exact_report_title: Optional[str] = None,
+    include_logos: bool = True
 ) -> int:
     """
     Applies the Master Institutional Header (Rows 1-5) based on Faculty Consolidated Design:
@@ -180,7 +181,7 @@ def apply_master_college_identity(
                 right=THIN_BLACK_SIDE if c == cols else None,
             )
 
-    left_logo, right_logo = get_asset_logo_paths()
+    left_logo, right_logo = get_asset_logo_paths() if include_logos else (None, None)
 
     # Row 1: Main Title Banner (Merged across all columns)
     ws.merge_cells(f"A1:{last_col_letter}1")
@@ -197,7 +198,7 @@ def apply_master_college_identity(
     ws.row_dimensions[2].height = 20
 
     # Insert Left Emblem Logo (scaled to target_h, exact 12.5px left & 4px top offset away from edges)
-    if left_logo:
+    if include_logos and left_logo:
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
             from openpyxl.drawing.spreadsheet_drawing import OneCellAnchor, AnchorMarker
@@ -217,7 +218,7 @@ def apply_master_college_identity(
             pass
 
     # Insert Right 25 NEC Anniversary Logo (scaled to target_h, exact 4px right & 4px top offset)
-    if right_logo:
+    if include_logos and right_logo:
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
             from openpyxl.drawing.spreadsheet_drawing import OneCellAnchor, AnchorMarker

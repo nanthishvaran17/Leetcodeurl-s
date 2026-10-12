@@ -4,11 +4,10 @@ import re
 from datetime import datetime
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import landscape, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, KeepInFrame
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfgen import canvas
-
-from typing import Any, Callable, Tuple
+from typing import Any, Callable, Tuple, List, Dict
 
 class NumberedCanvas(canvas.Canvas):
     _startPage: Callable[[], None]
@@ -16,7 +15,7 @@ class NumberedCanvas(canvas.Canvas):
     _pageNumber: int
 
     def __init__(self, *args, **kwargs):
-        canvas.Canvas.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._saved_page_states = []
 
     def showPage(self):
@@ -33,121 +32,118 @@ class NumberedCanvas(canvas.Canvas):
 
     def draw_page_number(self, page_count):
         self.saveState()
-        self.setFont('Helvetica-Bold', 9)
-        self.drawRightString(self._pagesize[0] - 30, 25, f"Page {self._pageNumber} of {page_count}")
+        self.setFont('Helvetica-Bold', 8)
+        self.setFillColor(colors.HexColor("#475569"))
+        self.drawRightString(self._pagesize[0] - 25, 15, f"Page {self._pageNumber} of {page_count}")
         self.restoreState()
 
+
+def _safe_str(val: Any, default: str = "—") -> str:
+    if val is None:
+        return default
+    s = str(val).strip()
+    if not s or s.lower() in ("none", "null", "nan"):
+        return default
+    return s
+
+
 def export_dynamic_pdf(dataset: dict) -> bytes:
+    """
+    Institutional Dynamic PDF Exporter for Nandha Engineering College.
+    Generates publication-quality, A4-landscape reports with:
+      - Institutional header & logo
+      - Smart curated columns matching report type
+      - Semantic status badges
+      - Clean pagination (repeatRows=1, Page X of Y)
+      - Guaranteed zero LayoutError crashes
+    """
     output = io.BytesIO()
-    
-    rows = dataset.get("rows") or dataset.get("allStudents") or dataset.get("all_students_current") or []
-    
-    contest_name = str(dataset.get("contestName") or dataset.get("sessionName") or "WEEKLY CONTEST").split("\n")[0].strip()
+
+    rows = dataset.get("rows") or dataset.get("allStudents") or dataset.get("all_rows") or dataset.get("all_students_current") or []
+    first_row = rows[0] if rows else {}
+
+    contest_name = str(
+        dataset.get("contestName")
+        or (dataset.get("current_session") or {}).get("contest_name")
+        or dataset.get("title")
+        or dataset.get("sessionName")
+        or "WEEKLY CONTEST"
+    ).split("\n")[0].strip()
+
+    session_date = str(
+        dataset.get("sessionDate")
+        or dataset.get("session_date")
+        or (dataset.get("current_session") or {}).get("session_date")
+        or dataset.get("report_date")
+        or ""
+    ).strip()
+
     report_type = str(dataset.get("reportType") or dataset.get("report_type") or "").upper().strip()
     raw_title = dataset.get("reportTitle") or dataset.get("title") or ""
-
-    is_wow = (
-        report_type in ("WEEK_ON_WEEK_INTELLIGENCE", "WOW_INTEL", "WEEK_ON_WEEK")
-        or (rows and any(k in rows[0] for k in ("prev_status", "curr_status", "solved_delta", "trend")))
-        or "wowSummary" in dataset
-    )
 
     prev_c_lbl = str(dataset.get("prevContest") or (dataset.get("wowSummary") or {}).get("prevContest") or "Last Week").strip()
     curr_c_lbl = str(dataset.get("currContest") or (dataset.get("wowSummary") or {}).get("currContest") or contest_name or "This Week").strip()
 
-    # Pre-calculate headers to determine dynamic page width
-    clean_headers = []
-    first_row = {}
-    weekly_data_keys = []
-    if rows:
-        first_row = rows[0]
-        if is_wow:
-            clean_headers = [
-                "S.No",
-                "Register No",
-                "Student Name",
-                "Dept",
-                "Yr",
-                f"{prev_c_lbl} Status",
-                f"{prev_c_lbl} Solved",
-                f"{prev_c_lbl} Score",
-                f"{curr_c_lbl} Status",
-                f"{curr_c_lbl} Solved",
-                f"{curr_c_lbl} Score",
-                "Δ Solved",
-                "Trend",
-            ]
-        else:
-            weekly_data_keys = []
-            if "weeklyData" in first_row:
-                for wd in first_row.get("weeklyData", []):
-                    weekly_data_keys.append(wd.get("contestNum"))
+    is_wow = (
+        report_type in ("WEEK_ON_WEEK_INTELLIGENCE", "WOW_INTEL", "WEEK_ON_WEEK")
+        or (bool(rows) and any(k in first_row for k in ("prev_status", "curr_status", "solved_delta", "trend")))
+        or "wowSummary" in dataset
+    )
 
-            for h in first_row.keys():
-                if h == "weeklyData":
-                    for c_num in weekly_data_keys:
-                        clean_headers.append(f"C{c_num}")
-                else:
-                    formatted_h = re.sub(r'([a-z])([A-Z])', r'\1 \2', h).replace("_", " ").title().replace('Pct', '%')
-                    clean_headers.append(formatted_h)
-                    
-    num_cols = len(clean_headers)
-    
-    # Strict A4 dimensions as baseline
+    is_five_week = (report_type in ("FIVE_WEEK_PERFORMANCE_TREND", "FIVE_WEEK_TREND")) or ("c1_solved" in first_row)
+    is_historical = (report_type == "HISTORICAL_CONTEST_INTELLIGENCE") or ("weeklyData" in first_row)
+    is_single_contest = (
+        any(k in report_type for k in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "SUNDAY_LIVE", "SUNDAY_CONTEST", "WEEKLY_CONTEST", "SINGLE_CONTEST", "SINGLE_SHEET"))
+        or any(k in first_row for k in ("q1_display", "q1_time", "contest_solved", "q1", "contest_easy"))
+        or (bool(session_date or contest_name) and report_type in ("12TH_TNEA_CUTOFF_ANALYSIS", "HOD_DEPARTMENT_INTELLIGENCE", "LEADERBOARD", "WEEKLY_STUDENT_PERFORMANCE"))
+    ) and not is_historical and not is_wow and not is_five_week and "COORDINATOR" not in report_type
+
+    # Sort rows to show top performers first
+    def _row_sort_key(r):
+        sol_raw = r.get("total_solved") or r.get("solved") or r.get("contest_solved") or 0
+        if isinstance(sol_raw, str) and "/" in sol_raw:
+            try:
+                sol = int(sol_raw.split("/")[0])
+            except Exception:
+                sol = 0
+        else:
+            try:
+                sol = int(sol_raw)
+            except Exception:
+                sol = 0
+
+        rnk_raw = r.get("rank") or r.get("contest_rank") or r.get("global_rank") or r.get("contest_global_rank")
+        try:
+            rnk = int(rnk_raw) if rnk_raw is not None else 999999
+        except Exception:
+            rnk = 999999
+
+        return (0 if sol > 0 else 1, -sol, rnk, str(r.get("name") or ""))
+
+    if is_wow:
+        def _wow_sort_key(r):
+            try:
+                sno = int(r.get("s_no") or 0)
+            except Exception:
+                sno = 99999
+            return (sno if sno > 0 else 99999, str(r.get("reg_no") or ""))
+        sorted_rows = sorted(rows, key=_wow_sort_key)
+    elif rows and not is_five_week and not is_historical:
+        sorted_rows = sorted(rows, key=_row_sort_key)
+    else:
+        sorted_rows = list(rows)
+
+    # Base page dimensions: A4 Landscape
     base_width, doc_height = landscape(A4)
-    margin = 25
-    
-    elements = []
-    styles = getSampleStyleSheet()
-    
-    # Custom Page Decorator for Logo, Border, and Page Numbers
-    def add_page_decorations(canvas, doc):
-        canvas.saveState()
-        
-        # Use dynamic doc dimensions to ensure it works for fallback sizes too
-        current_width, current_height = doc.pagesize
-        
-        # 1. Page Border
-        canvas.setStrokeColor(colors.black)
-        canvas.setLineWidth(1)
-        canvas.rect(15, 15, current_width - 30, current_height - 30)
-        
-        # 2. Page Number is handled by NumberedCanvas now
-        
-        canvas.restoreState()
-    
-    # Enhanced Title Styles for PDF Export
-    college_style = ParagraphStyle(
-        'CollegeTitle',
-        parent=styles['Heading1'],
-        fontSize=15,
-        textColor=colors.HexColor("#1B365D"),
-        alignment=1, # Center alignment
-        spaceAfter=5
-    )
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading2'],
-        fontSize=11,
-        textColor=colors.HexColor("#333333"),
-        alignment=1, # Center alignment
-        spaceAfter=5
-    )
-    timestamp_style = ParagraphStyle(
-        'TimestampStyle',
-        parent=styles['Normal'],
-        fontSize=10,
-        textColor=colors.HexColor("#1B365D"),
-        fontName='Helvetica-Bold',
-        alignment=1,
-        spaceAfter=15
-    )
-    
-    
-    # Robust Title Logic
+    margin = 20
+
+    # Title Determination
     if is_wow:
         report_title = f"WEEK-ON-WEEK INTELLIGENCE — {prev_c_lbl.upper()} VS {curr_c_lbl.upper()}"
-    elif report_type == "HISTORICAL_CONTEST_INTELLIGENCE":
+    elif is_five_week:
+        d_title = dataset.get("title") or dataset.get("reportTitle")
+        report_title = (d_title.upper() if d_title else "FIVE-WEEK LONGITUDINAL PERFORMANCE MATRIX")
+    elif is_historical:
         session_headers = dataset.get("sessionHeaders", [])
         if session_headers and len(session_headers) >= 1:
             first_c = session_headers[0].get("contestNum")
@@ -160,221 +156,306 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
                 report_title = "HISTORICAL INTELLIGENCE REPORT"
         else:
             report_title = "HISTORICAL INTELLIGENCE REPORT"
+    elif is_single_contest:
+        report_title = f"{contest_name.upper()} — STUDENT PERFORMANCE REPORT"
+    elif raw_title:
+        report_title = str(raw_title).upper().strip()
     else:
-        if raw_title:
-            report_title = str(raw_title).upper().strip()
-        else:
-            # Fallbacks
-            if report_type == "WOW_INTEL" or report_type == "WEEK_ON_WEEK_INTELLIGENCE":
-                report_title = f"{contest_name} — WEEK-ON-WEEK INTELLIGENCE REPORT"
-            elif report_type == "SUNDAY_LIVE_CONTEST" or report_type == "SUNDAY_LIVE":
-                report_title = f"{contest_name} — SUNDAY LIVE CONTEST REPORT"
-            elif report_type == "FRIDAY_OFFICIAL_CONTEST" or report_type == "FRIDAY_OFFICIAL":
-                report_title = f"{contest_name} — OFFICIAL FRIDAY CONTEST RESULT"
-            elif report_type == "WEEKLY_CONTEST_INTELLIGENCE":
-                report_title = f"{contest_name} — WEEKLY CONTEST INTELLIGENCE"
-            elif report_type == "CONTEST_ATTENDANCE_PARTICIPATION":
-                report_title = f"{contest_name} — ATTENDANCE & PARTICIPATION REPORT"
-            elif report_type == "CONTEST_PERFORMANCE_RANKING":
-                report_title = f"{contest_name} — PERFORMANCE & RANKING REPORT"
-            elif report_type == "FIVE_WEEK_PERFORMANCE_TREND" or report_type == "FIVE_WEEK_TREND":
-                report_title = f"{contest_name} — 5-WEEK PERFORMANCE TREND"
-            elif report_type == "PROBLEM_DIFFICULTY_INTELLIGENCE":
-                report_title = f"{contest_name} — PROBLEM DIFFICULTY INTELLIGENCE"
-            elif report_type == "FACULTY_CONSOLIDATED":
-                report_title = f"{contest_name} — FACULTY CONSOLIDATED PERFORMANCE"
-            elif report_type == "COORDINATOR_CONSOLIDATED":
-                report_title = f"{contest_name} — FACULTY COORDINATOR CONSOLIDATED"
-            elif report_type == "HOD_DEPARTMENT_INTELLIGENCE":
-                report_title = f"{contest_name} — HOD DEPARTMENT INTELLIGENCE"
-            elif report_type == "COORDINATOR_WEEKLY_PERFORMANCE":
-                report_title = f"{contest_name} — COORDINATOR WEEKLY PERFORMANCE"
-            elif report_type == "PRINCIPAL_EXECUTIVE":
-                report_title = f"{contest_name} — PRINCIPAL EXECUTIVE INTELLIGENCE"
-            elif report_type == "MANAGEMENT_EXECUTIVE":
-                report_title = f"{contest_name} — MANAGEMENT EXECUTIVE SUMMARY"
-            else:
-                report_title = f"{contest_name} — PERFORMANCE REPORT"
+        report_title = f"{contest_name.upper()} — PERFORMANCE REPORT"
 
-    # Add Elements to the Document
-    # 1. College Logo
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # Enhanced Typography Styles
+    college_style = ParagraphStyle(
+        'CollegeTitle',
+        parent=styles['Heading1'],
+        fontSize=13,
+        textColor=colors.HexColor("#1B365D"),
+        alignment=1,
+        spaceAfter=3
+    )
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading2'],
+        fontSize=10,
+        textColor=colors.HexColor("#1E293B"),
+        alignment=1,
+        spaceAfter=4
+    )
+    timestamp_style = ParagraphStyle(
+        'TimestampStyle',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.HexColor("#64748B"),
+        fontName='Helvetica-Bold',
+        alignment=1,
+        spaceAfter=12
+    )
+
+    def add_page_decorations(canvas, doc):
+        canvas.saveState()
+        current_width, current_height = doc.pagesize
+        # Subtle outer border
+        canvas.setStrokeColor(colors.HexColor("#CBD5E1"))
+        canvas.setLineWidth(0.75)
+        canvas.rect(12, 12, current_width - 24, current_height - 24)
+        canvas.restoreState()
+
+    # College Branding Logo
     logo_path = r"E:\Leetcode Web\backend\static\nec_25_logo.png"
     if not os.path.exists(logo_path):
         logo_path = r"E:\Leetcode Web\round_logo.png"
-        
+
     if os.path.exists(logo_path):
-        img = Image(logo_path, width=65, height=65)
+        img = Image(logo_path, width=48, height=48)
         img.hAlign = 'CENTER'
         elements.append(img)
-        elements.append(Spacer(1, 10))
-        
+        elements.append(Spacer(1, 4))
+
     elements.append(Paragraph("<b>NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</b>", college_style))
-    elements.append(Paragraph(f"<b>{report_title.upper()}</b>", title_style))
-    
-    # Add Download Timestamp
+    elements.append(Paragraph(f"<b>{report_title}</b>", title_style))
+
     from backend.time_utils import now_ist, format_ist_datetime
     now_str = dataset.get("generatedAtIST") or dataset.get("generated_at") or format_ist_datetime(now_ist())
     elements.append(Paragraph(f"Generated at: {now_str}", timestamp_style))
-    
-    if not rows:
-        # Fallback doc for empty data
-        doc = SimpleDocTemplate(output, pagesize=(base_width, doc_height), 
-                                rightMargin=margin, leftMargin=margin, topMargin=25, bottomMargin=40)
-        elements.append(Paragraph("No data available for this report.", styles["Normal"]))
+
+    if not sorted_rows:
+        doc = SimpleDocTemplate(output, pagesize=(base_width, doc_height),
+                                rightMargin=margin, leftMargin=margin, topMargin=20, bottomMargin=25)
+        elements.append(Paragraph("No student records available for this report.", styles["Normal"]))
         doc.build(elements, canvasmaker=NumberedCanvas, onFirstPage=add_page_decorations, onLaterPages=add_page_decorations)
         return output.getvalue()
-        
-    # Keep font readable
-    fs = 8
-    hs = 9
-    
-    # Wrap text in Paragraphs to force line breaks and avoid overflow
-    cell_style = ParagraphStyle('CellStyle', parent=styles['Normal'], fontSize=fs, alignment=1, textColor=colors.black, leading=fs+2, wordWrap='CJK')
-    left_cell_style = ParagraphStyle('LeftCellStyle', parent=styles['Normal'], fontSize=fs, alignment=0, textColor=colors.black, leading=fs+2, wordWrap='CJK')
-    header_style = ParagraphStyle('HeaderStyle', parent=styles['Normal'], fontSize=hs, alignment=1, textColor=colors.white, fontName='Helvetica-Bold', leading=hs+2, wordWrap='CJK')
-    
-    success_cell_style = ParagraphStyle('SuccessCellStyle', parent=styles['Normal'], fontSize=fs, alignment=1, textColor=colors.HexColor("#047857"), fontName='Helvetica-Bold', leading=fs+2, wordWrap='CJK')
-    risk_cell_style = ParagraphStyle('RiskCellStyle', parent=styles['Normal'], fontSize=fs, alignment=1, textColor=colors.HexColor("#B91C1C"), fontName='Helvetica-Bold', leading=fs+2, wordWrap='CJK')
-    neutral_cell_style = ParagraphStyle('NeutralCellStyle', parent=styles['Normal'], fontSize=fs, alignment=1, textColor=colors.HexColor("#475569"), leading=fs+2, wordWrap='CJK')
 
-    table_data = []
-    table_data.append([Paragraph(h, header_style) for h in clean_headers])
-    
+    # Typography for Table Cells
+    fs = 7.5
+    hs = 8.0
+    leading = fs + 2.0
+    h_leading = hs + 2.0
+
+    cell_style = ParagraphStyle('CellStyle', parent=styles['Normal'], fontSize=fs, alignment=1, textColor=colors.HexColor("#0F172A"), leading=leading)
+    left_cell_style = ParagraphStyle('LeftCellStyle', parent=styles['Normal'], fontSize=fs, alignment=0, textColor=colors.HexColor("#0F172A"), leading=leading)
+    header_style = ParagraphStyle('HeaderStyle', parent=styles['Normal'], fontSize=hs, alignment=1, textColor=colors.white, fontName='Helvetica-Bold', leading=h_leading)
+
+    success_cell_style = ParagraphStyle('SuccessCellStyle', parent=styles['Normal'], fontSize=fs, alignment=1, textColor=colors.HexColor("#047857"), fontName='Helvetica-Bold', leading=leading)
+    risk_cell_style = ParagraphStyle('RiskCellStyle', parent=styles['Normal'], fontSize=fs, alignment=1, textColor=colors.HexColor("#B91C1C"), fontName='Helvetica-Bold', leading=leading)
+    neutral_cell_style = ParagraphStyle('NeutralCellStyle', parent=styles['Normal'], fontSize=fs, alignment=1, textColor=colors.HexColor("#475569"), leading=leading)
+
+    # Build Curated Columns Scheme
+    # Format: list of (column_header, value_extractor_fn, relative_width_weight, is_left_aligned)
+    columns_spec = []
+
     if is_wow:
-        for idx, r in enumerate(rows, 1):
-            sno_val = str(r.get("s_no") or idx)
-            reg_val = str(r.get("reg_no") or "")
-            name_val = str(r.get("name") or "")
-            dept_val = str(r.get("dept") or "")
-            yr_val = str(r.get("year") or "")
+        columns_spec = [
+            ("S.No", lambda r, i: str(i), 0.8, False),
+            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")), 1.6, False),
+            ("Student Name", lambda r, i: _safe_str(r.get("name")), 2.6, True),
+            ("Dept", lambda r, i: _safe_str(r.get("dept")), 1.3, False),
+            ("Yr", lambda r, i: _safe_str(r.get("year")), 0.7, False),
+            (f"{prev_c_lbl} Status", lambda r, i: ("ATTENDED" if str(r.get("prev_status") or "").upper().strip() in ("ATTENDED", "PUBLIC", "VIRTUAL") else "ABSENT", "STATUS"), 1.6, False),
+            (f"{prev_c_lbl} Solved", lambda r, i: _safe_str(r.get("prev_solved"), "0"), 1.2, False),
+            (f"{prev_c_lbl} Score", lambda r, i: _safe_str(r.get("prev_score"), "0"), 1.1, False),
+            (f"{curr_c_lbl} Status", lambda r, i: ("ATTENDED" if str(r.get("curr_status") or "").upper().strip() in ("ATTENDED", "PUBLIC", "VIRTUAL") else "ABSENT", "STATUS"), 1.6, False),
+            (f"{curr_c_lbl} Solved", lambda r, i: _safe_str(r.get("curr_solved"), "0"), 1.2, False),
+            (f"{curr_c_lbl} Score", lambda r, i: _safe_str(r.get("curr_score"), "0"), 1.1, False),
+            ("Δ Solved", lambda r, i: (f"+{r.get('solved_delta')}" if isinstance(r.get('solved_delta'), int) and r.get('solved_delta') > 0 else str(r.get('solved_delta', 0)), "DELTA"), 1.2, False),
+            ("Trend", lambda r, i: (_safe_str(r.get("trend"), "Stable →"), "TREND"), 1.5, False),
+        ]
+    elif is_five_week:
+        sess_hdrs = dataset.get("sessionHeaders") or ["Contest 1", "Contest 2", "Contest 3", "Contest 4", "Contest 5"]
+        columns_spec = [
+            ("S.No", lambda r, i: str(i), 0.8, False),
+            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")), 1.6, False),
+            ("Student Name", lambda r, i: _safe_str(r.get("name")), 2.6, True),
+            ("Dept", lambda r, i: _safe_str(r.get("dept")), 1.3, False),
+            ("Yr", lambda r, i: _safe_str(r.get("year")), 0.7, False),
+            (sess_hdrs[0] if len(sess_hdrs) > 0 else "C1", lambda r, i: _safe_str(r.get("c1_solved"), "—"), 1.1, False),
+            (sess_hdrs[1] if len(sess_hdrs) > 1 else "C2", lambda r, i: _safe_str(r.get("c2_solved"), "—"), 1.1, False),
+            (sess_hdrs[2] if len(sess_hdrs) > 2 else "C3", lambda r, i: _safe_str(r.get("c3_solved"), "—"), 1.1, False),
+            (sess_hdrs[3] if len(sess_hdrs) > 3 else "C4", lambda r, i: _safe_str(r.get("c4_solved"), "—"), 1.1, False),
+            (sess_hdrs[4] if len(sess_hdrs) > 4 else "C5", lambda r, i: _safe_str(r.get("c5_solved"), "—"), 1.1, False),
+            ("5-W Solved", lambda r, i: _safe_str(r.get("solved_5w"), "0"), 1.3, False),
+            ("Att %", lambda r, i: _safe_str(r.get("attendance_rate"), "—"), 1.1, False),
+            ("Trajectory", lambda r, i: (_safe_str(r.get("trajectory"), "—"), "TREND"), 1.5, False),
+        ]
+    elif is_historical:
+        # Build base columns
+        columns_spec = [
+            ("S.No", lambda r, i: str(i), 0.8, False),
+            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")), 1.6, False),
+            ("Student Name", lambda r, i: _safe_str(r.get("name")), 2.6, True),
+            ("Dept", lambda r, i: _safe_str(r.get("dept")), 1.3, False),
+            ("Yr", lambda r, i: _safe_str(r.get("year")), 0.7, False),
+        ]
+        # Append weekly contest columns
+        weekly_keys = []
+        if "weeklyData" in first_row and isinstance(first_row["weeklyData"], list):
+            for wd in first_row["weeklyData"]:
+                c_num = wd.get("contestNum")
+                if c_num and c_num not in weekly_keys:
+                    weekly_keys.append(c_num)
 
-            p_st_raw = str(r.get("prev_status") or "").upper().strip()
-            p_st = "ATTENDED" if p_st_raw in ("ATTENDED", "PUBLIC", "VIRTUAL") else "ABSENT"
-            p_sol = "—" if p_st == "ABSENT" and (r.get("prev_solved") is None or r.get("prev_solved") == 0) else str(r.get("prev_solved", "0"))
-            p_sc = "—" if p_st == "ABSENT" and (r.get("prev_score") is None or r.get("prev_score") == 0) else str(r.get("prev_score", "0"))
+        for c_num in weekly_keys:
+            def _extract_c(r, i, cn=c_num):
+                w_list = r.get("weeklyData") or []
+                for item in w_list:
+                    if item.get("contestNum") == cn:
+                        if item.get("att"):
+                            return str(item.get("solved", 0))
+                        return "—"
+                return "—"
+            columns_spec.append((f"C{c_num}", _extract_c, 1.0, False))
 
-            c_st_raw = str(r.get("curr_status") or "").upper().strip()
-            c_st = "ATTENDED" if c_st_raw in ("ATTENDED", "PUBLIC", "VIRTUAL") else "ABSENT"
-            c_sol = str(r.get("curr_solved", "0"))
-            c_sc = str(r.get("curr_score", "0"))
+        # Add center metrics
+        columns_spec.extend([
+            ("Attended", lambda r, i: _safe_str(r.get("contests_attended") or r.get("total_attended"), "0"), 1.2, False),
+            ("Total Solved", lambda r, i: _safe_str(r.get("total_solved") or r.get("solved"), "0"), 1.3, False),
+            ("Global Rank", lambda r, i: _safe_str(r.get("global_rank") or r.get("contest_global_rank") or r.get("rank")), 1.4, False),
+            ("Rating", lambda r, i: _safe_str(r.get("rating") or r.get("contest_rating")), 1.3, False),
+        ])
+    elif is_single_contest:
+        # Standard Single Sheet / Weekly Contest Report
+        def _fmt_q(val):
+            s = str(val).strip() if val is not None else ""
+            if s in ("1", "SOLVED", "YES", "TRUE"):
+                return ("✓", "SUCCESS")
+            elif s in ("0", "UNSOLVED", "NO", "FALSE", "—", "-"):
+                return ("—", "NEUTRAL")
+            return (s if s else "—", "NEUTRAL")
 
-            diff = r.get("solved_delta", 0)
-            diff_str = f"+{diff}" if isinstance(diff, int) and diff > 0 else str(diff)
-            trend_str = str(r.get("trend") or "Stable →")
-
-            p_st_p = Paragraph(p_st, success_cell_style if p_st == "ATTENDED" else risk_cell_style)
-            c_st_p = Paragraph(c_st, success_cell_style if c_st == "ATTENDED" else risk_cell_style)
-            diff_p = Paragraph(diff_str, success_cell_style if str(diff_str).startswith("+") else (risk_cell_style if str(diff_str).startswith("-") else neutral_cell_style))  # type: ignore
-            trend_p = Paragraph(trend_str, success_cell_style if ("Improving" in trend_str or "↑" in trend_str) else (risk_cell_style if ("Declining" in trend_str or "↓" in trend_str) else neutral_cell_style))
-
-            table_data.append([
-                Paragraph(sno_val, cell_style),
-                Paragraph(reg_val, cell_style),
-                Paragraph(name_val, left_cell_style),
-                Paragraph(dept_val, cell_style),
-                Paragraph(yr_val, cell_style),
-                p_st_p,
-                Paragraph(p_sol, cell_style),
-                Paragraph(p_sc, cell_style),
-                c_st_p,
-                Paragraph(c_sol, cell_style),
-                Paragraph(c_sc, cell_style),
-                diff_p,
-                trend_p
-            ])
+        columns_spec = [
+            ("S.No", lambda r, i: str(i), 0.8, False),
+            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")), 1.6, False),
+            ("Student Name", lambda r, i: _safe_str(r.get("name")), 2.8, True),
+            ("Dept", lambda r, i: _safe_str(r.get("dept")), 1.3, False),
+            ("Yr", lambda r, i: _safe_str(r.get("year")), 0.7, False),
+            ("Status", lambda r, i: (_safe_str(r.get("status") or r.get("participation_status") or r.get("category"), "ABSENT"), "STATUS"), 1.6, False),
+            ("Q1", lambda r, i: _fmt_q(r.get("q1") if r.get("q1") is not None else r.get("q1_display")), 0.8, False),
+            ("Q2", lambda r, i: _fmt_q(r.get("q2") if r.get("q2") is not None else r.get("q2_display")), 0.8, False),
+            ("Q3", lambda r, i: _fmt_q(r.get("q3") if r.get("q3") is not None else r.get("q3_display")), 0.8, False),
+            ("Q4", lambda r, i: _fmt_q(r.get("q4") if r.get("q4") is not None else r.get("q4_display")), 0.8, False),
+            ("Solved", lambda r, i: _safe_str(r.get("solved") or r.get("total_solved") or r.get("total_contest_solved"), "0"), 1.2, False),
+            ("Score", lambda r, i: _safe_str(r.get("score") or r.get("contest_score"), "0"), 1.1, False),
+            ("Rank", lambda r, i: _safe_str(r.get("rank") or r.get("contest_rank") or r.get("global_rank") or r.get("contest_global_rank")), 1.4, False),
+            ("Rating", lambda r, i: _safe_str(r.get("rating") or r.get("contest_rating")), 1.3, False),
+        ]
     else:
-        for r in rows:
-            row_vals = []
-            c_idx = 0
-            for h in first_row.keys():
-                if h == "weeklyData":
-                    wd_list = r.get("weeklyData") or []
-                    wd_map = {wd.get("contestNum"): wd for wd in wd_list}
-                    for c_num in weekly_data_keys:
-                        wd_val = wd_map.get(c_num)
-                        if wd_val and wd_val.get("att"):
-                            solved = wd_val.get("solved", 0)
-                            row_vals.append(Paragraph(str(solved), cell_style))
-                        else:
-                            row_vals.append(Paragraph("-", cell_style))
-                        c_idx += 1
+        # General cumulative roster / Leaderboard / Faculty report
+        columns_spec = [
+            ("S.No", lambda r, i: str(i), 0.8, False),
+            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")), 1.6, False),
+            ("Student Name", lambda r, i: _safe_str(r.get("name")), 2.8, True),
+            ("Dept", lambda r, i: _safe_str(r.get("dept")), 1.3, False),
+            ("Yr", lambda r, i: _safe_str(r.get("year")), 0.7, False),
+            ("Easy", lambda r, i: _safe_str(r.get("easy") or r.get("easy_solved"), "0"), 1.0, False),
+            ("Med", lambda r, i: _safe_str(r.get("medium") or r.get("medium_solved"), "0"), 1.0, False),
+            ("Hard", lambda r, i: _safe_str(r.get("hard") or r.get("hard_solved"), "0"), 1.0, False),
+            ("Total Solved", lambda r, i: _safe_str(r.get("total_solved") or r.get("total") or r.get("solved"), "0"), 1.4, False),
+            ("Global Rank", lambda r, i: _safe_str(r.get("global_rank") or r.get("profile_rank") or r.get("rank")), 1.5, False),
+            ("Rating", lambda r, i: _safe_str(r.get("rating") or r.get("contest_rating")), 1.4, False),
+        ]
+
+    # Build Header Row
+    headers = [col[0] for col in columns_spec]
+    table_data = [[Paragraph(f"<b>{h}</b>", header_style) for h in headers]]
+
+    # Build Data Rows
+    for idx, r in enumerate(sorted_rows, 1):
+        row_cells = []
+        for col_name, extractor, weight, is_left in columns_spec:
+            extracted = extractor(r, idx)
+            cell_tag = None
+            if isinstance(extracted, tuple):
+                val_str, cell_tag = extracted
+            else:
+                val_str = str(extracted)
+
+            target_style = left_cell_style if is_left else cell_style
+
+            if cell_tag == "STATUS":
+                s_up = val_str.upper().strip()
+                if s_up in ("ATTENDED", "PUBLIC", "VIRTUAL", "VERIFIED", "LIVE"):
+                    p = Paragraph(val_str, success_cell_style)
+                elif s_up in ("ABSENT", "UNVERIFIED", "NOT_ATTENDED", "UNLINKED"):
+                    p = Paragraph(val_str, risk_cell_style)
                 else:
-                    raw_val = r.get(h) if r.get(h) is not None else ""
-                    if h.lower() in ("accommodation", "accomodation", "residence"):
-                        s_val = str(raw_val).strip().upper()
-                        if "DAY" in s_val:
-                            val = "D"
-                        elif "HOSTEL" in s_val:
-                            val = "H"
-                        else:
-                            val = str(raw_val)
-                    else:
-                        val = str(raw_val)
-                    h_name = clean_headers[c_idx].lower()
-                    c_style = left_cell_style if ("name" in h_name or "url" in h_name) else cell_style
-                    row_vals.append(Paragraph(val, c_style))
-                    c_idx += 1
-            table_data.append(row_vals)
-        
-    # Calculate balanced relative weights for columns
-    min_widths = []
-    for h in clean_headers:
-        hl = h.lower()
-        if "url" in hl:
-            min_widths.append(3.0)
-        elif "name" in hl or "username" in hl or "email" in hl:
-            min_widths.append(2.0)
-        elif "reg" in hl:
-            min_widths.append(1.5)
-        elif "department" in hl or "dept" in hl or "status" in hl or "solved" in hl or "trend" in hl or "delta" in hl or "attended" in hl:
-            min_widths.append(1.7)
-        elif "total" in hl or "consist" in hl:
-            min_widths.append(1.4)
-        else:
-            min_widths.append(1.0)
-            
-    # Each 1.0 of weight needs roughly 50 points of width to be readable without awkward header wrapping
-    required_table_width = sum(min_widths) * 50
-    
-    # Expand horizontally only if the table truly cannot fit in A4
-    if required_table_width > (base_width - margin * 2):
-        doc_width = required_table_width + (margin * 2)
+                    p = Paragraph(val_str, neutral_cell_style)
+            elif cell_tag == "SUCCESS":
+                p = Paragraph(val_str, success_cell_style)
+            elif cell_tag == "RISK":
+                p = Paragraph(val_str, risk_cell_style)
+            elif cell_tag == "DELTA":
+                if val_str.startswith("+"):
+                    p = Paragraph(val_str, success_cell_style)
+                elif val_str.startswith("-"):
+                    p = Paragraph(val_str, risk_cell_style)
+                else:
+                    p = Paragraph(val_str, neutral_cell_style)
+            elif cell_tag == "TREND":
+                if "↑" in val_str or "Improving" in val_str:
+                    p = Paragraph(val_str, success_cell_style)
+                elif "↓" in val_str or "Declining" in val_str:
+                    p = Paragraph(val_str, risk_cell_style)
+                else:
+                    p = Paragraph(val_str, neutral_cell_style)
+            else:
+                p = Paragraph(val_str, target_style)
+
+            row_cells.append(p)
+        table_data.append(row_cells)
+
+    # Calculate Table Width & Column Widths
+    total_weight = sum(col[2] for col in columns_spec)
+    num_cols = len(columns_spec)
+
+    # Wide table handling: if many columns (e.g. historical report with 15 contests)
+    if num_cols > 15:
+        # Dynamically widen page to fit all columns without cramping
+        doc_width = max(base_width, num_cols * 50.0 + margin * 2)
     else:
         doc_width = base_width
-        
+
     usable_width = doc_width - (margin * 2)
-    
-    # Scale column widths to perfectly fill the document width
-    total_min = sum(min_widths)
-    col_widths = [(w / total_min) * usable_width for w in min_widths]
-    
-    doc = SimpleDocTemplate(output, pagesize=(doc_width, doc_height), 
-                            rightMargin=margin, leftMargin=margin, topMargin=25, bottomMargin=40)
-    
-    # Create Table with colWidths so it is forced to stay inside the page
-    t = Table(table_data, colWidths=col_widths, repeatRows=1)
-    
-    # Style Table
+    col_widths = [(col[2] / total_weight) * usable_width for col in columns_spec]
+
+    doc = SimpleDocTemplate(
+        output,
+        pagesize=(doc_width, doc_height),
+        rightMargin=margin,
+        leftMargin=margin,
+        topMargin=20,
+        bottomMargin=30
+    )
+
+    t = Table(table_data, colWidths=col_widths, repeatRows=1, splitByRow=True)
+
+    h_pad = 4.0 if num_cols > 15 else 5.0
+    v_pad = 2.5 if num_cols > 15 else 3.5
+
     table_style = [
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#0F172A")),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-        ('TOPPADDING', (0, 0), (-1, 0), 8),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
-        ('TOPPADDING', (0, 1), (-1, -1), 5),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#E2E8F0")),
-        ('BOX', (0, 0), (-1, -1), 1, colors.HexColor("#94A3B8"))
+        ('BOTTOMPADDING', (0, 0), (-1, 0), h_pad),
+        ('TOPPADDING', (0, 0), (-1, 0), h_pad),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), v_pad),
+        ('TOPPADDING', (0, 1), (-1, -1), v_pad),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
+        ('BOX', (0, 0), (-1, -1), 1, colors.HexColor("#64748B"))
     ]
-    
+
     for i in range(1, len(table_data)):
-        bg_color = colors.HexColor("#F8FAFC") if i % 2 == 0 else colors.white
-        table_style.append(('BACKGROUND', (0, i), (-1, i), bg_color))
-        
+        bg = colors.HexColor("#F8FAFC") if i % 2 == 0 else colors.white
+        table_style.append(('BACKGROUND', (0, i), (-1, i), bg))
+
     t.setStyle(TableStyle(table_style))
-    
     elements.append(t)
-    doc.build(elements, canvasmaker=NumberedCanvas, onFirstPage=add_page_decorations, onLaterPages=add_page_decorations)
+
+    doc.build(
+        elements,
+        canvasmaker=NumberedCanvas,
+        onFirstPage=add_page_decorations,
+        onLaterPages=add_page_decorations
+    )
     return output.getvalue()

@@ -1071,6 +1071,7 @@ def download_session_report_by_format(
         eff_att = status if isinstance(status, str) and status != "ALL" else (attendance if isinstance(attendance, str) and attendance != "ALL" else "ALL")
         eff_search = search.strip() if isinstance(search, str) else ""
         eff_batch = batch if isinstance(batch, str) else "ALL"
+        eff_report_type = report_type.strip() if isinstance(report_type, str) else None
 
         dataset, r_filename = _get_dataset_for_id(
             report_id=session_id,
@@ -1081,7 +1082,7 @@ def download_session_report_by_format(
             search=eff_search,
             status=eff_att,
             batch=eff_batch,
-            report_type=report_type,
+            report_type=eff_report_type,
             current_user=current_user
         )
 
@@ -1350,8 +1351,8 @@ def get_contest_filename_base(
     today_date_seg = f"{now_ist_dt.day:02d}{MONTHS[now_ist_dt.month-1]}{now_ist_dt.year}"
 
     # --- 1. Report Type / Name Slug ---
-    rtype_str = (report_type or "").upper().strip()
-    cname_str = (contest_name or "").upper().strip()
+    rtype_str = (report_type if isinstance(report_type, str) else "").upper().strip()
+    cname_str = (contest_name if isinstance(contest_name, str) else "").upper().strip()
 
     type_slug = None
 

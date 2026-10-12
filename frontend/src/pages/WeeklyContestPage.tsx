@@ -1903,7 +1903,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const isFinalizing = activeSessionObj?.status === 'FINALIZING';
 
   return (
-    <div className="space-y-10 sm:space-y-12 pt-1 sm:pt-0 animate-fade-in pb-12">
+    <div className="space-y-8 sm:space-y-12 pt-1 sm:pt-0 animate-fade-in pb-24 md:pb-12">
 
       {/* 1. SLEEK INSTITUTIONAL HERO HEADER */}
       <div className={`relative overflow-hidden rounded-3xl text-white p-5 sm:p-7 md:p-8 shadow-2xl border transition-all duration-500 ${isLive
@@ -2002,10 +2002,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
 
           {/* Right Controls: Unified Session Selector & Admin Monitor Toggle */}
-          <div className="w-full lg:w-[615px] flex flex-col gap-3 bg-slate-900/60 p-3 sm:p-3.5 rounded-2xl backdrop-blur-md shadow-md">
+          <div className="w-full lg:w-[480px] flex flex-col gap-2.5 bg-white/5 dark:bg-slate-900/40 p-2.5 sm:p-3 rounded-2xl border border-white/10 backdrop-blur-md shadow-lg">
 
             {/* Session Dropdown Selector with Delete Option */}
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
               <div className="min-w-0 flex-1">
                 <GlobalFilter
                   options={displaySessions.map((s) => {
@@ -2040,8 +2040,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   searchPlaceholder="Search contest session..."
                   showSearch={true}
                   variant="default"
-                  className="w-full !rounded-2xl border-0 !border-0 !shadow-lg !bg-white !text-slate-900"
-                  dropdownWidth="w-[320px]"
+                  className="w-full !rounded-xl border-0 !border-0 !shadow-sm !bg-white/95 !text-slate-900 text-xs font-bold"
+                  dropdownWidth="w-[300px]"
                 />
               </div>
               
@@ -2049,7 +2049,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   type="button"
                   onClick={(e) => handleDeleteSession(activeSessionObj.sessionId, activeSessionObj.contestName, e)}
-                  className="p-3 bg-rose-500/20 hover:bg-rose-500/30 rounded-2xl border border-rose-500/30 text-rose-400 hover:text-rose-300 transition-colors shadow-sm cursor-pointer shrink-0"
+                  className="p-2.5 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl border border-rose-500/20 text-rose-400 hover:text-rose-300 transition-colors shadow-xs cursor-pointer shrink-0"
                   title="Delete this Weekly Contest Session"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -2074,15 +2074,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     setShowAdminMonitor(false);
                   }
                 }}
-                className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md border active:scale-[0.98] ${
+                className={`w-full flex items-center justify-center gap-2 px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer border active:scale-[0.98] ${
                   showAdminMonitor
-                    ? 'bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white border-rose-400/40 shadow-rose-950/40'
-                    : 'bg-gradient-to-r from-brand-600 via-indigo-600 to-blue-600 hover:from-brand-500 hover:to-blue-500 text-white border-brand-400/30 shadow-brand-950/40 hover:shadow-brand-500/20 hover:border-brand-400/50'
+                    ? 'bg-rose-600/90 hover:bg-rose-600 text-white border-rose-500/40 shadow-sm'
+                    : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 hover:text-white border-slate-700/60 shadow-sm'
                 }`}
                 title="Toggle Live Contest Monitor"
               >
-                <Activity className={`w-4 h-4 ${showAdminMonitor ? 'text-white' : 'text-emerald-300 animate-pulse'}`} />
-                <span>{showAdminMonitor ? 'Hide Live Monitor ✕' : 'Live Monitor ⚡'}</span>
+                <Activity className={`w-3.5 h-3.5 ${showAdminMonitor ? 'text-white' : 'text-emerald-400 animate-pulse'}`} />
+                <span>{showAdminMonitor ? 'Hide Live Monitor ✕' : 'Live Monitor'}</span>
               </button>
             )}
           </div>

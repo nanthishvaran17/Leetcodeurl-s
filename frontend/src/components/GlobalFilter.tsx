@@ -590,18 +590,18 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={twMerge(
-            "relative w-full flex items-center justify-between transition-all duration-200 outline-none select-none cursor-pointer shadow-sm text-left group",
-            className?.includes('border-0') || className?.includes('border-none') ? "border-0 border-transparent" : "border-2",
+            "relative w-full flex items-center justify-between transition-all duration-200 outline-none select-none cursor-pointer text-left group",
+            className?.includes('border-0') || className?.includes('border-none') ? "border-0 border-transparent" : "border",
             compact 
               ? "px-2.5 py-1 h-9 min-h-[36px] rounded-xl"
               : "px-3 py-1.5 h-10 min-h-[40px] sm:px-3.5 sm:py-2 sm:h-11 sm:min-h-[44px] rounded-xl sm:rounded-2xl",
             variant === 'dark'
-              ? `bg-navy-900/90 text-white ${className?.includes('border-0') ? 'border-transparent' : 'border-slate-700 hover:border-brand-500/60'} shadow-inner backdrop-blur-md`
+              ? `bg-navy-900/90 text-white ${className?.includes('border-0') ? 'border-transparent' : 'border-white/[0.08] hover:border-brand-500/50'} shadow-subtle backdrop-blur-md`
               : variant === 'glass'
-              ? `bg-white/10 dark:bg-navy-900/40 text-white ${className?.includes('border-0') ? 'border-transparent' : 'border-white/20 hover:border-white/40'} shadow-lg backdrop-blur-lg`
-              : `bg-white dark:bg-navy-950 ${className?.includes('border-0') ? 'border-transparent' : 'border-slate-300 hover:border-slate-400 dark:border-slate-700 hover:border-brand-500/60'} text-slate-900 dark:text-white`,
+              ? `bg-white/15 dark:bg-white/[0.04] text-white ${className?.includes('border-0') ? 'border-transparent' : 'border-white/20 hover:border-white/35'} shadow-glass backdrop-blur-xl`
+              : `bg-white/95 dark:bg-navy-950/95 ${className?.includes('border-0') ? 'border-transparent' : 'border-slate-200 dark:border-white/[0.08] hover:border-brand-500/40'} text-slate-900 dark:text-white shadow-subtle hover:shadow-md backdrop-blur-sm`,
             isOpen 
-              ? (className?.includes('border-0') ? "ring-2 ring-brand-500/30 shadow-md" : "border-brand-500 ring-4 ring-brand-500/10 shadow-md") 
+              ? (className?.includes('border-0') ? "ring-2 ring-brand-500/30 shadow-md" : "border-brand-500/70 ring-2 ring-brand-500/20 shadow-md") 
               : "",
             className
           )}

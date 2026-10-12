@@ -686,57 +686,53 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   return (
     <div className="space-y-4 sm:space-y-6 pt-0 sm:pt-1 pb-6">
 
-      {/* Hero Section */}
+      {/* Hero Section — 2026 Bento Glass Architecture */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-brand-900 via-navy-900 to-indigo-950 text-white p-5 sm:p-7 md:p-10 shadow-lg border border-brand-500/30"
+        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] text-white p-6 sm:p-8 md:p-10 shadow-2xl border border-white/[0.08]"
       >
+        {/* Ambient Radial Mesh Glow */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-gradient-to-br from-indigo-500/15 via-brand-500/10 to-transparent blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 -mb-20 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-3xl space-y-6">
-          <motion.div
-            initial={{ opacity: 1, y: 0 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center space-x-2.5 px-3.5 py-1.5 rounded-2xl bg-white/10 border border-white/20 text-white text-xs font-bold backdrop-blur-md shadow-lg"
-          >
-            <CollegeLogo size={24} className="w-6 h-6 animate-float" />
-            <span>NANDHA ENGINEERING COLLEGE (AUTONOMOUS) • ERODE</span>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 1, y: 0 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-3xl md:text-5xl font-black tracking-tight leading-tight"
-          >
-            Nandha LeetCode <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300">
-              Institutional Intelligence Platform
-            </span>
-          </motion.h1>
-
-          <motion.div
-            initial={{ opacity: 1, y: 0 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-3"
-          >
-            <div className="flex flex-wrap items-center gap-2">
-              {['Track', 'Verify', 'Analyze', 'Report', 'Recognize'].map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black tracking-wide bg-white/10 border border-white/15 text-emerald-300 backdrop-blur-sm shadow-sm"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5" />
-                  {tag}
-                </span>
-              ))}
+        <div className="relative z-10 max-w-4xl space-y-6">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-slate-200 text-xs font-semibold backdrop-blur-xl shadow-glass">
+              <CollegeLogo size={20} className="w-5 h-5 shrink-0" />
+              <span className="tracking-wide">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>
             </div>
+            <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>2026 INTELLIGENCE ENGINE</span>
+            </span>
+          </div>
 
-            <p className="text-xs md:text-sm text-slate-100 dark:text-slate-100 font-bold max-w-3xl leading-relaxed drop-shadow-sm">
-              <span className="sm:hidden">Institutional programming intelligence across all departments, with verified Sunday contests and automated reporting.</span>
-              <span className="hidden sm:inline">Institutional competitive programming intelligence {activeDepartmentDescription} with verified Sunday contest forensics and automated reporting.</span>
+          <div className="space-y-3">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.15] font-display">
+              LeetCode Performance <br />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300">
+                Institutional Intelligence Platform
+              </span>
+            </h1>
+
+            <p className="text-xs sm:text-sm md:text-[15px] text-slate-300 font-normal max-w-2xl leading-relaxed">
+              Real-time competitive programming forensics across all departments, automated Sunday contest verification, and faculty mentoring analytics.
             </p>
-          </motion.div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {['Real-time Telemetry', 'Contest Forensics', 'Sunday Automated Audits', 'Faculty Mentor Matrix'].map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold tracking-wide bg-white/[0.04] border border-white/[0.08] text-slate-300 backdrop-blur-sm shadow-2xs hover:border-white/20 transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mr-2" />
+                {tag}
+              </span>
+            ))}
+          </div>
 
 
           <motion.div
@@ -832,8 +828,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <CountdownTimer targetSeconds={summaryData?.next_session_countdown_seconds || 86400} isLive={summaryData?.is_session_live} />
       </motion.div>
 
-      {/* Stat Cards Grid — 4 in a single line on desktop, 2-col on mobile */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+      {/* Stat Cards Grid — 2026 Bento Grid Architecture */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-5">
         {(() => {
           const activeCohort = (selectedDept !== 'all' || isFiltered) ? sortedList : students;
           const totalStudents = activeCohort.length;
@@ -857,87 +853,123 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           return (
             <>
+              {/* Card 1: Total Enrolled */}
               <motion.div
-                whileHover={{ y: -5, scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                className="glass-card min-w-0 p-3 sm:p-7 rounded-2xl sm:rounded-3xl space-y-2 border border-slate-200/80 dark:border-slate-800/80 shadow-lg relative overflow-hidden group cursor-default"
+                whileHover={{ y: -3, scale: 1.01 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className="glass-panel-elevated bento-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 cursor-default relative group"
               >
-                <div className="p-2 sm:p-3 w-fit rounded-xl sm:rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform">
-                  <Users className="w-5 h-5 sm:w-7 sm:h-7" />
+                <div className="flex items-center justify-between">
+                  <div className="p-2.5 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform">
+                    <Users className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 py-0.5 rounded-full bg-slate-100/80 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06]">
+                    Roster
+                  </span>
                 </div>
-                <h4 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none break-words">
-                  <AnimatedNumber value={totalStudents} />
-                </h4>
-                <p className="text-xs sm:text-base font-extrabold text-slate-800 dark:text-slate-100 leading-snug">
-                  {isFacultyRole ? 'Allocated Mentees' : (selectedDept !== 'all' ? 'Department Enrolled Students' : 'Total Enrolled Students')}
-                </p>
+                <div>
+                  <h4 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none font-display">
+                    <AnimatedNumber value={totalStudents} />
+                  </h4>
+                  <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 mt-1">
+                    {isFacultyRole ? 'Allocated Mentees' : (selectedDept !== 'all' ? 'Dept Enrolled Students' : 'Total Enrolled Students')}
+                  </p>
+                </div>
               </motion.div>
 
+              {/* Card 2: Verified Profiles */}
               <motion.div
-                whileHover={{ y: -5, scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                className="glass-card min-w-0 p-3 sm:p-7 rounded-2xl sm:rounded-3xl space-y-2 border border-slate-200/80 dark:border-slate-800/80 shadow-lg relative overflow-hidden group cursor-default"
+                whileHover={{ y: -3, scale: 1.01 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className="glass-panel-elevated bento-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 cursor-default relative group"
               >
-                <div className="p-2 sm:p-3 w-fit rounded-xl sm:rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
-                  <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                <div className="flex items-center justify-between">
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                    <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    Live
+                  </span>
                 </div>
-                <h4 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none break-words">
-                  <AnimatedNumber value={verified} />
-                </h4>
-                <p className="text-xs sm:text-base font-extrabold text-slate-800 dark:text-slate-100 leading-snug">Verified Profiles</p>
+                <div>
+                  <h4 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none font-display">
+                    <AnimatedNumber value={verified} />
+                  </h4>
+                  <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 mt-1">
+                    Verified Profiles
+                  </p>
+                </div>
                 {(pending > 0 || failed > 0 || noUsername > 0) && (
-                  <div className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 flex flex-wrap items-center gap-1 pt-1 leading-4">
-                    {pending > 0 && <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/50 whitespace-nowrap">{pending} Pending</span>}
-                    {noUsername > 0 && <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 whitespace-nowrap">{noUsername} No Username</span>}
-                    {failed > 0 && <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/50 whitespace-nowrap">{failed} Failed</span>}
+                  <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-1.5 pt-0.5">
+                    {pending > 0 && <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">{pending} Pending</span>}
+                    {noUsername > 0 && <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.05] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10">{noUsername} No ID</span>}
+                    {failed > 0 && <span className="px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">{failed} Failed</span>}
                   </div>
                 )}
               </motion.div>
 
+              {/* Card 3: Problems Solved */}
               <motion.div
-                whileHover={{ y: -5, scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                className="glass-card min-w-0 p-3 sm:p-7 rounded-2xl sm:rounded-3xl space-y-2 border border-slate-200/80 dark:border-slate-800/80 shadow-lg relative overflow-hidden group cursor-default"
+                whileHover={{ y: -3, scale: 1.01 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className="glass-panel-elevated bento-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 cursor-default relative group"
               >
-                <div className="p-2 sm:p-3 w-fit rounded-xl sm:rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
-                  <Trophy className="w-5 h-5 sm:w-6 sm:h-6" />
+                <div className="flex items-center justify-between">
+                  <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
+                    <Trophy className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20">
+                    Solved
+                  </span>
                 </div>
-                <h4 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none break-words">
-                  <AnimatedNumber value={verifiedProblems} />
-                </h4>
-                <p className="text-xs sm:text-base font-extrabold text-slate-800 dark:text-slate-100 leading-snug">Verified Problems Solved</p>
-                <p className="max-w-full text-[10px] sm:text-sm font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/50 px-1.5 sm:px-2.5 py-1 rounded-lg border border-purple-200/60 dark:border-purple-800/40 w-fit leading-4 sm:leading-5">
-                  from <span className="font-extrabold">{activeSolvers.toLocaleString()}</span> active solvers
+                <div>
+                  <h4 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none font-display">
+                    <AnimatedNumber value={verifiedProblems} />
+                  </h4>
+                  <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 mt-1">
+                    Problems Solved
+                  </p>
+                </div>
+                <p className="text-[10.5px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50/80 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md border border-indigo-200/60 dark:border-indigo-800/40 w-fit">
+                  from {activeSolvers.toLocaleString()} active solvers
                 </p>
               </motion.div>
 
+              {/* Card 4: Top Ranker */}
               <motion.div
-                whileHover={{ y: -5, scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                className="glass-card min-w-0 p-3 sm:p-7 rounded-2xl sm:rounded-3xl space-y-2 border border-amber-200/80 dark:border-amber-900/40 shadow-lg relative overflow-hidden group cursor-default gold-aura"
+                whileHover={{ y: -3, scale: 1.01 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className="glass-panel-elevated bento-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 cursor-default relative group border-amber-500/30 dark:border-amber-500/20"
               >
-                <div className="p-2 sm:p-3 w-fit rounded-xl sm:rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
-                  <Trophy className="w-5 h-5 sm:w-6 sm:h-6 fill-amber-500" />
+                <div className="flex items-center justify-between">
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
+                    <Trophy className="w-5 h-5 sm:w-6 sm:h-6 fill-amber-500/80 text-amber-500" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25">
+                    #1 Rank
+                  </span>
                 </div>
-                <h4 className="text-lg sm:text-3xl font-black text-amber-500 break-words leading-tight" title={activeCohort.length > 0 ? activeCohort[0].name : (summaryData?.top_college_ranker || 'Top Ranker')}>
-                  {activeCohort.length > 0 ? activeCohort[0].name : (summaryData?.top_college_ranker || 'Top Ranker')}
-                </h4>
-                <p className="text-xs sm:text-base font-extrabold text-slate-800 dark:text-slate-100 leading-snug">
-                  {isFacultyRole ? 'Top Mentee Ranker (#1)' : (selectedDept !== 'all' ? 'Top Department Ranker (#1)' : 'Top College Ranker (#1)')}
-                </p>
+                <div>
+                  <h4 className="text-lg sm:text-2xl font-black text-amber-500 truncate leading-tight font-display" title={activeCohort.length > 0 ? activeCohort[0].name : (summaryData?.top_college_ranker || 'Top Ranker')}>
+                    {activeCohort.length > 0 ? activeCohort[0].name : (summaryData?.top_college_ranker || 'Top Ranker')}
+                  </h4>
+                  <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 mt-1">
+                    {isFacultyRole ? 'Top Mentee (#1)' : (selectedDept !== 'all' ? 'Top Dept Ranker (#1)' : 'College Ranker (#1)')}
+                  </p>
+                </div>
               </motion.div>
             </>
           );
         })()}
       </div>
 
-      {/* Filters Control Bar */}
-      <div className="glass-card p-4 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 sm:space-y-6 relative z-30 overflow-visible">
+      {/* Filters Control Bar — 2026 Glass Architecture */}
+      <div className="glass-panel p-5 sm:p-7 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] shadow-subtle space-y-4 sm:space-y-6 relative z-30 overflow-visible">
 
         {/* Header with Title & Controls */}
-        <div className="flex items-center justify-between flex-wrap gap-3 sm:gap-4 border-b border-slate-100 dark:border-slate-800 pb-3 sm:pb-4">
+        <div className="flex items-center justify-between flex-wrap gap-3 sm:gap-4 border-b border-slate-100 dark:border-white/[0.06] pb-3 sm:pb-4">
           <div className="space-y-1">
-            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center space-x-2">
+            <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center space-x-2 font-display">
               <Filter className="w-4 h-4 text-brand-500" />
               <span>Student Performance Showcase</span>
             </h3>
@@ -1022,7 +1054,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           {/* 3. Name Search */}
           <div className="col-span-2 sm:col-span-1 flex flex-col space-y-1.5 min-w-0 w-full">
-            <label htmlFor="landing-name-search" className="block text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider truncate flex items-center h-4 leading-4 m-0 p-0">
+            <label htmlFor="landing-name-search" className="block text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider truncate flex items-center h-4 leading-4 m-0 p-0">
               Search Student Name
             </label>
             <div className="relative">
@@ -1037,7 +1069,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   setDisplayCount(32);
                 }}
                 placeholder="Search name, reg no..."
-                className="w-full h-11 min-h-[44px] bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold py-2 px-3.5 pl-9 pr-8 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 placeholder-slate-500 dark:placeholder-slate-400 truncate transition-all text-left"
+                className="w-full h-11 min-h-[44px] bg-white/95 dark:bg-navy-950/95 text-slate-900 dark:text-white text-xs font-semibold py-2 px-3.5 pl-9 pr-8 rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-subtle focus:outline-none focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20 placeholder-slate-400 dark:placeholder-slate-500 truncate transition-all text-left backdrop-blur-md"
               />
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
                 <Search className="w-4 h-4 stroke-[2.5]" />

@@ -173,12 +173,12 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
         className={`relative w-full h-full min-h-[360px] flex flex-col duration-500 transform-style-3d transition-transform ease-out-expo ${isFlipped ? 'rotate-y-180' : ''
           }`}
       >
-        {/* FRONT SIDE */}
-        <div className="absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-navy-800 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.3)] backface-hidden flex flex-col justify-between bg-white dark:bg-navy-950/90 backdrop-blur-xl transform translate-z-0 will-change-transform">
+        {/* FRONT SIDE — 2026 Holographic Glass Student Card */}
+        <div className="absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] shadow-subtle hover:shadow-glass-dark backface-hidden flex flex-col justify-between bg-white/90 dark:bg-navy-900/80 backdrop-blur-xl transform translate-z-0 will-change-transform transition-all group">
 
           {/* Card Top: Rank & Department Pill */}
           <div className="flex items-center justify-between gap-2">
-            <span className={`px-3 py-1.5 rounded-full text-[11px] uppercase tracking-wider flex items-center space-x-1.5 whitespace-nowrap shadow-2xs ${getRankBadgeStyle(effectiveRank)}`}>
+            <span className={`px-3 py-1 rounded-full text-[10.5px] uppercase tracking-wider flex items-center space-x-1.5 whitespace-nowrap shadow-xs font-bold ${getRankBadgeStyle(effectiveRank)}`}>
               {effectiveRank === 1 ? (
                 <>
                   <Crown className="w-3.5 h-3.5 fill-amber-400 stroke-amber-900 animate-pulse" />
@@ -200,7 +200,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 <span>Unranked</span>
               )}
             </span>
-            <span className="font-extrabold text-[11px] tracking-wider uppercase text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-navy-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-navy-700 shadow-2xs">
+            <span className="font-bold text-[10.5px] tracking-wider uppercase text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.05] px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-white/10 shadow-2xs font-mono">
               {formatDepartmentCode(student.department) || deriveDepartmentFromRegNo(student.reg_no) || (typeof student.department === 'string' ? student.department : student.department?.code) || 'DEPT'}
             </span>
           </div>
@@ -208,26 +208,26 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           {/* Card Center: Avatar & Student Details */}
           <div className="text-center space-y-3 py-2 flex-1 flex flex-col justify-center min-w-0">
             <motion.div
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              className="relative w-24 h-24 mx-auto shrink-0"
+              whileHover={{ scale: 1.06, rotate: 3 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              className="relative w-22 h-22 sm:w-24 sm:h-24 mx-auto shrink-0"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-brand-400/20 to-indigo-500/20 rounded-full blur-xl animate-pulse-slow"></div>
-              <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-brand-500 via-indigo-600 to-navy-800 text-white font-black text-3xl flex items-center justify-center shadow-lg border-2 border-white dark:border-navy-900">
-                {student.name ? student.name.split(' ').map(n => n[0]).join('').slice(0, 2) : <User className="w-10 h-10" />}
+              <div className="absolute inset-0 bg-gradient-to-br from-brand-400/25 to-indigo-500/25 rounded-full blur-xl animate-pulse-subtle"></div>
+              <div className="relative w-22 h-22 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-brand-500 via-indigo-600 to-navy-900 text-white font-extrabold text-2xl sm:text-3xl flex items-center justify-center shadow-md border-2 border-white dark:border-navy-800">
+                {student.name ? student.name.split(' ').map(n => n[0]).join('').slice(0, 2) : <User className="w-9 h-9" />}
               </div>
             </motion.div>
 
             <div className="min-w-0 px-1 pt-1">
-              <h3 className="font-black text-lg text-slate-900 dark:text-white truncate max-w-full tracking-tight" title={student.name}>
+              <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white truncate max-w-full tracking-tight font-display" title={student.name}>
                 {student.name}
               </h3>
               <div className="flex items-center justify-center space-x-2 mt-1">
-                <p className="text-[11px] text-slate-700 dark:text-slate-200 font-extrabold tracking-wider truncate">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono tracking-wider truncate">
                   {student.reg_no}
                 </p>
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-navy-500"></span>
-                <p className="text-[11px] text-slate-700 dark:text-slate-200 font-extrabold truncate">
+                <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold truncate">
                   {formatStudentYearBadge(student)}{student.section ? ` • ${student.section?.name || student.section}` : ''}
                 </p>
               </div>
@@ -235,23 +235,23 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           </div>
 
           {/* Card Bottom: Quick Stats & Sync Badge */}
-          <div className="pt-4 flex flex-col items-center justify-center gap-1 mt-auto">
+          <div className="pt-3 flex flex-col items-center justify-center gap-1 mt-auto border-t border-slate-100 dark:border-white/[0.04]">
             {isVerified ? (
               <div className="flex flex-col items-center">
-                <span className="text-3.5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 dark:from-emerald-400 dark:to-teal-300 drop-shadow-sm leading-none">
+                <span className="text-3xl sm:text-3.5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-400 drop-shadow-sm leading-none font-display">
                   {totalSolved}
                 </span>
-                <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-100 tracking-wider mt-1 px-2.5 py-0.5 rounded-md bg-slate-100/90 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-700 shadow-2xs">
+                <span className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300 tracking-wider mt-1 px-2.5 py-0.5 rounded-full bg-slate-100/80 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.08]">
                   Problems Solved
                 </span>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-[52px]">
-                <span className="text-xs font-bold text-slate-400">Stats Unavailable</span>
+              <div className="flex flex-col items-center justify-center h-[50px]">
+                <span className="text-xs font-semibold text-slate-400">Stats Unavailable</span>
               </div>
             )}
 
-            <div className="mt-3 flex items-center justify-center">
+            <div className="mt-2.5 flex items-center justify-center">
               <SyncBadge />
             </div>
           </div>

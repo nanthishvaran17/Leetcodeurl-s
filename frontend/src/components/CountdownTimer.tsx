@@ -124,12 +124,12 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
 
   return (
     <motion.div
-      whileHover={{ scale: 1.005 }}
+      whileHover={{ scale: 1.003 }}
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
-      className={`p-5 sm:p-7 rounded-3xl border transition-all duration-500 shadow-2xl relative overflow-hidden ${
+      className={`p-5 sm:p-7 rounded-3xl border transition-all duration-500 shadow-2xl relative overflow-hidden backdrop-blur-2xl ${
         isSessionLive
-          ? 'bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-950 border-emerald-500/40 shadow-emerald-950/50 text-white'
-          : 'bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 dark:from-navy-950 dark:via-indigo-950 dark:to-slate-950 border-indigo-400/30 shadow-indigo-950/40 text-white'
+          ? 'bg-gradient-to-r from-[#061e16]/95 via-[#061814]/90 to-[#040d0f]/95 border-emerald-500/30 shadow-emerald-950/40 text-white'
+          : 'bg-gradient-to-r from-[#0b0f19]/95 via-[#0d1326]/90 to-[#070a12]/95 border-white/[0.08] shadow-glass-dark text-white'
       }`}
     >
       {/* Dynamic Ambient Background Glow Elements */}
