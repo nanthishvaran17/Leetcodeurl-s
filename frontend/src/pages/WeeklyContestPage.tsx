@@ -1905,42 +1905,44 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   return (
     <div className="space-y-8 sm:space-y-12 pt-1 sm:pt-0 animate-fade-in pb-24 md:pb-12">
 
-      {/* 1. SLEEK INSTITUTIONAL HERO HEADER */}
+      {/* 1. SLEEK 2026 INSTITUTIONAL HERO HEADER */}
       <div className={`relative overflow-hidden rounded-3xl text-white p-5 sm:p-7 md:p-8 shadow-2xl border transition-all duration-500 ${isLive
-        ? 'bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 border-emerald-500/50 shadow-emerald-500/10 before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-transparent before:-translate-x-full before:animate-[shimmer_2s_infinite]'
-        : 'bg-gradient-to-r from-slate-950 via-navy-950 to-slate-950 border-indigo-500/30 shadow-indigo-950/20'
+        ? 'bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] border-emerald-500/40 shadow-emerald-500/10'
+        : 'bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] border-white/[0.08] shadow-glass-dark'
         }`}>
+        {/* Ambient Radial Mesh Glow */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-gradient-to-br from-indigo-500/15 via-brand-500/10 to-transparent blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           {/* Left Context Info */}
           <div className="space-y-3 flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               {isLive ? (
-                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-md bg-rose-600 text-white animate-pulse">
+                <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-md bg-rose-600 text-white animate-pulse">
                   <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
                   <span>LIVE NOW • CONTEST WINDOW</span>
                 </span>
               ) : isScheduled ? (
-                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-sm bg-amber-500 text-slate-950">
+                <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-sm bg-amber-500/20 text-amber-300 border border-amber-500/30">
                   <Clock className="w-3.5 h-3.5" />
                   <span>SCHEDULED CONTEST</span>
                 </span>
               ) : isFinalizing ? (
-                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-sm bg-brand-600 text-white animate-pulse">
+                <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-sm bg-brand-600 text-white animate-pulse">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   <span>FINALIZING SNAPSHOT</span>
                 </span>
               ) : null}
 
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-slate-200 text-xs font-mono font-bold border border-white/10 shadow-xs">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] text-slate-200 text-xs font-mono font-medium border border-white/10 backdrop-blur-md">
                 <Clock className="w-3.5 h-3.5 text-brand-400 shrink-0" />
                 <span>08:00 AM – 09:30 AM IST</span>
               </span>
 
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold border shadow-sm ${
-                wsStatus === 'LIVE' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
-                wsStatus === 'RECONNECTING' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse' :
-                'bg-rose-500/20 text-rose-300 border-rose-500/40'
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold border shadow-xs ${
+                wsStatus === 'LIVE' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' :
+                wsStatus === 'RECONNECTING' ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 animate-pulse' :
+                'bg-rose-500/15 text-rose-300 border-rose-500/30'
               }`}>
                 <Radio className={`w-3.5 h-3.5 ${wsStatus === 'LIVE' ? 'text-emerald-400 animate-pulse' : 'text-amber-400'}`} />
                 <span>{wsStatus === 'LIVE' ? 'LIVE' : wsStatus === 'RECONNECTING' ? 'RECONNECTING...' : 'OFFLINE'}</span>
@@ -3439,10 +3441,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     onClick={() => setSelectedDeptFilter(isSelected ? 'ALL' : dept.code)}
                     role="button"
                     title={`Click to filter by ${dept.name}`}
-                    className={`relative group min-h-[214px] sm:min-h-0 p-4 sm:p-5 rounded-2xl bg-white dark:bg-navy-950 border shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between min-w-0 overflow-hidden cursor-pointer active:scale-[0.98] ${
+                    className={`relative group min-h-[200px] sm:min-h-0 p-4 sm:p-5 rounded-2xl glass-panel shadow-sm hover:shadow-glass hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between min-w-0 overflow-hidden cursor-pointer active:scale-[0.98] ${
                       isSelected 
-                        ? 'border-indigo-500 dark:border-indigo-400 ring-2 ring-indigo-500/20 shadow-md' 
-                        : 'border-slate-200 dark:border-navy-800 hover:border-slate-300 dark:hover:border-navy-700'
+                        ? 'border-brand-500/80 ring-2 ring-brand-500/30 shadow-glass-dark bg-brand-500/10' 
+                        : 'hover:border-white/20'
                     }`}
                   >
                     {/* Top gradient decorative line */}
@@ -3451,8 +3453,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     <div className="relative z-10 space-y-3 sm:space-y-4">
                       {/* Top Row: Icon + Code Badge (Left) & Participated Count (Right) */}
                       <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${color.bg} border ${color.border}`}>
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${color.bg} border ${color.border} group-hover:scale-105 transition-transform`}>
                             <Building2 className={`w-4 h-4 ${color.text}`} />
                           </div>
                           <div className="min-w-0">
@@ -3472,16 +3474,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
                       {/* Middle Row: Full Department Name */}
                       <div className="min-w-0">
-                        <h4 className="text-[11px] font-bold text-slate-600 dark:text-slate-300 leading-snug line-clamp-2" title={dept.name}>
+                        <h4 className="text-[11px] font-bold text-slate-600 dark:text-slate-300 leading-snug line-clamp-2 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" title={dept.name}>
                           {dept.name}
                         </h4>
                       </div>
                     </div>
 
                     {/* Bottom Row: Progress & Active Student Count */}
-                    <div className="relative z-10 pt-3 sm:pt-4 mt-3 sm:mt-4 border-t border-slate-100 dark:border-navy-800/80">
+                    <div className="relative z-10 pt-3 sm:pt-4 mt-3 sm:mt-4 border-t border-slate-100 dark:border-white/[0.06]">
                       <div className="flex justify-between items-end mb-2">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                           Active Students
                         </span>
                         <div className="flex items-baseline gap-1.5">
@@ -3491,7 +3493,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       </div>
                       
                       {/* Participation Progress Bar */}
-                      <div className="w-full bg-slate-100 dark:bg-navy-900 h-1.5 rounded-full overflow-hidden">
+                      <div className="w-full bg-slate-100 dark:bg-white/[0.06] h-1.5 rounded-full overflow-hidden">
                         <div 
                           className={`h-full rounded-full ${color.bar} transition-all duration-700 ease-out relative`}
                           style={{ width: `${participationPct}%` }}
@@ -3539,74 +3541,102 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
         )}
 
-        {/* Headline 6 Stat Cards (Equal height, animated count-up, hover micro-interactions) */}
+        {/* Headline 6 Stat Cards (2026 Bento glass cards, animated count-up, hover micro-interactions) */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {/* Card 1: Total Students */}
           <button
             onClick={() => setSelectedAttendanceFilter('ALL')}
-            className={`h-24 p-4 rounded-2xl bg-white dark:bg-navy-950 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'ALL'
-              ? 'border-brand-500 ring-4 ring-brand-500/20 shadow-lg'
-              : 'border-slate-200 dark:border-slate-800 hover:border-brand-300 shadow-sm'
+            className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'ALL'
+              ? 'border-brand-500/80 ring-2 ring-brand-500/30 shadow-glass-dark bg-brand-500/10'
+              : 'hover:border-brand-400/40'
               }`}
           >
             <div className="flex items-center justify-between w-full">
-              <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Total Students</p>
-              <Users className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+              <span className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Total</span>
+              <div className="w-6 h-6 rounded-lg bg-slate-500/10 flex items-center justify-center text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform">
+                <Users className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
-              <AnimatedNumber value={stats.totalRows} />
-            </p>
+            <div className="flex items-baseline justify-between w-full">
+              <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-slate-900 dark:text-white">
+                <AnimatedNumber value={stats.totalRows} />
+              </p>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Enrolled</span>
+            </div>
           </button>
 
           {/* Card 2: Public Attended */}
           <button
             onClick={() => toggleAttendanceFilter('PUBLIC_ATTENDED')}
-            className={`h-24 p-4 rounded-2xl bg-emerald-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'PUBLIC_ATTENDED'
-              ? 'border-emerald-500 ring-4 ring-emerald-500/30 shadow-lg bg-emerald-500/20'
-              : 'border-emerald-500/20 hover:border-emerald-400 shadow-sm'
+            className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'PUBLIC_ATTENDED'
+              ? 'border-emerald-500/80 ring-2 ring-emerald-500/30 shadow-glass-dark bg-emerald-500/15'
+              : 'hover:border-emerald-500/40'
               }`}
           >
+            <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
             <div className="flex items-center justify-between w-full">
-              <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">Public</p>
-              <Award className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Public
+              </span>
+              <div className="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                <Award className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 dark:text-emerald-300">
-              <AnimatedNumber value={stats.attendedRows} />
-            </p>
+            <div className="flex items-baseline justify-between w-full">
+              <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
+                <AnimatedNumber value={stats.attendedRows} />
+              </p>
+              <span className="text-[9px] font-bold text-emerald-600/70 dark:text-emerald-400/60 uppercase tracking-widest">Verified</span>
+            </div>
           </button>
 
           {/* Card 3: Virtual Attended */}
           <button
             onClick={() => toggleAttendanceFilter('VIRTUAL_ATTENDED')}
-            className={`h-24 p-4 rounded-2xl bg-purple-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'VIRTUAL_ATTENDED'
-              ? 'border-purple-500 ring-4 ring-purple-500/30 shadow-lg bg-purple-500/20'
-              : 'border-purple-500/20 hover:border-purple-400 shadow-sm'
+            className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'VIRTUAL_ATTENDED'
+              ? 'border-purple-500/80 ring-2 ring-purple-500/30 shadow-glass-dark bg-purple-500/15'
+              : 'hover:border-purple-500/40'
               }`}
           >
+            <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/5 rounded-full blur-xl pointer-events-none" />
             <div className="flex items-center justify-between w-full">
-              <p className="text-[10px] font-black uppercase text-purple-600 dark:text-purple-400 tracking-wider">Virtual</p>
-              <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              <span className="text-[10px] font-extrabold uppercase text-purple-600 dark:text-purple-400 tracking-wider flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                Virtual
+              </span>
+              <div className="w-6 h-6 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform">
+                <Sparkles className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-black font-mono text-purple-700 dark:text-purple-300">
-              <AnimatedNumber value={stats.virtualRows} />
-            </p>
+            <div className="flex items-baseline justify-between w-full">
+              <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-purple-600 dark:text-purple-400">
+                <AnimatedNumber value={stats.virtualRows} />
+              </p>
+              <span className="text-[9px] font-bold text-purple-600/70 dark:text-purple-400/60 uppercase tracking-widest">Practice</span>
+            </div>
           </button>
 
           {/* Card 4: Not Attended */}
           <button
             onClick={() => toggleAttendanceFilter('PUBLIC_NOT_ATTENDED')}
-            className={`h-24 p-4 rounded-2xl bg-rose-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED'
-              ? 'border-rose-500 ring-4 ring-rose-500/30 shadow-lg bg-rose-500/20'
-              : 'border-rose-500/20 hover:border-rose-400 shadow-sm'
+            className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED'
+              ? 'border-rose-500/80 ring-2 ring-rose-500/30 shadow-glass-dark bg-rose-500/15'
+              : 'hover:border-rose-500/40'
               }`}
           >
             <div className="flex items-center justify-between w-full">
-              <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-wider">Not Attended</p>
-              <UserX className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+              <span className="text-[10px] font-extrabold uppercase text-rose-600 dark:text-rose-400 tracking-wider">Absent</span>
+              <div className="w-6 h-6 rounded-lg bg-rose-500/15 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform">
+                <UserX className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-black font-mono text-rose-700 dark:text-rose-300">
-              <AnimatedNumber value={stats.notAttendedRows} />
-            </p>
+            <div className="flex items-baseline justify-between w-full">
+              <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-600 dark:text-rose-400">
+                <AnimatedNumber value={stats.notAttendedRows} />
+              </p>
+              <span className="text-[9px] font-bold text-rose-600/70 dark:text-rose-400/60 uppercase tracking-widest">Inactive</span>
+            </div>
           </button>
 
           {/* Card 5: Data Errors */}
@@ -3616,37 +3646,44 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               setShowDetailedView(true);
               setSubTab('error_board');
             }}
-            className={`h-24 p-4 rounded-2xl bg-amber-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'DATA_ERROR'
-              ? 'border-amber-500 ring-4 ring-amber-500/30 shadow-lg bg-amber-500/20'
-              : 'border-amber-500/20 hover:border-amber-400 shadow-sm'
+            className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'DATA_ERROR'
+              ? 'border-amber-500/80 ring-2 ring-amber-500/30 shadow-glass-dark bg-amber-500/15'
+              : 'hover:border-amber-500/40'
               }`}
           >
             <div className="flex items-center justify-between w-full">
-              <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">Data Errors</p>
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span className="text-[10px] font-extrabold uppercase text-amber-600 dark:text-amber-400 tracking-wider">Errors</span>
+              <div className="w-6 h-6 rounded-lg bg-amber-500/15 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+                <AlertTriangle className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <p className="text-2xl sm:text-3xl font-black font-mono text-amber-700 dark:text-amber-300">
-              <AnimatedNumber value={stats.errorRows} />
-            </p>
+            <div className="flex items-baseline justify-between w-full">
+              <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-amber-600 dark:text-amber-400">
+                <AnimatedNumber value={stats.errorRows} />
+              </p>
+              <span className="text-[9px] font-bold text-amber-600/70 dark:text-amber-400/60 uppercase tracking-widest">Fixes</span>
+            </div>
           </button>
 
           {/* Card 6: Participation (count = public + virtual) */}
           <button
             onClick={() => toggleAttendanceFilter('ALL_ATTENDED')}
-            className={`h-24 p-4 rounded-2xl bg-indigo-500/10 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'ALL_ATTENDED'
-              ? 'border-indigo-500 ring-4 ring-indigo-500/30 shadow-lg bg-indigo-500/20'
-              : 'border-indigo-500/20 hover:border-indigo-400 shadow-sm'
+            className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'ALL_ATTENDED'
+              ? 'border-brand-500/80 ring-2 ring-brand-500/30 shadow-glass-dark bg-brand-500/15'
+              : 'hover:border-brand-500/40'
               }`}
           >
             <div className="flex items-center justify-between w-full">
-              <p className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">Participation</p>
-              <TrendingUp className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span className="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">Overall</span>
+              <div className="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
+                <TrendingUp className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <div className="text-center w-full">
-              <p className="text-2xl sm:text-3xl font-black font-mono text-indigo-700 dark:text-indigo-300 leading-none">
+            <div className="flex items-baseline justify-between w-full">
+              <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-indigo-600 dark:text-indigo-400 leading-none">
                 <AnimatedNumber value={stats.attendedRows + stats.virtualRows} />
               </p>
-              <p className="text-[10px] font-bold text-indigo-500/70 dark:text-indigo-400/60 mt-0.5">{stats.totalParticipationPct}%</p>
+              <span className="text-[10px] font-black font-mono text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20">{stats.totalParticipationPct}%</span>
             </div>
           </button>
         </div>
@@ -3654,64 +3691,65 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         {/* Feature Spotlight: Quick Statistics + Trend (Sparkline) + Top Performers */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Card 1: Quick Statistics Progress Bars */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
+          <div className="p-5 sm:p-6 rounded-3xl glass-panel shadow-glass hover:border-white/20 transition-all duration-300 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
               <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                <div className="w-6 h-6 rounded-lg bg-indigo-500/15 text-indigo-500 flex items-center justify-center">
                   <Layers className="w-3.5 h-3.5" />
                 </div>
                 <span>Participation Distribution</span>
               </h4>
-              <span className="text-[10px] font-mono font-bold text-slate-400 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-950">
+              <span className="text-[10px] font-mono font-bold text-slate-400 px-2.5 py-1 rounded-lg bg-white/5 border border-white/5">
                 Total: {stats.totalRows}
               </span>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               <div>
                 <div className="flex justify-between text-xs font-extrabold mb-1.5">
-                  <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span className="text-emerald-500 dark:text-emerald-400 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
                     <span>PUBLIC ATTENDED ({stats.attendedRows})</span>
                   </span>
                   <span className="text-slate-900 dark:text-white font-mono">{stats.publicPct}%</span>
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-navy-950 rounded-full h-2.5 overflow-hidden">
-                  <div className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2.5 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.publicPct}%` }}></div>
+                <div className="w-full bg-slate-100 dark:bg-white/[0.06] rounded-full h-2 overflow-hidden">
+                  <div className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.publicPct}%` }}></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs font-extrabold mb-1.5">
-                  <span className="text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                  <span className="text-purple-500 dark:text-purple-400 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50"></span>
                     <span>VIRTUAL PRACTICE ({stats.virtualRows})</span>
                   </span>
                   <span className="text-slate-900 dark:text-white font-mono">{stats.virtualPct}%</span>
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-navy-950 rounded-full h-2.5 overflow-hidden">
-                  <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-2.5 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.virtualPct}%` }}></div>
+                <div className="w-full bg-slate-100 dark:bg-white/[0.06] rounded-full h-2 overflow-hidden">
+                  <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-2 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.virtualPct}%` }}></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs font-extrabold mb-1.5">
-                  <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+                  <span className="text-rose-500 dark:text-rose-400 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-400 shadow-sm shadow-rose-500/50"></span>
                     <span>NOT ATTENDED ({stats.notAttendedRows})</span>
                   </span>
                   <span className="text-slate-900 dark:text-white font-mono">{stats.notAttendedPct}%</span>
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-navy-950 rounded-full h-2.5 overflow-hidden">
-                  <div className="bg-gradient-to-r from-rose-400 to-rose-500 h-2.5 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.notAttendedPct}%` }}></div>
+                <div className="w-full bg-slate-100 dark:bg-white/[0.06] rounded-full h-2 overflow-hidden">
+                  <div className="bg-gradient-to-r from-rose-400 to-rose-500 h-2 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.notAttendedPct}%` }}></div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Card 2: Contest Participation Trend & Growth with Inline Sparkline */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 border border-indigo-500/30 text-white shadow-xl flex flex-col justify-between space-y-4">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <div className="p-5 sm:p-6 rounded-3xl glass-panel relative overflow-hidden text-white shadow-xl flex flex-col justify-between space-y-4 border-indigo-500/30">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="flex items-center justify-between border-b border-white/10 pb-3 relative z-10">
               <h4 className="text-xs font-black uppercase tracking-wider text-indigo-300 flex items-center gap-2">
                 <div className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
                   <TrendingUp className="w-3.5 h-3.5" />
@@ -3725,7 +3763,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </span>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-3 relative z-10">
               <div className="space-y-1">
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl sm:text-4xl font-black text-white font-mono">{stats.totalParticipationPct}%</span>
@@ -3742,16 +3780,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
             </div>
 
-            <div className="w-full bg-white/10 rounded-full h-2.5 overflow-hidden shadow-inner">
-              <div className="bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-400 h-2.5 rounded-full shadow-md" style={{ width: `${stats.totalParticipationPct}%` }}></div>
+            <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden shadow-inner relative z-10">
+              <div className="bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-400 h-2 rounded-full shadow-md" style={{ width: `${stats.totalParticipationPct}%` }}></div>
             </div>
           </div>
 
           {/* Card 3: Top Performers Spotlight */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-md space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
-              <h4 className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+          <div className="p-5 sm:p-6 rounded-3xl glass-panel shadow-glass hover:border-white/20 transition-all duration-300 space-y-3">
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+              <h4 className="text-xs font-black uppercase tracking-wider text-amber-500 dark:text-amber-400 flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-amber-500/15 text-amber-500 flex items-center justify-center">
                   <Trophy className="w-3.5 h-3.5" />
                 </div>
                 <span>Top Performers Spotlight</span>
@@ -3762,10 +3800,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <div className="space-y-2">
               {stats.topPerformers.length > 0 ? (
                 stats.topPerformers.map((p, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-slate-800 text-xs transition-all hover:bg-slate-100 dark:hover:bg-navy-800 hover:scale-[1.01]">
+                  <div key={idx} className="flex items-center justify-between p-2.5 rounded-2xl bg-white/5 dark:bg-white/[0.03] border border-white/[0.06] text-xs transition-all hover:bg-white/[0.08] hover:scale-[1.01]">
                     <div className="flex items-center space-x-2.5">
-                      <span className={`w-6 h-6 rounded-xl flex items-center justify-center font-black text-[11px] shadow-sm ${idx === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-400 text-slate-950' :
-                        idx === 1 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-900' : 'bg-gradient-to-br from-amber-700 to-amber-900 text-white'
+                      <span className={`w-6 h-6 rounded-xl flex items-center justify-center font-black text-[11px] shadow-sm ${idx === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-400 text-slate-950 font-bold' :
+                        idx === 1 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-900 font-bold' : 'bg-gradient-to-br from-amber-700 to-amber-900 text-white font-bold'
                         }`}>
                         {idx + 1}
                       </span>
@@ -3778,7 +3816,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       <span className="font-mono text-[11px] text-slate-500 font-bold">
                         {p.rank || p.contest_rank ? `#${p.rank || p.contest_rank}` : (p.participation_status?.includes('VIRTUAL') ? 'Virtual' : '—')}
                       </span>
-                      <span className="px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-mono font-black text-xs border border-emerald-200 dark:border-emerald-800">
+                      <span className="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono font-black text-xs border border-emerald-500/20">
                         {Number(p.total_solved ?? p.total_contest_solved ?? ((p.q1 || 0) + (p.q2 || 0) + (p.q3 || 0) + (p.q4 || 0))) || 0}/4
                       </span>
                     </div>
