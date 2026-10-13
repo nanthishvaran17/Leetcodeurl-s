@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
-import { Layers, Users, Trophy, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, AlertCircle, Search, X, ArrowUpDown, Star, Flame, SortAsc, SortDesc } from 'lucide-react';
+import { Layers, Users, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, AlertCircle, Search, X, ArrowUpDown, Star, SortAsc, SortDesc, Award, Activity } from 'lucide-react';
 import api from '../services/api';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
@@ -123,11 +123,11 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
   // Sort Options
   const sortOptions: DropdownOption[] = [
-    { value: 'top_solved', label: 'Top Solvers (Highest First)', icon: Trophy },
+    { value: 'top_solved', label: 'Top Solvers (Highest First)', icon: Award },
     { value: 'low_solved', label: 'Lowest Solvers First', icon: ArrowUpDown },
     { value: 'name_asc', label: 'Student Name (A → Z)', icon: SortAsc },
     { value: 'name_desc', label: 'Student Name (Z → A)', icon: SortDesc },
-    { value: 'streak', label: 'Highest Active Streak', icon: Flame },
+    { value: 'streak', label: 'Highest Active Streak', icon: Activity },
     { value: 'rating', label: 'Highest Contest Rating', icon: Star }
   ];
 
@@ -334,7 +334,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 setSolvedFilter(val);
                 setDisplayCount(32);
               }}
-              icon={Trophy}
+              icon={Award}
               align="right"
             />
           </div>
@@ -398,7 +398,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               <>
                 <span className="text-slate-300 dark:text-navy-600 font-bold px-0.5">•</span>
                 <div className="flex items-center space-x-1.5 text-rose-600 dark:text-rose-400">
-                  <Trophy className="w-3.5 h-3.5" />
+                  <Award className="w-3.5 h-3.5" />
                   <span className="font-black text-xs sm:text-sm tracking-tight">
                     {{
                       '500_plus': '500+',

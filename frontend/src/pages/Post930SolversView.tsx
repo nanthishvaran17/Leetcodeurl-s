@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  Clock, Download, RefreshCw, Search, Users, AlertCircle,
-  ExternalLink, Eye, ArrowUpDown, ChevronRight, X, ShieldAlert, CheckCircle2, FileSpreadsheet, Filter,
-  Flame, Zap, Sparkles, TrendingUp, Trophy, ChevronDown, SlidersHorizontal, ArrowLeft
-} from 'lucide-react';
+import { Clock, Download, RefreshCw, Search, Users, AlertCircle, ExternalLink, Eye, ArrowUpDown, ChevronRight, X, ShieldAlert, CheckCircle2, FileSpreadsheet, Filter, Zap, TrendingUp, ChevronDown, SlidersHorizontal, ArrowLeft, Activity } from 'lucide-react';
 import api from '../services/api';
 import { downloadManager } from '../services/download/downloadManager';
 import { useDepartments } from '../contexts/DepartmentContext';
@@ -229,7 +225,7 @@ export const Post930SolversView: React.FC<Post930SolversViewProps> = ({ onSelect
               Post-9:30 Problems
             </span>
             <div className="w-7 h-7 rounded-xl bg-amber-500/15 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-              <Flame className="w-3.5 h-3.5" />
+              <Activity className="w-3.5 h-3.5" />
             </div>
           </div>
           <p className="text-2xl sm:text-3xl font-black font-mono text-amber-600 dark:text-amber-400">
@@ -493,7 +489,7 @@ export const Post930SolversView: React.FC<Post930SolversViewProps> = ({ onSelect
                     {/* 2. Post-9:30 Star Tile */}
                     <div className="p-2 sm:p-2.5 rounded-2xl bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-amber-500/5 border border-amber-500/30 dark:border-amber-500/40 text-center shadow-xs">
                       <span className="text-[9px] font-black uppercase text-amber-700 dark:text-amber-300 flex items-center justify-center gap-0.5 tracking-wider">
-                        <Flame className="w-2.5 h-2.5 text-amber-500" />
+                        <Activity className="w-2.5 h-2.5 text-amber-500" />
                         Post-9:30
                       </span>
                       <span className="text-base font-black font-mono text-amber-600 dark:text-amber-400 block my-0.5">

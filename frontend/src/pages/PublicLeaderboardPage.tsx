@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
-import { 
-  Globe, Trophy, Shield, Users, TrendingUp, Search, 
-  Star, Award, Zap, ChevronLeft, ChevronRight, BarChart3, Filter, ExternalLink, Calendar, Building2, LayoutList
-} from 'lucide-react';
+import { Globe, Shield, Users, TrendingUp, Search, Star, Award, Zap, ChevronLeft, ChevronRight, BarChart3, Filter, ExternalLink, Calendar, Building2, LayoutList } from 'lucide-react';
 import { GlobalFilter } from '../components/GlobalFilter';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
@@ -168,9 +165,9 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
       {top3.length >= 3 && (
         <div className="glass-card p-4 sm:p-8 rounded-3xl border border-amber-500/25 bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent shadow-xl space-y-4 sm:space-y-6">
           <h2 className="text-center font-black text-xs sm:text-base text-slate-900 dark:text-white flex items-center justify-center space-x-2">
-            <Trophy className="w-4 h-4 sm:w-6 sm:h-6 text-amber-500 fill-amber-500 shrink-0" />
+            <Award className="w-4 h-4 sm:w-6 sm:h-6 text-amber-500 fill-amber-500 shrink-0" />
             <span className="truncate tracking-wider uppercase font-black">INSTITUTION TOP 3 RANKERS</span>
-            <Trophy className="w-4 h-4 sm:w-6 sm:h-6 text-amber-500 fill-amber-500 shrink-0" />
+            <Award className="w-4 h-4 sm:w-6 sm:h-6 text-amber-500 fill-amber-500 shrink-0" />
           </h2>
 
           {/* Desktop & Tablet Podium (sm and up) */}

@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Search, RefreshCw, Trophy, Zap, ShieldCheck, AlertCircle, Clock,
-  CheckCircle2, XCircle, User, Award, TrendingUp, Filter, Download
-} from 'lucide-react';
+import { Search, RefreshCw, Zap, ShieldCheck, AlertCircle, Clock, CheckCircle2, XCircle, User, Award, TrendingUp, Filter, Download } from 'lucide-react';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid
 } from 'recharts';
@@ -153,7 +150,7 @@ export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialI
             {/* Solve Matrix — KEY SECTION */}
             <div>
               <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-amber-500" />
+                <Award className="w-4 h-4 text-amber-500" />
                 <span>Question Solve Matrix (Q1 – Q4)</span>
                 <span className="ml-auto text-sm font-mono font-black text-brand-600 dark:text-brand-400">
                   {perf.solved_count} / 4 solved

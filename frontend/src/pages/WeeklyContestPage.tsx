@@ -3,12 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, memo, useRef, useDefe
 import { createPortal } from 'react-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import { useScrollLock } from '../hooks/useScrollLock';
-import {
-  Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet,
-  FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp, Flame,
-  Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward,
-  Gauge, Terminal, Cpu, Database, FlaskConical, Check, ExternalLink, Printer, FileArchive
-} from 'lucide-react';
+import { Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet, FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp, Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward, Gauge, Terminal, Cpu, Database, FlaskConical, Check, ExternalLink, Printer, FileArchive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
@@ -2640,7 +2635,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       disabled={isPerformingAdminAction}
                       className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-900/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-300" />
                       <span>Trigger Simulated Solves (5 Live Events)</span>
                     </button>
 
@@ -2737,7 +2732,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-navy-900/60'
           }`}
         >
-          <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+          <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
           <span className="sm:hidden truncate">Roster Matrix</span>
           <span className="hidden sm:inline truncate">Session Analytics & Student Roster Matrix</span>
         </button>
@@ -3510,7 +3505,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 Virtual
               </span>
               <div className="w-6 h-6 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform">
-                <Sparkles className="w-3.5 h-3.5" />
+                <CheckCircle2 className="w-3.5 h-3.5" />
               </div>
             </div>
             <div className="flex items-baseline justify-between w-full">
@@ -3694,7 +3689,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
               <h4 className="text-xs font-black uppercase tracking-wider text-amber-500 dark:text-amber-400 flex items-center gap-2">
                 <div className="w-6 h-6 rounded-lg bg-amber-500/15 text-amber-500 flex items-center justify-center">
-                  <Trophy className="w-3.5 h-3.5" />
+                  <Award className="w-3.5 h-3.5" />
                 </div>
                 <span>Top Performers Spotlight</span>
               </h4>
@@ -3738,7 +3733,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
           <div className="flex items-center space-x-3.5 relative z-10 min-w-0">
             <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-inner shrink-0">
-              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">

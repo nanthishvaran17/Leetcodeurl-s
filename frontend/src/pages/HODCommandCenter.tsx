@@ -1,16 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import {
- Building2, RefreshCw, Sparkles, Search, Plus,
- Trash2, UserCheck, X, CheckCircle2, AlertTriangle, Users,
- Activity, TrendingUp, BarChart3, ArrowUpRight, ArrowDownRight,
- Zap, BookOpen, RotateCcw, ShieldCheck, Clock, Download,
- SlidersHorizontal, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Loader2, FileSpreadsheet, FileText,
- HelpCircle, Eye, Compass, Target, PieChart, Layers, BrainCircuit,
- Award, Flame, Filter, ChevronDown, ChevronUp, Check, AlertCircle, ArrowRight,
- Sliders, User, CheckCircle, XCircle, ExternalLink, Calendar, Info,
- UserPlus, UserMinus, Shuffle, Printer, Share2, TrendingDown, Minus, Copy
-} from 'lucide-react';
+import { Building2, RefreshCw, Search, Plus, Trash2, UserCheck, X, CheckCircle2, AlertTriangle, Users, Activity, TrendingUp, BarChart3, ArrowUpRight, ArrowDownRight, Zap, BookOpen, RotateCcw, ShieldCheck, Clock, Download, SlidersHorizontal, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Loader2, FileSpreadsheet, FileText, HelpCircle, Eye, Compass, Target, PieChart, Layers, BrainCircuit, Award, Filter, ChevronDown, ChevronUp, Check, AlertCircle, ArrowRight, Sliders, User, CheckCircle, XCircle, ExternalLink, Calendar, Info, UserPlus, UserMinus, Shuffle, Printer, Share2, TrendingDown, Minus, Copy } from 'lucide-react';
 import { Mail, UserX, GraduationCap, Trophy } from 'lucide-react';
 import { SwipeHandle } from '../components/SwipeHandle';
 import { StaffDetailDrawer } from '../components/admin/StaffDetailDrawer';
@@ -3340,7 +3330,7 @@ export const HODCommandCenter: React.FC = () => {
  <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
  <h3 className="font-display text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
- <Sparkles size={16} className="text-brand-600" />
+ <CheckCircle2 size={16} className="text-brand-600" />
  <span>Ask Institution AI</span>
  </h3>
  <button onClick={() => setShowAIModal(false)} className="p-1 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100"><X size={16} /></button>
@@ -3542,7 +3532,7 @@ export const HODCommandCenter: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-1">
                     <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                      <Flame size={13} className="text-rose-500" />
+                      <Activity size={13} className="text-rose-500" />
                       <span>Inactive Reactivation</span>
                     </div>
                     <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -3562,7 +3552,7 @@ export const HODCommandCenter: React.FC = () => {
 
                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-1">
                     <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                      <Trophy size={13} className="text-indigo-500" />
+                      <Award size={13} className="text-indigo-500" />
                       <span>Contest Onboarding</span>
                     </div>
                     <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -3584,7 +3574,7 @@ export const HODCommandCenter: React.FC = () => {
                 }}
                 className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs flex items-center gap-1.5 transition"
               >
-                <Sparkles size={13} className="text-brand-600" />
+                <CheckCircle2 size={13} className="text-brand-600" />
                 <span>Ask AI About Cohort</span>
               </button>
 
@@ -3777,7 +3767,7 @@ export const HODCommandCenter: React.FC = () => {
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
                   <h4 className="font-display text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white font-mono flex items-center gap-2">
-                    <Trophy size={15} className="text-amber-500" />
+                    <Award size={15} className="text-amber-500" />
                     <span>Curated LeetCode Problem Ladder (5 Key Sprints)</span>
                   </h4>
                   <span className="text-[10px] text-slate-500 dark:text-slate-400 font-sans">
@@ -3864,7 +3854,7 @@ export const HODCommandCenter: React.FC = () => {
                   }}
                   className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs flex items-center gap-1.5 transition"
                 >
-                  <Sparkles size={13} className="text-brand-600" />
+                  <CheckCircle2 size={13} className="text-brand-600" />
                   <span>Ask AI for Lesson Plan</span>
                 </button>
               </div>

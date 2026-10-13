@@ -10,7 +10,7 @@ OUTPUT_DIR = os.path.abspath("output")
 os.makedirs(INTERMEDIATE_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# 23 Complete Application Scenes (Exact Timeline: 120.50 seconds / 2m 0.5s)
+# 23 Complete Application Scenes (Zero Skeletons, 100% Loaded Data, Perfect 119.0s Timeline)
 SCENES = [
     {
         "id": "01",
@@ -23,147 +23,147 @@ SCENES = [
     {
         "id": "02",
         "file": "clip_02_login.webm",
-        "ss": 1.4,
+        "ss": 2.0,
         "duration": 4.5,
         "subtitle": "[02/23] Enterprise Single Sign-On — 563 Enrolled Engineering Cohorts"
     },
     {
         "id": "03",
         "file": "clip_03_dashboard.webm",
-        "ss": 1.5,
+        "ss": 4.0,
         "duration": 5.5,
         "subtitle": "[03/23] Executive Command Center — Real-Time Performance Trajectory & KPIs"
     },
     {
         "id": "04",
         "file": "clip_04_students.webm",
-        "ss": 1.5,
+        "ss": 4.0,
         "duration": 5.5,
         "subtitle": "[04/23] Master Student Directory — Real LeetCode Ranks & Verified Solve Counts"
     },
     {
         "id": "05",
         "file": "clip_05_profile.webm",
-        "ss": 2.5,
+        "ss": 7.0,
         "duration": 5.5,
         "subtitle": "[05/23] Individual Student 360 Dossier — 6-Axis DSA Radar & Digital Identity Pass"
     },
     {
         "id": "06",
         "file": "clip_06_departments.webm",
-        "ss": 1.5,
+        "ss": 4.0,
         "duration": 5.0,
         "subtitle": "[06/23] Department Breakdown — Comparative Analytics & Cohort Tiers"
     },
     {
         "id": "07",
         "file": "clip_07_hod.webm",
-        "ss": 1.5,
+        "ss": 4.0,
         "duration": 5.5,
         "subtitle": "[07/23] Institutional HOD Deck — Departmental Oversight & Mentorship Targets"
     },
     {
         "id": "08",
         "file": "clip_08_compare.webm",
-        "ss": 1.5,
+        "ss": 4.0,
         "duration": 5.5,
         "subtitle": "[08/23] Student Versus Arena — Head-to-Head DSA Skill Matchups & Duels"
     },
     {
         "id": "09",
         "file": "clip_09_weekly_contest.webm",
-        "ss": 1.5,
+        "ss": 4.0,
         "duration": 5.5,
         "subtitle": "[09/23] Weekly Contest Tracker — Instant Attendance Reconciliation & Q1–Q4 Telemetry"
     },
     {
         "id": "10",
         "file": "clip_10_integrity.webm",
-        "ss": 1.5,
+        "ss": 4.0,
         "duration": 5.0,
         "subtitle": "[10/23] Contest Integrity Monitor — Forensic Dual-ID Detection & Anti-Cheat Audit"
     },
     {
         "id": "11",
         "file": "clip_11_growth.webm",
-        "ss": 1.5,
+        "ss": 5.0,
         "duration": 5.0,
         "subtitle": "[11/23] Growth & Delta Intelligence — Velocity Engine & Difficulty Breakdown"
     },
     {
         "id": "12",
         "file": "clip_12_quality.webm",
-        "ss": 1.5,
+        "ss": 4.0,
         "duration": 5.0,
         "subtitle": "[12/23] Data Quality Engine — Automated Profile Integrity & Anomaly Detection"
     },
     {
         "id": "13",
         "file": "clip_13_post930.webm",
-        "ss": 1.5,
+        "ss": 4.0,
         "duration": 5.0,
         "subtitle": "[13/23] Post 9:30 PM Solvers — Night Owl Coding Discipline & After-Hours Telemetry"
     },
     {
         "id": "14",
         "file": "clip_14_hr_finder.webm",
-        "ss": 1.5,
+        "ss": 9.0,
         "duration": 5.5,
         "subtitle": "[14/23] Placement & HR Finder — Precision Talent Filtering for Top Tech Recruiters"
     },
     {
         "id": "15",
         "file": "clip_15_faculty.webm",
-        "ss": 1.5,
+        "ss": 4.0,
         "duration": 5.5,
         "subtitle": "[15/23] Faculty Action Center — Prioritized Mentoring Queue & Timely Interventions"
     },
     {
         "id": "16",
         "file": "clip_16_ai_control.webm",
-        "ss": 1.5,
+        "ss": 3.5,
         "duration": 5.0,
         "subtitle": "[16/23] Autonomous AI Control Matrix — 24/7 Contest Sync & Sunday Dispatch Scheduler"
     },
     {
         "id": "17",
         "file": "clip_17_system_health.webm",
-        "ss": 1.5,
+        "ss": 3.5,
         "duration": 5.0,
         "subtitle": "[17/23] System Health & Telemetry — REST Latency, Database Pools & Service Uptime"
     },
     {
         "id": "18",
         "file": "clip_18_audit.webm",
-        "ss": 1.5,
+        "ss": 3.5,
         "duration": 5.0,
         "subtitle": "[18/23] Audit Log & Security Trail — Immutable Admin Activity & Role Oversight"
     },
     {
         "id": "19",
         "file": "clip_19_reports.webm",
-        "ss": 1.5,
+        "ss": 3.5,
         "duration": 5.0,
         "subtitle": "[19/23] Universal Reports Hub — Audit-Ready Excel Workbooks & Data Exporters"
     },
     {
         "id": "20",
         "file": "clip_20_data_issues.webm",
-        "ss": 1.5,
+        "ss": 4.0,
         "duration": 5.0,
         "subtitle": "[20/23] Data Issues Reconciliation — One-Click LeetCode Profile Resolution"
     },
     {
         "id": "21",
         "file": "clip_21_settings.webm",
-        "ss": 1.5,
+        "ss": 4.0,
         "duration": 5.0,
         "subtitle": "[21/23] Institutional Settings — Policy Configurations & Security Governance"
     },
     {
         "id": "22",
         "file": "clip_22_public.webm",
-        "ss": 1.5,
+        "ss": 4.0,
         "duration": 5.5,
         "subtitle": "[22/23] Public Campus Kiosk — Live Hall of Fame for Campus Digital Displays"
     },
@@ -286,7 +286,7 @@ def main():
     thumb_path = os.path.join(OUTPUT_DIR, "nandha_tracker_thumbnail.png")
     subprocess.run([
         FFMPEG, "-y",
-        "-ss", "00:00:12.000",
+        "-ss", "00:00:23.000",
         "-i", final_output,
         "-vframes", "1",
         thumb_path
@@ -304,7 +304,7 @@ def main():
         f.write("NANDHA LEETCODE INTELLIGENCE - 2-MINUTE EPIC MASTERPIECE VALIDATION REPORT\n")
         f.write("=========================================================================\n\n")
         f.write(f"Audio Track: 2-Minute Tamil Mass BGM (Anirudh Ravichander - Vaathi Raid / Master)\n")
-        f.write(f"Target Duration: {total_dur:.2f} seconds (~2:00.5 minutes)\n")
+        f.write(f"Target Duration: {total_dur:.2f} seconds (~1:59.0 minutes)\n")
         f.write(f"Total Scenes Featured: {len(SCENES)} complete application workflows\n")
         f.write(f"Resolution: 1920x1080 (16:9 Landscape)\n")
         f.write(f"Frame Rate: 30 FPS\n")

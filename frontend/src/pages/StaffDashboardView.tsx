@@ -1,10 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import {
-  Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle,
-  ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell,
-  FileText, Clock, AlertCircle, ArrowRight, Download, Zap, Sparkles,
-  ChevronDown, Check, Filter, Moon, Trophy
-} from 'lucide-react';
+import { Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle, ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell, FileText, Clock, AlertCircle, ArrowRight, Download, Zap, ChevronDown, Check, Filter, Moon, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
 import api, { clearApiCache } from '../services/api';
@@ -354,7 +349,7 @@ export const StaffDashboardView: React.FC = () => {
         {syncStatusMsg && (
           <div className="mt-4 p-3 rounded-2xl bg-white/[0.08] border border-white/15 text-xs font-semibold flex items-center justify-between animate-fade-in backdrop-blur-md">
             <div className="flex items-center space-x-2">
-              <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
               <span>{syncStatusMsg}</span>
             </div>
             <button 
@@ -1224,7 +1219,7 @@ export const StaffDashboardView: React.FC = () => {
                 </th>
                 <th className="px-5 py-4 whitespace-nowrap text-center">
                   <div className="flex items-center justify-center space-x-1 text-indigo-600 dark:text-indigo-400">
-                    <Trophy className="w-3.5 h-3.5" />
+                    <Award className="w-3.5 h-3.5" />
                     <span>Sun. Contest</span>
                   </div>
                 </th>

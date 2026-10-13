@@ -213,6 +213,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     update: updateToast,
   }), [addToast, dismissToast, dismissCategory, updateToast]);
 
+  useEffect(() => {
+    (window as any).__nec_notify__ = notify;
+    return () => {
+      delete (window as any).__nec_notify__;
+    };
+  }, [notify]);
+
   const ctxValue = useMemo(() => ({
     toasts,
     notify,

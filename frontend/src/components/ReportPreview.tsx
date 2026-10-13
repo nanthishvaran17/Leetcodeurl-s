@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Trophy, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Flame, Filter, Building2, GraduationCap, Target, Printer, ShieldCheck, Sparkles, Zap, TrendingUp, UserX, Clock } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Filter, Building2, GraduationCap, Target, Printer, ShieldCheck, TrendingUp, UserX, Clock } from 'lucide-react';
 import api from '../services/api';
 import { FullScreenLoadingOverlay } from './ui/FullScreenLoadingOverlay';
 import { SwipeHandle } from './SwipeHandle';
@@ -1386,11 +1386,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           <div><span className="text-slate-500 font-medium">Solves:</span> <span className="font-bold text-slate-900">{dr.total_solves?.toLocaleString()}</span></div>
                           <div><span className="text-slate-500 font-medium">Avg:</span> <span className="font-mono font-bold text-slate-900">{dr.average_solved}</span></div>
                           <div className="flex items-center gap-1 font-mono text-[9px] font-bold">
-                            <span className="text-emerald-700">4★:{dr.solved_4}</span>
-                            <span className="text-indigo-700">3★:{dr.solved_3}</span>
-                            <span className="text-amber-700">2★:{dr.solved_2}</span>
-                            <span className="text-slate-600">1★:{dr.solved_1}</span>
-                            <span className="text-rose-600">0★:{dr.solved_0}</span>
+                            <span className="text-emerald-700">4/4:{dr.solved_4}</span>
+                            <span className="text-indigo-700">3/4:{dr.solved_3}</span>
+                            <span className="text-amber-700">2/4:{dr.solved_2}</span>
+                            <span className="text-slate-600">1/4:{dr.solved_1}</span>
+                            <span className="text-rose-600">0/4:{dr.solved_0}</span>
                           </div>
                         </div>
                       </div>
@@ -2574,7 +2574,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       const k = key.toLowerCase();
                       
                       let fKey: string | null = null;
-                      let icon = <Sparkles className="w-4 h-4" />;
+                      let icon = <FileText className="w-4 h-4" />;
                       let lightGradient = 'from-indigo-50/90 via-white to-blue-50/50';
                       let darkGradient = 'dark:from-indigo-950/40 dark:via-slate-900/90 dark:to-slate-950';
                       let borderColor = 'border-indigo-200/90 dark:border-indigo-500/25 hover:border-indigo-400 dark:hover:border-indigo-500/50';
@@ -2615,7 +2615,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         chipLabel = 'Attention';
                       } else if (k.includes('active_solver') || k.includes('activesolver') || k === 'active') {
                         fKey = 'METRIC_ACTIVE_SOLVERS';
-                        icon = <Flame className="w-4 h-4" />;
+                        icon = <UserCheck className="w-4 h-4" />;
                         lightGradient = 'from-amber-50/90 via-white to-orange-50/50';
                         darkGradient = 'dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950';
                         borderColor = 'border-amber-200/90 dark:border-amber-500/25 hover:border-amber-400 dark:hover:border-amber-500/50';
@@ -2625,7 +2625,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         chipLabel = 'Active';
                       } else if (k.includes('total_solved') || k.includes('totalsolved')) {
                         fKey = null;
-                        icon = <Trophy className="w-4 h-4" />;
+                        icon = <CheckCircle2 className="w-4 h-4" />;
                         lightGradient = 'from-cyan-50/90 via-white to-blue-50/50';
                         darkGradient = 'dark:from-cyan-950/40 dark:via-slate-900/90 dark:to-slate-950';
                         borderColor = 'border-cyan-200/90 dark:border-cyan-500/25 hover:border-cyan-400 dark:hover:border-cyan-500/50';
@@ -2665,7 +2665,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         chipLabel = 'Medium Tier';
                       } else if (k.includes('hard')) {
                         fKey = 'METRIC_HARD_SOLVED';
-                        icon = <Zap className="w-4 h-4" />;
+                        icon = <AlertTriangle className="w-4 h-4" />;
                         lightGradient = 'from-purple-50/90 via-white to-rose-50/50';
                         darkGradient = 'dark:from-purple-950/40 dark:via-slate-900/90 dark:to-slate-950';
                         borderColor = 'border-purple-200/90 dark:border-purple-500/25 hover:border-purple-400 dark:hover:border-purple-500/50';
@@ -3058,7 +3058,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               {isFiveWeekTrend && report.sessionHeaders && Array.isArray(report.sessionHeaders) && report.sessionHeaders.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
-                    <Trophy className="w-4 h-4 text-indigo-500" />
+                    <Clock className="w-4 h-4 text-indigo-500" />
                     <span>Five-Week Longitudinal Performance Matrix</span>
                   </h3>
                   {/* Mobile Card View (< sm) */}
@@ -3156,7 +3156,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               {!isFiveWeekTrend && !isWeeklyPerformance && report.topStudents && report.topStudents.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
-                    <Trophy className="w-4 h-4 text-amber-500" />
+                    <Award className="w-4 h-4 text-amber-500" />
                     <span>Top Performers Leaderboard</span>
                   </h3>
                   {/* Mobile Card View (< sm) */}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trophy, FileSpreadsheet, FileText, Printer } from 'lucide-react';
+import { FileSpreadsheet, FileText, Printer, Award } from 'lucide-react';
 import { CoordinatorWeeklyReport, ColumnDef } from './CoordinatorWeeklyReport';
 import { triggerBrowserAnchorDownload, sanitizeFilename } from '../../services/download/downloadUtils';
 
@@ -171,7 +171,7 @@ export const All17ReportsManager: React.FC = () => {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200">
           <div>
             <h1 className="text-xl font-black text-slate-900 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-amber-500" /> Official College 17-Report Generator
+              <Award className="w-5 h-5 text-amber-500" /> Official College 17-Report Generator
             </h1>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
               Select any report. Every single sheet uses the exact <b>Nandha College Master Template</b> with Dual Logos & Format!

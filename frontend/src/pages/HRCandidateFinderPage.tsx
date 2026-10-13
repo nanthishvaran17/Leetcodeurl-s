@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef, useDeferredValue } from "react";
 import { createPortal } from "react-dom";
-import {
-  Search, RefreshCw, Filter, ChevronUp, ChevronDown, ChevronLeft, ChevronRight,
-  Trophy, TrendingUp, TrendingDown, Minus,
-  FileSpreadsheet, FileText, AlertTriangle, CheckCircle2,
-  Brain, Star, Award, Users, Download, ExternalLink,
-  BarChart2, Target, Zap, Code2, Shield, X, Check, Info, Sparkles, UserCheck, HelpCircle, Eye, Printer,
-  LayoutGrid, List, SlidersHorizontal, Flame, ArrowUpDown
-} from "lucide-react";
+import { Search, RefreshCw, Filter, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, FileSpreadsheet, FileText, AlertTriangle, CheckCircle2, Brain, Star, Award, Users, Download, ExternalLink, BarChart2, Target, Zap, Code2, Shield, X, Check, Info, UserCheck, HelpCircle, Eye, Printer, LayoutGrid, List, SlidersHorizontal, ArrowUpDown, Activity } from 'lucide-react';
 import api from "../services/api";
 import { triggerDownload } from "../utils/mobileDownload";
 import { useKeyboardContext } from "../context/KeyboardContext";
@@ -1550,7 +1543,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           value={filters.year_level}
           onChange={val => setFilters(p => ({ ...p, year_level: val }))}
           options={yearOptions}
-          icon={<Sparkles className="w-4 h-4 text-cyan-500" />}
+          icon={<CheckCircle2 className="w-4 h-4 text-cyan-500" />}
         />
       </div>
       {showSectionFilter && (
@@ -1882,7 +1875,7 @@ export const HRCandidateFinderPage: React.FC = () => {
     {
       id: "contest",
       title: "Contest Performance",
-      icon: <Trophy className="w-4 h-4 text-amber-500" />,
+      icon: <Award className="w-4 h-4 text-amber-500" />,
       badgeColor: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800",
       activeCount: [
         filters.contest_rating.active && filters.contest_rating.val1 > 0,
@@ -2368,7 +2361,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
-                <Trophy className="w-4 h-4" />
+                <Award className="w-4 h-4" />
               </div>
               <div className="flex items-center gap-2 flex-wrap min-w-0">
                 <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Contest Performance</span>
@@ -2802,7 +2795,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                                     ? 'bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
                                     : 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900'
                                 }`}>
-                                  <Flame className="w-2.5 h-2.5 text-purple-600 fill-purple-500/30" />
+                                  <Activity className="w-2.5 h-2.5 text-purple-600 fill-purple-500/30" />
                                   <span>{ratingVal.toLocaleString()}</span>
                                 </span>
                               ) : (
@@ -2884,7 +2877,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                                   }`}
                                   title={`Exact Rating: ${Number(c.contest_rating).toFixed(2)}`}
                                 >
-                                  <Flame className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 fill-purple-500/30" />
+                                  <Activity className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 fill-purple-500/30" />
                                   <span>{ratingVal.toLocaleString()}</span>
                                 </div>
                               ) : (

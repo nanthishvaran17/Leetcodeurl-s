@@ -1,13 +1,13 @@
 import React, { memo, useState } from 'react';
 import { useStudentEntity } from '../stores/studentLiveStore';
-import { Clock, AlertCircle, Trophy, Flame, Award, TrendingUp, RefreshCw, Trash2, Edit3, Eye, ExternalLink, ChevronRight, MoreHorizontal, Check } from 'lucide-react';
+import { Clock, AlertCircle, Award, TrendingUp, RefreshCw, Trash2, Edit3, Eye, ExternalLink, ChevronRight, MoreHorizontal, Check } from 'lucide-react';
 import { formatStudentYearBadge } from '../utils/filterUtils';
 
 function getRankBadge(rank?: number) {
   if (!rank || rank <= 0) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-navy-700">Unranked</span>;
-  if (rank === 1) return <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 text-white shadow-md shadow-amber-500/30 border border-amber-300/60"><Trophy className="w-3.5 h-3.5 text-white" /><span>#1</span></span>;
-  if (rank === 2) return <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 text-white shadow-md shadow-slate-500/20 border border-slate-300/60"><Trophy className="w-3.5 h-3.5 text-white" /><span>#2</span></span>;
-  if (rank === 3) return <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-amber-700 via-orange-600 to-orange-500 text-white shadow-md shadow-amber-700/20 border border-amber-600/60"><Trophy className="w-3.5 h-3.5 text-white" /><span>#3</span></span>;
+  if (rank === 1) return <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 text-white shadow-md shadow-amber-500/30 border border-amber-300/60"><span>#1</span></span>;
+  if (rank === 2) return <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 text-white shadow-md shadow-slate-500/20 border border-slate-300/60"><span>#2</span></span>;
+  if (rank === 3) return <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-amber-700 via-orange-600 to-orange-500 text-white shadow-md shadow-amber-700/20 border border-amber-600/60"><span>#3</span></span>;
   return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700">#{rank}</span>;
 }
 

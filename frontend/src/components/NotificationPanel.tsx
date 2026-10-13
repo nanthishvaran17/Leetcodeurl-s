@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { resolveNotificationDestination } from '../utils/notificationNavigation';
-import { Bell, Check, Archive, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, RefreshCw, Flame, Zap, Trophy, Users } from 'lucide-react';
+import { Bell, Check, Archive, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, RefreshCw, Zap, Users, Award, Activity } from 'lucide-react';
 import { useGlobalNotifications, normalizeCategory, type Notification } from '../context/GlobalNotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { requestPushPermissionAndGetToken } from '../services/firebasePush';
@@ -471,9 +471,9 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
 
   const getIcon = (type: string, priority: string) => {
     const t = (type || '').toLowerCase();
-    if (t.includes('daily_surge') || t.includes('100') || t.includes('single_day')) return <Flame className="text-amber-500" size={18} />;
+    if (t.includes('daily_surge') || t.includes('100') || t.includes('single_day')) return <Activity className="text-amber-500" size={18} />;
     if (t.includes('fetch_surge') || t.includes('delta')) return <Zap className="text-indigo-500" size={18} />;
-    if (t.includes('synced') || t.includes('finalized')) return <Trophy className="text-amber-500" size={18} />;
+    if (t.includes('synced') || t.includes('finalized')) return <Award className="text-amber-500" size={18} />;
     if (t.includes('attendance')) return <Users className="text-blue-500" size={18} />;
     if (priority === 'high' || priority === 'critical') return <AlertTriangle className="text-rose-500" size={18} />;
     if (t.includes('assignment')) return <Calendar className="text-emerald-500" size={18} />;

@@ -7,7 +7,7 @@ import { studentLiveStore } from '../stores/studentLiveStore';
 import { FastStudentRow, LEADERBOARD_TABLE_GRID_STYLE } from './FastStudentRow';
 import { useFilteredStudents, useFilters } from '../context/FilterContext';
 
-import { ExternalLink, Trophy, RefreshCw, Wifi, Trash2, AlertCircle, Eye, Edit3, ShieldAlert, X, Clock, Flame, Award, CheckCircle2, TrendingUp, Sparkles, BookOpen, Star } from 'lucide-react';
+import { ExternalLink, RefreshCw, Wifi, Trash2, AlertCircle, Eye, Edit3, ShieldAlert, X, Clock, Award, CheckCircle2, TrendingUp, BookOpen, Star, Activity } from 'lucide-react';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import api from '../services/api';
 import { StudentEditOverlay } from './StudentEditOverlay';
@@ -970,7 +970,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50/60 via-purple-50/30 to-brand-50/60 dark:from-navy-950 dark:via-indigo-950/30 dark:to-navy-950 border border-indigo-200/60 dark:border-indigo-800/40 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center space-x-2 min-w-0">
-                    <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 shrink-0" />
+                    <Award className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 shrink-0" />
                     <h4 className="text-sm font-black text-slate-900 dark:text-white truncate">
                       {viewingStudent.contest_name || viewingStudent.public_contest_result?.contest_name || viewingStudent.stats?.recent_contest_name || 'Weekly Contest'}
                     </h4>
@@ -1025,7 +1025,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-center">
                   <div className="flex items-center justify-center space-x-1 text-orange-500">
-                    <Flame className="w-4 h-4" />
+                    <Activity className="w-4 h-4" />
                     <span className="text-xs font-black">{viewingStudent.streak_count || 0} Days</span>
                   </div>
                   <span className="text-[10px] font-bold text-slate-500 mt-1 block">Active Streak</span>

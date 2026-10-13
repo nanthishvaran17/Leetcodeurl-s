@@ -1,10 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Users, Trophy, Activity, AlertTriangle, FileSpreadsheet,
-  RefreshCw, Plus, PieChart, ShieldCheck,
-  FileText, CheckCircle2, Play, Clock, History,
-  AlertOctagon, TrendingUp, Database, Brain, Building2
-} from 'lucide-react';
+import { Users, Activity, AlertTriangle, FileSpreadsheet, RefreshCw, Plus, PieChart, ShieldCheck, FileText, CheckCircle2, Play, Clock, History, AlertOctagon, TrendingUp, Database, Brain, Building2, Award } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
 import { CountdownTimer } from '../components/CountdownTimer';
 const PerformanceChart = React.lazy(() => import('../components/PerformanceChart').then(m => ({ default: m.PerformanceChart })));
@@ -685,7 +680,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-indigo-500/20 transition-all duration-300" />
           <div className="flex items-center justify-between mb-3">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-indigo-500/15 to-purple-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shadow-sm">
-              <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Award className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-500/20">
               Contest Pace
@@ -1104,7 +1099,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <div className="stagger-7 space-y-4 mt-6">
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
-            <Trophy className="w-4 h-4 text-amber-500" />
+            <Award className="w-4 h-4 text-amber-500" />
             <span className="uppercase tracking-wider">Top College Leaderboard</span>
           </h3>
           <button

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Award } from 'lucide-react';
+import { Award } from 'lucide-react';
 
 interface TopPerformersRowProps {
   matrixRows: any[];
@@ -26,7 +26,7 @@ export const TopPerformersRow: React.FC<TopPerformersRowProps> = ({ matrixRows }
       {/* Label */}
       <div className="shrink-0 flex items-center justify-center bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl px-4 py-3 text-white shadow-md">
         <div className="flex flex-col items-center">
-          <Trophy className="w-5 h-5 mb-1 text-amber-200" />
+          <Award className="w-5 h-5 mb-1 text-amber-200" />
           <span className="text-[10px] font-black tracking-widest uppercase">Top Performers</span>
         </div>
       </div>

@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Swords, Trophy, Flame, Star, Award, Zap, ChevronRight, ChevronDown, Check, User, CheckCircle2,
-  Search, Filter, RefreshCw, Building2, Users, BarChart3, TrendingUp, Sparkles,
-  ArrowRightLeft, GraduationCap, School, Layers
-} from 'lucide-react';
+import { Swords, Star, Award, Zap, ChevronRight, ChevronDown, Check, User, CheckCircle2, Search, Filter, RefreshCw, Building2, Users, BarChart3, TrendingUp, ArrowRightLeft, GraduationCap, School, Layers } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import { GlobalFilter } from '../components/GlobalFilter';
 import api from '../services/api';
@@ -744,7 +740,7 @@ export const ComparePage: React.FC = () => {
               {/* Winner Banner */}
               <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 border border-amber-500/30 text-center space-y-1 shadow-sm">
                 <div className="flex items-center justify-center space-x-2 text-amber-600 dark:text-amber-400 font-extrabold text-sm tracking-wide">
-                  <Trophy className="w-5 h-5 text-amber-500 fill-amber-500" />
+                  <Award className="w-5 h-5 text-amber-500 fill-amber-500" />
                   <span>
                     {battleResult?.winner === 'A'
                       ? `${studentA.name} leads the matchup (+${battleResult.margin} Solved)`
@@ -805,7 +801,7 @@ export const ComparePage: React.FC = () => {
                           className="inline-flex items-center justify-center space-x-1.5 text-xs text-slate-500 hover:text-brand-500 transition-colors font-mono font-semibold bg-slate-50 dark:bg-white/5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10"
                         >
                           <span>@{studentA.username}</span>
-                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
                         </a>
                       )}
                     </div>
@@ -917,7 +913,7 @@ export const ComparePage: React.FC = () => {
                           className="inline-flex items-center justify-center space-x-1.5 text-xs text-slate-500 hover:text-indigo-500 transition-colors font-mono font-semibold bg-slate-50 dark:bg-white/5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/10"
                         >
                           <span>@{studentB.username}</span>
-                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
                         </a>
                       )}
                     </div>
@@ -1190,7 +1186,7 @@ export const ComparePage: React.FC = () => {
               
               <div className="p-5 rounded-3xl bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10 border border-amber-500/40 text-center space-y-1 shadow-xl">
                 <div className="flex items-center justify-center space-x-2 text-amber-600 dark:text-amber-400 font-black text-sm uppercase tracking-wider">
-                  <Trophy className="w-6 h-6 fill-amber-500 text-amber-500 animate-bounce" />
+                  <Award className="w-6 h-6 fill-amber-500 text-amber-500 animate-bounce" />
                   <span>
                     {groupWinner?.winner === 'A'
                       ? `${groupAData.label} Leads in Average Solved (+${groupWinner.margin} / student)`

@@ -1,25 +1,7 @@
 // million-ignore
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  X,
-  ExternalLink,
-  RefreshCw,
-  FileText,
-  Award,
-  Trophy,
-  Zap,
-  Target,
-  Brain,
-  Sparkles,
-  Flame,
-  ArrowLeft,
-  Activity,
-  Edit3,
-  ShieldCheck,
-  CheckCircle,
-  Database
-} from 'lucide-react';
+import { X, ExternalLink, RefreshCw, FileText, Award, Zap, Target, Brain, ArrowLeft, Activity, Edit3, ShieldCheck, CheckCircle, Database, CheckCircle2, Calendar } from 'lucide-react';
 import { StudentEditOverlay } from './StudentEditOverlay';
 import {
   ResponsiveContainer,
@@ -536,7 +518,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
         tagBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30',
         iconElement: (
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border-2 border-emerald-500/40 flex items-center justify-center shadow-md shrink-0">
-            <Trophy className="w-8 h-8 text-emerald-500" />
+            <Award className="w-8 h-8 text-emerald-500" />
           </div>
         ),
         fallbackHtml: `<div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border-2 border-emerald-500/40 flex items-center justify-center shadow-md shrink-0"><svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9v3a6 6 0 006 6v0a6 6 0 006-6V9M4 5h16M12 15v5"></path></svg></div>`
@@ -594,7 +576,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
         tagBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/30',
         iconElement: (
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-red-500/20 border-2 border-amber-500/40 flex items-center justify-center shadow-md shrink-0">
-            <Flame className="w-8 h-8 text-amber-500" />
+            <Activity className="w-8 h-8 text-amber-500" />
           </div>
         ),
         fallbackHtml: `<div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-red-500/20 border-2 border-amber-500/40 flex items-center justify-center shadow-md shrink-0"><svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg></div>`
@@ -640,11 +622,11 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
   const tabs = [
     { id: 'overview', label: '1. Overview', icon: Activity },
     { id: 'dsa', label: '2. DSA Breakdown', icon: Brain },
-    { id: 'contests', label: '3. Contests', icon: Trophy },
+    { id: 'contests', label: '3. Contests', icon: Award },
     { id: 'activity', label: '4. Heatmap', icon: Zap },
     { id: 'submissions', label: `5. Submissions (${submissions.length})`, icon: FileText },
     { id: 'badges', label: `6. Badges (${badges.length})`, icon: Award },
-    { id: 'languages', label: '7. Languages', icon: Sparkles },
+    { id: 'languages', label: '7. Languages', icon: CheckCircle2 },
     { id: 'topics', label: '8. Topics & Skills', icon: Target },
     { id: 'telemetry', label: '9. Data Quality', icon: ShieldCheck }
   ];
@@ -886,7 +868,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         <div className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center">
                           <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Activity Streak</span>
                           <div className="text-xl font-black text-amber-600 font-mono mt-0.5 flex justify-center items-center gap-1">
-                            <Flame className="w-4 h-4 text-amber-500" />
+                            <Activity className="w-4 h-4 text-amber-500" />
                             <span>{activity.current_streak ?? 0} Days</span>
                           </div>
                         </div>
@@ -1032,7 +1014,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                     <div id="contests" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-6 animate-fade-in scroll-mt-20">
                       <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                          <Trophy className="w-4 h-4 text-purple-600" />
+                          <Award className="w-4 h-4 text-purple-600" />
                           <span>3. Contest Intelligence &amp; Rating Progression</span>
                         </h3>
                         <span className="text-[11px] font-black text-purple-900 font-mono bg-purple-50 px-3 py-1 rounded-full border border-purple-200">
@@ -1479,7 +1461,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                       <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <div>
                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-amber-500" />
+                            <CheckCircle2 className="w-4 h-4 text-amber-500" />
                             <span>7. Language Intelligence</span>
                           </h3>
                           <p className="text-[11px] text-slate-500 font-bold mt-0.5">Multi-language problem-solving distribution &amp; proficiency</p>

@@ -1,7 +1,7 @@
 // million-ignore
 import React, { useState, useEffect, useRef, useTransition } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Medal, TrendingUp, Target, CheckCircle2, AlertCircle, PieChart as LucidePieChart } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Medal, TrendingUp, Target, CheckCircle2, AlertCircle, PieChart as LucidePieChart } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
@@ -499,7 +499,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           {[
             { id: 'overview', label: 'Overview', icon: <FileText className="w-3.5 h-3.5 shrink-0" /> },
             { id: 'analytics', label: 'Analytics', icon: <BarChart2 className="w-3.5 h-3.5 shrink-0" /> },
-            { id: 'contests', label: 'Contests', icon: <Trophy className="w-3.5 h-3.5 shrink-0" /> },
+            { id: 'contests', label: 'Contests', icon: <Award className="w-3.5 h-3.5 shrink-0" /> },
             { id: 'activity', label: 'Activity', icon: <Activity className="w-3.5 h-3.5 shrink-0" /> },
             { id: 'reports', label: 'Reports', icon: <BookOpen className="w-3.5 h-3.5 shrink-0" /> }
           ].map((tab) => {
@@ -570,7 +570,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           <div className="flex items-center justify-between mb-5 relative z-10">
             <div className="flex items-center space-x-2.5">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-md shadow-amber-500/20">
-                <Trophy className="w-4 h-4" />
+                <Award className="w-4 h-4" />
               </div>
               <div>
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Rankings & Activity</h4>
@@ -588,7 +588,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300">College Rank</span>
                 <div className="p-1 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                  <Trophy className="w-3.5 h-3.5" />
+                  <Award className="w-3.5 h-3.5" />
                 </div>
               </div>
               <div className="flex items-baseline space-x-1">
@@ -634,7 +634,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-black uppercase tracking-wider text-orange-700 dark:text-orange-300">Active Streak</span>
                 <div className="p-1 rounded-lg bg-orange-500/15 text-orange-600 dark:text-orange-400 animate-pulse">
-                  <Flame className="w-3.5 h-3.5" />
+                  <Activity className="w-3.5 h-3.5" />
                 </div>
               </div>
               <div className="flex items-baseline space-x-1.5">

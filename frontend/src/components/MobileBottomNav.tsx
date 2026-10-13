@@ -1,14 +1,5 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  Trophy, 
-  Swords, 
-  TrendingUp, 
-  UserCircle,
-  Share2,
-  Building2,
-  UserCheck
-} from 'lucide-react';
+import { LayoutDashboard, Swords, TrendingUp, UserCircle, Share2, Building2, UserCheck, Calendar } from 'lucide-react';
 
 interface MobileBottomNavProps {
   activeTab: string;
@@ -61,7 +52,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     {
       id: 'students',
       label: 'Rankings',
-      icon: Trophy,
+      icon: Calendar,
     },
     {
       id: 'weekly-contest',

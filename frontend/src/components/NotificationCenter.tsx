@@ -115,7 +115,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
 
   return (
     <div
-      className={`pointer-events-auto relative shrink-0 w-full overflow-hidden rounded-2xl p-4 shadow-xl border backdrop-blur-xl transition-all duration-300 transform hover:-translate-y-0.5 animate-fade-in ${style.bg}`}
+      className={`pointer-events-auto relative shrink-0 w-full overflow-hidden rounded-2xl p-4 shadow-2xl border backdrop-blur-2xl transition-all duration-300 transform hover:-translate-y-0.5 animate-slide-down-fade ring-1 ring-black/5 dark:ring-white/10 ${style.bg}`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       role="alert"
@@ -209,14 +209,14 @@ export const NotificationCenter: React.FC = () => {
 
   return createPortal(
     <>
-      {/* Toast Notification Stack Container (Bottom-Right Non-Intrusive Floating Stack) */}
+      {/* Toast Notification Stack Container (Top-Right Header-Aligned Stack) */}
       <div
         id="nec-toast-container"
-        className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)] sm:bottom-6 right-3 sm:right-6 z-[99999999] flex flex-col-reverse gap-2.5 sm:gap-3.5 w-[calc(100vw-24px)] sm:w-[390px] pointer-events-none print:hidden no-print"
+        className="fixed top-[calc(env(safe-area-inset-top,0px)+3.85rem)] sm:top-[4.25rem] right-3 sm:right-6 z-[99999999] flex flex-col gap-2.5 sm:gap-3.5 w-[calc(100vw-24px)] sm:w-[400px] pointer-events-none print:hidden no-print"
         aria-live="polite"
         aria-atomic="true"
       >
-        {toasts.map((toast) => (
+        {[...toasts].reverse().map((toast) => (
           <ToastItem key={toast.id} toast={toast} onDismiss={notify.dismiss} />
         ))}
       </div>

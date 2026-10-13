@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, startTransition } from 'react';
-import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock, Building2, GraduationCap, ChevronDown, Check, Target, Loader2, Trophy, RefreshCw, Search } from 'lucide-react';
+import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock, Building2, GraduationCap, ChevronDown, Check, Target, Loader2, RefreshCw, Search } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api, { getApiUrl } from '../services/api';
 import { ReportPreview } from '../components/ReportPreview';
@@ -450,7 +450,7 @@ export const ReportsPage: React.FC = () => {
       badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
       description: 'Monitors student performance across the latest 5 valid contests. Automatically calculates rolling window metrics and identifies Improving (↑), Stable (→), Declining (↓), and Follow-Up student trajectories.',
       filename: 'Five_Week_Performance_Trend_Report.xlsx',
-      icon: Trophy,
+      icon: Award,
       iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
       btnGradient: 'from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 shadow-indigo-600/30',
       onClick: () => {
@@ -1163,7 +1163,7 @@ export const ReportsPage: React.FC = () => {
                 disabled={isGeneratingUniversal}
                 className="w-full sm:w-auto min-h-[48px] flex items-center justify-center space-x-2.5 px-7 py-3 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:via-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white font-black text-xs sm:text-sm tracking-wide rounded-2xl shadow-xl shadow-brand-500/25 hover:shadow-brand-500/40 border border-brand-400/30 transition-all active:scale-95 cursor-pointer touch-manipulation group"
               >
-                <Sparkles className={`w-4 h-4 text-brand-200 group-hover:rotate-12 transition-transform shrink-0 ${isGeneratingUniversal ? 'animate-spin' : ''}`} />
+                <CheckCircle2 className={`w-4 h-4 text-brand-200 group-hover:rotate-12 transition-transform shrink-0 ${isGeneratingUniversal ? 'animate-spin' : ''}`} />
                 <span className="font-sans font-black">{isGeneratingUniversal ? 'Opening Preview...' : 'Generate Preview'}</span>
               </button>
             </div>
@@ -1215,8 +1215,8 @@ export const ReportsPage: React.FC = () => {
 
           {/* Floating Success / Status Toast */}
           {toastMessage && (
-            <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 sm:left-auto sm:right-6 z-[10000] animate-slideUp">
-              <div className="px-5 py-3 rounded-2xl bg-slate-900 border border-slate-700 text-white text-xs font-bold shadow-lg flex items-center space-x-3 w-full sm:w-auto max-w-md mx-auto">
+            <div className="fixed top-[calc(env(safe-area-inset-top,0px)+3.85rem)] sm:top-[4.25rem] left-4 right-4 sm:left-auto sm:right-6 z-[10000] animate-slide-down-fade">
+              <div className="px-5 py-3 rounded-2xl bg-slate-905 bg-slate-900/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-700/80 text-white text-xs font-bold shadow-2xl flex items-center space-x-3 w-full sm:w-auto max-w-md mx-auto ring-1 ring-white/10">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span>{toastMessage}</span>
                 <button

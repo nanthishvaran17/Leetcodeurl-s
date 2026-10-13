@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Building2, GraduationCap, ChevronRight, Medal, Crown } from 'lucide-react';
+import { Building2, GraduationCap, ChevronRight, Medal, Crown, Award } from 'lucide-react';
 import api from '../../services/api';
 
 interface LeaderboardEntry {
@@ -178,7 +178,7 @@ export const ContestLeaderboardPanel: React.FC<ContestLeaderboardPanelProps> = (
       {/* Header + Tier tabs */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-amber-500" />
+          <Award className="w-4 h-4 text-amber-500" />
           <span>Contest Leaderboard</span>
           {displayEntries.length > 0 && (
             <span className="text-[10px] font-mono text-slate-500">({displayEntries.length} entries)</span>
@@ -186,7 +186,7 @@ export const ContestLeaderboardPanel: React.FC<ContestLeaderboardPanelProps> = (
         </h4>
         <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800">
           {([
-            { key: 'overall', label: 'Overall', icon: <Trophy className="w-3 h-3" /> },
+            { key: 'overall', label: 'Overall', icon: <Award className="w-3 h-3" /> },
             { key: 'dept',    label: 'By Dept', icon: <Building2 className="w-3 h-3" /> },
             { key: 'year',    label: 'By Year', icon: <GraduationCap className="w-3 h-3" /> },
           ] as const).map(t => (
@@ -297,7 +297,7 @@ export const ContestLeaderboardPanel: React.FC<ContestLeaderboardPanelProps> = (
 
       {!loading && displayEntries.length === 0 && (
         <div className="flex flex-col items-center justify-center py-6 text-center text-slate-500 space-y-1">
-          <Trophy className="w-6 h-6 text-slate-600" />
+          <Award className="w-6 h-6 text-slate-600" />
           <p className="text-xs">No participants yet. Start the contest to see leaderboard.</p>
         </div>
       )}

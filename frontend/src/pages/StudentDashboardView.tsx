@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Trophy, Flame, Award, Star, ExternalLink, CheckCircle2, TrendingUp,
-  AlertCircle, Shield, User, Clock, Zap, BookOpen, BarChart2
-} from 'lucide-react';
+import { Award, Star, ExternalLink, CheckCircle2, TrendingUp, AlertCircle, Shield, User, Clock, Zap, BookOpen, BarChart2, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
 import { StudentData } from '../components/LeaderboardTable';
@@ -142,7 +139,7 @@ export const StudentDashboardView: React.FC = () => {
             <div className="glass-card p-6 rounded-3xl border border-brand-500/30 space-y-2 shadow-lg">
               <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
                 <span>Total Solved</span>
-                <Trophy className="w-5 h-5 text-amber-500" />
+                <Award className="w-5 h-5 text-amber-500" />
               </div>
               <h3 className="text-3xl font-black text-slate-900 dark:text-white">
                 {reportedTotal}
@@ -196,7 +193,7 @@ export const StudentDashboardView: React.FC = () => {
             <div className="glass-card p-6 rounded-3xl border border-rose-500/30 space-y-2 shadow-lg">
               <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
                 <span>Active Streak</span>
-                <Flame className="w-5 h-5 text-rose-500 fill-rose-500" />
+                <Activity className="w-5 h-5 text-rose-500 fill-rose-500" />
               </div>
               {hasActivityData ? (
                 <>

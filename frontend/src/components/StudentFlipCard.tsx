@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink, Trophy, CheckCircle2, User, Trash2, ShieldCheck, Clock, AlertCircle, Loader, Crown, Award, RotateCcw } from 'lucide-react';
+import { ExternalLink, CheckCircle2, User, Trash2, ShieldCheck, Clock, AlertCircle, Loader, Crown, Award, RotateCcw } from 'lucide-react';
 import { StudentData } from './LeaderboardTable';
 import { useStudentEntity } from '../stores/studentLiveStore';
 import { formatStudentYearBadge, formatDepartmentCode, deriveDepartmentFromRegNo } from '../utils/filterUtils';
@@ -191,7 +191,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 </>
               ) : effectiveRank === 2 ? (
                 <>
-                  <Trophy className="w-3.5 h-3.5 text-slate-800 dark:text-slate-200" />
+                  <Award className="w-3.5 h-3.5 text-slate-800 dark:text-slate-200" />
                   <span>Rank #2</span>
                 </>
               ) : effectiveRank === 3 ? (

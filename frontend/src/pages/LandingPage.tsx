@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CollegeLogo } from '../components/CollegeLogo';
-import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List, RefreshCw, CheckCircle2, Clock, AlertCircle, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, Search, X, Sparkles, Zap, ArrowUpDown, SortAsc, SortDesc } from 'lucide-react';
+import { Shield, ArrowRight, Users, Layers, Activity, Star, LayoutGrid, List, RefreshCw, CheckCircle2, Clock, AlertCircle, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, Search, X, Zap, ArrowUpDown, SortAsc, SortDesc, Award } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { StudentFlipCard } from '../components/StudentFlipCard';
@@ -571,11 +571,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   // Sort Options
   const sortOptions: DropdownOption[] = [
-    { value: 'top_solved', label: 'Top Solvers (Highest First)', icon: Trophy },
+    { value: 'top_solved', label: 'Top Solvers (Highest First)', icon: Award },
     { value: 'low_solved', label: 'Lowest Solvers First', icon: ArrowUpDown },
     { value: 'name_asc', label: 'Student Name (A → Z)', icon: SortAsc },
     { value: 'name_desc', label: 'Student Name (Z → A)', icon: SortDesc },
-    { value: 'streak', label: 'Highest Active Streak', icon: Flame },
+    { value: 'streak', label: 'Highest Active Streak', icon: Activity },
     { value: 'rating', label: 'Highest Contest Rating', icon: Star }
   ];
 
@@ -905,7 +905,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               >
                 <div className="flex items-center justify-between">
                   <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
-                    <Trophy className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <Award className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20">
                     Solved
@@ -932,7 +932,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               >
                 <div className="flex items-center justify-between">
                   <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
-                    <Trophy className="w-5 h-5 sm:w-6 sm:h-6 fill-amber-500/80 text-amber-500" />
+                    <Award className="w-5 h-5 sm:w-6 sm:h-6 fill-amber-500/80 text-amber-500" />
                   </div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25">
                     #1 Rank
@@ -1086,7 +1086,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 setSolvedFilter(val);
                 setDisplayCount(32);
               }}
-              icon={Trophy}
+              icon={Award}
               align="left"
             />
           </div>

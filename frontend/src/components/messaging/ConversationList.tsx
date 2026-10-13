@@ -653,7 +653,7 @@ export const ConversationList: React.FC<Props> = ({
 
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed top-16 sm:top-20 left-1/2 transform -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="bg-slate-900/95 text-white px-5 py-2.5 rounded-full shadow-2xl font-bold text-xs flex items-center space-x-2 border border-slate-700/60 backdrop-blur-md">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>{toastMessage}</span>

@@ -19,11 +19,11 @@ export const ExportStatus: React.FC<ExportStatusProps> = ({ state, onRetry, onCl
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        initial={{ opacity: 0, y: -20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 15, scale: 0.96 }}
+        exit={{ opacity: 0, y: -15, scale: 0.96 }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-6 right-4 left-4 sm:left-auto z-[100060] bg-slate-900/85 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-slate-950/50 text-white max-w-[calc(100vw-2rem)] sm:max-w-[420px] w-full border border-white/[0.08] font-sans overflow-hidden"
+        className="fixed top-[calc(env(safe-area-inset-top,0px)+3.85rem)] sm:top-[4.25rem] right-4 left-4 sm:left-auto sm:right-6 z-[100060] bg-slate-900/90 dark:bg-navy-950/95 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-slate-950/50 text-white max-w-[calc(100vw-2rem)] sm:max-w-[420px] w-full border border-white/[0.12] font-sans overflow-hidden ring-1 ring-white/10"
       >
         {/* Subtle premium gradient background effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-brand-500/5 pointer-events-none" />
