@@ -104,28 +104,39 @@ def get_my_assigned_students(
     # Calculate weekly progress dynamically using StudentStatSnapshot (delta from 7 days ago)
     weekly_prog_map = {}
     if assigned_ids:
-        t_7d = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
-        snapshots = db.query(StudentStatSnapshot).filter(
-            StudentStatSnapshot.student_id.in_(assigned_ids)
-        ).order_by(StudentStatSnapshot.student_id, StudentStatSnapshot.captured_at.asc()).all()
-        
-        snap_map = {}
-        for snap in snapshots:
-            cap = snap.captured_at
-            if cap:
-                if cap.tzinfo is None:
-                    cap = cap.replace(tzinfo=datetime.timezone.utc)
-                if cap <= t_7d:
-                    snap_map[snap.student_id] = snap
-                elif snap.student_id not in snap_map:
-                    snap_map[snap.student_id] = snap
-                    
-        for s in students:
-            snap = snap_map.get(s.id)
-            if snap and s.stats and s.stats.total_solved is not None:
-                weekly_prog_map[s.id] = max(0, s.stats.total_solved - snap.total_solved)
-            else:
-                weekly_prog_map[s.id] = 0
+        try:
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
+            t_7d = now_utc - datetime.timedelta(days=7)
+            snapshots = db.query(StudentStatSnapshot).filter(
+                StudentStatSnapshot.student_id.in_(assigned_ids)
+            ).order_by(StudentStatSnapshot.student_id, StudentStatSnapshot.captured_at.asc()).all()
+            
+            snap_map = {}
+            for snap in snapshots:
+                cap = snap.captured_at
+                if cap:
+                    if isinstance(cap, str):
+                        try:
+                            import dateutil.parser
+                            cap = dateutil.parser.parse(cap)
+                        except Exception:
+                            cap = None
+                    if cap:
+                        if getattr(cap, "tzinfo", None) is None:
+                            cap = cap.replace(tzinfo=datetime.timezone.utc)
+                        if cap <= t_7d:
+                            snap_map[snap.student_id] = snap
+                        elif snap.student_id not in snap_map:
+                            snap_map[snap.student_id] = snap
+                        
+            for s in students:
+                snap = snap_map.get(s.id)
+                if snap and s.stats and s.stats.total_solved is not None:
+                    weekly_prog_map[s.id] = max(0, int(s.stats.total_solved or 0) - int(snap.total_solved or 0))
+                else:
+                    weekly_prog_map[s.id] = 0
+        except Exception as snap_err:
+            logger.warning(f"[WEEKLY_PROG_CALC_WARN] {snap_err}")
 
     student_list = []
     for s in students:
@@ -410,10 +421,19 @@ def calculate_student_performance_status(s: Student, weekly_solved: int = 0) -> 
 
     days_inactive = 0
     if last_verified:
-        now = datetime.datetime.now(datetime.timezone.utc)
-        if last_verified.tzinfo is None:
-            last_verified = last_verified.replace(tzinfo=datetime.timezone.utc)
-        days_inactive = (now - last_verified).days
+        try:
+            now = datetime.datetime.now(datetime.timezone.utc)
+            if isinstance(last_verified, str):
+                try:
+                    import dateutil.parser
+                    last_verified = dateutil.parser.parse(last_verified)
+                except Exception:
+                    last_verified = datetime.datetime.fromisoformat(last_verified.replace("Z", "+00:00"))
+            if getattr(last_verified, "tzinfo", None) is None:
+                last_verified = last_verified.replace(tzinfo=datetime.timezone.utc)
+            days_inactive = max(0, (now - last_verified).days)
+        except Exception:
+            days_inactive = 0
 
     if days_inactive >= 8 or total == 0 or not s.username:
         status_label = "At Risk"

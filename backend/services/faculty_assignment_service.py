@@ -29,7 +29,7 @@ class FacultyAssignmentService:
         """Returns list of student IDs currently assigned to a faculty member. Always fetches fresh from DB to prevent multi-worker cache staleness."""
         assignments = db.query(FacultyStudentAssignment.student_id).filter(
             FacultyStudentAssignment.faculty_id == faculty_id,
-            FacultyStudentAssignment.is_active == True
+            (FacultyStudentAssignment.is_active == True) | (FacultyStudentAssignment.is_active.is_(None))
         ).all()
         return [a[0] for a in assignments]
 
@@ -38,7 +38,7 @@ class FacultyAssignmentService:
         """Returns active count of students assigned to a faculty member."""
         return db.query(FacultyStudentAssignment).filter(
             FacultyStudentAssignment.faculty_id == faculty_id,
-            FacultyStudentAssignment.is_active == True
+            (FacultyStudentAssignment.is_active == True) | (FacultyStudentAssignment.is_active.is_(None))
         ).count()
 
     @staticmethod

@@ -36,16 +36,34 @@ export const StaffDashboardView: React.FC = () => {
     setLoading(true);
     try {
       clearApiCache();
-      const [sumRes, studRes, prioRes, alertRes] = await Promise.all([
+      const results = await Promise.allSettled([
         api.get(`/faculty-assignments/my-mentoring-summary?_t=${Date.now()}`),
         api.get(`/faculty-assignments/my-students?_t=${Date.now()}`),
         api.get(`/faculty-assignments/priority-students?_t=${Date.now()}`),
         api.get(`/faculty-assignments/alerts?_t=${Date.now()}`)
       ]);
 
-      const rawList = Array.isArray(studRes.data?.students)
-        ? studRes.data.students
-        : (Array.isArray(studRes.data) ? studRes.data : []);
+      const [sumRes, studRes, prioRes, alertRes] = results;
+
+      let rawList: any[] = [];
+      if (studRes.status === 'fulfilled') {
+        const d = studRes.value?.data;
+        rawList = Array.isArray(d?.students) ? d.students : (Array.isArray(d) ? d : []);
+      }
+
+      // If cachebuster request returned empty or failed, fetch default endpoint immediately
+      if (!rawList || rawList.length === 0) {
+        try {
+          const fb = await api.get('/faculty-assignments/my-students');
+          const fbData = fb?.data;
+          const fbList = Array.isArray(fbData?.students) ? fbData.students : (Array.isArray(fbData) ? fbData : []);
+          if (fbList.length > 0) {
+            rawList = fbList;
+          }
+        } catch (fbErr) {
+          console.warn('Fallback my-students warning:', fbErr);
+        }
+      }
 
       const studentList = rawList.map((s: any) => {
         const solved = Number(s.stats?.total_solved ?? s.total_solved ?? s.totalSolved ?? 0);
@@ -89,12 +107,37 @@ export const StaffDashboardView: React.FC = () => {
         };
       });
 
-      if (sumRes.data) {
-        setSummary(sumRes.data);
+      if (sumRes.status === 'fulfilled' && sumRes.value?.data) {
+        setSummary(sumRes.value.data);
+      } else if (studentList.length > 0) {
+        const activeCnt = studentList.filter((s: any) => s.total_solved > 0).length;
+        const atRiskCnt = studentList.filter((s: any) => s.status_code === 'AT_RISK').length;
+        const compCnt = studentList.filter((s: any) => s.status_code === 'EXCELLENT' || s.status_code === 'COMPLETED').length;
+        const attCnt = studentList.filter((s: any) => s.status_code === 'NEEDS_IMPROVEMENT' || s.status_code === 'ATTENTION').length;
+        setSummary({
+          total_assigned: studentList.length,
+          active_students: activeCnt,
+          completed_students: compCnt,
+          needing_attention: attCnt,
+          at_risk: atRiskCnt,
+          workload_capacity: 30,
+          workload_status: studentList.length > 20 ? 'OVERLOAD' : 'NORMAL'
+        });
       }
+
       setMyStudents(studentList);
-      setPriorityStudents(prioRes.data || []);
-      setAlerts(alertRes.data || []);
+
+      if (prioRes.status === 'fulfilled' && prioRes.value?.data) {
+        setPriorityStudents(prioRes.value.data);
+      } else {
+        setPriorityStudents(studentList.filter((s: any) => s.status_code === 'AT_RISK' || s.status_code === 'NEEDS_IMPROVEMENT'));
+      }
+
+      if (alertRes.status === 'fulfilled' && alertRes.value?.data) {
+        setAlerts(alertRes.value.data);
+      } else {
+        setAlerts([]);
+      }
     } catch (err) {
       console.error('Error fetching mentoring dashboard data:', err);
     } finally {

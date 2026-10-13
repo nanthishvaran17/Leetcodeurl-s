@@ -167,7 +167,7 @@ run_sync.py
 send_completion_email.py
 sunday_automation_complete.py
 sunday_autopilot_engine.py
-sunday_runner.py
+!backend/sunday_runner.py
 update_excel.py
 view_stats.py
 authoritative_contest_516_reconciliation.py
