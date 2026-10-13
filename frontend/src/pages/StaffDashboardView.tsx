@@ -327,12 +327,12 @@ export const StaffDashboardView: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-2.5 w-full sm:w-auto flex-wrap sm:flex-nowrap">
             <button
               type="button"
               onClick={handleLiveSync}
               disabled={liveSyncing}
-              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-indigo-700 hover:from-brand-500 hover:to-indigo-600 active:scale-[0.98] text-white text-xs font-bold shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
+              className="min-h-[44px] flex-1 sm:flex-none justify-center px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-indigo-700 hover:from-brand-500 hover:to-indigo-600 active:scale-95 text-white text-xs font-bold shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50 touch-manipulation"
             >
               <Zap className={`w-4 h-4 ${liveSyncing ? 'animate-bounce text-amber-400' : 'text-amber-300'}`} />
               <span>{liveSyncing ? 'Fetching Live Data...' : 'FETCH LIVE DATA'}</span>
@@ -342,7 +342,7 @@ export const StaffDashboardView: React.FC = () => {
               type="button"
               onClick={fetchMentoringData}
               disabled={loading}
-              className="px-4 py-3 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] text-white text-xs font-semibold border border-white/10 flex items-center space-x-2 transition-all cursor-pointer backdrop-blur-md"
+              className="min-h-[44px] flex-1 sm:flex-none justify-center px-4 py-2.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 text-white text-xs font-semibold border border-white/10 flex items-center space-x-2 transition-all cursor-pointer backdrop-blur-md touch-manipulation"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               <span>Refresh Portfolio</span>
@@ -678,7 +678,7 @@ export const StaffDashboardView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setSelectedStudent(st)}
-                    className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-[0.98] text-white text-xs font-black transition-all flex items-center justify-center space-x-1.5 shadow-md shadow-amber-500/20 cursor-pointer"
+                    className="w-full min-h-[44px] py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs font-black transition-all flex items-center justify-center space-x-1.5 shadow-md shadow-amber-500/20 cursor-pointer touch-manipulation"
                   >
                     <span>Inspect Student</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -1174,7 +1174,7 @@ export const StaffDashboardView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setSelectedStudent(st)}
-                      className="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-white text-xs font-black inline-flex items-center space-x-1.5 transition-all shadow-md shadow-brand-500/20 cursor-pointer shrink-0"
+                      className="min-h-[40px] px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-white text-xs font-black inline-flex items-center space-x-1.5 transition-all shadow-md shadow-brand-500/20 cursor-pointer shrink-0 touch-manipulation"
                     >
                       <Eye className="w-4 h-4" />
                       <span>Inspect</span>

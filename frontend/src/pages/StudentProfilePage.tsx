@@ -384,7 +384,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             <button
               type="button"
               onClick={() => onBack()}
-              className="px-3.5 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:bg-white/[0.05] text-white border border-white/10 transition-all cursor-pointer flex items-center space-x-1.5 text-xs font-bold shadow-md hover:scale-105 shrink-0 backdrop-blur-md"
+              className="min-h-[40px] px-3.5 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:bg-white/[0.05] text-white border border-white/10 transition-all cursor-pointer flex items-center space-x-1.5 text-xs font-bold shadow-md active:scale-95 shrink-0 backdrop-blur-md touch-manipulation"
               title="Back"
             >
               <ArrowLeft className="w-4 h-4 text-white shrink-0" />
@@ -419,7 +419,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           <button
             type="button"
             onClick={() => onBack()}
-            className="md:hidden p-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] text-slate-300 hover:text-white border border-white/10 shrink-0 cursor-pointer transition"
+            className="md:hidden p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl bg-white/[0.08] hover:bg-white/[0.16] text-slate-300 hover:text-white border border-white/10 shrink-0 cursor-pointer transition active:scale-95 touch-manipulation"
             title="Close modal"
           >
             <X className="w-4.5 h-4.5" />
@@ -509,7 +509,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                 key={tab.id}
                 type="button"
                 onClick={() => startTransition(() => setActiveTab(tab.id as TabId))}
-                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 py-2 sm:px-3 sm:py-2.5 rounded-xl text-xs font-black transition-all outline-none text-center cursor-pointer min-w-0 ${
+                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 py-2 sm:px-3 sm:py-2.5 rounded-xl text-xs font-black transition-all outline-none text-center cursor-pointer min-w-0 min-h-[42px] touch-manipulation active:scale-95 select-none ${
                   isActive
                     ? 'bg-white dark:bg-navy-800 text-brand-600 dark:text-brand-300 shadow-sm border border-slate-200/80 dark:border-navy-700'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-900/50'

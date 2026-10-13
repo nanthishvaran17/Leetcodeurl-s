@@ -476,7 +476,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             </div>
             <button
               onClick={handleResetFilters}
-              className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer inline-flex items-center space-x-1.5"
+              className="w-full sm:w-auto min-h-[42px] justify-center px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer inline-flex items-center space-x-1.5 touch-manipulation active:scale-95"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset Filters</span>
@@ -522,16 +522,16 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 <p className="text-xs text-slate-800 dark:text-slate-200 font-extrabold">
                   Showing <span className="font-black text-brand-600 dark:text-brand-400">{Math.min(displayCount, totalStudents)}</span> of <span className="font-black text-slate-900 dark:text-white">{totalStudents}</span> Students
                 </p>
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:space-x-3 w-full sm:w-auto px-4 sm:px-0">
                   <button
                     onClick={() => setDisplayCount(prev => prev + 32)}
-                    className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-600/30 transition-all hover:scale-105 cursor-pointer"
+                    className="w-full sm:w-auto min-h-[44px] flex items-center justify-center px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-600/30 transition-all active:scale-95 touch-manipulation cursor-pointer"
                   >
                     <span>Load More (+32)</span>
                   </button>
                   <button
                     onClick={() => setDisplayCount(totalStudents)}
-                    className="px-5 py-3 rounded-2xl glass-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all hover:scale-105 cursor-pointer"
+                    className="w-full sm:w-auto min-h-[44px] flex items-center justify-center px-5 py-3 rounded-2xl glass-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all active:scale-95 touch-manipulation cursor-pointer"
                   >
                     <span>Show All {totalStudents} Students</span>
                   </button>
@@ -544,7 +544,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 </p>
                 <button
                   onClick={() => setDisplayCount(32)}
-                  className="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all hover:scale-105 cursor-pointer inline-flex items-center space-x-2 shadow-sm"
+                  className="min-h-[40px] px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all active:scale-95 touch-manipulation cursor-pointer inline-flex items-center space-x-2 shadow-sm"
                 >
                   <ChevronDown className="w-4 h-4 rotate-180" />
                   <span>Collapse to Top 32</span>

@@ -110,7 +110,7 @@ export const StudentDashboardView: React.FC = () => {
               href={studentData.leetcode_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-5 py-2.5 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-black shadow-lg shadow-brand-500/30 flex items-center space-x-2 transition-all"
+              className="w-full sm:w-auto justify-center min-h-[44px] px-5 py-2.5 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-black shadow-lg shadow-brand-500/30 flex items-center space-x-2 transition-all touch-manipulation active:scale-95 cursor-pointer"
             >
               <span>LeetCode Profile</span>
               <ExternalLink className="w-4 h-4" />

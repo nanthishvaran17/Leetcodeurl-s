@@ -407,7 +407,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
             Showing <span className="text-slate-900 dark:text-white font-black">{Math.min((page - 1) * limit + 1, total)}</span> to <span className="text-slate-900 dark:text-white font-black">{Math.min(page * limit, total)}</span> of <span className="text-slate-900 dark:text-white font-black">{total}</span> students
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
             <GlobalFilter
               value={limit.toString()}
               onChange={val => {
@@ -425,19 +425,23 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
 
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-xl border border-slate-200 dark:border-navy-700">
               <button
+                type="button"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-2 rounded-lg hover:bg-white dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg hover:bg-white dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors flex items-center justify-center cursor-pointer active:scale-95 touch-manipulation"
+                aria-label="Previous Page"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <div className="px-3 text-sm font-black text-slate-700 dark:text-slate-200 min-w-[3rem] text-center">
+              <div className="px-3 text-sm font-black text-slate-700 dark:text-slate-200 min-w-[3rem] text-center select-none font-mono">
                 {page} / {totalPages}
               </div>
               <button
+                type="button"
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="p-2 rounded-lg hover:bg-white dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg hover:bg-white dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors flex items-center justify-center cursor-pointer active:scale-95 touch-manipulation"
+                aria-label="Next Page"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

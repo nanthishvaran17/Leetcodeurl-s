@@ -142,12 +142,12 @@ class DownloadManager {
           reportId: options.params?.report_id || options.params?.reportId
         });
 
-        // Zero-latency instant dispatch (5ms for event loop microtick)
+        // Zero-latency ultra-fast instant dispatch (1ms for event loop microtick)
         setTimeout(() => {
           if (writeResult.uri) {
             shareOrOpenFile(writeResult.uri, effectiveFilename, mimeType);
           }
-        }, 5);
+        }, 1);
 
         return { success: true, downloadId };
       }
@@ -332,7 +332,7 @@ class DownloadManager {
           if (writeResult.uri) {
             shareOrOpenFile(writeResult.uri, effectiveFilename, mimeType);
           }
-        }, 5);
+        }, 1);
 
         return { success: true, downloadId: jobId };
       }
@@ -432,7 +432,7 @@ class DownloadManager {
 
         setTimeout(() => {
           shareOrOpenFile(writeResult.uri, safeFilename, effectiveMime);
-        }, 5);
+        }, 1);
 
         return { success: true, downloadId };
       }

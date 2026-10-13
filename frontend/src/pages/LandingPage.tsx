@@ -1135,7 +1135,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <button
               onClick={handleRefreshAll}
               disabled={refreshing || syncProgress?.is_running}
-              className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${refreshing || syncProgress?.is_running
+              className={`w-full sm:w-auto min-h-[42px] flex items-center justify-center space-x-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95 ${refreshing || syncProgress?.is_running
                 ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
                 : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30 cursor-pointer'
                 }`}
@@ -1243,7 +1243,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               <button
                 onClick={handleResetFilters}
-                className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer inline-flex items-center space-x-1.5"
+                className="w-full sm:w-auto min-h-[42px] justify-center px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer inline-flex items-center space-x-1.5 touch-manipulation active:scale-95"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reset View</span>

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   Clock, Download, RefreshCw, Search, Users, AlertCircle,
   ExternalLink, Eye, ArrowUpDown, ChevronRight, X, ShieldAlert, CheckCircle2, FileSpreadsheet, Filter,
-  Flame, Zap, Sparkles, TrendingUp, Trophy, ChevronDown, SlidersHorizontal
+  Flame, Zap, Sparkles, TrendingUp, Trophy, ChevronDown, SlidersHorizontal, ArrowLeft
 } from 'lucide-react';
 import api from '../services/api';
 import { downloadManager } from '../services/download/downloadManager';
@@ -21,7 +21,12 @@ const formatYear = (yr: any) => {
   return `${clean} Year`;
 };
 
-export const Post930SolversView: React.FC = () => {
+export interface Post930SolversViewProps {
+  onSelectStudent?: (student: any) => void;
+  onBack?: () => void;
+}
+
+export const Post930SolversView: React.FC<Post930SolversViewProps> = ({ onSelectStudent, onBack }) => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -159,6 +164,16 @@ export const Post930SolversView: React.FC = () => {
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div className="space-y-2 max-w-2xl">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-white text-xs font-bold border border-white/20 transition-all cursor-pointer active:scale-95 mb-1 touch-manipulation"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>← Back to Executive Dashboard</span>
+              </button>
+            )}
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 text-brand-300 text-xs font-black border border-brand-500/40">
               <Clock className="w-4 h-4 text-brand-400" />
               <span>POST-09:30 AM IST ACTIVITY ENGINE</span>
@@ -721,7 +736,28 @@ export const Post930SolversView: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-2 flex justify-end">
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-end gap-2">
+              {onSelectStudent && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const studentObj = {
+                      id: selectedStudent.student_id || selectedStudent.id,
+                      name: selectedStudent.student_name,
+                      register_number: selectedStudent.register_number || selectedStudent.reg_no,
+                      department: selectedStudent.department,
+                      year_level: selectedStudent.year || selectedStudent.year_level,
+                      leetcode_username: selectedStudent.username
+                    };
+                    setSelectedStudent(null);
+                    onSelectStudent(studentObj);
+                  }}
+                  className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-black transition-colors cursor-pointer touch-manipulation active:scale-95 flex items-center justify-center gap-1.5 shadow-md shadow-brand-500/20"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>View Student Profile</span>
+                </button>
+              )}
               <button
                 onClick={() => setSelectedStudent(null)}
                 className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-xl bg-slate-200 dark:bg-navy-800 text-slate-800 dark:text-slate-200 text-xs font-black hover:bg-slate-300 dark:hover:bg-navy-700 transition-colors cursor-pointer touch-manipulation active:scale-95 flex items-center justify-center"

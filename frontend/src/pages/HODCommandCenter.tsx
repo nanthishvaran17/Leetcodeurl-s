@@ -9,7 +9,7 @@ import {
  HelpCircle, Eye, Compass, Target, PieChart, Layers, BrainCircuit,
  Award, Flame, Filter, ChevronDown, ChevronUp, Check, AlertCircle, ArrowRight,
  Sliders, User, CheckCircle, XCircle, ExternalLink, Calendar, Info,
- UserPlus, UserMinus, Shuffle, Printer, Share2, TrendingDown, Minus
+ UserPlus, UserMinus, Shuffle, Printer, Share2, TrendingDown, Minus, Copy
 } from 'lucide-react';
 import { Mail, UserX, GraduationCap, Trophy } from 'lucide-react';
 import { StaffDetailDrawer } from '../components/admin/StaffDetailDrawer';
@@ -1103,27 +1103,27 @@ const ReportHubModal: React.FC<{
  </div>
 
  {/* Footer */}
- <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-50 dark:bg-navy-900 border-t border-slate-200 dark:border-navy-800 flex justify-between items-center shrink-0 flex-wrap gap-2">
+ <div className="p-3 sm:px-6 sm:py-4 bg-slate-50 dark:bg-navy-900 border-t border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row justify-between items-stretch sm:items-center shrink-0 gap-2.5">
  <button
  onClick={handleDownloadPdf}
  disabled={downloadingPdf}
- className="px-4 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-900 dark:text-slate-200 text-xs font-black inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors shadow-xs"
+ className="min-h-[42px] px-4 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-900 dark:text-slate-200 text-xs font-black inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 transition-all touch-manipulation active:scale-95 shadow-xs"
  >
  <Printer size={14} className={downloadingPdf ? 'animate-spin text-amber-500' : 'text-amber-500'} />
  <span>{downloadingPdf ? 'Generating PDF...' : 'Print / Export PDF'}</span>
  </button>
- <div className="flex gap-2">
+ <div className="grid grid-cols-2 sm:flex gap-2">
  <button
  onClick={handleDownloadExcel}
  disabled={downloadingExcel}
- className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all shadow-md shadow-emerald-600/20"
+ className="min-h-[42px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all touch-manipulation active:scale-95 shadow-md shadow-emerald-600/20"
  >
  <Download size={13} className={downloadingExcel ? 'animate-spin' : ''} />
  <span>{downloadingExcel ? 'Downloading...' : 'Export Excel (.xlsx)'}</span>
  </button>
  <button
  onClick={onClose}
- className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-navy-800 text-slate-900 dark:text-slate-200 font-black hover:bg-slate-300 dark:hover:bg-navy-700 text-xs cursor-pointer transition-colors"
+ className="min-h-[42px] px-4 py-2 rounded-xl bg-slate-200 dark:bg-navy-800 text-slate-900 dark:text-slate-200 font-black hover:bg-slate-300 dark:hover:bg-navy-700 text-xs cursor-pointer transition-all touch-manipulation active:scale-95 flex items-center justify-center"
  >
  Close Hub
  </button>
@@ -1133,6 +1133,147 @@ const ReportHubModal: React.FC<{
  </div>
  );
 };
+
+export interface InstitutionalSkillGap {
+  id: string;
+  name: string;
+  solve: string;
+  solvePct: number;
+  target: string;
+  targetPct: number;
+  status: string;
+  color: 'rose' | 'amber' | 'blue';
+  deficit: string;
+  diagnosis: string;
+  rootCauses: string[];
+  sprintPlan: {
+    duration: string;
+    phase1Title: string;
+    phase1Desc: string;
+    phase2Title: string;
+    phase2Desc: string;
+    mentorDirectives: string[];
+  };
+  problems: {
+    number: number;
+    title: string;
+    slug: string;
+    difficulty: 'Easy' | 'Medium' | 'Hard';
+    pattern: string;
+    url: string;
+  }[];
+}
+
+export const institutionalSkillGaps: InstitutionalSkillGap[] = [
+  {
+    id: 'dp',
+    name: 'Dynamic Programming (DP)',
+    solve: '27.3%',
+    solvePct: 27.3,
+    target: '60.0%',
+    targetPct: 60.0,
+    status: 'Critical Gap',
+    color: 'rose',
+    deficit: '-32.7%',
+    diagnosis: 'Students demonstrate high cognitive friction when identifying recurrence relations, defining overlapping subproblem state spaces, and transitioning from naive recursive trees to memoization and bottom-up tabulation.',
+    rootCauses: [
+      'Subproblem overlap and state transition formulation (f(n) = f(n-1) + f(n-2) vs knapsack choice tables)',
+      'High overhead converting recursion trees into 1D/2D memory-efficient iterative matrices',
+      'Edge condition handling for base cases, 0/negative states, and unfeasible sub-branches'
+    ],
+    sprintPlan: {
+      duration: '2-Week Intensive Sprint',
+      phase1Title: 'Week 1: 1D Array Recurrence & Memoization Drill',
+      phase1Desc: 'Focus on recursion tree visualization, caching overlapping calls, and 1D state transition tables (Climbing Stairs, House Robber, Coin Change).',
+      phase2Title: 'Week 2: 2D Matrix DP, Subsequences & Interview Patterns',
+      phase2Desc: 'Transition to grid traversals, longest common subsequences, and hard string edits with space-optimized 2-row rolling buffers.',
+      mentorDirectives: [
+        'Conduct 2 mandatory live problem walkthrough labs per section with whiteboard state tracing',
+        'Require all cohort students to verify test cases and submit at least 5 benchmark DP problems',
+        'Pair students with < 30% solve rate with peer coding leads for guided step-by-step debugging'
+      ]
+    },
+    problems: [
+      { number: 70, title: 'Climbing Stairs', slug: 'climbing-stairs', difficulty: 'Easy', pattern: '1D State DP / Fibonacci', url: 'https://leetcode.com/problems/climbing-stairs/' },
+      { number: 198, title: 'House Robber', slug: 'house-robber', difficulty: 'Medium', pattern: '1D DP / Optimal Substructure Decision', url: 'https://leetcode.com/problems/house-robber/' },
+      { number: 322, title: 'Coin Change', slug: 'coin-change', difficulty: 'Medium', pattern: 'Unbounded Knapsack / Min Choice Tabulation', url: 'https://leetcode.com/problems/coin-change/' },
+      { number: 300, title: 'Longest Increasing Subsequence', slug: 'longest-increasing-subsequence', difficulty: 'Medium', pattern: '1D DP with Binary Search Patience Sort', url: 'https://leetcode.com/problems/longest-increasing-subsequence/' },
+      { number: 72, title: 'Edit Distance', slug: 'edit-distance', difficulty: 'Hard', pattern: '2D String Matrix State Transition', url: 'https://leetcode.com/problems/edit-distance/' }
+    ]
+  },
+  {
+    id: 'graph',
+    name: 'Graph BFS/DFS & Shortest Path',
+    solve: '42.0%',
+    solvePct: 42.0,
+    target: '65.0%',
+    targetPct: 65.0,
+    status: 'Attention Needed',
+    color: 'amber',
+    deficit: '-23.0%',
+    diagnosis: 'Students struggle with abstract graph representations (adjacency lists vs matrices), cycle detection invariants in directed graphs, and multi-source BFS queue synchronizations.',
+    rootCauses: [
+      'Translating grid matrices (2D arrays) into implicit graph vertices and directional neighbors',
+      'Cycle detection invariants and topological sorting orders (Kahn\'s algorithm indegree vs DFS 3-color states)',
+      'Shortest path edge relaxation and heap state tracking in Dijkstra algorithms'
+    ],
+    sprintPlan: {
+      duration: '2-Week Intensive Sprint',
+      phase1Title: 'Week 1: Grid Traversals, Connected Components & Visited Sets',
+      phase1Desc: 'Focus on 2D grid flood fill, directional vectors (dx, dy), and visited matrix management (Number of Islands, Clone Graph).',
+      phase2Title: 'Week 2: Topological Sorting, DAGs & Dijkstra Shortest Path',
+      phase2Desc: 'Drill dependency resolution in course schedules, cycle detection, and weighted shortest path priority queues.',
+      mentorDirectives: [
+        'Demonstrate BFS queue stepping vs DFS recursion stack unwinding side-by-side in lab',
+        'Verify every student implements graph adjacency lists from scratch without helper libraries',
+        'Enforce time-complexity proofs (O(V + E)) for all lab assignment submissions'
+      ]
+    },
+    problems: [
+      { number: 200, title: 'Number of Islands', slug: 'number-of-islands', difficulty: 'Medium', pattern: 'Grid Traversal / BFS & DFS Visited Island Sinks', url: 'https://leetcode.com/problems/number-of-islands/' },
+      { number: 133, title: 'Clone Graph', slug: 'clone-graph', difficulty: 'Medium', pattern: 'Graph Traversal / Hash Map Visited Node Copy', url: 'https://leetcode.com/problems/clone-graph/' },
+      { number: 785, title: 'Is Graph Bipartite?', slug: 'is-graph-bipartite', difficulty: 'Medium', pattern: 'BFS / 2-Color Graph Partition Invariant', url: 'https://leetcode.com/problems/is-graph-bipartite/' },
+      { number: 207, title: 'Course Schedule', slug: 'course-schedule', difficulty: 'Medium', pattern: 'Topological Sort / Indegree & Cycle Detection', url: 'https://leetcode.com/problems/course-schedule/' },
+      { number: 743, title: 'Network Delay Time', slug: 'network-delay-time', difficulty: 'Medium', pattern: 'Dijkstra Algorithm / Min-Heap Edge Relaxation', url: 'https://leetcode.com/problems/network-delay-time/' }
+    ]
+  },
+  {
+    id: 'bs_tp',
+    name: 'Binary Search & Two Pointers',
+    solve: '58.4%',
+    solvePct: 58.4,
+    target: '75.0%',
+    targetPct: 75.0,
+    status: 'Improving',
+    color: 'blue',
+    deficit: '-16.6%',
+    diagnosis: 'While linear scanning is familiar, students encounter repeated off-by-one errors on search space boundary updates, monotonic predicates on answer spaces, and multi-pointer symmetry.',
+    rootCauses: [
+      'Off-by-one boundary bugs (low <= high vs low < high, mid + 1 vs mid)',
+      'Determining monotonic properties for binary search on answer spaces (minimum capacity / rate)',
+      'Multi-variable sorting constraints and duplicate skipping logic in two-pointer algorithms'
+    ],
+    sprintPlan: {
+      duration: '2-Week Intensive Sprint',
+      phase1Title: 'Week 1: Strict Invariants & Rotated Array Search',
+      phase1Desc: 'Master canonical binary search templates, integer overflow prevention, and partitioned monotonic intervals.',
+      phase2Title: 'Week 2: Search on Answer Space & Two-Pointer Opposing Scans',
+      phase2Desc: 'Apply opposing pointers for 2Sum/3Sum duplicate deduplication and greedy interval narrowing.',
+      mentorDirectives: [
+        'Drill students on the 3 fundamental binary search boundary templates until error-free',
+        'Review extreme edge cases: 1-element arrays, duplicated pivot elements, and integer overflow',
+        'Conduct a 30-minute speed quiz requiring bug-free two-pointer interval narrowing'
+      ]
+    },
+    problems: [
+      { number: 704, title: 'Binary Search', slug: 'binary-search', difficulty: 'Easy', pattern: 'Canonical Template / Boundary Invariant Verification', url: 'https://leetcode.com/problems/binary-search/' },
+      { number: 167, title: 'Two Sum II - Input Array Is Sorted', slug: 'two-sum-ii-input-array-is-sorted', difficulty: 'Medium', pattern: 'Opposing Ends Two-Pointer Shrinking Scan', url: 'https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/' },
+      { number: 33, title: 'Search in Rotated Sorted Array', slug: 'search-in-rotated-sorted-array', difficulty: 'Medium', pattern: 'Partitioned Monotonic Interval Binary Search', url: 'https://leetcode.com/problems/search-in-rotated-sorted-array/' },
+      { number: 11, title: 'Container With Most Water', slug: 'container-with-most-water', difficulty: 'Medium', pattern: 'Greedy Two-Pointer Shrink on Shorter Boundary', url: 'https://leetcode.com/problems/container-with-most-water/' },
+      { number: 15, title: '3Sum', slug: '3sum', difficulty: 'Medium', pattern: 'Array Sorting + Opposing Two-Pointer Duplicate Skip', url: 'https://leetcode.com/problems/3sum/' }
+    ]
+  }
+];
 
 // Main Component 
 
@@ -1185,6 +1326,9 @@ export const HODCommandCenter: React.FC = () => {
  const [showMethodologyModal, setShowMethodologyModal] = useState<boolean>(false);
  const [showAIModal, setShowAIModal] = useState<boolean>(false);
  const [showWhatIfModal, setShowWhatIfModal] = useState<boolean>(false);
+  const [selectedYearBenchmark, setSelectedYearBenchmark] = useState<YearBenchmark | null>(null);
+  const [selectedSkillGap, setSelectedSkillGap] = useState<InstitutionalSkillGap | null>(null);
+  const [copiedSkillPlan, setCopiedSkillPlan] = useState<boolean>(false);
  const [confirmUnassignTarget, setConfirmUnassignTarget] = useState<{ id: number; name: string } | null>(null);
  const [confirmUnassignLoading, setConfirmUnassignLoading] = useState(false);
  const [aiQuery, setAiQuery] = useState<string>('');
@@ -1198,7 +1342,8 @@ export const HODCommandCenter: React.FC = () => {
  const isAnyModalOrDrawerOpen = Boolean(
  selectedStudentDetail || selectedStaffDetail || selectedDeptIntelligence ||
  showStaffAllocationModal || showReportHubModal || showMethodologyModal ||
- showAIModal || showWhatIfModal || confirmUnassignTarget
+ showAIModal || showWhatIfModal || confirmUnassignTarget ||
+ selectedYearBenchmark || selectedSkillGap
  );
 
  useEffect(() => {
@@ -1214,6 +1359,8 @@ export const HODCommandCenter: React.FC = () => {
  if (showAIModal) setShowAIModal(false);
  if (showWhatIfModal) setShowWhatIfModal(false);
  if (confirmUnassignTarget) setConfirmUnassignTarget(null);
+ if (selectedYearBenchmark) setSelectedYearBenchmark(null);
+ if (selectedSkillGap) setSelectedSkillGap(null);
  });
  return () => {
  unregister();
@@ -1223,7 +1370,7 @@ export const HODCommandCenter: React.FC = () => {
  }, [
  isAnyModalOrDrawerOpen, selectedStudentDetail, selectedStaffDetail, selectedDeptIntelligence,
  showStaffAllocationModal, showReportHubModal, showMethodologyModal, showAIModal,
- showWhatIfModal, confirmUnassignTarget, pushContext, popContext, registerEscHandler
+ showWhatIfModal, confirmUnassignTarget, selectedYearBenchmark, selectedSkillGap, pushContext, popContext, registerEscHandler
  ]);
 
 
@@ -1433,6 +1580,21 @@ export const HODCommandCenter: React.FC = () => {
  }
  };
 
+  const handleYearClick = useCallback((y: YearBenchmark) => {
+    const targetVal = y.year_level === 'II' ? '2' : y.year_level === 'III' ? '3' : y.year_level === 'IV' ? '4' : y.year_level;
+    const isSelected = selectedYear === targetVal || selectedYear === y.year_level;
+    if (isSelected) {
+      setSelectedYear('ALL');
+      notify.info('Cleared cohort filter. Showing all cohorts.', '', { category: 'ALLOCATION' });
+    } else {
+      setSelectedYear(targetVal);
+      notify.info(`Filtered to ${y.year} cohort (${y.student_count || 0} students) · Health: ${y.health_score}`, '', { category: 'ALLOCATION' });
+      setTimeout(() => {
+        document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [selectedYear, notify]);
+
  const rawYearMatrix = summary?.benchmarks?.year_matrix || [];
   const yearMatrix = useMemo(() => {
     const map = new Map<string, YearBenchmark>();
@@ -1581,43 +1743,43 @@ export const HODCommandCenter: React.FC = () => {
  </p>
  </div>
 
- <div className="grid grid-cols-2 items-center gap-2.5 w-full sm:w-auto sm:flex sm:flex-wrap sm:justify-end">
+ <div className="grid grid-cols-2 items-center gap-2 sm:gap-2.5 w-full sm:w-auto sm:flex sm:flex-wrap sm:justify-end">
  {/* Quick Faculty Matrix Button */}
  <button
  onClick={() => {
    document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
  }}
- className="inline-flex min-w-0 items-center justify-center gap-2 h-9 px-2.5 sm:px-3.5 rounded-xl bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-300 border border-indigo-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+ className="inline-flex min-w-0 items-center justify-center gap-1.5 sm:gap-2 min-h-[42px] px-2.5 sm:px-3.5 rounded-xl bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-300 border border-indigo-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95 touch-manipulation"
  title="Jump to Faculty Mentors Performance & Progress Matrix"
  >
- <Users size={14} />
- <span>Faculty Matrix</span>
+ <Users size={14} className="shrink-0" />
+ <span className="truncate">Faculty Matrix</span>
  </button>
 
  {/* HOD Staff Allocation Manager Button */}
  <button
  onClick={() => setShowStaffAllocationModal(true)}
- className="inline-flex min-w-0 items-center justify-center gap-2 h-9 px-2.5 sm:px-3.5 rounded-xl bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 border border-purple-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+ className="inline-flex min-w-0 items-center justify-center gap-1.5 sm:gap-2 min-h-[42px] px-2.5 sm:px-3.5 rounded-xl bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 border border-purple-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95 touch-manipulation"
  >
- <Users size={14} />
- <span>Staff Allocation</span>
+ <Users size={14} className="shrink-0" />
+ <span className="truncate">Staff Allocation</span>
  </button>
 
  {/* Dedicated Report Hub Button */}
  <button
  onClick={() => setShowReportHubModal(true)}
- className="inline-flex min-w-0 items-center justify-center gap-2 h-9 px-2.5 sm:px-3.5 rounded-xl bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+ className="inline-flex min-w-0 items-center justify-center gap-1.5 sm:gap-2 min-h-[42px] px-2.5 sm:px-3.5 rounded-xl bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95 touch-manipulation"
  >
- <FileSpreadsheet size={14} />
- <span>Dedicated Reports</span>
+ <FileSpreadsheet size={14} className="shrink-0" />
+ <span className="truncate">Dedicated Reports</span>
  </button>
 
  {/* Refresh Button */}
  <button
  onClick={() => { setRefreshing(true); clearApiCache(); loadScopedData(false, true); loadStudents(); }}
- className="inline-flex min-w-0 items-center justify-center gap-2 h-9 px-2.5 sm:px-3.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 border border-slate-700/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+ className="inline-flex min-w-0 items-center justify-center gap-1.5 sm:gap-2 min-h-[42px] px-2.5 sm:px-3.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 border border-slate-700/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95 touch-manipulation"
  >
- <RotateCcw size={14} className={refreshing ? 'animate-spin' : ''} />
+ <RotateCcw size={14} className={`shrink-0 ${refreshing ? 'animate-spin' : ''}`} />
  <span>Refresh</span>
  </button>
  </div>
@@ -2818,27 +2980,73 @@ export const HODCommandCenter: React.FC = () => {
  {yearMatrix.length === 0 ? (
  <div className="col-span-2 p-6 text-center text-slate-600 dark:text-slate-400 font-mono text-xs">No year benchmark metrics recorded.</div>
  ) : (
- yearMatrix.map(y => (
-                <div key={y.year_level} className="p-4 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 font-mono flex items-center justify-between shadow-xs hover:border-brand-500/40 transition">
-                  <div className="space-y-1">
-                    <div className="font-extrabold text-slate-900 dark:text-white text-sm font-display flex items-center gap-2">
-                      <span>{y.year}</span>
-                      <span className="text-[10px] font-sans px-2 py-0.5 rounded-full bg-slate-200 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-semibold">
-                        {y.student_count || 0} Students
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-600 dark:text-slate-400 font-sans">
-                      Active: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{y.active_count || 0}</strong> • Inactive: <strong className="text-rose-600 dark:text-rose-400 font-bold">{y.inactive_count || 0}</strong>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-emerald-600 dark:text-emerald-400 font-extrabold text-base">{y.participation_pct}%</div>
-                    <div className="text-xs font-sans text-slate-500 dark:text-slate-400">
-                      Health: <span className="font-bold text-brand-600 dark:text-brand-400">{y.health_score}</span>
-                    </div>
-                  </div>
-                </div>
-              ))
+ yearMatrix.map(y => {
+   const targetVal = y.year_level === 'II' ? '2' : y.year_level === 'III' ? '3' : y.year_level === 'IV' ? '4' : y.year_level;
+   const isSelectedCohort = selectedYear === targetVal || selectedYear === y.year_level;
+   return (
+     <div
+       key={y.year_level}
+       onClick={() => setSelectedYearBenchmark(y)}
+       className={`group relative p-4 rounded-xl font-mono flex flex-col justify-between shadow-xs transition-all duration-200 cursor-pointer border ${
+         isSelectedCohort
+           ? 'bg-brand-50/70 dark:bg-brand-950/40 border-brand-500 shadow-md ring-2 ring-brand-500/30'
+           : 'bg-slate-50 dark:bg-navy-900/80 border-slate-200 dark:border-navy-800 hover:border-brand-500/60 hover:shadow-md hover:bg-slate-100/70 dark:hover:bg-navy-800/80'
+       }`}
+       title="Click to view detailed Cohort Benchmark Deck & Analytics"
+     >
+       <div className="flex items-start justify-between gap-2">
+         <div className="space-y-1 min-w-0">
+           <div className="font-extrabold text-slate-900 dark:text-white text-sm font-display flex items-center gap-2 flex-wrap">
+             <span>{y.year}</span>
+             <span className="text-[10px] font-sans px-2 py-0.5 rounded-full bg-slate-200 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-semibold">
+               {y.student_count || 0} Students
+             </span>
+             {isSelectedCohort && (
+               <span className="text-[10px] font-sans px-2 py-0.5 rounded-full bg-brand-600 text-white font-bold animate-pulse">
+                 Active Filter
+               </span>
+             )}
+           </div>
+           <div className="text-xs text-slate-600 dark:text-slate-400 font-sans">
+             Active: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{y.active_count || 0}</strong> • Inactive: <strong className="text-rose-600 dark:text-rose-400 font-bold">{y.inactive_count || 0}</strong>
+           </div>
+         </div>
+         <div className="text-right shrink-0">
+           <div className={`font-extrabold text-base ${y.participation_pct >= 80 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
+             {y.participation_pct}%
+           </div>
+           <div className="text-xs font-sans text-slate-500 dark:text-slate-400">
+             Health: <span className="font-bold text-brand-600 dark:text-brand-400">{y.health_score}</span>
+           </div>
+         </div>
+       </div>
+
+       <div className="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-navy-800 flex items-center justify-between text-xs">
+         <button
+           type="button"
+           onClick={(e) => {
+             e.stopPropagation();
+             handleYearClick(y);
+           }}
+           className={`px-2 py-1 rounded-lg text-[11px] font-sans font-bold transition flex items-center gap-1 ${
+             isSelectedCohort
+               ? 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 hover:bg-rose-200'
+               : 'bg-slate-200 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-900/40'
+           }`}
+           title={isSelectedCohort ? "Clear cohort filter" : "Filter student roster to this cohort"}
+         >
+           <Filter size={11} />
+           <span>{isSelectedCohort ? 'Clear Cohort Filter' : 'Filter Roster'}</span>
+         </button>
+
+         <span className="text-[11px] font-sans text-brand-600 dark:text-brand-400 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+           <span>Inspect Cohort Deck</span>
+           <ChevronRight size={13} />
+         </span>
+       </div>
+     </div>
+   );
+ })
  )}
  </div>
  </Card>
@@ -2859,28 +3067,53 @@ export const HODCommandCenter: React.FC = () => {
  </div>
 
  <div className="space-y-3 font-mono">
- {[
- { name: 'Dynamic Programming (DP)', solve: '27.3%', target: '60.0%', status: 'Critical Gap', color: 'rose' },
- { name: 'Graph BFS/DFS & Shortest Path', solve: '42.0%', target: '65.0%', status: 'Attention Needed', color: 'amber' },
- { name: 'Binary Search & Two Pointers', solve: '58.4%', target: '75.0%', status: 'Improving', color: 'blue' }
- ].map((s, i) => (
- <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
- <div className="space-y-1 min-w-0">
- <div className="font-extrabold text-slate-900 dark:text-white text-xs font-sans leading-snug break-words">{s.name}</div>
- <div className="text-xs text-slate-700 dark:text-slate-400 leading-relaxed">
- Benchmark Target: <strong className="text-slate-700 dark:text-slate-300 font-bold">{s.target}</strong>
- </div>
- </div>
- <div className="text-left sm:text-right flex flex-col items-start sm:items-end gap-1 min-w-0">
- <span className={`max-w-full px-2.5 py-0.5 rounded-full text-xs font-extrabold border whitespace-normal leading-tight ${
- s.color === 'rose' ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800' :
- s.color === 'amber' ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800' :
- 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800'
- }`}>
- {s.solve} solve rate
- </span>
- <span className="text-xs text-slate-700 dark:text-slate-400 font-bold uppercase tracking-tight leading-tight">{s.status}</span>
- </div>
+ {institutionalSkillGaps.map((s) => (
+ <div
+   key={s.id}
+   onClick={() => setSelectedSkillGap(s)}
+   className="group relative p-3.5 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 hover:border-brand-500/60 hover:shadow-md hover:bg-slate-100/70 dark:hover:bg-navy-800/80 transition-all duration-200 cursor-pointer flex flex-col justify-between gap-2.5"
+   title="Click to open full Skill Diagnostic & 2-Week Lab Sprint Plan"
+ >
+   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+     <div className="space-y-1 min-w-0">
+       <div className="font-extrabold text-slate-900 dark:text-white text-xs font-sans leading-snug break-words flex items-center gap-1.5">
+         <span>{s.name}</span>
+       </div>
+       <div className="text-xs text-slate-700 dark:text-slate-400 leading-relaxed">
+         Benchmark Target: <strong className="text-slate-700 dark:text-slate-300 font-bold">{s.target}</strong>
+       </div>
+     </div>
+     <div className="text-left sm:text-right flex flex-col items-start sm:items-end gap-1 min-w-0 shrink-0">
+       <span className={`max-w-full px-2.5 py-0.5 rounded-full text-xs font-extrabold border whitespace-normal leading-tight ${
+         s.color === 'rose' ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800' :
+         s.color === 'amber' ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800' :
+         'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800'
+       }`}>
+         {s.solve} solve rate
+       </span>
+       <span className="text-xs text-slate-700 dark:text-slate-400 font-bold uppercase tracking-tight leading-tight">{s.status}</span>
+     </div>
+   </div>
+
+   {/* Progress bar comparison */}
+   <div className="w-full bg-slate-200 dark:bg-navy-800 h-1.5 rounded-full overflow-hidden flex">
+     <div
+       className={`h-full ${s.color === 'rose' ? 'bg-rose-500' : s.color === 'amber' ? 'bg-amber-500' : 'bg-blue-500'}`}
+       style={{ width: `${s.solvePct}%` }}
+     />
+     <div
+       className="h-full bg-slate-300 dark:bg-navy-700 border-l border-white/40"
+       style={{ width: `${Math.max(0, s.targetPct - s.solvePct)}%` }}
+     />
+   </div>
+
+   <div className="flex items-center justify-between text-[11px] font-sans text-slate-500 dark:text-slate-400 pt-1">
+     <span>Deficit: <strong className="text-rose-600 dark:text-rose-400 font-mono font-bold">{s.deficit}</strong></span>
+     <span className="text-brand-600 dark:text-brand-400 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+       <span>Inspect Sprint Deck</span>
+       <ChevronRight size={13} />
+     </span>
+   </div>
  </div>
  ))}
  </div>
@@ -3099,6 +3332,484 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  </div>
  )}
+
+      {/* =========================================================================
+          COHORT ACADEMIC BENCHMARK & INTELLIGENCE DECK MODAL
+          ========================================================================= */}
+      {selectedYearBenchmark && (
+        <div
+          className="fixed inset-0 z-[100050] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 dark:bg-black/90 backdrop-blur-md animate-fade-in"
+          onClick={e => e.target === e.currentTarget && setSelectedYearBenchmark(null)}
+        >
+          <div className="w-full max-w-2xl bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between gap-3 shrink-0 bg-slate-50/50 dark:bg-navy-900/50">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 flex items-center justify-center text-brand-600 dark:text-brand-400 shrink-0">
+                  <GraduationCap size={20} />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-display text-base font-bold text-slate-900 dark:text-white truncate flex items-center gap-2">
+                    <span>{selectedYearBenchmark.year} Cohort Intelligence Deck</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold border border-brand-200 dark:border-brand-800">
+                      Cohort {selectedYearBenchmark.year_level}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 font-sans mt-0.5 truncate">
+                    Academic performance, participation health, and mentor intervention roadmap
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedYearBenchmark(null)}
+                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition"
+                title="Close Deck"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-5 custom-scrollbar text-xs font-sans">
+              {/* Telemetry Metric Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800">
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block font-mono">Cohort Strength</span>
+                  <span className="text-xl font-extrabold text-slate-900 dark:text-white font-mono mt-0.5 block">
+                    {selectedYearBenchmark.student_count || 0}
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Total Enrolled</span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/60">
+                  <span className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block font-mono">Active Solvers</span>
+                  <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 font-mono mt-0.5 block">
+                    {selectedYearBenchmark.active_count || 0}
+                  </span>
+                  <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold">
+                    {selectedYearBenchmark.participation_pct}% Participation
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-800/60">
+                  <span className="text-[10px] uppercase font-bold text-rose-700 dark:text-rose-400 block font-mono">Inactive Cohort</span>
+                  <span className="text-xl font-extrabold text-rose-600 dark:text-rose-400 font-mono mt-0.5 block">
+                    {selectedYearBenchmark.inactive_count || Math.max(0, (selectedYearBenchmark.student_count || 0) - (selectedYearBenchmark.active_count || 0))}
+                  </span>
+                  <span className="text-[11px] text-rose-700 dark:text-rose-300 font-semibold">Needs Follow-Up</span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-brand-50/60 dark:bg-brand-950/30 border border-brand-200/70 dark:border-brand-800/60">
+                  <span className="text-[10px] uppercase font-bold text-brand-700 dark:text-brand-400 block font-mono">Health Score</span>
+                  <span className="text-xl font-extrabold text-brand-600 dark:text-brand-400 font-mono mt-0.5 block">
+                    {selectedYearBenchmark.health_score}
+                  </span>
+                  <span className="text-[11px] text-brand-700 dark:text-brand-300 font-semibold">Out of 100 Index</span>
+                </div>
+              </div>
+
+              {/* Target Compliance Progress Strip */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 space-y-2.5">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Target size={14} className="text-brand-600" />
+                    <span>80%+ Institutional Participation Benchmark</span>
+                  </span>
+                  <span className={`font-extrabold ${selectedYearBenchmark.participation_pct >= 80 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                    {selectedYearBenchmark.participation_pct}% / 80.0%
+                  </span>
+                </div>
+                <div className="w-full bg-slate-200 dark:bg-navy-800 h-2.5 rounded-full overflow-hidden relative">
+                  <div
+                    className={`h-full transition-all duration-500 ${selectedYearBenchmark.participation_pct >= 80 ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                    style={{ width: `${Math.min(100, selectedYearBenchmark.participation_pct)}%` }}
+                  />
+                  {/* Target line at 80% */}
+                  <div className="absolute top-0 bottom-0 left-[80%] w-0.5 bg-rose-500 shadow-sm" title="80% Target" />
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
+                  <span>
+                    {selectedYearBenchmark.participation_pct >= 80 ? (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                        <CheckCircle2 size={13} />
+                        Exceeds target by +{(selectedYearBenchmark.participation_pct - 80).toFixed(1)}%
+                      </span>
+                    ) : (
+                      <span className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                        <AlertTriangle size={13} />
+                        Deficit: {(80 - selectedYearBenchmark.participation_pct).toFixed(1)}% below institutional target
+                      </span>
+                    )}
+                  </span>
+                  <span className="font-mono text-slate-500">Benchmark: 80.0% Minimum</span>
+                </div>
+              </div>
+
+              {/* Strategic Cohort Directives */}
+              <div className="space-y-2">
+                <h4 className="font-display text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 font-mono flex items-center gap-1.5">
+                  <BrainCircuit size={14} className="text-brand-600" />
+                  <span>Strategic Interventions For {selectedYearBenchmark.year}</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-1">
+                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Flame size={13} className="text-rose-500" />
+                      <span>Inactive Reactivation</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      Assign faculty mentors to the {selectedYearBenchmark.inactive_count || Math.max(0, (selectedYearBenchmark.student_count || 0) - (selectedYearBenchmark.active_count || 0))} zero-solve students for 1-on-1 account verification.
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-1">
+                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Zap size={13} className="text-amber-500" />
+                      <span>Weekly Solve Velocity</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      Target 3 solved problems weekly per student via supervised laboratory coding hours and Friday sync sprints.
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-1">
+                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Trophy size={13} className="text-indigo-500" />
+                      <span>Contest Onboarding</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      Mandate bi-weekly LeetCode contest attendance to build real-time problem-solving resilience and algorithmic grit.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 sm:p-5 border-t border-slate-100 dark:border-navy-800 bg-slate-50/70 dark:bg-navy-950/50 flex flex-wrap items-center justify-between gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setAiQuery(`Provide a detailed faculty intervention roadmap for ${selectedYearBenchmark.year} cohort. Total students: ${selectedYearBenchmark.student_count}, Active: ${selectedYearBenchmark.active_count}, Inactive: ${selectedYearBenchmark.inactive_count || 0}, Health score: ${selectedYearBenchmark.health_score}/100.`);
+                  setSelectedYearBenchmark(null);
+                  setShowAIModal(true);
+                }}
+                className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs flex items-center gap-1.5 transition"
+              >
+                <Sparkles size={13} className="text-brand-600" />
+                <span>Ask AI About Cohort</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleYearClick(selectedYearBenchmark);
+                    setSelectedYearBenchmark(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-sm"
+                >
+                  <Filter size={13} />
+                  <span>Filter Student Roster to {selectedYearBenchmark.year}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedYearBenchmark(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-navy-800 text-slate-800 dark:text-slate-200 hover:bg-slate-300 font-bold text-xs transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          INSTITUTIONAL SKILL GAP & 2-WEEK LAB SPRINT DECK MODAL
+          ========================================================================= */}
+      {selectedSkillGap && (
+        <div
+          className="fixed inset-0 z-[100050] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 dark:bg-black/90 backdrop-blur-md animate-fade-in"
+          onClick={e => e.target === e.currentTarget && setSelectedSkillGap(null)}
+        >
+          <div className="w-full max-w-3xl bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between gap-3 shrink-0 bg-slate-50/50 dark:bg-navy-900/50">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${
+                  selectedSkillGap.color === 'rose'
+                    ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/60 dark:border-rose-800'
+                    : selectedSkillGap.color === 'amber'
+                    ? 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950/60 dark:border-amber-800'
+                    : 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/60 dark:border-blue-800'
+                }`}>
+                  <Target size={20} />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-display text-base font-bold text-slate-900 dark:text-white truncate flex items-center gap-2">
+                    <span>{selectedSkillGap.name}</span>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${
+                      selectedSkillGap.color === 'rose'
+                        ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300'
+                        : selectedSkillGap.color === 'amber'
+                        ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300'
+                        : 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300'
+                    }`}>
+                      {selectedSkillGap.status}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 font-sans mt-0.5 truncate">
+                    Institutional algorithmic gap diagnostic & faculty-led 2-week laboratory intervention plan
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedSkillGap(null)}
+                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition"
+                title="Close Deck"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-5 custom-scrollbar text-xs font-sans">
+              {/* Telemetry Metric Strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800">
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block font-mono">Current Solve Rate</span>
+                  <span className={`text-xl font-extrabold font-mono mt-0.5 block ${
+                    selectedSkillGap.color === 'rose' ? 'text-rose-600' : selectedSkillGap.color === 'amber' ? 'text-amber-600' : 'text-blue-600'
+                  }`}>
+                    {selectedSkillGap.solve}
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Telemetry Data</span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/60">
+                  <span className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block font-mono">Benchmark Target</span>
+                  <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 font-mono mt-0.5 block">
+                    {selectedSkillGap.target}
+                  </span>
+                  <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold">Institutional Standard</span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-800/60">
+                  <span className="text-[10px] uppercase font-bold text-rose-700 dark:text-rose-400 block font-mono">Deficit Gap</span>
+                  <span className="text-xl font-extrabold text-rose-600 dark:text-rose-400 font-mono mt-0.5 block">
+                    {selectedSkillGap.deficit}
+                  </span>
+                  <span className="text-[11px] text-rose-700 dark:text-rose-300 font-semibold">Rate Deficit</span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-brand-50/60 dark:bg-brand-950/30 border border-brand-200/70 dark:border-brand-800/60">
+                  <span className="text-[10px] uppercase font-bold text-brand-700 dark:text-brand-400 block font-mono">Intervention</span>
+                  <span className="text-xl font-extrabold text-brand-600 dark:text-brand-400 font-mono mt-0.5 block">
+                    2-Week
+                  </span>
+                  <span className="text-[11px] text-brand-700 dark:text-brand-300 font-semibold">Lab Sprint Program</span>
+                </div>
+              </div>
+
+              {/* Algorithmic Diagnostic & Root Causes */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 space-y-3">
+                <div className="flex items-center gap-2 font-display text-xs font-bold text-slate-900 dark:text-white uppercase font-mono tracking-wider">
+                  <AlertTriangle size={15} className="text-amber-500" />
+                  <span>Algorithmic Diagnosis & Student Cognitive Friction</span>
+                </div>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-xs">
+                  {selectedSkillGap.diagnosis}
+                </p>
+                <div className="space-y-1.5 pt-1">
+                  <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight block font-mono">
+                    Identified Root Causes:
+                  </span>
+                  {selectedSkillGap.rootCauses.map((rc, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                      <span>{rc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2-Week Lab Sprint Plan */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-display text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white font-mono flex items-center gap-2">
+                    <BookOpen size={15} className="text-brand-600" />
+                    <span>2-Week Laboratory Intervention Curriculum</span>
+                  </h4>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 font-bold">
+                    Faculty-Led
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-1">
+                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-md bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 flex items-center justify-center font-mono text-[11px] font-extrabold">1</span>
+                      <span>{selectedSkillGap.sprintPlan.phase1Title}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {selectedSkillGap.sprintPlan.phase1Desc}
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-1">
+                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 flex items-center justify-center font-mono text-[11px] font-extrabold">2</span>
+                      <span>{selectedSkillGap.sprintPlan.phase2Title}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {selectedSkillGap.sprintPlan.phase2Desc}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-1">
+                  <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight block font-mono mb-1.5">
+                    Faculty Mentor Directives:
+                  </span>
+                  <div className="space-y-1">
+                    {selectedSkillGap.sprintPlan.mentorDirectives.map((md, idx) => (
+                      <div key={idx} className="flex items-start gap-2 text-[11px] text-slate-700 dark:text-slate-300">
+                        <CheckCircle2 size={13} className="text-emerald-500 mt-0.5 shrink-0" />
+                        <span>{md}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Curated 5-Problem LeetCode Practice Ladder */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-display text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white font-mono flex items-center gap-2">
+                    <Trophy size={15} className="text-amber-500" />
+                    <span>Curated LeetCode Problem Ladder (5 Key Sprints)</span>
+                  </h4>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-sans">
+                    Click problem to open directly on LeetCode
+                  </span>
+                </div>
+
+                <div className="border border-slate-200 dark:border-navy-800 rounded-xl overflow-hidden divide-y divide-slate-100 dark:divide-navy-800 bg-white dark:bg-navy-950">
+                  {selectedSkillGap.problems.map((prob) => (
+                    <div
+                      key={prob.number}
+                      className="p-3 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-navy-900/60 transition"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-xs font-mono font-bold text-slate-400 dark:text-slate-500 w-8">
+                          #{prob.number}
+                        </span>
+                        <div className="min-w-0">
+                          <a
+                            href={prob.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-bold text-slate-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400 text-xs flex items-center gap-1.5 group"
+                          >
+                            <span className="truncate">{prob.title}</span>
+                            <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-600" />
+                          </a>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">
+                            Pattern: {prob.pattern}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
+                          prob.difficulty === 'Easy'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                            : prob.difficulty === 'Medium'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                            : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                        }`}>
+                          {prob.difficulty}
+                        </span>
+                        <a
+                          href={prob.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 hover:bg-brand-600 hover:text-white text-slate-700 dark:text-slate-300 text-[11px] font-bold flex items-center gap-1 transition"
+                        >
+                          <span>Solve</span>
+                          <ExternalLink size={11} />
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 sm:p-5 border-t border-slate-100 dark:border-navy-800 bg-slate-50/70 dark:bg-navy-950/50 flex flex-wrap items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const text = `=== 2-WEEK LAB SPRINT: ${selectedSkillGap.name} ===\nDeficit: ${selectedSkillGap.deficit} (Current: ${selectedSkillGap.solve}, Target: ${selectedSkillGap.target})\n\n${selectedSkillGap.sprintPlan.phase1Title}:\n${selectedSkillGap.sprintPlan.phase1Desc}\n\n${selectedSkillGap.sprintPlan.phase2Title}:\n${selectedSkillGap.sprintPlan.phase2Desc}\n\nCurated LeetCode Ladder:\n${selectedSkillGap.problems.map(p => `#${p.number} ${p.title} (${p.difficulty}) - ${p.url}`).join('\n')}`;
+                    navigator.clipboard.writeText(text);
+                    setCopiedSkillPlan(true);
+                    notify.success('Sprint syllabus copied to clipboard!', '', { category: 'SYSTEM' });
+                    setTimeout(() => setCopiedSkillPlan(false), 2000);
+                  }}
+                  className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs flex items-center gap-1.5 transition"
+                >
+                  <Copy size={13} className="text-slate-600" />
+                  <span>{copiedSkillPlan ? 'Copied to Clipboard!' : 'Copy Sprint Syllabus'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAiQuery(`Generate a customized day-by-day lesson plan and laboratory code examples for teaching ${selectedSkillGap.name}. Current cohort solve rate is ${selectedSkillGap.solve} vs target ${selectedSkillGap.target}. Focus on overcoming: ${selectedSkillGap.rootCauses.join('; ')}.`);
+                    setSelectedSkillGap(null);
+                    setShowAIModal(true);
+                  }}
+                  className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs flex items-center gap-1.5 transition"
+                >
+                  <Sparkles size={13} className="text-brand-600" />
+                  <span>Ask AI for Lesson Plan</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedStatus('PENDING');
+                    notify.info(`Filtered directory to in-progress students for ${selectedSkillGap.name} intervention`, '', { category: 'ALLOCATION' });
+                    setSelectedSkillGap(null);
+                    setTimeout(() => {
+                      document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-sm"
+                >
+                  <Filter size={13} />
+                  <span>Filter Struggling Solvers Below</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedSkillGap(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-navy-800 text-slate-800 dark:text-slate-200 hover:bg-slate-300 font-bold text-xs transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
  </div>
  );

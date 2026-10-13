@@ -829,11 +829,11 @@ const UpdateModal: React.FC<{
         </div>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 dark:border-navy-800 bg-slate-50/90 dark:bg-navy-950/90 backdrop-blur-md shrink-0">
+        <div className="grid grid-cols-2 sm:flex sm:justify-end items-center gap-2.5 p-3 sm:px-6 sm:py-4 border-t border-slate-200 dark:border-navy-800 bg-slate-50/90 dark:bg-navy-950/90 backdrop-blur-md shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 min-h-[44px] rounded-2xl bg-slate-200/80 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 text-xs font-black transition cursor-pointer touch-manipulation active:scale-95"
+            className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-2xl bg-slate-200/80 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 text-xs font-black transition cursor-pointer touch-manipulation active:scale-95 flex items-center justify-center"
           >
             Cancel
           </button>
@@ -841,10 +841,10 @@ const UpdateModal: React.FC<{
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 min-h-[44px] rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 active:scale-95 transition-all cursor-pointer disabled:opacity-50 touch-manipulation"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 min-h-[44px] rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 active:scale-95 transition-all cursor-pointer disabled:opacity-50 touch-manipulation"
           >
             <Send size={14} />
-            <span>{saving ? 'Saving Action Details...' : 'Save Changes'}</span>
+            <span>{saving ? 'Saving...' : 'Save Changes'}</span>
           </button>
         </div>
       </div>

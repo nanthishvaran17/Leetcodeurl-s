@@ -70,7 +70,7 @@ export const ReportsPage: React.FC = () => {
 
   const { pushContext, popContext, registerEscHandler } = useKeyboardContext();
 
-  // Background pre-fetch warm-up on filter change for instant (< 5ms) dataset generation
+  // Background pre-fetch warm-up on filter change for instant (< 1ms) dataset generation
   useEffect(() => {
     const timer = setTimeout(() => {
       if (navigator.onLine) {

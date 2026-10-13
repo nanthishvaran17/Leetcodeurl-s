@@ -401,10 +401,10 @@ export const ComparePage: React.FC = () => {
           </div>
 
           {/* Mode Switcher Buttons */}
-          <div className="flex items-center p-1 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shrink-0 self-start md:self-center shadow-lg">
+          <div className="w-full sm:w-auto grid grid-cols-2 sm:flex items-center p-1 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shrink-0 self-stretch sm:self-auto shadow-lg">
             <button
               onClick={() => setCompareMode('STUDENT')}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+              className={`min-h-[42px] flex items-center justify-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer touch-manipulation active:scale-95 select-none ${
                 compareMode === 'STUDENT'
                   ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-900/40'
                   : 'text-slate-400 hover:text-white'
@@ -416,7 +416,7 @@ export const ComparePage: React.FC = () => {
 
             <button
               onClick={() => setCompareMode('GROUP')}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+              className={`min-h-[42px] flex items-center justify-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer touch-manipulation active:scale-95 select-none ${
                 compareMode === 'GROUP'
                   ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-900/40'
                   : 'text-slate-400 hover:text-white'
@@ -537,7 +537,7 @@ export const ComparePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => { setFighterAOpen(p => !p); setFighterBOpen(false); setDeptOpen(false); setYearOpen(false); }}
-                  className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-xs cursor-pointer ${
+                  className={`w-full min-h-[44px] flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-xs cursor-pointer touch-manipulation active:scale-98 ${
                     fighterAOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400'
                   }`}
                 >
@@ -651,7 +651,7 @@ export const ComparePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => { setFighterBOpen(p => !p); setFighterAOpen(false); setDeptOpen(false); setYearOpen(false); }}
-                  className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-xs cursor-pointer ${
+                  className={`w-full min-h-[44px] flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-xs cursor-pointer touch-manipulation active:scale-98 ${
                     fighterBOpen ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-navy-700 hover:border-indigo-400'
                   }`}
                 >
