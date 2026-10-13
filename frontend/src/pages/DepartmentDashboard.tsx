@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { Layers, Users, Trophy, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, AlertCircle, Search, X, ArrowUpDown, Star, Flame, SortAsc, SortDesc } from 'lucide-react';
-import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api from '../services/api';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
@@ -8,7 +7,6 @@ import { getCachedStudents, saveCachedStudents } from '../utils/rosterCache';
 import { filterAndSortStudents } from '../utils/filterUtils';
 import { useNotification } from '../context/NotificationContext';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
-import { GlobalFilter } from '../components/GlobalFilter';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { useDepartments } from '../contexts/DepartmentContext';
@@ -233,13 +231,13 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           </div>
         </div>
 
-        {/* Quick Mobile Horizontal Swipeable Chips (1-Tap Fast Filter) */}
-        <div className="flex md:hidden flex-col gap-2 pt-1 pb-1 border-t border-slate-100 dark:border-navy-800">
+        {/* Department and Academic Year Pill Selectors (1-Tap Fast Filter) */}
+        <div className="flex flex-col gap-2 pt-1 pb-1 border-t border-slate-100 dark:border-navy-800">
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
             <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">Dept:</span>
             {[
               { id: 'all', label: 'All Depts' },
-              ...departments.slice(0, 6).map(d => ({ id: String(d.id), label: d.code || d.name }))
+              ...departments.map(d => ({ id: String(d.id), label: d.code || d.name }))
             ].map(d => {
               const isSelected = selectedDept === d.id || (d.id === 'all' && (selectedDept === 'all' || selectedDept === 'ALL'));
               return (
@@ -250,7 +248,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
                     isSelected
                       ? 'bg-brand-600 text-white shadow-xs'
-                      : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700'
+                      : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
                   }`}
                 >
                   {d.label}
@@ -276,7 +274,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
                     isSelected
                       ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700'
+                      : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
                   }`}
                 >
                   {y.label}
@@ -286,47 +284,11 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           </div>
         </div>
 
-        {/* 5 Filter & Search Controls — Auto-Fitting Responsive 2-Column Grid on Mobile */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 sm:gap-2.5 items-start">
+        {/* 3 Filter & Search Controls: Name Search, Performance Range, Sort Ranking */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5 items-end">
 
-          {/* 1. Department Filter */}
-          <div className="min-w-0 w-full">
-            <PremiumDepartmentSelect
-              compact={true}
-              selectedDept={selectedDept === 'all' ? 'ALL' : selectedDept}
-              onChange={(val) => {
-                setSelectedDept(val === 'ALL' ? 'all' : val);
-                setDisplayCount(32);
-              }}
-              dropdownWidth="min-w-[260px] sm:min-w-[320px]"
-              useIdAsValue={true}
-            />
-          </div>
-
-          {/* 2. Academic Year Filter */}
-          <div className="min-w-0 w-full">
-            <GlobalFilter
-              compact={true}
-              label="Academic Year"
-              value={yearLevel}
-              onChange={(val) => {
-                setYearLevel(val);
-                setDisplayCount(32);
-              }}
-              dropdownWidth="min-w-[200px] sm:min-w-[240px]"
-              searchPlaceholder="Search academic year..."
-              options={[
-                { value: "all", label: "All Academic Years", pillText: "ALL" },
-                { value: "1", label: "I Year", pillText: "1ST" },
-                { value: "2", label: "II Year", pillText: "2ND" },
-                { value: "3", label: "III Year", pillText: "3RD" },
-                { value: "4", label: "IV Year", pillText: "4TH" }
-              ]}
-            />
-          </div>
-
-          {/* 3. Name Search (spans full width on mobile for easy typing, single col on desktop) */}
-          <div className="col-span-2 sm:col-span-1 xl:col-span-1 flex flex-col space-y-1.5 min-w-0 w-full">
+          {/* 1. Name Search (spans full width on mobile/tablet if needed, single col on desktop) */}
+          <div className="col-span-1 sm:col-span-2 lg:col-span-1 flex flex-col space-y-1.5 min-w-0 w-full">
             <label htmlFor="dept-dashboard-name-search" className="block text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider truncate h-4 leading-4 m-0 p-0">
               Search Student Name
             </label>
@@ -360,7 +322,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             </div>
           </div>
 
-          {/* 4. Performance Range Filter */}
+          {/* 2. Performance Range Filter */}
           <div className="min-w-0 w-full">
             <CustomDropdown
               compact={true}
@@ -377,7 +339,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             />
           </div>
 
-          {/* 5. Sort Students */}
+          {/* 3. Sort Students */}
           <div className="min-w-0 w-full">
             <CustomDropdown
               compact={true}

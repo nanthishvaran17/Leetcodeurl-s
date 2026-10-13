@@ -19,7 +19,7 @@ from backend.models import User, Student, FacultyStudentAssignment, StudentAssig
 from backend.logger import logger
 
 RECOMMENDED_FACULTY_STUDENT_RATIO = 20
-MAX_STUDENTS_PER_FACULTY = 30  # Hard backend capacity cap
+MAX_STUDENTS_PER_FACULTY = None  # No arbitrary backend capacity cap — staff can be assigned any number of students
 _allocation_lock = threading.RLock()
 
 
@@ -51,7 +51,7 @@ class FacultyAssignmentService:
     ) -> Dict[str, Any]:
         """
         Assigns one or more students to a faculty member.
-        Hard capacity limit of 30 students enforced server-side.
+        No arbitrary 30-cap restriction: staff can be assigned any number of mentees.
         Guaranteed concurrency-safe against race conditions via:
           1. threading.RLock (single-process / SQLite safety)
           2. SELECT FOR UPDATE (PostgreSQL multi-worker / gunicorn safety)
@@ -64,10 +64,9 @@ class FacultyAssignmentService:
                     detail=f"Faculty with ID {faculty_id} not found or is inactive."
                 )
 
-            # DB-LEVEL ATOMIC CAPACITY CHECK
+            # DB-LEVEL ATOMIC LOCK
             # For PostgreSQL: SELECT FOR UPDATE locks the row(s) preventing concurrent reads
-            # that haven't committed yet from passing the capacity check simultaneously.
-            # For SQLite: falls back to count-based check (threading.RLock is sufficient in single-process).
+            # For SQLite: falls back to threading.RLock
             from sqlalchemy import text, func as sa_func
             from backend.database import engine as _engine
             is_postgres = "postgresql" in str(_engine.url)
@@ -97,14 +96,6 @@ class FacultyAssignmentService:
 
             assigner = db.query(User).filter(User.id == assigned_by_id).first() if assigned_by_id else None
             is_assigner_admin = bool(assigner and getattr(assigner, "role", "").lower() in ["admin", "super admin"])
-
-            # DB-LEVEL ATOMIC CAPACITY CHECK
-            # Capacity check: Admins & Super Admins can bypass or override the default capacity cap
-            if not is_assigner_admin and (current_count + len(new_ids) > MAX_STUDENTS_PER_FACULTY):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"This staff member has reached the default student capacity limit of {MAX_STUDENTS_PER_FACULTY} students."
-                )
 
             # 1. Validate that all students exist and belong to the same department
             students = db.query(Student).filter(Student.id.in_(new_ids)).all()
@@ -259,16 +250,13 @@ class FacultyAssignmentService:
             elif new_total == RECOMMENDED_FACULTY_STUDENT_RATIO:
                 workload_status = "AT_RATIO"
                 workload_label = "At Target Ratio"
-            elif new_total <= MAX_STUDENTS_PER_FACULTY:
-                workload_status = "ABOVE_RATIO"
-                workload_label = "Above Recommended Target"
             else:
-                workload_status = "HIGH_WORKLOAD"
-                workload_label = "High Workload"
+                workload_status = "ACTIVE"
+                workload_label = "Active Mentoring"
 
             logger.info(
                 f"[FACULTY_ASSIGNMENT] Staff {faculty.username} (ID {faculty_id}) assigned {len(new_ids)} students. "
-                f"Total now: {new_total}/{MAX_STUDENTS_PER_FACULTY} (Status: {workload_label})"
+                f"Total now: {new_total} (Status: {workload_label})"
             )
 
             return {
@@ -278,11 +266,11 @@ class FacultyAssignmentService:
                 "assigned_count": len(new_ids),
                 "reassigned_count": reassigned_count,
                 "total_assigned": new_total,
-                "max_capacity": MAX_STUDENTS_PER_FACULTY,
+                "max_capacity": None,
                 "recommended_ratio": RECOMMENDED_FACULTY_STUDENT_RATIO,
                 "workload_status": workload_status,
                 "workload_label": workload_label,
-                "workload_warning": f"Staff has {new_total} students (Above recommended target of {RECOMMENDED_FACULTY_STUDENT_RATIO})" if new_total > RECOMMENDED_FACULTY_STUDENT_RATIO else None
+                "workload_warning": None
             }
 
     @staticmethod
@@ -342,7 +330,7 @@ class FacultyAssignmentService:
             "success": True,
             "unassigned_count": deleted,
             "remaining_assigned": remaining,
-            "slots_remaining": MAX_STUDENTS_PER_FACULTY - remaining
+            "slots_remaining": None
         }
 
     @staticmethod
@@ -354,7 +342,7 @@ class FacultyAssignmentService:
     ) -> Dict[str, Any]:
         """
         Batch-distributes unassigned students in a department to active department faculty
-        up to 30 students max per faculty member in round-robin fashion.
+        in an evenly balanced manner without arbitrary capacity limits.
         """
         faculty_members = db.query(User).filter(
             User.department_id == department_id,
@@ -368,18 +356,11 @@ class FacultyAssignmentService:
                 detail="No active staff members found in this department for auto-allocation."
             )
 
-        # Filter faculty who have not reached max capacity (30)
+        # All active faculty in department are eligible
         eligible_faculty = []
         for f in faculty_members:
             count = FacultyAssignmentService.get_faculty_assigned_count(db, f.id)  # type: ignore
-            if count < MAX_STUDENTS_PER_FACULTY:
-                eligible_faculty.append({"faculty": f, "current": count, "assigned": []})
-
-        if not eligible_faculty:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="All staff members in this department have reached maximum student capacity (30)."
-            )
+            eligible_faculty.append({"faculty": f, "current": count, "assigned": []})
 
         # Get all unassigned active students in this department
         assigned_subquery = db.query(FacultyStudentAssignment.student_id).filter(
@@ -407,51 +388,42 @@ class FacultyAssignmentService:
         total_allocated = 0
         now = datetime.datetime.now(datetime.timezone.utc)
 
-        # Round robin allocation respecting max limit of 30 per staff
-        fac_idx = 0
+        # Balanced allocation: distribute each unassigned student to the faculty member with fewest current students
         for st in unassigned_students:
-            # Find next eligible staff with capacity < 30
-            attempts = 0
-            while attempts < len(eligible_faculty):
-                bucket = eligible_faculty[fac_idx % len(eligible_faculty)]
-                if bucket["current"] < MAX_STUDENTS_PER_FACULTY:
-                    existing_assign = db.query(FacultyStudentAssignment).filter(
-                        FacultyStudentAssignment.student_id == st.id
-                    ).first()
-                    prev_fac = existing_assign.faculty_id if existing_assign else None
+            bucket = min(eligible_faculty, key=lambda b: b["current"])
+            existing_assign = db.query(FacultyStudentAssignment).filter(
+                FacultyStudentAssignment.student_id == st.id
+            ).first()
+            prev_fac = existing_assign.faculty_id if existing_assign else None
 
-                    if existing_assign:
-                        existing_assign.faculty_id = bucket["faculty"].id
-                        existing_assign.assigned_by_id = assigned_by_id  # type: ignore
-                        existing_assign.is_active = True  # type: ignore
-                        existing_assign.assigned_at = now  # type: ignore
-                    else:
-                        new_assign = FacultyStudentAssignment(
-                            faculty_id=bucket["faculty"].id,
-                            student_id=st.id,
-                            assigned_by_id=assigned_by_id,
-                            is_active=True,
-                            assigned_at=now
-                        )
-                        db.add(new_assign)
+            if existing_assign:
+                existing_assign.faculty_id = bucket["faculty"].id
+                existing_assign.assigned_by_id = assigned_by_id  # type: ignore
+                existing_assign.is_active = True  # type: ignore
+                existing_assign.assigned_at = now  # type: ignore
+            else:
+                new_assign = FacultyStudentAssignment(
+                    faculty_id=bucket["faculty"].id,
+                    student_id=st.id,
+                    assigned_by_id=assigned_by_id,
+                    is_active=True,
+                    assigned_at=now
+                )
+                db.add(new_assign)
 
-                    history_record = StudentAssignmentHistory(
-                        student_id=st.id,
-                        previous_faculty_id=prev_fac,
-                        new_faculty_id=bucket["faculty"].id,
-                        assigned_by_id=assigned_by_id,
-                        reason="Auto Distribution",
-                        assigned_at=now
-                    )
-                    db.add(history_record)
+            history_record = StudentAssignmentHistory(
+                student_id=st.id,
+                previous_faculty_id=prev_fac,
+                new_faculty_id=bucket["faculty"].id,
+                assigned_by_id=assigned_by_id,
+                reason="Auto Distribution",
+                assigned_at=now
+            )
+            db.add(history_record)
 
-                    bucket["assigned"].append(st.reg_no)
-                    bucket["current"] += 1
-                    total_allocated += 1
-                    fac_idx += 1
-                    break
-                fac_idx += 1
-                attempts += 1
+            bucket["assigned"].append(st.reg_no)
+            bucket["current"] += 1
+            total_allocated += 1
 
         db.commit()
 
@@ -466,7 +438,7 @@ class FacultyAssignmentService:
                     "faculty_name": fc["faculty"].username,
                     "newly_allocated": len(fc["assigned"]),
                     "total_now": fc["current"],
-                    "max_capacity": MAX_STUDENTS_PER_FACULTY
+                    "max_capacity": None
                 }
                 for fc in eligible_faculty
             ]

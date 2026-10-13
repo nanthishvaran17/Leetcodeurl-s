@@ -79,6 +79,17 @@ data/*.db-wal
 reports/certificates/*.pdf
 reports/certificates/*.png
 
+# Video Production Temporary Assets & Binary Clips
+output/raw*
+output/intermediate*
+output/brand_scenes/
+output/preview_snapshots/
+output/test_*
+output/*.mp4
+output/*.wav
+output/*.ttf
+output/auth_state.json
+
 # Root-level DB files (SQLite) — never commit
 *.db
 *.db-shm

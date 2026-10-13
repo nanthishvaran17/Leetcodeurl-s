@@ -24,8 +24,8 @@ def update_nanthish():
                 easy_solved=399,
                 medium_solved=372,
                 hard_solved=124,
-                contest_rating=1820.0,
-                contest_global_ranking=65461,
+                contest_rating=1826.4,
+                contest_global_ranking=63487,
                 status="OK"
             )
             db.add(stats)
@@ -34,8 +34,8 @@ def update_nanthish():
             stud.stats.easy_solved = 399
             stud.stats.medium_solved = 372
             stud.stats.hard_solved = 124
-            stud.stats.contest_rating = 1820.0
-            stud.stats.contest_global_ranking = 65461
+            stud.stats.contest_rating = 1826.4
+            stud.stats.contest_global_ranking = 63487
             stud.stats.status = "OK"
 
         prog = db.query(WeeklyStudentProgress).filter(

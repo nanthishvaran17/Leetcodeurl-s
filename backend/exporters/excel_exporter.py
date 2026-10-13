@@ -51,6 +51,10 @@ FONT_BODY_BOLD = Font(name=FONT_TNR, size=10, bold=True)
 FONT_NUMERIC = Font(name=FONT_TNR, size=10)
 FONT_NUMERIC_BOLD = Font(name=FONT_TNR, size=10, bold=True)
 FONT_NOTE = Font(name=FONT_TNR, size=9, italic=True, color="64748B")
+FONT_DOC_MAIN_TITLE = Font(name=FONT_TNR, size=13, bold=True, color="000000")
+FONT_DOC_SUBTITLE = Font(name=FONT_TNR, size=11, bold=True, color="000000")
+FONT_DOC_SECTION = Font(name=FONT_TNR, size=12, bold=True, color="000000")
+FONT_DOC_TBL_HDR = Font(name=FONT_TNR, size=10, bold=True, color="000000")
 
 # Alignments
 ALIGN_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
@@ -181,93 +185,334 @@ def normalize_row_data(r: dict) -> dict:
 def export_weekly_performance_excel(dataset: dict) -> bytes:
     """
     COORDINATOR WEEKLY PERFORMANCE EXCEL EXPORTER
-    Generates a multi-sheet institutional workbook detailing College Summary,
-    Department Performance Summary, Batch-wise Summary, and Full Student Roster.
+    Generates the official institutional workbook matching the exact templates:
+      Sheet 1: Weekly Performance (Leetcode Performance - Weekly Report, Image 1)
+      Sheet 2: Contest Performance (Leetcode Contest Performance - Weekly Report, Image 2)
+      Sheet 3: Department Summary
+      Sheet 4: Full Student Roster
     """
     wb = openpyxl.Workbook()
     if wb.active is not None:
         wb.remove(wb.active)
 
-    # SHEET 1: EXECUTIVE SUMMARY
-    ws_exec = wb.create_sheet(title="Executive Summary")
-    ws_exec.sheet_view.showGridLines = True
-    ws_exec.page_setup.orientation = ws_exec.ORIENTATION_LANDSCAPE
+    dept_name = str(dataset.get("department_name") or "Department of CSE (Cyber Security)")
+    raw_rep_date = str(dataset.get("report_date") or dataset.get("reportDate") or "12.10.2026")
+    report_date = raw_rep_date.replace("-", ".") if "-" in raw_rep_date else raw_rep_date
+    raw_c_date = str(dataset.get("contest_date") or dataset.get("session_date") or "11.10.2026")
+    contest_date = raw_c_date.replace("-", ".") if "-" in raw_c_date else raw_c_date
+    coordinator = str(dataset.get("coordinator") or dataset.get("academicCoordinator") or "M.Santhosh Kumar / AP")
+    batch_summaries = dataset.get("batch_summaries") or []
+
+    # Sort batches in canonical institutional order: IV (2023-2027), III (2024-2028), II (2025-2029), I (2026-2030)
+    order_map = {"IV": 1, "III": 2, "II": 3, "I": 4}
+    batch_summaries = sorted(batch_summaries, key=lambda b: order_map.get(b.get("year", ""), 99))
+
+    logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "round_logo.png")
+    if not os.path.exists(logo_path):
+        logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "transparent_logo.png")
+
+    # =========================================================================
+    # SHEET 1: LEETCODE PERFORMANCE - WEEKLY REPORT (Image 1)
+    # =========================================================================
+    ws1 = wb.create_sheet(title="Weekly Performance")
+    ws1.sheet_view.showGridLines = True
+    ws1.page_setup.orientation = ws1.ORIENTATION_LANDSCAPE
+
+    # Embed Logo if available
+    if os.path.exists(logo_path):
+        try:
+            from openpyxl.drawing.image import Image as OpenPyxlImage
+            img1 = OpenPyxlImage(logo_path)
+            img1.width = 90
+            img1.height = 90
+            ws1.add_image(img1, "A1")
+        except Exception:
+            pass
+
+    # Header Rows 1-5 (Centered Times New Roman)
+    ws1.merge_cells("C1:M1")
+    ws1["C1"] = "NANDHA ENGINEERING COLLEGE, ERODE - 638 052."
+    ws1["C1"].font = FONT_DOC_MAIN_TITLE
+    ws1["C1"].alignment = ALIGN_CENTER
+
+    ws1.merge_cells("C2:M2")
+    ws1["C2"] = dept_name
+    ws1["C2"].font = FONT_DOC_SUBTITLE
+    ws1["C2"].alignment = ALIGN_CENTER
+
+    ws1.merge_cells("C3:M3")
+    ws1["C3"] = f"Date:{report_date}"
+    ws1["C3"].font = FONT_DOC_SUBTITLE
+    ws1["C3"].alignment = ALIGN_CENTER
+
+    ws1.merge_cells("C4:M4")
+    ws1["C4"] = "Leetcode Performance - Weekly Report"
+    ws1["C4"].font = FONT_DOC_SECTION
+    ws1["C4"].alignment = ALIGN_CENTER
+
+    ws1.merge_cells("C5:M5")
+    ws1["C5"] = f"Name & Designation of the Academic Coordinator: {coordinator}"
+    ws1["C5"].font = FONT_DOC_SUBTITLE
+    ws1["C5"].alignment = ALIGN_CENTER
+
+    # Table Header Rows 7-8 (Two-level header exactly matching Image 1)
+    h_r7 = [
+        ("Batch", 1, 1, 7, 8),
+        ("Number of Students\n(Total Count)", 2, 2, 7, 8),
+        ("Number of Problems Solved", 3, 7, 7, 7),
+        ("Weekly Contest Attended: (give the\ncount here)", 8, 11, 7, 7),
+        ("Leetcode Contest Rating and\nRanking", 12, 13, 7, 7),
+    ]
+    for text, s_c, e_c, s_r, e_r in h_r7:
+        if s_c == e_c and s_r == e_r:
+            c = ws1.cell(row=s_r, column=s_c, value=text)
+        else:
+            ws1.merge_cells(start_row=s_r, start_column=s_c, end_row=e_r, end_column=e_c)
+            c = ws1.cell(row=s_r, column=s_c, value=text)
+        c.font = FONT_DOC_TBL_HDR
+        c.alignment = ALIGN_CENTER
+        for r_x in range(s_r, e_r + 1):
+            for c_x in range(s_c, e_c + 1):
+                _apply_thin_border(ws1.cell(row=r_x, column=c_x))
+
+    h_r8 = [
+        (3, "Above 500"),
+        (4, "250 - 500"),
+        (5, "Less than\n250"),
+        (6, "Less than 100"),
+        (7, "Not yet\nstarted"),
+        (8, "4 Q\nSolved"),
+        (9, "3 Q\nSolved"),
+        (10, "2 Q\nSolved"),
+        (11, "1 Q\nSolved"),
+        (12, "Rating:\nAbove 1500"),
+        (13, "Ranking:\nBelow 20000"),
+    ]
+    for col_i, text in h_r8:
+        c = ws1.cell(row=8, column=col_i, value=text)
+        c.font = FONT_DOC_TBL_HDR
+        c.alignment = ALIGN_CENTER
+        _apply_thin_border(c)
+
+    ws1.row_dimensions[7].height = 28
+    ws1.row_dimensions[8].height = 28
+
+    # Populate Batch Rows (2 rows per batch: Last Week & Current Week)
+    cur_r1 = 9
+    for b in batch_summaries:
+        b_label = b.get("batch", "")
+        b_tot = b.get("total_students") or b.get("num_students", 0)
+        lw = b.get("last_week") or {}
+        cw = b.get("current_week") or {}
+
+        # Row 1: Last Week
+        c_batch_lw = ws1.cell(row=cur_r1, column=1, value=f"{b_label}\n(Last Week)")
+        c_batch_lw.font = FONT_NUMERIC_BOLD
+        c_batch_lw.alignment = ALIGN_CENTER
+
+        # Total count merged vertically across 2 rows
+        ws1.merge_cells(start_row=cur_r1, start_column=2, end_row=cur_r1 + 1, end_column=2)
+        c_tot = ws1.cell(row=cur_r1, column=2, value=b_tot)
+        c_tot.font = FONT_NUMERIC_BOLD
+        c_tot.alignment = ALIGN_CENTER
+
+        # Last Week problem solve counts
+        ws1.cell(row=cur_r1, column=3, value=lw.get("above_500", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=4, value=lw.get("prob_250_500", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=5, value=lw.get("prob_100_249", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=6, value=lw.get("prob_1_99", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=7, value=lw.get("prob_0", 0)).font = FONT_NUMERIC_BOLD
+
+        # Last Week contest attended counts
+        ws1.cell(row=cur_r1, column=8, value=lw.get("q4", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=9, value=lw.get("q3", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=10, value=lw.get("q2", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=11, value=lw.get("q1", 0)).font = FONT_NUMERIC_BOLD
+
+        # Rating / Ranking (dash if 0)
+        ws1.cell(row=cur_r1, column=12, value=lw.get("rating_above_1500") or "—").font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=13, value=lw.get("rank_below_20000") or "—").font = FONT_NUMERIC_BOLD
+
+        # Row 2: Current Week
+        cur_r1 += 1
+        c_batch_cw = ws1.cell(row=cur_r1, column=1, value=f"{b_label}\n(Current Week)")
+        c_batch_cw.font = FONT_NUMERIC_BOLD
+        c_batch_cw.alignment = ALIGN_CENTER
+
+        # Current Week problem solve counts
+        ws1.cell(row=cur_r1, column=3, value=cw.get("above_500", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=4, value=cw.get("prob_250_500", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=5, value=cw.get("prob_100_249", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=6, value=cw.get("prob_1_99", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=7, value=cw.get("prob_0", 0)).font = FONT_NUMERIC_BOLD
+
+        # Current Week contest attended counts
+        ws1.cell(row=cur_r1, column=8, value=cw.get("q4", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=9, value=cw.get("q3", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=10, value=cw.get("q2", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=11, value=cw.get("q1", 0)).font = FONT_NUMERIC_BOLD
+
+        # Rating / Ranking
+        ws1.cell(row=cur_r1, column=12, value=cw.get("rating_above_1500") or "—").font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=13, value=cw.get("rank_below_20000") or "—").font = FONT_NUMERIC_BOLD
+
+        # Apply borders and center alignment
+        for r_x in (cur_r1 - 1, cur_r1):
+            ws1.row_dimensions[r_x].height = 24
+            for c_x in range(1, 14):
+                cell_item = ws1.cell(row=r_x, column=c_x)
+                _apply_thin_border(cell_item)
+                cell_item.alignment = ALIGN_CENTER
+        cur_r1 += 1
+
+    col_w1 = {1: 18, 2: 15, 3: 13, 4: 13, 5: 13, 6: 13, 7: 13, 8: 11, 9: 11, 10: 11, 11: 11, 12: 15, 13: 16}
+    for c_i, w in col_w1.items():
+        ws1.column_dimensions[get_column_letter(c_i)].width = w
+
+    # =========================================================================
+    # SHEET 2: LEETCODE CONTEST PERFORMANCE - WEEKLY REPORT (Image 2)
+    # =========================================================================
+    ws2 = wb.create_sheet(title="Contest Performance")
+    ws2.sheet_view.showGridLines = True
+    ws2.page_setup.orientation = ws2.ORIENTATION_LANDSCAPE
+
+    if os.path.exists(logo_path):
+        try:
+            from openpyxl.drawing.image import Image as OpenPyxlImage
+            img2 = OpenPyxlImage(logo_path)
+            img2.width = 90
+            img2.height = 90
+            ws2.add_image(img2, "A1")
+        except Exception:
+            pass
+
+    ws2.merge_cells("C1:L1")
+    ws2["C1"] = "NANDHA ENGINEERING COLLEGE, ERODE - 638 052."
+    ws2["C1"].font = FONT_DOC_MAIN_TITLE
+    ws2["C1"].alignment = ALIGN_CENTER
+
+    ws2.merge_cells("C2:L2")
+    ws2["C2"] = dept_name
+    ws2["C2"].font = FONT_DOC_SUBTITLE
+    ws2["C2"].alignment = ALIGN_CENTER
+
+    ws2.merge_cells("C3:L3")
+    ws2["C3"] = f"Date:{report_date}"
+    ws2["C3"].font = FONT_DOC_SUBTITLE
+    ws2["C3"].alignment = ALIGN_CENTER
+
+    ws2.merge_cells("C4:L4")
+    ws2["C4"] = "Leetcode Contest Performance - Weekly Report"
+    ws2["C4"].font = FONT_DOC_SECTION
+    ws2["C4"].alignment = ALIGN_CENTER
+
+    ws2.merge_cells("C5:L5")
+    ws2["C5"] = f"Name & Designation of the Academic Coordinator: {coordinator}"
+    ws2["C5"].font = FONT_DOC_SUBTITLE
+    ws2["C5"].alignment = ALIGN_CENTER
+
+    # Table Header Rows 7-8 for Sheet 2
+    h2_r7 = [
+        ("Batch", 1, 1, 7, 8),
+        ("Number of Students\n(Total Count)", 2, 2, 7, 8),
+        ("Contest taken on ---\n(Date)", 3, 3, 7, 8),
+        ("Number of Problems Solved", 4, 8, 7, 7),
+        ("Leetcode Contest Rating and\nRanking", 9, 11, 7, 7),
+        ("Global Ranking\nBelow 20000", 12, 12, 7, 8),
+    ]
+    for text, s_c, e_c, s_r, e_r in h2_r7:
+        if s_c == e_c and s_r == e_r:
+            c = ws2.cell(row=s_r, column=s_c, value=text)
+        else:
+            ws2.merge_cells(start_row=s_r, start_column=s_c, end_row=e_r, end_column=e_c)
+            c = ws2.cell(row=s_r, column=s_c, value=text)
+        c.font = FONT_DOC_TBL_HDR
+        c.alignment = ALIGN_CENTER
+        for r_x in range(s_r, e_r + 1):
+            for c_x in range(s_c, e_c + 1):
+                _apply_thin_border(ws2.cell(row=r_x, column=c_x))
+
+    h2_r8 = [
+        (4, "4"),
+        (5, "3"),
+        (6, "2"),
+        (7, "1"),
+        (8, "0"),
+        (9, "Above\n2000"),
+        (10, "Above\n1500"),
+        (11, "Above\n1250"),
+    ]
+    for col_i, text in h2_r8:
+        c = ws2.cell(row=8, column=col_i, value=text)
+        c.font = FONT_DOC_TBL_HDR
+        c.alignment = ALIGN_CENTER
+        _apply_thin_border(c)
+
+    ws2.row_dimensions[7].height = 28
+    ws2.row_dimensions[8].height = 28
+
+    cur_r2 = 9
+    for b in batch_summaries:
+        b_label = b.get("batch", "")
+        b_tot = b.get("total_students") or b.get("num_students", 0)
+        cw = b.get("current_week") or {}
+        c_date = b.get("contest_date") or contest_date
+
+        row_vals2 = [
+            (1, b_label),
+            (2, b_tot),
+            (3, c_date),
+            (4, cw.get("q4", 0)),
+            (5, cw.get("q3", 0)),
+            (6, cw.get("q2", 0)),
+            (7, cw.get("q1", 0)),
+            (8, cw.get("q0", 0)),
+            (9, cw.get("rating_above_2000") or "—"),
+            (10, cw.get("rating_above_1500") or "—"),
+            (11, cw.get("rating_above_1250") or "—"),
+            (12, cw.get("rank_below_20000") or "—"),
+        ]
+        for col_i, val in row_vals2:
+            c = ws2.cell(row=cur_r2, column=col_i, value=val)
+            c.font = FONT_NUMERIC_BOLD
+            c.alignment = ALIGN_CENTER
+            _apply_thin_border(c)
+        ws2.row_dimensions[cur_r2].height = 24
+        cur_r2 += 1
+
+    col_w2 = {1: 18, 2: 15, 3: 15, 4: 10, 5: 10, 6: 10, 7: 10, 8: 10, 9: 13, 10: 13, 11: 13, 12: 16}
+    for c_i, w in col_w2.items():
+        ws2.column_dimensions[get_column_letter(c_i)].width = w
+
+    # =========================================================================
+    # SHEET 3: DEPARTMENT PERFORMANCE SUMMARY
+    # =========================================================================
+    ws_dept = wb.create_sheet(title="Department Summary")
+    ws_dept.sheet_view.showGridLines = True
+    ws_dept.page_setup.orientation = ws_dept.ORIENTATION_LANDSCAPE
 
     _write_college_header(
-        ws_exec,
+        ws_dept,
         "COORDINATOR WEEKLY PERFORMANCE REPORT",
-        "INSTITUTIONAL PERFORMANCE & CONTEST SUMMARY",
+        "DEPARTMENT PERFORMANCE SUMMARY",
         13,
         {
             "Report ID": str(dataset.get("report_id") or dataset.get("reportId") or "REP-2026"),
-            "Report Date": str(dataset.get("report_date") or dataset.get("reportDate") or ""),
+            "Report Date": sess_date,
             "Total Roster": f"{dataset.get('total_students', 0)} Students",
             "Verified Solvers": f"{dataset.get('verified_students', 0)} Solvers"
         }
     )
 
-    # 1. College Performance Summary
-    row_idx = 7
-    ws_exec.merge_cells(f"A{row_idx}:M{row_idx}")
-    cell_sec1 = ws_exec.cell(row=row_idx, column=1, value="1. COLLEGE PERFORMANCE SUMMARY")
-    cell_sec1.font = FONT_SECTION_BANNER
-    cell_sec1.fill = NAVY_PRIMARY
-    cell_sec1.alignment = ALIGN_LEFT
-    for col in range(1, 14):
-        _apply_thin_border(ws_exec.cell(row=row_idx, column=col))
-    row_idx += 1
-
-    coll_metrics = dataset.get("college_summary") or {}
-    categories = coll_metrics.get("categories") or {}
-
-    kpi_headers = ["Total Students", "Verified Profiles", "Unavailable Profiles", "Above 500", "250–500", "Less than 250", "Less than 100", "Not Started", "Avg Solved", "Total Solved", "Rating > 1500", "Ranking < 20K"]
-    for c_i, h in enumerate(kpi_headers, 1):
-        c = ws_exec.cell(row=row_idx, column=c_i, value=h)
-        c.font = FONT_TBL_HDR
-        c.fill = NAVY_SECONDARY
-        c.alignment = ALIGN_CENTER
-        _apply_thin_border(c)
-    row_idx += 1
-
-    kpi_vals = [
-        dataset.get("total_students", coll_metrics.get("total_students", 0)),
-        dataset.get("verified_students", coll_metrics.get("verified_students", 0)),
-        dataset.get("unavailable_students", 0),
-        categories.get("Above 500", 0),
-        categories.get("250 - 500") or categories.get("250–500", 0),
-        categories.get("Less than 250", 0),
-        categories.get("Less than 100", 0),
-        categories.get("Not Yet Started") or categories.get("Not Started", 0),
-        coll_metrics.get("average_solved", 0),
-        coll_metrics.get("total_solved", 0),
-        coll_metrics.get("rating_1500", 0),
-        coll_metrics.get("ranking_20000", 0)
-    ]
-    for c_i, v in enumerate(kpi_vals, 1):
-        c = ws_exec.cell(row=row_idx, column=c_i, value=v)
-        c.font = FONT_NUMERIC_BOLD
-        c.alignment = ALIGN_CENTER
-        _apply_thin_border(c)
-    row_idx += 3
-
-    # 2. Department Performance Summary
-    ws_exec.merge_cells(f"A{row_idx}:M{row_idx}")
-    cell_sec2 = ws_exec.cell(row=row_idx, column=1, value="2. DEPARTMENT PERFORMANCE SUMMARY")
-    cell_sec2.font = FONT_SECTION_BANNER
-    cell_sec2.fill = NAVY_PRIMARY
-    cell_sec2.alignment = ALIGN_LEFT
-    for col in range(1, 14):
-        _apply_thin_border(ws_exec.cell(row=row_idx, column=col))
-    row_idx += 1
-
+    d_row = 7
     dept_headers = ["S.No", "Department", "Coordinator", "Total", "Verified", "Avg Solved", "Total Solved", "Above 500", "250–500", "4/4 Solved", "3/4 Solved", "2/4 Solved", "1/4 Solved"]
     for c_i, h in enumerate(dept_headers, 1):
-        c = ws_exec.cell(row=row_idx, column=c_i, value=h)
+        c = ws_dept.cell(row=d_row, column=c_i, value=h)
         c.font = FONT_TBL_HDR
         c.fill = NAVY_SECONDARY
         c.alignment = ALIGN_CENTER
         _apply_thin_border(c)
-    row_idx += 1
+    d_row += 1
 
     dept_summaries = dataset.get("department_summaries") or dataset.get("dept_summaries") or []
     for d_i, d in enumerate(dept_summaries, 1):
@@ -289,57 +534,11 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
             d_cw.get("q1", 0),
         ]
         for c_i, v in enumerate(d_vals, 1):
-            c = ws_exec.cell(row=row_idx, column=c_i, value=v)
+            c = ws_dept.cell(row=d_row, column=c_i, value=v)
             c.font = FONT_BODY if c_i in (2, 3) else FONT_NUMERIC
             c.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
             _apply_thin_border(c)
-        row_idx += 1
-    row_idx += 2
-
-    # 3. Batch-wise Performance Summary
-    ws_exec.merge_cells(f"A{row_idx}:M{row_idx}")
-    cell_sec3 = ws_exec.cell(row=row_idx, column=1, value="3. BATCH-WISE PERFORMANCE SUMMARY")
-    cell_sec3.font = FONT_SECTION_BANNER
-    cell_sec3.fill = NAVY_PRIMARY
-    cell_sec3.alignment = ALIGN_LEFT
-    for col in range(1, 14):
-        _apply_thin_border(ws_exec.cell(row=row_idx, column=col))
-    row_idx += 1
-
-    batch_headers = ["Batch", "Year", "Total", "Above 500", "250–500", "< 250", "< 100", "Not Started", "Rating > 1500", "Ranking < 20K", "4/4 Solved", "3/4 Solved", "2/4 Solved"]
-    for c_i, h in enumerate(batch_headers, 1):
-        c = ws_exec.cell(row=row_idx, column=c_i, value=h)
-        c.font = FONT_TBL_HDR
-        c.fill = NAVY_SECONDARY
-        c.alignment = ALIGN_CENTER
-        _apply_thin_border(c)
-    row_idx += 1
-
-    batch_summaries = dataset.get("batch_summaries") or []
-    for b in batch_summaries:
-        b_cats = b.get("categories") or {}
-        b_cw = b.get("current_week") or {}
-        b_vals = [
-            b.get("batch", ""),
-            b.get("year", ""),
-            b.get("total_students") or b.get("num_students", 0),
-            b_cats.get("Above 500", 0),
-            b_cats.get("250 - 500") or b_cats.get("250–500", 0),
-            b_cats.get("Less than 250", 0),
-            b_cats.get("Less than 100", 0),
-            b_cats.get("Not Yet Started") or b_cats.get("Not Started", 0),
-            b.get("rating_1500", 0),
-            b.get("ranking_20000", 0),
-            b_cw.get("q4", 0),
-            b_cw.get("q3", 0),
-            b_cw.get("q2", 0),
-        ]
-        for c_i, v in enumerate(b_vals, 1):
-            c = ws_exec.cell(row=row_idx, column=c_i, value=v)
-            c.font = FONT_NUMERIC
-            c.alignment = ALIGN_CENTER
-            _apply_thin_border(c)
-        row_idx += 1
+        d_row += 1
 
     # SHEET 2: FULL STUDENT ROSTER
     ws_roster = wb.create_sheet(title="Full Student Roster")

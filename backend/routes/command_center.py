@@ -315,7 +315,7 @@ def get_command_center_summary(
                 "pending_count": pending_cnt,
                 "progress_pct": staff_prog,
                 "traffic_status": traffic_status,
-                "max_allowed": MAX_STUDENTS_PER_FACULTY,
+                "max_allowed": None,
                 "workload_status": "NORMAL" if assigned_cnt < 20 else ("AT_RATIO" if assigned_cnt == 20 else "HIGH_WORKLOAD"),
                 "role": u.role or "Faculty",
                 "is_active": u.is_active,
@@ -731,7 +731,7 @@ def get_faculty_workload(
             "conversion_rate_pct": conversion_rate_pct,
             "total_mentee_solves": total_solves,
             "avg_solves_per_mentee": avg_solves,
-            "max_capacity": MAX_STUDENTS_PER_FACULTY,
+            "max_capacity": None,
             "workload_status": "NORMAL" if count < 20 else ("AT_RATIO" if count == 20 else "HIGH_WORKLOAD"),
             "students": students_summary
         })

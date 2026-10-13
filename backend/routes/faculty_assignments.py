@@ -201,8 +201,8 @@ def get_faculty_assignments(
         "faculty_name": faculty.username,
         "department_id": faculty.department_id,
         "total_assigned": len(students),
-        "max_allowed": MAX_STUDENTS_PER_FACULTY,
-        "slots_remaining": max(0, MAX_STUDENTS_PER_FACULTY - len(students)),
+        "max_allowed": None,
+        "slots_remaining": None,
         "students": [
             {
                 "id": s.id,
@@ -391,7 +391,7 @@ def get_faculty_workload_summary(
         "total_faculty": len(faculty_list),
         "target_department_id": target_dept_id,
         "recommended_ratio_per_faculty": 20,
-        "max_capacity_per_faculty": 30,
+        "max_capacity_per_faculty": None,
         "faculty_workload": workload
     }
 

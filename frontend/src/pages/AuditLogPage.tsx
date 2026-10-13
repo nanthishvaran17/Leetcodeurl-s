@@ -1,3 +1,4 @@
+import { SwipeHandle } from '../components/SwipeHandle';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { createPortal } from 'react-dom';
@@ -753,7 +754,7 @@ export const AuditLogPage: React.FC = () => {
         >
           <div className="modal-container-responsive max-w-xl w-full max-h-[85vh] sm:max-h-[90vh] flex flex-col bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl animate-modal-content overflow-hidden">
             {/* Mobile Drag Indicator */}
-            <div className="w-10 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto my-2 sm:hidden shrink-0" />
+            <SwipeHandle onClose={() => setSelectedLog(null)} className="py-2" pillClassName="bg-slate-300 dark:bg-slate-700 hover:bg-slate-400" />
 
             {/* Modal Header */}
             <div className="flex items-center justify-between p-5 sm:p-6 pb-4 border-b border-slate-100 dark:border-navy-800 flex-shrink-0">

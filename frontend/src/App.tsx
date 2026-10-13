@@ -984,9 +984,7 @@ export const App: React.FC = () => {
               )}
 
               {(activeTab === 'post930' || activeTab === 'post-930') && (
-                isTabAllowed('post930')
-                  ? <Post930SolversView onSelectStudent={handleSelectStudent} onBack={() => handleTabChange('dashboard')} />
-                  : renderAccessDenied('Post-9:30 AM Activity Solvers')
+                <WeeklyContestPage onSelectStudent={handleSelectStudent} />
               )}
 
               {activeTab === 'students' && (

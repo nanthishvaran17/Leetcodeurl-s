@@ -446,8 +446,8 @@ export const StudentAllocationCenter: React.FC = () => {
                         <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                           {staff.role || 'Faculty'}
                         </span>
-                        <span className="text-[10px] font-bold text-slate-500">
-                          {staff.assigned_count || 0} / {staff.max_capacity || 30} Allocated
+                        <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                          {staff.assigned_count || 0} {(staff.assigned_count || 0) === 1 ? 'Mentee' : 'Mentees'} Allocated
                         </span>
                       </div>
                     </div>

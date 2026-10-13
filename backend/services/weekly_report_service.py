@@ -111,8 +111,23 @@ def _aggregate_cohort_metrics(student_list: List[Dict[str, Any]]) -> Dict[str, A
     prob_1_99 = sum(1 for s in student_list if s.get("total_solved") is not None and 1 <= s["total_solved"] < 100)
     prob_0 = sum(1 for s in student_list if s.get("total_solved") is None or s["total_solved"] == 0)
 
+    # Last Week Problem Buckets
+    lw_above_500 = sum(1 for s in student_list if (s.get("last_total_solved") if s.get("last_total_solved") is not None else s.get("total_solved") or 0) > 500)
+    lw_prob_250_500 = sum(1 for s in student_list if 250 <= (s.get("last_total_solved") if s.get("last_total_solved") is not None else s.get("total_solved") or 0) <= 500)
+    lw_prob_100_249 = sum(1 for s in student_list if 100 <= (s.get("last_total_solved") if s.get("last_total_solved") is not None else s.get("total_solved") or 0) < 250)
+    lw_prob_1_99 = sum(1 for s in student_list if 1 <= (s.get("last_total_solved") if s.get("last_total_solved") is not None else s.get("total_solved") or 0) < 100)
+    lw_prob_0 = sum(1 for s in student_list if (s.get("last_total_solved") if s.get("last_total_solved") is not None else s.get("total_solved") or 0) == 0)
+
+    # Contest Rating and Ranking Bands
+    rating_2000 = sum(1 for s in student_list if s.get("contest_rating") is not None and s["contest_rating"] > 2000)
     rating_1500 = sum(1 for s in student_list if s.get("contest_rating") is not None and s["contest_rating"] > 1500)
+    rating_1250 = sum(1 for s in student_list if s.get("contest_rating") is not None and s["contest_rating"] > 1250)
     ranking_20000 = sum(1 for s in student_list if s.get("contest_ranking") is not None and 0 < s["contest_ranking"] < 20000)
+
+    lw_rating_2000 = sum(1 for s in student_list if s.get("last_contest_rating") is not None and s["last_contest_rating"] > 2000)
+    lw_rating_1500 = sum(1 for s in student_list if s.get("last_contest_rating") is not None and s["last_contest_rating"] > 1500)
+    lw_rating_1250 = sum(1 for s in student_list if s.get("last_contest_rating") is not None and s["last_contest_rating"] > 1250)
+    lw_ranking_20000 = sum(1 for s in student_list if s.get("last_contest_ranking") is not None and 0 < s["last_contest_ranking"] < 20000)
 
     # STRICT PRE-GENERATION VALIDATION
     bucket_sum = above_500 + prob_250_500 + prob_100_249 + prob_1_99 + prob_0
@@ -167,26 +182,40 @@ def _aggregate_cohort_metrics(student_list: List[Dict[str, Any]]) -> Dict[str, A
         "101_250": prob_100_249,
         "less_100": prob_1_99,
         "not_started": prob_0,
+        "rating_2000": rating_2000,
         "rating_1500": rating_1500,
+        "rating_1250": rating_1250,
         "ranking_20000": ranking_20000,
         "avg_solved": avg_solved,
         "total_solved": total_solved,
         "current_week": {
             "q4": cw_q4, "q3": cw_q3, "q2": cw_q2, "q1": cw_q1, "q0": cw_q0,
             "not_participated": cw_not_part, "unknown": cw_unknown, "source_unavailable": cw_unavail,
-            "prob_above_500": above_500, "prob_250_500": prob_250_500,
-            "prob_100_249": prob_100_249, "prob_1_99": prob_1_99, "prob_0": prob_0,
-            "rating_above_1500": rating_1500, "rank_below_20000": ranking_20000,
-            "rank_below_20k": ranking_20000, "total_students": tot_count,
+            "above_500": above_500, "prob_above_500": above_500,
+            "prob_250_500": prob_250_500, "250_500": prob_250_500,
+            "prob_100_249": prob_100_249, "101_250": prob_100_249,
+            "prob_1_99": prob_1_99, "less_100": prob_1_99,
+            "prob_0": prob_0, "not_started": prob_0,
+            "rating_above_2000": rating_2000, "rating_2000": rating_2000,
+            "rating_above_1500": rating_1500, "rating_1500": rating_1500,
+            "rating_above_1250": rating_1250, "rating_1250": rating_1250,
+            "rank_below_20000": ranking_20000, "rank_below_20k": ranking_20000, "ranking_20000": ranking_20000,
+            "total_students": tot_count,
             "avg_solved": avg_solved, "total_solved": total_solved,
             "verified": verified_cnt, "failed": failed_cnt
         },
         "last_week": {
             "q4": lw_q4, "q3": lw_q3, "q2": lw_q2, "q1": lw_q1, "q0": lw_q0,
-            "prob_above_500": above_500, "prob_250_500": prob_250_500,
-            "prob_100_249": prob_100_249, "prob_1_99": prob_1_99, "prob_0": prob_0,
-            "rating_above_1500": rating_1500, "rank_below_20000": ranking_20000,
-            "rank_below_20k": ranking_20000, "total_students": tot_count
+            "above_500": lw_above_500, "prob_above_500": lw_above_500,
+            "prob_250_500": lw_prob_250_500, "250_500": lw_prob_250_500,
+            "prob_100_249": lw_prob_100_249, "101_250": lw_prob_100_249,
+            "prob_1_99": lw_prob_1_99, "less_100": lw_prob_1_99,
+            "prob_0": lw_prob_0, "not_started": lw_prob_0,
+            "rating_above_2000": lw_rating_2000, "rating_2000": lw_rating_2000,
+            "rating_above_1500": lw_rating_1500, "rating_1500": lw_rating_1500,
+            "rating_above_1250": lw_rating_1250, "rating_1250": lw_rating_1250,
+            "rank_below_20000": lw_ranking_20000, "rank_below_20k": lw_ranking_20000, "ranking_20000": lw_ranking_20000,
+            "total_students": tot_count
         },
         "virtual_contest": {
             "q4": cw_vq4, "q3": cw_vq3, "q2": cw_vq2, "q1": cw_vq1, "q0": cw_vq0
@@ -276,8 +305,8 @@ def generate_weekly_performance_data(
     last_contest_str = ", ".join(last_contest_ids) if last_contest_ids else (f"Weekly Contest {last_contest_num}" if last_contest_num and last_contest_num != "N/A" else (str(last_week_contest) if last_week_contest else "Weekly Contest (Current Period)"))
     curr_contest_str = ", ".join(curr_contest_ids) if curr_contest_ids else (f"Weekly Contest {curr_contest_num}" if curr_contest_num and curr_contest_num != "N/A" else (str(current_week_contest) if current_week_contest else "Weekly Contest (Current Period)"))
 
-    curr_date = period_info["current_week_start_str"]
-    last_date = period_info["previous_week_start_str"]
+    curr_date = getattr(curr_ws, "session_date", None) or period_info["current_week_start_str"]
+    last_date = getattr(last_ws, "session_date", None) or period_info["previous_week_start_str"]
 
     # Step 3: Load Full Master Roster
     from backend.services.authorization_service import apply_role_based_student_filter
@@ -465,9 +494,32 @@ def generate_weekly_performance_data(
             "cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
             "category": curr_category_name,
             "profile_ranking": getattr(st, "public_profile_ranking", None),
-            "contest_rating": (getattr(curr_contest_history_map.get(s.id), "rating_after", None) if curr_contest_history_map.get(s.id) and getattr(curr_contest_history_map.get(s.id), "rating_after", None) is not None else (getattr(curr_pub_obj, "contest_rating", None) if curr_pub_obj and getattr(curr_pub_obj, "contest_rating", None) else None)),
-            "contest_ranking": (getattr(curr_pub_obj, "contest_rank", None) if curr_pub_obj and getattr(curr_pub_obj, "contest_rank", None) else None),
-            "contest_global_ranking": (getattr(curr_pub_obj, "contest_rank", None) if curr_pub_obj and getattr(curr_pub_obj, "contest_rank", None) else None),
+            "contest_rating": (
+                getattr(curr_contest_history_map.get(s.id), "rating_after", None)
+                if curr_contest_history_map.get(s.id) and getattr(curr_contest_history_map.get(s.id), "rating_after", None) is not None
+                else (getattr(curr_pub_obj, "contest_rating", None) if curr_pub_obj and getattr(curr_pub_obj, "contest_rating", None) else getattr(st, "contest_rating", None))
+            ),
+            "contest_ranking": (
+                getattr(curr_pub_obj, "contest_rank", None)
+                if curr_pub_obj and getattr(curr_pub_obj, "contest_rank", None)
+                else getattr(st, "contest_global_ranking", None)
+            ),
+            "contest_global_ranking": (
+                getattr(curr_pub_obj, "contest_rank", None)
+                if curr_pub_obj and getattr(curr_pub_obj, "contest_rank", None)
+                else getattr(st, "contest_global_ranking", None)
+            ),
+            "last_contest_rating": (
+                getattr(last_contest_history_map.get(s.id), "rating_after", None)
+                if last_contest_history_map.get(s.id) and getattr(last_contest_history_map.get(s.id), "rating_after", None) is not None
+                else (getattr(last_pub_obj, "contest_rating", None) if last_pub_obj and getattr(last_pub_obj, "contest_rating", None) else None)
+            ),
+            "last_contest_ranking": (
+                getattr(last_pub_obj, "contest_rank", None)
+                if last_pub_obj and getattr(last_pub_obj, "contest_rank", None)
+                else None
+            ),
+            "last_total_solved": last_tot,
             "contest_name": f"Weekly Contest {curr_contest_num}",
             "public_result": curr_pub_outcome,
             "last_public_result": last_pub_outcome,
@@ -625,11 +677,18 @@ def generate_weekly_performance_data(
                 "Less than 100": b_metrics["less_100"],
                 "Not Yet Started": b_metrics["not_started"]
             },
+            "rating_2000": b_metrics["rating_2000"],
             "rating_1500": b_metrics["rating_1500"],
+            "rating_1250": b_metrics["rating_1250"],
             "ranking_20000": b_metrics["ranking_20000"],
             "current_week": b_metrics["current_week"],
-            "last_week": b_metrics["last_week"]
+            "last_week": b_metrics["last_week"],
+            "contest_date": curr_date
         })
+
+    # Sort in canonical institutional order: Batch IV (2023-2027), Batch III (2024-2028), Batch II (2025-2029), Batch I (2026-2030)
+    order_map = {"IV": 1, "III": 2, "II": 3, "I": 4}
+    batch_summaries.sort(key=lambda b: order_map.get(b.get("year", ""), 99))
 
     # College-wide Summary
     college_metrics = _aggregate_cohort_metrics(all_students_current)
@@ -669,10 +728,21 @@ def generate_weekly_performance_data(
         logger.error(f"[REPORT AUDIT LOG ERROR] {e}")
         db.rollback()
 
+    coordinator_display = get_coordinator_for_department(dept_filter if dept_filter and dept_filter != "ALL" else "CSE(CS)")
+    dept_display = "Department of CSE (Cyber Security)" if dept_filter in ("CSE(CS)", "CSE (Cyber Security)", "CSE") else (f"Department of {dept_filter}" if dept_filter and dept_filter != "ALL" else "Department of CSE (Cyber Security)")
+
     canonical_dataset = {
         "report_id": report_id,
         "institution": "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)",
+        "college_header": "NANDHA ENGINEERING COLLEGE, ERODE - 638 052.",
         "report_date": today_str,
+        "session_date": curr_date,
+        "contest_date": curr_date,
+        "department": dept_filter or "ALL",
+        "department_name": dept_display,
+        "coordinator": coordinator_display,
+        "academicCoordinator": coordinator_display,
+        "coordinator_designation": coordinator_display,
         "total_students": total_students_count,
         "verified_students": verified_count,
         "unavailable_students": unavailable_count,

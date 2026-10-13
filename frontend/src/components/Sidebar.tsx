@@ -98,7 +98,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       items: [
         { id: 'departments', label: 'Departments & Sections', icon: Layers },
         { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
-        { id: 'post930', label: 'Post-9:30 Solvers', icon: Clock, badge: 'VERIFIED', badgeColor: 'amber' },
         { id: 'integrity-monitor', label: 'Contest Integrity Monitor', icon: ShieldAlert, badge: 'DUAL-ID', badgeColor: 'rose' },
         { id: 'students', label: 'Student Leaderboard', icon: Users },
         { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
@@ -134,7 +133,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       items: [
         { id: 'departments', label: 'Departments & Sections', icon: Layers },
         { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
-        { id: 'post930', label: 'Post-9:30 Solvers', icon: Clock, badge: 'VERIFIED', badgeColor: 'amber' },
         { id: 'integrity-monitor', label: 'Contest Integrity Monitor', icon: ShieldAlert, badge: 'DUAL-ID', badgeColor: 'rose' },
         { id: 'students', label: 'Student Leaderboard', icon: Users },
         { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
@@ -169,7 +167,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       items: [
         { id: 'departments', label: 'Departments & Sections', icon: Layers },
         { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
-        { id: 'post930', label: 'Post-9:30 Solvers', icon: Clock, badge: 'VERIFIED', badgeColor: 'amber' },
         { id: 'integrity-monitor', label: 'Contest Integrity Monitor', icon: ShieldAlert, badge: 'DUAL-ID', badgeColor: 'rose' },
         { id: 'students', label: 'Student Leaderboard', icon: Users },
         { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
@@ -205,7 +202,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       items: [
         { id: 'departments', label: 'Departments & Sections', icon: Layers },
         { id: 'weekly-contest', label: 'Weekly Contest Tracker', icon: Calendar, pulse: true, badge: 'LIVE', badgeColor: 'emerald' },
-        { id: 'post930', label: 'Post-9:30 Solvers', icon: Clock, badge: 'VERIFIED', badgeColor: 'amber' },
         { id: 'students', label: 'Student Leaderboard', icon: Users },
         { id: 'compare', label: 'Student Comparison', icon: BarChart3 },
         { id: 'quality', label: 'Data Quality Board', icon: CheckCircle2 },

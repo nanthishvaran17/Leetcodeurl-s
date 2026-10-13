@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Filter, RotateCcw, Check, Sparkles, Search } from 'lucide-react';
 import { useFilters } from '../context/FilterContext';
+import { SwipeHandle } from './SwipeHandle';
 
 interface MobileFilterDrawerProps {
   isOpen: boolean;
@@ -61,10 +62,12 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         role="dialog"
         aria-modal="true"
       >
-        {/* Handle pill for swipe down indication */}
-        <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
-        </div>
+        {/* Handle pill for swipe down or tap to close */}
+        <SwipeHandle
+          onClose={onClose}
+          className="pt-2 pb-1"
+          pillClassName="bg-slate-300 dark:bg-navy-700 hover:bg-slate-400"
+        />
 
         {/* Drawer Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-navy-800">

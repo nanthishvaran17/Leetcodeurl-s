@@ -5,6 +5,7 @@ import {
   X, Building2, Users, Activity, TrendingUp, TrendingDown, Minus,
   AlertCircle, CheckCircle, Code, Info, Mail
 } from 'lucide-react';
+import { SwipeHandle } from '../SwipeHandle';
 import { getDepartmentIntelligenceDetails, DepartmentIntelligenceDetails, DeptBenchmark } from '../../services/commandCenterService';
 
 interface DepartmentDetailDrawerProps {
@@ -61,7 +62,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
           {/* Header */}
           <div className="relative p-4 sm:p-6 border-b border-indigo-200/50 dark:border-indigo-900/50 flex flex-col bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-navy-900 dark:via-navy-950 dark:to-indigo-950 overflow-hidden rounded-none">
             {/* Mobile indicator */}
-            <div className="w-12 h-1.5 rounded-full bg-indigo-300 dark:bg-indigo-700 mx-auto sm:hidden shrink-0 -mt-1 mb-2 relative z-20" />
+            <SwipeHandle onClose={onClose} className="pt-1 pb-1 relative z-20" pillClassName="bg-indigo-300 dark:bg-indigo-700 hover:bg-indigo-400" />
             
             <div className="flex items-start justify-between w-full">
               {/* Background elements */}

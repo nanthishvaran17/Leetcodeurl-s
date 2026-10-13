@@ -653,7 +653,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
         {/* Metric 3: Post-9:30 Solvers */}
         <div 
-          onClick={() => onNavigateTab('post930')}
+          onClick={() => onNavigateTab('weekly-contest')}
           className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white/80 dark:bg-[#0c1424]/90 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-lg shadow-slate-200/50 dark:shadow-none hover:border-amber-500/50 dark:hover:border-amber-500/40 transition-all duration-300 cursor-pointer active:scale-[0.99]"
         >
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-amber-500/20 transition-all duration-300" />

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { SwipeHandle } from '../SwipeHandle';
 import { StaffRecord, StudentRecord, getCommandCenterStudents } from '../../services/commandCenterService';
 import { Users, X, Code, CheckCircle, Clock, Calendar, Mail, Briefcase, Activity, RefreshCw, Gauge, Trophy, Sparkles, Target, Eye } from 'lucide-react';
 
@@ -81,7 +82,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
           <div className="absolute inset-0 opacity-20 pointer-events-none [background-image:linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.16)_48%,transparent_49%),linear-gradient(30deg,transparent_0%,rgba(56,189,248,0.18)_48%,transparent_49%)] [background-size:180px_180px]" />
 
           {/* Mobile Swipe / Drag Handle Indicator inside dark header */}
-          <div className="w-12 h-1.5 rounded-full bg-white/30 mx-auto sm:hidden shrink-0 mt-3 -mb-1 relative z-30" />
+          <SwipeHandle onClose={onClose} className="pt-2 pb-0 relative z-30" pillClassName="bg-white/40 hover:bg-white/60" />
 
           {/* Close button top right */}
           <div className="absolute top-3 sm:top-4 right-3.5 sm:right-4 z-20">

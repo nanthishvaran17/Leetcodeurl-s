@@ -12,6 +12,7 @@ import {
  UserPlus, UserMinus, Shuffle, Printer, Share2, TrendingDown, Minus, Copy
 } from 'lucide-react';
 import { Mail, UserX, GraduationCap, Trophy } from 'lucide-react';
+import { SwipeHandle } from '../components/SwipeHandle';
 import { StaffDetailDrawer } from '../components/admin/StaffDetailDrawer';
 import { DepartmentDetailDrawer } from '../components/admin/DepartmentDetailDrawer';
 import { FacultyMentorMatrixCard } from '../components/admin/FacultyMentorMatrixCard';
@@ -93,7 +94,7 @@ const StudentDetailDrawer: React.FC<{
     <div className="fixed inset-0 z-[999999] flex items-end sm:items-stretch justify-center sm:justify-end bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in p-0" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="w-full max-w-md max-h-[92vh] sm:max-h-none sm:h-full bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl rounded-t-3xl sm:rounded-none sm:rounded-l-3xl p-4 sm:p-6 pt-3 sm:pt-7 overflow-y-auto space-y-6 flex flex-col justify-between">
         {/* Mobile Swipe / Drag Handle Indicator */}
-        <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700 mx-auto sm:hidden shrink-0 mb-1" />
+        <SwipeHandle onClose={onClose} className="py-1 mb-1" pillClassName="bg-slate-300 dark:bg-navy-700 hover:bg-slate-400" />
         <div className="space-y-6">
  {/* Header */}
  <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-navy-800">
@@ -329,10 +330,10 @@ const StaffAllocationModal: React.FC<{
  if (!isOpen) return null;
 
  return createPortal(
- <div className="modal-overlay-responsive z-[10000] animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+ <div className="modal-overlay-responsive z-[999999] animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
  <div className="modal-container-responsive mobile-responsive-modal bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh]">
         {/* Mobile Swipe Drag Handle */}
-        <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700 mx-auto sm:hidden shrink-0 mt-3 mb-1" />
+        <SwipeHandle onClose={onClose} className="pt-2 pb-1 mt-1 mb-1" pillClassName="bg-slate-300 dark:bg-navy-700 hover:bg-slate-400" />
  {/* Modal Header */}
  <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
  <div className="flex items-center gap-3">
@@ -827,10 +828,10 @@ const ReportHubModal: React.FC<{
  };
  }, [isOpen, loadReport]);
 
- if (!isOpen) return null;
+ if (!isOpen || typeof document === 'undefined') return null;
 
- return (
- <div className="fixed inset-0 z-[100050] flex flex-col bg-slate-50 dark:bg-navy-950 animate-fade-in overflow-hidden" onClick={e => e.target === e.currentTarget && onClose()}>
+ return createPortal(
+ <div className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex flex-col bg-slate-50 dark:bg-navy-950 animate-fade-in overflow-hidden" onClick={e => e.target === e.currentTarget && onClose()}>
  <div className="w-full h-full flex flex-col text-slate-900 dark:text-white antialiased bg-white dark:bg-navy-950">
  {/* Header */}
  <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-50 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0">
@@ -1130,7 +1131,8 @@ const ReportHubModal: React.FC<{
  </div>
  </div>
  </div>
- </div>
+ </div>,
+ document.body
  );
 };
 
@@ -1348,6 +1350,7 @@ export const HODCommandCenter: React.FC = () => {
 
  useEffect(() => {
  if (isAnyModalOrDrawerOpen) {
+ document.body.style.overflow = 'hidden';
  pushContext('MODAL');
  const unregister = registerEscHandler(() => {
  if (selectedStudentDetail) setSelectedStudentDetail(null);
@@ -1363,6 +1366,7 @@ export const HODCommandCenter: React.FC = () => {
  if (selectedSkillGap) setSelectedSkillGap(null);
  });
  return () => {
+ document.body.style.overflow = '';
  unregister();
  popContext('MODAL');
  };
@@ -2040,9 +2044,9 @@ export const HODCommandCenter: React.FC = () => {
  </div>
 
  {/* 4. SIX AUTHORITATIVE HOD KPI CARDS */}
- <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 sm:gap-6 lg:gap-6 mb-8 sm:mb-10">
+ <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
  <Card 
- className={`p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer ${staffWorkloadFilter === 'ALL' && selectedStaff === 'ALL' && allocationFilter === 'ALL' && selectedStatus === 'ALL' ? '' : ''}`}
+ className={`p-3.5 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer ${staffWorkloadFilter === 'ALL' && selectedStaff === 'ALL' && allocationFilter === 'ALL' && selectedStatus === 'ALL' ? '' : ''}`}
  onClick={() => {
  setStaffWorkloadFilter('ALL');
  notify.info(`Showing all faculty mentors (${summary?.kpi_summary?.total_staff ?? staffList.length}).`, '', { category: 'ALLOCATION' });
@@ -2050,19 +2054,19 @@ export const HODCommandCenter: React.FC = () => {
  }}
  >
  <div className="flex items-center justify-between text-slate-700 dark:text-slate-400">
- <span className="text-xs font-bold uppercase tracking-wider font-mono">TOTAL STAFF</span>
- <Users size={17} className="text-indigo-500" />
+ <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider font-mono">TOTAL STAFF</span>
+ <Users size={16} className="text-indigo-500" />
  </div>
- <div className="mt-3">
- <div className="font-display text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+ <div className="mt-2 sm:mt-3">
+ <div className="font-display text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
  {summary?.kpi_summary?.total_staff ?? staffList.length}
  </div>
- <div className="text-xs text-slate-700 dark:text-slate-400 mt-1">Faculty Mentors</div>
+ <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Faculty Mentors</div>
  </div>
  </Card>
 
  <Card 
- className={`p-6 flex flex-col justify-between min-h-[145px] cursor-pointer transition-all hover:-translate-y-1 hover:shadow-xl ${selectedStatus === 'ALL' && allocationFilter === 'ALL' ? 'ring-2 ring-slate-400 bg-slate-50 dark:bg-navy-800' : ''}`}
+ className={`p-3.5 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[145px] cursor-pointer transition-all hover:-translate-y-1 hover:shadow-xl ${selectedStatus === 'ALL' && allocationFilter === 'ALL' ? 'ring-2 ring-slate-400 bg-slate-50 dark:bg-navy-800' : ''}`}
  onClick={() => {
  setSelectedStatus('ALL');
  setAllocationFilter('ALL');
@@ -2071,19 +2075,19 @@ export const HODCommandCenter: React.FC = () => {
  }}
  >
  <div className="flex items-center justify-between text-slate-700 dark:text-slate-400">
- <span className="text-xs font-bold uppercase tracking-wider font-mono">TOTAL STUDENTS</span>
- <BookOpen size={17} className="text-slate-600" />
+ <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider font-mono">TOTAL STUDENTS</span>
+ <BookOpen size={16} className="text-slate-600" />
  </div>
- <div className="mt-3">
- <div className="font-display text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+ <div className="mt-2 sm:mt-3">
+ <div className="font-display text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
  {summary?.kpi_summary?.total_students ?? totalInScope}
  </div>
- <div className="text-xs text-slate-700 dark:text-slate-400 mt-1">Enrolled Scope</div>
+ <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Enrolled Scope</div>
  </div>
  </Card>
 
  <Card 
- className={`p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer ${allocationFilter === 'ALLOCATED' ? 'ring-2 ring-brand-500 bg-brand-50/50 dark:bg-brand-950/40' : ''}`}
+ className={`p-3.5 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer ${allocationFilter === 'ALLOCATED' ? 'ring-2 ring-brand-500 bg-brand-50/50 dark:bg-brand-950/40' : ''}`}
  onClick={() => {
  if (allocationFilter === 'ALLOCATED') {
    setAllocationFilter('ALL');
@@ -2096,19 +2100,19 @@ export const HODCommandCenter: React.FC = () => {
  }}
  >
  <div className="flex items-center justify-between text-brand-600">
- <span className="text-xs font-bold uppercase tracking-wider font-mono">ALLOCATED</span>
- <UserCheck size={17} />
+ <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider font-mono">ALLOCATED</span>
+ <UserCheck size={16} />
  </div>
- <div className="mt-3">
- <div className="font-display text-2xl lg:text-3xl font-extrabold text-brand-600 font-mono">
+ <div className="mt-2 sm:mt-3">
+ <div className="font-display text-xl sm:text-2xl lg:text-3xl font-extrabold text-brand-600 font-mono">
  {summary?.kpi_summary?.total_allocated ?? activeInScope}
  </div>
- <div className="text-xs text-slate-700 dark:text-slate-400 mt-1">{summary?.kpi_summary?.unassigned ?? 0} Unassigned</div>
+ <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">{summary?.kpi_summary?.unassigned ?? 0} Unassigned</div>
  </div>
  </Card>
 
   <Card 
-    className={`p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${selectedStatus === 'COMPLETED' ? 'ring-2 ring-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40' : ''}`}
+    className={`p-3.5 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${selectedStatus === 'COMPLETED' ? 'ring-2 ring-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40' : ''}`}
     onClick={() => {
       if (selectedStatus === 'COMPLETED') {
         setSelectedStatus('ALL');
@@ -2123,24 +2127,24 @@ export const HODCommandCenter: React.FC = () => {
     }}
   >
     <div className="flex items-center justify-between text-emerald-600">
-      <span className="text-xs font-bold uppercase tracking-wider font-mono">COMPLETED</span>
-      <CheckCircle2 size={17} />
+      <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider font-mono">COMPLETED</span>
+      <CheckCircle2 size={16} />
     </div>
-    <div className="mt-3">
-      <div className="font-display text-2xl lg:text-3xl font-extrabold text-emerald-600 font-mono">
+    <div className="mt-2 sm:mt-3">
+      <div className="font-display text-xl sm:text-2xl lg:text-3xl font-extrabold text-emerald-600 font-mono">
         {summary?.kpi_summary?.completed ?? 0}
       </div>
-      <div className="flex items-center justify-between text-xs text-emerald-600 dark:text-emerald-500 font-semibold mt-1">
+      <div className="flex items-center justify-between text-[11px] sm:text-xs text-emerald-600 dark:text-emerald-500 font-semibold mt-0.5">
         <span>Target Achieved</span>
         <span className="text-[10px] font-mono font-bold group-hover:underline flex items-center gap-0.5">
-          View {summary?.kpi_summary?.completed ?? 0} →
+          {summary?.kpi_summary?.completed ?? 0} →
         </span>
       </div>
     </div>
   </Card>
 
   <Card 
-    className={`p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${selectedStatus === 'PENDING' ? 'ring-2 ring-amber-500 bg-amber-50/70 dark:bg-amber-950/40' : ''}`}
+    className={`p-3.5 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${selectedStatus === 'PENDING' ? 'ring-2 ring-amber-500 bg-amber-50/70 dark:bg-amber-950/40' : ''}`}
     onClick={() => {
       if (selectedStatus === 'PENDING') {
         setSelectedStatus('ALL');
@@ -2155,40 +2159,40 @@ export const HODCommandCenter: React.FC = () => {
     }}
   >
     <div className="flex items-center justify-between text-amber-600">
-      <span className="text-xs font-bold uppercase tracking-wider font-mono">PENDING</span>
-      <Clock size={17} />
+      <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider font-mono">PENDING</span>
+      <Clock size={16} />
     </div>
-    <div className="mt-3">
-      <div className="font-display text-2xl lg:text-3xl font-extrabold text-amber-600 font-mono">
+    <div className="mt-2 sm:mt-3">
+      <div className="font-display text-xl sm:text-2xl lg:text-3xl font-extrabold text-amber-600 font-mono">
         {summary?.kpi_summary?.pending ?? 0}
       </div>
-      <div className="flex items-center justify-between text-xs text-amber-600 dark:text-amber-500 font-semibold mt-1">
+      <div className="flex items-center justify-between text-[11px] sm:text-xs text-amber-600 dark:text-amber-500 font-semibold mt-0.5">
         <span>In Progress</span>
         <span className="text-[10px] font-mono font-bold group-hover:underline flex items-center gap-0.5">
-          View {summary?.kpi_summary?.pending ?? 0} →
+          {summary?.kpi_summary?.pending ?? 0} →
         </span>
       </div>
     </div>
   </Card>
 
  <Card 
- className="p-6 flex flex-col justify-between min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer !bg-slate-900 text-white border-slate-800"
+ className="p-3.5 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer !bg-slate-900 text-white border-slate-800"
  >
  <div className="flex items-center justify-between text-brand-300">
- <span className="text-xs font-bold uppercase tracking-wider font-mono text-slate-300">OVERALL PROGRESS</span>
- <Zap size={17} className="text-amber-400" />
+ <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider font-mono text-slate-300">PROGRESS</span>
+ <Zap size={16} className="text-amber-400" />
  </div>
- <div className="mt-3">
- <div className="font-display text-2xl lg:text-3xl font-extrabold text-amber-400 font-mono drop-shadow-sm">
+ <div className="mt-2 sm:mt-3">
+ <div className="font-display text-xl sm:text-2xl lg:text-3xl font-extrabold text-amber-400 font-mono drop-shadow-sm">
  {summary?.kpi_summary?.overall_progress ?? 0}%
  </div>
- <div className="flex items-center gap-1.5 mt-1.5">
- <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
+ <div className="flex items-center gap-1.5 mt-1">
+ <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
  (summary?.kpi_summary?.overall_progress ?? 0) >= 80 ? 'bg-emerald-500 text-white' :
  (summary?.kpi_summary?.overall_progress ?? 0) >= 60 ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white'
  }`}>
- {(summary?.kpi_summary?.overall_progress ?? 0) >= 80 ? 'GREEN (GOOD)' :
- (summary?.kpi_summary?.overall_progress ?? 0) >= 60 ? 'AMBER (WATCH)' : 'RED (ACTION)'}
+ {(summary?.kpi_summary?.overall_progress ?? 0) >= 80 ? 'GOOD' :
+ (summary?.kpi_summary?.overall_progress ?? 0) >= 60 ? 'WATCH' : 'ACTION'}
  </span>
  </div>
  </div>
@@ -2511,7 +2515,7 @@ export const HODCommandCenter: React.FC = () => {
  )}
 
  {/* Mobile Student Cards (Compact, structured, no horizontal clipping) */}
- <div className="block md:hidden space-y-4">
+ <div className="block md:hidden space-y-2">
  {studentsLoading ? (
  <div className="py-8 text-center text-slate-600 dark:text-slate-400 text-xs font-medium">Loading live student roster...</div>
  ) : students.length === 0 ? (
@@ -2524,14 +2528,14 @@ export const HODCommandCenter: React.FC = () => {
  <div
  key={s.id}
  onClick={() => setSelectedStudentDetail(s)}
- className={`p-3.5 rounded-2xl border transition cursor-pointer bg-white dark:bg-navy-900 shadow-sm space-y-2.5 ${
- isChecked ? 'border-brand-500 bg-brand-50/30 dark:bg-brand-950/30' : 'border-slate-200 dark:border-navy-800 hover:border-brand-300'
+ className={`p-2.5 sm:p-3 rounded-xl border transition cursor-pointer bg-white dark:bg-navy-900 shadow-2xs space-y-1.5 touch-manipulation active:scale-[0.99] ${
+ isChecked ? 'border-brand-500 bg-brand-50/40 dark:bg-brand-950/40 ring-1 ring-brand-500/30' : 'border-slate-200/90 dark:border-navy-800 hover:border-brand-300'
  }`}
  >
- {/* Top Row: Checkbox + Name + Status */}
- <div className="flex items-start justify-between gap-2">
- <div className="flex items-center gap-2.5 min-w-0">
- <div onClick={e => e.stopPropagation()} className="pt-0.5">
+ {/* Top Row: Checkbox + Name + Reg No + Solved & Status */}
+ <div className="flex items-center justify-between gap-1.5">
+ <div className="flex items-center gap-2 min-w-0 flex-1">
+ <div onClick={e => e.stopPropagation()} className="shrink-0 flex items-center">
  <input
  type="checkbox"
  checked={isChecked}
@@ -2539,14 +2543,14 @@ export const HODCommandCenter: React.FC = () => {
  if (e.target.checked) setSelectedStudentIds(prev => [...prev, s.id]);
  else setSelectedStudentIds(prev => prev.filter(id => id !== s.id));
  }}
- className="rounded text-brand-600 focus:ring-brand-500"
+ className="rounded text-brand-600 focus:ring-brand-500 w-3.5 h-3.5"
  />
  </div>
- <div className="min-w-0">
- <span className="font-extrabold text-sm text-slate-900 dark:text-white truncate block">
+ <div className="min-w-0 flex-1">
+ <span className="font-bold text-xs text-slate-900 dark:text-white truncate block">
  {s.name}
  </span>
- <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 font-mono mt-0.5 truncate">
+ <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">
  <span>{s.reg_no}</span>
  {cleanYear && <span>• {cleanYear}</span>}
  {s.leetcode_username && (
@@ -2556,7 +2560,11 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  </div>
 
- <span className={`text-xs font-black font-mono px-2 py-0.5 rounded-lg shrink-0 ${
+ <div className="text-right shrink-0 flex items-center gap-1.5">
+ <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 font-mono">
+ {s.total_solved} Solved
+ </span>
+ <span className={`text-[10px] font-bold font-mono px-1.5 py-0.2 rounded-md ${
  s.status === 'ACTIVE'
  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300'
  : s.status === 'IMPROVING'
@@ -2566,49 +2574,27 @@ export const HODCommandCenter: React.FC = () => {
  {s.status || 'ACTIVE'}
  </span>
  </div>
-
- {/* Middle Row: Score Metrics Strip (Solved, Weekly Change, Contest) */}
- <div className="grid grid-cols-3 gap-2 p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800 text-center font-mono">
- <div>
- <span className="text-xs uppercase font-black text-indigo-600 dark:text-indigo-400 block">Solved</span>
- <span className="text-xs font-black text-slate-900 dark:text-white">{s.total_solved}</span>
  </div>
- <div>
- <span className="text-xs uppercase font-black text-emerald-600 dark:text-emerald-400 block">Weekly Δ</span>
- <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
- {(() => {
+
+ {/* Metrics Strip */}
+ <div className="flex items-center justify-between gap-1.5 px-2 py-1 rounded-lg bg-slate-50/90 dark:bg-navy-950/80 border border-slate-100 dark:border-navy-800 text-[11px] font-mono">
+ <div className="flex items-center gap-2 truncate">
+ <span className="text-slate-500 text-[10px]">Mentor:</span>
+ <span className="font-semibold text-slate-700 dark:text-slate-300 text-[10.5px] truncate">{s.assigned_staff || 'Unassigned'}</span>
+ </div>
+ <div className="flex items-center gap-2 shrink-0 text-[10px]">
+ <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+ Δ {(() => {
  const w = String(s.weekly_change ?? 0);
  return w.startsWith('+') || w.startsWith('-') ? w : `+${w}`;
  })()}
  </span>
- </div>
- <div>
- <span className="text-xs uppercase font-black text-purple-600 dark:text-purple-400 block">Contest</span>
- <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{s.contest_standing || '—'}</span>
- </div>
- </div>
-
- {/* Bottom Row: Assigned Mentor + Last Activity + Inspect Button */}
- <div className="flex items-center justify-between gap-2 pt-1 text-xs">
- <div className="min-w-0 text-slate-700 dark:text-slate-400 truncate">
- <span className="text-xs text-slate-600 dark:text-slate-400 block">Assigned Mentor:</span>
- <span className="font-semibold text-slate-700 dark:text-slate-300 truncate block">{s.assigned_staff || 'Unassigned'}</span>
- </div>
- <div className="flex items-center gap-2 shrink-0">
- {s.last_updated && (
- <span className="text-xs text-slate-600 dark:text-slate-400 font-mono hidden sm:inline">
- {s.last_updated}
+ {s.contest_standing && s.contest_standing !== '—' && (
+ <span className="text-purple-600 dark:text-purple-400 font-bold">
+ Rank #{s.contest_standing}
  </span>
  )}
- <button
- onClick={(e) => {
- e.stopPropagation();
- setSelectedStudentDetail(s);
- }}
- className="px-3 py-1.5 rounded-xl bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/20 font-bold text-xs transition cursor-pointer"
- >
- Inspect
- </button>
+ <span className="text-brand-600 dark:text-brand-400 font-bold">Inspect →</span>
  </div>
  </div>
  </div>
@@ -3159,9 +3145,9 @@ export const HODCommandCenter: React.FC = () => {
  />
 
  {/* Unassign All Mentees Confirmation Modal */}
- {confirmUnassignTarget && (
+ {confirmUnassignTarget && typeof document !== 'undefined' && createPortal(
  <div
- className="fixed inset-0 z-[100100] flex items-center justify-center p-4 bg-slate-950/90 dark:bg-black/90 backdrop-blur-xl animate-fade-in"
+ className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex items-center justify-center p-4 bg-slate-950/90 dark:bg-black/90 backdrop-blur-xl animate-fade-in"
  onClick={e => { if (e.target === e.currentTarget) setConfirmUnassignTarget(null); }}
  >
  <div className="w-full max-w-md bg-white dark:bg-navy-950 rounded-2xl shadow-2xl border border-rose-200 dark:border-rose-800/60 overflow-hidden">
@@ -3209,7 +3195,8 @@ export const HODCommandCenter: React.FC = () => {
  </button>
  </div>
  </div>
- </div>
+ </div>,
+ document.body
  )}
 
  {/* Dedicated Report Hub Modal */}
@@ -3221,8 +3208,8 @@ export const HODCommandCenter: React.FC = () => {
  />
 
  {/* View Methodology Modal */}
- {showMethodologyModal && (
- <div className="fixed inset-0 z-[100050] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowMethodologyModal(false)}>
+ {showMethodologyModal && typeof document !== 'undefined' && createPortal(
+ <div className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowMethodologyModal(false)}>
  <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
  <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
@@ -3246,12 +3233,13 @@ export const HODCommandCenter: React.FC = () => {
  </button>
  </div>
  </div>
- </div>
+ </div>,
+ document.body
  )}
 
  {/* Ask AI Modal */}
- {showAIModal && (
- <div className="fixed inset-0 z-[100050] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowAIModal(false)}>
+ {showAIModal && typeof document !== 'undefined' && createPortal(
+ <div className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowAIModal(false)}>
  <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
  <h3 className="font-display text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -3281,12 +3269,13 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  )}
  </div>
- </div>
+ </div>,
+ document.body
  )}
 
  {/* What-If Simulator Modal */}
- {showWhatIfModal && (
- <div className="fixed inset-0 z-[100050] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowWhatIfModal(false)}>
+ {showWhatIfModal && typeof document !== 'undefined' && createPortal(
+ <div className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowWhatIfModal(false)}>
  <div className="w-full max-w-md bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
  <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
@@ -3330,18 +3319,19 @@ export const HODCommandCenter: React.FC = () => {
  </button>
  </div>
  </div>
- </div>
+ </div>,
+ document.body
  )}
 
       {/* =========================================================================
           COHORT ACADEMIC BENCHMARK & INTELLIGENCE DECK MODAL
           ========================================================================= */}
-      {selectedYearBenchmark && (
+      {selectedYearBenchmark && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-[100050] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 dark:bg-black/90 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in"
           onClick={e => e.target === e.currentTarget && setSelectedYearBenchmark(null)}
         >
-          <div className="w-full max-w-2xl bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="w-full max-w-2xl bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             {/* Modal Header */}
             <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between gap-3 shrink-0 bg-slate-50/50 dark:bg-navy-900/50">
               <div className="flex items-center gap-3 min-w-0">
@@ -3523,18 +3513,19 @@ export const HODCommandCenter: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* =========================================================================
           INSTITUTIONAL SKILL GAP & 2-WEEK LAB SPRINT DECK MODAL
           ========================================================================= */}
-      {selectedSkillGap && (
+      {selectedSkillGap && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-[100050] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 dark:bg-black/90 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in"
           onClick={e => e.target === e.currentTarget && setSelectedSkillGap(null)}
         >
-          <div className="w-full max-w-3xl bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+          <div className="w-full max-w-3xl sm:max-w-4xl bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden flex flex-col max-h-[94vh]">
             {/* Modal Header */}
             <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between gap-3 shrink-0 bg-slate-50/50 dark:bg-navy-900/50">
               <div className="flex items-center gap-3 min-w-0">
@@ -3808,7 +3799,8 @@ export const HODCommandCenter: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
  </div>

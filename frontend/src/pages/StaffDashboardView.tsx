@@ -397,13 +397,11 @@ export const StaffDashboardView: React.FC = () => {
           </div>
           <div className="mt-2.5 flex items-center">
             <span className={`text-[9.5px] font-bold tracking-wide px-2 py-0.5 rounded-full border ${
-              totalAssignedCount === (summary?.max_capacity || 30)
-                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400'
-                : (totalAssignedCount > (summary?.max_capacity || 30)
-                    ? 'bg-rose-500/10 text-rose-600 border-rose-500/20 dark:text-rose-400'
-                    : 'bg-brand-500/10 text-brand-600 border-brand-500/20 dark:text-brand-400')
+              totalAssignedCount === 0
+                ? 'bg-slate-500/10 text-slate-500 border-slate-500/20'
+                : 'bg-brand-500/10 text-brand-600 border-brand-500/20 dark:text-brand-400'
             }`}>
-              {totalAssignedCount === 0 ? 'NO ASSIGNMENTS' : (summary?.workload_status || (totalAssignedCount === (summary?.max_capacity || 30) ? 'AT CAPACITY' : 'WITHIN CAPACITY'))}
+              {totalAssignedCount === 0 ? 'NO ASSIGNMENTS' : `${totalAssignedCount} ACTIVE MENTEES`}
             </span>
           </div>
         </div>
