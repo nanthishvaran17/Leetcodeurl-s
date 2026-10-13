@@ -138,10 +138,42 @@ def get_my_assigned_students(
         except Exception as snap_err:
             logger.warning(f"[WEEKLY_PROG_CALC_WARN] {snap_err}")
 
+    # Fetch latest finalized Weekly Contest results (e.g. Weekly Contest 523, Session 14)
+    contest_score_map = {}
+    try:
+        from backend.models import WeeklySession, WeeklyPublicResult
+        latest_weekly = db.query(WeeklySession).filter(
+            WeeklySession.contest_name.ilike("Weekly Contest%"),
+            WeeklySession.status == "FINALIZED"
+        ).order_by(WeeklySession.id.desc()).first()
+
+        if latest_weekly and assigned_ids:
+            pub_results = db.query(WeeklyPublicResult).filter(
+                WeeklyPublicResult.session_id == latest_weekly.id,
+                WeeklyPublicResult.student_id.in_(assigned_ids)
+            ).all()
+            for pr in pub_results:
+                is_att = pr.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")
+                if is_att:
+                    sol = pr.total_contest_solved if pr.total_contest_solved is not None else ((pr.q1 or 0) + (pr.q2 or 0) + (pr.q3 or 0) + (pr.q4 or 0))
+                    contest_score_map[pr.student_id] = f"{sol} / 4"
+                else:
+                    contest_score_map[pr.student_id] = "0 / 4"
+    except Exception as c_err:
+        logger.warning(f"[CONTEST_SCORE_MAP_WARN] {c_err}")
+
     student_list = []
     for s in students:
         week_solved = weekly_prog_map.get(s.id, 0)
         perf = calculate_student_performance_status(s, weekly_solved=week_solved)
+
+        # Determine recent contest score: priority session result > profile stats
+        c_score = contest_score_map.get(s.id)
+        if not c_score and s.stats and getattr(s.stats, "recent_contest_score", None):
+            c_score = s.stats.recent_contest_score
+        if not c_score:
+            c_score = "0 / 4" if (s.username and str(s.username).strip()) else None
+
         st_out = {
             "id": s.id,
             "reg_no": s.reg_no,
@@ -151,14 +183,15 @@ def get_my_assigned_students(
             "section": s.section.name if s.section else "A",
             "username": s.username,
             "leetcode_url": s.leetcode_url,
-            "total_solved": s.stats.total_solved if s.stats else 0,
+            "total_solved": s.stats.total_solved if (s.stats and s.stats.total_solved is not None) else 0,
             "weekly_solved": week_solved,
-            "easy_solved": s.stats.easy_solved if s.stats else 0,
-            "medium_solved": s.stats.medium_solved if s.stats else 0,
-            "hard_solved": s.stats.hard_solved if s.stats else 0,
-            "contest_rating": s.stats.contest_rating if s.stats else 0.0,
-            "max_streak": s.stats.max_streak if s.stats else 0,
+            "easy_solved": s.stats.easy_solved if (s.stats and s.stats.easy_solved is not None) else 0,
+            "medium_solved": s.stats.medium_solved if (s.stats and s.stats.medium_solved is not None) else 0,
+            "hard_solved": s.stats.hard_solved if (s.stats and s.stats.hard_solved is not None) else 0,
+            "contest_rating": s.stats.contest_rating if (s.stats and s.stats.contest_rating is not None) else 0.0,
+            "max_streak": s.stats.max_streak if (s.stats and s.stats.max_streak is not None) else 0,
             "sync_status": s.stats.sync_status if s.stats else "not_started",
+            "recent_contest_score": c_score,
             "status_code": perf["status_code"],
             "status_label": perf["status_label"],
             "badge_color": perf["badge_color"],
