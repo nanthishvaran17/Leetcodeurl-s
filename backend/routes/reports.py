@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any
 from pydantic import BaseModel
 
 from backend.database import get_db
-from backend.models import Student, CertificateRecord, EmailLog, ReportCache, Department
+from backend.models import Student, CertificateRecord, EmailLog, ReportCache, Department, WeeklySession
 from backend.services.authorization_service import apply_role_based_student_filter
 from backend.excel_handler import (
     generate_8_sheet_excel_report,
@@ -1384,8 +1384,8 @@ def get_contest_filename_base(
         type_slug = "12th_TNEA_Cutoff"
     elif "PRINCIPAL" in rtype_str or "PRINCIPAL" in cname_str:
         type_slug = "Principal_Executive"
-    elif "FACULTY_COORDINATOR" in rtype_str or "COORDINATOR" in rtype_str:
-        type_slug = "Coordinator_Weekly"
+    elif "FACULTY_COORDINATOR" in rtype_str or "COORDINATOR" in rtype_str or "WEEKLY_PERFORMANCE" in rtype_str:
+        type_slug = "Coordinator_Weekly_Performance"
     elif "FACULTY" in rtype_str or "FACULTY" in cname_str:
         type_slug = "Faculty_Consolidated"
     elif "HOD" in rtype_str or "HOD" in cname_str:
@@ -1481,6 +1481,14 @@ def get_contest_filename_base(
 
     if session_date and not is_live_performance_report:
         s_date_str = session_date.strip()
+        if s_date_str.isdigit() and db is not None:
+            try:
+                from backend.models import WeeklySession
+                ws_item = db.query(WeeklySession).filter(WeeklySession.id == int(s_date_str)).first()
+                if ws_item and ws_item.session_date:
+                    s_date_str = str(ws_item.session_date).strip()
+            except Exception:
+                pass
         parts = re.split(r'[.\-/]', s_date_str)
         try:
             if len(parts) == 3:
@@ -2492,6 +2500,59 @@ def download_universal_excel(
             )
             if not excel_bytes or len(excel_bytes) < 100:
                 raise ValueError("Generated Excel file is empty or corrupted.")
+            return Response(
+                content=excel_bytes,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={
+                    "Content-Disposition": f'attachment; filename="{r_filename}.xlsx"',
+                    "Access-Control-Expose-Headers": "Content-Disposition",
+                    "Cache-Control": "no-cache, no-store, must-revalidate"
+                }
+            )
+
+        if rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE"):
+            from backend.services.pregenerated_report_service import generate_report_bytes
+            filters = {
+                "department": eff_dept,
+                "year": eff_year,
+                "attendance": eff_att,
+                "status": status,
+                "search": eff_search,
+                "batch": batch,
+                "session_id": dataset.get("session_id") or dataset.get("contest_id") or (dataset.get("current_session") or {}).get("id") or "latest",
+                "report_date": dataset.get("session_date") or dataset.get("contest_date") or dataset.get("report_date")
+            }
+            try:
+                excel_bytes = generate_report_bytes(db, report_type="WEEKLY_PERFORMANCE", format="xlsx", filters=filters, current_user=current_user)
+            except Exception as e:
+                logger.warning(f"[WEEKLY PERFORMANCE FALLBACK] {e}")
+                from backend.exporters.excel_exporter import export_excel_from_dataset
+                excel_bytes = export_excel_from_dataset(dataset)
+            
+            if not excel_bytes or len(excel_bytes) < 100:
+                raise ValueError("Generated Excel file is empty or corrupted.")
+
+            if not r_filename or "WC" in r_filename or "Student" in r_filename or "Coordinator" not in r_filename:
+                raw_d = str(dataset.get("session_date") or dataset.get("contest_date") or dataset.get("report_date") or "").strip()
+                MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                parts = re.split(r'[.\-/]', raw_d)
+                fmt_date = raw_d
+                try:
+                    if len(parts) == 3:
+                        if len(parts[0]) == 4:
+                            dd, mm, yyyy = int(parts[2]), int(parts[1]), parts[0]
+                        else:
+                            dd, mm, yyyy = int(parts[0]), int(parts[1]), parts[2]
+                        if 1 <= mm <= 12:
+                            fmt_date = f"{dd:02d}{MONTHS[mm-1]}{yyyy}"
+                except Exception:
+                    pass
+                c_d_clean = "CSE-CS" if (eff_dept in ("1", "CSE(CS)") or "CS" in eff_dept.upper()) else ("CSE-IOT" if (eff_dept in ("2", "CSE(IOT)") or "IOT" in eff_dept.upper()) else eff_dept.replace(" ", "-"))
+                yr_s = eff_year.strip()
+                yr_map = {"1": "I-Yr", "2": "II-Yr", "3": "III-Yr", "4": "IV-Yr"}
+                yr_clean = yr_map.get(yr_s, f"{yr_s}-Yr" if yr_s and yr_s != "ALL" else "III-Yr")
+                r_filename = f"NEC_Coordinator_Weekly_Performance_{c_d_clean}_{yr_clean}_{fmt_date}"
+
             return Response(
                 content=excel_bytes,
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

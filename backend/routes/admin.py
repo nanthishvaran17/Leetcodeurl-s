@@ -1289,11 +1289,24 @@ def update_staff_user(
             changes=profile_summary
         )
 
+        recipient_targets = [str(staff_user.email)]
+        if staff_user.username and staff_user.username != staff_user.email:
+            recipient_targets.append(str(staff_user.username))
+        recipient_targets.append(f"STAFF_{staff_user.id}")
+        recipient_targets.append(str(staff_user.id))
+
+        notif_title = "Role & Profile Updated" if "role" in changes_made else "Profile Details Updated"
+        notif_msg = f"Your institutional profile was updated. Role: {staff_user.role}"
+        if "role" in changes_made:
+            notif_msg += f" (New Role Assigned: {staff_user.role})"
+
         NotificationService.create_direct_notification(
-            title="Profile Details Updated",
-            message=f"Your institutional staff profile was updated. Assigned Role: {staff_user.role}, DOB: {display_dob}",
-            recipient_user_ids=[str(staff_user.email)],
-            notification_type="ACCOUNT_UPDATE",
+            title=notif_title,
+            message=notif_msg,
+            recipient_user_ids=recipient_targets,
+            notification_type="ROLE_CHANGED" if "role" in changes_made else "ACCOUNT_UPDATE",
+            priority="high",
+            action_route="/settings",
             send_email_notification=False
         )
 

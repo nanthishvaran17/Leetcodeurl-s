@@ -137,6 +137,7 @@ test_*.py
 1234.pdf
 all_codes.txt
 *.apk
+!frontend/public/*.apk
 *.xlsx
 *.tsv
 *.pdf
@@ -181,4 +182,8 @@ frontend/dist-electron/
 dist-windows-exe/
 frontend/release-builds/
 *.exe
+
+# Rendered Media Outputs
+output/
+
 

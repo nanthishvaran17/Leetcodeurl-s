@@ -26,8 +26,8 @@ export const ANDROID_CHANNELS: Channel[] = [
     id: 'account_security',
     name: 'Account & Security',
     description: 'Critical security alerts, password changes, and account activity',
-    importance: 5, // High / Urgent
-    visibility: 1, // Public
+    importance: 5, // High / Urgent Heads-Up
+    visibility: 1, // Public on Lock Screen
     sound: 'default',
     vibration: true,
   },
@@ -35,7 +35,7 @@ export const ANDROID_CHANNELS: Channel[] = [
     id: 'contest_updates',
     name: 'Contest Updates',
     description: 'Live contest alerts, reminders, and contest result announcements',
-    importance: 4, // High
+    importance: 5, // High / Urgent Heads-Up
     visibility: 1,
     sound: 'default',
     vibration: true,
@@ -44,37 +44,46 @@ export const ANDROID_CHANNELS: Channel[] = [
     id: 'weekly_reports',
     name: 'Weekly Performance Reports',
     description: 'Weekly student performance reports and analytical summaries',
-    importance: 3, // Default
+    importance: 5, // High / Urgent Heads-Up
     visibility: 1,
     sound: 'default',
-    vibration: false,
+    vibration: true,
   },
   {
     id: 'performance_updates',
     name: 'Performance Milestones',
     description: 'Rating changes, milestones, and performance velocity updates',
-    importance: 3, // Default
+    importance: 5, // High / Urgent Heads-Up
     visibility: 1,
     sound: 'default',
-    vibration: false,
+    vibration: true,
   },
   {
     id: 'academic_announcements',
     name: 'Academic Announcements',
     description: 'Institutional, department, and academic announcements',
-    importance: 3, // Default
+    importance: 5, // High / Urgent Heads-Up
     visibility: 1,
     sound: 'default',
-    vibration: false,
+    vibration: true,
   },
   {
     id: 'system_status',
     name: 'System Status',
     description: 'Maintenance schedules and system status updates',
-    importance: 3, // Default
+    importance: 5, // High / Urgent Heads-Up
     visibility: 1,
     sound: 'default',
-    vibration: false,
+    vibration: true,
+  },
+  {
+    id: 'leetcode_intelligence_channel',
+    name: 'LeetCode General Alerts',
+    description: 'General system alerts, role updates, and real-time announcements',
+    importance: 5, // High / Urgent Heads-Up
+    visibility: 1,
+    sound: 'default',
+    vibration: true,
   },
 ];
 
@@ -166,10 +175,23 @@ export const requestPushPermissionAndSync = async (userEmailOrId: string) => {
 
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
+      let swReg: ServiceWorkerRegistration | undefined;
+      try {
+        swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        await navigator.serviceWorker.ready;
+      } catch (swErr) {
+        console.warn('[Push] Explicit SW registration note:', swErr);
+      }
+
       const app = getOrInitApp();
       const messaging = getMessaging(app);
       
-      const currentToken = await getToken(messaging, { vapidKey });
+      const tokenOptions: any = swReg ? { serviceWorkerRegistration: swReg } : {};
+      if (vapidKey) {
+        tokenOptions.vapidKey = vapidKey;
+      }
+
+      const currentToken = await getToken(messaging, tokenOptions);
       if (currentToken) {
         return await syncTokenToBackend(currentToken, userEmailOrId);
       }

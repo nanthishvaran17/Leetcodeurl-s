@@ -929,13 +929,13 @@ def get_operations_center_overview(db: Session = Depends(get_db)):
     else:
         last_audit = db.query(AdminAuditLog).order_by(AdminAuditLog.id.desc()).first()
         if last_audit and last_audit.created_at:
-            last_config_str = format_ist(last_audit.created_at, "%Y-%m-%d %H:%M:%S IST")
+            last_config_str = format_ist(getattr(last_audit, "created_at", None), "%Y-%m-%d %H:%M:%S IST")
         else:
             last_config_str = now_ist.strftime("%Y-%m-%d %H:%M:%S IST")
 
     # Dynamic Freshness Intelligence
     latest_job = db.query(SyncJob).order_by(SyncJob.id.desc()).first()
-    profiles_fresh = format_ist(latest_job.completed_at, "%d %b %I:%M %p") if (latest_job and latest_job.completed_at) else "Live (Synchronized)"
+    profiles_fresh = format_ist(getattr(latest_job, "completed_at", None), "%d %b %I:%M %p") if (latest_job and latest_job.completed_at) else "Live (Synchronized)"
     contest_data_fresh = f"{eval_sess.contest_name}" if eval_sess else "Live"
     snapshot_fresh = f"{latest_backup['created_at']}" if (latest_backup and latest_backup.get('created_at')) else "Verified"
 

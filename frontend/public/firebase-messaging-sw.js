@@ -22,16 +22,20 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
 
-  // Customize notification here
-  const notificationTitle = payload.notification?.title || payload.data?.title || 'New Notification';
+  const notificationTitle = payload.notification?.title || payload.data?.title || 'LeetCode Intelligence Alert';
+  const notificationBody = payload.notification?.body || payload.data?.body || payload.data?.message || 'New update received.';
+  
   const notificationOptions = {
-    body: payload.notification?.body || payload.data?.body || '',
-    icon: '/logo192.png',
-    badge: '/logo192.png',
+    body: notificationBody,
+    icon: '/android-chrome-192x192.png',
+    badge: '/favicon-32x32.png',
+    vibrate: [200, 100, 200, 100, 200], // Phone vibration pattern (like WhatsApp/SMS)
+    requireInteraction: true,           // Keeps notification visible on lock screen/desktop
+    silent: false,                      // Ensures audio chime & vibration trigger
     data: {
-      url: payload.data?.action_route || payload.fcmOptions?.link || '/',
+      url: payload.data?.action_route || payload.data?.actionRoute || payload.fcmOptions?.link || '/',
     },
-    tag: payload.data?.tag || 'default-tag',
+    tag: payload.data?.notificationId || payload.data?.tag || ('notif_' + Date.now()),
     renotify: true,
   };
 

@@ -680,6 +680,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
           'CONTEST_PERFORMANCE_RANKING': 'Contest_Performance_and_Ranking_Report',
           'CONTEST_ATTENDANCE_PARTICIPATION': 'Contest_Attendance_and_Participation_Report',
           'WEEKLY_COORDINATOR': 'Coordinator_Weekly_Performance_Report',
+          'WEEKLY_PERFORMANCE': 'Coordinator_Weekly_Performance_Report',
+          'WEEKLY_STUDENT_PERFORMANCE': 'Coordinator_Weekly_Performance_Report',
           'WOW_INTEL': 'Week_on_Week_Performance_Intel_Report',
           'HISTORICAL_PERFORMANCE': 'Historical_Contest_Performance_Report',
           'FIVE_WEEK_TREND': '5Week_Contest_Trend_Report',
@@ -698,6 +700,10 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
         titlePart = typeMap[report?.reportType] || (report?.reportType || 'Student_Performance_Detail').replace(/\s+/g, '_');
       }
 
+      if (isWeeklyPerformance) {
+        titlePart = 'Coordinator_Weekly_Performance_Report';
+      }
+
       let sessionTag = '';
       if (report?.contestName) {
         sessionTag += `_${report.contestName.replace(/\s+/g, '_')}`;
@@ -706,7 +712,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       }
 
       const isLiveReport = ['STUDENT_PERFORMANCE', 'ASSIGNED_STUDENTS', 'STAFF_MENTORING'].includes(report?.reportType || '');
-      const dateVal = isLiveReport ? '' : (report?.contestDate || report?.sessionDate || report?.session_date || report?.currDate || '');
+      const dateVal = isLiveReport ? '' : (report?.contestDate || report?.sessionDate || report?.session_date || report?.currDate || report?.report_date || report?.reportDate || '');
       const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
       if (dateVal) {
@@ -2248,16 +2254,36 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                 NANDHA ENGINEERING COLLEGE, ERODE - 638 052.
                               </h2>
                               <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
-                                {report.department_name || (report.department ? `Department of CSE (${report.department})` : 'Department of CSE (Internet of Things )')}
+                                {(() => {
+                                  const dRaw = (report.department_name || report.department || '').toString().trim();
+                                  if (dRaw.includes('Cyber') || dRaw === '1' || dRaw === 'CSE(CS)') {
+                                    return 'Department of CSE (Cyber Security)';
+                                  }
+                                  if (dRaw.includes('Things') || dRaw.includes('IoT') || dRaw === '2' || dRaw === 'CSE(IOT)') {
+                                    return 'Department of CSE (Internet of Things )';
+                                  }
+                                  if (report.department_name && !report.department_name.match(/Department of \d+/i)) {
+                                    return report.department_name;
+                                  }
+                                  return 'Department of CSE (Cyber Security)';
+                                })()}
                               </p>
                               <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                                Date:{report.report_date || report.currentWeek?.date || '12.10.2026'}
+                                Date:{report.session_date || report.contest_date || report.report_date || report.currentWeek?.date || '11.10.2026'}
                               </p>
                               <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white pt-1">
                                 Leetcode Performance - Weekly Report
                               </h3>
                               <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                Name &amp; Designation of the Academic Coordinator: <span className="font-black text-brand-700 dark:text-brand-400">{report.coordinator || 'P.Devayani /AP'}</span>
+                                Name &amp; Designation of the Academic Coordinator: <span className="font-black text-brand-700 dark:text-brand-400">
+                                  {(() => {
+                                    const dRaw = (report.department_name || report.department || '').toString().trim();
+                                    if (dRaw.includes('Things') || dRaw.includes('IoT') || dRaw === '2' || dRaw === 'CSE(IOT)') {
+                                      return 'P.Devayani /AP';
+                                    }
+                                    return report.coordinator || 'M. Santhoshkumar, AP / CSE (Cyber Security)';
+                                  })()}
+                                </span>
                               </p>
                             </div>
                           </div>

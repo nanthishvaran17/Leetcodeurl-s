@@ -21,7 +21,8 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
     wb = openpyxl.Workbook()
     wb.active
 
-    report_date = data.get("report_date", "04-09-2026")
+    raw_date = str(data.get("session_date") or data.get("contest_date") or data.get("report_date") or "11.10.2026")
+    report_date = raw_date.replace("-", ".") if "-" in raw_date else raw_date
     
     # Palette: Professional Institutional Restrained Navy/Slate
     navy_fill = PatternFill(start_color="002060", end_color="002060", fill_type="solid")

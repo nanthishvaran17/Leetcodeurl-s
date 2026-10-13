@@ -63,7 +63,7 @@ def normalize_year_roman(year_level: Optional[str] = None, reg_no: Optional[str]
     - '2', '2nd', 'II' -> 'II'
     - '1', '1st', 'I' -> 'I'
     """
-    reg_clean = (str(reg_no or "")).upper().strip()
+    reg_clean = (reg_no or "").upper().strip()
     if reg_clean:
         if "732223" in reg_clean or "23CC" in reg_clean or "23CI" in reg_clean or "23CS" in reg_clean or "23IT" in reg_clean or "23AI" in reg_clean or "23EC" in reg_clean or "23EE" in reg_clean or "23ME" in reg_clean or reg_clean.startswith("23"):
             return "IV"
@@ -75,7 +75,7 @@ def normalize_year_roman(year_level: Optional[str] = None, reg_no: Optional[str]
             return "I"
 
     if year_level:
-        cleaned = str(year_level).upper().replace("YEAR", "").replace("YR", "").strip()
+        cleaned = year_level.upper().replace("YEAR", "").replace("YR", "").strip()
         if cleaned in YEAR_ROMAN_MAP:
             return YEAR_ROMAN_MAP[cleaned]
         if "2027" in cleaned or "2023-2027" in cleaned:

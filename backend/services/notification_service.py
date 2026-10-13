@@ -479,10 +479,40 @@ class NotificationService:
                 raw_route = str(eff_route or "/dashboard")  # type: ignore
                 fcm_link = raw_route if raw_route.startswith("http") else f"https://leetcodeurl-s-ipfr.onrender.com{raw_route}"
                 
-                target_uids = set(r["user_id"] for r in recipients if r.get("user_id"))
+                target_uids = set()
                 for r in recipients:
-                    if r.get("email"):
-                        target_uids.add(r["email"])
+                    uid = r.get("user_id")
+                    if uid:
+                        target_uids.add(str(uid))
+                        target_uids.add(str(uid).lower())
+                    em = r.get("email")
+                    if em:
+                        target_uids.add(str(em))
+                        target_uids.add(str(em).lower())
+                    
+                    lookup_val = em or uid
+                    if lookup_val:
+                        u_match = db.query(User).filter(
+                            or_(User.email.ilike(str(lookup_val)), User.username == str(lookup_val))
+                        ).first()
+                        if u_match:
+                            if u_match.email:
+                                target_uids.add(str(u_match.email).lower())
+                                target_uids.add(str(u_match.email))
+                            if u_match.username:
+                                target_uids.add(str(u_match.username))
+                            target_uids.add(str(u_match.id))
+                            target_uids.add(f"STAFF_{u_match.id}")
+                        s_match = db.query(Student).filter(
+                            or_(Student.email.ilike(str(lookup_val)), Student.reg_no == str(lookup_val))
+                        ).first()
+                        if s_match:
+                            if s_match.email:
+                                target_uids.add(str(s_match.email).lower())
+                                target_uids.add(str(s_match.email))
+                            if s_match.reg_no:
+                                target_uids.add(str(s_match.reg_no))
+                            target_uids.add(str(s_match.id))
 
                 from backend.models import NotificationPreference
 
@@ -539,11 +569,11 @@ class NotificationService:
                                 "entityType": str(entity_type or ""),  # type: ignore
                                 "entityId": str(entity_id or ""),  # type: ignore
                                 "fileId": str(file_id or ""),  # type: ignore
-                                "priority": str(eff_priority),  # type: ignore
+                                "priority": "high",  # type: ignore
                                 **({str(k): str(v) for k, v in (metadata or {}).items() if v is not None})  # type: ignore
                             },
                             android=messaging.AndroidConfig(
-                                priority="high" if is_high_priority else "normal",
+                                priority="high",
                                 notification=messaging.AndroidNotification(
                                     title=title,
                                     body=body,
@@ -554,21 +584,22 @@ class NotificationService:
                                     default_vibrate_timings=True,
                                     channel_id=eff_channel_id,
                                     visibility="public",
+                                    priority="max",
                                     notification_count=1,
                                     tag=f"conv_{metadata.get('conversation_id')}" if (metadata and metadata.get("conversation_id")) else eff_event_id
                                 )
                             ),
                             webpush=messaging.WebpushConfig(
                                 headers={
-                                    "Urgency": "high" if is_high_priority else "normal"
+                                    "Urgency": "high"
                                 },
                                 notification=messaging.WebpushNotification(
                                     title=title,
                                     body=body,
-                                    icon="/logo.png",
-                                    badge="/logo.png",
+                                    icon="/android-chrome-192x192.png",
+                                    badge="/favicon-32x32.png",
                                     tag=eff_event_id,
-                                    require_interaction=is_high_priority
+                                    require_interaction=True
                                 ),
                                 fcm_options=messaging.WebpushFCMOptions(
                                     link=fcm_link
@@ -763,7 +794,7 @@ class NotificationService:
         message: str,
         recipient_user_ids: List[str],
         notification_type: str = 'announcement',
-        priority: str = 'normal',
+        priority: str = 'high',
         action_route: Optional[str] = None,
         created_by: str = 'System',
         send_email_notification: bool = False

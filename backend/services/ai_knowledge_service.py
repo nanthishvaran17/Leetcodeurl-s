@@ -79,7 +79,7 @@ class AIKnowledgeEngine:
         m = re.search(r'\b(51[0-9]|52[0-9])\b', text)
         if m:
             c_num = m.group(1)
-            clauses = [WeeklySession.contest_name.ilike(f"%{c_num}%")]
+            clauses: List[Any] = [WeeklySession.contest_name.ilike(f"%{c_num}%")]
             if c_num.isdigit() and int(c_num) < 100:
                 clauses.append(WeeklySession.id == int(c_num))
             sess = db.query(WeeklySession).filter(or_(*clauses)).first()

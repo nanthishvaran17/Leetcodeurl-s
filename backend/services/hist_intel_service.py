@@ -163,12 +163,12 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
                 if not pr:
                     weekly_data.append({"contestNum": c_num, "att": False, "solved": 0, "score": 0})
                     continue
-                is_att = _is_attended(pr.participation_status or "") or (pr.total_contest_solved or 0) > 0 or pr.contest_rank is not None
-                solved = pr.total_contest_solved or 0
-                q1 = 1 if (pr.q1 or 0) > 0 else 0
-                q2 = 1 if (pr.q2 or 0) > 0 else 0
-                q3 = 1 if (pr.q3 or 0) > 0 else 0
-                q4 = 1 if (pr.q4 or 0) > 0 else 0
+                is_att = _is_attended(pr.participation_status or "") or int(pr.total_contest_solved or 0) > 0 or pr.contest_rank is not None
+                solved = int(pr.total_contest_solved or 0)
+                q1 = 1 if int(pr.q1 or 0) > 0 else 0
+                q2 = 1 if int(pr.q2 or 0) > 0 else 0
+                q3 = 1 if int(pr.q3 or 0) > 0 else 0
+                q4 = 1 if int(pr.q4 or 0) > 0 else 0
                 actual_solved = max(q1 + q2 + q3 + q4, solved) if is_att else 0
                 weekly_data.append({
                     "contestNum": c_num,
@@ -191,7 +191,7 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
             total_solved_frac = f"{total_solved_all}/{max_possible_problems}"
             attended_solved_frac = f"{total_solved_all}/{max_attended_problems}" if total_attended > 0 else "0/0"
 
-            solve_pct = round((float(total_solved_all) / max(max_attended_problems, 1)) * 100.0, 1) if total_attended > 0 else 0.0
+            solve_pct = round((float(int(total_solved_all)) / max(max_attended_problems, 1)) * 100.0, 1) if total_attended > 0 else 0.0
 
             rows.append({
                 "s_no": idx,

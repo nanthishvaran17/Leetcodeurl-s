@@ -247,6 +247,14 @@ def generate_weekly_performance_data(
     """
     CANONICAL WEEKLY PERFORMANCE DATASET GENERATOR
     """
+    if dept_filter and dept_filter.strip().isdigit():
+        try:
+            d_rec = db.query(Department).filter(Department.id == int(dept_filter)).first()
+            if d_rec and d_rec.code:
+                dept_filter = str(d_rec.code)
+        except Exception:
+            pass
+
     # Step 0: Resolve session_id early to set report_date for historical accurate reporting
     target_ws = None
     if session_id and str(session_id).lower() not in ("latest", "all", "none", ""):
@@ -720,38 +728,51 @@ def generate_weekly_performance_data(
     canonical_json_str = json.dumps(canonical_hash_payload, sort_keys=True)
     file_hash = hashlib.sha256(canonical_json_str.encode("utf-8")).hexdigest()
 
-    audit_rec = WeeklyReportAudit(
-        report_id=report_id,
-        reporting_period_id=curr_period_id,
-        report_date=today_str,
-        generated_by=getattr(current_user, "username", "System"),
-        contests_included=json.dumps({"last_week": last_contest_ids, "current_week": curr_contest_ids}),
-        total_students=total_students_count,
-        total_batches=len(batch_summaries),
-        validation_status="VALID",
-        validation_details="All batch problem bucket sums matched total student count exactly.",
-        file_hash=file_hash
-    )
-    db.add(audit_rec)
-    try:
-        db.commit()
-    except Exception as e:
-        logger.error(f"[REPORT AUDIT LOG ERROR] {e}")
-        db.rollback()
+    existing_audit = db.query(WeeklyReportAudit).filter(WeeklyReportAudit.report_id == report_id).first()
+    if not existing_audit:
+        audit_rec = WeeklyReportAudit(
+            report_id=report_id,
+            reporting_period_id=curr_period_id,
+            report_date=today_str,
+            generated_by=getattr(current_user, "username", "System"),
+            contests_included=json.dumps({"last_week": last_contest_ids, "current_week": curr_contest_ids}),
+            total_students=total_students_count,
+            total_batches=len(batch_summaries),
+            validation_status="VALID",
+            validation_details="All batch problem bucket sums matched total student count exactly.",
+            file_hash=file_hash
+        )
+        db.add(audit_rec)
+        try:
+            db.commit()
+        except Exception as e:
+            logger.error(f"[REPORT AUDIT LOG ERROR] {e}")
+            db.rollback()
 
-    coordinator_display = get_coordinator_for_department(dept_filter if dept_filter and dept_filter != "ALL" else "CSE(CS)")
-    dept_display = "Department of CSE (Cyber Security)" if dept_filter in ("CSE(CS)", "CSE (Cyber Security)", "CSE") else (f"Department of {dept_filter}" if dept_filter and dept_filter != "ALL" else "Department of CSE (Cyber Security)")
+    dept_code = (dept_filter or "ALL").upper().strip()
+    if "IOT" in dept_code or dept_code == "2":
+        dept_display = "Department of CSE (Internet of Things )"
+        coordinator_display = "P.Devayani /AP"
+        clean_dept_slug = "CSE(IOT)"
+    else:
+        dept_display = "Department of CSE (Cyber Security)"
+        coordinator_display = "M. Santhoshkumar, AP / CSE (Cyber Security)"
+        clean_dept_slug = "CSE(CS)" if dept_code in ("1", "CSE(CS)", "CSE") else (dept_filter if dept_filter and dept_filter != "ALL" else "CSE(CS)")
 
     canonical_dataset = {
         "report_id": report_id,
+        "reportId": report_id,
+        "report_type": "WEEKLY_PERFORMANCE",
+        "reportType": "WEEKLY_PERFORMANCE",
         "institution": "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)",
         "college_header": "NANDHA ENGINEERING COLLEGE, ERODE - 638 052.",
         "report_date": today_str,
         "session_date": curr_date,
         "contest_date": curr_date,
-        "department": dept_filter or "ALL",
+        "department": clean_dept_slug,
         "department_name": dept_display,
         "coordinator": coordinator_display,
+        "coordinator_name": coordinator_display,
         "academicCoordinator": coordinator_display,
         "coordinator_designation": coordinator_display,
         "total_students": total_students_count,
@@ -793,10 +814,6 @@ def generate_weekly_performance_data(
             "contests_str": curr_contest_str
         },
 
-        "department": (dept_filter if dept_filter and dept_filter.upper() != "ALL" else "CSE(IOT)"),
-        "department_name": ("Department of CSE (Internet of Things )" if dept_filter and "IOT" in dept_filter.upper() else ("Department of CSE (Cyber Security)" if dept_filter and "CS" in dept_filter.upper() else (f"Department of {dept_filter}" if dept_filter and dept_filter.upper() != "ALL" else "Department of CSE (Internet of Things )"))),
-        "coordinator": get_coordinator_for_department(dept_filter if dept_filter and dept_filter.upper() != "ALL" else "CSE(IOT)"),
-        "report_date": curr_date or today_str,
 
         "college_summary": {
             "institution": "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)",

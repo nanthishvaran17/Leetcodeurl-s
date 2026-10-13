@@ -498,7 +498,7 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
         13,
         {
             "Report ID": str(dataset.get("report_id") or dataset.get("reportId") or "REP-2026"),
-            "Report Date": sess_date,
+            "Report Date": report_date,
             "Total Roster": f"{dataset.get('total_students', 0)} Students",
             "Verified Solvers": f"{dataset.get('verified_students', 0)} Solvers"
         }

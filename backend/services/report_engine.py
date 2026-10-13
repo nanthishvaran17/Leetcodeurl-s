@@ -448,11 +448,13 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
                 except (ValueError, TypeError):
                     co_val = None
 
-            if band["min"] is None:
+            b_min = band.get("min")
+            b_max = band.get("max")
+            if b_min is None or b_max is None:
                 if co_val is None:
                     band_students.append(s)
             else:
-                if co_val is not None and band["min"] <= co_val <= band["max"]:
+                if co_val is not None and float(b_min) <= co_val <= float(b_max):
                     band_students.append(s)
         
         b_total = len(band_students)
