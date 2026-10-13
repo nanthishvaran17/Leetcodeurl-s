@@ -195,24 +195,50 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
     if wb.active is not None:
         wb.remove(wb.active)
 
-    dept_name = str(dataset.get("department_name") or "Department of CSE (Cyber Security)")
-    raw_rep_date = str(dataset.get("report_date") or dataset.get("reportDate") or "12.10.2026")
+    d_raw = (dataset.get("department_name") or dataset.get("department") or "").strip()
+    if "Cyber" in d_raw or "(CS)" in d_raw or d_raw == "1" or d_raw == "CSE(CS)":
+        dept_name = "Department of CSE (Cyber Security)"
+        default_coord = "M. Santhoshkumar, AP / CSE (Cyber Security)"
+    elif "Things" in d_raw or "IoT" in d_raw or "IOT" in d_raw or d_raw == "2" or d_raw == "CSE(IOT)":
+        dept_name = "Department of CSE (Internet of Things )"
+        default_coord = "P.Devayani /AP"
+    else:
+        dept_name = str(dataset.get("department_name") or "Department of CSE (Cyber Security)")
+        default_coord = "M. Santhoshkumar, AP / CSE (Cyber Security)"
+
+    raw_rep_date = str(dataset.get("session_date") or dataset.get("contest_date") or dataset.get("report_date") or dataset.get("reportDate") or "11.10.2026")
     report_date = raw_rep_date.replace("-", ".") if "-" in raw_rep_date else raw_rep_date
     raw_c_date = str(dataset.get("contest_date") or dataset.get("session_date") or "11.10.2026")
     contest_date = raw_c_date.replace("-", ".") if "-" in raw_c_date else raw_c_date
-    coordinator = str(dataset.get("coordinator") or dataset.get("academicCoordinator") or "M.Santhosh Kumar / AP")
-    batch_summaries = dataset.get("batch_summaries") or []
+    coordinator = str(dataset.get("coordinator") or dataset.get("academicCoordinator") or default_coord)
 
-    # Sort batches in canonical institutional order: IV (2023-2027), III (2024-2028), II (2025-2029), I (2026-2030)
-    order_map = {"IV": 1, "III": 2, "II": 3, "I": 4}
-    batch_summaries = sorted(batch_summaries, key=lambda b: order_map.get(b.get("year", ""), 99))
+    # Institutional Cohort Mapping: Always ensure IV (2023-2027), III (2024-2028), II (2025-2029) are represented
+    canonical_batches = [
+        {"label": "2023 - 2027", "year": "IV"},
+        {"label": "2024 - 2028", "year": "III"},
+        {"label": "2025 - 2029", "year": "II"}
+    ]
+    raw_batches = dataset.get("batch_summaries") or []
+    batch_summaries = []
+    for cb in canonical_batches:
+        found = next((b for b in raw_batches if str(b.get("batch", "")).replace(" ", "") == cb["label"].replace(" ", "")), None)
+        if found:
+            batch_summaries.append(found)
+        else:
+            batch_summaries.append({
+                "batch": cb["label"],
+                "year": cb["year"],
+                "total_students": 0,
+                "current_week": {},
+                "last_week": {}
+            })
 
     logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "round_logo.png")
     if not os.path.exists(logo_path):
         logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "transparent_logo.png")
 
     # =========================================================================
-    # SHEET 1: LEETCODE PERFORMANCE - WEEKLY REPORT (Image 1)
+    # SHEET 1: LEETCODE PERFORMANCE - WEEKLY REPORT (Image 1 Preview Match)
     # =========================================================================
     ws1 = wb.create_sheet(title="Weekly Performance")
     ws1.sheet_view.showGridLines = True
@@ -255,6 +281,9 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
     ws1["C5"].font = FONT_DOC_SUBTITLE
     ws1["C5"].alignment = ALIGN_CENTER
 
+    HDR_SLATE_FILL = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+    SUBHDR_SLATE_FILL = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+
     # Table Header Rows 7-8 (Two-level header exactly matching Image 1)
     h_r7 = [
         ("Batch", 1, 1, 7, 8),
@@ -273,25 +302,28 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
         c.alignment = ALIGN_CENTER
         for r_x in range(s_r, e_r + 1):
             for c_x in range(s_c, e_c + 1):
-                _apply_thin_border(ws1.cell(row=r_x, column=c_x))
+                cell_h = ws1.cell(row=r_x, column=c_x)
+                cell_h.fill = HDR_SLATE_FILL
+                _apply_thin_border(cell_h)
 
     h_r8 = [
         (3, "Above 500"),
         (4, "250 - 500"),
-        (5, "Less than\n250"),
+        (5, "Less than 250"),
         (6, "Less than 100"),
-        (7, "Not yet\nstarted"),
-        (8, "4 Q\nSolved"),
-        (9, "3 Q\nSolved"),
-        (10, "2 Q\nSolved"),
-        (11, "1 Q\nSolved"),
-        (12, "Rating:\nAbove 1500"),
-        (13, "Ranking:\nBelow 20000"),
+        (7, "Not yet started"),
+        (8, "4 Q Solved"),
+        (9, "3 Q Solved"),
+        (10, "2 Q Solved"),
+        (11, "1 Q Solved"),
+        (12, "Rating: Above 1500"),
+        (13, "Ranking: Below 20000"),
     ]
     for col_i, text in h_r8:
         c = ws1.cell(row=8, column=col_i, value=text)
         c.font = FONT_DOC_TBL_HDR
         c.alignment = ALIGN_CENTER
+        c.fill = SUBHDR_SLATE_FILL
         _apply_thin_border(c)
 
     ws1.row_dimensions[7].height = 28
@@ -317,11 +349,17 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
         c_tot.alignment = ALIGN_CENTER
 
         # Last Week problem solve counts
-        ws1.cell(row=cur_r1, column=3, value=lw.get("above_500", 0)).font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=4, value=lw.get("prob_250_500", 0)).font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=5, value=lw.get("prob_100_249", 0)).font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=6, value=lw.get("prob_1_99", 0)).font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=7, value=lw.get("prob_0", 0)).font = FONT_NUMERIC_BOLD
+        lw_above_500 = lw.get("prob_above_500") if lw.get("prob_above_500") is not None else lw.get("above_500", 0)
+        lw_250_500 = lw.get("prob_250_500") if lw.get("prob_250_500") is not None else lw.get("250_500", 0)
+        lw_100_249 = lw.get("prob_100_249") if lw.get("prob_100_249") is not None else lw.get("101_250", 0)
+        lw_1_99 = lw.get("prob_1_99") if lw.get("prob_1_99") is not None else lw.get("less_100", 0)
+        lw_0 = lw.get("prob_0") if lw.get("prob_0") is not None else lw.get("not_started", 0)
+
+        ws1.cell(row=cur_r1, column=3, value=lw_above_500).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=4, value=lw_250_500).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=5, value=lw_100_249).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=6, value=lw_1_99).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=7, value=lw_0).font = FONT_NUMERIC_BOLD
 
         # Last Week contest attended counts
         ws1.cell(row=cur_r1, column=8, value=lw.get("q4", 0)).font = FONT_NUMERIC_BOLD
@@ -330,8 +368,10 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
         ws1.cell(row=cur_r1, column=11, value=lw.get("q1", 0)).font = FONT_NUMERIC_BOLD
 
         # Rating / Ranking (dash if 0)
-        ws1.cell(row=cur_r1, column=12, value=lw.get("rating_above_1500") or "—").font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=13, value=lw.get("rank_below_20000") or "—").font = FONT_NUMERIC_BOLD
+        lw_r = lw.get("rating_above_1500") or lw.get("rating_1500") or 0
+        lw_rnk = lw.get("rank_below_20000") or lw.get("ranking_20000") or 0
+        ws1.cell(row=cur_r1, column=12, value=lw_r if lw_r > 0 else "-").font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=13, value=lw_rnk if lw_rnk > 0 else "-").font = FONT_NUMERIC_BOLD
 
         # Row 2: Current Week
         cur_r1 += 1
@@ -340,11 +380,17 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
         c_batch_cw.alignment = ALIGN_CENTER
 
         # Current Week problem solve counts
-        ws1.cell(row=cur_r1, column=3, value=cw.get("above_500", 0)).font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=4, value=cw.get("prob_250_500", 0)).font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=5, value=cw.get("prob_100_249", 0)).font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=6, value=cw.get("prob_1_99", 0)).font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=7, value=cw.get("prob_0", 0)).font = FONT_NUMERIC_BOLD
+        cw_above_500 = cw.get("prob_above_500") if cw.get("prob_above_500") is not None else (cw.get("above_500") or (cw.get("categories") or {}).get("Above 500", 0))
+        cw_250_500 = cw.get("prob_250_500") if cw.get("prob_250_500") is not None else (cw.get("250_500") or (cw.get("categories") or {}).get("250 - 500", 0))
+        cw_100_249 = cw.get("prob_100_249") if cw.get("prob_100_249") is not None else (cw.get("101_250") or (cw.get("categories") or {}).get("Less than 250", 0))
+        cw_1_99 = cw.get("prob_1_99") if cw.get("prob_1_99") is not None else (cw.get("less_100") or (cw.get("categories") or {}).get("Less than 100", 0))
+        cw_0 = cw.get("prob_0") if cw.get("prob_0") is not None else (cw.get("not_started") or (cw.get("categories") or {}).get("Not Yet Started", 0))
+
+        ws1.cell(row=cur_r1, column=3, value=cw_above_500).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=4, value=cw_250_500).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=5, value=cw_100_249).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=6, value=cw_1_99).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=7, value=cw_0).font = FONT_NUMERIC_BOLD
 
         # Current Week contest attended counts
         ws1.cell(row=cur_r1, column=8, value=cw.get("q4", 0)).font = FONT_NUMERIC_BOLD
@@ -353,8 +399,10 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
         ws1.cell(row=cur_r1, column=11, value=cw.get("q1", 0)).font = FONT_NUMERIC_BOLD
 
         # Rating / Ranking
-        ws1.cell(row=cur_r1, column=12, value=cw.get("rating_above_1500") or "—").font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=13, value=cw.get("rank_below_20000") or "—").font = FONT_NUMERIC_BOLD
+        cw_r = cw.get("rating_above_1500") or cw.get("rating_1500") or 0
+        cw_rnk = cw.get("rank_below_20000") or cw.get("ranking_20000") or 0
+        ws1.cell(row=cur_r1, column=12, value=cw_r if cw_r > 0 else "-").font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=13, value=cw_rnk if cw_rnk > 0 else "-").font = FONT_NUMERIC_BOLD
 
         # Apply borders and center alignment
         for r_x in (cur_r1 - 1, cur_r1):
@@ -365,7 +413,7 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
                 cell_item.alignment = ALIGN_CENTER
         cur_r1 += 1
 
-    col_w1 = {1: 18, 2: 15, 3: 13, 4: 13, 5: 13, 6: 13, 7: 13, 8: 11, 9: 11, 10: 11, 11: 11, 12: 15, 13: 16}
+    col_w1 = {1: 18, 2: 15, 3: 13, 4: 13, 5: 13, 6: 13, 7: 13, 8: 11, 9: 11, 10: 11, 11: 11, 12: 16, 13: 16}
     for c_i, w in col_w1.items():
         ws1.column_dimensions[get_column_letter(c_i)].width = w
 
@@ -643,6 +691,11 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
             else: w = max(12.0, min(max_len + 3, 30.0))
             sheet.column_dimensions[col_letter].width = w
 
+    try:
+        wb.active = ws1
+    except Exception:
+        pass
+
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
@@ -658,7 +711,12 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
         return export_dynamic_excel(dataset)
 
-    if rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR") or dataset.get("college_summary"):
+    if (
+        rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
+        or dataset.get("college_summary")
+        or dataset.get("batch_summaries")
+        or "COORDINATOR" in str(dataset.get("title") or "").upper()
+    ):
         return export_weekly_performance_excel(dataset)
 
     wb = openpyxl.Workbook()

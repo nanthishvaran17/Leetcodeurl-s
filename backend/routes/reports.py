@@ -1114,6 +1114,20 @@ def download_session_report_by_format(
                 except Exception as e:
                     logger.warning(f"[MASTER WORKBOOK FALLBACK in session_report] {e}")
 
+            if (
+                rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
+                or dataset.get("batch_summaries")
+                or dataset.get("college_summary")
+                or "COORDINATOR" in str(dataset.get("title") or "").upper()
+            ):
+                from backend.exporters.excel_exporter import export_weekly_performance_excel
+                excel_bytes = export_weekly_performance_excel(dataset)
+                return Response(
+                    content=excel_bytes,
+                    media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": f'attachment; filename="{r_filename}.xlsx"'}
+                )
+
             from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
             excel_bytes = export_dynamic_excel(dataset)
             return Response(
@@ -2510,24 +2524,14 @@ def download_universal_excel(
                 }
             )
 
-        if rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE"):
-            from backend.services.pregenerated_report_service import generate_report_bytes
-            filters = {
-                "department": eff_dept,
-                "year": eff_year,
-                "attendance": eff_att,
-                "status": status,
-                "search": eff_search,
-                "batch": batch,
-                "session_id": dataset.get("session_id") or dataset.get("contest_id") or (dataset.get("current_session") or {}).get("id") or "latest",
-                "report_date": dataset.get("session_date") or dataset.get("contest_date") or dataset.get("report_date")
-            }
-            try:
-                excel_bytes = generate_report_bytes(db, report_type="WEEKLY_PERFORMANCE", format="xlsx", filters=filters, current_user=current_user)
-            except Exception as e:
-                logger.warning(f"[WEEKLY PERFORMANCE FALLBACK] {e}")
-                from backend.exporters.excel_exporter import export_excel_from_dataset
-                excel_bytes = export_excel_from_dataset(dataset)
+        if (
+            rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
+            or dataset.get("batch_summaries")
+            or dataset.get("college_summary")
+            or "COORDINATOR" in str(dataset.get("title") or "").upper()
+        ):
+            from backend.exporters.excel_exporter import export_weekly_performance_excel
+            excel_bytes = export_weekly_performance_excel(dataset)
             
             if not excel_bytes or len(excel_bytes) < 100:
                 raise ValueError("Generated Excel file is empty or corrupted.")
