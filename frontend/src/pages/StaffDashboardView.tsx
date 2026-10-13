@@ -11,7 +11,14 @@ export const StaffDashboardView: React.FC = () => {
   const { user } = useAuth();
   const { notify } = useNotification();
   const [summary, setSummary] = useState<any>(null);
-  const [myStudents, setMyStudents] = useState<any[]>([]);
+  const [myStudents, setMyStudents] = useState<any[]>(() => {
+    try {
+      const cached = sessionStorage.getItem('nec_my_assigned_students');
+      return cached ? JSON.parse(cached) : [];
+    } catch (_) {
+      return [];
+    }
+  });
   const [priorityStudents, setPriorityStudents] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -29,18 +36,21 @@ export const StaffDashboardView: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
-    fetchMentoringData();
+    fetchMentoringData(false);
   }, []);
 
-  const fetchMentoringData = async () => {
+  const fetchMentoringData = async (forceRefresh: boolean = false) => {
     setLoading(true);
     try {
-      clearApiCache();
+      if (forceRefresh) {
+        clearApiCache();
+      }
+      const tParam = forceRefresh ? `?_t=${Date.now()}` : '';
       const results = await Promise.allSettled([
-        api.get(`/faculty-assignments/my-mentoring-summary?_t=${Date.now()}`),
-        api.get(`/faculty-assignments/my-students?_t=${Date.now()}`),
-        api.get(`/faculty-assignments/priority-students?_t=${Date.now()}`),
-        api.get(`/faculty-assignments/alerts?_t=${Date.now()}`)
+        api.get(`/faculty-assignments/my-mentoring-summary${tParam}`),
+        api.get(`/faculty-assignments/my-students${tParam}`),
+        api.get(`/faculty-assignments/priority-students${tParam}`),
+        api.get(`/faculty-assignments/alerts${tParam}`)
       ]);
 
       const [sumRes, studRes, prioRes, alertRes] = results;
@@ -51,7 +61,7 @@ export const StaffDashboardView: React.FC = () => {
         rawList = Array.isArray(d?.students) ? d.students : (Array.isArray(d) ? d : []);
       }
 
-      // If cachebuster request returned empty or failed, fetch default endpoint immediately
+      // If cachebuster/initial request returned empty or failed, fetch default endpoint immediately
       if (!rawList || rawList.length === 0) {
         try {
           const fb = await api.get('/faculty-assignments/my-students');
@@ -63,6 +73,19 @@ export const StaffDashboardView: React.FC = () => {
         } catch (fbErr) {
           console.warn('Fallback my-students warning:', fbErr);
         }
+      }
+
+      // Tier 3 fallback: Load previously stored mentees from sessionStorage if network was empty
+      if (!rawList || rawList.length === 0) {
+        try {
+          const cachedRaw = sessionStorage.getItem('nec_my_assigned_students');
+          if (cachedRaw) {
+            const parsed = JSON.parse(cachedRaw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              rawList = parsed;
+            }
+          }
+        } catch (_) {}
       }
 
       const studentList = rawList.map((s: any) => {
@@ -126,6 +149,11 @@ export const StaffDashboardView: React.FC = () => {
       }
 
       setMyStudents(studentList);
+      if (studentList && studentList.length > 0) {
+        try {
+          sessionStorage.setItem('nec_my_assigned_students', JSON.stringify(studentList));
+        } catch (_) {}
+      }
 
       if (prioRes.status === 'fulfilled' && prioRes.value?.data) {
         setPriorityStudents(prioRes.value.data);
@@ -212,13 +240,13 @@ export const StaffDashboardView: React.FC = () => {
     return solved > 0;
   }, []);
 
-  // Exact KPI calculations strictly matching assigned portfolio
-  const totalAssignedCount = myStudents.length;
-  const activeCount = myStudents.filter(isActiveStudent).length;
-  const completedCount = myStudents.filter(isCompletedStudent).length;
-  const attentionCount = myStudents.filter(isAttentionStudent).length;
-  const atRiskCount = myStudents.filter(isAtRiskStudent).length;
-  const unresponsiveCount = myStudents.filter(isUnresponsiveStudent).length;
+  // Exact KPI calculations strictly matching assigned portfolio with summary fallback
+  const totalAssignedCount = myStudents.length > 0 ? myStudents.length : (summary?.total_assigned || 0);
+  const activeCount = myStudents.length > 0 ? myStudents.filter(isActiveStudent).length : (summary?.active_students || 0);
+  const completedCount = myStudents.length > 0 ? myStudents.filter(isCompletedStudent).length : (summary?.completed_students || 0);
+  const attentionCount = myStudents.length > 0 ? myStudents.filter(isAttentionStudent).length : (summary?.needing_attention || 0);
+  const atRiskCount = myStudents.length > 0 ? myStudents.filter(isAtRiskStudent).length : (summary?.at_risk || 0);
+  const unresponsiveCount = myStudents.length > 0 ? myStudents.filter(isUnresponsiveStudent).length : (summary?.unresponsive_students || 0);
   
   // Progress calculations based on 100 Target
   const totalSolvedSum = myStudents.reduce((acc: number, s: any) => acc + Number(s.stats?.total_solved ?? s.total_solved ?? 0), 0);
@@ -378,7 +406,7 @@ export const StaffDashboardView: React.FC = () => {
 
             <button
               type="button"
-              onClick={fetchMentoringData}
+              onClick={() => fetchMentoringData(true)}
               disabled={loading}
               className="min-h-[44px] flex-1 sm:flex-none justify-center px-4 py-2.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 text-white text-xs font-semibold border border-white/10 flex items-center space-x-2 transition-all cursor-pointer backdrop-blur-md touch-manipulation"
             >
