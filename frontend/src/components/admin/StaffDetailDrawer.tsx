@@ -83,24 +83,11 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
           {/* Mobile Swipe / Drag Handle Indicator inside dark header */}
           <div className="w-12 h-1.5 rounded-full bg-white/30 mx-auto sm:hidden shrink-0 mt-3 -mb-1 relative z-30" />
 
-          {/* Actions top right */}
-          <div className="absolute top-3.5 sm:top-4 right-4 flex items-center gap-2 z-20">
-            {onFilterDashboard && (
-              <button
-                onClick={() => {
-                  onFilterDashboard(staff.id);
-                  onClose();
-                }}
-                className="px-3 py-2 bg-brand-500/30 hover:bg-brand-500/50 text-white rounded-xl backdrop-blur-md transition cursor-pointer text-xs font-black flex items-center gap-1.5 border border-white/20 shadow-sm"
-                title="Filter Main Dashboard to this Mentor"
-              >
-                <Eye size={14} className="text-brand-300" />
-                <span className="hidden sm:inline">Filter Dashboard</span>
-              </button>
-            )}
+          {/* Close button top right */}
+          <div className="absolute top-3 sm:top-4 right-3.5 sm:right-4 z-20">
             <button
               onClick={onClose}
-              className="w-10 h-10 p-2.5 bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white rounded-xl backdrop-blur-md transition cursor-pointer border border-white/10"
+              className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 active:bg-white/30 text-white rounded-xl backdrop-blur-md transition-all cursor-pointer border border-white/15 shadow-sm active:scale-95 touch-manipulation"
               title="Close drawer"
             >
               <X size={18} />
@@ -108,7 +95,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
           </div>
 
           {/* Avatar + Info */}
-          <div className="flex items-center gap-4 px-6 pt-4 sm:pt-6 pb-5 relative z-10 pr-14">
+          <div className="flex items-center gap-3.5 sm:gap-4 px-4 sm:px-6 pt-4 sm:pt-6 pb-5 relative z-10 pr-14 sm:pr-16">
             <div
               className={`relative shrink-0 ${staff.profile_photo ? 'cursor-pointer active:scale-95 hover:scale-105 transition-transform' : ''}`}
               onClick={() => { if (staff.profile_photo) setShowPhotoZoom(true); }}
@@ -545,32 +532,49 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-slate-200 dark:border-navy-700 bg-white/95 dark:bg-navy-950/95 backdrop-blur-md flex flex-wrap justify-between items-center gap-2.5 shrink-0 safe-area-pb">
-          <button 
-            onClick={onClose}
-            className="px-4 py-2.5 bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition cursor-pointer border border-slate-200 dark:border-navy-700"
-          >
-            Close Drawer
-          </button>
-          <div className="flex items-center gap-2">
-            {onFilterDashboard && (
-              <button
-                onClick={() => {
-                  onFilterDashboard(staff.id);
-                  onClose();
-                }}
-                className="px-4 py-2.5 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 shadow-xs"
-              >
-                <Eye size={14} />
-                <span>Filter Dashboard</span>
-              </button>
-            )}
+        <div className="p-3.5 sm:p-4 border-t border-slate-200 dark:border-navy-700 bg-white/95 dark:bg-navy-950/95 backdrop-blur-md shrink-0 safe-area-pb">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+            {/* Desktop Close button */}
             <button 
-              onClick={onManageAllocation}
-              className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-extrabold transition shadow-lg shadow-brand-600/25 cursor-pointer flex items-center gap-1.5"
+              type="button"
+              onClick={onClose}
+              className="hidden sm:inline-flex px-4 py-2.5 bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition cursor-pointer border border-slate-200 dark:border-navy-700 items-center justify-center"
             >
-              <Users size={14} />
-              <span>Manage Allocation</span>
+              Close Drawer
+            </button>
+
+            {/* Primary Action Buttons */}
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+              {onFilterDashboard && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onFilterDashboard(staff.id);
+                    onClose();
+                  }}
+                  className="w-full sm:w-auto px-4 py-2.5 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/80 active:bg-brand-100 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs active:scale-98 touch-manipulation"
+                >
+                  <Eye size={14} className="text-brand-600 dark:text-brand-400" />
+                  <span>Filter Dashboard</span>
+                </button>
+              )}
+              <button 
+                type="button"
+                onClick={onManageAllocation}
+                className="w-full sm:w-auto px-5 py-2.5 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl text-xs font-extrabold transition shadow-lg shadow-brand-600/25 cursor-pointer flex items-center justify-center gap-1.5 active:scale-98 touch-manipulation"
+              >
+                <Users size={14} />
+                <span>Manage Allocation</span>
+              </button>
+            </div>
+
+            {/* Mobile Close button */}
+            <button 
+              type="button"
+              onClick={onClose}
+              className="sm:hidden w-full py-2 bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-700 rounded-xl text-xs font-bold transition cursor-pointer border border-slate-200 dark:border-navy-700 flex items-center justify-center active:scale-98 touch-manipulation"
+            >
+              Close Drawer
             </button>
           </div>
         </div>
