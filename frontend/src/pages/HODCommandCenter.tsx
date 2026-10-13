@@ -5,7 +5,7 @@ import {
  Trash2, UserCheck, X, CheckCircle2, AlertTriangle, Users,
  Activity, TrendingUp, BarChart3, ArrowUpRight, ArrowDownRight,
  Zap, BookOpen, RotateCcw, ShieldCheck, Clock, Download,
- SlidersHorizontal, ChevronRight, FileSpreadsheet, FileText,
+ SlidersHorizontal, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Loader2, FileSpreadsheet, FileText,
  HelpCircle, Eye, Compass, Target, PieChart, Layers, BrainCircuit,
  Award, Flame, Filter, ChevronDown, ChevronUp, Check, AlertCircle, ArrowRight,
  Sliders, User, CheckCircle, XCircle, ExternalLink, Calendar, Info,
@@ -870,8 +870,7 @@ const ReportHubModal: React.FC<{
  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Refine parameters to dynamically update institutional reports</p>
  </div>
  </div>
- <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold border border-emerald-200 dark:border-emerald-800/40 shadow-xs">
- <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+ <div className="hidden sm:flex items-center px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold border border-emerald-200 dark:border-emerald-800/40 shadow-xs">
  <span>Live Scope Synced</span>
  </div>
  </div>
@@ -2049,7 +2048,6 @@ export const HODCommandCenter: React.FC = () => {
  className={`p-3.5 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer ${staffWorkloadFilter === 'ALL' && selectedStaff === 'ALL' && allocationFilter === 'ALL' && selectedStatus === 'ALL' ? '' : ''}`}
  onClick={() => {
  setStaffWorkloadFilter('ALL');
- notify.info(`Showing all faculty mentors (${summary?.kpi_summary?.total_staff ?? staffList.length}).`, '', { category: 'ALLOCATION' });
  document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
  }}
  >
@@ -2514,6 +2512,33 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  )}
 
+ {/* Mobile Select-All Action Bar */}
+ {students.length > 0 && !studentsLoading && (
+   <div className="flex md:hidden items-center justify-between px-1 py-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+     <label className="flex items-center gap-2 cursor-pointer select-none">
+       <input
+         type="checkbox"
+         checked={students.length > 0 && selectedStudentIds.length === students.length}
+         onChange={e => {
+           if (e.target.checked) setSelectedStudentIds(students.map(s => s.id));
+           else setSelectedStudentIds([]);
+         }}
+         className="rounded text-brand-600 focus:ring-brand-500 w-3.5 h-3.5 cursor-pointer"
+       />
+       <span className="font-semibold text-slate-700 dark:text-slate-300">Select all on this page ({students.length})</span>
+     </label>
+     {selectedStudentIds.length > 0 && (
+       <button
+         type="button"
+         onClick={() => setSelectedStudentIds([])}
+         className="text-brand-600 dark:text-brand-400 font-bold hover:underline cursor-pointer"
+       >
+         Clear ({selectedStudentIds.length})
+       </button>
+     )}
+   </div>
+ )}
+
  {/* Mobile Student Cards (Compact, structured, no horizontal clipping) */}
  <div className="block md:hidden space-y-2">
  {studentsLoading ? (
@@ -2701,26 +2726,98 @@ export const HODCommandCenter: React.FC = () => {
  </table>
  </div>
 
- {/* Pagination */}
- <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-400 pt-1">
- <span>Showing {students.length} of {studentsTotal} students</span>
- <div className="flex gap-2">
- <button
- disabled={studentsPage <= 1}
- onClick={() => setStudentsPage(p => p - 1)}
- className="px-3 py-1 rounded-lg border border-slate-200 dark:border-navy-700 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-navy-800 transition"
- >
- Previous
- </button>
- <button
- disabled={studentsPage * (isMobile ? 6 : 15) >= studentsTotal || students.length < (isMobile ? 6 : 15)}
- onClick={() => setStudentsPage(p => p + 1)}
- className="px-3 py-1 rounded-lg border border-slate-200 dark:border-navy-700 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-navy-800 transition"
- >
- Next
- </button>
- </div>
- </div>
+ {/* Dynamic Live Pagination */}
+ {(() => {
+   const pageSize = isMobile ? 6 : 15;
+   const totalPages = Math.max(1, Math.ceil(studentsTotal / pageSize));
+   const startIdx = studentsTotal === 0 ? 0 : (studentsPage - 1) * pageSize + 1;
+   const endIdx = Math.min(studentsPage * pageSize, studentsTotal);
+
+   const handlePageChange = (newPage: number) => {
+     if (newPage < 1 || newPage > totalPages || newPage === studentsPage || studentsLoading) return;
+     setStudentsPage(newPage);
+     const el = document.getElementById('student-directory-section');
+     if (el) {
+       const rect = el.getBoundingClientRect();
+       if (rect.top < 0) {
+         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+       }
+     }
+   };
+
+   return (
+     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-700 dark:text-slate-400 pt-3 border-t border-slate-100 dark:border-navy-800">
+       <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start">
+         <span className="font-medium text-slate-700 dark:text-slate-300">
+           Showing <strong className="font-mono text-brand-600 dark:text-brand-400 font-extrabold">{startIdx}–{endIdx}</strong> of <strong className="font-mono text-slate-900 dark:text-white font-extrabold">{studentsTotal}</strong> students
+         </span>
+         <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold border border-slate-200/80 dark:border-navy-700">
+           Page {studentsPage} of {totalPages}
+         </span>
+         {studentsLoading && (
+           <span className="inline-flex items-center gap-1 text-[11px] text-brand-600 dark:text-brand-400 font-semibold animate-pulse">
+             <Loader2 size={12} className="animate-spin" />
+             Loading...
+           </span>
+         )}
+       </div>
+
+       <div className="flex items-center gap-1.5 shrink-0">
+         {totalPages > 2 && (
+           <button
+             type="button"
+             disabled={studentsPage <= 1 || studentsLoading}
+             onClick={() => handlePageChange(1)}
+             title="First Page"
+             className="p-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-800 hover:bg-slate-100 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:pointer-events-none font-bold transition flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
+           >
+             <ChevronsLeft size={14} />
+           </button>
+         )}
+
+         <button
+           type="button"
+           disabled={studentsPage <= 1 || studentsLoading}
+           onClick={() => handlePageChange(studentsPage - 1)}
+           aria-label="Previous Page"
+           className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-800 hover:bg-slate-100 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 disabled:opacity-30 disabled:pointer-events-none font-bold transition flex items-center gap-1 cursor-pointer active:scale-95 shadow-2xs"
+         >
+           <ChevronLeft size={14} />
+           <span>Previous</span>
+         </button>
+
+         <div className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-navy-800/80 font-mono text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200/60 dark:border-navy-700 flex items-center gap-1 select-none">
+           <span className="text-brand-600 dark:text-brand-400 font-black">{studentsPage}</span>
+           <span className="text-slate-400 font-normal">/</span>
+           <span>{totalPages}</span>
+         </div>
+
+         <button
+           type="button"
+           disabled={studentsPage >= totalPages || studentsLoading}
+           onClick={() => handlePageChange(studentsPage + 1)}
+           aria-label="Next Page"
+           className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-800 hover:bg-slate-100 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 disabled:opacity-30 disabled:pointer-events-none font-bold transition flex items-center gap-1 cursor-pointer active:scale-95 shadow-2xs"
+         >
+           <span>Next</span>
+           <ChevronRight size={14} />
+         </button>
+
+         {totalPages > 2 && (
+           <button
+             type="button"
+             disabled={studentsPage >= totalPages || studentsLoading}
+             onClick={() => handlePageChange(totalPages)}
+             title="Last Page"
+             className="p-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-800 hover:bg-slate-100 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:pointer-events-none font-bold transition flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
+           >
+             <ChevronsRight size={14} />
+           </button>
+         )}
+       </div>
+     </div>
+   );
+ })()}
  </Card>
 
  {/* 7. DEPARTMENT MATRIX & YEAR BENCHMARKS */}

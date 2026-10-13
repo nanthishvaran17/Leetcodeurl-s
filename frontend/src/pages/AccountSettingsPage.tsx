@@ -10,7 +10,7 @@ export const AccountSettingsPage: React.FC = () => {
       <div className="absolute top-48 right-10 w-80 h-80 bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
       <div className="absolute bottom-20 left-10 w-96 h-96 bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3 sm:pt-6 space-y-6">
+      <div className="w-full px-2.5 sm:px-4 lg:px-6 pt-3 sm:pt-6 space-y-6">
         {/* Executive Breadcrumb & Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200/60 dark:border-navy-800/60">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 flex-wrap">

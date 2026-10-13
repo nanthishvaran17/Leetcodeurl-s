@@ -62,6 +62,32 @@ def clean_report_title(t_str: str) -> str:
     return t.strip()
 
 
+def get_friday_date_for_session(date_str: str) -> str:
+    """Calculates the Friday date corresponding to a given session date (e.g. Saturday or Sunday contest)."""
+    if not date_str:
+        return datetime.date.today().strftime("%d.%m.%Y")
+    d_clean = str(date_str).strip()
+    try:
+        if "." in d_clean:
+            d = datetime.datetime.strptime(d_clean, "%d.%m.%Y").date()
+        elif "-" in d_clean:
+            parts = d_clean.split("-")
+            if len(parts[0]) == 4:
+                d = datetime.datetime.strptime(d_clean, "%Y-%m-%d").date()
+            else:
+                d = datetime.datetime.strptime(d_clean, "%d-%m-%Y").date()
+        else:
+            return d_clean
+        w = d.weekday()  # Monday=0, Tuesday=1, Wednesday=2, Thursday=3, Friday=4, Saturday=5, Sunday=6
+        if w >= 4:
+            friday_d = d - datetime.timedelta(days=(w - 4))
+        else:
+            friday_d = d - datetime.timedelta(days=(w + 3))
+        return friday_d.strftime("%d.%m.%Y")
+    except Exception:
+        return d_clean
+
+
 def normalize_department_filter(target_dept: Optional[str]) -> Optional[str]:
     if not target_dept:
         return None
@@ -883,24 +909,56 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     is_valid_data = not has_dup
     validation_error = None if is_valid_data else "Official result generation blocked because validated source data contains critical errors."
 
-    # 9. Format Title
-    CONTEST_REPORT_TITLES = {
-        "SATURDAY_BIWEEKLY_CONTEST": f"{contest_name.upper()} — STUDENT PERFORMANCE REPORT",
-        "FRIDAY_OFFICIAL_CONTEST": f"{contest_name.upper()} — STUDENT PERFORMANCE REPORT",
-        "OFFICIAL_CONTEST": f"{contest_name.upper()} — STUDENT PERFORMANCE REPORT",
-        "WEEKLY_CONTEST_INTELLIGENCE": "Weekly Contest Intelligence Report",
-        "SUNDAY_LIVE_CONTEST": "Sunday Live Contest Report",
-        "CONTEST_ATTENDANCE_PARTICIPATION": "Contest Attendance & Participation Report",
-        "CONTEST_PERFORMANCE_RANKING": "Contest Performance & Ranking Report",
-    }
-    rpt_key = config.report_type or "FRIDAY_OFFICIAL_CONTEST"
-    if "BIWEEKLY" in rpt_key or "BIWEEKLY" in (contest_name or "").upper():
-        base_title = f"{contest_name.upper()} — STUDENT PERFORMANCE REPORT"
-    elif rpt_key in ("FRIDAY_OFFICIAL_CONTEST", "OFFICIAL_CONTEST", "SATURDAY_BIWEEKLY_CONTEST"):
-        base_title = f"{contest_name.upper()} — STUDENT PERFORMANCE REPORT"
+    # 9. Format Title and Contest Metadata
+    rpt_key = (config.report_type or "FRIDAY_OFFICIAL_CONTEST").upper().strip()
+    is_friday = rpt_key in ("FRIDAY_OFFICIAL_CONTEST", "FRIDAY_OFFICIAL", "FRIDAY_OFFICIAL_RESULT")
+    is_biweekly = "BIWEEKLY" in rpt_key
+    is_sunday = rpt_key in ("SUNDAY_LIVE_CONTEST", "SUNDAY_LIVE", "SUNDAY_CONTEST")
+    is_weekly_intel = rpt_key == "WEEKLY_CONTEST_INTELLIGENCE"
+
+    if is_friday:
+        base_title = "FRIDAY CONTEST RESULT — STUDENT PERFORMANCE REPORT"
+        display_contest_name = "Friday Contest Result"
+        display_contest_date = get_friday_date_for_session(contest_date)
+        report_prefix = "RPT-FRIDAY"
+        c_window = "02:00 PM – 04:30 PM IST"
+    elif is_biweekly:
+        display_contest_name = contest_name if "biweekly" in contest_name.lower() else "Saturday Biweekly Contest"
+        display_contest_date = contest_date
+        base_title = f"{display_contest_name.upper()} — STUDENT PERFORMANCE REPORT"
+        report_prefix = "RPT-BIWEEKLY"
+        c_window = "08:00 PM – 09:30 PM IST"
+    elif is_sunday:
+        display_contest_name = contest_name if "weekly" in contest_name.lower() else "Sunday Live Contest"
+        display_contest_date = contest_date
+        base_title = f"{display_contest_name.upper()} — STUDENT PERFORMANCE REPORT" if "weekly" in contest_name.lower() else "SUNDAY LIVE CONTEST — STUDENT PERFORMANCE REPORT"
+        report_prefix = "RPT-SUNDAY"
+        c_window = "08:00 AM – 09:30 AM IST"
+    elif is_weekly_intel:
+        display_contest_name = contest_name or "Weekly Contest Intelligence"
+        display_contest_date = contest_date
+        base_title = "Weekly Contest Intelligence Report"
+        report_prefix = "RPT-CONTEST"
+        c_window = "08:00 AM – 09:30 AM IST"
+    elif rpt_key == "CONTEST_ATTENDANCE_PARTICIPATION":
+        display_contest_name = contest_name or "Contest Attendance & Participation"
+        display_contest_date = contest_date
+        base_title = "Contest Attendance & Participation Report"
+        report_prefix = "RPT-ATTENDANCE"
+        c_window = "08:00 AM – 09:30 AM IST"
+    elif rpt_key == "CONTEST_PERFORMANCE_RANKING":
+        display_contest_name = contest_name or "Contest Performance & Ranking"
+        display_contest_date = contest_date
+        base_title = "Contest Performance & Ranking Report"
+        report_prefix = "RPT-RANKING"
+        c_window = "08:00 AM – 09:30 AM IST"
     else:
-        base_title = CONTEST_REPORT_TITLES.get(rpt_key, f"{contest_name.upper()} — STUDENT PERFORMANCE REPORT")
-    
+        display_contest_name = contest_name
+        display_contest_date = contest_date
+        base_title = f"{contest_name.upper()} — STUDENT PERFORMANCE REPORT"
+        report_prefix = "RPT-BIWEEKLY" if "BIWEEKLY" in (contest_name or "").upper() else "RPT-CONTEST"
+        c_window = "08:00 PM – 09:30 PM IST" if ("biweekly" in (contest_name or "").lower()) else "08:00 AM – 09:30 AM IST"
+
     # Resolve numeric department ID or code to clear uppercase dept code (e.g. 8 -> CSE, 7 -> IT)
     resolved_dept_display = dept_filter
     if dept_filter != "ALL":
@@ -925,12 +983,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         title = f"{title} ({resolved_year_display} Year)"
     title = clean_report_title(title)
 
-    report_prefix = "RPT-BIWEEKLY" if "BIWEEKLY" in rpt_key else ("RPT-SUNDAY" if rpt_key == "SUNDAY_LIVE_CONTEST" else "RPT-FRIDAY")
     report_id = f"{report_prefix}-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
-
     version_str = f"v1.0.0 | Template Rev 3.0 | Contest {contest_id} | Generated {datetime.datetime.now(datetime.timezone.utc).strftime('%d-%m-%Y')}"
-    is_biw = "biweekly" in contest_name.lower() or "biweekly" in contest_id.lower()
-    c_window = "08:00 PM – 09:30 PM IST" if is_biw else "08:00 AM – 09:30 AM IST"
 
     dataset: Dict[str, Any] = {
         "reportId": report_id,
@@ -938,15 +992,15 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         "reportType": rpt_key,
         "report_type": rpt_key,
         "collegeName": "NANDHA ENGINEERING COLLEGE",
-        "reportTitle": base_title,
+        "reportTitle": "Friday Official Contest Result" if is_friday else base_title,
         "title": f"NANDHA ENGINEERING COLLEGE (AUTONOMOUS)\n{title.upper()}",
         "department": resolved_dept_display or "ALL",
         "year": resolved_year_display or "ALL",
-        "contestName": contest_name,
-        "contest_name": contest_name,
-        "contestDate": contest_date,
-        "sessionDate": contest_date,
-        "session_date": contest_date,
+        "contestName": display_contest_name,
+        "contest_name": display_contest_name,
+        "contestDate": display_contest_date,
+        "sessionDate": display_contest_date,
+        "session_date": display_contest_date,
         "contestId": contest_id,
         "academicYear": "Academic Year 2026–2027",
         "contestWindow": c_window,
@@ -961,8 +1015,9 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         "data_status": "READY" if (total_students > 0 and is_valid_data) else ("BLOCKED" if not is_valid_data else "PARTIAL"),
         "config": config.model_dump() if hasattr(config, "model_dump") else (config if isinstance(config, dict) else vars(config)),
         "contestSummary": {
-            "latestContest": contest_name,
-            "contestDate": contest_date,
+            "latestContest": display_contest_name,
+            "contestName": display_contest_name,
+            "contestDate": display_contest_date,
             "totalStudents": total_students,
             "publicAttended": public_attended,
             "virtualAttended": virtual_attended,

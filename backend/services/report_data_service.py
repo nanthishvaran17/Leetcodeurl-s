@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from backend.models import Student, Department, Section, ContestParticipation
 from backend.services.report_models import StudentRow, ContestRow
 from backend.config.report_config import normalize_year_roman
+from backend.logger import logger
 
 
 def get_problem_category(total_solved: Optional[int], is_verified: bool = True) -> str:
@@ -439,6 +440,7 @@ def fetch_normalized_contests(db: Session, dept_filter: Optional[str] = "ALL", y
 
     for idx, p in enumerate(participations, start=1):
         s = p.student
+        c_rank_val = int(getattr(p, "contest_rank", 0) or 0)
         rows.append(ContestRow(
             s_no=idx,
             contest_name=getattr(p, "contest_name", ""),
@@ -448,7 +450,7 @@ def fetch_normalized_contests(db: Session, dept_filter: Optional[str] = "ALL", y
             dept=s.department.code if (s and s.department) else "",
             year=s.year_level if s else "",
             problems_solved=getattr(p, "problems_solved", 0),
-            rank=f"#{p.contest_rank:,}" if (p.contest_rank and str(p.contest_rank).isdigit() and int(p.contest_rank) > 0) else "-",
+            rank=f"#{c_rank_val:,}" if c_rank_val > 0 else "-",
         ))
 
     # Fallback to profile stats recent contest info if no ContestParticipation table entries exist

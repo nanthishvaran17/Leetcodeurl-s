@@ -697,18 +697,18 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     !forensicLoading;
 
   return (
-    <div className="space-y-6 pb-20 animate-fade-in text-slate-900 dark:text-slate-100 font-sans">
+    <div className="space-y-4 sm:space-y-6 pb-20 animate-fade-in text-slate-900 dark:text-slate-100 font-sans">
       {/* 1. TOP HERO BANNER (RICH GLOWING INSTITUTIONAL GRADIENT) */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-3.5 sm:p-6 md:p-8 shadow-lg border border-brand-500/30">
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 sm:gap-6">
           {/* Left Column: Institutional Header & Status */}
-          <div className="space-y-3 max-w-xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="flex items-center px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+          <div className="space-y-2 sm:space-y-3 max-w-xl">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <span className="flex items-center px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                 PRODUCTION
               </span>
-              <span className="px-3 py-1 rounded-full text-xs font-bold text-slate-300 bg-white/10 backdrop-blur-md border border-white/15">
+              <span className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold text-slate-300 bg-white/10 backdrop-blur-md border border-white/15">
                 Asia/Kolkata (IST)
               </span>
               <button
@@ -721,79 +721,79 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             </div>
 
             <div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
+              <h1 className="text-xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
                 NANDHA INSTITUTIONAL{' '}
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-orange-200 to-indigo-200">
                   OPERATIONS CENTER
                 </span>
               </h1>
-              <p className="text-xs sm:text-sm font-semibold text-slate-300 mt-1">
+              <p className="text-[11px] sm:text-sm font-semibold text-slate-300 mt-1 line-clamp-2 sm:line-clamp-none leading-relaxed">
                 Real-time Academic Data • Automation • Integrity • Recovery • Intelligence
               </p>
             </div>
           </div>
 
-          {/* Right Column: Hero Metrics Bento Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Right Column: Hero Metrics Bento Grid — 2x2 on mobile, 4-col on lg */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 w-full lg:w-auto">
             {/* System Trust Score Card */}
             <div
               onClick={() => setShowTrustModal(true)}
-              className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left cursor-pointer hover:border-amber-400/60 transition-all hover:scale-[1.02] shadow-sm"
+              className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left cursor-pointer hover:border-amber-400/60 transition-all active:scale-95 shadow-sm flex flex-col justify-between min-h-[84px] sm:min-h-[96px]"
               title="Click to view contributing factors"
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-black uppercase text-amber-300 tracking-wider">Trust Score</span>
-                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-300">
+              <div className="flex items-center justify-between gap-1 mb-0.5">
+                <span className="text-[9px] sm:text-[10px] font-black uppercase text-amber-300 tracking-wider">Trust Score</span>
+                <span className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-300">
                   TRUSTED
                 </span>
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black text-white">{trustScore}</span>
-                <span className="text-xs text-slate-400 font-bold">/ 100</span>
+              <div className="flex items-baseline gap-1 my-0.5 sm:my-1">
+                <span className="text-lg sm:text-2xl font-black text-white">{trustScore}</span>
+                <span className="text-[10px] sm:text-xs text-slate-400 font-bold">/ 100</span>
               </div>
-              <p className="text-[10px] text-amber-200 font-bold mt-0.5 flex items-center gap-1">
+              <p className="text-[9px] sm:text-[10px] text-amber-200 font-bold flex items-center gap-0.5">
                 <span>Why this score?</span>
-                <ChevronRight className="w-3 h-3" />
+                <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               </p>
             </div>
 
             {/* Data Freshness Card */}
-            <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left shadow-sm">
-              <span className="text-[10px] font-black uppercase text-slate-300 tracking-wider">Data Freshness</span>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span className="text-sm font-black text-white">FRESH</span>
+            <div className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left shadow-sm flex flex-col justify-between min-h-[84px] sm:min-h-[96px]">
+              <span className="text-[9px] sm:text-[10px] font-black uppercase text-slate-300 tracking-wider">Data Freshness</span>
+              <div className="flex items-center gap-1.5 my-0.5 sm:my-1">
+                <span className="text-xs sm:text-sm font-black text-white">FRESH</span>
               </div>
-              <p className="text-[10px] text-slate-300 font-bold mt-0.5">Contest Data • Just now</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-300 font-bold truncate">Contest Data • Just now</p>
             </div>
 
             {/* Next Automation Card */}
-            <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left shadow-sm">
-              <span className="text-[10px] font-black uppercase text-slate-300 tracking-wider">Next Sunday Run</span>
-              <p className="text-sm font-black text-white mt-1">08:00 AM</p>
-              <p className="text-[10px] text-emerald-300 font-black mt-0.5">ARMED & READY</p>
+            <div className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left shadow-sm flex flex-col justify-between min-h-[84px] sm:min-h-[96px]">
+              <span className="text-[9px] sm:text-[10px] font-black uppercase text-slate-300 tracking-wider">Next Sunday Run</span>
+              <p className="text-xs sm:text-sm font-black text-white my-0.5 sm:my-1">08:00 AM</p>
+              <p className="text-[9px] sm:text-[10px] text-emerald-300 font-black truncate">ARMED & READY</p>
             </div>
 
             {/* Last Verified Snapshot Card */}
-            <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left shadow-sm">
-              <span className="text-[10px] font-black uppercase text-slate-300 tracking-wider">Last Snapshot</span>
-              <p className="text-xs font-black text-white mt-1 truncate">{hero.lastSnapshot || 'Verified'}</p>
-              <p className="text-[10px] text-indigo-300 font-black mt-0.5">SHA-256 VALIDATED</p>
+            <div className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left shadow-sm flex flex-col justify-between min-h-[84px] sm:min-h-[96px]">
+              <span className="text-[9px] sm:text-[10px] font-black uppercase text-slate-300 tracking-wider">Last Snapshot</span>
+              <p className="text-[10px] sm:text-xs font-black text-white my-0.5 sm:my-1 truncate font-mono" title={hero.lastSnapshot || 'Verified'}>
+                {hero.lastSnapshot || 'Verified'}
+              </p>
+              <p className="text-[9px] sm:text-[10px] text-indigo-300 font-black truncate">SHA-256 VALIDATED</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* 2. LIVE SYSTEM PULSE (10 CORE SERVICES - COLLAPSIBLE) */}
-      <div className="bg-white dark:bg-navy-950 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+      <div className="bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
           <div className="flex items-center gap-2.5 flex-wrap">
-            <Activity className="w-4 h-4 text-emerald-500 animate-pulse" />
+            <Activity className="w-4 h-4 text-emerald-500" />
             <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
               Live System Pulse ({Object.keys(livePulse).length || 10} Core Infrastructure Nodes)
             </h3>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               All Nodes Operational
             </span>
           </div>
@@ -1022,7 +1022,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 </p>
               </div>
               <span className="inline-flex w-fit px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-[10px] font-mono font-bold text-slate-600 dark:text-slate-300 self-start sm:self-center">
-                Last configuration update: 2026-08-15 15:37:34 IST
+                Last configuration update: {data?.lastConfigUpdate || 'Live'}
               </span>
             </div>
 
@@ -1069,7 +1069,9 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 <div key={idx} className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
                   <span className="text-[10px] font-black uppercase text-slate-400">{pillar.category}</span>
                   <p className="text-xs font-black text-white">{pillar.records}</p>
-                  <p className="text-[10px] text-emerald-400 font-bold">0 Conflicts Detected</p>
+                  <p className={`text-[10px] font-bold ${pillar.conflicts > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                    {pillar.conflicts > 0 ? `${pillar.conflicts} Conflicts Detected` : '0 Conflicts Detected'}
+                  </p>
                 </div>
               ))}
             </div>

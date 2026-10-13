@@ -162,8 +162,8 @@ def run_live_loop():
                     )
                     db.add(wpr)
                 else:
-                    wpr.participation_status = "PUBLIC_ATTENDED"
-                    wpr.total_contest_solved = max(wpr.total_contest_solved or 0, total_solved)
+                    wpr.participation_status = "PUBLIC_ATTENDED"  # type: ignore
+                    wpr.total_contest_solved = max(int(getattr(wpr, "total_contest_solved", 0) or 0), total_solved)  # type: ignore
 
                 # Broadcast via WebSocket
                 try:

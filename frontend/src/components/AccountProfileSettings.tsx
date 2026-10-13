@@ -292,6 +292,20 @@ export const AccountProfileSettings: React.FC = () => {
   // Master Tabs (Mentorship only available for staff)
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'id_card' | 'mentorship'>('profile');
 
+  // Mobile profile sub-section filter & accordion states for authentic app ergonomics
+  const [profileSubSection, setProfileSubSection] = useState<'all' | 'contact' | 'academic' | 'institutional' | 'links'>('all');
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({
+    photo: true,
+    contact: true,
+    academic: true,
+    institutional: true,
+    links: true,
+    languages: true
+  });
+  const toggleCard = (key: string) => {
+    setExpandedCards(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
   // Prevent non-staff from remaining on mentorship tab
   useEffect(() => {
     if (!isStaffMentor && activeTab === 'mentorship') {
@@ -1796,142 +1810,178 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
   return (
     <div className="space-y-6 sm:space-y-8 animate-fade-in w-full pb-12 text-slate-900 dark:text-slate-100">
       
-      {/* 1. TOP HERO IDENTITY BANNER */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 shadow-2xl border border-indigo-500/30">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-indigo-600/10 rounded-full blur-2xl pointer-events-none" />
+      {/* 1. TOP HERO IDENTITY BANNER — Clean 2026 Institutional Adaptive Card */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-gradient-to-r dark:from-navy-950 dark:via-slate-900 dark:to-indigo-950 text-slate-900 dark:text-white p-4 sm:p-6 lg:p-8 shadow-xl shadow-slate-200/50 dark:shadow-2xl border-2 border-slate-200/80 dark:border-indigo-500/30 transition-colors">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/5 dark:bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-indigo-600/5 dark:bg-indigo-600/10 rounded-full blur-2xl pointer-events-none" />
         
-        <div className="relative z-10 space-y-5 sm:space-y-6">
+        <div className="relative z-10 space-y-3.5 sm:space-y-5 lg:space-y-6">
           {/* Top Sub-row: Category Badge, IST Clock & Quick Actions */}
-          <div className="flex items-center justify-between gap-2 pb-3 border-b border-white/15">
-            <div className="inline-flex items-center whitespace-nowrap shrink-0 px-3 py-1 rounded-full bg-brand-500/25 border border-brand-400/40 text-brand-200 text-[10px] sm:text-xs font-black uppercase tracking-wider">
+          <div className="flex items-center justify-between gap-2 pb-2.5 sm:pb-3 border-b border-slate-100 dark:border-white/15">
+            <div className="inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 px-2.5 py-1 rounded-full bg-brand-50 dark:bg-brand-500/25 border border-brand-200/80 dark:border-brand-400/40 text-brand-700 dark:text-brand-200 text-[10px] sm:text-xs font-black uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-400 animate-pulse shrink-0" />
               <span className="hidden sm:inline">Personal Identity • Self-Service Hub</span>
               <span className="sm:hidden">Identity Hub</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 type="button"
                 onClick={handleExportProfileJson}
-                className="h-8 px-3 rounded-full font-bold text-xs bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer box-border"
+                className="h-7 sm:h-8 px-2 sm:px-3 rounded-full font-bold text-[11px] sm:text-xs bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white border border-slate-200 dark:border-white/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer box-border"
                 title="Export JSON"
               >
-                <Download className="w-3.5 h-3.5 text-brand-300 shrink-0" />
+                <Download className="w-3.5 h-3.5 text-brand-600 dark:text-brand-300 shrink-0" />
                 <span className="hidden sm:inline">Export JSON</span>
               </button>
 
-              <label className="h-8 px-3 rounded-full font-bold text-xs bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer box-border m-0">
-                <UploadCloud className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
+              <label className="h-7 sm:h-8 px-2 sm:px-3 rounded-full font-bold text-[11px] sm:text-xs bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white border border-slate-200 dark:border-white/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer box-border m-0">
+                <UploadCloud className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300 shrink-0" />
                 <span className="hidden sm:inline">Import JSON</span>
                 <input ref={jsonImportInputRef} type="file" accept=".json" className="hidden" onChange={handleImportProfileJson} />
               </label>
 
-              <span className="hidden md:flex h-8 px-3 rounded-full font-black text-xs border items-center justify-center gap-1.5 bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-xs box-border">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="hidden md:flex h-8 px-3 rounded-full font-black text-xs border items-center justify-center gap-1.5 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:border-emerald-500/40 dark:text-emerald-300 shadow-xs box-border">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse shrink-0" />
                 <span>ACTIVE</span>
               </span>
               
-              <span className="h-8 px-3 rounded-full font-mono text-xs font-bold bg-white/15 text-white border border-white/20 flex items-center justify-center whitespace-nowrap box-border">
+              <span className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-full font-mono text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-white/15 text-slate-700 dark:text-white border border-slate-200 dark:border-white/20 flex items-center justify-center whitespace-nowrap box-border">
                 IST {clientInfo.timeStr}
               </span>
             </div>
           </div>
 
-          {/* Main User Profile Row */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6 w-full">
+          {/* Main User Profile Row: Mobile Horizontal App Style / Desktop Bento */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 sm:gap-5 lg:gap-6 w-full">
             
-            {/* Left Side: Avatar & Identity Details */}
-            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4 lg:gap-6 text-center lg:text-left flex-1 min-w-0">
+            {/* Left Side: Horizontal Avatar & Identity Details */}
+            <div className="flex flex-row items-center gap-3.5 sm:gap-4 lg:gap-6 text-left flex-1 min-w-0">
               {/* Avatar with Zoom and Edit overlay */}
               <div 
                 className={`relative shrink-0 ${profilePhoto ? 'cursor-zoom-in group' : ''}`}
                 onClick={() => { if (profilePhoto) setShowPhotoZoom(true); }}
                 title={profilePhoto ? "Click to enlarge photo" : "Profile Avatar"}
               >
-                <div className="w-[84px] h-[84px] lg:w-24 lg:h-24 rounded-2xl overflow-hidden border-2 border-brand-400/80 shadow-xl bg-slate-900 flex items-center justify-center relative group mx-auto">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl overflow-hidden border-2 border-brand-500/80 shadow-xl bg-slate-900 flex items-center justify-center relative group">
                   {profilePhoto ? (
                     <img src={profilePhoto} alt={fullName || user?.username} className="w-full h-full object-contain p-1 bg-white dark:bg-navy-900 group-hover:scale-105 transition-transform duration-300" />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-3xl lg:text-3xl flex items-center justify-center">
+                    <div className="w-full h-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-2xl sm:text-3xl flex items-center justify-center">
                       {(fullName || user?.username || 'U').charAt(0).toUpperCase()}
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera className="w-5 h-5 text-white" />
+                    <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                 </div>
-                <span className="absolute -bottom-1 -right-1 w-5 h-5 lg:w-5 lg:h-5 rounded-full bg-emerald-500 border-2 border-slate-900 shadow-md flex items-center justify-center">
-                  <Check className="w-3 h-3 text-white stroke-[3]" />
+                <span className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-md flex items-center justify-center">
+                  <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white stroke-[3]" />
                 </span>
               </div>
 
               {/* Identity Details */}
-              <div className="flex flex-col items-center lg:items-start justify-center min-w-0 flex-1 w-full">
-                <div className="flex flex-row items-center justify-center lg:justify-start gap-2 flex-wrap">
-                  <h2 className="text-xl lg:text-3xl font-black text-white tracking-tight text-center lg:text-left">
+              <div className="flex flex-col items-start justify-center min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base sm:text-xl lg:text-3xl font-black text-slate-950 dark:text-white tracking-tight truncate max-w-full">
                     {fullName || user?.username}
                   </h2>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-500/40 text-white border border-brand-400/60 shadow-xs whitespace-nowrap">
+                  <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-brand-100 text-brand-800 dark:bg-brand-500/40 dark:text-white border border-brand-200 dark:border-brand-400/60 shadow-xs whitespace-nowrap">
                     {roleName}
                   </span>
                 </div>
                 
                 {designation && (
-                  <p className="text-xs lg:text-xs text-indigo-200 font-bold flex flex-row items-center justify-center lg:justify-start gap-1 mt-1">
-                    <Award className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                    <span className="text-center lg:text-left">{designation}</span>
+                  <p className="text-[11px] sm:text-xs text-brand-600 dark:text-indigo-200 font-bold flex items-center gap-1 mt-0.5 truncate max-w-full">
+                    <Award className="w-3.5 h-3.5 text-amber-500 dark:text-amber-300 shrink-0" />
+                    <span className="truncate">{designation}</span>
                   </p>
                 )}
 
-                <div className="text-xs text-slate-100 font-mono flex flex-row items-center justify-center lg:justify-start gap-1.5 flex-wrap mt-1.5 font-bold">
-                  <span className="font-bold text-white bg-white/20 px-2 py-0.5 rounded border border-white/20">{institutionalId}</span>
+                <div className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-100 font-mono flex items-center gap-1.5 flex-wrap mt-1 font-bold">
+                  <span className="font-bold text-slate-800 dark:text-white bg-slate-100 dark:bg-white/20 px-2 py-0.5 rounded border border-slate-200 dark:border-white/20 text-[10px] sm:text-xs">{institutionalId}</span>
                   <span className="text-slate-400 hidden sm:inline">•</span>
-                  <span className="text-white truncate">{user?.email}</span>
+                  <span className="text-slate-600 dark:text-slate-300 truncate max-w-[160px] sm:max-w-none text-[10px] sm:text-xs">{user?.email}</span>
                 </div>
-
               </div>
             </div>
 
-            {/* Right Side: Profile Completeness & Security Health */}
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:flex lg:flex-row lg:items-center lg:justify-end shrink-0 w-full lg:w-auto mt-2 lg:mt-0">
-              <div className="bg-white/15 backdrop-blur-md rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 border border-white/20 flex flex-col justify-center gap-1 sm:gap-2 w-full lg:w-[220px]">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[10px] sm:text-xs mb-0.5 sm:mb-0">
-                  <span className="font-black text-white flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-300" /> 
+            {/* Mobile Metric Strip (Clean compact glass cards for < lg viewports) */}
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-white/10 lg:hidden w-full">
+              <div className="bg-slate-50/90 dark:bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-slate-200/80 dark:border-white/15 flex flex-col gap-1.5 min-w-0">
+                <div className="flex items-center justify-between text-[11px] font-black">
+                  <span className="text-slate-700 dark:text-white flex items-center gap-1 truncate">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300 shrink-0" /> 
                     <span className="truncate">Strength</span>
                   </span>
-                  <span className="font-black text-emerald-300 text-right">{profileCompleteness}%</span>
+                  <span className="font-mono text-emerald-600 dark:text-emerald-300 text-[10px]">{profileCompleteness}%</span>
                 </div>
-                <div className="w-full h-1.5 sm:h-2 rounded-full bg-slate-800/90 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800/90 overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-brand-400 via-indigo-400 to-emerald-400 rounded-full transition-all duration-500" 
+                    className="h-full bg-gradient-to-r from-teal-500 via-emerald-500 to-green-500 rounded-full transition-all duration-500" 
                     style={{ width: `${profileCompleteness}%` }}
                   />
                 </div>
-                <p className="text-[9px] sm:text-[10px] text-slate-200 font-bold hidden sm:block">
+              </div>
+
+              <div className="bg-slate-50/90 dark:bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-slate-200/80 dark:border-white/15 flex flex-col gap-1.5 min-w-0">
+                <div className="flex items-center justify-between text-[11px] font-black">
+                  <span className="text-slate-700 dark:text-white flex items-center gap-1 truncate">
+                    <Lock className="w-3.5 h-3.5 text-brand-600 dark:text-indigo-300 shrink-0" /> 
+                    <span className="truncate">Security</span>
+                  </span>
+                  <span className="font-mono text-brand-600 dark:text-indigo-300 text-[10px]">{securityScore}/100</span>
+                </div>
+                <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800/90 overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-500 rounded-full transition-all duration-500" 
+                    style={{ width: `${securityScore}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop Metrics (Spacious Right Side for lg+ viewports) */}
+            <div className="hidden lg:flex lg:flex-row lg:items-center lg:justify-end gap-3.5 shrink-0">
+              <div className="bg-slate-50/90 dark:bg-white/15 backdrop-blur-md rounded-2xl p-3.5 border border-slate-200/80 dark:border-white/20 flex flex-col justify-center gap-2 w-[220px]">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-black text-slate-800 dark:text-white flex items-center gap-1">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-300" /> 
+                    <span className="truncate">Strength</span>
+                  </span>
+                  <span className="font-black text-emerald-600 dark:text-emerald-300">{profileCompleteness}%</span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800/90 overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-teal-500 via-emerald-500 to-green-500 rounded-full transition-all duration-500" 
+                    style={{ width: `${profileCompleteness}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-500 dark:text-slate-200 font-bold">
                   {profileCompleteness === 100 ? '100% Completed' : `${100 - profileCompleteness}% to reach 100%`}
                 </p>
               </div>
 
-              <div className="bg-white/15 backdrop-blur-md rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 border border-white/20 flex flex-col justify-center gap-1 sm:gap-2 w-full lg:w-[220px]">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[10px] sm:text-xs mb-0.5 sm:mb-0">
-                  <span className="font-black text-white flex items-center gap-1">
-                    <Lock className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-300" /> 
+              <div className="bg-slate-50/90 dark:bg-white/15 backdrop-blur-md rounded-2xl p-3.5 border border-slate-200/80 dark:border-white/20 flex flex-col justify-center gap-2 w-[220px]">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-black text-slate-800 dark:text-white flex items-center gap-1">
+                    <Lock className="w-4 h-4 text-brand-600 dark:text-indigo-300" /> 
                     <span className="truncate">Security</span>
                   </span>
-                  <span className="font-black text-indigo-300 text-right">{securityScore}/100</span>
+                  <span className="font-black text-brand-600 dark:text-indigo-300">{securityScore}/100</span>
                 </div>
-                <div className="w-full h-1.5 sm:h-2 rounded-full bg-slate-800/90 overflow-hidden">
+                <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800/90 overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-400 rounded-full transition-all duration-500" 
+                    className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-500 rounded-full transition-all duration-500" 
                     style={{ width: `${securityScore}%` }}
                   />
                 </div>
-                <p className="text-[9px] sm:text-[10px] text-slate-200 font-bold hidden sm:block">
+                <p className="text-[10px] text-slate-500 dark:text-slate-200 font-bold">
                   {securityScore < 100 ? '2FA Recommended' : 'Maximum Security'}
                 </p>
               </div>
             </div>
+
           </div>
         </div>
       </div>
@@ -1993,67 +2043,67 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
       </div>
 
-      {/* 3. RESPONSIVE TAB NAVIGATION */}
-      <div className={`grid ${isStaffMentor ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : 'grid-cols-2 sm:grid-cols-4'} gap-1.5 p-1.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/60 dark:border-white/10 shadow-sm relative`}>
+      {/* 3. RESPONSIVE TAB NAVIGATION — Sticky Mobile Pill Bar & Desktop Segmented Control */}
+      <div className="sticky top-1 sm:top-3 z-30 flex items-center gap-1.5 overflow-x-auto no-scrollbar p-1.5 rounded-2xl bg-white/90 dark:bg-navy-950/90 backdrop-blur-xl border border-slate-200/80 dark:border-navy-800 shadow-md">
         
         {/* Tab 1: Personal & Academic Profile */}
         <button
           type="button"
           onClick={() => setActiveTab('profile')}
-          className={`w-full min-w-0 col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
+          className={`shrink-0 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
             activeTab === 'profile'
               ? 'text-white bg-gradient-to-r from-brand-600 to-indigo-600 shadow-[0_4px_12px_rgba(79,70,229,0.3)]'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-900'
           }`}
         >
-          <User className={`w-4 h-4 shrink-0 ${activeTab === 'profile' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
+          <User className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'profile' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
           <span className="truncate">Personal &amp; Profile</span>
-          {activeTab === 'profile' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />}
+          {activeTab === 'profile' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20 pointer-events-none" />}
         </button>
 
         {/* Tab 2: Security & Password Vault */}
         <button
           type="button"
           onClick={() => setActiveTab('security')}
-          className={`w-full min-w-0 col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
+          className={`shrink-0 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
             activeTab === 'security'
               ? 'text-white bg-gradient-to-r from-emerald-500 to-teal-600 shadow-[0_4px_12px_rgba(16,185,129,0.3)]'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-900'
           }`}
         >
-          <KeyRound className={`w-4 h-4 shrink-0 ${activeTab === 'security' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
+          <KeyRound className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'security' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
           <span className="truncate">Security Vault</span>
-          {activeTab === 'security' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />}
+          {activeTab === 'security' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20 pointer-events-none" />}
         </button>
 
         {/* Tab 3: Notification Preferences */}
         <button
           type="button"
           onClick={() => setActiveTab('preferences')}
-          className={`w-full min-w-0 col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
+          className={`shrink-0 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
             activeTab === 'preferences'
               ? 'text-white bg-gradient-to-r from-purple-500 to-pink-600 shadow-[0_4px_12px_rgba(168,85,247,0.3)]'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-900'
           }`}
         >
-          <Bell className={`w-4 h-4 shrink-0 ${activeTab === 'preferences' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
+          <Bell className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'preferences' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
           <span className="truncate">Privacy &amp; Alerts</span>
-          {activeTab === 'preferences' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />}
+          {activeTab === 'preferences' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20 pointer-events-none" />}
         </button>
 
         {/* Tab 4: Digital Identity Card */}
         <button
           type="button"
           onClick={() => setActiveTab('id_card')}
-          className={`w-full min-w-0 col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
+          className={`shrink-0 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
             activeTab === 'id_card'
               ? 'text-white bg-gradient-to-r from-sky-500 to-blue-600 shadow-[0_4px_12px_rgba(14,165,233,0.3)]'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-900'
           }`}
         >
-          <ShieldCheck className={`w-4 h-4 shrink-0 ${activeTab === 'id_card' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
+          <ShieldCheck className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'id_card' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
           <span className="truncate">Identity Card</span>
-          {activeTab === 'id_card' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />}
+          {activeTab === 'id_card' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20 pointer-events-none" />}
         </button>
 
         {/* Tab 5: Mentorship & Tracking (ONLY for Staff / Faculty) */}
@@ -2061,15 +2111,15 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           <button
             type="button"
             onClick={() => setActiveTab('mentorship')}
-            className={`w-full min-w-0 col-span-2 sm:col-span-1 py-2.5 px-2 sm:px-3 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
+            className={`shrink-0 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
               activeTab === 'mentorship'
                 ? 'text-white bg-gradient-to-r from-amber-500 to-orange-600 shadow-[0_4px_12px_rgba(245,158,11,0.3)]'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-900'
             }`}
           >
-            <GraduationCap className={`w-4 h-4 shrink-0 ${activeTab === 'mentorship' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
+            <GraduationCap className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'mentorship' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
             <span className="truncate">Mentorship</span>
-            {activeTab === 'mentorship' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />}
+            {activeTab === 'mentorship' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20 pointer-events-none" />}
           </button>
         )}
       </div>
@@ -2093,482 +2143,628 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         
 
         {/* ========================================================================= */}
-        {/* TAB 1: PERSONAL & ACADEMIC PROFILE */}
+        {/* TAB 1: PERSONAL & ACADEMIC PROFILE — Native Mobile App & Desktop Bento UI */}
         {/* ========================================================================= */}
         {activeTab === 'profile' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
-            
-            {/* LEFT COLUMN: Self-Editable Identity & Contact Fields */}
-            <div className="lg:col-span-7 space-y-6">
+          <div className="space-y-4 sm:space-y-6 animate-fade-in">
+            {/* Mobile Sub-Section Quick Switcher */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1.5 px-1.5 bg-slate-100/90 dark:bg-navy-950/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-navy-800 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setProfileSubSection('all')}
+                className={`shrink-0 px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  profileSubSection === 'all'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                All Sections
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileSubSection('contact');
+                  setExpandedCards(prev => ({ ...prev, photo: true, contact: true }));
+                }}
+                className={`shrink-0 px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                  profileSubSection === 'contact'
+                    ? 'bg-brand-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <User className="w-3.5 h-3.5 shrink-0" />
+                <span>Contact &amp; Info</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileSubSection('academic');
+                  setExpandedCards(prev => ({ ...prev, academic: true }));
+                }}
+                className={`shrink-0 px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                  profileSubSection === 'academic'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5 shrink-0" />
+                <span>Academic &amp; Bio</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileSubSection('institutional');
+                  setExpandedCards(prev => ({ ...prev, institutional: true }));
+                }}
+                className={`shrink-0 px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                  profileSubSection === 'institutional'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Building2 className="w-3.5 h-3.5 shrink-0" />
+                <span>Institutional</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileSubSection('links');
+                  setExpandedCards(prev => ({ ...prev, links: true, languages: true }));
+                }}
+                className={`shrink-0 px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                  profileSubSection === 'links'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5 shrink-0" />
+                <span>Links &amp; Skills</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
               
-              {/* Photo & Avatar Customizer */}
-              <div className="bg-white/95 dark:bg-navy-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-5">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Camera className="w-4 h-4 text-brand-600 dark:text-brand-400" /> Profile Picture & Avatar
-                  </h3>
-                  <span className="text-xs font-black text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2.5 py-0.5 rounded-md">Self Editable</span>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
+              {/* LEFT COLUMN: Self-Editable Identity, Contact & Academic Profile */}
+              <div className="lg:col-span-7 space-y-5 sm:space-y-6">
+                
+                {/* 1. Photo & Avatar Customizer */}
+                {(profileSubSection === 'all' || profileSubSection === 'contact') && (
+                  <div className="bg-white/95 dark:bg-navy-900 rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
                     <div 
-                      className={`w-16 h-16 rounded-2xl overflow-hidden bg-white dark:bg-navy-900 border-2 border-slate-300 dark:border-navy-700 flex items-center justify-center shrink-0 shadow-xs ${profilePhoto ? 'cursor-zoom-in' : ''}`}
-                      onClick={() => { if (profilePhoto) setShowPhotoZoom(true); }}
+                      onClick={() => toggleCard('photo')}
+                      className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 cursor-pointer select-none"
                     >
-                      {profilePhoto ? (
-                        <img src={profilePhoto} alt="Preview" className="w-full h-full object-contain p-0.5 bg-white dark:bg-navy-900" />
-                      ) : (
-                        <User className="w-8 h-8 text-slate-600 dark:text-slate-300" />
-                      )}
+                      <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                        <Camera className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+                        <span>Profile Picture &amp; Avatar</span>
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] sm:text-xs font-black text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2 sm:px-2.5 py-0.5 rounded-md">Self Editable</span>
+                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.photo ? 'rotate-180 text-brand-600' : ''}`} />
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-xs font-black text-slate-950 dark:text-white">Profile Photo or Preset Avatar</h4>
-                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300">PNG, JPG, WEBP up to 5 MB or pick an academic icon</p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-1.5 w-full">
-                    <label className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-[10px] sm:text-xs font-black transition-all shadow-xs cursor-pointer">
-                      <Camera className="w-3.5 h-3.5 shrink-0" />
-                      <span className="truncate">{profilePhoto ? 'Upload' : 'Upload'}</span>
-                      <input ref={fileInputRef} type="file" className="hidden" accept="image/png, image/jpeg, image/webp" onChange={handlePhotoUpload} />
-                    </label>
+                    {expandedCards.photo && (
+                      <div className="space-y-4 animate-fade-in">
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 sm:gap-4">
+                          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                            <div 
+                              className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-white dark:bg-navy-900 border-2 border-slate-300 dark:border-navy-700 flex items-center justify-center shrink-0 shadow-xs ${profilePhoto ? 'cursor-zoom-in' : ''}`}
+                              onClick={() => { if (profilePhoto) setShowPhotoZoom(true); }}
+                            >
+                              {profilePhoto ? (
+                                <img src={profilePhoto} alt="Preview" className="w-full h-full object-contain p-0.5 bg-white dark:bg-navy-900" />
+                              ) : (
+                                <User className="w-7 h-7 sm:w-8 sm:h-8 text-slate-600 dark:text-slate-300" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-black text-slate-950 dark:text-white truncate">Profile Photo or Preset Avatar</h4>
+                              <p className="text-[11px] sm:text-xs font-bold text-slate-600 dark:text-slate-300">PNG, JPG, WEBP up to 5 MB or pick icon</p>
+                            </div>
+                          </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setShowPresetAvatarPicker(!showPresetAvatarPicker)}
-                      className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-900 dark:text-slate-100 text-[10px] sm:text-xs font-black transition-all border border-slate-300 dark:border-navy-700 cursor-pointer"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                      <span className="truncate">Preset</span>
-                    </button>
+                          <div className="flex items-center gap-1.5 w-full sm:w-auto shrink-0">
+                            <label className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-[11px] sm:text-xs font-black transition-all shadow-xs cursor-pointer">
+                              <Camera className="w-3.5 h-3.5 shrink-0" />
+                              <span>{profilePhoto ? 'Change' : 'Upload'}</span>
+                              <input ref={fileInputRef} type="file" className="hidden" accept="image/png, image/jpeg, image/webp" onChange={handlePhotoUpload} />
+                            </label>
 
-                    {profilePhoto && (
-                      <button
-                        type="button"
-                        onClick={() => setProfilePhoto(null)}
-                        className="p-2 rounded-xl bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-500/20 dark:text-rose-300 transition-colors border border-rose-300 dark:border-rose-500/30 cursor-pointer shrink-0"
-                        title="Remove Photo"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                            <button
+                              type="button"
+                              onClick={() => setShowPresetAvatarPicker(!showPresetAvatarPicker)}
+                              className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-900 dark:text-slate-100 text-[11px] sm:text-xs font-black transition-all border border-slate-300 dark:border-navy-700 cursor-pointer"
+                            >
+                              <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                              <span>Preset</span>
+                            </button>
+
+                            {profilePhoto && (
+                              <button
+                                type="button"
+                                onClick={() => setProfilePhoto(null)}
+                                className="p-2 rounded-xl bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-500/20 dark:text-rose-300 transition-colors border border-rose-300 dark:border-rose-500/30 cursor-pointer shrink-0"
+                                title="Remove Photo"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Preset Avatar Picker Grid */}
+                        {showPresetAvatarPicker && (
+                          <div className="p-3.5 sm:p-4 rounded-2xl bg-indigo-50/70 dark:bg-navy-950/90 border-2 border-indigo-200 dark:border-navy-700 space-y-3 animate-fade-in">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-black text-indigo-950 dark:text-indigo-200">Choose a Professional Avatar Icon:</span>
+                              <button 
+                                type="button" 
+                                onClick={() => setShowPresetAvatarPicker(false)}
+                                className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-300 cursor-pointer"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                              {PRESET_AVATARS.map((av) => {
+                                const IconComponent = av.icon;
+                                return (
+                                  <button
+                                    key={av.id}
+                                    type="button"
+                                    onClick={() => handleSelectPresetAvatar(av)}
+                                    className="flex flex-col items-center justify-center p-2 rounded-xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-800 hover:border-brand-500 hover:scale-105 transition-all shadow-xs cursor-pointer group"
+                                    title={av.label}
+                                  >
+                                    <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-300 flex items-center justify-center group-hover:bg-brand-600 group-hover:text-white transition-colors">
+                                      <IconComponent className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 truncate max-w-full mt-1">{av.label.split(' ')[0]}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
-                </div>
+                )}
 
-                {/* Preset Avatar Picker Grid using clean vector icons */}
-                {showPresetAvatarPicker && (
-                  <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-navy-950/90 border-2 border-indigo-200 dark:border-navy-700 space-y-3 animate-fade-in">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-indigo-950 dark:text-indigo-200">Choose a Professional Avatar Icon:</span>
-                      <button 
-                        type="button" 
-                        onClick={() => setShowPresetAvatarPicker(false)}
-                        className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-300 cursor-pointer"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                {/* 2. Personal & Contact Information Card */}
+                {(profileSubSection === 'all' || profileSubSection === 'contact') && (
+                  <div className="bg-white/95 dark:bg-navy-900 rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
+                    <div 
+                      onClick={() => toggleCard('contact')}
+                      className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 cursor-pointer select-none"
+                    >
+                      <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                        <User className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+                        <span>Identity &amp; Contact Information</span>
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] sm:text-xs font-black text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2 sm:px-2.5 py-0.5 rounded-md">Self Editable</span>
+                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.contact ? 'rotate-180 text-brand-600' : ''}`} />
+                      </div>
                     </div>
-                    <div className="grid grid-cols-4 sm:grid-cols-8 gap-2.5">
-                      {PRESET_AVATARS.map((av) => {
-                        const IconComponent = av.icon;
-                        return (
-                          <button
-                            key={av.id}
-                            type="button"
-                            onClick={() => handleSelectPresetAvatar(av)}
-                            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-800 hover:border-brand-500 hover:scale-105 transition-all shadow-xs cursor-pointer group"
-                            title={av.label}
-                          >
-                            <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-300 flex items-center justify-center group-hover:bg-brand-600 group-hover:text-white transition-colors">
-                              <IconComponent className="w-4 h-4" />
+
+                    {expandedCards.contact && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 animate-fade-in">
+                        {/* Full Display Name */}
+                        <div className="space-y-1 sm:col-span-2">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Full Display Name</label>
+                          <input
+                            type="text"
+                            value={fullName}
+                            onChange={e => setFullName(e.target.value)}
+                            placeholder="Dr. / Mr. / Ms. Name"
+                            className="w-full h-11 px-3.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                            required
+                          />
+                        </div>
+
+                        {/* Professional Designation / Title */}
+                        <div className="space-y-1 sm:col-span-2">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Professional Designation / Academic Title</label>
+                          <input
+                            type="text"
+                            value={designation}
+                            onChange={e => setDesignation(e.target.value)}
+                            placeholder="e.g. Assistant Professor, Lead System Architect, HOD"
+                            className="w-full h-11 px-3.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                          />
+                        </div>
+
+                        {/* Phone / Mobile Number */}
+                        <div className="space-y-1">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Mobile / Contact Number</label>
+                          <input
+                            type="tel"
+                            inputMode="tel"
+                            value={phoneNumber}
+                            onChange={e => setPhoneNumber(e.target.value)}
+                            placeholder="+91 9876543210"
+                            className="w-full h-11 px-3.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                          />
+                        </div>
+
+                        {/* Date of Birth (MM/DD/YYYY) */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Date of Birth</label>
+                            <span className="text-[10px] text-brand-600 dark:text-brand-400 font-bold font-mono bg-brand-50 dark:bg-brand-950/60 px-1.5 py-0.5 rounded border border-brand-200 dark:border-brand-800/80">MM/DD/YYYY</span>
+                          </div>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={dateOfBirth}
+                              onChange={e => {
+                                let val = e.target.value.replace(/\D/g, '');
+                                if (val.length >= 3 && val.length <= 4) val = val.slice(0, 2) + '/' + val.slice(2);
+                                else if (val.length >= 5) val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
+                                setDateOfBirth(val);
+                              }}
+                              placeholder="MM/DD/YYYY (e.g. 08/15/1990)"
+                              maxLength={10}
+                              className="w-full h-11 pl-3.5 pr-10 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-mono font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                            />
+                            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center">
+                              <input
+                                type="date"
+                                id="acc-settings-dob-picker"
+                                className="opacity-0 absolute w-6 h-6 cursor-pointer"
+                                onChange={e => {
+                                  if (e.target.value) {
+                                    const parts = e.target.value.split('-');
+                                    if (parts.length === 3) {
+                                      setDateOfBirth(`${parts[1]}/${parts[2]}/${parts[0]}`);
+                                    }
+                                  }
+                                }}
+                              />
+                              <label htmlFor="acc-settings-dob-picker" className="p-1 text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer" title="Pick from calendar">
+                                <Calendar className="w-4 h-4" />
+                              </label>
                             </div>
-                            <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 truncate max-w-full mt-1.5">{av.label.split(' ')[0]}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                          </div>
+                        </div>
+
+                        {/* Blood Group */}
+                        <div className="space-y-1">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Blood Group (Medical Record)</label>
+                          <PremiumSelect
+                            value={bloodGroup}
+                            onChange={setBloodGroup}
+                            options={BLOOD_GROUP_OPTIONS}
+                            placeholder="Select Blood Group"
+                            leadingIcon={<Heart className="w-4 h-4 text-rose-500" />}
+                            heightClass="h-11"
+                          />
+                        </div>
+
+                        {/* Office Cabin / Room Location */}
+                        <div className="space-y-1">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Office Cabin / Room Location</label>
+                          <input
+                            type="text"
+                            value={officeLocation}
+                            onChange={e => setOfficeLocation(e.target.value)}
+                            placeholder="e.g. CS Block Room 204"
+                            className="w-full h-11 px-3.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                          />
+                        </div>
+
+                        {/* Emergency Contact Name */}
+                        <div className="space-y-1">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Emergency Contact Person</label>
+                          <input
+                            type="text"
+                            value={emergencyContactName}
+                            onChange={e => setEmergencyContactName(e.target.value)}
+                            placeholder="e.g. Spouse / Parent / Relative"
+                            className="w-full h-11 px-3.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                          />
+                        </div>
+
+                        {/* Emergency Contact Phone */}
+                        <div className="space-y-1">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Emergency Contact Phone</label>
+                          <input
+                            type="tel"
+                            inputMode="tel"
+                            value={emergencyContactPhone}
+                            onChange={e => setEmergencyContactPhone(e.target.value)}
+                            placeholder="+91 9876543210"
+                            className="w-full h-11 px-3.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
 
-              {/* Personal Details Inputs */}
-              <div className="bg-white/95 dark:bg-navy-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-5">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <User className="w-4 h-4 text-brand-600 dark:text-brand-400" /> Identity & Contact Information
-                  </h3>
-                  <span className="text-xs font-black text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2.5 py-0.5 rounded-md">Self Editable</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Full Display Name */}
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Full Display Name</label>
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={e => setFullName(e.target.value)}
-                      placeholder="Dr. / Mr. / Ms. Name"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
-                      required
-                    />
-                  </div>
-
-                  {/* Professional Designation / Title */}
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Professional Designation / Academic Title</label>
-                    <input
-                      type="text"
-                      value={designation}
-                      onChange={e => setDesignation(e.target.value)}
-                      placeholder="e.g. Assistant Professor, Lead System Architect, HOD"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
-                    />
-                  </div>
-
-                  {/* Phone / Mobile Number */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Mobile / Contact Number</label>
-                    <input
-                      type="tel"
-                      value={phoneNumber}
-                      onChange={e => setPhoneNumber(e.target.value)}
-                      placeholder="+91 9876543210"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
-                    />
-                  </div>
-
-                  {/* Date of Birth (MM/DD/YYYY) */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">
-                        Date of Birth
-                      </label>
-                      <span className="text-xs text-brand-600 dark:text-brand-400 font-bold font-mono bg-brand-50 dark:bg-brand-950/60 px-2 py-0.5 rounded-md border border-brand-200 dark:border-brand-800/80">MM/DD/YYYY</span>
-                    </div>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={dateOfBirth}
-                        onChange={e => {
-                          let val = e.target.value.replace(/\D/g, '');
-                          if (val.length >= 3 && val.length <= 4) val = val.slice(0, 2) + '/' + val.slice(2);
-                          else if (val.length >= 5) val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
-                          setDateOfBirth(val);
-                        }}
-                        placeholder="MM/DD/YYYY (e.g. 08/15/1990)"
-                        maxLength={10}
-                        className="w-full h-11 pl-4 pr-10 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-mono font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
-                      />
-                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center">
-                        <input
-                          type="date"
-                          id="acc-settings-dob-picker"
-                          className="opacity-0 absolute w-6 h-6 cursor-pointer text-ellipsis"
-                          onChange={e => {
-                            if (e.target.value) {
-                              const parts = e.target.value.split('-');
-                              if (parts.length === 3) {
-                                setDateOfBirth(`${parts[1]}/${parts[2]}/${parts[0]}`);
-                              }
-                            }
-                          }}
-                        />
-                        <label htmlFor="acc-settings-dob-picker" className="p-1 text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer" title="Pick from calendar">
-                          <Calendar className="w-4 h-4" />
-                        </label>
+                {/* 3. Academic Credentials & Teaching Bio Card */}
+                {(profileSubSection === 'all' || profileSubSection === 'academic') && (
+                  <div className="bg-white/95 dark:bg-navy-900 rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
+                    <div 
+                      onClick={() => toggleCard('academic')}
+                      className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 cursor-pointer select-none"
+                    >
+                      <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                        <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                        <span>Academic Background &amp; Mentoring Bio</span>
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] sm:text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 sm:px-2.5 py-0.5 rounded-md">Curriculum</span>
+                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.academic ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
-                  </div>
 
-                  {/* Blood Group */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Blood Group (Medical Record)</label>
-                    <PremiumSelect
-                      value={bloodGroup}
-                      onChange={setBloodGroup}
-                      options={BLOOD_GROUP_OPTIONS}
-                      placeholder="Select Blood Group"
-                      leadingIcon={<Heart className="w-4 h-4 text-rose-500" />}
-                      heightClass="h-11"
-                    />
-                  </div>
+                    {expandedCards.academic && (
+                      <div className="space-y-3.5 sm:space-y-4 animate-fade-in">
+                        {/* Highest Degree */}
+                        <div className="space-y-1">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Highest Academic Degree &amp; Institution</label>
+                          <input
+                            type="text"
+                            value={highestDegree}
+                            onChange={e => setHighestDegree(e.target.value)}
+                            placeholder="e.g. M.E. Computer Science & Engineering • Anna University"
+                            className="w-full h-11 px-3.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                          />
+                        </div>
 
-                  {/* Office Cabin / Room Location */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Office Cabin / Room Location</label>
-                    <input
-                      type="text"
-                      value={officeLocation}
-                      onChange={e => setOfficeLocation(e.target.value)}
-                      placeholder="e.g. CS Block Room 204"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
-                    />
-                  </div>
+                        {/* Research Specialization */}
+                        <div className="space-y-1">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Specialization &amp; Research Domains</label>
+                          <input
+                            type="text"
+                            value={specialization}
+                            onChange={e => setSpecialization(e.target.value)}
+                            placeholder="e.g. Algorithms, Distributed Cloud Systems, Deep Learning"
+                            className="w-full h-11 px-3.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                          />
+                        </div>
 
-                  {/* Emergency Contact Name */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Emergency Contact Person</label>
-                    <input
-                      type="text"
-                      value={emergencyContactName}
-                      onChange={e => setEmergencyContactName(e.target.value)}
-                      placeholder="e.g. Spouse / Parent / Relative"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
-                    />
-                  </div>
+                        {/* Courses Taught */}
+                        <div className="space-y-1">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Courses &amp; Lab Subjects Handling</label>
+                          <input
+                            type="text"
+                            value={coursesTaught}
+                            onChange={e => setCoursesTaught(e.target.value)}
+                            placeholder="e.g. CS8451 Design & Analysis of Algorithms, Data Structures Lab"
+                            className="w-full h-11 px-3.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                          />
+                        </div>
 
-                  {/* Emergency Contact Phone */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Emergency Contact Phone</label>
-                    <input
-                      type="tel"
-                      value={emergencyContactPhone}
-                      onChange={e => setEmergencyContactPhone(e.target.value)}
-                      placeholder="+91 9876543210"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
-                    />
+                        {/* Faculty Bio with 1-Tap Quick Templates */}
+                        <div className="space-y-1.5">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 sm:gap-0">
+                            <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Faculty Bio &amp; Mentoring Philosophy</label>
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
+                              <span>Templates:</span>
+                              <button type="button" onClick={() => insertBioTemplate('mentor')} className="text-brand-600 dark:text-brand-400 hover:underline cursor-pointer font-bold">Mentor</button>
+                              <span>•</span>
+                              <button type="button" onClick={() => insertBioTemplate('researcher')} className="text-brand-600 dark:text-brand-400 hover:underline cursor-pointer font-bold">Research</button>
+                              <span>•</span>
+                              <button type="button" onClick={() => insertBioTemplate('placement')} className="text-brand-600 dark:text-brand-400 hover:underline cursor-pointer font-bold">Placement</button>
+                            </div>
+                          </div>
+                          <textarea
+                            rows={3}
+                            value={facultyBio}
+                            onChange={e => setFacultyBio(e.target.value)}
+                            placeholder="Write a brief professional summary about your teaching journey..."
+                            className="w-full p-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all resize-none"
+                          />
+                          <div className="text-right text-[10px] text-slate-500 font-bold">{facultyBio.length} characters</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                )}
 
-                  {/* Highest Degree */}
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Highest Academic Degree & Institution</label>
-                    <input
-                      type="text"
-                      value={highestDegree}
-                      onChange={e => setHighestDegree(e.target.value)}
-                      placeholder="e.g. M.E. Computer Science & Engineering • Anna University"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
-                    />
-                  </div>
+              </div>
 
-                  {/* Research Specialization */}
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Specialization & Research Domains</label>
-                    <input
-                      type="text"
-                      value={specialization}
-                      onChange={e => setSpecialization(e.target.value)}
-                      placeholder="e.g. Algorithms, Distributed Cloud Systems, Deep Learning"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
-                    />
-                  </div>
-
-                  {/* Courses Taught */}
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Courses & Lab Subjects Handling</label>
-                    <input
-                      type="text"
-                      value={coursesTaught}
-                      onChange={e => setCoursesTaught(e.target.value)}
-                      placeholder="e.g. CS8451 Design & Analysis of Algorithms, Data Structures Lab"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
-                    />
-                  </div>
-
-                  {/* Faculty Bio with Templates */}
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 sm:gap-0">
-                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Faculty Bio & Mentoring Philosophy</label>
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
-                        <span>Templates:</span>
-                        <button type="button" onClick={() => insertBioTemplate('mentor')} className="text-brand-600 hover:underline cursor-pointer">Mentor</button>
-                        <span>•</span>
-                        <button type="button" onClick={() => insertBioTemplate('researcher')} className="text-brand-600 hover:underline cursor-pointer">Research</button>
-                        <span>•</span>
-                        <button type="button" onClick={() => insertBioTemplate('placement')} className="text-brand-600 hover:underline cursor-pointer">Placement</button>
+              {/* RIGHT COLUMN: Official Institutional Scope, Portfolio & Languages */}
+              <div className="lg:col-span-5 space-y-5 sm:space-y-6">
+                
+                {/* 4. Institutional Scope */}
+                {(profileSubSection === 'all' || profileSubSection === 'institutional') && (
+                  <div className="bg-white/95 dark:bg-navy-900 rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
+                    <div 
+                      onClick={() => toggleCard('institutional')}
+                      className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 cursor-pointer select-none"
+                    >
+                      <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                        <span>Institutional Scope</span>
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] sm:text-xs text-indigo-700 dark:text-indigo-300 font-black bg-indigo-100 dark:bg-indigo-950/80 px-2 sm:px-2.5 py-0.5 rounded-md border border-indigo-300 dark:border-indigo-700">
+                          Managed by Admin
+                        </span>
+                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.institutional ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
-                    <textarea
-                      rows={3}
-                      value={facultyBio}
-                      onChange={e => setFacultyBio(e.target.value)}
-                      placeholder="Write a brief professional summary about your teaching journey..."
-                      className="w-full p-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all resize-none"
-                    />
-                    <div className="text-right text-[10px] text-slate-500 font-bold">{facultyBio.length} characters</div>
+
+                    {expandedCards.institutional && (
+                      <div className="space-y-3 animate-fade-in">
+                        <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 space-y-0.5">
+                          <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                            <Key className="w-3.5 h-3.5 text-indigo-600 shrink-0" /> Institutional ID (Username)
+                          </span>
+                          <div className="text-xs sm:text-sm font-mono font-black text-indigo-950 dark:text-indigo-200 pl-5">
+                            {institutionalId}
+                          </div>
+                        </div>
+
+                        <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 space-y-0.5">
+                          <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                            <Mail className="w-3.5 h-3.5 text-brand-600 shrink-0" /> Official Email Address
+                          </span>
+                          <div className="text-xs sm:text-sm font-black text-slate-950 dark:text-white truncate pl-5">
+                            {user?.email}
+                          </div>
+                        </div>
+
+                        <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 space-y-0.5">
+                          <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                            <Building2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Department Scope
+                          </span>
+                          <div className="text-xs sm:text-sm font-black text-slate-950 dark:text-white pl-5">
+                            {departmentName}
+                          </div>
+                        </div>
+
+                        <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 space-y-0.5">
+                          <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                            <ShieldCheck className="w-3.5 h-3.5 text-purple-600 shrink-0" /> Institutional Role
+                          </span>
+                          <div className="text-xs sm:text-sm font-black text-purple-800 dark:text-purple-200 pl-5">
+                            {roleName}
+                          </div>
+                        </div>
+
+                        <div className="p-3 sm:p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border-2 border-indigo-200 dark:border-indigo-800 flex items-start gap-2.5">
+                          <Info className="w-4 h-4 text-indigo-700 dark:text-indigo-300 shrink-0 mt-0.5" />
+                          <p className="text-[11px] sm:text-xs text-indigo-950 dark:text-indigo-100 font-bold leading-relaxed">
+                            Institutional scope and department allocations are controlled centrally by college administrators.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </div>
+                )}
 
-
-
-            </div>
-
-            {/* RIGHT COLUMN: Official Institutional Scope, Portfolio & Consultation Planner */}
-            <div className="lg:col-span-5 space-y-6">
-              
-              {/* Institutional Scope */}
-              <div className="bg-white/95 dark:bg-navy-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-5">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> Institutional Scope
-                  </h3>
-                  <span className="text-xs text-indigo-700 dark:text-indigo-300 font-black bg-indigo-100 dark:bg-indigo-950/80 px-2.5 py-0.5 rounded-md border border-indigo-300 dark:border-indigo-700">
-                    Managed by Admin
-                  </span>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 space-y-0.5">
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      <Key className="w-3.5 h-3.5 text-indigo-600 shrink-0" /> Institutional ID (Username)
-                    </span>
-                    <div className="text-xs font-mono font-black text-indigo-950 dark:text-indigo-200 pl-5">
-                      {institutionalId}
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 space-y-0.5">
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 text-brand-600 shrink-0" /> Official Email Address
-                    </span>
-                    <div className="text-xs font-black text-slate-950 dark:text-white truncate pl-5">
-                      {user?.email}
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 space-y-0.5">
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Department Scope
-                    </span>
-                    <div className="text-xs font-black text-slate-950 dark:text-white pl-5">
-                      {departmentName}
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 space-y-0.5">
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-purple-600 shrink-0" /> Institutional Role
-                    </span>
-                    <div className="text-xs font-black text-purple-800 dark:text-purple-200 pl-5">
-                      {roleName}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border-2 border-indigo-200 dark:border-indigo-800 flex items-start gap-2.5">
-                  <Info className="w-4 h-4 text-indigo-700 dark:text-indigo-300 shrink-0 mt-0.5" />
-                  <p className="text-xs text-indigo-950 dark:text-indigo-100 font-bold leading-relaxed">
-                    Institutional scope and department allocations are controlled centrally by college administrators.
-                  </p>
-                </div>
-              </div>
-
-              {/* Academic Social & Research Links */}
-              <div className="bg-white/95 dark:bg-navy-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-brand-600 dark:text-brand-400" /> Academic & Portfolio Links
-                  </h3>
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Web Visibility</span>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">LinkedIn Profile URL</label>
-                    <input
-                      type="url"
-                      value={linkedinUrl}
-                      onChange={e => setLinkedinUrl(e.target.value)}
-                      placeholder="https://linkedin.com/in/username"
-                      className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:outline-none focus-visible:outline-none focus:border-brand-500 focus:ring-0 focus:ring-offset-0"
-                      style={{ boxShadow: 'none' }}
-                      onFocus={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.outline = 'none'; }}
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">GitHub Profile URL</label>
-                    <input
-                      type="url"
-                      value={githubUrl}
-                      onChange={e => setGithubUrl(e.target.value)}
-                      placeholder="https://github.com/username"
-                      className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:outline-none focus-visible:outline-none focus:border-brand-500 focus:ring-0 focus:ring-offset-0"
-                      style={{ boxShadow: 'none' }}
-                      onFocus={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.outline = 'none'; }}
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Google Scholar Profile URL</label>
-                    <input
-                      type="url"
-                      value={scholarUrl}
-                      onChange={e => setScholarUrl(e.target.value)}
-                      placeholder="https://scholar.google.com/citations?user=..."
-                      className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:outline-none focus-visible:outline-none focus:border-brand-500 focus:ring-0 focus:ring-offset-0"
-                      style={{ boxShadow: 'none' }}
-                      onFocus={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.outline = 'none'; }}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">ORCID iD</label>
-                      <input
-                        type="text"
-                        value={orcidId}
-                        onChange={e => setOrcidId(e.target.value)}
-                        placeholder="0000-0002-1825-0097"
-                        className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:outline-none focus-visible:outline-none focus:border-brand-500 focus:ring-0 focus:ring-offset-0 font-mono"
-                        style={{ boxShadow: 'none' }}
-                        onFocus={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.outline = 'none'; }}
-                      />
+                {/* 5. Academic Social & Research Links */}
+                {(profileSubSection === 'all' || profileSubSection === 'links') && (
+                  <div className="bg-white/95 dark:bg-navy-900 rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4">
+                    <div 
+                      onClick={() => toggleCard('links')}
+                      className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 cursor-pointer select-none"
+                    >
+                      <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                        <Globe className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+                        <span>Academic &amp; Portfolio Links</span>
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">Web Visibility</span>
+                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.links ? 'rotate-180 text-brand-600' : ''}`} />
+                      </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">LeetCode Handle</label>
-                      <input
-                        type="text"
-                        value={leetcodeHandle}
-                        onChange={e => setLeetcodeHandle(e.target.value)}
-                        placeholder="nanthish_nec"
-                        className="w-full h-10 px-3 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:outline-none focus-visible:outline-none focus:border-brand-500 focus:ring-0 focus:ring-offset-0 font-mono"
-                        style={{ boxShadow: 'none' }}
-                        onFocus={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.outline = 'none'; }}
-                      />
-                    </div>
+                    {expandedCards.links && (
+                      <div className="space-y-3 animate-fade-in">
+                        <div className="space-y-1">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">LinkedIn Profile URL</label>
+                          <input
+                            type="url"
+                            value={linkedinUrl}
+                            onChange={e => setLinkedinUrl(e.target.value)}
+                            placeholder="https://linkedin.com/in/username"
+                            className="w-full h-11 px-3.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">GitHub Profile URL</label>
+                          <input
+                            type="url"
+                            value={githubUrl}
+                            onChange={e => setGithubUrl(e.target.value)}
+                            placeholder="https://github.com/username"
+                            className="w-full h-11 px-3.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Google Scholar Profile URL</label>
+                          <input
+                            type="url"
+                            value={scholarUrl}
+                            onChange={e => setScholarUrl(e.target.value)}
+                            placeholder="https://scholar.google.com/citations?user=..."
+                            className="w-full h-11 px-3.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 outline-none"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                          <div className="space-y-1">
+                            <label className="block text-xs font-black text-slate-900 dark:text-slate-100">ORCID iD</label>
+                            <input
+                              type="text"
+                              value={orcidId}
+                              onChange={e => setOrcidId(e.target.value)}
+                              placeholder="0000-0002-1825-0097"
+                              className="w-full h-11 px-3.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 outline-none font-mono"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="block text-xs font-black text-slate-900 dark:text-slate-100">LeetCode Handle</label>
+                            <input
+                              type="text"
+                              value={leetcodeHandle}
+                              onChange={e => setLeetcodeHandle(e.target.value)}
+                              placeholder="nanthish_nec"
+                              className="w-full h-11 px-3.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-950 dark:text-white focus:border-brand-500 outline-none font-mono"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </div>
+                )}
 
-              {/* Languages Spoken */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-indigo-500" /> Language Proficiencies
-                  </h3>
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Multi-lingual Communication</span>
-                </div>
+                {/* 6. Languages Spoken */}
+                {(profileSubSection === 'all' || profileSubSection === 'links') && (
+                  <div className="bg-white dark:bg-navy-900 rounded-3xl p-4 sm:p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-3.5 sm:space-y-4">
+                    <div 
+                      onClick={() => toggleCard('languages')}
+                      className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 cursor-pointer select-none"
+                    >
+                      <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                        <Globe className="w-4 h-4 text-indigo-500 shrink-0" />
+                        <span>Language Proficiencies</span>
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300">Multi-lingual Communication</span>
+                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.languages ? 'rotate-180 text-brand-600' : ''}`} />
+                      </div>
+                    </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {AVAILABLE_LANGUAGES.map(lang => {
-                    const isSelected = selectedLanguages.includes(lang);
-                    return (
-                      <button
-                        key={lang}
-                        type="button"
-                        onClick={() => handleToggleLanguage(lang)}
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all border-2 cursor-pointer flex items-center gap-1.5 ${
-                          isSelected 
-                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs' 
-                            : 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-indigo-400'
-                        }`}
-                      >
-                        <span>{lang}</span>
-                        {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                      </button>
-                    );
-                  })}
-                </div>
+                    {expandedCards.languages && (
+                      <div className="flex flex-wrap gap-2 animate-fade-in">
+                        {AVAILABLE_LANGUAGES.map(lang => {
+                          const isSelected = selectedLanguages.includes(lang);
+                          return (
+                            <button
+                              key={lang}
+                              type="button"
+                              onClick={() => handleToggleLanguage(lang)}
+                              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-black transition-all border-2 cursor-pointer flex items-center gap-1.5 active:scale-95 ${
+                                isSelected 
+                                  ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs' 
+                                  : 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-indigo-400'
+                              }`}
+                            >
+                              <span>{lang}</span>
+                              {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
               </div>
 
             </div>
-
           </div>
         )}
 
@@ -3595,13 +3791,19 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         )}
 
         {/* 4. MASTER SAVE & ACTIONS — STICKY BOTTOM BAR */}
-        <div className="fixed bottom-0 left-0 right-0 z-[500] bg-white/95 dark:bg-navy-900/95 backdrop-blur-md border-t-2 border-slate-200 dark:border-navy-700 shadow-2xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
+        <div className="fixed bottom-0 left-0 right-0 z-[500] bg-white/95 dark:bg-navy-900/95 backdrop-blur-xl border-t border-slate-200 dark:border-navy-800 shadow-2xl px-3 sm:px-6 py-2.5 sm:py-3.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-2.5 sm:gap-4">
           <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">
-            <Info className="w-4 h-4 text-brand-600 shrink-0" />
-            <span>Updates will apply immediately across your college portal session.</span>
+            <span className="inline-flex sm:hidden items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Live Sync</span>
+            </span>
+            <div className="hidden sm:flex items-center gap-2">
+              <Info className="w-4 h-4 text-brand-600 shrink-0" />
+              <span>Updates will apply immediately across your college portal session.</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 sm:gap-3 w-auto flex-1 sm:flex-initial justify-end">
             <button
               type="button"
               onClick={() => {
@@ -3617,7 +3819,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 setErrorMessage(null);
                 notify.success('Form reset to saved profile state', '', { category: 'ADMIN' });
               }}
-              className="w-1/2 sm:w-auto px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl border-2 border-slate-300 dark:border-navy-700 font-black text-xs text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 active:scale-95 transition-all cursor-pointer"
+              className="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border-2 border-slate-300 dark:border-navy-700 font-black text-xs text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 active:scale-95 transition-all cursor-pointer shrink-0"
             >
               Reset
             </button>
@@ -3625,16 +3827,16 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             <button
               type="submit"
               disabled={isSaving}
-              className="w-1/2 sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-black text-xs transition-all shadow-lg shadow-brand-500/25 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-black text-xs transition-all shadow-lg shadow-brand-500/25 active:scale-95 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer flex-1 sm:flex-initial"
             >
               {isSaving ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                   <span>Saving...</span>
                 </>
               ) : (
                 <>
-                  <Save className="w-4 h-4" />
+                  <Save className="w-4 h-4 shrink-0" />
                   <span className="hidden sm:inline">Save Account Details</span>
                   <span className="sm:hidden">Save Details</span>
                 </>
@@ -3643,7 +3845,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           </div>
         </div>
         {/* Bottom padding so form content not hidden behind sticky bar */}
-        <div className="h-20" />
+        <div className="h-24 sm:h-20" />
 
       </form>
       {/* MODAL: MENTEE PROFILE */}

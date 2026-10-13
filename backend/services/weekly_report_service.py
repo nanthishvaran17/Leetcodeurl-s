@@ -34,6 +34,15 @@ from backend.services.contest_bucket_classifier import (
 from backend.logger import logger
 
 
+def _safe_float(val: Any) -> Optional[float]:
+    if val is None:
+        return None
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return None
+
+
 def get_student_status_code(student: Student, st: Optional[Any] = None) -> Tuple[str, Optional[int], Optional[int], Optional[int], Optional[int]]:
     """
     Extracts student stats and distinguishes verified zero solved, missing links, invalid URLs, and network errors.
@@ -244,7 +253,7 @@ def generate_weekly_performance_data(
         from backend.services.weekly_session_resolver import resolve_target_weekly_session
         target_ws = resolve_target_weekly_session(db, session_id)
         if target_ws and not report_date:
-            report_date = target_ws.session_date
+            report_date = str(target_ws.session_date) if target_ws.session_date else None
 
     # Step 1: Reporting Period & Contest Discovery
     period_info = reporting_period_service.get_reporting_period(report_date)
@@ -490,8 +499,8 @@ def generate_weekly_performance_data(
             "hard": hd,
             "total_solved": curr_tot,
             "accommodation": getattr(s, "accommodation", "") or getattr(s, "accommodation_type", "") or "",
-            "twelfth_cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
-            "cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
+            "twelfth_cutoff": _safe_float(getattr(s, "twelfth_cutoff", None)),
+            "cutoff": _safe_float(getattr(s, "twelfth_cutoff", None)),
             "category": curr_category_name,
             "profile_ranking": getattr(st, "public_profile_ranking", None),
             "contest_rating": (
@@ -564,8 +573,8 @@ def generate_weekly_performance_data(
             "leetcode_url": s.leetcode_url,
             "username": s.username,
             "accommodation": getattr(s, "accommodation", "") or getattr(s, "accommodation_type", "") or "",
-            "twelfth_cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
-            "cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,
+            "twelfth_cutoff": _safe_float(getattr(s, "twelfth_cutoff", None)),
+            "cutoff": _safe_float(getattr(s, "twelfth_cutoff", None)),
             "total_solved": last_tot,
             "category": last_category_name,
             "public_result": last_pub_outcome,
@@ -657,13 +666,15 @@ def generate_weekly_performance_data(
             "last_week": d_metrics["last_week"]
         })
 
-    # Batch Summaries (Across College)
+    # Batch Summaries (Across College or filtered Department)
+    # Strictly the 3 institutional cohorts: IV (2023-2027), III (2024-2028), II (2025-2029)
+    REQUIRED_BATCH_KEYS = ["2023_2027", "2024_2028", "2025_2029"]
     batch_summaries = []
     for b_cfg in BATCH_CONFIG:
+        if b_cfg["key"] not in REQUIRED_BATCH_KEYS:
+            continue
         b_label = b_cfg["label"]
         b_students = batch_map.get(b_label, [])
-        if len(b_students) == 0:
-            continue
         b_metrics = _aggregate_cohort_metrics(b_students)
         batch_summaries.append({
             "batch": b_label,
@@ -686,7 +697,7 @@ def generate_weekly_performance_data(
             "contest_date": curr_date
         })
 
-    # Sort in canonical institutional order: Batch IV (2023-2027), Batch III (2024-2028), Batch II (2025-2029), Batch I (2026-2030)
+    # Sort in canonical institutional order: Batch IV (2023-2027), Batch III (2024-2028), Batch II (2025-2029)
     order_map = {"IV": 1, "III": 2, "II": 3, "I": 4}
     batch_summaries.sort(key=lambda b: order_map.get(b.get("year", ""), 99))
 
@@ -781,6 +792,11 @@ def generate_weekly_performance_data(
             "date": curr_date,
             "contests_str": curr_contest_str
         },
+
+        "department": (dept_filter if dept_filter and dept_filter.upper() != "ALL" else "CSE(IOT)"),
+        "department_name": ("Department of CSE (Internet of Things )" if dept_filter and "IOT" in dept_filter.upper() else ("Department of CSE (Cyber Security)" if dept_filter and "CS" in dept_filter.upper() else (f"Department of {dept_filter}" if dept_filter and dept_filter.upper() != "ALL" else "Department of CSE (Internet of Things )"))),
+        "coordinator": get_coordinator_for_department(dept_filter if dept_filter and dept_filter.upper() != "ALL" else "CSE(IOT)"),
+        "report_date": curr_date or today_str,
 
         "college_summary": {
             "institution": "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)",

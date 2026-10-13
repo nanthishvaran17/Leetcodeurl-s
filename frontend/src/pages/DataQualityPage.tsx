@@ -182,31 +182,39 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
   };
 
   return (
-    <div className="w-full space-y-4 sm:space-y-6 md:space-y-8 animate-fade-in pb-16 font-sans px-0 max-w-full">
+    <div className="w-full space-y-3 sm:space-y-6 md:space-y-8 animate-fade-in pb-16 font-sans px-0 max-w-full">
       
       {/* Hero Banner with Rich Styling */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-4 sm:p-6 md:p-8 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-3.5 sm:p-6 md:p-8 shadow-lg border border-brand-500/30">
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
-          <div className="space-y-2 sm:space-y-3 max-w-3xl">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black tracking-wider leading-snug">
-              <span>DATA INTEGRITY & PROFILE HEALTH • REALTIME AUDIT BOARD</span>
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-6">
+          <div className="space-y-1.5 sm:space-y-3 max-w-3xl">
+            {/* Mobile Top Strip: Badge + Audit Time */}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg sm:rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[9px] sm:text-xs font-black tracking-wider leading-none">
+                <span>DATA INTEGRITY • REALTIME AUDIT</span>
+              </div>
+              {lastAuditTime && (
+                <div className="flex sm:hidden items-center space-x-1 px-2.5 py-1 rounded-xl bg-white/10 border border-white/15 text-slate-200 text-[10px] font-mono font-bold shadow-xs">
+                  <Clock className="w-3 h-3 text-emerald-400 shrink-0" />
+                  <span>{lastAuditTime}</span>
+                </div>
+              )}
             </div>
 
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
-              Data Quality & <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-orange-300 to-rose-300">Profile Health Dashboard</span>
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight">
+              Data Quality &amp; <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-orange-300 to-rose-300">Profile Health</span>
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-300 font-medium sm:font-bold tracking-wide">
+            <p className="text-[11px] sm:text-sm text-slate-300 font-medium sm:font-bold tracking-wide line-clamp-2 sm:line-clamp-none leading-relaxed">
               Monitor missing links, invalid profile URLs, profile not found errors, and network anomalies across all institutional student records.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 w-full lg:w-auto shrink-0 pt-2 lg:pt-0">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full lg:w-auto shrink-0 pt-1 sm:pt-0">
             {lastAuditTime && (
-              <div className="flex items-center space-x-2 px-3 py-2 rounded-2xl bg-white/10 border border-white/15 text-slate-200 text-xs font-mono font-bold shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <Clock className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+              <div className="hidden sm:flex items-center space-x-2 px-3 py-2 rounded-2xl bg-white/10 border border-white/15 text-slate-200 text-xs font-mono font-bold shadow-xs">
+                <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span>Audited: {lastAuditTime}</span>
               </div>
             )}
@@ -216,10 +224,10 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
                 <button
                   type="button"
                   onClick={() => onNavigateTab('data-issues')}
-                  className="px-4 py-2.5 min-h-[44px] bg-gradient-to-r from-rose-600 via-rose-500 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-xs font-black rounded-2xl shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center space-x-2 cursor-pointer active:scale-95 border border-rose-400/30 touch-manipulation"
+                  className="px-3 sm:px-4 py-2 sm:py-2.5 min-h-[40px] sm:min-h-[44px] bg-gradient-to-r from-rose-600 via-rose-500 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-[11px] sm:text-xs font-black rounded-xl sm:rounded-2xl shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 border border-rose-400/30 touch-manipulation"
                 >
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span className="truncate">Data Issues &amp; Recovery</span>
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">Issues &amp; Recovery</span>
                 </button>
               )}
 
@@ -227,10 +235,10 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
                 type="button"
                 onClick={() => fetchQualityData(true)}
                 disabled={refreshing}
-                className="px-4 py-2.5 min-h-[44px] bg-white/10 hover:bg-white/20 active:bg-white/25 text-white text-xs font-black rounded-2xl border border-white/20 transition-all backdrop-blur-md flex items-center justify-center space-x-2 cursor-pointer active:scale-95 shadow-xs touch-manipulation disabled:opacity-50"
+                className="px-3 sm:px-4 py-2 sm:py-2.5 min-h-[40px] sm:min-h-[44px] bg-white/10 hover:bg-white/20 active:bg-white/25 text-white text-[11px] sm:text-xs font-black rounded-xl sm:rounded-2xl border border-white/20 transition-all backdrop-blur-md flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 shadow-xs touch-manipulation disabled:opacity-50"
               >
-                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''} shrink-0 text-brand-300`} />
-                <span>{refreshing ? 'Auditing...' : 'Run Quality Audit'}</span>
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''} shrink-0 text-brand-300`} />
+                <span>{refreshing ? 'Auditing...' : 'Run Audit'}</span>
               </button>
             </div>
           </div>
@@ -238,8 +246,8 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
       </div>
 
       {/* Scope Filter Controls - 2026 SaaS Glassmorphic Bar */}
-      <div className="bg-white/90 dark:bg-navy-950/90 backdrop-blur-xl p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-3 sm:gap-4 w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5 flex-1 w-full max-w-3xl min-w-0">
+      <div className="bg-white/90 dark:bg-navy-950/90 backdrop-blur-xl p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2.5 sm:gap-4 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-5 flex-1 w-full max-w-3xl min-w-0">
           {/* Department Filter */}
           <PremiumDepartmentSelect
             selectedDept={selectedDept}
@@ -270,7 +278,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
           <button
             type="button"
             onClick={() => { setSelectedDept('ALL'); setSelectedYear('ALL'); }}
-            className="text-xs font-black text-rose-600 dark:text-rose-400 hover:text-rose-700 flex items-center justify-center space-x-1.5 cursor-pointer bg-rose-50 dark:bg-rose-950/40 px-4 py-2.5 min-h-[44px] rounded-2xl border border-rose-200 dark:border-rose-800 shadow-xs transition-all shrink-0 self-stretch sm:self-end touch-manipulation active:scale-95"
+            className="text-[11px] sm:text-xs font-black text-rose-600 dark:text-rose-400 hover:text-rose-700 flex items-center justify-center space-x-1.5 cursor-pointer bg-rose-50 dark:bg-rose-950/40 px-3 py-2 min-h-[38px] sm:min-h-[44px] rounded-xl sm:rounded-2xl border border-rose-200 dark:border-rose-800 shadow-xs transition-all shrink-0 self-stretch sm:self-end touch-manipulation active:scale-95"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset Filters</span>
@@ -279,24 +287,24 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
       </div>
 
       {/* Metrics Snapshot Grid — 5 2026 SaaS Bento Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
         {/* 1. Health Score */}
         <div 
           onClick={() => setFilterCategory('ALL')}
-          className={`relative overflow-hidden p-4 sm:p-5 rounded-3xl border flex flex-col justify-between min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+          className={`relative overflow-hidden p-3 sm:p-5 rounded-2xl sm:rounded-3xl border flex flex-col justify-between min-h-[92px] sm:min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
             filterCategory === 'ALL' 
               ? 'bg-gradient-to-br from-emerald-50 via-white to-teal-50/50 dark:from-emerald-950/40 dark:via-slate-900/90 dark:to-slate-950 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md shadow-emerald-500/10' 
               : 'bg-white/90 dark:bg-[#0c1324] border-slate-200/90 dark:border-white/10 hover:border-emerald-400 dark:hover:border-emerald-500/50 shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Health Score</span>
-            <div className="w-7 h-7 rounded-xl bg-emerald-500/15 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-4 h-4" />
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Health Score</span>
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-emerald-500/15 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">{healthScore}%</p>
-          <span className="inline-flex items-center text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2.5 py-0.5 rounded-full w-fit border border-emerald-500/20">
+          <p className="text-xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-0.5 sm:my-1">{healthScore}%</p>
+          <span className="inline-flex items-center text-[9px] sm:text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-md sm:rounded-full w-fit border border-emerald-500/20">
             Roster Accuracy
           </span>
         </div>
@@ -304,23 +312,23 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
         {/* 2. Valid Profiles */}
         <div 
           onClick={() => setFilterCategory('VALID')}
-          className={`relative overflow-hidden p-4 sm:p-5 rounded-3xl border flex flex-col justify-between min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+          className={`relative overflow-hidden p-3 sm:p-5 rounded-2xl sm:rounded-3xl border flex flex-col justify-between min-h-[92px] sm:min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
             filterCategory === 'VALID' 
               ? 'bg-gradient-to-br from-indigo-50 via-white to-blue-50/50 dark:from-indigo-950/40 dark:via-slate-900/90 dark:to-slate-950 border-brand-500 ring-2 ring-brand-500/30 shadow-md shadow-indigo-500/10' 
               : 'bg-white/90 dark:bg-[#0c1324] border-slate-200/90 dark:border-white/10 hover:border-brand-400 dark:hover:border-brand-500/50 shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">Valid Profiles</span>
-            <div className="w-7 h-7 rounded-xl bg-brand-500/15 border border-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-4 h-4" />
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">Valid Profiles</span>
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-brand-500/15 border border-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white tracking-tight my-1">
+          <p className="text-xl sm:text-3xl font-black text-slate-950 dark:text-white tracking-tight my-0.5 sm:my-1">
             {data?.valid_profiles || 0}
-            {data?.total_students ? <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 font-mono"> / {data.total_students}</span> : null}
+            {data?.total_students ? <span className="text-[10px] sm:text-sm font-semibold text-slate-500 dark:text-slate-400 font-mono"> / {data.total_students}</span> : null}
           </p>
-          <span className="inline-flex items-center text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-2.5 py-0.5 rounded-full w-fit border border-brand-500/20">
+          <span className="inline-flex items-center text-[9px] sm:text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-2 py-0.5 rounded-md sm:rounded-full w-fit border border-brand-500/20">
             Strictly Mapped
           </span>
         </div>
@@ -328,81 +336,83 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
         {/* 3. Missing Links */}
         <div 
           onClick={() => setFilterCategory('MISSING')}
-          className={`relative overflow-hidden p-4 sm:p-5 rounded-3xl border flex flex-col justify-between min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+          className={`relative overflow-hidden p-3 sm:p-5 rounded-2xl sm:rounded-3xl border flex flex-col justify-between min-h-[92px] sm:min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
             filterCategory === 'MISSING' 
               ? 'bg-gradient-to-br from-amber-50 via-white to-orange-50/50 dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950 border-amber-500 ring-2 ring-amber-500/30 shadow-md shadow-amber-500/10' 
               : 'bg-white/90 dark:bg-[#0c1324] border-slate-200/90 dark:border-white/10 hover:border-amber-400 dark:hover:border-amber-500/50 shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Missing Links</span>
-            <div className="w-7 h-7 rounded-xl bg-amber-500/15 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-              <AlertCircle className="w-4 h-4" />
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Missing Links</span>
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-amber-500/15 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">{data?.missing_links || 0}</p>
-          <span className="inline-flex items-center text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2.5 py-0.5 rounded-full w-fit border border-amber-500/20">
-            No Username Set
+          <p className="text-xl sm:text-3xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-0.5 sm:my-1">{data?.missing_links || 0}</p>
+          <span className="inline-flex items-center text-[9px] sm:text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-md sm:rounded-full w-fit border border-amber-500/20">
+            No Username
           </span>
         </div>
 
         {/* 4. Profile Not Found */}
         <div 
           onClick={() => setFilterCategory('NOT_FOUND')}
-          className={`relative overflow-hidden p-4 sm:p-5 rounded-3xl border flex flex-col justify-between min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+          className={`relative overflow-hidden p-3 sm:p-5 rounded-2xl sm:rounded-3xl border flex flex-col justify-between min-h-[92px] sm:min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
             filterCategory === 'NOT_FOUND' 
               ? 'bg-gradient-to-br from-rose-50 via-white to-red-50/50 dark:from-rose-950/40 dark:via-slate-900/90 dark:to-slate-950 border-rose-500 ring-2 ring-rose-500/30 shadow-md shadow-rose-500/10' 
               : 'bg-white/90 dark:bg-[#0c1324] border-slate-200/90 dark:border-white/10 hover:border-rose-400 dark:hover:border-rose-500/50 shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">Profile Not Found</span>
-            <div className="w-7 h-7 rounded-xl bg-rose-500/15 border border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
-              <UserX className="w-4 h-4" />
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">Not Found</span>
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-rose-500/15 border border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+              <UserX className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-rose-800 dark:text-rose-300 tracking-tight my-1">{data?.profile_not_found || 0}</p>
-          <span className="inline-flex items-center text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-2.5 py-0.5 rounded-full w-fit border border-rose-500/20">
-            Invalid on LeetCode
+          <p className="text-xl sm:text-3xl font-black text-rose-800 dark:text-rose-300 tracking-tight my-0.5 sm:my-1">{data?.profile_not_found || 0}</p>
+          <span className="inline-flex items-center text-[9px] sm:text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded-md sm:rounded-full w-fit border border-rose-500/20">
+            Invalid LC
           </span>
         </div>
 
         {/* 5. Network / Sync */}
         <div 
           onClick={() => setFilterCategory('NETWORK')}
-          className={`col-span-2 sm:col-span-1 relative overflow-hidden p-4 sm:p-5 rounded-3xl border flex flex-col justify-between min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+          className={`col-span-2 sm:col-span-1 relative overflow-hidden p-3 sm:p-5 rounded-2xl sm:rounded-3xl border flex flex-col justify-between min-h-[82px] sm:min-h-[110px] transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
             filterCategory === 'NETWORK' 
               ? 'bg-gradient-to-br from-cyan-50 via-white to-blue-50/50 dark:from-cyan-950/40 dark:via-slate-900/90 dark:to-slate-950 border-cyan-500 ring-2 ring-cyan-500/30 shadow-md shadow-cyan-500/10' 
               : 'bg-white/90 dark:bg-[#0c1324] border-slate-200/90 dark:border-white/10 hover:border-cyan-400 dark:hover:border-cyan-500/50 shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[10px] font-black uppercase tracking-wider text-cyan-800 dark:text-cyan-300">Network / Sync</span>
-            <div className="w-7 h-7 rounded-xl bg-cyan-500/15 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
-              <Wifi className="w-4 h-4" />
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-cyan-800 dark:text-cyan-300">Network / Sync</span>
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-cyan-500/15 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
+              <Wifi className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-cyan-800 dark:text-cyan-300 tracking-tight my-1">{data?.network_errors || 0}</p>
-          <span className="inline-flex items-center text-[10px] font-black text-cyan-800 dark:text-cyan-300 bg-cyan-500/10 px-2.5 py-0.5 rounded-full w-fit border border-cyan-500/20">
-            Retryable Anomalies
-          </span>
+          <div className="flex items-baseline justify-between sm:block">
+            <p className="text-xl sm:text-3xl font-black text-cyan-800 dark:text-cyan-300 tracking-tight my-0.5 sm:my-1">{data?.network_errors || 0}</p>
+            <span className="inline-flex items-center text-[9px] sm:text-[10px] font-black text-cyan-800 dark:text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-md sm:rounded-full w-fit border border-cyan-500/20">
+              Retry Anomalies
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Profile Attention & Quality Issues Board */}
-      <div className="border border-slate-200/90 dark:border-white/10 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-950 p-4 sm:p-6 space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-4 pb-2 border-b border-slate-100 dark:border-white/10">
-          <div className="space-y-1">
-            <h3 className="text-sm font-black uppercase text-slate-900 dark:text-white flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 text-amber-500" />
-              <span>Profile Attention &amp; Data Quality Roster ({filteredIssues.length} Items Displayed)</span>
+      <div className="border border-slate-200/90 dark:border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-950 p-3 sm:p-6 space-y-3 sm:space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-2.5 sm:gap-4 pb-2 border-b border-slate-100 dark:border-white/10">
+          <div className="space-y-0.5 sm:space-y-1">
+            <h3 className="text-xs sm:text-sm font-black uppercase text-slate-900 dark:text-white flex items-center space-x-1.5 sm:space-x-2">
+              <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+              <span>Data Quality Roster ({filteredIssues.length})</span>
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Filter by category or search name, register number, or issue flag.</p>
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">Filter by category or search name, register number, or issue flag.</p>
           </div>
 
           {/* Interactive Search & Filter Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full xl:w-auto">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full xl:w-auto">
+            <div className="relative flex-1 min-w-[180px]">
               <input
                 type="text"
                 placeholder="Search name, reg no..."
@@ -410,10 +420,10 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoComplete="off"
                 spellCheck={false}
-                className="pl-9 pr-8 py-2.5 min-h-[44px] rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-navy-900/60 text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 w-full shadow-xs transition-all"
+                className="pl-8 sm:pl-9 pr-8 py-2 sm:py-2.5 min-h-[40px] sm:min-h-[44px] rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-navy-900/60 text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 w-full shadow-xs transition-all"
               />
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-400">
-                <Search className="w-4 h-4 stroke-[2.5]" />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 sm:pl-3 z-10 text-slate-400">
+                <Search className="w-3.5 h-3.5 stroke-[2.5]" />
               </div>
               {searchQuery && (
                 <button
@@ -422,52 +432,52 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
                   className="absolute inset-y-0 right-0 z-10 flex items-center px-2.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors"
                   title="Clear search"
                 >
-                  <XCircle className="w-4 h-4 stroke-[2]" />
+                  <XCircle className="w-3.5 h-3.5 stroke-[2]" />
                 </button>
               )}
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-900 p-1.5 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 text-[11px] font-bold overflow-x-auto max-w-full shadow-2xs scrollbar-none">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-900 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-navy-700/80 text-[10px] sm:text-[11px] font-bold overflow-x-auto no-scrollbar scrollbar-none max-w-full shadow-2xs">
               <button
                 type="button"
                 onClick={() => { setFilterCategory('ALL'); setPage(1); }}
-                className={`px-3 py-1.5 min-h-[36px] rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'ALL' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
+                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 min-h-[32px] sm:min-h-[36px] rounded-lg sm:rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'ALL' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
               >
                 All ({issuesList.length})
               </button>
               <button
                 type="button"
                 onClick={() => { setFilterCategory('VALID'); setPage(1); }}
-                className={`px-3 py-1.5 min-h-[36px] rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'VALID' ? 'bg-emerald-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'}`}
+                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 min-h-[32px] sm:min-h-[36px] rounded-lg sm:rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'VALID' ? 'bg-emerald-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'}`}
               >
                 Valid ({data?.valid_profiles || 0})
               </button>
               <button
                 type="button"
                 onClick={() => { setFilterCategory('MISSING'); setPage(1); }}
-                className={`px-3 py-1.5 min-h-[36px] rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'MISSING' ? 'bg-amber-500 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'}`}
+                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 min-h-[32px] sm:min-h-[36px] rounded-lg sm:rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'MISSING' ? 'bg-amber-500 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'}`}
               >
                 Missing ({data?.missing_links || 0})
               </button>
               <button
                 type="button"
                 onClick={() => { setFilterCategory('NOT_FOUND'); setPage(1); }}
-                className={`px-3 py-1.5 min-h-[36px] rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'NOT_FOUND' ? 'bg-rose-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400'}`}
+                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 min-h-[32px] sm:min-h-[36px] rounded-lg sm:rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'NOT_FOUND' ? 'bg-rose-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400'}`}
               >
                 Not Found ({data?.profile_not_found || 0})
               </button>
               <button
                 type="button"
                 onClick={() => { setFilterCategory('NETWORK'); setPage(1); }}
-                className={`px-3 py-1.5 min-h-[36px] rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'NETWORK' ? 'bg-cyan-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400'}`}
+                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 min-h-[32px] sm:min-h-[36px] rounded-lg sm:rounded-xl transition-all shrink-0 cursor-pointer touch-manipulation active:scale-95 ${filterCategory === 'NETWORK' ? 'bg-cyan-600 text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400'}`}
               >
                 Network ({data?.network_errors || 0})
               </button>
             </div>
 
             {data?.source_status === 'UNAVAILABLE' && (
-              <span className="px-3 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-600 border border-rose-500/30 animate-pulse">
-                LEETCODE SOURCE UNAVAILABLE
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-500/20 text-rose-600 border border-rose-500/30">
+                SOURCE UNAVAILABLE
               </span>
             )}
           </div>
@@ -498,12 +508,19 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
                           </h4>
                           <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500 dark:text-slate-400 font-mono font-bold">
                             <span>{item.reg_no}</span>
-                            {(item.year_level || item.year) && (
-                              <>
-                                <span>•</span>
-                                <span>Year {item.year_level || item.year}</span>
-                              </>
-                            )}
+                            {(() => {
+                              const rawYear = String(item.year_level || item.year || '').trim();
+                              if (!rawYear) return null;
+                              const formattedYear = rawYear.toLowerCase().includes('year') || rawYear.toLowerCase().includes('yr') 
+                                ? rawYear 
+                                : `Year ${rawYear}`;
+                              return (
+                                <>
+                                  <span>•</span>
+                                  <span>{formattedYear}</span>
+                                </>
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>
@@ -521,7 +538,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
                           Audit Status
                         </span>
                         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full font-black text-[10px] border ${statusCfg.bg}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot} animate-pulse`} />
+                          <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
                           <span className="truncate">{statusCfg.label}</span>
                         </span>
                       </div>
@@ -666,7 +683,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
         ) : (
           <div className="p-10 sm:p-14 text-center rounded-3xl bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/80 dark:border-navy-700/80 shadow-lg backdrop-blur-md space-y-3 my-4">
             <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 dark:bg-emerald-950/60 text-emerald-500 border border-emerald-500/20 flex items-center justify-center mx-auto shadow-md shadow-emerald-500/10">
-              <Sparkles className="w-7 h-7 text-emerald-500 animate-pulse" />
+              <Sparkles className="w-7 h-7 text-emerald-500" />
             </div>
             <div className="space-y-1">
               <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">No Matching Issues Found</h4>

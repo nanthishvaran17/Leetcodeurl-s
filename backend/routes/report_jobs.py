@@ -309,7 +309,7 @@ def create_report_job(
             
             if cached_info and cached_info.get("status") == "READY" and cached_info.get("cache_id"):
                 cache_rec = db.query(ReportCache).filter(ReportCache.id == cached_info["cache_id"]).first()
-                if cache_rec and cache_rec.storage_path and os.path.exists(cache_rec.storage_path) and os.path.getsize(cache_rec.storage_path) > 0:
+                if cache_rec and cache_rec.storage_path and os.path.exists(str(cache_rec.storage_path)) and os.path.getsize(str(cache_rec.storage_path)) > 0:
                     new_job.status = "COMPLETED"  # type: ignore
                     new_job.progress = 100  # type: ignore
                     new_job.file_path = cache_rec.storage_path  # type: ignore
@@ -427,9 +427,9 @@ def download_report_job_file(
     from backend.models import ReportCache
     cache_rec = db.query(ReportCache).filter(ReportCache.storage_path == job.file_path).first()
     if cache_rec and cache_rec.filename:
-        raw_filename = cache_rec.filename
+        raw_filename = str(cache_rec.filename)
     else:
-        raw_filename = os.path.basename(job.file_path)
+        raw_filename = os.path.basename(str(job.file_path))
         
     clean_filename = os.path.basename(raw_filename).replace('"', '').replace('\r', '').replace('\n', '').strip() or "report"
     ext = clean_filename.split(".")[-1].lower() if "." in clean_filename else ""

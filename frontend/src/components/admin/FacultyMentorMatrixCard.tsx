@@ -218,9 +218,183 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
       </div>
 
       {/* 4. Table / Responsive Cards Display */}
-      <div className="w-full overflow-x-auto pb-6 sm:pb-8">
-        <table className="w-full text-left text-xs border-collapse block md:table">
-          <thead className="hidden md:table-header-group">
+      {/* DEDICATED MOBILE CARDS VIEW (md:hidden) */}
+      <div className="md:hidden p-3.5 space-y-3">
+        {filteredStaff.length === 0 ? (
+          <div className="py-12 text-center text-slate-500 dark:text-slate-400 font-bold font-sans">
+            <div className="flex flex-col items-center justify-center space-y-2">
+              <UserX className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+              <span>No faculty mentors match the selected criteria.</span>
+            </div>
+          </div>
+        ) : (
+          filteredStaff.map((s) => {
+            const assigned = s.assigned_count || 0;
+            const active = (s as any).active_count || 0;
+            const completionRate = assigned > 0 ? Math.round((active / assigned) * 100) : 0;
+            const isSelected = selectedStaff === String(s.id);
+            const deptCode = (s as any).department_code || 'DEPT';
+            const deptBadge = getDeptBadgeStyle(deptCode);
+            const initial = (s.username || 'F').charAt(0).toUpperCase();
+
+            return (
+              <div
+                key={s.id}
+                onClick={() => setSelectedStaffDetail(s)}
+                className={`p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border transition-all cursor-pointer shadow-xs active:scale-[0.99] space-y-3 ${
+                  isSelected
+                    ? 'border-indigo-500 ring-2 ring-indigo-500/30'
+                    : 'border-slate-200/80 dark:border-white/10 hover:border-slate-300'
+                }`}
+              >
+                {/* Header: Avatar, Name, Email, Dept Badge */}
+                <div className="flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-brand-500/20 text-indigo-600 dark:text-indigo-400 font-black flex items-center justify-center text-sm border border-indigo-400/30 shadow-xs shrink-0">
+                      {initial}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white truncate flex items-center gap-1.5">
+                        <span className="truncate">{s.username}</span>
+                        {isSelected && (
+                          <span className="px-1.5 py-0.2 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase shrink-0">
+                            Active
+                          </span>
+                        )}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                        {s.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className={`px-2 py-0.5 rounded-lg font-mono text-[10px] font-extrabold border shrink-0 ${deptBadge}`}>
+                    {deptCode}
+                  </span>
+                </div>
+
+                {/* 3-Cell Inset Metric Grid */}
+                <div className="grid grid-cols-3 gap-2 p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 text-center">
+                  <div>
+                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
+                      Mentees
+                    </span>
+                    <span className="text-xs font-mono font-black text-slate-800 dark:text-white">
+                      {assigned}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
+                      Active Solvers
+                    </span>
+                    <span className="text-xs font-mono font-black text-teal-600 dark:text-teal-400">
+                      {active}/{assigned}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
+                      Sunday Contest
+                    </span>
+                    <span className="text-xs font-mono font-black text-indigo-600 dark:text-indigo-400">
+                      {assigned > 0 ? `${s.sunday_contest_attended ?? 0}/${assigned}` : '—'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Progress Bar & Status Pill */}
+                <div className="flex items-center justify-between gap-3 pt-0.5">
+                  <div className="flex-1 flex items-center gap-2">
+                    <div className="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          completionRate >= 80 ? 'bg-emerald-500' : completionRate > 0 ? 'bg-amber-500' : 'bg-slate-300'
+                        }`}
+                        style={{ width: `${completionRate}%` }}
+                      />
+                    </div>
+                    <span className={`text-[10px] font-mono font-black shrink-0 ${
+                      completionRate === 0 ? 'text-slate-400' : 'text-slate-800 dark:text-white'
+                    }`}>
+                      {completionRate}%
+                    </span>
+                  </div>
+
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border shrink-0 ${
+                    assigned === 0
+                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
+                      : active === assigned
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                      : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                  }`}>
+                    {assigned === 0 ? 'Unallocated' : active === assigned ? '100% Active' : `Allocated (${assigned})`}
+                  </span>
+                </div>
+
+                {/* Mobile Action Buttons */}
+                <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-white/5" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedStaffDetail(s);
+                    }}
+                    className="flex-1 min-h-[32px] px-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-brand-600 text-white text-[11px] font-black transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95"
+                  >
+                    <Eye size={11} className="shrink-0" />
+                    <span>Inspect</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFilterByStaff(s.id, s.username);
+                    }}
+                    className={`min-h-[32px] px-2.5 rounded-xl text-[11px] font-black transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 ${
+                      isSelected
+                        ? 'bg-emerald-600 text-white shadow-emerald-600/30'
+                        : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
+                    <span>{isSelected ? 'Scoped ✓' : 'Filter Scope'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowStaffAllocationModal(true);
+                    }}
+                    className="min-h-[32px] px-2 rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 text-[11px] font-bold border border-slate-200 dark:border-slate-700 flex items-center justify-center active:scale-95"
+                    title="Reassign"
+                  >
+                    <ArrowRightLeft size={11} />
+                  </button>
+
+                  {assigned > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleUnassignAllForStaff(s.id, s.username);
+                      }}
+                      className="min-h-[32px] px-2 rounded-xl bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 text-[11px] font-bold border border-rose-200 dark:border-rose-900/50 flex items-center justify-center active:scale-95"
+                      title="Unassign All"
+                    >
+                      <UserX size={11} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* DESKTOP TABLE VIEW (hidden md:block) */}
+      <div className="hidden md:block w-full overflow-x-auto pb-6 sm:pb-8">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead>
             <tr className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 bg-slate-100/70 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-white/10">
               <th className="py-4 px-4">Faculty Mentor</th>
               <th className="py-4 px-3">Dept</th>

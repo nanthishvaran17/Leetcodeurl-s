@@ -774,7 +774,7 @@ def export_monday_hod_master_excel(
 
         status_text = str(res.participation_status or "OFFICIAL_ATTENDED") if res else "OFFICIAL_ATTENDED"
         solved = int(cast(Any, res.total_contest_solved)) if (res and res.total_contest_solved is not None) else (3 if idx % 2 == 0 else 2)
-        score = int(solved * 25)
+        score = solved * 25
 
         if status_text == "OFFICIAL_ATTENDED":
             badge_str = "GREEN BADGE: Official Participant"

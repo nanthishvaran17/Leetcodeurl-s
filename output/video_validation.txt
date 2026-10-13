@@ -10,7 +10,7 @@ Video Codec: H.264 (High Profile, CRF 17)
 Audio Codec: AAC (256 kbps, 48000 Hz Stereo)
 Primary Output: E:\Leetcode Web\output\nandha_tracker_worldclass_marketing.mp4
 Deliverable Output: E:\Leetcode Web\output\nandha_tracker_marketing.mp4
-File Size: 5.82 MB
+File Size: 6.16 MB
 
 FFMPEG Stream Details:
 ffmpeg version 7.1-essentials_build-www.gyan.dev Copyright (c) 2000-2024 the FFmpeg developers
@@ -30,8 +30,8 @@ Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'E:\Leetcode Web\output\nandha_tracker_w
     minor_version   : 512
     compatible_brands: isomiso2avc1mp41
     encoder         : Lavf61.7.100
-  Duration: 00:00:55.13, start: 0.000000, bitrate: 885 kb/s
-  Stream #0:0[0x1](und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(progressive), 1920x1080 [SAR 1:1 DAR 16:9], 617 kb/s, 30 fps, 30 tbr, 15360 tbn (default)
+  Duration: 00:00:55.53, start: 0.000000, bitrate: 930 kb/s
+  Stream #0:0[0x1](und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(progressive), 1920x1080 [SAR 1:1 DAR 16:9], 662 kb/s, 30 fps, 30 tbr, 15360 tbn (default)
       Metadata:
         handler_name    : VideoHandler
         vendor_id       : [0][0][0][0]

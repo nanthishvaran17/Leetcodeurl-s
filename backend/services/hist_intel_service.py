@@ -191,7 +191,7 @@ def build_hist_intel_report(db, config, current_user=None) -> Dict[str, Any]:
             total_solved_frac = f"{total_solved_all}/{max_possible_problems}"
             attended_solved_frac = f"{total_solved_all}/{max_attended_problems}" if total_attended > 0 else "0/0"
 
-            solve_pct = round((total_solved_all / max(max_attended_problems, 1)) * 100, 1) if total_attended > 0 else 0.0
+            solve_pct = round((float(total_solved_all) / max(max_attended_problems, 1)) * 100.0, 1) if total_attended > 0 else 0.0
 
             rows.append({
                 "s_no": idx,

@@ -368,7 +368,7 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
             if isinstance(extracted, tuple):
                 val_str, cell_tag = extracted
             else:
-                val_str = str(extracted)
+                val_str = extracted if isinstance(extracted, str) else str(extracted)
 
             target_style = left_cell_style if is_left else cell_style
 

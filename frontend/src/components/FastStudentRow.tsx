@@ -89,6 +89,11 @@ export function getProfileRankDisplay(st: any): string {
   return getContestRankDisplay(st);
 }
 
+export const LEADERBOARD_TABLE_GRID_STYLE: React.CSSProperties = {
+  gridTemplateColumns: '44px 76px 124px minmax(180px, 1.8fr) minmax(115px, 1.1fr) minmax(140px, 1.3fr) minmax(72px, 0.8fr) minmax(110px, 1.1fr) minmax(72px, 0.8fr) minmax(96px, 1fr) minmax(110px, 1.1fr)',
+  alignItems: 'center',
+};
+
 // million-ignore
 export const FastStudentRow = memo(({
   studentId,
@@ -142,12 +147,12 @@ export const FastStudentRow = memo(({
         }
         onView(student, e);
       }}
-      className="flex flex-col md:flex-row p-0 md:py-3.5 md:px-0 gap-0 hover:bg-slate-50/80 dark:hover:bg-navy-900/50 transition-all duration-150 group font-medium text-xs md:border-b border-slate-200/80 dark:border-navy-800/60 cursor-pointer w-full min-w-full md:min-w-[1100px] items-stretch md:items-center bg-transparent rounded-2xl md:rounded-none mb-3 md:mb-0 min-h-0 md:min-h-[68px]"
+      className="w-full min-w-full md:min-w-[1100px] mb-3 md:mb-0"
     >
       {/* MOBILE LAYOUT (2026 SaaS LUXURY LEADERBOARD CARD) */}
       <div 
         onClick={(e) => onView(student, e)}
-        className={`flex md:hidden flex-col w-full bg-white dark:bg-[#0c1424] rounded-2xl border transition-all duration-200 relative overflow-hidden shadow-xs hover:shadow-md active:scale-[0.99] touch-manipulation cursor-pointer ${
+        className={`!flex md:!hidden flex-col w-full bg-white dark:bg-[#0c1424] rounded-2xl border transition-all duration-200 relative overflow-hidden shadow-xs hover:shadow-md active:scale-[0.99] touch-manipulation cursor-pointer ${
           isSelected 
             ? 'border-brand-500 ring-2 ring-brand-500/30 bg-brand-500/[0.04] dark:bg-brand-950/20' 
             : 'border-slate-200/90 dark:border-white/10 hover:border-brand-500/40'
@@ -242,115 +247,133 @@ export const FastStudentRow = memo(({
         </div>
       </div>
 
-      {/* DESKTOP LAYOUT COLUMNS */}
-      <div className="hidden md:flex flex-none w-10 items-center justify-center text-center px-3" onClick={(e) => e.stopPropagation()}>
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => toggleStudent(student.id)}
-          className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
-        />
-      </div>
+      {/* DESKTOP LAYOUT (BALANCED GRID - ZERO AWKWARD GAPS) */}
+      <div
+        className="!hidden md:!grid w-full min-w-full md:min-w-[1100px] h-full items-center py-2.5 px-0 hover:bg-slate-50/80 dark:hover:bg-navy-900/50 transition-all duration-150 group font-medium text-xs md:border-b border-slate-200/80 dark:border-navy-800/60 cursor-pointer min-h-[68px]"
+        style={LEADERBOARD_TABLE_GRID_STYLE}
+      >
+        {/* 1. Checkbox */}
+        <div className="px-3 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => toggleStudent(student.id)}
+            className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+          />
+        </div>
 
-      <div className="hidden md:flex flex-none w-24 items-center justify-start px-3 font-bold" onClick={(e) => e.stopPropagation()}>
-        {isSolver
-          ? getRankBadge(effectiveCollegeRank)
-          : syncState === 'pending'
-            ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700"><Clock className="w-3 h-3" /><span>Pending</span></span>
-            : syncState === 'failed'
-              ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800"><AlertCircle className="w-3 h-3" /><span>Failed</span></span>
-              : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700">Unranked</span>
-        }
-      </div>
+        {/* 2. Rank */}
+        <div className="px-3 flex items-center justify-start font-bold" onClick={(e) => e.stopPropagation()}>
+          {isSolver
+            ? getRankBadge(effectiveCollegeRank)
+            : syncState === 'pending'
+              ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700"><Clock className="w-3 h-3" /><span>Pending</span></span>
+              : syncState === 'failed'
+                ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800"><AlertCircle className="w-3 h-3" /><span>Failed</span></span>
+                : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700">Unranked</span>
+          }
+        </div>
 
-      <div className="hidden md:flex flex-none w-32 items-center justify-start px-3">
-        <span className="font-mono text-xs font-extrabold text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-navy-800 px-2 py-0.5 rounded-md border border-slate-300 dark:border-navy-700">
-          {student.reg_no}
-        </span>
-      </div>
+        {/* 3. Register No */}
+        <div className="px-3 flex items-center justify-start">
+          <span className="font-mono text-xs font-extrabold text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-navy-800 px-2 py-0.5 rounded-md border border-slate-300 dark:border-navy-700">
+            {student.reg_no}
+          </span>
+        </div>
 
-      <div className="hidden md:flex flex-1 min-w-[200px] px-3 items-center justify-start text-left">
-        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} className="flex items-center space-x-3 w-full text-left">
-          <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-sm">
-            {student.name.charAt(0).toUpperCase()}
-          </div>
-          <div className="min-w-0">
-            <p className="font-black text-sm text-slate-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-              {student.name}
-            </p>
-          </div>
-        </button>
-      </div>
+        {/* 4. Student (Avatar + Name) */}
+        <div className="px-3 flex items-center justify-start text-left min-w-0">
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} className="flex items-center space-x-3 w-full text-left min-w-0 group/btn">
+            <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-sm">
+              {student.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1 truncate">
+              <p className="font-black text-sm text-slate-900 dark:text-white truncate group-hover/btn:text-brand-600 dark:group-hover/btn:text-brand-400 transition-colors">
+                {student.name}
+              </p>
+            </div>
+          </button>
+        </div>
 
-      <div className="hidden md:flex flex-none w-36 px-3 text-[11px] font-bold items-center justify-start gap-0.5 self-center my-auto overflow-hidden min-h-[44px]">
-        <span className="text-slate-900 dark:text-white truncate font-extrabold">{getDeptCode(student)}</span>
-        <span className="text-slate-600 dark:text-slate-300 shrink-0 font-extrabold px-0.5">/</span>
-        <span className="text-slate-800 dark:text-slate-200 shrink-0 font-extrabold">{formatStudentYearBadge(student)}</span>
-      </div>
+        {/* 5. Dept / Year */}
+        <div className="px-3 text-[11px] font-bold flex items-center justify-start gap-0.5 self-center my-auto overflow-hidden min-w-0">
+          <span className="text-slate-900 dark:text-white truncate font-extrabold">{getDeptCode(student)}</span>
+          <span className="text-slate-600 dark:text-slate-300 shrink-0 font-extrabold px-0.5">/</span>
+          <span className="text-slate-800 dark:text-slate-200 shrink-0 font-extrabold">{formatStudentYearBadge(student)}</span>
+        </div>
 
-      <div className="hidden md:flex flex-1 min-w-[160px] px-3 flex-col justify-center self-center my-auto overflow-hidden min-h-[44px]">
-        {student.username ? (
-          <a href={`https://leetcode.com/u/${student.username}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center leading-normal truncate" onClick={(e) => e.stopPropagation()}>
-            @{student.username}
-          </a>
-        ) : <span className="text-slate-500 dark:text-slate-400 text-[11px] font-medium inline-flex items-center leading-normal truncate">Not Linked</span>}
-        {(() => {
-          const secUser = student.secondary_leetcode_id || student.secondary_accounts?.[0]?.username || student.leetcode_accounts?.[0]?.username;
-          if (!secUser) return null;
-          return (
-            <a
-              href={`https://leetcode.com/u/${secUser}/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 shrink-0 mt-0.5 w-fit"
-              onClick={(e) => e.stopPropagation()}
-              title="Secondary LeetCode Account"
-            >
-              <span>Sec: @{secUser}</span>
+        {/* 6. LeetCode Handle */}
+        <div className="px-3 flex flex-col justify-center self-center my-auto overflow-hidden min-w-0">
+          {student.username ? (
+            <a href={`https://leetcode.com/u/${student.username}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center leading-normal truncate" onClick={(e) => e.stopPropagation()}>
+              @{student.username}
             </a>
-          );
-        })()}
-      </div>
+          ) : <span className="text-slate-500 dark:text-slate-400 text-[11px] font-medium inline-flex items-center leading-normal truncate">Not Linked</span>}
+          {(() => {
+            const secUser = student.secondary_leetcode_id || student.secondary_accounts?.[0]?.username || student.leetcode_accounts?.[0]?.username;
+            if (!secUser) return null;
+            return (
+              <a
+                href={`https://leetcode.com/u/${secUser}/`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 shrink-0 mt-0.5 w-fit truncate"
+                onClick={(e) => e.stopPropagation()}
+                title="Secondary LeetCode Account"
+              >
+                <span>Sec: @{secUser}</span>
+              </a>
+            );
+          })()}
+        </div>
 
-      <div className={`hidden md:flex flex-none w-24 px-3 py-1 rounded-lg items-center justify-center text-center transition-colors ${flashSolved ? 'bg-emerald-200 dark:bg-emerald-800/50 duration-75' : 'bg-transparent duration-1000'}`}>
-        {totalSolved !== null ? (
-          <span className="text-base font-black text-emerald-600 dark:text-emerald-400">{totalSolved}</span>
-        ) : <span className="text-slate-400">—</span>}
-      </div>
+        {/* 7. Solved */}
+        <div className="px-3 flex items-center justify-center text-center">
+          <div className={`px-2.5 py-0.5 rounded-lg inline-flex items-center justify-center transition-colors ${flashSolved ? 'bg-emerald-200 dark:bg-emerald-800/50 duration-75' : 'bg-transparent duration-1000'}`}>
+            {totalSolved !== null ? (
+              <span className="text-base font-black text-emerald-600 dark:text-emerald-400">{totalSolved}</span>
+            ) : <span className="text-slate-400 font-bold">—</span>}
+          </div>
+        </div>
 
-      <div className="hidden md:flex flex-none w-32 px-3 items-center justify-center text-center">
-        {(() => {
-          const status = student.contest_status || 'NOT_ATTENDED';
-          if (status === 'PUBLIC_ATTENDED' || status === 'PUBLIC' || status === 'ATTENDED') {
-            return <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold text-[10px] tracking-wider uppercase">Public</span>;
-          }
-          if (status === 'VIRTUAL_ATTENDED' || status === 'VIRTUAL') {
-            return <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-extrabold text-[10px] tracking-wider uppercase">Virtual</span>;
-          }
-          if (status === 'PENDING_USERNAME' || status === 'NO_HANDLE') {
-            return <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-extrabold text-[10px] tracking-wider uppercase">Pending</span>;
-          }
-          if (status === 'DATA_ERROR' || status === 'SOURCE_ERROR' || status === 'CONFLICT' || status === 'INVALID_USERNAME') {
-            return <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-extrabold text-[10px] tracking-wider uppercase">Data Error</span>;
-          }
-          return <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-extrabold text-[10px] tracking-wider uppercase">Not Attended</span>;
-        })()}
-      </div>
+        {/* 8. Contest */}
+        <div className="px-3 flex items-center justify-center text-center">
+          {(() => {
+            const status = student.contest_status || 'NOT_ATTENDED';
+            if (status === 'PUBLIC_ATTENDED' || status === 'PUBLIC' || status === 'ATTENDED') {
+              return <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold text-[10px] tracking-wider uppercase">Public</span>;
+            }
+            if (status === 'VIRTUAL_ATTENDED' || status === 'VIRTUAL') {
+              return <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-extrabold text-[10px] tracking-wider uppercase">Virtual</span>;
+            }
+            if (status === 'PENDING_USERNAME' || status === 'NO_HANDLE') {
+              return <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-extrabold text-[10px] tracking-wider uppercase">Pending</span>;
+            }
+            if (status === 'DATA_ERROR' || status === 'SOURCE_ERROR' || status === 'CONFLICT' || status === 'INVALID_USERNAME') {
+              return <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-extrabold text-[10px] tracking-wider uppercase">Data Error</span>;
+            }
+            return <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-extrabold text-[10px] tracking-wider uppercase">Not Attended</span>;
+          })()}
+        </div>
 
-      <div className="hidden md:flex flex-none w-24 px-3 items-center justify-center text-center text-amber-600 dark:text-amber-400 font-extrabold">
-        {getContestRatingDisplay(student)}
-      </div>
+        {/* 9. Rating */}
+        <div className="px-3 flex items-center justify-center text-center text-amber-600 dark:text-amber-400 font-extrabold">
+          {getContestRatingDisplay(student)}
+        </div>
 
-      <div className="hidden md:flex flex-none w-28 px-3 items-center justify-center text-center text-indigo-700 dark:text-indigo-300 font-extrabold">
-        {getContestRankDisplay(student)}
-      </div>
+        {/* 10. Contest Rank */}
+        <div className="px-3 flex items-center justify-center text-center text-indigo-700 dark:text-indigo-300 font-extrabold">
+          {getContestRankDisplay(student)}
+        </div>
 
-      <div className="hidden md:flex flex-none w-32 px-3 items-center justify-center text-center" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-center gap-1 transition-opacity">
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} className="p-1.5 rounded-xl text-brand-600 hover:bg-brand-50" title="View"><Eye className="w-4 h-4" /></button>
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }} className="p-1.5 rounded-xl text-amber-600 hover:bg-amber-50" title="Edit"><Edit3 className="w-4 h-4" /></button>
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRefresh?.((student || initialStudent).id); }} disabled={isSyncing} className={`p-1.5 rounded-xl ${isSyncing ? 'text-brand-500' : 'text-emerald-600 hover:bg-emerald-50'}`} title="Refresh Stats"><RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} /></button>
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(student, e); }} className="p-1.5 rounded-xl text-rose-600 hover:bg-rose-50" title="Delete"><Trash2 className="w-4 h-4" /></button>
+        {/* 11. Actions */}
+        <div className="px-3 flex items-center justify-center text-center" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-center gap-1 transition-opacity">
+            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} className="p-1.5 rounded-xl text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/50" title="View"><Eye className="w-4 h-4" /></button>
+            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }} className="p-1.5 rounded-xl text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/50" title="Edit"><Edit3 className="w-4 h-4" /></button>
+            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRefresh?.((student || initialStudent).id); }} disabled={isSyncing} className={`p-1.5 rounded-xl ${isSyncing ? 'text-brand-500' : 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50'}`} title="Refresh Stats"><RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} /></button>
+            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(student, e); }} className="p-1.5 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50" title="Delete"><Trash2 className="w-4 h-4" /></button>
+          </div>
         </div>
       </div>
     </div>

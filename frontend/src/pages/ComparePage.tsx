@@ -382,8 +382,7 @@ export const ComparePage: React.FC = () => {
                 <Swords className="w-3.5 h-3.5 text-brand-400" />
                 <span>Comparison Arena</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.06] text-slate-200 text-[11px] font-semibold border border-white/10">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] text-slate-200 text-[11px] font-semibold border border-white/10">
                 <span>{compareMode === 'STUDENT' ? 'Student Head-to-Head' : 'Cohort & Batch Telemetry'}</span>
               </span>
             </div>

@@ -62,6 +62,12 @@ export const ReportsPage: React.FC = () => {
   const [rptSessionOpen, setRptSessionOpen] = useState<boolean>(false);
   const [rptSearch, setRptSearch] = useState<string>('');
 
+  useEffect(() => {
+    if (selectedReportType === 'WEEKLY_PERFORMANCE') {
+      setSelectedYear('ALL');
+    }
+  }, [selectedReportType]);
+
   // Floating Center Delete Modal & Toast States
   const [deleteModalItem, setDeleteModalItem] = useState<DeleteItemInfo | null>(null);
   const [isDeletingSnapshot, setIsDeletingSnapshot] = useState<boolean>(false);
@@ -1146,7 +1152,6 @@ export const ReportsPage: React.FC = () => {
             {/* Action Bar Footer */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-5 border-t border-slate-200/80 dark:border-white/10 relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-xs text-slate-600 dark:text-slate-300 font-semibold truncate w-full sm:w-auto">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                 <span className="text-[11px] sm:text-xs truncate">
                   Active Filter: <span className="font-black text-slate-900 dark:text-white">{selectedDept === 'ALL' ? 'All Departments' : selectedDept}</span> • <span className="font-black text-indigo-600 dark:text-indigo-400">{selectedYear === 'ALL' ? 'All Batches' : `${selectedYear === '2' ? 'II' : selectedYear === '3' ? 'III' : 'IV'} Year`}</span>
                 </span>

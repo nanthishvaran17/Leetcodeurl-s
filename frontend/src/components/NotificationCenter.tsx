@@ -209,10 +209,10 @@ export const NotificationCenter: React.FC = () => {
 
   return createPortal(
     <>
-      {/* Toast Notification Stack Container */}
+      {/* Toast Notification Stack Container (Bottom-Right Non-Intrusive Floating Stack) */}
       <div
         id="nec-toast-container"
-        className="fixed top-[calc(env(safe-area-inset-top,0px)+4.5rem)] sm:top-20 right-3 sm:right-6 z-[99999999] flex flex-col gap-3.5 sm:gap-4 w-[calc(100vw-24px)] sm:w-[420px] pointer-events-none print:hidden no-print"
+        className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)] sm:bottom-6 right-3 sm:right-6 z-[99999999] flex flex-col-reverse gap-2.5 sm:gap-3.5 w-[calc(100vw-24px)] sm:w-[390px] pointer-events-none print:hidden no-print"
         aria-live="polite"
         aria-atomic="true"
       >

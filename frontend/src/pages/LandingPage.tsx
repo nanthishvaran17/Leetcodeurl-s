@@ -698,10 +698,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="absolute bottom-0 left-1/3 -mb-20 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-4xl space-y-6">
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-slate-200 text-xs font-semibold backdrop-blur-xl shadow-glass">
-              <span className="tracking-wide">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>
-            </div>
-
           <div className="space-y-3">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.15] font-display">
               LeetCode Performance <br />
@@ -715,14 +711,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2 pt-1 overflow-x-auto no-scrollbar py-0.5 sm:flex-wrap">
+          <div className="grid grid-cols-2 gap-2 pt-1 sm:flex sm:flex-wrap sm:items-center sm:gap-2.5">
             {['Real-time Telemetry', 'Contest Forensics', 'Sunday Automated Audits', 'Faculty Mentor Matrix'].map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold tracking-wide bg-white/[0.04] border border-white/[0.08] text-slate-300 backdrop-blur-sm shadow-2xs hover:border-white/20 transition-colors whitespace-nowrap shrink-0"
+                className="inline-flex items-center justify-start px-2.5 py-1.5 rounded-xl text-[10.5px] sm:text-xs font-semibold tracking-wide bg-white/[0.05] border border-white/[0.08] text-slate-200 backdrop-blur-sm shadow-2xs hover:border-white/20 transition-colors min-w-0"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mr-2 shrink-0" />
-                {tag}
+                <span className="truncate">{tag}</span>
               </span>
             ))}
           </div>

@@ -1056,23 +1056,31 @@ export const FacultyActionCenter: React.FC = () => {
 
       {/* KPI Cards (2026 Bento Matrix / Mobile Horizontal Snap Carousel) */}
       {kpis && (
-        <div className="flex md:grid overflow-x-auto no-scrollbar snap-x snap-mandatory py-1 md:py-0 pb-2 md:pb-0 gap-2.5 sm:gap-3.5 md:grid-cols-4 lg:grid-cols-8 mb-5 sm:mb-6 scroll-smooth">
-          <KPICard label="Critical" value={kpis.critical_count} colorTheme="red"
-            icon={<ShieldAlert size={14} strokeWidth={2.5} />} active={kpiFilter === 'Critical'} onClick={() => applyKPIFilter('Critical', 'priority')} subtitle="Immediate action" />
-          <KPICard label="High" value={kpis.high_count} colorTheme="orange"
-            icon={<AlertTriangle size={14} strokeWidth={2.5} />} active={kpiFilter === 'High'} onClick={() => applyKPIFilter('High', 'priority')} subtitle="Urgent review" />
-          <KPICard label="Monitoring" value={kpis.monitoring_count} colorTheme="amber"
-            icon={<Activity size={14} strokeWidth={2.5} />} active={kpiFilter === 'Monitoring'} onClick={() => applyKPIFilter('Monitoring', 'status')} subtitle="Track progress" />
-          <KPICard label="In Progress" value={kpis.in_progress_count} colorTheme="blue"
-            icon={<Zap size={14} strokeWidth={2.5} />} active={kpiFilter === 'In Progress'} onClick={() => applyKPIFilter('In Progress', 'status')} subtitle="Active intervention" />
-          <KPICard label="Completed" value={kpis.completed_count} colorTheme="cyan"
-            icon={<CheckCircle2 size={14} strokeWidth={2.5} />} active={kpiFilter === 'Completed'} onClick={() => applyKPIFilter('Completed', 'status')} subtitle="Task finished" />
-          <KPICard label="Resolved" value={kpis.resolved_count} colorTheme="emerald"
-            icon={<CheckCircle2 size={14} strokeWidth={2.5} />} active={kpiFilter === 'Resolved'} onClick={() => applyKPIFilter('Resolved', 'status')} subtitle="Issue resolved" />
-          <KPICard label="Overdue" value={kpis.overdue_count} colorTheme="pink"
-            icon={<Bell size={14} strokeWidth={2.5} />} active={kpiFilter === 'Overdue'} onClick={() => applyKPIFilter('Overdue', 'overdue')} subtitle="Follow-up missed" />
-          <KPICard label="Escalated" value={kpis.escalated_count} colorTheme="violet"
-            icon={<ArrowUpRight size={14} strokeWidth={2.5} />} active={kpiFilter === 'Escalated'} onClick={() => applyKPIFilter('Escalated', 'escalated')} subtitle="Escalated to HOD" />
+        <div className="space-y-1.5 mb-5 sm:mb-6">
+          <div className="flex md:hidden items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 px-1 select-none">
+            <span className="uppercase tracking-wider font-extrabold text-[10px] text-slate-700 dark:text-slate-300">Action Metric KPIs</span>
+            <span className="flex items-center gap-1 text-[10.5px] text-indigo-600 dark:text-indigo-400 font-extrabold">
+              Swipe across 8 metrics &rarr;
+            </span>
+          </div>
+          <div className="flex md:grid overflow-x-auto no-scrollbar snap-x snap-mandatory py-1 md:py-0 pb-2 md:pb-0 gap-2.5 sm:gap-3.5 md:grid-cols-4 lg:grid-cols-8 scroll-smooth pr-4 md:pr-0">
+            <KPICard label="Critical" value={kpis.critical_count} colorTheme="red"
+              icon={<ShieldAlert size={14} strokeWidth={2.5} />} active={kpiFilter === 'Critical'} onClick={() => applyKPIFilter('Critical', 'priority')} subtitle="Immediate action" />
+            <KPICard label="High" value={kpis.high_count} colorTheme="orange"
+              icon={<AlertTriangle size={14} strokeWidth={2.5} />} active={kpiFilter === 'High'} onClick={() => applyKPIFilter('High', 'priority')} subtitle="Urgent review" />
+            <KPICard label="Monitoring" value={kpis.monitoring_count} colorTheme="amber"
+              icon={<Activity size={14} strokeWidth={2.5} />} active={kpiFilter === 'Monitoring'} onClick={() => applyKPIFilter('Monitoring', 'status')} subtitle="Track progress" />
+            <KPICard label="In Progress" value={kpis.in_progress_count} colorTheme="blue"
+              icon={<Zap size={14} strokeWidth={2.5} />} active={kpiFilter === 'In Progress'} onClick={() => applyKPIFilter('In Progress', 'status')} subtitle="Active intervention" />
+            <KPICard label="Completed" value={kpis.completed_count} colorTheme="cyan"
+              icon={<CheckCircle2 size={14} strokeWidth={2.5} />} active={kpiFilter === 'Completed'} onClick={() => applyKPIFilter('Completed', 'status')} subtitle="Task finished" />
+            <KPICard label="Resolved" value={kpis.resolved_count} colorTheme="emerald"
+              icon={<CheckCircle2 size={14} strokeWidth={2.5} />} active={kpiFilter === 'Resolved'} onClick={() => applyKPIFilter('Resolved', 'status')} subtitle="Issue resolved" />
+            <KPICard label="Overdue" value={kpis.overdue_count} colorTheme="pink"
+              icon={<Bell size={14} strokeWidth={2.5} />} active={kpiFilter === 'Overdue'} onClick={() => applyKPIFilter('Overdue', 'overdue')} subtitle="Follow-up missed" />
+            <KPICard label="Escalated" value={kpis.escalated_count} colorTheme="violet"
+              icon={<ArrowUpRight size={14} strokeWidth={2.5} />} active={kpiFilter === 'Escalated'} onClick={() => applyKPIFilter('Escalated', 'escalated')} subtitle="Escalated to HOD" />
+          </div>
         </div>
       )}
 

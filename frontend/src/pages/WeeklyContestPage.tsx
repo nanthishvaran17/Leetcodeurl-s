@@ -2754,7 +2754,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {activeTab === 'matrix' && (
         <>
           {/* 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR */}
-          <div className="mt-2 sm:mt-4 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800/90 shadow-xl space-y-3 sm:space-y-5 no-print mb-8 sm:mb-12">
+          <div className={`relative ${showExportMenu ? 'z-40' : 'z-20'} mt-2 sm:mt-4 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800/90 shadow-xl space-y-3 sm:space-y-5 no-print mb-8 sm:mb-12`}>
         {/* Row 1: Consolidated Action Toolbar & Mobile Filter Toggle */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           {/* Mobile Filter Scope Bar */}
@@ -2783,10 +2783,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
 
           {/* Consolidated Action Toolbar */}
-          <div className="w-full sm:w-auto grid grid-cols-1 sm:flex sm:flex-row items-stretch sm:items-center gap-2 ml-auto">
+          <div className="w-full sm:w-auto grid grid-cols-1 sm:flex sm:flex-row items-stretch sm:items-center gap-2 ml-auto relative z-30">
             
             {/* Unified Actions & Export Dropdown */}
-            <div className="relative w-full sm:w-auto" ref={exportMenuRef}>
+            <div className="relative w-full sm:w-auto z-40" ref={exportMenuRef}>
               <button
                 type="button"
                 onClick={() => setShowExportMenu(!showExportMenu)}
@@ -3015,7 +3015,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -8, scale: 0.97 }}
                           transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                          className="absolute top-[calc(100%+8px)] right-0 w-[380px] z-[9999] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] p-3.5 space-y-2 focus:outline-none select-none origin-top-right"
+                          className="absolute top-[calc(100%+8px)] right-0 w-[380px] max-w-[calc(100vw-32px)] max-h-[calc(100vh-140px)] overflow-y-auto custom-scrollbar z-[9999] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)] p-3.5 space-y-2 focus:outline-none select-none origin-top-right"
                         >
                           {exportMenuContent}
                         </motion.div>
@@ -3480,8 +3480,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           >
             <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
             <div className="flex items-center justify-between w-full">
-              <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider flex items-center">
                 Public
               </span>
               <div className="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">

@@ -399,7 +399,7 @@ def get_student_intelligence(
     # 4. Contest Standing & History
     contest = db.query(LeetCodeContest).filter(LeetCodeContest.student_id == student.id).first()
     c_rating = (getattr(p_stats, "contest_rating", None) if p_stats and getattr(p_stats, "contest_rating", None) is not None and float(getattr(p_stats, "contest_rating", 0) or 0) > 0 else (contest.contest_rating if contest and contest.contest_rating is not None else getattr(student, "contest_rating", None)))
-    c_rank = (getattr(p_stats, "contest_global_ranking", None) if p_stats and getattr(p_stats, "contest_global_ranking", None) is not None and int(getattr(p_stats, "contest_global_ranking", 0) or 0) > 0 else (contest.contest_global_ranking if contest and contest.contest_global_ranking is not None and int(contest.contest_global_ranking or 0) > 0 else None))
+    c_rank = (getattr(p_stats, "contest_global_ranking", None) if p_stats and getattr(p_stats, "contest_global_ranking", None) is not None and int(getattr(p_stats, "contest_global_ranking", 0) or 0) > 0 else (contest.contest_global_ranking if contest and contest.contest_global_ranking is not None and int(getattr(contest, "contest_global_ranking", 0) or 0) > 0 else None))  # type: ignore
     c_attended = (getattr(p_stats, "attended_contests_count", None) if p_stats and getattr(p_stats, "attended_contests_count", None) is not None else (contest.attended_count if contest and contest.attended_count is not None else getattr(student, "contests_attended", None)))
     c_top_pct = contest.top_percentage if contest and contest.top_percentage is not None else None
 
@@ -1102,8 +1102,8 @@ def search_candidates(
             else getattr(st, "contest_rating", 0.0))
         ) or 0.0
         c_rank = (
-            (stats.contest_global_ranking if stats and stats.contest_global_ranking and int(stats.contest_global_ranking) > 0 else None)
-            or (contest.contest_global_ranking if contest and contest.contest_global_ranking and int(contest.contest_global_ranking) > 0 else None)
+            (stats.contest_global_ranking if stats and stats.contest_global_ranking and int(getattr(stats, "contest_global_ranking", 0) or 0) > 0 else None)  # type: ignore
+            or (contest.contest_global_ranking if contest and contest.contest_global_ranking and int(getattr(contest, "contest_global_ranking", 0) or 0) > 0 else None)  # type: ignore
         )
         c_attended = contest.attended_count if contest and contest.attended_count is not None else (getattr(stats, "attended_contests_count", None) if stats else getattr(st, "contests_attended", None))
         c_top_pct = contest.top_percentage if contest and contest.top_percentage is not None else None

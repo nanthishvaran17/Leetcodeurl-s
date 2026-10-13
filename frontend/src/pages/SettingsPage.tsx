@@ -967,7 +967,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
 
         {/* SECTION: STUDENT ALLOCATION */}
         {activeSectionFilter === 'allocation' && (
-          <div className="p-0 sm:p-5 rounded-2xl border-0 sm:border border-slate-200 dark:border-navy-700 animate-fade-in">
+          <div className="w-full animate-fade-in">
             <AdminStaffAllocationPanel />
           </div>
         )}

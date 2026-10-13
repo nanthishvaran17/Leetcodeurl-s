@@ -571,7 +571,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-12">
+    <div className="w-full space-y-6 sm:space-y-8 pb-12">
 
 
       {/* 1. STAFF WORKLOAD MATRIX PANEL */}
@@ -606,8 +606,8 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                 spellCheck={false}
                 value={staffSearchQuery}
                 onChange={(e) => setStaffSearchQuery(e.target.value)}
-                placeholder="Search staff by name, email or department..."
-                className="w-full pl-2.5 pr-20 py-2.5 bg-transparent border-0 outline-none focus:outline-none focus:ring-0 text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-navy-400"
+                placeholder="Search staff by name, email, department..."
+                className="w-full pl-2.5 pr-10 sm:pr-20 py-2.5 bg-transparent border-0 outline-none focus:outline-none focus:ring-0 text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-navy-400"
               />
               <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center gap-1.5 z-10">
                 {staffSearchQuery && (
@@ -626,11 +626,11 @@ export const AdminStaffAllocationPanel: React.FC = () => {
               </div>
             </div>
 
-            {/* Filter Controls Row: Aligned in ONE unified row side-by-side */}
-            <div className="flex items-center gap-2 shrink-0 flex-nowrap w-full md:w-auto">
+            {/* Filter Controls Row: 2-Col Grid on Mobile, Side-by-side on Desktop */}
+            <div className="grid grid-cols-2 md:flex items-center gap-2 shrink-0 w-full md:w-auto">
               
               {/* Premium Custom Capacity Cap Dropdown (Portal-Backed) */}
-              <div className="flex-1 md:flex-none shrink-0 min-w-0">
+              <div className="col-span-1 md:flex-none shrink-0 min-w-0">
                 <CustomDropdown
                   id="staff-capacity-cap-select"
                   label=""
@@ -645,12 +645,12 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                     { value: '60', label: '60 Students Cap', badge: '60 CAP', badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20' },
                     { value: '100', label: '100 Students Cap', badge: '100 CAP', badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' }
                   ]}
-                  triggerClassName="w-full md:w-auto px-3.5 py-2.5 rounded-2xl border bg-white dark:bg-navy-950 border-slate-200/90 dark:border-navy-600 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-xs hover:border-sky-500 whitespace-nowrap"
+                  triggerClassName="w-full md:w-auto px-3 sm:px-3.5 py-2.5 rounded-2xl border bg-white dark:bg-navy-950 border-slate-200/90 dark:border-navy-600 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-xs hover:border-sky-500 whitespace-nowrap"
                 />
               </div>
 
               {/* Premium Custom Workload Status Filter Dropdown (Portal-Backed) */}
-              <div className="flex-1 md:flex-none shrink-0 min-w-0">
+              <div className="col-span-1 md:flex-none shrink-0 min-w-0">
                 <CustomDropdown
                   id="staff-workload-status-filter"
                   label=""
@@ -665,24 +665,26 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                     { value: 'EMPTY', label: `Unallocated (0/${capacityCap >= 9999 ? '∞' : capacityCap})`, badge: 'EMPTY', badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20' },
                     { value: 'DISABLED', label: 'Disabled Accounts', badge: 'DISABLED', badgeColor: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20' }
                   ]}
-                  triggerClassName="w-full md:w-auto px-3.5 py-2.5 rounded-2xl border bg-white dark:bg-navy-950 border-slate-200/90 dark:border-navy-600 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-xs hover:border-sky-500 whitespace-nowrap"
+                  triggerClassName="w-full md:w-auto px-3 sm:px-3.5 py-2.5 rounded-2xl border bg-white dark:bg-navy-950 border-slate-200/90 dark:border-navy-600 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-xs hover:border-sky-500 whitespace-nowrap"
                 />
               </div>
 
               {/* Clear All Filters Button if active */}
               {(staffSearchQuery.trim() !== '' || staffWorkloadFilter !== 'ALL') && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStaffSearchQuery('');
-                    setStaffWorkloadFilter('ALL');
-                  }}
-                  className="px-3 py-2.5 rounded-2xl bg-slate-200 dark:bg-navy-800 hover:bg-rose-100 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
-                  title="Reset Search and Filters"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  <span>Reset</span>
-                </button>
+                <div className="col-span-2 md:col-span-1 flex justify-end md:block">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStaffSearchQuery('');
+                      setStaffWorkloadFilter('ALL');
+                    }}
+                    className="w-full md:w-auto justify-center px-3 py-2.5 rounded-2xl bg-slate-200 dark:bg-navy-800 hover:bg-rose-100 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
+                    title="Reset Search and Filters"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Reset</span>
+                  </button>
+                </div>
               )}
 
             </div>
@@ -707,7 +709,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
         </div>
 
         {/* Staff Workload Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-5">
           {loading ? (
             <p className="text-xs text-slate-500 animate-pulse">Loading staff workload...</p>
           ) : filteredStaffList.length === 0 ? (
@@ -723,7 +725,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
               return (
                 <div
                   key={st.id}
-                  className="group relative rounded-3xl p-5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-500/60 dark:hover:border-indigo-500/60 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 space-y-4 overflow-hidden flex flex-col justify-between"
+                  className="group relative rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-500/60 dark:hover:border-indigo-500/60 shadow-md hover:shadow-xl transition-all duration-300 space-y-3 sm:space-y-4 overflow-hidden flex flex-col justify-between"
                 >
                   {/* Linear Glowing Top Accent Line */}
                   <div className={`absolute top-0 left-0 right-0 h-1 transition-all duration-500 ${!st.is_active 
@@ -736,30 +738,30 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                     }`} />
 
                   {/* Ambient corner light */}
-                  <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl pointer-events-none opacity-20 group-hover:opacity-60 group-hover:scale-150 transition-all duration-500 ${
+                  <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl pointer-events-none opacity-20 group-hover:opacity-60 transition-all duration-500 ${
                     isFull ? 'bg-rose-500' : count >= 20 ? 'bg-amber-500' : 'bg-indigo-500'
                   }`} />
 
-                  <div className="flex flex-col flex-1 justify-between space-y-3.5 relative z-1">
+                  <div className="flex flex-col flex-1 justify-between space-y-2.5 sm:space-y-3.5 relative z-1">
                     {/* Header: Avatar + Staff Info + Status Pill */}
-                    <div className="flex items-start justify-between gap-3 w-full min-w-0 pt-1">
-                      <div className="flex items-center space-x-3 min-w-0 flex-1">
-                        <div className={`relative w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black text-white shadow-lg shadow-indigo-500/10 border border-white/20 shrink-0 ${!st.is_active ? 'bg-slate-400'
+                    <div className="flex items-start justify-between gap-2.5 sm:gap-3 w-full min-w-0 pt-0.5">
+                      <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0 flex-1">
+                        <div className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center text-xs sm:text-sm font-black text-white shadow-md border border-white/20 shrink-0 ${!st.is_active ? 'bg-slate-400'
                           : isFull ? 'bg-gradient-to-tr from-rose-600 to-orange-500'
                             : count >= 20 ? 'bg-gradient-to-tr from-amber-500 to-orange-500'
                               : 'bg-gradient-to-tr from-indigo-600 via-blue-600 to-violet-600'
                           }`}>
                           {st.username?.charAt(0)?.toUpperCase() || '?'}
                           {st.is_active && (
-                            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 bg-emerald-500 shadow-2xs" />
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border-2 border-white dark:border-slate-900 bg-emerald-500 shadow-2xs" />
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-black text-base text-slate-900 dark:text-white leading-tight truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" title={st.username}>
+                          <h4 className="font-black text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" title={st.username}>
                             {st.username}
                           </h4>
-                          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate" title={st.email}>
-                            <Mail className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                          <div className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate" title={st.email}>
+                            <Mail className="w-3 h-3 text-indigo-500 shrink-0" />
                             <span className="truncate">{st.email || 'No email'}</span>
                           </div>
                         </div>
@@ -767,7 +769,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
                       {/* Status Badge */}
                       <div className="shrink-0">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap shadow-2xs ${!st.is_active
+                        <span className={`inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider whitespace-nowrap shadow-2xs ${!st.is_active
                           ? 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
                           : isFull
                             ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
@@ -775,7 +777,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                               ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
                               : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                           }`}>
-                          <span className={`w-2 h-2 rounded-full ${!st.is_active ? 'bg-slate-400' : isFull ? 'bg-rose-500' : count >= 20 ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
+                          <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${!st.is_active ? 'bg-slate-400' : isFull ? 'bg-rose-500' : count >= 20 ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
                           {!st.is_active ? 'DISABLED' : isFull ? 'FULL' : 'AVAILABLE'}
                         </span>
                       </div>
@@ -784,18 +786,18 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                     {/* Department Tag & Quick Action Buttons */}
                     <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
                       <div className="min-w-0 flex-1">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 text-[10px] font-black border border-slate-200/60 dark:border-slate-700/60 uppercase tracking-wider truncate max-w-full">
-                          <Building2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                        <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 text-[9px] sm:text-[10px] font-black border border-slate-200/60 dark:border-slate-700/60 uppercase tracking-wider truncate max-w-full">
+                          <Building2 className="w-3 h-3 text-indigo-500 shrink-0" />
                           <span className="truncate">{st.department || 'GENERAL'}</span>
                         </span>
                       </div>
 
                       {/* Action buttons toolbar */}
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                         <button
                           type="button"
                           onClick={() => handleOpenStaffRoster(st)}
-                          className="p-2 rounded-xl bg-indigo-50/80 hover:bg-indigo-600 text-indigo-600 hover:text-white dark:bg-indigo-950/50 dark:hover:bg-indigo-600 dark:text-indigo-300 dark:hover:text-white border border-indigo-200/60 dark:border-indigo-800/60 transition-all active:scale-95 cursor-pointer shadow-2xs"
+                          className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-indigo-50/80 hover:bg-indigo-600 text-indigo-600 hover:text-white dark:bg-indigo-950/50 dark:hover:bg-indigo-600 dark:text-indigo-300 dark:hover:text-white border border-indigo-200/60 dark:border-indigo-800/60 transition-all active:scale-95 cursor-pointer shadow-2xs"
                           title="View Student Roster"
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -803,7 +805,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => triggerToggleStatusModal(st)}
-                          className={`p-2 rounded-xl border transition-all active:scale-95 cursor-pointer shadow-2xs ${st.is_active
+                          className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl border transition-all active:scale-95 cursor-pointer shadow-2xs ${st.is_active
                             ? 'bg-slate-100 dark:bg-slate-800 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700/80'
                             : 'bg-emerald-50/80 hover:bg-emerald-600 text-emerald-700 hover:text-white dark:bg-emerald-950/50 dark:hover:bg-emerald-600 dark:text-emerald-300 dark:hover:text-white border-emerald-200/60 dark:border-emerald-800/60'
                             }`}
@@ -814,7 +816,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => triggerDeleteStaffModal(st)}
-                          className="p-2 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-600 hover:text-white border border-rose-200/60 dark:border-rose-800/60 transition-all active:scale-95 cursor-pointer shadow-2xs"
+                          className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-600 hover:text-white border border-rose-200/60 dark:border-rose-800/60 transition-all active:scale-95 cursor-pointer shadow-2xs"
                           title="Delete Staff Account"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -823,15 +825,15 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                     </div>
 
                     {/* Allocation Progress Inset Card */}
-                    <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 space-y-2">
+                    <div className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 space-y-1.5 sm:space-y-2">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-500 dark:text-slate-400 font-bold text-[11px] uppercase tracking-wider flex items-center gap-1">
-                          <Activity className="w-3.5 h-3.5 text-sky-500" />
-                          Assigned Mentees
+                        <span className="text-slate-500 dark:text-slate-400 font-bold text-[10px] sm:text-[11px] uppercase tracking-wider flex items-center gap-1">
+                          <Activity className="w-3 h-3 text-sky-500" />
+                          Mentee Capacity
                         </span>
                         <div className="flex items-center gap-1.5">
                           <span className="font-mono font-bold text-xs text-slate-900 dark:text-white">
-                            {count} {count === 1 ? 'Mentee' : 'Mentees'}
+                            {count} / {capacityCap >= 9999 ? '∞' : capacityCap} <span className="text-[10px] text-slate-400 font-normal">({percent}%)</span>
                           </span>
                         </div>
                       </div>
@@ -850,14 +852,14 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                             />
                           </div>
 
-                          <div className="flex items-center justify-between text-[11px] pt-0.5">
+                          <div className="flex items-center justify-between text-[10px] sm:text-[11px] pt-0.5">
                             <span className={`font-mono font-bold ${isFull ? 'text-rose-500' : availableSlots <= 5 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
                               {isFull ? 'Capacity Reached' : `${availableSlots} slots available`}
                             </span>
                           </div>
                         </>
                       ) : (
-                        <div className="flex items-center justify-between text-[11px] pt-0.5">
+                        <div className="flex items-center justify-between text-[10px] sm:text-[11px] pt-0.5">
                           <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
                             {count > 0 ? `${count} Active ${count === 1 ? 'Mentee' : 'Mentees'}` : 'Ready for Assignment'}
                           </span>
@@ -942,25 +944,25 @@ export const AdminStaffAllocationPanel: React.FC = () => {
             </div>
 
             {/* Filters */}
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-800/60 border border-slate-200 dark:border-navy-700 flex flex-col md:flex-row items-end gap-3">
-              <div className="w-full md:flex-1 min-w-[200px] space-y-1.5">
-                <label className="block text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider h-4 leading-4">
+            <div className="p-3 sm:p-4 rounded-2xl bg-slate-50 dark:bg-navy-800/60 border border-slate-200 dark:border-navy-700 flex flex-col md:flex-row items-stretch md:items-end gap-2.5 sm:gap-3">
+              <div className="w-full md:flex-1 min-w-[200px] space-y-1">
+                <label className="block text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider h-4 leading-4">
                   Search Query
                 </label>
-                <div className="relative flex items-center rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/90 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-500/20 h-11 transition-all group">
-                  <Search className="w-4 h-4 text-slate-400 dark:text-navy-400 group-focus-within:text-sky-500 ml-3.5 transition-colors shrink-0" />
+                <div className="relative flex items-center rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/90 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-500/20 h-10 sm:h-11 transition-all group">
+                  <Search className="w-4 h-4 text-slate-400 dark:text-navy-400 group-focus-within:text-sky-500 ml-3 transition-colors shrink-0" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search reg no, name, username..."
-                    className="w-full pl-2.5 pr-9 h-full bg-transparent border-0 outline-none focus:outline-none focus:ring-0 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-navy-400"
+                    className="w-full pl-2.5 pr-8 h-full bg-transparent border-0 outline-none focus:outline-none focus:ring-0 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-navy-400"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -968,54 +970,60 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                 </div>
               </div>
 
-              <div className="w-full md:w-[200px]">
-                <CustomDropdown label="Department Filter" options={deptOptions} value={String(selectedDept)} onChange={setSelectedDept} icon={Building2} />
-              </div>
+              {/* Department & Academic Year: 2-column grid on mobile */}
+              <div className="grid grid-cols-2 md:flex items-end gap-2 w-full md:w-auto">
+                <div className="w-full md:w-[190px]">
+                  <CustomDropdown label="Department" options={deptOptions} value={String(selectedDept)} onChange={setSelectedDept} icon={Building2} />
+                </div>
 
-              <div className="w-full md:w-[170px]">
-                <CustomDropdown label="Academic Year" options={yearOptions} value={selectedYear} onChange={setSelectedYear} icon={Filter} />
+                <div className="w-full md:w-[160px]">
+                  <CustomDropdown label="Academic Year" options={yearOptions} value={selectedYear} onChange={setSelectedYear} icon={Filter} />
+                </div>
               </div>
 
               {isFilterActive && (
-                <div className="space-y-1.5 shrink-0">
-                  <div className="h-4"></div>
-                  <button onClick={clearFilters} className="h-11 px-3 rounded-2xl bg-slate-200 dark:bg-navy-700 hover:bg-slate-300 text-slate-600 dark:text-slate-300 transition-all cursor-pointer flex items-center justify-center" title="Clear filters">
+                <div className="space-y-1 shrink-0 self-end">
+                  <div className="hidden md:block h-4"></div>
+                  <button onClick={clearFilters} className="h-10 sm:h-11 px-3 rounded-2xl bg-slate-200 dark:bg-navy-700 hover:bg-slate-300 text-slate-600 dark:text-slate-300 transition-all cursor-pointer flex items-center justify-center gap-1 text-xs font-bold" title="Clear filters">
                     <X className="w-4 h-4" />
+                    <span className="md:hidden">Reset</span>
                   </button>
                 </div>
               )}
 
-              {/* Assign controls */}
-              <div className="w-full md:w-[250px]">
-                <CustomDropdown label="Assign To Staff" options={staffOptions} value={targetStaffId ? String(targetStaffId) : ''} onChange={(val) => setTargetStaffId(val ? Number(val) : '')} icon={UserPlus} align="right" hideTriggerBadge={true} placeholder="[ Select Mentor ]" />
-              </div>
+              {/* Assign Controls: Mentor picker + Assign button */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:flex items-end gap-2 w-full md:w-auto pt-1 md:pt-0 border-t md:border-t-0 border-slate-200/80 dark:border-navy-700">
+                <div className="w-full md:w-[230px]">
+                  <CustomDropdown label="Assign To Staff" options={staffOptions} value={targetStaffId ? String(targetStaffId) : ''} onChange={(val) => setTargetStaffId(val ? Number(val) : '')} icon={UserPlus} align="right" hideTriggerBadge={true} placeholder="[ Select Mentor ]" />
+                </div>
 
-              <div className="w-full md:w-auto space-y-1.5 shrink-0">
-                <div className="hidden md:block h-4"></div>
-                <button
-                  onClick={handleBulkAssign}
-                  disabled={submitting || selectedStudents.length === 0 || !targetStaffId}
-                  className="w-full md:w-auto px-6 h-11 rounded-2xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-sky-600/25 border border-sky-400/30 transition-all cursor-pointer whitespace-nowrap active:scale-95"
-                >
-                  <span>Assign ({selectedStudents.length})</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                <div className="w-full md:w-auto space-y-1 shrink-0">
+                  <div className="hidden md:block h-4"></div>
+                  <button
+                    onClick={handleBulkAssign}
+                    disabled={submitting || selectedStudents.length === 0 || !targetStaffId}
+                    className="w-full md:w-auto px-5 h-10 sm:h-11 rounded-2xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-sky-600/25 border border-sky-400/30 transition-all cursor-pointer whitespace-nowrap active:scale-95"
+                  >
+                    <span>Assign ({selectedStudents.length})</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Quick Range & Batch Selection Control Bar */}
-            <div className="p-3 sm:p-4 rounded-3xl bg-white/70 dark:bg-navy-900/60 border border-slate-200/50 dark:border-navy-700/50 shadow-xl backdrop-blur-xl flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 transition-all hover:border-brand-500/30">
+            <div className="p-3 sm:p-4 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-navy-900/60 border border-slate-200/50 dark:border-navy-700/50 shadow-md sm:shadow-xl backdrop-blur-xl flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 sm:gap-4">
               
-              {/* Left: Quick Preset Count Buttons */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-indigo-600 shadow-md shadow-brand-500/20 shrink-0 mr-1">
-                  <Sliders className="w-4 h-4 text-white" />
+              {/* Left: Quick Preset Count Buttons (Swipeable Horizontal Scroll on Mobile) */}
+              <div className="flex items-center gap-2 w-full xl:w-auto overflow-hidden">
+                <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-brand-500 to-indigo-600 shadow-md shadow-brand-500/20 shrink-0">
+                  <Sliders className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-navy-300 mr-1">
-                  Quick Select
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-navy-300 shrink-0 mr-0.5">
+                  Quick:
                 </span>
 
-                <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100/80 dark:bg-navy-950/80 rounded-2xl border border-slate-200/60 dark:border-navy-800/60 backdrop-blur-md">
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1 bg-slate-100/80 dark:bg-navy-950/80 rounded-2xl border border-slate-200/60 dark:border-navy-800/60 select-none flex-1 min-w-0">
                   {[10, 20, 30, 45, 50].map((num) => {
                     const isSelected = selectedStudents.length === Math.min(num, filteredUnassigned.length) && selectedStudents.length > 0;
                     return (
@@ -1024,10 +1032,10 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                         type="button"
                         onClick={() => selectFirstN(num)}
                         disabled={filteredUnassigned.length === 0}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                        className={`px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 active:scale-95 ${
                           isSelected
-                            ? 'bg-gradient-to-r from-brand-500 to-indigo-600 text-white shadow-md shadow-brand-500/30 scale-105 border-0'
-                            : 'bg-transparent text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-navy-800 hover:shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-navy-700'
+                            ? 'bg-gradient-to-r from-brand-500 to-indigo-600 text-white shadow-md shadow-brand-500/30'
+                            : 'bg-transparent text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-navy-800'
                         }`}
                       >
                         1 to {Math.min(num, filteredUnassigned.length || num)}
@@ -1035,16 +1043,16 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                     );
                   })}
                   
-                  <div className="w-px h-5 bg-slate-300 dark:bg-navy-700 mx-1"></div>
+                  <div className="w-px h-4 bg-slate-300 dark:bg-navy-700 shrink-0 mx-0.5"></div>
 
                   <button
                     type="button"
                     onClick={toggleSelectAll}
                     disabled={filteredUnassigned.length === 0}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                    className={`px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 active:scale-95 ${
                       selectedStudents.length === filteredUnassigned.length && filteredUnassigned.length > 0
-                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/30 scale-105 border-0'
-                        : 'bg-transparent text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-navy-800 hover:shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-navy-700'
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/30'
+                        : 'bg-transparent text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-navy-800'
                     }`}
                   >
                     All ({filteredUnassigned.length})
@@ -1055,22 +1063,20 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setSelectedStudents([])}
-                    className="ml-1 px-3 py-1.5 rounded-xl text-xs font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/30 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                    className="shrink-0 px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 border border-rose-200 dark:border-rose-500/30 transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
                   >
-                    <X className="w-3.5 h-3.5 stroke-[3]" />
+                    <X className="w-3 h-3 stroke-[3]" />
                     <span>Clear</span>
                   </button>
                 )}
               </div>
 
-              {/* Right: Custom Range Inputs (From # to #) */}
-              <div className="flex items-center gap-3 self-start xl:self-auto flex-wrap sm:flex-nowrap">
-                <div className="flex items-center p-1.5 bg-slate-100/80 dark:bg-navy-950/80 rounded-2xl border border-slate-200/60 dark:border-navy-800/60 backdrop-blur-md shadow-inner">
-                  <div className="flex items-center px-2">
-                    <span className="font-black text-slate-500 dark:text-navy-400 text-[10px] uppercase tracking-wider">Range</span>
-                  </div>
+              {/* Right: Custom Range Inputs */}
+              <div className="flex items-center justify-between sm:justify-start gap-2 pt-1 xl:pt-0 border-t xl:border-t-0 border-slate-100 dark:border-navy-800">
+                <div className="flex items-center p-1 bg-slate-100/80 dark:bg-navy-950/80 rounded-xl sm:rounded-2xl border border-slate-200/60 dark:border-navy-800/60">
+                  <span className="font-black text-slate-500 dark:text-navy-400 text-[10px] uppercase tracking-wider px-1.5">Range</span>
                   <div className="flex items-center gap-1">
-                    <span className="text-[11px] font-mono font-bold text-slate-400 ml-1">#</span>
+                    <span className="text-[10px] font-mono text-slate-400">#</span>
                     <input
                       type="number"
                       min={1}
@@ -1078,10 +1084,10 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                       value={rangeFrom}
                       onChange={(e) => setRangeFrom(e.target.value)}
                       placeholder="1"
-                      className="w-12 h-8 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-xl text-center font-black text-xs text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-brand-500/50 shadow-sm transition-all"
+                      className="w-10 sm:w-12 h-7 sm:h-8 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-lg text-center font-black text-xs text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-500"
                     />
-                    <span className="font-black text-slate-400 dark:text-navy-500 text-[10px] uppercase px-1">to</span>
-                    <span className="text-[11px] font-mono font-bold text-slate-400">#</span>
+                    <span className="text-[10px] text-slate-400 px-0.5">to</span>
+                    <span className="text-[10px] font-mono text-slate-400">#</span>
                     <input
                       type="number"
                       min={1}
@@ -1089,23 +1095,23 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                       value={rangeTo}
                       onChange={(e) => setRangeTo(e.target.value)}
                       placeholder="20"
-                      className="w-12 h-8 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-xl text-center font-black text-xs text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-brand-500/50 shadow-sm transition-all"
+                      className="w-10 sm:w-12 h-7 sm:h-8 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-lg text-center font-black text-xs text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-500"
                     />
                     <button
                       type="button"
                       onClick={() => selectRange(rangeFrom, rangeTo)}
-                      className="ml-1.5 px-3 h-8 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/25 flex items-center gap-1.5 cursor-pointer active:scale-95"
+                      className="ml-1 px-2.5 h-7 sm:h-8 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-black text-xs transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-xs"
                     >
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      <Check className="w-3 h-3 stroke-[3]" />
                       <span>Apply</span>
                     </button>
                   </div>
                 </div>
 
                 {selectedStudents.length > 0 && (
-                  <div className="flex items-center px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 shadow-sm">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-2"></div>
-                    <span className="text-[11px] font-black uppercase tracking-wider">
+                  <div className="flex items-center px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1.5"></span>
+                    <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider">
                       {selectedStudents.length} Selected
                     </span>
                   </div>
@@ -1113,10 +1119,77 @@ export const AdminStaffAllocationPanel: React.FC = () => {
               </div>
             </div>
 
-            {/* Table */}
-            <div className="overflow-hidden md:overflow-x-auto rounded-2xl border-0 md:border border-slate-200 dark:border-navy-700 bg-transparent md:bg-transparent w-full max-w-full box-border">
-              <table className="w-full table-fixed md:table-auto text-left text-xs mobile-card-table box-border">
-                <thead className="hidden md:table-header-group">
+            {/* MOBILE VIEW: Dedicated Native Card List */}
+            <div className="space-y-2 md:hidden">
+              {loading ? (
+                <div className="p-6 text-center text-xs text-slate-500 animate-pulse">Loading unassigned students...</div>
+              ) : filteredUnassigned.length === 0 ? (
+                <div className="p-6 text-center rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-2">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
+                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">All students are currently assigned to primary mentors!</p>
+                </div>
+              ) : (
+                filteredUnassigned.map((st: any, index: number) => {
+                  const isSelected = selectedStudents.includes(st.id);
+                  return (
+                    <div
+                      key={st.id}
+                      onClick={(e) => handleStudentRowClick(st.id, index, e)}
+                      className={`p-3 rounded-2xl border transition-all duration-200 cursor-pointer select-none active:scale-[0.99] ${
+                        isSelected
+                          ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-400 dark:border-sky-600 shadow-sm ring-1 ring-sky-500/30'
+                          : 'bg-white dark:bg-navy-950 border-slate-200 dark:border-navy-800 hover:border-slate-300 dark:hover:border-navy-700 shadow-xs'
+                      }`}
+                    >
+                      {/* Row 1: Index + Custom Checkbox + Name + Solved Badge */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span className="font-mono text-[10px] font-black text-slate-400 dark:text-navy-400 bg-slate-100 dark:bg-navy-900 px-1.5 py-0.5 rounded-md shrink-0">
+                            #{index + 1}
+                          </span>
+                          <div className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                            isSelected
+                              ? 'bg-sky-600 border-sky-600 text-white'
+                              : 'border-slate-300 dark:border-navy-600 bg-white dark:bg-navy-900'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                          </div>
+                          <span className="font-black text-xs text-slate-900 dark:text-white truncate">
+                            {st.name}
+                          </span>
+                        </div>
+                        <span className="shrink-0 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono font-black text-[10px] border border-emerald-500/20 whitespace-nowrap">
+                          {st.total_solved || 0} Solved
+                        </span>
+                      </div>
+
+                      {/* Row 2: Reg No + Dept + Yr + LeetCode Username */}
+                      <div className="flex items-center gap-1.5 flex-wrap pt-1.5 mt-1 border-t border-slate-100 dark:border-navy-800/80 text-[10px]">
+                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-navy-900 px-1.5 py-0.5 rounded-md border border-slate-200 dark:border-navy-700">
+                          {st.reg_no}
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded-md bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-bold border border-sky-200 dark:border-sky-800/60">
+                          {st.department || 'INSTITUTIONAL'}
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-200 dark:border-navy-700">
+                          Yr {st.year_level || '—'}
+                        </span>
+                        {st.username && (
+                          <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono font-bold border border-indigo-200 dark:border-indigo-800/60 truncate max-w-[140px]">
+                            @{st.username}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* DESKTOP VIEW: Full Data Table */}
+            <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-700 bg-transparent w-full">
+              <table className="w-full text-left text-xs">
+                <thead>
                   <tr className="bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-navy-300 font-bold border-b border-slate-200 dark:border-navy-700">
                     <th className="p-3 text-center w-12">
                       <input type="checkbox" checked={selectedStudents.length === filteredUnassigned.length && filteredUnassigned.length > 0} onChange={toggleSelectAll} className="rounded border-slate-300 text-sky-600 cursor-pointer" />
@@ -1130,11 +1203,11 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                     <th className="p-3 text-right">Total Solved</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-navy-800 block md:table-row-group">
+                <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
                   {loading ? (
-                    <tr className="block md:table-row"><td colSpan={8} className="p-6 text-center text-slate-500 animate-pulse block md:table-cell">Loading unassigned students...</td></tr>
+                    <tr><td colSpan={8} className="p-6 text-center text-slate-500 animate-pulse">Loading unassigned students...</td></tr>
                   ) : filteredUnassigned.length === 0 ? (
-                    <tr className="block md:table-row"><td colSpan={8} className="p-8 text-center block md:table-cell">
+                    <tr><td colSpan={8} className="p-8 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                         <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">All students are currently assigned to primary mentors!</p>
@@ -1144,75 +1217,31 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                     filteredUnassigned.map((st: any, index: number) => {
                       const isSelected = selectedStudents.includes(st.id);
                       return (
-                        <tr key={st.id} onClick={(e) => handleStudentRowClick(st.id, index, e)}
-                          className={`cursor-pointer transition-all duration-200 block md:table-row rounded-2xl md:rounded-none mb-2.5 md:mb-0 overflow-hidden box-border border border-slate-200/80 dark:border-navy-800 md:border-0 shadow-2xs md:shadow-none ${isSelected ? 'bg-sky-50/60 dark:bg-sky-950/40' : 'bg-white md:bg-transparent dark:bg-navy-950 hover:bg-slate-50/80 dark:hover:bg-navy-800/50'}`}
+                        <tr
+                          key={st.id}
+                          onClick={(e) => handleStudentRowClick(st.id, index, e)}
+                          className={`cursor-pointer transition-colors duration-150 ${isSelected ? 'bg-sky-50/70 dark:bg-sky-950/40' : 'hover:bg-slate-50/80 dark:hover:bg-navy-800/50'}`}
                         >
-                          {/* MOBILE COMPACT CARD VIEW */}
-                          <td className="md:hidden p-2.5 sm:p-3 border-0 w-full block overflow-hidden box-border" colSpan={8}>
-                            <div className="flex flex-col space-y-2 w-full max-w-full overflow-hidden box-border">
-                              {/* Row 1: Index + Checkbox + Name + Solved Badge */}
-                              <div className="flex items-center justify-between gap-2 w-full min-w-0">
-                                <div className="flex items-center gap-2 min-w-0 flex-1">
-                                  <span className="font-mono text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-navy-800 px-1.5 py-0.5 rounded">
-                                    #{index + 1}
-                                  </span>
-                                  <input
-                                    type="checkbox"
-                                    checked={isSelected}
-                                    onChange={() => handleStudentRowClick(st.id, index)}
-                                    className="rounded border-slate-300 text-sky-600 cursor-pointer w-4 h-4 shrink-0"
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
-                                  <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
-                                    {st.name}
-                                  </span>
-                                </div>
-                                <span className="shrink-0 px-2 py-0.5 rounded-md bg-emerald-500/10 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-mono font-black text-[10px] sm:text-[11px] border border-emerald-500/20 whitespace-nowrap">
-                                  {st.total_solved || 0} Solved
-                                </span>
-                              </div>
-
-                              {/* Row 2: Reg No + Dept + Yr + LeetCode Username */}
-                              <div className="flex items-center gap-1.5 flex-wrap w-full min-w-0 text-[10px] sm:text-[11px]">
-                                <span className="font-mono font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-navy-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-navy-700 shrink-0">
-                                  {st.reg_no}
-                                </span>
-                                <span className="px-1.5 py-0.5 rounded bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-bold border border-sky-200 dark:border-sky-800/60 shrink-0">
-                                  {st.department || 'INSTITUTIONAL'}
-                                </span>
-                                <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-200 dark:border-navy-700 shrink-0">
-                                  Yr {st.year_level || '—'}
-                                </span>
-                                {st.username && (
-                                  <span className="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono font-bold border border-indigo-200 dark:border-indigo-800/60 break-all shrink-0">
-                                    @{st.username}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* DESKTOP TABLE VIEW */}
-                          <td className="hidden md:table-cell p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                          <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
                             <input type="checkbox" checked={isSelected} onChange={() => toggleSelectStudent(st.id)} className="rounded border-slate-300 text-sky-600 cursor-pointer w-4 h-4" />
                           </td>
-                          <td className="hidden md:table-cell p-3 font-mono font-bold text-slate-400 text-center text-xs">
+                          <td className="p-3 font-mono font-bold text-slate-400 text-center text-xs">
                             #{index + 1}
                           </td>
-                          <td className="hidden md:table-cell p-3 font-bold text-slate-800 dark:text-slate-200">{st.reg_no}</td>
-                          <td className="hidden md:table-cell p-3 font-extrabold text-slate-900 dark:text-white">{st.name}</td>
-                          <td className="hidden md:table-cell p-3 font-bold text-sky-700 dark:text-sky-400">{st.department || 'INSTITUTIONAL'}</td>
-                          <td className="hidden md:table-cell p-3 font-bold text-slate-800 dark:text-slate-200">
+                          <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{st.reg_no}</td>
+                          <td className="p-3 font-extrabold text-slate-900 dark:text-white">{st.name}</td>
+                          <td className="p-3 font-bold text-sky-700 dark:text-sky-400">{st.department || 'INSTITUTIONAL'}</td>
+                          <td className="p-3 font-bold text-slate-800 dark:text-slate-200">
                             <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-navy-700 font-mono font-bold text-xs">
                               {st.year_level || '—'}
                             </span>
                           </td>
-                          <td className="hidden md:table-cell p-3 font-bold text-slate-800 dark:text-slate-200">
+                          <td className="p-3 font-bold text-slate-800 dark:text-slate-200">
                             <span className="truncate max-w-[150px] font-mono font-extrabold text-indigo-600 dark:text-indigo-300">
                               {st.username || '—'}
                             </span>
                           </td>
-                          <td className="hidden md:table-cell p-3 text-right font-bold text-slate-800 dark:text-slate-200">{st.total_solved || 0}</td>
+                          <td className="p-3 text-right font-bold text-slate-800 dark:text-slate-200">{st.total_solved || 0}</td>
                         </tr>
                       );
                     })
@@ -1284,128 +1313,149 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                 <p className="text-sm font-bold text-slate-500">Loading assigned students...</p>
               </div>
             ) : (
-              <div className="overflow-hidden md:overflow-x-auto rounded-2xl border-0 md:border border-slate-200 dark:border-navy-700 bg-transparent md:bg-transparent w-full max-w-full box-border">
-                <table className="w-full table-fixed md:table-auto text-left text-xs mobile-card-table box-border">
-                  <thead className="hidden md:table-header-group">
-                    <tr className="bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 font-bold border-b border-rose-100 dark:border-rose-900/50">
-                      <th className="p-3 text-center">
-                        <input type="checkbox"
-                          checked={selectedAssignedStudents.length === filteredRoster.length && filteredRoster.length > 0}
-                          onChange={() => {
-                            if (selectedAssignedStudents.length === filteredRoster.length) setSelectedAssignedStudents([]);
-                            else setSelectedAssignedStudents(filteredRoster.map((s: any) => s.id));
-                          }}
-                          className="rounded border-rose-300 text-rose-600 cursor-pointer"
-                        />
-                      </th>
-                      <th className="p-3">Register No</th>
-                      <th className="p-3">Student Name</th>
-                      <th className="p-3">Year</th>
-                      <th className="p-3">LeetCode Handle</th>
-                      <th className="p-3 text-right">Problems Solved</th>
-                      <th className="p-3 text-center">Quick Unassign</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-navy-800 block md:table-row-group">
-                    {filteredRoster.length === 0 ? (
-                      <tr className="block md:table-row"><td colSpan={7} className="p-8 text-center text-slate-400 italic block md:table-cell">No students found for this staff member.</td></tr>
-                    ) : (
-                      filteredRoster.map((s: any) => {
-                        const isSel = selectedAssignedStudents.includes(s.id);
-                        return (
-                        <tr key={s.id} onClick={() => toggleAssignedStudent(s.id)}
-                          className={`cursor-pointer transition-all duration-200 block md:table-row rounded-2xl md:rounded-none mb-2.5 md:mb-0 overflow-hidden box-border border border-slate-200/80 dark:border-navy-800 md:border-0 shadow-2xs md:shadow-none ${isSel ? 'bg-rose-50/60 dark:bg-rose-950/40' : 'bg-white md:bg-transparent dark:bg-navy-950 hover:bg-slate-50/80 dark:hover:bg-navy-800/50'}`}
+              <div>
+                {/* MOBILE VIEW: Dedicated Native Card List */}
+                <div className="space-y-2 md:hidden">
+                  {filteredRoster.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-slate-400 italic">No students found for this staff member.</div>
+                  ) : (
+                    filteredRoster.map((s: any) => {
+                      const isSel = selectedAssignedStudents.includes(s.id);
+                      return (
+                        <div
+                          key={s.id}
+                          onClick={() => toggleAssignedStudent(s.id)}
+                          className={`p-3 rounded-2xl border transition-all duration-200 cursor-pointer select-none active:scale-[0.99] ${
+                            isSel
+                              ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-400 dark:border-rose-600 shadow-sm ring-1 ring-rose-500/30'
+                              : 'bg-white dark:bg-navy-950 border-slate-200 dark:border-navy-800 hover:border-slate-300 dark:hover:border-navy-700 shadow-xs'
+                          }`}
                         >
-                            {/* MOBILE COMPACT CARD VIEW */}
-                            <td className="md:hidden p-2.5 sm:p-3 border-0 w-full block overflow-hidden box-border" colSpan={7}>
-                              <div className="flex flex-col space-y-2 w-full max-w-full overflow-hidden box-border">
-                                {/* Row 1: Checkbox + Name + Solved Badge & Quick Unassign Button */}
-                                <div className="flex items-center justify-between gap-2 w-full min-w-0">
-                                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                                    <input
-                                      type="checkbox"
-                                      checked={isSel}
-                                      onChange={() => toggleAssignedStudent(s.id)}
-                                      className="rounded border-rose-300 text-rose-600 cursor-pointer w-4 h-4 shrink-0"
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
-                                    <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
-                                      {s.name}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-1.5 shrink-0">
-                                    <span className={`px-2 py-0.5 rounded-md font-mono font-black text-[10px] sm:text-[11px] border whitespace-nowrap ${s.total_solved >= 100 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200' :
-                                      s.total_solved >= 30 ? 'bg-sky-100 text-sky-800 border-sky-200' :
-                                        'bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300 border-slate-200'
-                                      }`}>{s.total_solved || 0} Solved</span>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setStudentToUnassign({ student: s, staffId: Number(unassignStaffId), source: 'tab' });
-                                      }}
-                                      className="p-1 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-colors shrink-0"
-                                      title="Unassign"
-                                    >
-                                      <UserMinus className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                </div>
-
-                                {/* Row 2: Reg No + Yr + LeetCode Username */}
-                                <div className="flex items-center gap-1.5 flex-wrap w-full min-w-0 text-[10px] sm:text-[11px]">
-                                  <span className="font-mono font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-navy-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-navy-700 shrink-0">
-                                    {s.reg_no}
-                                  </span>
-                                  <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-200 dark:border-navy-700 shrink-0">
-                                    Yr {s.year_level || '—'}
-                                  </span>
-                                  {s.username && (
-                                    <span className="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono font-bold border border-indigo-200 dark:border-indigo-800/60 break-all shrink-0">
-                                      @{s.username}
-                                    </span>
-                                  )}
-                                </div>
+                          {/* Row 1: Checkbox + Name + Solved Badge & Quick Unassign Button */}
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <div className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                                isSel
+                                  ? 'bg-rose-600 border-rose-600 text-white'
+                                  : 'border-rose-300 dark:border-rose-800 bg-white dark:bg-navy-900'
+                              }`}>
+                                {isSel && <Check className="w-3 h-3 stroke-[3]" />}
                               </div>
-                            </td>
-
-                            {/* DESKTOP TABLE VIEW */}
-                            <td className="hidden md:table-cell p-3 text-center" onClick={(e) => e.stopPropagation()}>
-                              <input type="checkbox" checked={isSel} onChange={() => toggleAssignedStudent(s.id)} className="rounded border-rose-300 text-rose-600 cursor-pointer w-4 h-4" />
-                            </td>
-                            <td className="hidden md:table-cell p-3 font-bold text-slate-800 dark:text-slate-200">{s.reg_no}</td>
-                            <td className="hidden md:table-cell p-3 font-extrabold text-slate-900 dark:text-white">{s.name}</td>
-                            <td className="hidden md:table-cell p-3 font-bold text-slate-800 dark:text-slate-200">
-                              <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-navy-700 font-mono font-bold text-xs">
-                                {s.year_level || '—'}
+                              <span className="font-black text-xs text-slate-900 dark:text-white truncate">
+                                {s.name}
                               </span>
-                            </td>
-                            <td className="hidden md:table-cell p-3 font-bold text-slate-800 dark:text-slate-200">
-                              <span className="truncate max-w-[150px] font-mono font-extrabold text-indigo-600 dark:text-indigo-300">
-                                {s.username || '—'}
-                              </span>
-                            </td>
-                            <td className="hidden md:table-cell p-3 text-right">
-                              <span className={`px-2 py-1 rounded-lg font-black text-[11px] ${s.total_solved >= 100 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
-                                s.total_solved >= 30 ? 'bg-sky-100 text-sky-800' :
-                                  'bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300'
-                                }`}>{s.total_solved || 0}</span>
-                            </td>
-                            <td className="hidden md:table-cell p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className={`px-2 py-0.5 rounded-full font-mono font-black text-[10px] border whitespace-nowrap ${s.total_solved >= 100 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200' :
+                                s.total_solved >= 30 ? 'bg-sky-100 text-sky-800 border-sky-200' :
+                                  'bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300 border-slate-200'
+                                }`}>{s.total_solved || 0} Solved</span>
                               <button
-                                onClick={() => setStudentToUnassign({ student: s, staffId: Number(unassignStaffId), source: 'tab' })}
-                                className="p-1.5 rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-200 transition-colors cursor-pointer inline-flex items-center justify-center"
-                                title="Unassign this student"
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setStudentToUnassign({ student: s, staffId: Number(unassignStaffId), source: 'tab' });
+                                }}
+                                className="p-1 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-colors shrink-0"
+                                title="Unassign"
                               >
                                 <UserMinus className="w-3.5 h-3.5" />
                               </button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
+                            </div>
+                          </div>
+
+                          {/* Row 2: Reg No + Yr + LeetCode Username */}
+                          <div className="flex items-center gap-1.5 flex-wrap pt-1.5 mt-1 border-t border-slate-100 dark:border-navy-800/80 text-[10px]">
+                            <span className="font-mono font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-navy-900 px-1.5 py-0.5 rounded-md border border-slate-200 dark:border-navy-700">
+                              {s.reg_no}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-200 dark:border-navy-700">
+                              Yr {s.year_level || '—'}
+                            </span>
+                            {s.username && (
+                              <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono font-bold border border-indigo-200 dark:border-indigo-800/60 truncate max-w-[140px]">
+                                @{s.username}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* DESKTOP VIEW: Full Data Table */}
+                <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-700 bg-transparent w-full">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 font-bold border-b border-rose-100 dark:border-rose-900/50">
+                        <th className="p-3 text-center w-12">
+                          <input type="checkbox"
+                            checked={selectedAssignedStudents.length === filteredRoster.length && filteredRoster.length > 0}
+                            onChange={() => {
+                              if (selectedAssignedStudents.length === filteredRoster.length) setSelectedAssignedStudents([]);
+                              else setSelectedAssignedStudents(filteredRoster.map((s: any) => s.id));
+                            }}
+                            className="rounded border-rose-300 text-rose-600 cursor-pointer"
+                          />
+                        </th>
+                        <th className="p-3">Register No</th>
+                        <th className="p-3">Student Name</th>
+                        <th className="p-3">Year</th>
+                        <th className="p-3">LeetCode Handle</th>
+                        <th className="p-3 text-right">Problems Solved</th>
+                        <th className="p-3 text-center">Quick Unassign</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
+                      {filteredRoster.length === 0 ? (
+                        <tr><td colSpan={7} className="p-8 text-center text-slate-400 italic">No students found for this staff member.</td></tr>
+                      ) : (
+                        filteredRoster.map((s: any) => {
+                          const isSel = selectedAssignedStudents.includes(s.id);
+                          return (
+                            <tr
+                              key={s.id}
+                              onClick={() => toggleAssignedStudent(s.id)}
+                              className={`cursor-pointer transition-colors duration-150 ${isSel ? 'bg-rose-50/70 dark:bg-rose-950/40' : 'hover:bg-slate-50/80 dark:hover:bg-navy-800/50'}`}
+                            >
+                              <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                                <input type="checkbox" checked={isSel} onChange={() => toggleAssignedStudent(s.id)} className="rounded border-rose-300 text-rose-600 cursor-pointer w-4 h-4" />
+                              </td>
+                              <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{s.reg_no}</td>
+                              <td className="p-3 font-extrabold text-slate-900 dark:text-white">{s.name}</td>
+                              <td className="p-3 font-bold text-slate-800 dark:text-slate-200">
+                                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-navy-700 font-mono font-bold text-xs">
+                                  {s.year_level || '—'}
+                                </span>
+                              </td>
+                              <td className="p-3 font-bold text-slate-800 dark:text-slate-200">
+                                <span className="truncate max-w-[150px] font-mono font-extrabold text-indigo-600 dark:text-indigo-300">
+                                  {s.username || '—'}
+                                </span>
+                              </td>
+                              <td className="p-3 text-right">
+                                <span className={`px-2 py-1 rounded-lg font-black text-[11px] ${s.total_solved >= 100 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
+                                  s.total_solved >= 30 ? 'bg-sky-100 text-sky-800' :
+                                    'bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300'
+                                  }`}>{s.total_solved || 0}</span>
+                              </td>
+                              <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  onClick={() => setStudentToUnassign({ student: s, staffId: Number(unassignStaffId), source: 'tab' })}
+                                  className="p-1.5 rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-200 transition-colors cursor-pointer inline-flex items-center justify-center"
+                                  title="Unassign this student"
+                                >
+                                  <UserMinus className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
@@ -1833,6 +1883,85 @@ export const AdminStaffAllocationPanel: React.FC = () => {
             </div>
           </div>
         </GlobalModalBackdrop>
+      )}
+
+      {/* Mobile Sticky Floating Action Bar when students are selected in Assign Tab */}
+      {activeTab === 'assign' && selectedStudents.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 p-3 md:hidden bg-slate-900/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-700/60 shadow-2xl animate-fade-in-up pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+          <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-8 h-8 rounded-xl bg-sky-500/20 text-sky-400 font-mono font-black text-xs flex items-center justify-center shrink-0 border border-sky-400/30">
+                {selectedStudents.length}
+              </span>
+              <div className="min-w-0">
+                <span className="text-xs font-black text-white block truncate">
+                  {selectedStudents.length} Selected
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedStudents([])}
+                  className="text-[10px] text-slate-400 hover:text-white underline cursor-pointer"
+                >
+                  Clear Selection
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleBulkAssign}
+                disabled={submitting || !targetStaffId}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 disabled:opacity-40 text-white text-xs font-black flex items-center gap-1.5 shadow-lg shadow-sky-600/30 active:scale-95 transition-all cursor-pointer"
+              >
+                <span>Assign ({selectedStudents.length})</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+          {!targetStaffId && (
+            <p className="text-[10px] text-amber-300 font-semibold mt-1.5 text-center">
+              ⚠️ Select a mentor in the dropdown above to assign
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Mobile Sticky Floating Action Bar when students are selected in Unassign Tab */}
+      {activeTab === 'unassign' && selectedAssignedStudents.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 p-3 md:hidden bg-slate-900/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-rose-900/60 shadow-2xl animate-fade-in-up pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+          <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 font-mono font-black text-xs flex items-center justify-center shrink-0 border border-rose-400/30">
+                {selectedAssignedStudents.length}
+              </span>
+              <div className="min-w-0">
+                <span className="text-xs font-black text-white block truncate">
+                  {selectedAssignedStudents.length} Selected to Remove
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedAssignedStudents([])}
+                  className="text-[10px] text-slate-400 hover:text-white underline cursor-pointer"
+                >
+                  Clear Selection
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleBulkUnassign}
+                disabled={submitting}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 disabled:opacity-40 text-white text-xs font-black flex items-center gap-1.5 shadow-lg shadow-rose-600/30 active:scale-95 transition-all cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Remove ({selectedAssignedStudents.length})</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

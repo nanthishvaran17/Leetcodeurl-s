@@ -79,18 +79,16 @@ class AIKnowledgeEngine:
         m = re.search(r'\b(51[0-9]|52[0-9])\b', text)
         if m:
             c_num = m.group(1)
-            sess = db.query(WeeklySession).filter(
-                or_(
-                    WeeklySession.contest_name.ilike(f"%{c_num}%"),
-                    WeeklySession.id == int(c_num) if c_num.isdigit() and int(c_num) < 100 else False
-                )
-            ).first()
+            clauses = [WeeklySession.contest_name.ilike(f"%{c_num}%")]
+            if c_num.isdigit() and int(c_num) < 100:
+                clauses.append(WeeklySession.id == int(c_num))
+            sess = db.query(WeeklySession).filter(or_(*clauses)).first()
             if sess:
                 return sess
 
         # 2. Context parameter
         if context_sess:
-            m = re.search(r'\b(51[0-9]|52[0-9])\b', str(context_sess))
+            m = re.search(r'\b(51[0-9]|52[0-9])\b', context_sess)
             if m:
                 c_num = m.group(1)
                 sess = db.query(WeeklySession).filter(WeeklySession.contest_name.ilike(f"%{c_num}%")).first()

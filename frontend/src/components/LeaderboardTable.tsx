@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { FixedSizeList as List } from 'react-window';
 
 import { studentLiveStore } from '../stores/studentLiveStore';
-import { FastStudentRow } from './FastStudentRow';
+import { FastStudentRow, LEADERBOARD_TABLE_GRID_STYLE } from './FastStudentRow';
 import { useFilteredStudents, useFilters } from '../context/FilterContext';
 
 import { ExternalLink, Trophy, RefreshCw, Wifi, Trash2, AlertCircle, Eye, Edit3, ShieldAlert, X, Clock, Flame, Award, CheckCircle2, TrendingUp, Sparkles, BookOpen, Star } from 'lucide-react';
@@ -207,6 +207,16 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [modalTopY, setModalTopY] = useState<number | null>(null);
+
+  const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const isServerPaginated = serverTotalCount !== undefined && !isFilteringActive;
 
@@ -580,25 +590,49 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       )}
 
 
-      <div className="responsive-table-container w-full min-w-0 overflow-x-auto md:rounded-2xl md:border md:border-slate-200 md:dark:border-navy-800 md:shadow-sm md:bg-white md:dark:bg-navy-950 flex flex-col space-y-4 md:space-y-0">
+      <div className="responsive-table-container w-full min-w-0 overflow-x-hidden md:overflow-x-auto md:rounded-2xl md:border md:border-slate-200 md:dark:border-navy-800 md:shadow-sm md:bg-white md:dark:bg-navy-950 flex flex-col space-y-4 md:space-y-0">
         {/* Table Header Wrapper (Sticky) */}
-        <div className="hidden md:flex bg-slate-100/90 dark:bg-navy-900 text-slate-800 dark:text-slate-100 font-extrabold border-b border-slate-300 dark:border-navy-700 uppercase tracking-wider text-xs w-full min-w-full md:min-w-[1100px] items-center py-4">
-          <div className="flex-none w-10 px-3 text-center">
+        <div
+          className="!hidden md:!grid bg-slate-100/90 dark:bg-navy-900 text-slate-800 dark:text-slate-100 font-extrabold border-b border-slate-300 dark:border-navy-700 uppercase tracking-wider text-xs w-full min-w-full md:min-w-[1100px] items-center py-3.5"
+          style={LEADERBOARD_TABLE_GRID_STYLE}
+        >
+          {/* 1. Checkbox */}
+          <div className="px-3 flex items-center justify-center">
             <input type="checkbox" checked={deferredSortedStudents.length > 0 && selectedIds.length === deferredSortedStudents.length} onChange={toggleAll} className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
           </div>
-          <div className="flex-none w-24 px-4 text-left">Rank</div>
-          <div className="flex-none w-32 px-4 text-left">Register No</div>
-          <div className="flex-1 min-w-[200px] px-4 flex items-center space-x-3 text-left">
+
+          {/* 2. Rank */}
+          <div className="px-3 text-left">Rank</div>
+
+          {/* 3. Register No */}
+          <div className="px-3 text-left">Register No</div>
+
+          {/* 4. Student */}
+          <div className="px-3 flex items-center space-x-3 text-left min-w-0">
             <div className="w-8 shrink-0"></div>
             <span>Student</span>
           </div>
-          <div className="flex-none w-36 px-4 text-left">Dept / Year</div>
-          <div className="flex-1 min-w-[160px] px-4 text-left">LeetCode Handle</div>
-          <div className="flex-none w-24 px-4 text-center">Solved</div>
-          <div className="flex-none w-32 px-4 text-center">Contest</div>
-          <div className="flex-none w-24 px-4 text-center">Rating</div>
-          <div className="flex-none w-28 px-4 text-center">Contest Rank</div>
-          <div className="flex-none w-32 px-4 text-center">Actions</div>
+
+          {/* 5. Dept / Year */}
+          <div className="px-3 text-left min-w-0">Dept / Year</div>
+
+          {/* 6. LeetCode Handle */}
+          <div className="px-3 text-left min-w-0">LeetCode Handle</div>
+
+          {/* 7. Solved */}
+          <div className="px-3 text-center">Solved</div>
+
+          {/* 8. Contest */}
+          <div className="px-3 text-center">Contest</div>
+
+          {/* 9. Rating */}
+          <div className="px-3 text-center">Rating</div>
+
+          {/* 10. Contest Rank */}
+          <div className="px-3 text-center">Contest Rank</div>
+
+          {/* 11. Actions */}
+          <div className="px-3 text-center">Actions</div>
         </div>
 
         {/* Virtualized Body */}
@@ -616,9 +650,9 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
           ) : (
             (paginatedStudents.length > 50) ? (
               <List
-                height={typeof window !== 'undefined' && window.innerWidth < 768 ? 600 : 800}
+                height={isMobile ? 650 : 800}
                 itemCount={paginatedStudents.length}
-                itemSize={typeof window !== 'undefined' && window.innerWidth < 768 ? 136 : 68}
+                itemSize={isMobile ? 148 : 68}
                 width="100%"
                 itemData={paginatedStudents}
                 style={{ overflowX: 'hidden' }}

@@ -203,11 +203,8 @@ export const ReportsAnalyticsView: React.FC<ReportsAnalyticsProps> = ({
                 <FileText className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h5 className="font-bold text-sm text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                  <span>Institutional Vector PDF</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                    A4 • 300 DPI
-                  </span>
+                <h5 className="font-bold text-sm text-slate-900 dark:text-white tracking-tight">
+                  Institutional Vector PDF
                 </h5>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
                   High-res accredited report with verification stamp and official crest watermark

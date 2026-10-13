@@ -329,37 +329,38 @@ export const App: React.FC = () => {
     userRole: user?.role,
   });
 
-  useEffect(() => {
-    const handleToggleSidebar = () => {
-      setIsSidebarOpen(prev => !prev);
-    };
-    window.addEventListener('toggle_sidebar', handleToggleSidebar);
-    const handleOpenAi = () => {
-      setShowAiWidget(true);
-      window.dispatchEvent(new CustomEvent('force_open_ai_widget'));
-    };
-    window.addEventListener('open_ai_widget', handleOpenAi);
-
-    const handleOpenFilterDrawer = () => {
-      setShowMobileFilterDrawer(true);
-    };
-    window.addEventListener('open_mobile_filter_drawer', handleOpenFilterDrawer);
-
-    const handleOpenShareModal = (e?: any) => {
+    const handleOpenShareModal = useCallback((e?: any) => {
       if (e?.detail?.student) {
         setSelectedStudent(e.detail.student);
       }
       setShowShareModal(true);
-    };
-    window.addEventListener('open_share_card', handleOpenShareModal);
+    }, []);
 
-    return () => {
-      window.removeEventListener('toggle_sidebar', handleToggleSidebar);
-      window.removeEventListener('open_ai_widget', handleOpenAi);
-      window.removeEventListener('open_mobile_filter_drawer', handleOpenFilterDrawer);
-      window.removeEventListener('open_share_card', handleOpenShareModal);
-    };
-  }, []);
+    useEffect(() => {
+      const handleToggleSidebar = () => {
+        setIsSidebarOpen(prev => !prev);
+      };
+      window.addEventListener('toggle_sidebar', handleToggleSidebar);
+      const handleOpenAi = () => {
+        setShowAiWidget(true);
+        window.dispatchEvent(new CustomEvent('force_open_ai_widget'));
+      };
+      window.addEventListener('open_ai_widget', handleOpenAi);
+
+      const handleOpenFilterDrawer = () => {
+        setShowMobileFilterDrawer(true);
+      };
+      window.addEventListener('open_mobile_filter_drawer', handleOpenFilterDrawer);
+
+      window.addEventListener('open_share_card', handleOpenShareModal);
+
+      return () => {
+        window.removeEventListener('toggle_sidebar', handleToggleSidebar);
+        window.removeEventListener('open_ai_widget', handleOpenAi);
+        window.removeEventListener('open_mobile_filter_drawer', handleOpenFilterDrawer);
+        window.removeEventListener('open_share_card', handleOpenShareModal);
+      };
+    }, [handleOpenShareModal]);
 
 
 
@@ -379,10 +380,24 @@ export const App: React.FC = () => {
       preloadStudentProfilePage();
     }, 6000);
 
+    const normalizeRouteAlias = (rawTab: string): string => {
+      const t = rawTab.replace('#/', '').replace('/', '').trim();
+      if (t === 'data-quality') return 'quality';
+      if (t === 'account' || t === 'profile-settings') return 'account-settings';
+      if (t === 'department') return 'departments';
+      if (t === 'hod' || t === 'command-center') return 'hod-command-center';
+      if (t === 'faculty') return 'faculty-action-center';
+      if (t === 'hr' || t === 'candidate-finder') return 'hr-candidate-finder';
+      if (t === 'contest' || t === 'contests') return 'weekly-contest';
+      if (t === 'integrity') return 'integrity-monitor';
+      if (t === 'issues' || t === 'student-data-issues') return 'data-issues';
+      return t;
+    };
+
     const handleHashChange = () => {
       const hash = window.location.hash;
       if (hash && hash.startsWith('#/')) {
-        const tab = hash.replace('#/', '').trim();
+        const tab = normalizeRouteAlias(hash.replace('#/', '').trim());
         if (tab && tab !== 'main-content') setActiveTab(tab);
       } else if (isAuthenticated) {
         setActiveTab('dashboard');
@@ -392,7 +407,7 @@ export const App: React.FC = () => {
     const handleDeepLinkNav = (e: any) => {
       const routeStr = e?.detail?.route || '';
       if (!routeStr) return;
-      const cleanRoute = routeStr.replace('/api', '').replace('#/', '').replace('/', '').trim();
+      const cleanRoute = normalizeRouteAlias(routeStr.replace('/api', '').replace('#/', '').replace('/', '').trim());
       if (cleanRoute && cleanRoute !== 'main-content') {
         setActiveTab(cleanRoute);
       }
@@ -730,7 +745,7 @@ export const App: React.FC = () => {
   // CENTRALIZED ROLE PERMISSION MATRIX 
   // Single source of truth for all role-based tab access.
   // NEVER duplicate this logic across components.
-  const ALL_ACADEMIC_TABS = useMemo(() => ['dashboard','landing','public','profile','account-settings','students','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder','post930','post-930'], []);
+  const ALL_ACADEMIC_TABS = useMemo(() => ['dashboard','landing','public','profile','account-settings','students','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder','post930','post-930'], []);
   
   const ROLE_PERMISSIONS = useMemo<Record<string, string[]>>(() => ({
     // Super admin / admin: full system access
@@ -762,8 +777,16 @@ export const App: React.FC = () => {
 
   const isTabAllowed = useCallback((tab: string): boolean => {
     if (!isAuthenticated) return ['landing', 'public', 'profile'].includes(tab);
+    const normalized = tab === 'data-quality' ? 'quality'
+      : (tab === 'account' || tab === 'profile-settings') ? 'account-settings'
+      : tab === 'department' ? 'departments'
+      : (tab === 'hod' || tab === 'command-center') ? 'hod-command-center'
+      : tab === 'faculty' ? 'faculty-action-center'
+      : (tab === 'hr' || tab === 'candidate-finder') ? 'hr-candidate-finder'
+      : (tab === 'issues' || tab === 'student-data-issues') ? 'data-issues'
+      : tab;
     const allowed = ROLE_PERMISSIONS[roleClean] || ALL_ACADEMIC_TABS;
-    return allowed.includes(tab);
+    return allowed.includes(normalized) || allowed.includes(tab);
   }, [isAuthenticated, roleClean, ROLE_PERMISSIONS, ALL_ACADEMIC_TABS]);
 
   // Legacy compatibility — used by a few other components
@@ -943,13 +966,13 @@ export const App: React.FC = () => {
 
               {activeTab === 'dashboard' && renderDashboardComponent()}
 
-              {activeTab === 'hod-command-center' && (
+              {(activeTab === 'hod-command-center' || activeTab === 'hod' || activeTab === 'command-center') && (
                 isTabAllowed('hod-command-center')
                   ? <HODCommandCenter />
                   : renderAccessDenied('HOD Dashboard')
               )}
 
-              {activeTab === 'faculty-action-center' && (
+              {(activeTab === 'faculty-action-center' || activeTab === 'faculty') && (
                 isTabAllowed('faculty-action-center')
                   ? <FacultyActionCenter />
                   : renderAccessDenied('Faculty Action Center')
@@ -971,7 +994,7 @@ export const App: React.FC = () => {
 
               {activeTab === 'staff-dashboard' && <StaffDashboardView />}
 
-              {activeTab === 'departments' && (
+              {(activeTab === 'departments' || activeTab === 'department') && (
                 isTabAllowed('departments')
                   ? <DepartmentDashboard onSelectStudent={handleSelectStudent} />
                   : renderAccessDenied('Department Analytics')
@@ -1006,13 +1029,13 @@ export const App: React.FC = () => {
                   : renderAccessDenied('Student Comparison')
               )}
 
-              {activeTab === 'quality' && (
+              {(activeTab === 'quality' || activeTab === 'data-quality') && (
                 isTabAllowed('quality')
                   ? <DataQualityPage onNavigateTab={handleTabChange} onSelectStudent={handleSelectStudent} />
                   : renderAccessDenied('Data Quality Board')
               )}
 
-              {(activeTab === 'data-issues' || activeTab === 'issues' || activeTab === 'not-started-issues') && (
+              {(activeTab === 'data-issues' || activeTab === 'issues' || activeTab === 'student-data-issues' || activeTab === 'not-started-issues') && (
                 isTabAllowed('data-issues')
                   ? <StudentDataIssuesPage />
                   : renderAccessDenied('Student Data Issues & Recovery')
@@ -1036,7 +1059,7 @@ export const App: React.FC = () => {
                   : renderAccessDenied('Reports & Exports')
               )}
 
-              {(activeTab === 'hr-candidate-finder' || activeTab === 'candidate-requirements' || activeTab === 'placement-finder' || activeTab === 'hr-finder') && (
+              {(activeTab === 'hr-candidate-finder' || activeTab === 'candidate-requirements' || activeTab === 'placement-finder' || activeTab === 'hr-finder' || activeTab === 'hr') && (
                 isTabAllowed('hr-candidate-finder') ? (
                   <Suspense fallback={<PageSkeleton />}>
                     <HRCandidateFinderPage />
@@ -1048,7 +1071,7 @@ export const App: React.FC = () => {
                 <PublicLeaderboardPage onSelectStudent={handleSelectStudent} />
               )}
 
-              {activeTab === 'account-settings' && (
+              {(activeTab === 'account-settings' || activeTab === 'account' || activeTab === 'profile-settings') && (
                 <AccountSettingsPage />
               )}
 

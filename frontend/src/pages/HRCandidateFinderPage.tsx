@@ -5,12 +5,14 @@ import {
   Trophy, TrendingUp, TrendingDown, Minus,
   FileSpreadsheet, FileText, AlertTriangle, CheckCircle2,
   Brain, Star, Award, Users, Download, ExternalLink,
-  BarChart2, Target, Zap, Code2, Shield, X, Check, Info, Sparkles, UserCheck, HelpCircle, Eye, Printer
+  BarChart2, Target, Zap, Code2, Shield, X, Check, Info, Sparkles, UserCheck, HelpCircle, Eye, Printer,
+  LayoutGrid, List, SlidersHorizontal, Flame, ArrowUpDown
 } from "lucide-react";
 import api from "../services/api";
 import { triggerDownload } from "../utils/mobileDownload";
 import { useKeyboardContext } from "../context/KeyboardContext";
 import { StudentIntelligenceProfileModal } from "../components/StudentIntelligenceProfileModal";
+import { SwipeHandle } from "../components/SwipeHandle";
 
 export interface Candidate {
   id: number;
@@ -445,6 +447,7 @@ export const HRCandidateFinderPage: React.FC = () => {
   const [intelData, setIntelData] = useState<any>(null);
   const [intelLoading, setIntelLoading] = useState<boolean>(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState<boolean>(false);
+  const [mobileViewMode, setMobileViewMode] = useState<'cards' | 'compact'>('cards');
   const [mobileAccordions, setMobileAccordions] = useState<Record<string, boolean>>({
     academic: false,
     identity: false,
@@ -1907,45 +1910,45 @@ export const HRCandidateFinderPage: React.FC = () => {
     <div ref={pageContainerRef} className="space-y-6 pb-12 text-slate-900 dark:text-slate-100">
 
       {/* HEADER (RICH GLOWING INSTITUTIONAL GRADIENT) */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
-        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-2.5 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-4 sm:p-6 md:p-8 shadow-lg border border-brand-500/30">
+        <div className="relative z-10 flex items-center justify-between flex-wrap gap-3 sm:gap-4">
+          <div className="space-y-1.5 sm:space-y-2.5 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[11px] sm:text-xs font-black">
               <Filter className="w-3.5 h-3.5 text-brand-400" />
               <span>PLACEMENT & HIRING PORTAL</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
               Placement & <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Hiring Portal</span>
             </h1>
-            <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
-              Define your recruitment criteria & precision filter top technical talent tailored to institutional benchmarks.
+            <p className="text-[11px] sm:text-xs md:text-sm text-slate-300 font-bold tracking-wide">
+              Define recruitment criteria & precision filter top technical talent tailored to institutional benchmarks.
             </p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto justify-end">
             <button
               onClick={handleReset}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-slate-800/90 hover:bg-rose-950/60 text-slate-200 hover:text-rose-200 rounded-2xl text-xs font-bold shadow-lg border border-slate-700/80 hover:border-rose-500/40 transition-all cursor-pointer"
+              className="flex items-center space-x-1.5 sm:space-x-2 px-3.5 py-2 sm:px-5 sm:py-2.5 bg-slate-800/90 hover:bg-rose-950/60 text-slate-200 hover:text-rose-200 rounded-xl sm:rounded-2xl text-xs font-bold shadow-md border border-slate-700/80 hover:border-rose-500/40 transition-all cursor-pointer"
             >
-              <RefreshCw className="w-4 h-4 text-rose-400" />
+              <RefreshCw className="w-3.5 h-3.5 text-rose-400" />
               <span>Reset Filters</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* MOBILE COMPACT FILTER BAR TRIGGER */}
+      {/* MOBILE COMPACT FILTER BAR TRIGGER & QUICK FILTER HORIZONTAL PILLS */}
       <div className="md:hidden space-y-3">
-        <div className="bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 p-3.5 shadow-2xs flex items-center justify-between gap-3">
+        <div className="bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 p-3 shadow-2xs flex items-center justify-between gap-2.5">
           <button
             type="button"
             onClick={() => setIsMobileFilterOpen(true)}
-            className="flex-1 min-h-[44px] px-4 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 text-slate-800 dark:text-slate-200 font-extrabold text-xs hover:border-blue-400 transition-all flex items-center justify-between cursor-pointer"
+            className="flex-1 min-h-[44px] px-3.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 text-slate-800 dark:text-slate-200 font-extrabold text-xs hover:border-blue-400 transition-all flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-blue-500" />
+              <Filter className="w-4 h-4 text-blue-500 shrink-0" />
               <span>Filters</span>
               {activeChips.length > 0 ? (
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-600 text-white font-black text-[10px]">
+                <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white font-black text-[10px]">
                   [{activeChips.length} Applied]
                 </span>
               ) : (
@@ -1959,16 +1962,115 @@ export const HRCandidateFinderPage: React.FC = () => {
             type="button"
             onClick={handleFind}
             disabled={loading}
-            className="h-11 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+            className="h-11 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
           >
             {loading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
             <span>Apply</span>
           </button>
         </div>
 
+        {/* Quick Filter Horizontal Pill Strip */}
+        <div className="space-y-2 bg-slate-50/70 dark:bg-navy-900/60 p-2.5 rounded-2xl border border-slate-200/70 dark:border-navy-800">
+          {/* Department Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
+            <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-1">Dept:</span>
+            {['all', 'CSE(CS)', 'CSE(IOT)', 'IT', 'AIDS', 'ECE'].map((d) => {
+              const active = (filters.department || 'all').toUpperCase() === d.toUpperCase();
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => {
+                    setFilters(prev => ({ ...prev, department: active && d !== 'all' ? 'all' : d }));
+                  }}
+                  className={`px-2.5 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${
+                    active
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                      : 'bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800'
+                  }`}
+                >
+                  {d === 'all' ? 'All Depts' : d}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Rating Tier Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
+            <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-1">Rating:</span>
+            {[
+              { label: 'All', min: 0 },
+              { label: '1800+', min: 1800 },
+              { label: '1600+', min: 1600 },
+              { label: '1400+', min: 1400 },
+            ].map((r) => {
+              const active = filters.contest_rating.active && filters.contest_rating.val1 === r.min;
+              return (
+                <button
+                  key={r.label}
+                  type="button"
+                  onClick={() => {
+                    setFilters(prev => ({
+                      ...prev,
+                      contest_rating: {
+                        op: '>=',
+                        val1: r.min,
+                        val2: 0,
+                        active: r.min > 0 ? !active : false
+                      }
+                    }));
+                  }}
+                  className={`px-2.5 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${
+                    (r.min === 0 && !filters.contest_rating.active) || active
+                      ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                      : 'bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800'
+                  }`}
+                >
+                  {r.label}
+                </button>
+              );
+            })}
+
+            {/* Solved Pills */}
+            <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mx-1">Solved:</span>
+            {[
+              { label: 'All', min: 0 },
+              { label: '800+', min: 800 },
+              { label: '500+', min: 500 },
+              { label: '300+', min: 300 },
+            ].map((s) => {
+              const active = filters.total_solved.active && filters.total_solved.val1 === s.min;
+              return (
+                <button
+                  key={s.label}
+                  type="button"
+                  onClick={() => {
+                    setFilters(prev => ({
+                      ...prev,
+                      total_solved: {
+                        op: '>=',
+                        val1: s.min,
+                        val2: 0,
+                        active: s.min > 0 ? !active : false
+                      }
+                    }));
+                  }}
+                  className={`px-2.5 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${
+                    (s.min === 0 && !filters.total_solved.active) || active
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                      : 'bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Active Filters Summary Pills on Mobile */}
         {activeChips.length > 0 && (
-          <div className="bg-blue-50/60 dark:bg-blue-950/30 p-3 rounded-2xl border border-blue-100 dark:border-blue-900/40 flex items-center gap-1.5 flex-wrap">
+          <div className="bg-blue-50/60 dark:bg-blue-950/30 p-2.5 rounded-2xl border border-blue-100 dark:border-blue-900/40 flex items-center gap-1.5 flex-wrap">
             <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">Active:</span>
             {activeChips.map(c => (
               <span key={c.key} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white dark:bg-navy-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[11px] font-bold shadow-2xs">
@@ -1986,16 +2088,18 @@ export const HRCandidateFinderPage: React.FC = () => {
       </div>
 
       {/* MOBILE FILTER DRAWER PORTAL */}
-      {isMobileFilterOpen && createPortal(
-        <div className="fixed inset-0 z-50 flex flex-col justify-end md:hidden bg-slate-900/60 backdrop-blur-sm transition-all animate-fadeIn">
+      {isMobileFilterOpen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex flex-col justify-end md:hidden bg-slate-950/80 backdrop-blur-md transition-all animate-fadeIn">
           {/* Backdrop */}
           <div className="absolute inset-0" onClick={() => setIsMobileFilterOpen(false)} />
 
           {/* Drawer Panel */}
-          <div className="relative z-10 w-full max-h-[88vh] bg-white dark:bg-navy-900 rounded-t-3xl shadow-2xl border-t border-slate-200 dark:border-navy-700 flex flex-col min-h-0 overflow-hidden">
+          <div className="relative z-10 w-full max-h-[90vh] bg-white dark:bg-navy-900 rounded-t-3xl shadow-2xl border-t border-slate-200 dark:border-navy-700 flex flex-col min-h-0 overflow-hidden">
+            {/* Top Swipe Drag Handle */}
+            <SwipeHandle onClose={() => setIsMobileFilterOpen(false)} className="pt-2 pb-0" pillClassName="bg-slate-300 dark:bg-navy-700" />
 
             {/* Header */}
-            <div className="pt-4 pb-3 px-5 flex items-center justify-between border-b border-slate-100 dark:border-navy-800 flex-shrink-0">
+            <div className="pt-2 pb-3 px-5 flex items-center justify-between border-b border-slate-100 dark:border-navy-800 shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
                   <Filter className="w-4 h-4" />
@@ -2400,36 +2504,112 @@ export const HRCandidateFinderPage: React.FC = () => {
 
         {/* Candidate Table Container */}
         <div ref={tableRef} className="bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm overflow-hidden">
-          <div className="px-4 sm:px-5 py-3.5 border-b border-slate-100 dark:border-navy-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-blue-600 shrink-0" />
-              <h4 className="font-bold text-xs text-slate-800 dark:text-white uppercase tracking-wider">
-                Master Candidate Table
-              </h4>
-            </div>
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="relative w-full sm:w-auto">
-                <input
-                  type="text"
-                  value={tableSearch}
-                  onChange={e => setTableSearch(e.target.value)}
-                  placeholder="Filter table..."
-                  autoComplete="off"
-                  spellCheck={false}
-                  className="pl-8 pr-8 py-2 rounded-lg border border-slate-200 dark:border-navy-700 text-xs bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-44 min-h-[40px] sm:min-h-0 text-left"
-                />
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 z-10 text-slate-400">
-                  <Search className="w-3.5 h-3.5 stroke-[2.5]" />
+          <div className="px-4 sm:px-5 py-3.5 border-b border-slate-100 dark:border-navy-800 space-y-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="flex items-center justify-between sm:justify-start gap-2">
+                <div className="flex items-center gap-2">
+                  <Award className="w-4 h-4 text-blue-600 shrink-0" />
+                  <h4 className="font-bold text-xs text-slate-800 dark:text-white uppercase tracking-wider">
+                    Master Candidate Table
+                  </h4>
                 </div>
-                {tableSearch && (
-                  <button
-                    type="button"
-                    onClick={() => setTableSearch('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded-full z-10 cursor-pointer"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-extrabold md:hidden">
+                  {displayCandidates.length}
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                <div className="relative w-full sm:w-auto flex-1 sm:flex-initial">
+                  <input
+                    type="text"
+                    value={tableSearch}
+                    onChange={e => setTableSearch(e.target.value)}
+                    placeholder="Search candidate name, reg no, username..."
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="pl-8 pr-8 py-2 rounded-xl border border-slate-200 dark:border-navy-700 text-xs bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-60 min-h-[40px] sm:min-h-0 text-left shadow-2xs"
+                  />
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 z-10 text-slate-400">
+                    <Search className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </div>
+                  {tableSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setTableSearch('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded-full z-10 cursor-pointer"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile-Only Sort Pills & View Switcher */}
+            <div className="flex md:hidden items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-navy-800/80">
+              <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
+                  <ArrowUpDown className="w-3 h-3 text-slate-400" /> Sort:
+                </span>
+                {[
+                  { field: 'contest_rating' as keyof Candidate, label: 'Rating' },
+                  { field: 'total_solved' as keyof Candidate, label: 'Solved' },
+                  { field: 'global_rank' as keyof Candidate, label: 'Rank' },
+                  { field: 'twelfth_cutoff' as keyof Candidate, label: 'Cutoff' },
+                ].map(s => {
+                  const isActive = sortField === s.field;
+                  return (
+                    <button
+                      key={s.field}
+                      type="button"
+                      onClick={() => {
+                        if (isActive) {
+                          setSortAsc(!sortAsc);
+                        } else {
+                          setSortField(s.field);
+                          setSortAsc(s.field === 'global_rank');
+                        }
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all shrink-0 cursor-pointer border active:scale-95 ${
+                        isActive
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          : 'bg-slate-50 dark:bg-navy-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-navy-800'
+                      }`}
+                    >
+                      <span>{s.label}</span>
+                      {isActive && (
+                        <span className="text-[10px]">{sortAsc ? '↑' : '↓'}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* View Switcher: Card vs Compact */}
+              <div className="flex items-center bg-slate-100 dark:bg-navy-950 p-0.5 rounded-xl border border-slate-200 dark:border-navy-800 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setMobileViewMode('cards')}
+                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    mobileViewMode === 'cards'
+                      ? 'bg-white dark:bg-navy-800 text-blue-600 dark:text-blue-400 shadow-xs font-bold'
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                  title="Card View"
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMobileViewMode('compact')}
+                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    mobileViewMode === 'compact'
+                      ? 'bg-white dark:bg-navy-800 text-blue-600 dark:text-blue-400 shadow-xs font-bold'
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                  title="Compact List View"
+                >
+                  <List className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           </div>
@@ -2553,124 +2733,289 @@ export const HRCandidateFinderPage: React.FC = () => {
                 </table>
               </div>
 
-              {/* MOBILE RESPONSIVE CANDIDATE CARDS (< 768px) */}
-              <div className="block md:hidden space-y-3 p-3 sm:p-4">
-                {paginatedCandidates.map((c) => (
-                  <div
-                    key={c.id}
-                    onClick={() => setSelectedCandidate(c)}
-                    className="bg-white dark:bg-navy-950 rounded-2xl border border-slate-200/90 dark:border-navy-800 p-4 shadow-sm space-y-3 relative transition-all cursor-pointer hover:border-brand-500/50"
-                  >
-                    {/* Header: Avatar + Student Name + Username & Action Buttons */}
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-sm shadow-xs shrink-0">
-                          {c.name.charAt(0)}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h5 className="font-extrabold text-slate-900 dark:text-white text-sm leading-snug truncate" title={c.name}>
-                            {c.name}
-                          </h5>
-                          {c.username && (
-                            <div className="text-xs text-slate-500 dark:text-slate-400 font-mono font-medium leading-none truncate mt-1" title={`@${c.username}`}>
-                              @{c.username}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Action Buttons: View + External Link */}
-                      <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
+              {/* MOBILE RESPONSIVE CANDIDATES CONTAINER (< 768px) */}
+              <div className="block md:hidden p-3 sm:p-4 space-y-3">
+                {mobileViewMode === 'compact' ? (
+                  /* COMPACT HIGH-DENSITY SCANNING ROWS */
+                  <div className="space-y-2">
+                    {paginatedCandidates.map((c) => {
+                      const ratingVal = Math.round(c.contest_rating || 0);
+                      const isHighRated = ratingVal >= 1750;
+                      return (
+                        <div
+                          key={c.id}
                           onClick={() => setSelectedCandidate(c)}
-                          className="flex-1 sm:flex-none min-h-[40px] px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                          className="bg-white dark:bg-navy-950 rounded-xl border border-slate-200/80 dark:border-navy-800 p-3 shadow-2xs hover:border-blue-500/50 hover:shadow-xs flex items-center justify-between gap-3 active:scale-[0.99] transition-all cursor-pointer group"
                         >
-                          <Eye className="w-3.5 h-3.5 text-blue-100" />
-                          <span>View Profile</span>
-                        </button>
-                        <a
-                          href={c.leetcode_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="shrink-0 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition-all cursor-pointer"
-                          title="Open LeetCode Profile"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      </div>
-                    </div>
+                          {/* Avatar & Core Student Identity */}
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0 shadow-2xs ${
+                              isHighRated
+                                ? 'bg-gradient-to-br from-amber-500 via-purple-600 to-indigo-600 ring-2 ring-purple-400/40'
+                                : 'bg-gradient-to-br from-blue-600 to-indigo-600 ring-1 ring-blue-400/30'
+                            }`}>
+                              {c.name.charAt(0)}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <h5 className="font-extrabold text-slate-900 dark:text-white text-xs leading-snug truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                  {c.name}
+                                </h5>
+                                {isHighRated && (
+                                  <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5">
+                                    <Award className="w-2.5 h-2.5" />
+                                    <span>Top</span>
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate">
+                                <span className="font-bold text-blue-600 dark:text-blue-400">{c.dept_code}</span>
+                                <span>•</span>
+                                <span>{c.batch}</span>
+                                {c.twelfth_cutoff && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="text-cyan-600 dark:text-cyan-400 font-bold">{Number(c.twelfth_cutoff).toFixed(1)}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
 
-                    {/* Meta Bar: Register No, Batch, Dept, 12th Cutoff */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 text-xs p-3 bg-slate-50 dark:bg-navy-900 rounded-xl border border-slate-100 dark:border-navy-800">
-                      <div className="min-w-0 flex-1">
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Register No</span>
-                        <span className="font-mono font-bold text-slate-700 dark:text-slate-200 truncate block mt-0.5" title={c.reg_no}>
-                          {c.reg_no || '—'}
-                        </span>
-                      </div>
-                      <div className="min-w-0 flex-shrink-0 text-right">
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Batch & Dept</span>
-                        <div className="flex items-center justify-end gap-1.5 mt-0.5 flex-wrap">
-                          <span className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-800 dark:text-slate-200 font-extrabold text-[10px] truncate max-w-[80px] sm:max-w-none">
-                            {c.dept_code}
-                          </span>
-                          <span className="font-semibold text-slate-600 dark:text-slate-400 text-[11px] sm:text-xs whitespace-nowrap">{c.batch}</span>
-                          {c.twelfth_cutoff !== null && c.twelfth_cutoff !== undefined && (
-                            <span className="px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 font-mono font-black text-[10px] border border-cyan-300 dark:border-cyan-800">
-                              Cutoff: {Number(c.twelfth_cutoff).toFixed(1)}
-                            </span>
-                          )}
+                          {/* Right Metrics & Quick Access */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            {/* Solved Stat */}
+                            <div className="text-right shrink-0">
+                              <span className="font-mono font-black text-xs text-slate-900 dark:text-white block leading-none">
+                                {c.total_solved}
+                              </span>
+                              <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-tight block mt-0.5">
+                                solved
+                              </span>
+                            </div>
+
+                            {/* Contest Rating Pill */}
+                            <div className="shrink-0 min-w-[56px] text-right">
+                              {ratingVal > 0 ? (
+                                <span className={`px-2 py-1 rounded-lg font-mono font-black text-[11px] inline-flex items-center gap-0.5 border ${
+                                  isHighRated
+                                    ? 'bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                                    : 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900'
+                                }`}>
+                                  <Flame className="w-2.5 h-2.5 text-purple-600 fill-purple-500/30" />
+                                  <span>{ratingVal.toLocaleString()}</span>
+                                </span>
+                              ) : (
+                                <span className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-navy-900 text-slate-400 font-mono font-bold text-[10px]">
+                                  —
+                                </span>
+                              )}
+                            </div>
+
+                            <ChevronRight className="w-4 h-4 text-slate-300 dark:text-navy-600 group-hover:text-blue-500 transition-colors shrink-0" />
+                          </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Performance Grid: Global Rank, Total Solved, Contest Rating */}
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div className="bg-blue-50/70 dark:bg-blue-950/40 p-2 rounded-xl border border-blue-100 dark:border-blue-900/50">
-                        <span className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 block uppercase">LeetCode Rank</span>
-                        <span className="font-mono font-black text-xs text-blue-700 dark:text-blue-300 mt-0.5 block">
-                          {(() => {
-                            const gr: any = c.global_rank;
-                            if (gr === null || gr === undefined || gr === "" || gr === "N/A" || gr === "—") return "0";
-                            if (typeof gr === "string") {
-                              const s = gr.trim();
-                              if (s.startsWith("#")) return s;
-                              const num = parseInt(s.replace(/\D/g, ""), 10);
-                              return !isNaN(num) && num > 0 ? `${num.toLocaleString()}` : (s === "—" ? "0" : s);
-                            }
-                            if (typeof gr === "number" && gr > 0) return `${gr.toLocaleString()}`;
-                            return "0";
-                          })()}
-                        </span>
-                      </div>
-
-                      <div className="bg-slate-100/70 dark:bg-navy-900 p-2 rounded-xl border border-slate-200/60 dark:border-navy-800">
-                        <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 block uppercase">Total Solved</span>
-                        <span className="font-mono font-black text-xs text-slate-900 dark:text-white mt-0.5 block">
-                          {c.total_solved}
-                        </span>
-                      </div>
-
-                      <div 
-                        className="bg-purple-50/70 dark:bg-purple-950/40 p-2 rounded-xl border border-purple-100 dark:border-purple-900/50 cursor-pointer"
-                        title={c.contest_rating > 0 ? `Exact Rating: ${Number(c.contest_rating).toFixed(3)}` : undefined}
-                      >
-                        <span className="text-[10px] font-extrabold text-purple-600 dark:text-purple-400 block uppercase">Contest Rating</span>
-                        <span className="font-mono font-black text-xs text-purple-700 dark:text-purple-300 mt-0.5 block">
-                          {c.contest_rating > 0 ? Math.round(c.contest_rating).toLocaleString() : "—"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Easy / Medium / Hard Breakdown */}
-                    <div className="flex items-center justify-between text-[11px] font-mono font-bold px-2 pt-1 border-t border-slate-100 dark:border-navy-800">
-                      <span className="text-emerald-600 dark:text-emerald-400">Easy: {c.easy_solved}</span>
-                      <span className="text-amber-600 dark:text-amber-400">Medium: {c.medium_solved}</span>
-                      <span className="text-rose-600 dark:text-rose-400">Hard: {c.hard_solved}</span>
-                    </div>
+                      );
+                    })}
                   </div>
-                ))}
+                ) : (
+                  /* PREMIUM RICH CARDS VIEW */
+                  <div className="space-y-3">
+                    {paginatedCandidates.map((c) => {
+                      const ratingVal = Math.round(c.contest_rating || 0);
+                      const isHighRated = ratingVal >= 1750;
+                      const totalSolved = c.total_solved || 1;
+                      const easyPct = Math.round(((c.easy_solved || 0) / totalSolved) * 100);
+                      const medPct = Math.round(((c.medium_solved || 0) / totalSolved) * 100);
+                      const hardPct = Math.max(0, 100 - easyPct - medPct);
+
+                      return (
+                        <div
+                          key={c.id}
+                          onClick={() => setSelectedCandidate(c)}
+                          className="bg-white dark:bg-navy-950 rounded-2xl border border-slate-200/90 dark:border-navy-800 p-4 shadow-sm hover:shadow-md transition-all space-y-3 relative active:scale-[0.99] cursor-pointer group hover:border-blue-500/40"
+                        >
+                          {/* Card Header: Avatar + Student Name + Leetcode Link & Rating */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              {/* Avatar with Glow Ring */}
+                              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm text-white shrink-0 shadow-sm transition-transform group-hover:scale-105 ${
+                                isHighRated
+                                  ? 'bg-gradient-to-br from-amber-500 via-purple-600 to-indigo-600 ring-2 ring-purple-500/40 shadow-purple-500/20'
+                                  : 'bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 ring-1 ring-blue-400/30 shadow-blue-500/15'
+                              }`}>
+                                {c.name.charAt(0)}
+                              </div>
+
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <h5 className="font-extrabold text-slate-900 dark:text-white text-sm leading-tight truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                    {c.name}
+                                  </h5>
+                                  {isHighRated && (
+                                    <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5" title="Top Contest Performer">
+                                      <Award className="w-2.5 h-2.5" />
+                                      <span>Top</span>
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate">
+                                  {c.username && (
+                                    <span className="truncate">@{c.username}</span>
+                                  )}
+                                  {c.reg_no && (
+                                    <>
+                                      <span className="text-slate-300 dark:text-navy-700">•</span>
+                                      <span className="truncate text-slate-600 dark:text-slate-300 font-semibold">{c.reg_no}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Top Right: Rating Pill + External LeetCode */}
+                            <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                              {ratingVal > 0 ? (
+                                <div
+                                  className={`px-2.5 py-1 rounded-xl font-mono font-black text-xs flex items-center gap-1 border shadow-2xs ${
+                                    isHighRated
+                                      ? 'bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                                      : 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900'
+                                  }`}
+                                  title={`Exact Rating: ${Number(c.contest_rating).toFixed(2)}`}
+                                >
+                                  <Flame className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 fill-purple-500/30" />
+                                  <span>{ratingVal.toLocaleString()}</span>
+                                </div>
+                              ) : (
+                                <span className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-navy-900 text-slate-400 font-mono font-bold text-[11px]">
+                                  Unrated
+                                </span>
+                              )}
+
+                              <a
+                                href={c.leetcode_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-all flex items-center justify-center shrink-0"
+                                title="Open LeetCode Profile"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            </div>
+                          </div>
+
+                          {/* Academic Tags Strip */}
+                          <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                            <span className="px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-extrabold text-[10px] border border-blue-200/50 dark:border-blue-900/40">
+                              {c.dept_code}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 font-semibold text-[10px]">
+                              {c.batch}
+                            </span>
+                            {c.twelfth_cutoff !== null && c.twelfth_cutoff !== undefined && (
+                              <span className="px-2 py-0.5 rounded-lg bg-cyan-50 dark:bg-cyan-950/50 text-cyan-700 dark:text-cyan-300 font-mono font-black text-[10px] border border-cyan-200/60 dark:border-cyan-900/50">
+                                Cutoff: {Number(c.twelfth_cutoff).toFixed(1)}
+                              </span>
+                            )}
+                            {c.primary_language && (
+                              <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400 font-mono text-[10px]">
+                                {c.primary_language}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* 3-Column Fintech Performance Metric Grid */}
+                          <div className="grid grid-cols-3 gap-2 text-center pt-0.5">
+                            {/* 1. Total Solved */}
+                            <div className="bg-slate-50 dark:bg-navy-900/70 p-2 rounded-xl border border-slate-100 dark:border-navy-800">
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Total Solved</span>
+                              <span className="font-mono font-black text-sm text-slate-900 dark:text-white mt-0.5 block">
+                                {c.total_solved}
+                              </span>
+                            </div>
+
+                            {/* 2. Global Rank */}
+                            <div className="bg-blue-50/60 dark:bg-blue-950/30 p-2 rounded-xl border border-blue-100 dark:border-blue-900/40">
+                              <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider block">LeetCode Rank</span>
+                              <span className="font-mono font-black text-xs text-blue-700 dark:text-blue-300 mt-0.5 block truncate">
+                                {(() => {
+                                  const gr: any = c.global_rank;
+                                  if (gr === null || gr === undefined || gr === "" || gr === "N/A" || gr === "—") return "0";
+                                  if (typeof gr === "string") {
+                                    const s = gr.trim();
+                                    if (s.startsWith("#")) return s;
+                                    const num = parseInt(s.replace(/\D/g, ""), 10);
+                                    return !isNaN(num) && num > 0 ? `#${num.toLocaleString()}` : (s === "—" ? "0" : s);
+                                  }
+                                  if (typeof gr === "number" && gr > 0) return `#${gr.toLocaleString()}`;
+                                  return "0";
+                                })()}
+                              </span>
+                            </div>
+
+                            {/* 3. Acceptance / Contests */}
+                            <div className="bg-purple-50/60 dark:bg-purple-950/30 p-2 rounded-xl border border-purple-100 dark:border-purple-900/40">
+                              <span className="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-wider block">Acceptance</span>
+                              <span className="font-mono font-black text-xs text-purple-700 dark:text-purple-300 mt-0.5 block">
+                                {c.acceptance_rate ? `${Number(c.acceptance_rate).toFixed(1)}%` : "—"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Problem Difficulty Segmented Distribution Bar */}
+                          <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-navy-800/80">
+                            <div className="h-2 w-full bg-slate-100 dark:bg-navy-800 rounded-full overflow-hidden flex">
+                              <div
+                                style={{ width: `${easyPct}%` }}
+                                className="bg-emerald-500 h-full transition-all"
+                                title={`Easy: ${c.easy_solved} (${easyPct}%)`}
+                              />
+                              <div
+                                style={{ width: `${medPct}%` }}
+                                className="bg-amber-500 h-full transition-all"
+                                title={`Medium: ${c.medium_solved} (${medPct}%)`}
+                              />
+                              <div
+                                style={{ width: `${hardPct}%` }}
+                                className="bg-rose-500 h-full transition-all"
+                                title={`Hard: ${c.hard_solved} (${hardPct}%)`}
+                              />
+                            </div>
+
+                            <div className="flex items-center justify-between text-[10px] font-mono font-bold px-0.5">
+                              <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                                {c.easy_solved} Easy
+                              </span>
+                              <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+                                {c.medium_solved} Med
+                              </span>
+                              <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block" />
+                                {c.hard_solved} Hard
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Bottom Action Button */}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCandidate(c)}
+                            className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 active:scale-98 text-white font-extrabold text-xs shadow-md shadow-blue-600/20 transition-all flex items-center justify-between cursor-pointer"
+                          >
+                            <div className="flex items-center gap-1.5">
+                              <Eye className="w-3.5 h-3.5 text-blue-100" />
+                              <span>View Intelligence Profile</span>
+                            </div>
+                            <ChevronRight className="w-3.5 h-3.5 text-blue-200" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Pagination Controls */}

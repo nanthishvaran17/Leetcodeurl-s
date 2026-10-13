@@ -52,7 +52,7 @@ def to_roman_year(val: Any) -> str:
 def clean_report_title(t_str: str) -> str:
     if not t_str:
         return ""
-    t = str(t_str).strip()
+    t = t_str.strip()
     # 1. Strip leading standalone numbers e.g. "2 2 ", "2 ", "3 ", "2-", "2 2"
     t = re.sub(r'^\s*(\d+(?:[\s-]+|$))+', '', t).strip()
     # 2. Strip orphaned standalone numbers before hyphens e.g. " (AUTONOMOUS) 2 - " -> " (AUTONOMOUS) "
@@ -118,6 +118,7 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
     )
     CONTEST_REPORT_TYPES = (
         "FRIDAY_OFFICIAL_CONTEST", "FRIDAY_OFFICIAL", "FRIDAY_OFFICIAL_RESULT",
+        "SATURDAY_BIWEEKLY_CONTEST", "BIWEEKLY_CONTEST",
         "CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "WEEKLY_CONTEST",
         "SUNDAY_LIVE_CONTEST", "WEEKLY_CONTEST_INTELLIGENCE",
         "CONTEST_ATTENDANCE_PARTICIPATION", "CONTEST_PERFORMANCE_RANKING",
@@ -127,6 +128,8 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
     rtype_upper = (config.report_type or "").upper()
 
     REPORT_TYPE_TITLES = {
+        "FRIDAY_OFFICIAL_CONTEST": "Friday Contest Result — Student Performance Report",
+        "SATURDAY_BIWEEKLY_CONTEST": "Saturday Biweekly Contest Result — Student Performance Report",
         "WEEKLY_CONTEST_INTELLIGENCE": "Weekly Contest Intelligence Report",
         "SUNDAY_LIVE_CONTEST": "Sunday Live Contest Report",
         "CONTEST_ATTENDANCE_PARTICIPATION": "Contest Attendance & Participation Report",
@@ -169,16 +172,24 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         if config.filters and isinstance(config.filters, dict):
             eff_sess = config.filters.get("session_id") or config.filters.get("session_date") or config.filters.get("report_date")
         if eff_sess and str(eff_sess).strip().upper() not in ("LATEST", "NONE", "ALL"):
-            res_data["session_date"] = str(eff_sess).strip()
-            res_data["sessionDate"] = str(eff_sess).strip()
-            res_data["session_id"] = str(eff_sess).strip()
+            if rtype_upper in ("FRIDAY_OFFICIAL_CONTEST", "FRIDAY_OFFICIAL", "FRIDAY_OFFICIAL_RESULT"):
+                from backend.services.contest_performance_service import get_friday_date_for_session
+                f_date = get_friday_date_for_session(str(eff_sess).strip())
+                res_data["session_date"] = f_date
+                res_data["sessionDate"] = f_date
+                res_data["contestDate"] = f_date
+                res_data["session_id"] = str(eff_sess).strip()
+            else:
+                res_data["session_date"] = str(eff_sess).strip()
+                res_data["sessionDate"] = str(eff_sess).strip()
+                res_data["session_id"] = str(eff_sess).strip()
         try:
             existing = db.query(ReportHistory).filter(ReportHistory.report_id == final_rid).first()
             if existing:
-                existing.dataset = res_data
-                existing.status = "GENERATED"
-                existing.title = res_data.get("title") or res_data.get("reportTitle") or title
-                existing.filters = config.model_dump()
+                existing.dataset = res_data  # type: ignore
+                existing.status = "GENERATED"  # type: ignore
+                existing.title = res_data.get("title") or res_data.get("reportTitle") or title  # type: ignore
+                existing.filters = config.model_dump()  # type: ignore
             else:
                 history_entry = ReportHistory(
                     report_id=final_rid,
@@ -430,11 +441,18 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         band_students = []
         for s in students:
             co = s.twelfth_cutoff
+            co_val: Optional[float] = None
+            if co is not None:
+                try:
+                    co_val = float(co)
+                except (ValueError, TypeError):
+                    co_val = None
+
             if band["min"] is None:
-                if co is None:
+                if co_val is None:
                     band_students.append(s)
             else:
-                if co is not None and band["min"] <= co <= band["max"]:
+                if co_val is not None and band["min"] <= co_val <= band["max"]:
                     band_students.append(s)
         
         b_total = len(band_students)
@@ -503,7 +521,7 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
     resolved_cname = curr_sess.contest_name if curr_sess else None
     resolved_cdate = curr_sess.session_date if curr_sess else None
 
-    metrics_dict = {
+    metrics_dict: Dict[str, Any] = {
         "totalStudents": total_students,
         "verifiedStudents": verified_students,
         "unverifiedStudents": unverified_students,

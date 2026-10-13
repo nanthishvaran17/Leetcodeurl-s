@@ -36,8 +36,8 @@ BATCH_CONFIG = [
 
 DEPARTMENT_COORDINATORS = {
     "CSE(CS)": "M. Santhoshkumar, AP / CSE (Cyber Security)",
-    "CSE(IoT)": "Mohan Gandhi S",
-    "CSE(IOT)": "Mohan Gandhi S",
+    "CSE(IoT)": "P.Devayani /AP",
+    "CSE(IOT)": "P.Devayani /AP",
     "DEFAULT": "Dr. S. Prabhu, M.E., Ph.D. / Associate Professor & Head - CSE (Cyber Security)",
 }
 

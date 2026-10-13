@@ -497,7 +497,8 @@ def generate_report_bytes(
             save_snapshot=False,
             dept_filter=dept_val,
             year_filter=year_val,
-            batch_filter=batch
+            batch_filter=batch,
+            session_id=flt.get("session_id")
         )
         temp_dir = tempfile.gettempdir()
         temp_path = os.path.join(temp_dir, f"temp_report_{uuid.uuid4().hex}.xlsx")
@@ -533,7 +534,6 @@ def generate_report_bytes(
     # 2.5 Historical Contest Intelligence Engine
     if rpt in ("HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"):
         from backend.services.hist_intel_service import build_hist_intel_report
-        from backend.services.report_models import ReportConfig
         from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
         from backend.exporters.dynamic_pdf_exporter import export_dynamic_pdf
         from backend.exporters.dynamic_word_exporter import export_dynamic_word
@@ -637,7 +637,6 @@ def pregenerate_all_weekly_reports(db: Session, institution_id: str = "NEC"):
     Call on startup, post-sync, or after Sunday contests.
     """
     from backend.services.report_engine import build_universal_report
-    from backend.services.report_models import ReportConfig
 
     core_report_types = [
         "WEEK_ON_WEEK_INTELLIGENCE",

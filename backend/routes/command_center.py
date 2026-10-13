@@ -452,8 +452,8 @@ def get_students(
             "4": ["4", "IV", "4th", "IV Year", "4 Year"],
             "4TH": ["4", "IV", "4th", "IV Year", "4 Year"],
         }
-        clean_yr_key = str(year_level).upper().replace("YEAR", "").strip()
-        y_matches = years_map_dict.get(clean_yr_key) or years_map_dict.get(str(year_level).upper()) or [year_level]
+        clean_yr_key = year_level.upper().replace("YEAR", "").strip()
+        y_matches = years_map_dict.get(clean_yr_key) or years_map_dict.get(year_level.upper()) or [year_level]
         q = q.filter(Student.year_level.in_(y_matches))
     if section and section != "ALL":
         from backend.models import Section

@@ -131,6 +131,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     return (
       rType === 'CONTEST_PERFORMANCE' ||
       rType === 'OFFICIAL_CONTEST' ||
+      rType === 'FRIDAY_OFFICIAL_CONTEST' ||
+      rType === 'FRIDAY_OFFICIAL' ||
+      rType === 'SATURDAY_BIWEEKLY_CONTEST' ||
       rType === 'WEEKLY_CONTEST' ||
       rType === 'WEEKLY_CONTEST_INTELLIGENCE' ||
       rType === 'SUNDAY_LIVE_CONTEST' ||
@@ -316,6 +319,31 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     }
     return t.replace(/\s+/g, ' ').trim();
   };
+
+  const isFridayContestType = useMemo(() => {
+    const rid = String(report?.reportId || report?.report_id || '').toUpperCase();
+    return rType === 'FRIDAY_OFFICIAL_CONTEST' || rType === 'FRIDAY_OFFICIAL' || rid.includes('RPT-FRIDAY') || rid.includes('FRIDAY');
+  }, [report, rType]);
+
+  const headerTitle = useMemo(() => {
+    let raw = cleanReportTitle(report?.title || report?.reportTitle);
+    if (isFridayContestType && !rType.includes('BIWEEKLY')) {
+      if (raw.toUpperCase().includes('BIWEEKLY CONTEST')) {
+        raw = raw.replace(/BIWEEKLY CONTEST\s*\d*\s*—?/gi, 'FRIDAY CONTEST RESULT —').trim();
+      }
+      return raw || 'FRIDAY CONTEST RESULT — STUDENT PERFORMANCE REPORT';
+    }
+    return raw || (isContestReport ? `${report?.contestName || 'Contest'} Performance Report` : 'Report Preview');
+  }, [report, isFridayContestType, isContestReport, rType]);
+
+  const contestBadgeText = useMemo(() => {
+    if (isFridayContestType && !rType.includes('BIWEEKLY')) {
+      const cDate = report?.contestDate || report?.sessionDate || '';
+      const name = (report?.contestName && !report.contestName.toLowerCase().includes('biweekly')) ? report.contestName : 'Friday Contest Result';
+      return `${name}${cDate ? ` (${cDate})` : ''}`;
+    }
+    return `${report?.contestName || 'Contest'} (${report?.contestDate || report?.sessionDate || 'Sunday Session'})`;
+  }, [report, isFridayContestType, rType]);
 
   const getQVal = (q: any, qNum: number, solvedCount: any, isPart: boolean) => {
     if (!isPart) return 0;
@@ -835,7 +863,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 <h2 className="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight print:text-black truncate print:whitespace-normal">
-                  {cleanReportTitle(report.title || report.reportTitle) || (isContestReport ? `${report.contestName || 'Contest'} Performance Report` : 'Report Preview')}
+                  {headerTitle}
                 </h2>
                 <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 font-extrabold tracking-wide shrink-0 shadow-2xs print:hidden">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -843,9 +871,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                 </span>
               </div>
               <div className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5 truncate print:whitespace-normal flex items-center gap-1.5 flex-wrap">
-                {isContestReport && report.contestName && (
+                {isContestReport && (
                   <span className="font-bold text-amber-900 print:text-black px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-[10px] sm:text-[11px]">
-                    {report.contestName} ({report.contestDate || report.sessionDate || 'Sunday Session'})
+                    {contestBadgeText}
                   </span>
                 )}
                 <span className="text-[10px] sm:text-[11px] text-slate-500">Report ID: <span className="font-mono font-bold text-slate-700 print:text-slate-600">{report.reportId || report.report_id}</span></span>
@@ -912,381 +940,256 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
           {isContestReport ? (
             <div className="space-y-6">
               
-              {/* Contest Summary KPI Cards (Executive Bento Grid) */}
+              {/* Contest Executive Summary: Solve Condition & Performance Cohorts */}
               {!isHistIntel && !isWowIntel && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-brand-500 animate-pulse" />
-                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                        <span>Contest Attendance &amp; Performance Intelligence</span>
-                      </h3>
-                    </div>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
-                      <Filter className="w-3 h-3 text-brand-500" />
-                      <span>Executive Bento Cohorts • Click any metric to filter</span>
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-                    
-                    {/* Bento Card 1: Total Enrolled Roster */}
-                    <div 
-                      onClick={() => setActiveFilter(null)}
-                      className={`relative overflow-hidden p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-300 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 group ${
-                        activeFilter === null 
-                          ? 'bg-gradient-to-br from-indigo-500/15 via-brand-500/10 to-transparent border-brand-500 ring-2 ring-brand-500/30 shadow-md shadow-brand-500/10' 
-                          : 'bg-white border-slate-200/90 hover:border-brand-300 shadow-2xs'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1 sm:mb-2">
-                        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-500">Total Enrolled</span>
-                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-brand-50 border border-brand-200 text-brand-600 flex items-center justify-center transition-transform group-hover:scale-110">
-                          <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <div className="space-y-4 print:break-inside-avoid">
+                  <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#0c1427] border-2 border-slate-200/90 dark:border-white/10 shadow-xl space-y-5">
+                    {/* Header with Title, Report Type Scope & Badges */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/10 pb-4">
+                      <div className="flex items-center space-x-3 min-w-0">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/25 border border-white/20">
+                          <Target className="w-5 h-5 text-white" />
                         </div>
-                      </div>
-                      <div className="flex items-baseline gap-1.5 my-0.5 sm:my-1">
-                        <span className="text-xl sm:text-3xl font-black font-mono text-slate-900 tracking-tight">
-                          {totalRosterCount}
-                        </span>
-                        <span className="text-[10px] sm:text-xs font-bold text-slate-500">Students</span>
-                      </div>
-                      <div className="flex items-center justify-between text-[10px] pt-0.5 sm:pt-1">
-                        <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full font-bold text-brand-700 bg-brand-50 border border-brand-200 text-[9px] sm:text-[10px]">
-                          Roster Total
-                        </span>
-                        <span className="text-[9px] sm:text-[10px] text-slate-400 font-mono font-bold">100% Synced</span>
-                      </div>
-                    </div>
-
-                    {/* Bento Card 2: Attended Participants */}
-                    <div 
-                      onClick={() => toggleFilter('PUBLIC_ATTENDED')}
-                      className={`relative overflow-hidden p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-300 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 group ${
-                        activeFilter === 'PUBLIC_ATTENDED' || activeFilter === 'VIRTUAL_ATTENDED'
-                          ? 'bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-transparent border-emerald-500 ring-2 ring-emerald-500/30 shadow-md shadow-emerald-500/10' 
-                          : 'bg-white border-slate-200/90 hover:border-emerald-300 shadow-2xs'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1 sm:mb-2">
-                        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-emerald-700">Attended</span>
-                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center transition-transform group-hover:scale-110">
-                          <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        </div>
-                      </div>
-                      <div className="flex items-baseline gap-1.5 my-0.5 sm:my-1">
-                        <span className="text-xl sm:text-3xl font-black font-mono text-emerald-600 tracking-tight">
-                          {actualParticipantCount}
-                        </span>
-                        <span className="text-[10px] sm:text-xs font-bold text-emerald-700">({turnoutPercentage})</span>
-                      </div>
-                      <div className="flex items-center justify-between text-[10px] pt-0.5 sm:pt-1">
-                        <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 text-[9px] sm:text-[10px]">
-                          Turnout
-                        </span>
-                        <span className="text-[9px] sm:text-[10px] text-emerald-600 font-mono font-bold">Active Solvers</span>
-                      </div>
-                    </div>
-
-                    {/* Bento Card 3: Absenteeism / Not Attended */}
-                    <div 
-                      onClick={() => toggleFilter('NOT_ATTENDED')}
-                      className={`relative overflow-hidden p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-300 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 group ${
-                        activeFilter === 'NOT_ATTENDED' 
-                          ? 'bg-gradient-to-br from-rose-500/15 via-pink-500/10 to-transparent border-rose-500 ring-2 ring-rose-500/30 shadow-md shadow-rose-500/10' 
-                          : 'bg-white border-slate-200/90 hover:border-rose-300 shadow-2xs'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1 sm:mb-2">
-                        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-rose-700">Absent</span>
-                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center transition-transform group-hover:scale-110">
-                          <UserX className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        </div>
-                      </div>
-                      <div className="flex items-baseline gap-1.5 my-0.5 sm:my-1">
-                        <span className="text-xl sm:text-3xl font-black font-mono text-rose-600 tracking-tight">
-                          {actualNotAttendedCount}
-                        </span>
-                        <span className="text-[10px] sm:text-xs font-bold text-rose-700">({absentPercentage})</span>
-                      </div>
-                      <div className="flex items-center justify-between text-[10px] pt-0.5 sm:pt-1">
-                        <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full font-bold text-rose-700 bg-rose-50 border border-rose-200 text-[9px] sm:text-[10px]">
-                          Non-Attending
-                        </span>
-                        <span className="text-[9px] sm:text-[10px] text-rose-500 font-mono font-bold">Needs Review</span>
-                      </div>
-                    </div>
-
-                    {/* Bento Card 4: Roster Integrity & Handle Status */}
-                    <div 
-                      onClick={() => {
-                        if ((contestSummary.pendingUsername || 0) > 0) toggleFilter('PENDING_USERNAME');
-                        else if ((contestSummary.invalidUsername || 0) > 0) toggleFilter('INVALID_USERNAME');
-                      }}
-                      className={`relative overflow-hidden p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-300 touch-manipulation group ${
-                        (contestSummary.pendingUsername || 0) > 0 || (contestSummary.invalidUsername || 0) > 0
-                          ? 'cursor-pointer hover:-translate-y-0.5 active:scale-95 bg-white border-amber-300 hover:border-amber-400' 
-                          : 'bg-white border-slate-200/90'
-                      } ${
-                        activeFilter === 'PENDING_USERNAME' || activeFilter === 'INVALID_USERNAME'
-                          ? 'ring-2 ring-amber-500/30 border-amber-500 shadow-md shadow-amber-500/10'
-                          : 'shadow-2xs'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1 sm:mb-2">
-                        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-amber-700">Integrity</span>
-                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center transition-transform group-hover:scale-110">
-                          <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        </div>
-                      </div>
-                      <div className="flex items-baseline gap-1.5 my-0.5 sm:my-1">
-                        <span className="text-xl sm:text-3xl font-black font-mono text-slate-900 tracking-tight">
-                          {(contestSummary.pendingUsername || 0) + (contestSummary.invalidUsername || 0)}
-                        </span>
-                        <span className="text-[10px] sm:text-xs font-bold text-slate-500">Issues</span>
-                      </div>
-                      <div className="flex items-center justify-between text-[10px] pt-0.5 sm:pt-1">
-                        <div className="flex items-center gap-1 flex-wrap">
-                          {(contestSummary.pendingUsername || 0) === 0 && (contestSummary.invalidUsername || 0) === 0 ? (
-                            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 text-[9px] sm:text-[10px]">
-                              100% Verified
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-sm sm:text-base font-black text-slate-950 dark:text-white uppercase tracking-wider">
+                              Solve Condition &amp; Performance Summary
+                            </h3>
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20">
+                              {rType || 'CONTEST PERFORMANCE REPORT'}
                             </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full font-bold text-amber-700 bg-amber-50 border border-amber-200 text-[9px] sm:text-[10px]">
-                              {(contestSummary.pendingUsername || 0) + (contestSummary.invalidUsername || 0)} Anomalies
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[9px] sm:text-[10px] text-emerald-600 font-bold font-mono">Zero Errors</span>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-              )}
-
-
-              {/* Problem Solve Distribution (Clickable Cohort Spectrum) */}
-              {!isSundayLive && !isHistIntel && !isWowIntel && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse" />
-                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                        <span>Problem Solve Distribution Spectrum</span>
-                      </h3>
-                    </div>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
-                      Click any cohort to inspect exact student records
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    
-                    {/* 4 Problems Solved */}
-                    <div 
-                      onClick={() => toggleFilter('SOLVED_4')}
-                      className={`relative overflow-hidden p-3.5 rounded-2xl border flex flex-col justify-between min-h-[115px] transition-all duration-300 cursor-pointer touch-manipulation hover:-translate-y-1 active:scale-95 group ${
-                        activeFilter === 'SOLVED_4' 
-                          ? 'bg-gradient-to-br from-emerald-500/20 via-teal-500/10 to-transparent dark:from-emerald-950/60 dark:via-slate-900 dark:to-slate-950 border-emerald-500 ring-2 ring-emerald-500/40 shadow-lg shadow-emerald-500/15' 
-                          : 'bg-white/90 dark:bg-slate-900/80 border-slate-200/80 dark:border-white/10 hover:border-emerald-400 dark:hover:border-emerald-500/50 shadow-xs'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center justify-between gap-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">4 Solved (Full)</span>
-                          <div className="w-7 h-7 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
-                            <Trophy className="w-3.5 h-3.5" />
                           </div>
-                        </div>
-                        <div className="flex items-baseline gap-1.5 my-1.5">
-                          <p className="text-2xl font-black font-mono text-emerald-700 dark:text-emerald-300 tracking-tight">{s4Count}</p>
-                          <span className="text-[11px] font-bold text-emerald-600/80 dark:text-emerald-400/80 font-mono">({getCohortPct(s4Count)})</span>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                            Aggregated solve condition cohorts, problem difficulty metrics &amp; attendance breakdown for this contest session.
+                          </p>
                         </div>
                       </div>
-                      <div className="space-y-1.5 pt-1">
-                        <div className="h-1.5 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(100, Math.max(s4Count > 0 ? 8 : 0, (s4Count / Math.max(totalRosterCount, 1)) * 100))}%` }}
-                          />
-                        </div>
-                        <span className="inline-flex items-center text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full w-fit border border-emerald-500/20">
-                          Flawless Solvers
+
+                      <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200">
+                          <Users className="w-3.5 h-3.5 text-brand-500" />
+                          <span>In Scope: {allRows.length} Students</span>
+                        </span>
+                        {activeFilter && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs font-black text-amber-700 dark:text-amber-300">
+                            <Filter className="w-3.5 h-3.5 text-amber-500" />
+                            <span>Filtered View: {conditionStats.totalStudents}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 1. Problem Solve Distribution Cohorts (4/4, 3/4, 2/4, 1/4, 0/4, Not Attended) */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                          <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                          <span>Contest / Weekly Solve Distribution Cohorts</span>
+                        </span>
+                        <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                          Click any cohort card to filter students in the table
                         </span>
                       </div>
-                    </div>
 
-                    {/* 3 Problems Solved */}
-                    <div 
-                      onClick={() => toggleFilter('SOLVED_3')}
-                      className={`relative overflow-hidden p-3.5 rounded-2xl border flex flex-col justify-between min-h-[115px] transition-all duration-300 cursor-pointer touch-manipulation hover:-translate-y-1 active:scale-95 group ${
-                        activeFilter === 'SOLVED_3' 
-                          ? 'bg-gradient-to-br from-teal-500/20 via-cyan-500/10 to-transparent dark:from-teal-950/60 dark:via-slate-900 dark:to-slate-950 border-teal-500 ring-2 ring-teal-500/40 shadow-lg shadow-teal-500/15' 
-                          : 'bg-white/90 dark:bg-slate-900/80 border-slate-200/80 dark:border-white/10 hover:border-teal-400 dark:hover:border-teal-500/50 shadow-xs'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center justify-between gap-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-teal-800 dark:text-teal-300">3 Solved</span>
-                          <div className="w-7 h-7 rounded-xl bg-teal-500/15 border border-teal-500/25 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
-                            <Target className="w-3.5 h-3.5" />
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+                        {/* 4/4 Solved */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_4')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                            activeFilter === 'SOLVED_4'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md'
+                              : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-emerald-400 shadow-xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300">4 Solved (4/4)</span>
+                            <Trophy className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           </div>
+                          <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">{conditionStats.s4}</p>
+                          <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full w-fit">
+                            {conditionStats.totalStudents > 0 ? `${((conditionStats.s4 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                          </span>
                         </div>
-                        <div className="flex items-baseline gap-1.5 my-1.5">
-                          <p className="text-2xl font-black font-mono text-teal-700 dark:text-teal-300 tracking-tight">{s3Count}</p>
-                          <span className="text-[11px] font-bold text-teal-600/80 dark:text-teal-400/80 font-mono">({getCohortPct(s3Count)})</span>
-                        </div>
-                      </div>
-                      <div className="space-y-1.5 pt-1">
-                        <div className="h-1.5 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-teal-500 to-cyan-400 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(100, Math.max(s3Count > 0 ? 8 : 0, (s3Count / Math.max(totalRosterCount, 1)) * 100))}%` }}
-                          />
-                        </div>
-                        <span className="inline-flex items-center text-[10px] font-black text-teal-800 dark:text-teal-300 bg-teal-500/10 px-2 py-0.5 rounded-full w-fit border border-teal-500/20">
-                          Advanced Solvers
-                        </span>
-                      </div>
-                    </div>
 
-                    {/* 2 Problems Solved */}
-                    <div 
-                      onClick={() => toggleFilter('SOLVED_2')}
-                      className={`relative overflow-hidden p-3.5 rounded-2xl border flex flex-col justify-between min-h-[115px] transition-all duration-300 cursor-pointer touch-manipulation hover:-translate-y-1 active:scale-95 group ${
-                        activeFilter === 'SOLVED_2' 
-                          ? 'bg-gradient-to-br from-indigo-500/20 via-blue-500/10 to-transparent dark:from-indigo-950/60 dark:via-slate-900 dark:to-slate-950 border-brand-500 ring-2 ring-brand-500/40 shadow-lg shadow-brand-500/15' 
-                          : 'bg-white/90 dark:bg-slate-900/80 border-slate-200/80 dark:border-white/10 hover:border-brand-400 dark:hover:border-brand-500/50 shadow-xs'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center justify-between gap-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">2 Solved</span>
-                          <div className="w-7 h-7 rounded-xl bg-brand-500/15 border border-brand-500/25 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
-                            <Zap className="w-3.5 h-3.5" />
+                        {/* 3/4 Solved */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_3')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                            activeFilter === 'SOLVED_3'
+                              ? 'bg-teal-50 dark:bg-teal-950/40 border-teal-500 ring-2 ring-teal-500/30 shadow-md'
+                              : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-teal-400 shadow-xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase text-teal-800 dark:text-teal-300">3 Solved (3/4)</span>
+                            <Sparkles className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
                           </div>
+                          <p className="text-2xl font-black text-teal-800 dark:text-teal-300 tracking-tight my-1">{conditionStats.s3}</p>
+                          <span className="text-[10px] font-black text-teal-800 dark:text-teal-300 bg-teal-500/10 px-2 py-0.5 rounded-full w-fit">
+                            {conditionStats.totalStudents > 0 ? `${((conditionStats.s3 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                          </span>
                         </div>
-                        <div className="flex items-baseline gap-1.5 my-1.5">
-                          <p className="text-2xl font-black font-mono text-brand-700 dark:text-brand-300 tracking-tight">{s2Count}</p>
-                          <span className="text-[11px] font-bold text-brand-600/80 dark:text-brand-400/80 font-mono">({getCohortPct(s2Count)})</span>
-                        </div>
-                      </div>
-                      <div className="space-y-1.5 pt-1">
-                        <div className="h-1.5 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-brand-500 to-indigo-400 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(100, Math.max(s2Count > 0 ? 8 : 0, (s2Count / Math.max(totalRosterCount, 1)) * 100))}%` }}
-                          />
-                        </div>
-                        <span className="inline-flex items-center text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-2 py-0.5 rounded-full w-fit border border-brand-500/20">
-                          Intermediate
-                        </span>
-                      </div>
-                    </div>
 
-                    {/* 1 Problem Solved */}
-                    <div 
-                      onClick={() => toggleFilter('SOLVED_1')}
-                      className={`relative overflow-hidden p-3.5 rounded-2xl border flex flex-col justify-between min-h-[115px] transition-all duration-300 cursor-pointer touch-manipulation hover:-translate-y-1 active:scale-95 group ${
-                        activeFilter === 'SOLVED_1' 
-                          ? 'bg-gradient-to-br from-amber-500/20 via-yellow-500/10 to-transparent dark:from-amber-950/60 dark:via-slate-900 dark:to-slate-950 border-amber-500 ring-2 ring-amber-500/40 shadow-lg shadow-amber-500/15' 
-                          : 'bg-white/90 dark:bg-slate-900/80 border-slate-200/80 dark:border-white/10 hover:border-amber-400 dark:hover:border-amber-500/50 shadow-xs'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center justify-between gap-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">1 Solved</span>
-                          <div className="w-7 h-7 rounded-xl bg-amber-500/15 border border-amber-500/25 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
-                            <Flame className="w-3.5 h-3.5" />
+                        {/* 2/4 Solved */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_2')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                            activeFilter === 'SOLVED_2'
+                              ? 'bg-indigo-50 dark:bg-indigo-950/40 border-brand-500 ring-2 ring-brand-500/30 shadow-md'
+                              : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-brand-400 shadow-xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase text-brand-800 dark:text-brand-300">2 Solved (2/4)</span>
+                            <Zap className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
                           </div>
+                          <p className="text-2xl font-black text-brand-800 dark:text-brand-300 tracking-tight my-1">{conditionStats.s2}</p>
+                          <span className="text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-2 py-0.5 rounded-full w-fit">
+                            {conditionStats.totalStudents > 0 ? `${((conditionStats.s2 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                          </span>
                         </div>
-                        <div className="flex items-baseline gap-1.5 my-1.5">
-                          <p className="text-2xl font-black font-mono text-amber-700 dark:text-amber-300 tracking-tight">{s1Count}</p>
-                          <span className="text-[11px] font-bold text-amber-600/80 dark:text-amber-400/80 font-mono">({getCohortPct(s1Count)})</span>
-                        </div>
-                      </div>
-                      <div className="space-y-1.5 pt-1">
-                        <div className="h-1.5 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(100, Math.max(s1Count > 0 ? 8 : 0, (s1Count / Math.max(totalRosterCount, 1)) * 100))}%` }}
-                          />
-                        </div>
-                        <span className="inline-flex items-center text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full w-fit border border-amber-500/20">
-                          Fundamental
-                        </span>
-                      </div>
-                    </div>
 
-                    {/* 0 Problems Solved (Attended) */}
-                    <div 
-                      onClick={() => toggleFilter('SOLVED_0')}
-                      className={`relative overflow-hidden p-3.5 rounded-2xl border flex flex-col justify-between min-h-[115px] transition-all duration-300 cursor-pointer touch-manipulation hover:-translate-y-1 active:scale-95 group ${
-                        activeFilter === 'SOLVED_0' 
-                          ? 'bg-gradient-to-br from-purple-500/20 via-fuchsia-500/10 to-transparent dark:from-purple-950/60 dark:via-slate-900 dark:to-slate-950 border-purple-500 ring-2 ring-purple-500/40 shadow-lg shadow-purple-500/15' 
-                          : 'bg-white/90 dark:bg-slate-900/80 border-slate-200/80 dark:border-white/10 hover:border-purple-400 dark:hover:border-purple-500/50 shadow-xs'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center justify-between gap-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">0 Solved (Attended)</span>
-                          <div className="w-7 h-7 rounded-xl bg-purple-500/15 border border-purple-500/25 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
-                            <Layers className="w-3.5 h-3.5" />
+                        {/* 1/4 Solved */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_1')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                            activeFilter === 'SOLVED_1'
+                              ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/30 shadow-md'
+                              : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-amber-400 shadow-xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300">1 Solved (1/4)</span>
+                            <Flame className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                           </div>
+                          <p className="text-2xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">{conditionStats.s1}</p>
+                          <span className="text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
+                            {conditionStats.totalStudents > 0 ? `${((conditionStats.s1 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                          </span>
                         </div>
-                        <div className="flex items-baseline gap-1.5 my-1.5">
-                          <p className="text-2xl font-black font-mono text-purple-700 dark:text-purple-300 tracking-tight">{s0Count}</p>
-                          <span className="text-[11px] font-bold text-purple-600/80 dark:text-purple-400/80 font-mono">({getCohortPct(s0Count)})</span>
-                        </div>
-                      </div>
-                      <div className="space-y-1.5 pt-1">
-                        <div className="h-1.5 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-purple-500 to-indigo-400 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(100, Math.max(s0Count > 0 ? 8 : 0, (s0Count / Math.max(totalRosterCount, 1)) * 100))}%` }}
-                          />
-                        </div>
-                        <span className="inline-flex items-center text-[10px] font-black text-purple-800 dark:text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full w-fit border border-purple-500/20">
-                          Attempted Turnout
-                        </span>
-                      </div>
-                    </div>
 
-                    {/* Not Attended / Absent */}
-                    <div 
-                      onClick={() => toggleFilter('NOT_ATTENDED')}
-                      className={`relative overflow-hidden p-3.5 rounded-2xl border flex flex-col justify-between min-h-[115px] transition-all duration-300 cursor-pointer touch-manipulation hover:-translate-y-1 active:scale-95 group ${
-                        activeFilter === 'NOT_ATTENDED' 
-                          ? 'bg-gradient-to-br from-rose-500/20 via-pink-500/10 to-transparent dark:from-rose-950/60 dark:via-slate-900 dark:to-slate-950 border-rose-500 ring-2 ring-rose-500/40 shadow-lg shadow-rose-500/15' 
-                          : 'bg-white/90 dark:bg-slate-900/80 border-slate-200/80 dark:border-white/10 hover:border-rose-400 dark:hover:border-rose-500/50 shadow-xs'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center justify-between gap-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">Not Attended</span>
-                          <div className="w-7 h-7 rounded-xl bg-rose-500/15 border border-rose-500/25 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
-                            <UserX className="w-3.5 h-3.5" />
+                        {/* 0/4 Solved (Attended) */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_0')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                            activeFilter === 'SOLVED_0'
+                              ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 ring-2 ring-purple-500/30 shadow-md'
+                              : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-purple-400 shadow-xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase text-purple-800 dark:text-purple-300">0 Solved (Attended)</span>
+                            <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
                           </div>
+                          <p className="text-2xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">{conditionStats.s0}</p>
+                          <span className="text-[10px] font-black text-purple-800 dark:text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full w-fit">
+                            {conditionStats.totalStudents > 0 ? `${((conditionStats.s0 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                          </span>
                         </div>
-                        <div className="flex items-baseline gap-1.5 my-1.5">
-                          <p className="text-2xl font-black font-mono text-rose-700 dark:text-rose-300 tracking-tight">{notAttendedCount}</p>
-                          <span className="text-[11px] font-bold text-rose-600/80 dark:text-rose-400/80 font-mono">({getCohortPct(notAttendedCount)})</span>
+
+                        {/* Not Attended / Absent */}
+                        <div
+                          onClick={() => toggleFilter('NOT_ATTENDED')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                            activeFilter === 'NOT_ATTENDED'
+                              ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 ring-2 ring-rose-500/30 shadow-md'
+                              : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-rose-400 shadow-xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase text-rose-800 dark:text-rose-300">Not Attended</span>
+                            <UserX className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                          </div>
+                          <p className="text-2xl font-black text-rose-800 dark:text-rose-300 tracking-tight my-1">{conditionStats.notAttendedCount}</p>
+                          <span className="text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded-full w-fit">
+                            {conditionStats.totalStudents > 0 ? `${((conditionStats.notAttendedCount / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                          </span>
                         </div>
-                      </div>
-                      <div className="space-y-1.5 pt-1">
-                        <div className="h-1.5 w-full bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-rose-500 to-pink-400 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(100, Math.max(notAttendedCount > 0 ? 8 : 0, (notAttendedCount / Math.max(totalRosterCount, 1)) * 100))}%` }}
-                          />
-                        </div>
-                        <span className="inline-flex items-center text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded-full w-fit border border-rose-500/20">
-                          Absent Roster
-                        </span>
                       </div>
                     </div>
 
+                    {/* 2. Problem Difficulty Solves Split (Easy / Medium / Hard / Total) */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/10">
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                        <Flame className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>Difficulty Solve Distribution (Easy • Medium • Hard)</span>
+                      </span>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {/* Easy Solves */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col justify-between shadow-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300">Easy Solves</span>
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          </div>
+                          <p className="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">
+                            {conditionStats.totalEasy.toLocaleString()}
+                          </p>
+                          <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400">
+                            Foundational Solves
+                          </span>
+                        </div>
+
+                        {/* Medium Solves */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col justify-between shadow-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300">Medium Solves</span>
+                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                          </div>
+                          <p className="text-2xl sm:text-3xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">
+                            {conditionStats.totalMed.toLocaleString()}
+                          </p>
+                          <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400">
+                            Core Algorithmic Solves
+                          </span>
+                        </div>
+
+                        {/* Hard Solves */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex flex-col justify-between shadow-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-purple-800 dark:text-purple-300">Hard Solves</span>
+                            <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                          </div>
+                          <p className="text-2xl sm:text-3xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">
+                            {conditionStats.totalHard.toLocaleString()}
+                          </p>
+                          <span className="text-[10px] font-extrabold text-purple-700 dark:text-purple-400">
+                            High Difficulty Solves
+                          </span>
+                        </div>
+
+                        {/* Total Cumulative Solves */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-brand-500/15 border border-brand-500/30 flex flex-col justify-between shadow-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-brand-800 dark:text-brand-300">Total Solves</span>
+                            <Zap className="w-4 h-4 text-brand-500" />
+                          </div>
+                          <p className="text-2xl sm:text-3xl font-black text-brand-800 dark:text-brand-300 tracking-tight my-1">
+                            {conditionStats.totalSolves.toLocaleString()}
+                          </p>
+                          <span className="text-[10px] font-extrabold text-brand-700 dark:text-brand-400">
+                            Cumulative Solves
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3. Official Condition Criteria Reference Strip */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold">
+                        <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <span>Evaluation Standards: 4/4 (100% Complete) • 3/4 (Advanced) • 2/4 (Intermediate) • 1/4 (Developing) • 0/4 (Participation)</span>
+                      </div>
+                      {activeFilter && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveFilter(null)}
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-black text-[11px] transition-all cursor-pointer touch-manipulation active:scale-95 shrink-0"
+                        >
+                          <span>Clear Filter ({conditionStats.totalStudents}/{allRows.length})</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -2211,25 +2114,65 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     </div>
                   )}
 
-                  {/* Current Week Contest Attendance */}
-                  {report.college_summary?.metrics?.current_week && (
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
-                        <span>Current Week Contest Attendance</span>
-                      </h3>
-                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                        {[
-                          { label: '4/4 Solved', value: report.college_summary.metrics.current_week.q4, color: 'text-emerald-700 dark:text-emerald-300' },
-                          { label: '3/4 Solved', value: report.college_summary.metrics.current_week.q3, color: 'text-cyan-700 dark:text-cyan-300' },
-                          { label: '2/4 Solved', value: report.college_summary.metrics.current_week.q2, color: 'text-blue-700 dark:text-blue-300' },
-                          { label: '1/4 Solved', value: report.college_summary.metrics.current_week.q1, color: 'text-amber-700 dark:text-amber-300' },
-                          { label: '0/4 Solved', value: report.college_summary.metrics.current_week.q0, color: 'text-rose-700 dark:text-rose-300' },
-                        ].map((m, i) => (
-                          <div key={i} className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-center">
-                            <div className="text-xs font-black text-slate-900 dark:text-slate-100 mb-1">{m.label}</div>
-                            <div className={`text-xl font-black ${m.color}`}>{m.value ?? '—'}</div>
+                  {/* Contest Attendance Comparison (Current Week & Last Week) */}
+                  {(report.college_summary?.metrics?.current_week || report.college_summary?.metrics?.last_week) && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Current Week Contest Attendance */}
+                        {report.college_summary?.metrics?.current_week && (
+                          <div className="p-4 rounded-2xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50/40 dark:bg-cyan-950/20 space-y-2.5 shadow-2xs">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-xs font-black uppercase text-cyan-900 dark:text-cyan-200 tracking-wider flex items-center space-x-1.5">
+                                <span>Current Week Attendance</span>
+                              </h3>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
+                                {report.currentWeek?.date || 'Latest'}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-5 gap-2">
+                              {[
+                                { label: '4/4 Solved', value: report.college_summary.metrics.current_week.q4, color: 'text-emerald-700 dark:text-emerald-300' },
+                                { label: '3/4 Solved', value: report.college_summary.metrics.current_week.q3, color: 'text-cyan-700 dark:text-cyan-300' },
+                                { label: '2/4 Solved', value: report.college_summary.metrics.current_week.q2, color: 'text-blue-700 dark:text-blue-300' },
+                                { label: '1/4 Solved', value: report.college_summary.metrics.current_week.q1, color: 'text-amber-700 dark:text-amber-300' },
+                                { label: '0/4 Solved', value: report.college_summary.metrics.current_week.q0, color: 'text-rose-700 dark:text-rose-300' },
+                              ].map((m, i) => (
+                                <div key={i} className="p-2 rounded-xl bg-white/80 dark:bg-navy-900/60 border border-cyan-200/60 dark:border-cyan-800/40 text-center">
+                                  <div className="text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">{m.label}</div>
+                                  <div className={`text-base sm:text-lg font-black ${m.color}`}>{m.value ?? '—'}</div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        ))}
+                        )}
+
+                        {/* Last Week Contest Attendance */}
+                        {report.college_summary?.metrics?.last_week && (
+                          <div className="p-4 rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-950/20 space-y-2.5 shadow-2xs">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-xs font-black uppercase text-amber-900 dark:text-amber-200 tracking-wider flex items-center space-x-1.5">
+                                <span>Last Week Attendance</span>
+                              </h3>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                {report.lastWeek?.date || 'Past'}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-5 gap-2">
+                              {[
+                                { label: '4/4 Solved', value: report.college_summary.metrics.last_week.q4, color: 'text-emerald-700 dark:text-emerald-300' },
+                                { label: '3/4 Solved', value: report.college_summary.metrics.last_week.q3, color: 'text-cyan-700 dark:text-cyan-300' },
+                                { label: '2/4 Solved', value: report.college_summary.metrics.last_week.q2, color: 'text-blue-700 dark:text-blue-300' },
+                                { label: '1/4 Solved', value: report.college_summary.metrics.last_week.q1, color: 'text-amber-700 dark:text-amber-300' },
+                                { label: '0/4 Solved', value: report.college_summary.metrics.last_week.q0, color: 'text-rose-700 dark:text-rose-300' },
+                              ].map((m, i) => (
+                                <div key={i} className="p-2 rounded-xl bg-white/80 dark:bg-navy-900/60 border border-amber-200/60 dark:border-amber-800/40 text-center">
+                                  <div className="text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">{m.label}</div>
+                                  <div className={`text-base sm:text-lg font-black ${m.color}`}>{m.value ?? '—'}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -2303,62 +2246,187 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     </div>
                   )}
 
-                  {/* Batch Summaries */}
+                  {/* Batch Summaries - Multi-Row Comparative Matrix (Last Week & Current Week) */}
                   {report.batch_summaries && Array.isArray(report.batch_summaries) && report.batch_summaries.length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">Batch-wise Performance Summary</h3>
-                      {/* Mobile Card View (< sm) */}
-                      <div className="block sm:hidden print:hidden space-y-2">
-                        {report.batch_summaries.filter((b: any) => (b.total_students || 0) > 0).map((b: any, idx: number) => (
-                          <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs space-y-1.5">
-                            <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
-                              <h4 className="text-xs font-bold text-slate-900">{b.batch} ({b.year})</h4>
-                              <span className="text-[10.5px] font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{b.total_students} Students</span>
-                            </div>
-                            <div className="flex items-center justify-between gap-1.5 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
-                              <div><span className="text-slate-500 font-medium">&gt;500:</span> <span className="font-bold text-purple-700">{b.categories?.['Above 500'] ?? '—'}</span></div>
-                              <div><span className="text-slate-500 font-medium">250-500:</span> <span className="font-bold text-indigo-700">{b.categories?.['250 - 500'] ?? '—'}</span></div>
-                              <div><span className="text-slate-500 font-medium">&gt;1500:</span> <span className="font-bold text-emerald-700">{b.rating_1500 ?? '—'}</span></div>
-                              <div><span className="text-slate-500 font-medium">4/4:</span> <span className="font-bold text-emerald-700">{b.current_week?.q4 ?? '—'}</span></div>
-                            </div>
-                          </div>
-                        ))}
+                    <div className="space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <h3 className="text-xs sm:text-sm font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-2">
+                          <span>Batch-wise Performance Summary</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
+                            Last vs Current Week
+                          </span>
+                        </h3>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                          Multi-Level Comparative Institutional Standard
+                        </span>
                       </div>
 
-                      {/* Desktop Table View (>= sm) */}
-                      <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
-                        <table className="w-full text-left text-xs min-w-[700px]">
-                          <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase">
-                            <tr>
-                              <th className="px-3 py-3">Batch</th>
-                              <th className="px-3 py-3 text-center">Year</th>
-                              <th className="px-3 py-3 text-center">Total</th>
-                              <th className="px-3 py-3 text-center">Above 500</th>
-                              <th className="px-3 py-3 text-center">250–500</th>
-                              <th className="px-3 py-3 text-center">{'<250'}</th>
-                              <th className="px-3 py-3 text-center">{'<100'}</th>
-                              <th className="px-3 py-3 text-center">Not Started</th>
-                              <th className="px-3 py-3 text-center">Rating {'>'} 1500</th>
-                              <th className="px-3 py-3 text-center">4/4</th>
-                              <th className="px-3 py-3 text-center">3/4</th>
+                      {/* Mobile Card View (< md) */}
+                      <div className="block md:hidden print:hidden space-y-3">
+                        {report.batch_summaries.filter((b: any) => (b.total_students || 0) > 0).map((b: any, idx: number) => {
+                          const cw = b.current_week || {};
+                          const lw = b.last_week || {};
+                          return (
+                            <div key={idx} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b101d] shadow-sm space-y-3">
+                              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-white/5">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                                    {b.year || 'BATCH'}
+                                  </span>
+                                  <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">{b.batch}</h4>
+                                </div>
+                                <span className="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg">
+                                  {b.total_students} Students
+                                </span>
+                              </div>
+
+                              {/* Comparative Cards: Last Week vs Current Week */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                {/* Last Week Block */}
+                                <div className="p-2.5 rounded-xl border border-amber-200/80 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-950/20 space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                                      Last Week
+                                    </span>
+                                    <span className="text-[10px] font-mono font-bold text-amber-700 dark:text-amber-300">
+                                      {report.lastWeek?.date || 'Past'}
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-5 gap-1 text-center bg-white/70 dark:bg-black/20 p-1.5 rounded-lg text-[10px]">
+                                    <div><div className="text-slate-400 font-semibold">&gt;500</div><div className="font-bold text-purple-700 dark:text-purple-300">{lw.prob_above_500 ?? 0}</div></div>
+                                    <div><div className="text-slate-400 font-semibold">250-500</div><div className="font-bold text-indigo-700 dark:text-indigo-300">{lw.prob_250_500 ?? 0}</div></div>
+                                    <div><div className="text-slate-400 font-semibold">&lt;250</div><div className="font-bold text-slate-700 dark:text-slate-200">{lw.prob_100_249 ?? 0}</div></div>
+                                    <div><div className="text-slate-400 font-semibold">&lt;100</div><div className="font-bold text-amber-700 dark:text-amber-300">{lw.prob_1_99 ?? 0}</div></div>
+                                    <div><div className="text-slate-400 font-semibold">0</div><div className="font-bold text-rose-700 dark:text-rose-300">{lw.prob_0 ?? 0}</div></div>
+                                  </div>
+                                  <div className="flex items-center justify-between text-[10px] pt-1 border-t border-amber-200/60 dark:border-amber-800/40">
+                                    <span className="font-semibold text-slate-600 dark:text-slate-300">Contests:</span>
+                                    <div className="flex items-center gap-1.5 font-bold font-mono">
+                                      <span className="text-emerald-600">4Q: {lw.q4 ?? 0}</span>
+                                      <span className="text-cyan-600">3Q: {lw.q3 ?? 0}</span>
+                                      <span className="text-blue-600">2Q: {lw.q2 ?? 0}</span>
+                                      <span className="text-amber-600">1Q: {lw.q1 ?? 0}</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Current Week Block */}
+                                <div className="p-2.5 rounded-xl border border-cyan-200/80 dark:border-cyan-800/60 bg-cyan-50/50 dark:bg-cyan-950/20 space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-cyan-700 dark:text-cyan-400">
+                                      Current Week
+                                    </span>
+                                    <span className="text-[10px] font-mono font-bold text-cyan-700 dark:text-cyan-300">
+                                      {report.currentWeek?.date || 'Latest'}
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-5 gap-1 text-center bg-white/70 dark:bg-black/20 p-1.5 rounded-lg text-[10px]">
+                                    <div><div className="text-slate-400 font-semibold">&gt;500</div><div className="font-bold text-purple-700 dark:text-purple-300">{cw.prob_above_500 ?? cw.categories?.['Above 500'] ?? 0}</div></div>
+                                    <div><div className="text-slate-400 font-semibold">250-500</div><div className="font-bold text-indigo-700 dark:text-indigo-300">{cw.prob_250_500 ?? cw.categories?.['250 - 500'] ?? 0}</div></div>
+                                    <div><div className="text-slate-400 font-semibold">&lt;250</div><div className="font-bold text-slate-700 dark:text-slate-200">{cw.prob_100_249 ?? cw.categories?.['Less than 250'] ?? 0}</div></div>
+                                    <div><div className="text-slate-400 font-semibold">&lt;100</div><div className="font-bold text-amber-700 dark:text-amber-300">{cw.prob_1_99 ?? cw.categories?.['Less than 100'] ?? 0}</div></div>
+                                    <div><div className="text-slate-400 font-semibold">0</div><div className="font-bold text-rose-700 dark:text-rose-300">{cw.prob_0 ?? cw.categories?.['Not Yet Started'] ?? 0}</div></div>
+                                  </div>
+                                  <div className="flex items-center justify-between text-[10px] pt-1 border-t border-cyan-200/60 dark:border-cyan-800/40">
+                                    <span className="font-semibold text-slate-600 dark:text-slate-300">Contests:</span>
+                                    <div className="flex items-center gap-1.5 font-bold font-mono">
+                                      <span className="text-emerald-600 font-black">4Q: {cw.q4 ?? 0}</span>
+                                      <span className="text-cyan-600 font-black">3Q: {cw.q3 ?? 0}</span>
+                                      <span className="text-blue-600 font-black">2Q: {cw.q2 ?? 0}</span>
+                                      <span className="text-amber-600 font-black">1Q: {cw.q1 ?? 0}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Desktop Institutional Multi-Level Table (>= md) */}
+                      <div className="hidden md:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
+                        <table className="w-full text-left text-xs min-w-[960px]">
+                          <thead>
+                            <tr className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase text-[11px]">
+                              <th rowSpan={2} className="px-3.5 py-3 border-r border-slate-800 text-left">Batch & Period</th>
+                              <th rowSpan={2} className="px-3 py-3 border-r border-slate-800 text-center">No. of Students</th>
+                              <th colSpan={5} className="px-3 py-2 border-r border-slate-800 text-center bg-slate-800/70">Number of Problems Solved</th>
+                              <th colSpan={4} className="px-3 py-2 border-r border-slate-800 text-center bg-indigo-950/70">Weekly Contest Attended</th>
+                              <th colSpan={2} className="px-3 py-2 text-center bg-blue-950/70">LeetCode Rating & Ranking</th>
+                            </tr>
+                            <tr className="bg-slate-800/90 text-white text-[10px] font-black uppercase tracking-wider">
+                              {/* Problems Solved */}
+                              <th className="px-2 py-2 text-center border-r border-slate-700 text-purple-300">Above 500</th>
+                              <th className="px-2 py-2 text-center border-r border-slate-700 text-indigo-300">250–500</th>
+                              <th className="px-2 py-2 text-center border-r border-slate-700">100–249</th>
+                              <th className="px-2 py-2 text-center border-r border-slate-700 text-amber-300">1–99</th>
+                              <th className="px-2 py-2 text-center border-r border-slate-700 text-rose-300">0</th>
+                              {/* Contest Attended */}
+                              <th className="px-2 py-2 text-center border-r border-slate-700 text-emerald-300">4Q</th>
+                              <th className="px-2 py-2 text-center border-r border-slate-700 text-cyan-300">3Q</th>
+                              <th className="px-2 py-2 text-center border-r border-slate-700 text-blue-300">2Q</th>
+                              <th className="px-2 py-2 text-center border-r border-slate-700 text-amber-300">1Q</th>
+                              {/* Rating & Ranking */}
+                              <th className="px-2 py-2 text-center border-r border-slate-700 text-emerald-300">&gt; 1500</th>
+                              <th className="px-2 py-2 text-center text-sky-300">&lt; 20000</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
-                            {report.batch_summaries.filter((b: any) => (b.total_students || 0) > 0).map((b: any, idx: number) => (
-                              <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
-                                <td className="px-3 py-2.5 font-black text-brand-700 dark:text-brand-300">{b.batch}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{b.year}</td>
-                                <td className="px-3 py-2.5 text-center font-black">{b.total_students}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-purple-700 dark:text-purple-300">{b.categories?.['Above 500'] ?? '—'}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{b.categories?.['250 - 500'] ?? '—'}</td>
-                                <td className="px-3 py-2.5 text-center font-black">{b.categories?.['Less than 250'] ?? '—'}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-amber-700 dark:text-amber-300">{b.categories?.['Less than 100'] ?? '—'}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-rose-700 dark:text-rose-300">{b.categories?.['Not Yet Started'] ?? '—'}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{b.rating_1500 ?? '—'}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{b.current_week?.q4 ?? '—'}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-cyan-700 dark:text-cyan-300">{b.current_week?.q3 ?? '—'}</td>
-                              </tr>
-                            ))}
+                          <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-sans">
+                            {report.batch_summaries.filter((b: any) => (b.total_students || 0) > 0).map((b: any, idx: number) => {
+                              const cw = b.current_week || {};
+                              const lw = b.last_week || {};
+                              return (
+                                <React.Fragment key={idx}>
+                                  {/* Row 1: Last Week */}
+                                  <tr className="bg-amber-500/[0.04] dark:bg-amber-500/[0.03] hover:bg-amber-500/[0.08] dark:hover:bg-amber-500/[0.06] transition-colors border-t-2 border-slate-300 dark:border-slate-700">
+                                    <td className="px-3.5 py-2.5 font-bold text-slate-800 dark:text-slate-200">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-extrabold text-slate-900 dark:text-white">{b.batch}</span>
+                                        <span className="text-[9.5px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                                          Last Week
+                                        </span>
+                                      </div>
+                                    </td>
+                                    <td className="px-3 py-2.5 text-center font-bold text-slate-600 dark:text-slate-400">{lw.total_students ?? b.total_students}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-purple-700 dark:text-purple-300">{lw.prob_above_500 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{lw.prob_250_500 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-bold text-slate-700 dark:text-slate-300">{lw.prob_100_249 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-bold text-amber-700 dark:text-amber-300">{lw.prob_1_99 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-bold text-rose-700 dark:text-rose-300">{lw.prob_0 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{lw.q4 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-cyan-700 dark:text-cyan-300">{lw.q3 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-blue-700 dark:text-blue-300">{lw.q2 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-amber-700 dark:text-amber-300">{lw.q1 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{lw.rating_above_1500 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-sky-700 dark:text-sky-300">{lw.rank_below_20000 ?? 0}</td>
+                                  </tr>
+
+                                  {/* Row 2: Current Week */}
+                                  <tr className="bg-cyan-500/[0.06] dark:bg-cyan-500/[0.04] hover:bg-cyan-500/[0.10] dark:hover:bg-cyan-500/[0.08] transition-colors">
+                                    <td className="px-3.5 py-2.5 font-bold text-slate-800 dark:text-slate-200">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-extrabold text-slate-900 dark:text-white">{b.batch}</span>
+                                        <span className="text-[9.5px] font-black uppercase px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40">
+                                          Current Week
+                                        </span>
+                                      </div>
+                                    </td>
+                                    <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-white">{cw.total_students ?? b.total_students}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-purple-700 dark:text-purple-300">{cw.prob_above_500 ?? cw.categories?.['Above 500'] ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{cw.prob_250_500 ?? cw.categories?.['250 - 500'] ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-slate-800 dark:text-slate-100">{cw.prob_100_249 ?? cw.categories?.['Less than 250'] ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-amber-700 dark:text-amber-300">{cw.prob_1_99 ?? cw.categories?.['Less than 100'] ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-rose-700 dark:text-rose-300">{cw.prob_0 ?? cw.categories?.['Not Yet Started'] ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/10">{cw.q4 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-cyan-700 dark:text-cyan-300 bg-cyan-500/10">{cw.q3 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-blue-700 dark:text-blue-300 bg-blue-500/10">{cw.q2 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-amber-700 dark:text-amber-300 bg-amber-500/10">{cw.q1 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{cw.rating_above_1500 ?? cw.rating_1500 ?? 0}</td>
+                                    <td className="px-2 py-2.5 text-center font-black text-sky-700 dark:text-sky-300">{cw.rank_below_20000 ?? cw.ranking_20000 ?? 0}</td>
+                                  </tr>
+                                </React.Fragment>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -3324,6 +3392,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
           )}
 
           {/* UNIVERSAL SOLVE CONDITION & DIFFICULTY BREAKDOWN (TABLE FOOTER ANALYSIS) */}
+          {!isContestReport && (
           <div className="pt-4 space-y-4 print:break-inside-avoid print:mt-6">
             <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#0c1427] border-2 border-slate-200/90 dark:border-white/10 shadow-xl space-y-5">
               {/* Header with Title, Report Type Scope & Badges */}
@@ -3574,6 +3643,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               </div>
             </div>
           </div>
+          )}
 
         </div>
 
@@ -3591,40 +3661,40 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
             <button
               onClick={() => window.print()}
               type="button"
-              className="flex items-center justify-center space-x-1 px-2 sm:px-3 py-1.5 sm:py-2 min-h-[34px] sm:min-h-[36px] bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-2xs cursor-pointer hover:-translate-y-0.5 active:scale-95 touch-manipulation border border-slate-200/80"
+              className="flex items-center justify-center space-x-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 min-h-[34px] sm:min-h-[36px] bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-md cursor-pointer hover:-translate-y-0.5 active:scale-95 touch-manipulation border border-slate-800"
               title="Print / Save as PDF from browser"
             >
-              <Printer className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+              <Printer className="w-3.5 h-3.5 text-slate-300 shrink-0" />
               <span className="truncate">Print View</span>
             </button>
             <button
               onClick={() => downloadFile('excel')}
               type="button"
               disabled={isDownloading}
-              className="flex items-center justify-center space-x-1 px-2 sm:px-3 py-1.5 sm:py-2 min-h-[34px] sm:min-h-[36px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-2xs cursor-pointer hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 border border-emerald-300/80 touch-manipulation group"
+              className="flex items-center justify-center space-x-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 min-h-[34px] sm:min-h-[36px] bg-[#10b981] hover:bg-[#059669] text-white rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-md cursor-pointer hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 touch-manipulation group"
               title="Download Excel spreadsheet"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform shrink-0" />
+              <FileSpreadsheet className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform shrink-0" />
               <span className="truncate">Excel (.xlsx)</span>
             </button>
             <button
               onClick={() => downloadFile('pdf')}
               type="button"
               disabled={isDownloading}
-              className="flex items-center justify-center space-x-1 px-2 sm:px-3 py-1.5 sm:py-2 min-h-[34px] sm:min-h-[36px] bg-rose-50 hover:bg-rose-100 text-rose-800 rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-2xs cursor-pointer hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 border border-rose-300/80 touch-manipulation group"
+              className="flex items-center justify-center space-x-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 min-h-[34px] sm:min-h-[36px] bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-md cursor-pointer hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 touch-manipulation group"
               title="Download PDF document"
             >
-              <FileText className="w-3.5 h-3.5 text-rose-600 group-hover:scale-110 transition-transform shrink-0" />
+              <FileText className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform shrink-0" />
               <span className="truncate">PDF (.pdf)</span>
             </button>
             <button
               onClick={() => downloadFile('word')}
               type="button"
               disabled={isDownloading}
-              className="flex items-center justify-center space-x-1 px-2 sm:px-3 py-1.5 sm:py-2 min-h-[34px] sm:min-h-[36px] bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-2xs cursor-pointer hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 border border-blue-300/80 touch-manipulation group"
+              className="flex items-center justify-center space-x-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 min-h-[34px] sm:min-h-[36px] bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-md cursor-pointer hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 touch-manipulation group"
               title="Download Word document"
             >
-              <FileText className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform shrink-0" />
+              <FileText className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform shrink-0" />
               <span className="truncate">Word (.docx)</span>
             </button>
           </div>

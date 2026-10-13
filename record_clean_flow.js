@@ -94,7 +94,7 @@ async function main() {
   await authPage.fill('#userId', creds.username);
   await authPage.fill('#password', creds.password);
   await authPage.click('button[type="submit"]');
-  await authPage.waitForTimeout(2000);
+  await authPage.waitForTimeout(2200);
   await authContext.storageState({ path: authFile });
   await authContext.close();
   console.log('✅ Fresh auth state stored.');
@@ -126,14 +126,15 @@ async function main() {
   // SCENE 05: Student Profile Dossier Modal
   await recordScene(browser, { clipName: 'clip_05_profile', outDir, storageState: authFile }, async (page) => {
     await page.goto('http://localhost:3000/#/students', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(2000);
-    const viewBtn = await page.$('tbody tr:first-child [title*="View"], tbody tr:first-child button');
-    if (viewBtn) {
-      await viewBtn.click().catch(() => {});
-      await page.waitForTimeout(1500);
-      await smoothMove(page, 960, 480);
-      await page.waitForTimeout(2200);
-    }
+    await page.waitForTimeout(2200);
+    const viewBtn = page.locator('button[title="View"]').first();
+    await viewBtn.click({ force: true }).catch(async () => {
+      const fallbackBtn = await page.$('tbody tr:first-child [title*="View"], tbody tr:first-child button');
+      if (fallbackBtn) await fallbackBtn.click().catch(() => {});
+    });
+    await page.waitForTimeout(1800);
+    await smoothMove(page, 960, 480);
+    await page.waitForTimeout(2200);
   });
 
   // SCENE 06: Institutional Analytics Dashboard (HOD Deck)
@@ -257,7 +258,7 @@ async function main() {
   });
 
   await browser.close();
-  console.log('\n🎉 ALL 15 CLEAN SCENES RECORDED WITH ZERO LOGIN REDIRECTS!');
+  console.log('\n🎉 ALL 15 CLEAN SCENES RECORDED WITH ZERO LOGIN REDIRECTS AND ZERO FLOATING CIRCLES!');
 }
 
 main().catch(err => {

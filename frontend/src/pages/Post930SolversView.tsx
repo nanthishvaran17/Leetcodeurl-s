@@ -534,8 +534,7 @@ export const Post930SolversView: React.FC<Post930SolversViewProps> = ({ onSelect
 
                   {/* Bottom Action Strip */}
                   <div className="flex items-center justify-between gap-2.5 pt-1 relative z-10">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shrink-0">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shrink-0">
                       <span>{st.evidence_status || 'VERIFIED'}</span>
                     </span>
 

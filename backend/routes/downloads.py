@@ -345,7 +345,7 @@ def _dispatch_internal_endpoint(
             db=db,
             current_user=user
         )
-        return resp.body, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "Command_Center_Report.xlsx"
+        return bytes(resp.body), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "Command_Center_Report.xlsx"
 
     # 3. Faculty Consolidated Performance Excel
     elif clean_endpoint == "/api/reports/staff":

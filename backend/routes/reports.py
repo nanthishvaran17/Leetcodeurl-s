@@ -48,23 +48,25 @@ def get_available_sundays(db: Session = Depends(get_db)):
         if not s.session_date:
             continue
         try:
-            # Try to parse DD.MM.YYYY
-            s_date_val = str(s.session_date)
+            # Try to parse DD.MM.YYYY or YYYY-MM-DD
+            s_date_val = str(s.session_date).strip()
             if "." in s_date_val:
                 d_obj = datetime.strptime(s_date_val, "%d.%m.%Y").date()
             else:
                 d_obj = datetime.strptime(s_date_val, "%Y-%m-%d").date()
             
             if d_obj <= today:
-                valid_sessions.append(s)
+                # Prefer weekly contests on the same date/weekend
+                is_weekly = 1 if "biweekly" not in str(s.contest_name or "").lower() else 0
+                valid_sessions.append((d_obj, is_weekly, s))
         except Exception:
-            # Fallback to string comparison if parsing fails, but mostly it should work
             pass
             
-    valid_sessions.sort(key=lambda x: x.id, reverse=True)
+    # Sort chronologically descending: latest date first, then weekly contest preference, then id
+    valid_sessions.sort(key=lambda item: (item[0], item[1], item[2].id), reverse=True)
     
     results = []
-    for s in valid_sessions:
+    for d_obj, is_weekly, s in valid_sessions:
         c_name = s.contest_name or "Weekly Contest"
         c_type = "biweekly" if "biweekly" in c_name.lower() or "biweekly" in (s.contest_id or "").lower() else "weekly"
         results.append({
@@ -1282,38 +1284,50 @@ def _get_latest_completed_session(db: Session) -> Optional[WeeklySession]:
     # 1. First check finalized sessions with date <= today
     raw_finalized = db.query(WeeklySession).filter(
         (WeeklySession.status == "FINALIZED") | (WeeklySession.finalized == True)
-    ).order_by(WeeklySession.id.desc()).all()
+    ).all()
+    valid_finalized = []
     for s in raw_finalized:
         if not s.session_date:
             continue
         try:
-            s_date_val = str(s.session_date)
+            s_date_val = str(s.session_date).strip()
             if "." in s_date_val:
                 d_obj = datetime.datetime.strptime(s_date_val, "%d.%m.%Y").date()
             else:
                 d_obj = datetime.datetime.strptime(s_date_val, "%Y-%m-%d").date()
             if d_obj <= today:
-                return s
+                is_weekly = 1 if "biweekly" not in str(s.contest_name or "").lower() else 0
+                valid_finalized.append((d_obj, is_weekly, s.id, s))
         except Exception:
             pass
+
+    if valid_finalized:
+        valid_finalized.sort(key=lambda item: (item[0], item[1], item[2]), reverse=True)
+        return valid_finalized[0][3]
 
     # 2. Check non-upcoming sessions with date <= today
     raw_active = db.query(WeeklySession).filter(
         WeeklySession.status != "UPCOMING"
-    ).order_by(WeeklySession.id.desc()).all()
+    ).all()
+    valid_active = []
     for s in raw_active:
         if not s.session_date:
             continue
         try:
-            s_date_val = str(s.session_date)
+            s_date_val = str(s.session_date).strip()
             if "." in s_date_val:
                 d_obj = datetime.datetime.strptime(s_date_val, "%d.%m.%Y").date()
             else:
                 d_obj = datetime.datetime.strptime(s_date_val, "%Y-%m-%d").date()
             if d_obj <= today:
-                return s
+                is_weekly = 1 if "biweekly" not in str(s.contest_name or "").lower() else 0
+                valid_active.append((d_obj, is_weekly, s.id, s))
         except Exception:
             pass
+
+    if valid_active:
+        valid_active.sort(key=lambda item: (item[0], item[1], item[2]), reverse=True)
+        return valid_active[0][3]
 
     # 3. Fallback: all sessions with date <= today ordered by id desc
     all_sess = db.query(WeeklySession).order_by(WeeklySession.id.desc()).all()
@@ -2494,7 +2508,7 @@ def download_universal_excel(
         elif rpt_t in (
             "MASTER_10_SHEET", "FRIDAY_OFFICIAL_CONTEST", "SUNDAY_LIVE_CONTEST",
             "WEEKLY_CONTEST_INTELLIGENCE", "CONTEST_ATTENDANCE_PARTICIPATION",
-            "CONTEST_PERFORMANCE_RANKING", "WEEKLY_STUDENT_PERFORMANCE",
+            "CONTEST_PERFORMANCE_RANKING", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_PERFORMANCE",
             "PROBLEM_DIFFICULTY_INTELLIGENCE",
             "FACULTY_CONSOLIDATED", "FACULTY_COORDINATOR_CONSOLIDATED",
             "HOD_DEPARTMENT_INTELLIGENCE", "PRINCIPAL_EXECUTIVE",

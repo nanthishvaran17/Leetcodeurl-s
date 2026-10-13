@@ -678,72 +678,99 @@ export const StudentDataIssuesPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Search Input — Top-Level Prominent on Mobile */}
-        <div className="relative flex items-center">
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search Name, Reg No (732224CC031)..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            autoComplete="off"
-            spellCheck={false}
-            className="w-full h-10 min-h-[40px] pl-9 pr-9 bg-slate-50 dark:bg-navy-900/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-inner text-left"
-          />
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
-            <Search className="w-3.5 h-3.5 stroke-[2.5]" />
+        {/* Department and Academic Year Pill Selectors (1-Tap Fast Filter) */}
+        <div className="flex flex-col gap-2 pt-0.5 pb-1">
+          {/* DEPT PILLS */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
+            <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">Dept:</span>
+            {[
+              { id: 'all', label: 'All Depts' },
+              ...departments.map(d => ({ id: d.code, label: d.code || d.name }))
+            ].map(d => {
+              const isSelected = selectedDept.toLowerCase() === d.id.toLowerCase() || (d.id === 'all' && (selectedDept.toLowerCase() === 'all'));
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => setSelectedDept(d.id)}
+                  className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
+                    isSelected
+                      ? 'bg-brand-600 text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
+                  }`}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
           </div>
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 z-10 flex items-center px-3 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
-              title="Clear Search"
-            >
-              <XCircle className="w-4 h-4 stroke-[2]" />
-            </button>
-          )}
+
+          {/* YEAR PILLS */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
+            <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">Year:</span>
+            {[
+              { value: 'all', label: 'All Years' },
+              { value: '1', label: 'I Year' },
+              { value: '2', label: 'II Year' },
+              { value: '3', label: 'III Year' },
+              { value: '4', label: 'IV Year' }
+            ].map(y => {
+              const isSelected = normalizeAcademicYear(selectedYear) === y.value || (y.value === 'all' && normalizeAcademicYear(selectedYear) === 'all');
+              return (
+                <button
+                  key={y.value}
+                  type="button"
+                  onClick={() => setSelectedYear(y.value)}
+                  className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
+                    isSelected
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
+                  }`}
+                >
+                  {y.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Filter Controls Row: 2-Column Mobile Grid, 3-Column Desktop */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-          {/* Department Selector */}
+        {/* Search & Issue Category Row (2-Column Desktop, 1-Column Mobile) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 items-end pt-1 border-t border-slate-100 dark:border-navy-800/80">
+          {/* Search Input */}
           <div className="space-y-1">
             <label className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center space-x-1 truncate">
-              <Building2 className="w-3 h-3 text-indigo-600 dark:text-brand-400 shrink-0" />
-              <span className="truncate">Department</span>
+              <Search className="w-3 h-3 text-indigo-600 dark:text-brand-400 shrink-0" />
+              <span className="truncate">Search Student</span>
             </label>
-            <GlobalFilter
-              label=""
-              value={selectedDept}
-              onChange={setSelectedDept}
-              options={deptFilterOptions}
-              icon={<Building2 size={15} />}
-              showSearch={true}
-              searchPlaceholder="Search dept..."
-              dropdownWidth="w-full max-w-[calc(100vw-2rem)] sm:min-w-[320px]"
-            />
+            <div className="relative flex items-center">
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search Name, Reg No (732224CC031)..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+                className="w-full h-10 min-h-[40px] pl-9 pr-9 bg-slate-50 dark:bg-navy-900/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-inner text-left"
+              />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
+                <Search className="w-3.5 h-3.5 stroke-[2.5]" />
+              </div>
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-0 z-10 flex items-center px-3 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                  title="Clear Search"
+                >
+                  <XCircle className="w-4 h-4 stroke-[2]" />
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Academic Year Selector */}
+          {/* Issue Category Selector */}
           <div className="space-y-1">
-            <label className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center space-x-1 truncate">
-              <GraduationCap className="w-3 h-3 text-indigo-600 dark:text-brand-400 shrink-0" />
-              <span className="truncate">Academic Year</span>
-            </label>
-            <GlobalFilter
-              label=""
-              value={selectedYear}
-              onChange={setSelectedYear}
-              options={yearFilterOptions}
-              icon={<GraduationCap size={15} />}
-              showSearch={false}
-              dropdownWidth="w-full max-w-[calc(100vw-2rem)] sm:min-w-[280px]"
-            />
-          </div>
-
-          {/* Issue Category Selector — col-span-2 on mobile for full width, 1-col on desktop */}
-          <div className="col-span-2 lg:col-span-1 space-y-1">
             <label className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center space-x-1 truncate">
               <Sliders className="w-3 h-3 text-amber-500 shrink-0" />
               <span className="truncate">Issue Category</span>
