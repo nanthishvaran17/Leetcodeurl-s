@@ -88,64 +88,45 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
             dept_data = {"batches": {}} # Fallback to empty if missing
             
         coord = get_coordinator_for_department(dept_spec["code"])
+        dept_display_name = "Department of CSE (Internet of Things )" if "IOT" in dept_spec["code"].upper() else ("Department of CSE (Cyber Security)" if "CS" in dept_spec["code"].upper() else f"Department of {dept_spec['code']}")
         
-        # Header Rows
-        ws.merge_cells('A1:M2')
-        c1 = ws['A1']
-        c1.value = "NANDHA ENGINEERING COLLEGE, ERODE - 638 052\n(An Autonomous Institution, Affiliated to Anna University, Chennai)"
-        c1.font = font_title
-        c1.fill = navy_fill
-        c1.alignment = align_center
-        ws.row_dimensions[1].height = 10  # Top margin for logos
-        ws.row_dimensions[2].height = 50  # Main header height
+        # Clean White Institutional Header
+        header_lines = [
+            ("A1:M1", "NANDHA ENGINEERING COLLEGE, ERODE - 638 052.", 12, True),
+            ("A2:M2", dept_display_name, 11, True),
+            ("A3:M3", f"Date:{report_date}", 11, True),
+            ("A4:M4", "Leetcode Performance - Weekly Report", 11, True),
+            ("A5:M5", f"Name & Designation of the Academic Coordinator: {coord}", 11, True),
+        ]
+
+        for merge_range, text, sz, is_b in header_lines:
+            ws.merge_cells(merge_range)
+            start_cell = ws[merge_range.split(':')[0]]
+            start_cell.value = text
+            start_cell.font = Font(name="Times New Roman", size=sz, bold=is_b, color="000000")
+            start_cell.alignment = align_center
+
+        ws.row_dimensions[1].height = 24
+        ws.row_dimensions[2].height = 20
+        ws.row_dimensions[3].height = 20
+        ws.row_dimensions[4].height = 22
+        ws.row_dimensions[5].height = 22
         
-        for col in range(1, 14):
-            ws.cell(row=1, column=col).fill = navy_fill
-            ws.cell(row=2, column=col).fill = navy_fill
-        
-        # Add College Logo (Left - New Black and White Logo)
+        # Add College Logo (Left)
         logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "black_white_logo.png")
         if os.path.exists(logo_path):
             img = Image(logo_path)
-            img.width = 135
-            img.height = 42
-            ws.add_image(img, 'A2')
-            
-        # Add Right Side Logo (Right - 25 Years Logo)
-        right_logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "round_logo.png")
-        if os.path.exists(right_logo_path):
-            img_right = Image(right_logo_path)
-            img_right.width = 45
-            img_right.height = 45
-            ws.add_image(img_right, 'M2')
-            
-        ws.merge_cells('A3:M3')
-        c3 = ws['A3']
-        c3.value = f"{dept_spec['full_name']}"
-        c3.font = font_title
-        c3.fill = brand_fill
-        c3.alignment = align_center
-        ws.row_dimensions[3].height = 30
-        for col in range(1, 14):
-            ws.cell(row=3, column=col).fill = brand_fill
-        
-        ws.merge_cells('A4:M4')
-        c4 = ws['A4']
-        c4.value = f"LeetCode Performance - Weekly Report | Date: {report_date} | Academic Coordinator: {coord}"
-        c4.font = font_subtitle
-        c4.fill = navy_fill
-        c4.alignment = align_center
-        ws.row_dimensions[4].height = 25
-        for col in range(1, 14):
-            ws.cell(row=4, column=col).fill = navy_fill
+            img.width = 110
+            img.height = 55
+            ws.add_image(img, 'A1')
 
-        # Table Header
+        # Multi-Level Table Header (Rows 6 & 7)
         headers = [
-            ("A5", "A6", "Batch"),
-            ("B5", "B6", "No. of Students\n(Total Count)"),
-            ("C5", "G5", "Number of Problems Solved"),
-            ("H5", "K5", "Weekly Contest Attended"),
-            ("L5", "M5", "LeetCode Contest")
+            ("A6", "A7", "Batch"),
+            ("B6", "B7", "Number of Students (Total Count)"),
+            ("C6", "G6", "Number of Problems Solved"),
+            ("H6", "K6", "Weekly Contest Attended: (give the count here)"),
+            ("L6", "M6", "Leetcode Contest Rating and Ranking")
         ]
         
         for start, end, val in headers:
@@ -153,10 +134,8 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
             cell = ws[start]
             cell.value = val
             cell.font = font_tbl_head
-            cell.fill = sub_header_fill
             cell.alignment = align_center
             
-            # Apply border to all merged cells
             start_col, start_row = coordinate_to_tuple(start)
             end_col, end_row = coordinate_to_tuple(end)
             for r in range(start_row, end_row + 1):
@@ -164,77 +143,110 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
                     ws.cell(row=r, column=c).border = grid_border
             
         sub_headers = [
-            ("C6", "Above 500"), ("D6", "250-500"), ("E6", "Less than 250"), ("F6", "Less than 100"), ("G6", "Not Yet Started"),
-            ("H6", "4 Q Solved"), ("I6", "3 Q Solved"), ("J6", "2 Q Solved"), ("K6", "1 Q Solved"),
-            ("L6", "Rating Above 1500"), ("M6", "Ranking Below 20000")
+            ("C7", "Above 500"), ("D7", "250 - 500"), ("E7", "Less than 250"), ("F7", "Less than 100"), ("G7", "Not yet started"),
+            ("H7", "4 Q Solved"), ("I7", "3 Q Solved"), ("J7", "2 Q Solved"), ("K7", "1 Q Solved"),
+            ("L7", "Rating: Above 1500"), ("M7", "Ranking: Below 20000")
         ]
         
         for pos, val in sub_headers:
             cell = ws[pos]
             cell.value = val
             cell.font = font_tbl_head
-            cell.fill = section_fill
             cell.alignment = align_center
             cell.border = grid_border
             
-        ws.row_dimensions[5].height = 30
-        ws.row_dimensions[6].height = 35
+        ws.row_dimensions[6].height = 32
+        ws.row_dimensions[7].height = 32
         
-        # Data Rows
-        # Batches required: 2025-2029, 2024-2028, 2023-2027 (NO 2026-2030)
-        required_batches = [b for b in BATCH_CONFIG if b["key"] != "2026_2030"]
+        # Canonical order: IV (2023-2027), III (2024-2028), II (2025-2029)
+        required_batches = [
+            {"key": "2023_2027", "label": "2023 - 2027", "year": "IV"},
+            {"key": "2024_2028", "label": "2024 - 2028", "year": "III"},
+            {"key": "2025_2029", "label": "2025 - 2029", "year": "II"}
+        ]
         
-        current_row = 7
+        current_row = 8
         for b in required_batches:
             batch_key = b["key"]
             batch_label = b["label"]
             
             b_data = dept_data.get("batches", {}).get(batch_key, {})
-            # Ensure safe fallback if metrics are missing
             last_w = b_data.get("last_week", {})
             curr_w = b_data.get("current_week", {})
             
-            rows_to_add = [
-                (f"{batch_label} - Last Week", last_w),
-                (f"{batch_label} - Current Week", curr_w)
-            ]
+            tot_students = curr_w.get("total_students", 0) or last_w.get("total_students", 0) or b_data.get("total_students", 0)
             
-            for row_label, row_metrics in rows_to_add:
-                ws.row_dimensions[current_row].height = 25
+            # Row 1: Last Week
+            r1 = current_row
+            ws.row_dimensions[r1].height = 26
+            ws.cell(row=r1, column=1, value=f"{batch_label}\n(Last Week)").font = font_bold
+            ws.cell(row=r1, column=1).alignment = align_center
+            
+            # Merged Number of Students cell (B{r1}:B{r1+1})
+            ws.merge_cells(f"B{r1}:B{r1+1}")
+            cell_b = ws.cell(row=r1, column=2, value=tot_students)
+            cell_b.font = font_bold
+            cell_b.alignment = align_center
+            
+            lw_vals = [
+                last_w.get("prob_above_500", 0),
+                last_w.get("prob_250_500", 0),
+                last_w.get("prob_100_249", 0),
+                last_w.get("prob_1_99", 0),
+                last_w.get("prob_0", 0),
+                last_w.get("q4", 0),
+                last_w.get("q3", 0),
+                last_w.get("q2", 0),
+                last_w.get("q1", 0),
+                "-",
+                "-"
+            ]
+            for idx_c, v in enumerate(lw_vals, start=3):
+                c = ws.cell(row=r1, column=idx_c, value=v)
+                c.font = font_regular
+                c.alignment = align_center
                 
-                # Fetch explicit values without generating fakes
-                tot_students = row_metrics.get("total_students", 0)
-                ab_500 = row_metrics.get("prob_above_500", 0)
-                p250 = row_metrics.get("prob_250_500", 0)
-                p100 = row_metrics.get("prob_100_249", 0)
-                p1 = row_metrics.get("prob_1_99", 0)
-                p0 = row_metrics.get("prob_0", 0)
+            # Row 2: Current Week
+            r2 = current_row + 1
+            ws.row_dimensions[r2].height = 26
+            ws.cell(row=r2, column=1, value=f"{batch_label}\n(Current Week)").font = font_bold
+            ws.cell(row=r2, column=1).alignment = align_center
+            
+            cw_rating = curr_w.get("rating_above_1500", 0)
+            cw_ranking = curr_w.get("rank_below_20000", 0)
+            
+            cw_vals = [
+                curr_w.get("prob_above_500", 0),
+                curr_w.get("prob_250_500", 0),
+                curr_w.get("prob_100_249", 0),
+                curr_w.get("prob_1_99", 0),
+                curr_w.get("prob_0", 0),
+                curr_w.get("q4", 0),
+                curr_w.get("q3", 0),
+                curr_w.get("q2", 0),
+                curr_w.get("q1", 0),
+                cw_rating if cw_rating and cw_rating > 0 else "-",
+                cw_ranking if cw_ranking and cw_ranking > 0 else "-"
+            ]
+            for idx_c, v in enumerate(cw_vals, start=3):
+                c = ws.cell(row=r2, column=idx_c, value=v)
+                c.font = font_bold if idx_c >= 12 and v != "-" else font_regular
+                c.alignment = align_center
                 
-                q4 = row_metrics.get("q4", 0)
-                q3 = row_metrics.get("q3", 0)
-                q2 = row_metrics.get("q2", 0)
-                q1 = row_metrics.get("q1", 0)
-                
-                rating = row_metrics.get("rating_above_1500", 0)
-                ranking = row_metrics.get("rank_below_20000", 0)
-                
-                vals = [row_label, tot_students, ab_500, p250, p100, p1, p0, q4, q3, q2, q1, rating, ranking]
-                
-                for c_idx, val in enumerate(vals, start=1):
-                    cell = ws.cell(row=current_row, column=c_idx, value=val)
-                    cell.font = font_bold if c_idx <= 2 else font_regular
-                    cell.alignment = align_left if c_idx == 1 else align_center
-                    
-                current_row += 1
+            current_row += 2
 
         # Column widths
-        widths = {'A': 32, 'B': 20, 'C': 13, 'D': 13, 'E': 14, 'F': 14, 'G': 15, 'H': 12, 'I': 12, 'J': 12, 'K': 12, 'L': 18, 'M': 18}
+        widths = {'A': 20, 'B': 18, 'C': 12, 'D': 12, 'E': 13, 'F': 13, 'G': 14, 'H': 11, 'I': 11, 'J': 11, 'K': 11, 'L': 18, 'M': 18}
         for col, width in widths.items():
             ws.column_dimensions[col].width = width
 
-        # 15. Determine the actual last used row dynamically and set print area
         actual_last_row = current_row - 1
         ws.print_area = f"A1:M{actual_last_row}"
+        
+        # Apply standard borders to the whole table (Rows 6 to actual_last_row)
+        for r in range(6, actual_last_row + 1):
+            for c in range(1, 14):
+                ws.cell(row=r, column=c).border = grid_border
         
         # Apply standard 'All Borders' to every single cell in the table exactly as requested
         for r in range(5, actual_last_row + 1):

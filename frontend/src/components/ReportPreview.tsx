@@ -946,33 +946,26 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#0c1427] border-2 border-slate-200/90 dark:border-white/10 shadow-xl space-y-5">
                     {/* Header with Title, Report Type Scope & Badges */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/10 pb-4">
-                      <div className="flex items-center space-x-3 min-w-0">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/25 border border-white/20">
-                          <Target className="w-5 h-5 text-white" />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-sm sm:text-base font-black text-slate-950 dark:text-white uppercase tracking-wider">
+                            Solve Condition &amp; Performance Summary
+                          </h3>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20">
+                            {rType || 'CONTEST PERFORMANCE REPORT'}
+                          </span>
                         </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="text-sm sm:text-base font-black text-slate-950 dark:text-white uppercase tracking-wider">
-                              Solve Condition &amp; Performance Summary
-                            </h3>
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20">
-                              {rType || 'CONTEST PERFORMANCE REPORT'}
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                            Aggregated solve condition cohorts, problem difficulty metrics &amp; attendance breakdown for this contest session.
-                          </p>
-                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                          Aggregated solve condition cohorts, problem difficulty metrics & attendance breakdown for this contest session.
+                        </p>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0 flex-wrap">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200">
-                          <Users className="w-3.5 h-3.5 text-brand-500" />
                           <span>In Scope: {allRows.length} Students</span>
                         </span>
                         {activeFilter && (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs font-black text-amber-700 dark:text-amber-300">
-                            <Filter className="w-3.5 h-3.5 text-amber-500" />
                             <span>Filtered View: {conditionStats.totalStudents}</span>
                           </span>
                         )}
@@ -982,9 +975,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     {/* 1. Problem Solve Distribution Cohorts (4/4, 3/4, 2/4, 1/4, 0/4, Not Attended) */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                          <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                          <span>Contest / Weekly Solve Distribution Cohorts</span>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                          Contest / Weekly Solve Distribution Cohorts
                         </span>
                         <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
                           Click any cohort card to filter students in the table
@@ -1002,13 +994,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300">4 Solved (4/4)</span>
-                            <Trophy className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">4 Solved (4/4)</span>
+                            <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s4 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
                           </div>
-                          <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">{conditionStats.s4}</p>
-                          <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full w-fit">
-                            {conditionStats.totalStudents > 0 ? `${((conditionStats.s4 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                          </span>
+                          <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight mt-1">{conditionStats.s4}</p>
                         </div>
 
                         {/* 3/4 Solved */}
@@ -1021,13 +1012,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] font-black uppercase text-teal-800 dark:text-teal-300">3 Solved (3/4)</span>
-                            <Sparkles className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                            <span className="text-[10px] font-black uppercase tracking-wider text-teal-800 dark:text-teal-300">3 Solved (3/4)</span>
+                            <span className="text-[10px] font-black text-teal-800 dark:text-teal-300 bg-teal-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s3 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
                           </div>
-                          <p className="text-2xl font-black text-teal-800 dark:text-teal-300 tracking-tight my-1">{conditionStats.s3}</p>
-                          <span className="text-[10px] font-black text-teal-800 dark:text-teal-300 bg-teal-500/10 px-2 py-0.5 rounded-full w-fit">
-                            {conditionStats.totalStudents > 0 ? `${((conditionStats.s3 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                          </span>
+                          <p className="text-2xl font-black text-teal-800 dark:text-teal-300 tracking-tight mt-1">{conditionStats.s3}</p>
                         </div>
 
                         {/* 2/4 Solved */}
@@ -1040,13 +1030,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] font-black uppercase text-brand-800 dark:text-brand-300">2 Solved (2/4)</span>
-                            <Zap className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
+                            <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">2 Solved (2/4)</span>
+                            <span className="text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s2 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
                           </div>
-                          <p className="text-2xl font-black text-brand-800 dark:text-brand-300 tracking-tight my-1">{conditionStats.s2}</p>
-                          <span className="text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-2 py-0.5 rounded-full w-fit">
-                            {conditionStats.totalStudents > 0 ? `${((conditionStats.s2 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                          </span>
+                          <p className="text-2xl font-black text-brand-800 dark:text-brand-300 tracking-tight mt-1">{conditionStats.s2}</p>
                         </div>
 
                         {/* 1/4 Solved */}
@@ -1059,13 +1048,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300">1 Solved (1/4)</span>
-                            <Flame className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                            <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">1 Solved (1/4)</span>
+                            <span className="text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s1 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
                           </div>
-                          <p className="text-2xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">{conditionStats.s1}</p>
-                          <span className="text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
-                            {conditionStats.totalStudents > 0 ? `${((conditionStats.s1 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                          </span>
+                          <p className="text-2xl font-black text-amber-800 dark:text-amber-300 tracking-tight mt-1">{conditionStats.s1}</p>
                         </div>
 
                         {/* 0/4 Solved (Attended) */}
@@ -1078,13 +1066,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] font-black uppercase text-purple-800 dark:text-purple-300">0 Solved (Attended)</span>
-                            <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                            <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">0 Solved (Attended)</span>
+                            <span className="text-[10px] font-black text-purple-800 dark:text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s0 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
                           </div>
-                          <p className="text-2xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">{conditionStats.s0}</p>
-                          <span className="text-[10px] font-black text-purple-800 dark:text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full w-fit">
-                            {conditionStats.totalStudents > 0 ? `${((conditionStats.s0 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                          </span>
+                          <p className="text-2xl font-black text-purple-800 dark:text-purple-300 tracking-tight mt-1">{conditionStats.s0}</p>
                         </div>
 
                         {/* Not Attended / Absent */}
@@ -1097,31 +1084,26 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] font-black uppercase text-rose-800 dark:text-rose-300">Not Attended</span>
-                            <UserX className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                            <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">Not Attended</span>
+                            <span className="text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.notAttendedCount / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
                           </div>
-                          <p className="text-2xl font-black text-rose-800 dark:text-rose-300 tracking-tight my-1">{conditionStats.notAttendedCount}</p>
-                          <span className="text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded-full w-fit">
-                            {conditionStats.totalStudents > 0 ? `${((conditionStats.notAttendedCount / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                          </span>
+                          <p className="text-2xl font-black text-rose-800 dark:text-rose-300 tracking-tight mt-1">{conditionStats.notAttendedCount}</p>
                         </div>
                       </div>
                     </div>
 
                     {/* 2. Problem Difficulty Solves Split (Easy / Medium / Hard / Total) */}
                     <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/10">
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                        <Flame className="w-3.5 h-3.5 text-indigo-500" />
-                        <span>Difficulty Solve Distribution (Easy • Medium • Hard)</span>
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Difficulty Solve Distribution (Easy • Medium • Hard)
                       </span>
 
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {/* Easy Solves */}
                         <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col justify-between shadow-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300">Easy Solves</span>
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                          </div>
+                          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Easy Solves</span>
                           <p className="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">
                             {conditionStats.totalEasy.toLocaleString()}
                           </p>
@@ -1132,10 +1114,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
                         {/* Medium Solves */}
                         <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col justify-between shadow-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300">Medium Solves</span>
-                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                          </div>
+                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Medium Solves</span>
                           <p className="text-2xl sm:text-3xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">
                             {conditionStats.totalMed.toLocaleString()}
                           </p>
@@ -1146,10 +1125,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
                         {/* Hard Solves */}
                         <div className="p-3.5 sm:p-4 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex flex-col justify-between shadow-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black uppercase text-purple-800 dark:text-purple-300">Hard Solves</span>
-                            <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-                          </div>
+                          <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">Hard Solves</span>
                           <p className="text-2xl sm:text-3xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">
                             {conditionStats.totalHard.toLocaleString()}
                           </p>
@@ -1160,10 +1136,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
                         {/* Total Cumulative Solves */}
                         <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-brand-500/15 border border-brand-500/30 flex flex-col justify-between shadow-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black uppercase text-brand-800 dark:text-brand-300">Total Solves</span>
-                            <Zap className="w-4 h-4 text-brand-500" />
-                          </div>
+                          <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">Total Solves</span>
                           <p className="text-2xl sm:text-3xl font-black text-brand-800 dark:text-brand-300 tracking-tight my-1">
                             {conditionStats.totalSolves.toLocaleString()}
                           </p>
@@ -1176,9 +1149,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
                     {/* 3. Official Condition Criteria Reference Strip */}
                     <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                      <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold">
-                        <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-                        <span>Evaluation Standards: 4/4 (100% Complete) • 3/4 (Advanced) • 2/4 (Intermediate) • 1/4 (Developing) • 0/4 (Participation)</span>
+                      <div className="text-slate-700 dark:text-slate-300 font-bold">
+                        Evaluation Standards: 4/4 (100% Complete) • 3/4 (Advanced) • 2/4 (Intermediate) • 1/4 (Developing) • 0/4 (Participation)
                       </div>
                       {activeFilter && (
                         <button
@@ -2246,192 +2218,220 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     </div>
                   )}
 
-                  {/* Batch Summaries - Multi-Row Comparative Matrix (Last Week & Current Week) */}
-                  {report.batch_summaries && Array.isArray(report.batch_summaries) && report.batch_summaries.length > 0 && (
-                    <div className="space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <h3 className="text-xs sm:text-sm font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-2">
-                          <span>Batch-wise Performance Summary</span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
-                            Last vs Current Week
-                          </span>
-                        </h3>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                          Multi-Level Comparative Institutional Standard
-                        </span>
-                      </div>
+                  {/* Batch Summaries - Institutional Official Report Layout */}
+                  {(() => {
+                    const canonicalBatches = [
+                      { label: '2023 - 2027', year: 'IV' },
+                      { label: '2024 - 2028', year: 'III' },
+                      { label: '2025 - 2029', year: 'II' }
+                    ];
+                    const rawBatches = Array.isArray(report.batch_summaries) ? report.batch_summaries : [];
+                    const batchesToDisplay = canonicalBatches.map(cb => {
+                      const found = rawBatches.find((b: any) => (b.batch || '').replace(/\s+/g, '') === cb.label.replace(/\s+/g, ''));
+                      if (found) return found;
+                      return { batch: cb.label, year: cb.year, total_students: 0, current_week: {}, last_week: {} };
+                    });
 
-                      {/* Mobile Card View (< md) */}
-                      <div className="block md:hidden print:hidden space-y-3">
-                        {report.batch_summaries.filter((b: any) => (b.total_students || 0) > 0).map((b: any, idx: number) => {
-                          const cw = b.current_week || {};
-                          const lw = b.last_week || {};
-                          return (
-                            <div key={idx} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b101d] shadow-sm space-y-3">
-                              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-white/5">
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
-                                    {b.year || 'BATCH'}
-                                  </span>
-                                  <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">{b.batch}</h4>
-                                </div>
-                                <span className="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg">
-                                  {b.total_students} Students
-                                </span>
-                              </div>
-
-                              {/* Comparative Cards: Last Week vs Current Week */}
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                {/* Last Week Block */}
-                                <div className="p-2.5 rounded-xl border border-amber-200/80 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-950/20 space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                                      Last Week
-                                    </span>
-                                    <span className="text-[10px] font-mono font-bold text-amber-700 dark:text-amber-300">
-                                      {report.lastWeek?.date || 'Past'}
-                                    </span>
-                                  </div>
-                                  <div className="grid grid-cols-5 gap-1 text-center bg-white/70 dark:bg-black/20 p-1.5 rounded-lg text-[10px]">
-                                    <div><div className="text-slate-400 font-semibold">&gt;500</div><div className="font-bold text-purple-700 dark:text-purple-300">{lw.prob_above_500 ?? 0}</div></div>
-                                    <div><div className="text-slate-400 font-semibold">250-500</div><div className="font-bold text-indigo-700 dark:text-indigo-300">{lw.prob_250_500 ?? 0}</div></div>
-                                    <div><div className="text-slate-400 font-semibold">&lt;250</div><div className="font-bold text-slate-700 dark:text-slate-200">{lw.prob_100_249 ?? 0}</div></div>
-                                    <div><div className="text-slate-400 font-semibold">&lt;100</div><div className="font-bold text-amber-700 dark:text-amber-300">{lw.prob_1_99 ?? 0}</div></div>
-                                    <div><div className="text-slate-400 font-semibold">0</div><div className="font-bold text-rose-700 dark:text-rose-300">{lw.prob_0 ?? 0}</div></div>
-                                  </div>
-                                  <div className="flex items-center justify-between text-[10px] pt-1 border-t border-amber-200/60 dark:border-amber-800/40">
-                                    <span className="font-semibold text-slate-600 dark:text-slate-300">Contests:</span>
-                                    <div className="flex items-center gap-1.5 font-bold font-mono">
-                                      <span className="text-emerald-600">4Q: {lw.q4 ?? 0}</span>
-                                      <span className="text-cyan-600">3Q: {lw.q3 ?? 0}</span>
-                                      <span className="text-blue-600">2Q: {lw.q2 ?? 0}</span>
-                                      <span className="text-amber-600">1Q: {lw.q1 ?? 0}</span>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Current Week Block */}
-                                <div className="p-2.5 rounded-xl border border-cyan-200/80 dark:border-cyan-800/60 bg-cyan-50/50 dark:bg-cyan-950/20 space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-cyan-700 dark:text-cyan-400">
-                                      Current Week
-                                    </span>
-                                    <span className="text-[10px] font-mono font-bold text-cyan-700 dark:text-cyan-300">
-                                      {report.currentWeek?.date || 'Latest'}
-                                    </span>
-                                  </div>
-                                  <div className="grid grid-cols-5 gap-1 text-center bg-white/70 dark:bg-black/20 p-1.5 rounded-lg text-[10px]">
-                                    <div><div className="text-slate-400 font-semibold">&gt;500</div><div className="font-bold text-purple-700 dark:text-purple-300">{cw.prob_above_500 ?? cw.categories?.['Above 500'] ?? 0}</div></div>
-                                    <div><div className="text-slate-400 font-semibold">250-500</div><div className="font-bold text-indigo-700 dark:text-indigo-300">{cw.prob_250_500 ?? cw.categories?.['250 - 500'] ?? 0}</div></div>
-                                    <div><div className="text-slate-400 font-semibold">&lt;250</div><div className="font-bold text-slate-700 dark:text-slate-200">{cw.prob_100_249 ?? cw.categories?.['Less than 250'] ?? 0}</div></div>
-                                    <div><div className="text-slate-400 font-semibold">&lt;100</div><div className="font-bold text-amber-700 dark:text-amber-300">{cw.prob_1_99 ?? cw.categories?.['Less than 100'] ?? 0}</div></div>
-                                    <div><div className="text-slate-400 font-semibold">0</div><div className="font-bold text-rose-700 dark:text-rose-300">{cw.prob_0 ?? cw.categories?.['Not Yet Started'] ?? 0}</div></div>
-                                  </div>
-                                  <div className="flex items-center justify-between text-[10px] pt-1 border-t border-cyan-200/60 dark:border-cyan-800/40">
-                                    <span className="font-semibold text-slate-600 dark:text-slate-300">Contests:</span>
-                                    <div className="flex items-center gap-1.5 font-bold font-mono">
-                                      <span className="text-emerald-600 font-black">4Q: {cw.q4 ?? 0}</span>
-                                      <span className="text-cyan-600 font-black">3Q: {cw.q3 ?? 0}</span>
-                                      <span className="text-blue-600 font-black">2Q: {cw.q2 ?? 0}</span>
-                                      <span className="text-amber-600 font-black">1Q: {cw.q1 ?? 0}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
+                    return (
+                      <div className="space-y-4">
+                        {/* Institutional Official Paper Header Card */}
+                        <div className="p-4 sm:p-5 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white shadow-sm space-y-2 font-sans">
+                          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
+                            <img
+                              src="/black_white_logo.png"
+                              alt="Nandha Engineering College"
+                              className="h-12 sm:h-14 w-auto object-contain shrink-0"
+                              onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+                            />
+                            <div className="space-y-1">
+                              <h2 className="text-sm sm:text-base font-black tracking-wider uppercase text-slate-950 dark:text-white">
+                                NANDHA ENGINEERING COLLEGE, ERODE - 638 052.
+                              </h2>
+                              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                                {report.department_name || (report.department ? `Department of CSE (${report.department})` : 'Department of CSE (Internet of Things )')}
+                              </p>
+                              <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                Date:{report.report_date || report.currentWeek?.date || '12.10.2026'}
+                              </p>
+                              <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white pt-1">
+                                Leetcode Performance - Weekly Report
+                              </h3>
+                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                Name &amp; Designation of the Academic Coordinator: <span className="font-black text-brand-700 dark:text-brand-400">{report.coordinator || 'P.Devayani /AP'}</span>
+                              </p>
                             </div>
-                          );
-                        })}
-                      </div>
+                          </div>
+                        </div>
 
-                      {/* Desktop Institutional Multi-Level Table (>= md) */}
-                      <div className="hidden md:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
-                        <table className="w-full text-left text-xs min-w-[960px]">
-                          <thead>
-                            <tr className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase text-[11px]">
-                              <th rowSpan={2} className="px-3.5 py-3 border-r border-slate-800 text-left">Batch & Period</th>
-                              <th rowSpan={2} className="px-3 py-3 border-r border-slate-800 text-center">No. of Students</th>
-                              <th colSpan={5} className="px-3 py-2 border-r border-slate-800 text-center bg-slate-800/70">Number of Problems Solved</th>
-                              <th colSpan={4} className="px-3 py-2 border-r border-slate-800 text-center bg-indigo-950/70">Weekly Contest Attended</th>
-                              <th colSpan={2} className="px-3 py-2 text-center bg-blue-950/70">LeetCode Rating & Ranking</th>
-                            </tr>
-                            <tr className="bg-slate-800/90 text-white text-[10px] font-black uppercase tracking-wider">
-                              {/* Problems Solved */}
-                              <th className="px-2 py-2 text-center border-r border-slate-700 text-purple-300">Above 500</th>
-                              <th className="px-2 py-2 text-center border-r border-slate-700 text-indigo-300">250–500</th>
-                              <th className="px-2 py-2 text-center border-r border-slate-700">100–249</th>
-                              <th className="px-2 py-2 text-center border-r border-slate-700 text-amber-300">1–99</th>
-                              <th className="px-2 py-2 text-center border-r border-slate-700 text-rose-300">0</th>
-                              {/* Contest Attended */}
-                              <th className="px-2 py-2 text-center border-r border-slate-700 text-emerald-300">4Q</th>
-                              <th className="px-2 py-2 text-center border-r border-slate-700 text-cyan-300">3Q</th>
-                              <th className="px-2 py-2 text-center border-r border-slate-700 text-blue-300">2Q</th>
-                              <th className="px-2 py-2 text-center border-r border-slate-700 text-amber-300">1Q</th>
-                              {/* Rating & Ranking */}
-                              <th className="px-2 py-2 text-center border-r border-slate-700 text-emerald-300">&gt; 1500</th>
-                              <th className="px-2 py-2 text-center text-sky-300">&lt; 20000</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-sans">
-                            {report.batch_summaries.filter((b: any) => (b.total_students || 0) > 0).map((b: any, idx: number) => {
-                              const cw = b.current_week || {};
-                              const lw = b.last_week || {};
-                              return (
-                                <React.Fragment key={idx}>
-                                  {/* Row 1: Last Week */}
-                                  <tr className="bg-amber-500/[0.04] dark:bg-amber-500/[0.03] hover:bg-amber-500/[0.08] dark:hover:bg-amber-500/[0.06] transition-colors border-t-2 border-slate-300 dark:border-slate-700">
-                                    <td className="px-3.5 py-2.5 font-bold text-slate-800 dark:text-slate-200">
-                                      <div className="flex items-center gap-2">
-                                        <span className="font-extrabold text-slate-900 dark:text-white">{b.batch}</span>
-                                        <span className="text-[9.5px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
-                                          Last Week
-                                        </span>
-                                      </div>
-                                    </td>
-                                    <td className="px-3 py-2.5 text-center font-bold text-slate-600 dark:text-slate-400">{lw.total_students ?? b.total_students}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-purple-700 dark:text-purple-300">{lw.prob_above_500 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{lw.prob_250_500 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-bold text-slate-700 dark:text-slate-300">{lw.prob_100_249 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-bold text-amber-700 dark:text-amber-300">{lw.prob_1_99 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-bold text-rose-700 dark:text-rose-300">{lw.prob_0 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{lw.q4 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-cyan-700 dark:text-cyan-300">{lw.q3 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-blue-700 dark:text-blue-300">{lw.q2 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-amber-700 dark:text-amber-300">{lw.q1 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{lw.rating_above_1500 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-sky-700 dark:text-sky-300">{lw.rank_below_20000 ?? 0}</td>
-                                  </tr>
+                        {/* Mobile Card View (< md) */}
+                        <div className="block md:hidden print:hidden space-y-3">
+                          {batchesToDisplay.map((b: any, idx: number) => {
+                            const cw = b.current_week || {};
+                            const lw = b.last_week || {};
+                            const totStudents = b.total_students || lw.total_students || cw.total_students || 0;
+                            return (
+                              <div key={idx} className="p-3.5 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 shadow-sm space-y-3 font-sans">
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                                  <div className="flex items-center gap-2">
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+                                      Batch {b.year || 'IV'}
+                                    </span>
+                                    <h4 className="text-xs font-black text-slate-900 dark:text-white">{b.batch}</h4>
+                                  </div>
+                                  <span className="text-xs font-black px-2.5 py-0.5 rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                                    {totStudents} Students
+                                  </span>
+                                </div>
 
-                                  {/* Row 2: Current Week */}
-                                  <tr className="bg-cyan-500/[0.06] dark:bg-cyan-500/[0.04] hover:bg-cyan-500/[0.10] dark:hover:bg-cyan-500/[0.08] transition-colors">
-                                    <td className="px-3.5 py-2.5 font-bold text-slate-800 dark:text-slate-200">
-                                      <div className="flex items-center gap-2">
-                                        <span className="font-extrabold text-slate-900 dark:text-white">{b.batch}</span>
-                                        <span className="text-[9.5px] font-black uppercase px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40">
-                                          Current Week
-                                        </span>
-                                      </div>
-                                    </td>
-                                    <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-white">{cw.total_students ?? b.total_students}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-purple-700 dark:text-purple-300">{cw.prob_above_500 ?? cw.categories?.['Above 500'] ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{cw.prob_250_500 ?? cw.categories?.['250 - 500'] ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-slate-800 dark:text-slate-100">{cw.prob_100_249 ?? cw.categories?.['Less than 250'] ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-amber-700 dark:text-amber-300">{cw.prob_1_99 ?? cw.categories?.['Less than 100'] ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-rose-700 dark:text-rose-300">{cw.prob_0 ?? cw.categories?.['Not Yet Started'] ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/10">{cw.q4 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-cyan-700 dark:text-cyan-300 bg-cyan-500/10">{cw.q3 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-blue-700 dark:text-blue-300 bg-blue-500/10">{cw.q2 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-amber-700 dark:text-amber-300 bg-amber-500/10">{cw.q1 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{cw.rating_above_1500 ?? cw.rating_1500 ?? 0}</td>
-                                    <td className="px-2 py-2.5 text-center font-black text-sky-700 dark:text-sky-300">{cw.rank_below_20000 ?? cw.ranking_20000 ?? 0}</td>
-                                  </tr>
-                                </React.Fragment>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                                <div className="space-y-2">
+                                  {/* Last Week Row */}
+                                  <div className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-navy-900/40 space-y-1.5">
+                                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                      <span>(Last Week)</span>
+                                      <span className="text-[10px] text-slate-500">Rating: - | Rank: -</span>
+                                    </div>
+                                    <div className="grid grid-cols-5 gap-1 text-center text-[10px]">
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">&gt;500</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_above_500 ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">250-500</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_250_500 ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">&lt;250</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_100_249 ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">&lt;100</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_1_99 ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">Not start</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_0 ?? 0}</div></div>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[10px] pt-1 text-slate-600 dark:text-slate-400">
+                                      <span>Contests:</span>
+                                      <span className="font-mono font-bold">4Q: {lw.q4 ?? 0} | 3Q: {lw.q3 ?? 0} | 2Q: {lw.q2 ?? 0} | 1Q: {lw.q1 ?? 0}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Current Week Row */}
+                                  <div className="p-2.5 rounded-xl border border-cyan-300 dark:border-cyan-800 bg-cyan-50/50 dark:bg-cyan-950/20 space-y-1.5">
+                                    <div className="flex items-center justify-between text-[11px] font-black text-cyan-900 dark:text-cyan-200">
+                                      <span>(Current Week)</span>
+                                      <span className="text-[10px] text-cyan-700 dark:text-cyan-300">
+                                        Rating: {(cw.rating_above_1500 ?? cw.rating_1500 ?? 0) > 0 ? (cw.rating_above_1500 ?? cw.rating_1500) : '-'} | Rank: {(cw.rank_below_20000 ?? cw.ranking_20000 ?? 0) > 0 ? (cw.rank_below_20000 ?? cw.ranking_20000) : '-'}
+                                      </span>
+                                    </div>
+                                    <div className="grid grid-cols-5 gap-1 text-center text-[10px]">
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">&gt;500</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_above_500 ?? cw.categories?.['Above 500'] ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">250-500</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_250_500 ?? cw.categories?.['250 - 500'] ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">&lt;250</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_100_249 ?? cw.categories?.['Less than 250'] ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">&lt;100</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_1_99 ?? cw.categories?.['Less than 100'] ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">Not start</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_0 ?? cw.categories?.['Not Yet Started'] ?? 0}</div></div>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[10px] pt-1 text-cyan-800 dark:text-cyan-300">
+                                      <span>Contests:</span>
+                                      <span className="font-mono font-black">4Q: {cw.q4 ?? 0} | 3Q: {cw.q3 ?? 0} | 2Q: {cw.q2 ?? 0} | 1Q: {cw.q1 ?? 0}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Desktop Multi-Level Institutional Table (>= md) */}
+                        <div className="hidden md:block print:block border-2 border-slate-400 dark:border-slate-600 rounded-xl overflow-x-auto shadow-sm bg-white dark:bg-navy-950">
+                          <table className="w-full text-left text-xs min-w-[980px] border-collapse font-sans">
+                            <thead>
+                              <tr className="bg-slate-100 dark:bg-navy-900 text-slate-950 dark:text-white font-black text-xs uppercase border-b-2 border-slate-400 dark:border-slate-600">
+                                <th rowSpan={2} className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-black">
+                                  Batch
+                                </th>
+                                <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[140px] leading-tight">
+                                  Number of Students (Total Count)
+                                </th>
+                                <th colSpan={5} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
+                                  Number of Problems Solved
+                                </th>
+                                <th colSpan={4} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
+                                  Weekly Contest Attended: (give the count here)
+                                </th>
+                                <th colSpan={2} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
+                                  Leetcode Contest Rating and Ranking
+                                </th>
+                              </tr>
+                              <tr className="bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-slate-100 text-[11px] font-black border-b border-slate-400 dark:border-slate-600">
+                                {/* Problems Solved */}
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Above 500</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">250 - 500</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Less than 250</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Less than 100</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Not yet started</th>
+                                {/* Contests Attended */}
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">4 Q Solved</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">3 Q Solved</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">2 Q Solved</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">1 Q Solved</th>
+                                {/* Rating & Ranking */}
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Rating: Above 1500</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Ranking: Below 20000</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-400 dark:divide-slate-600 font-sans text-xs">
+                              {batchesToDisplay.map((b: any, idx: number) => {
+                                const cw = b.current_week || {};
+                                const lw = b.last_week || {};
+                                const totalStudents = b.total_students || lw.total_students || cw.total_students || 0;
+                                const cwRating = cw.rating_above_1500 ?? cw.rating_1500 ?? 0;
+                                const cwRanking = cw.rank_below_20000 ?? cw.ranking_20000 ?? 0;
+
+                                return (
+                                  <React.Fragment key={idx}>
+                                    {/* Row 1: Last Week */}
+                                    <tr className="hover:bg-slate-50 dark:hover:bg-navy-900/30 transition-colors">
+                                      <td className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 font-bold text-slate-900 dark:text-white text-center leading-tight">
+                                        <div className="font-extrabold">{b.batch}</div>
+                                        <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">(Last Week)</div>
+                                      </td>
+                                      {/* Total Students Cell (rowSpan=2) */}
+                                      <td rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white text-base align-middle bg-slate-50/40 dark:bg-navy-900/10">
+                                        {totalStudents}
+                                      </td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_above_500 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_250_500 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_100_249 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_1_99 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_0 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q4 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q3 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q2 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q1 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-400 dark:text-slate-500">-</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-400 dark:text-slate-500">-</td>
+                                    </tr>
+
+                                    {/* Row 2: Current Week */}
+                                    <tr className="hover:bg-slate-50 dark:hover:bg-navy-900/30 transition-colors">
+                                      <td className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 font-bold text-slate-900 dark:text-white text-center leading-tight">
+                                        <div className="font-extrabold">{b.batch}</div>
+                                        <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">(Current Week)</div>
+                                      </td>
+                                      {/* Total Students omitted here due to rowSpan={2} */}
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_above_500 ?? cw.categories?.['Above 500'] ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_250_500 ?? cw.categories?.['250 - 500'] ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_100_249 ?? cw.categories?.['Less than 250'] ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_1_99 ?? cw.categories?.['Less than 100'] ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_0 ?? cw.categories?.['Not Yet Started'] ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.q4 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.q3 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.q2 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.q1 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white">
+                                        {cwRating > 0 ? cwRating : '-'}
+                                      </td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white">
+                                        {cwRanking > 0 ? cwRanking : '-'}
+                                      </td>
+                                    </tr>
+                                  </React.Fragment>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Student Roster with Contest Outcomes */}
                   {(() => {
@@ -3394,254 +3394,226 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
           {/* UNIVERSAL SOLVE CONDITION & DIFFICULTY BREAKDOWN (TABLE FOOTER ANALYSIS) */}
           {!isContestReport && (
           <div className="pt-4 space-y-4 print:break-inside-avoid print:mt-6">
-            <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#0c1427] border-2 border-slate-200/90 dark:border-white/10 shadow-xl space-y-5">
-              {/* Header with Title, Report Type Scope & Badges */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/10 pb-4">
-                <div className="flex items-center space-x-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/25 border border-white/20">
-                    <Target className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm sm:text-base font-black text-slate-950 dark:text-white uppercase tracking-wider">
-                        Solve Condition &amp; Performance Summary
-                      </h3>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20">
-                        {rType || 'UNIVERSAL REPORT'}
+                  <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#0c1427] border-2 border-slate-200/90 dark:border-white/10 shadow-xl space-y-5">
+                    {/* Header with Title, Report Type Scope & Badges */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/10 pb-4">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-sm sm:text-base font-black text-slate-950 dark:text-white uppercase tracking-wider">
+                            Solve Condition &amp; Performance Summary
+                          </h3>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20">
+                            {rType || 'UNIVERSAL REPORT'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                          Aggregated solve condition cohorts, problem difficulty metrics & attendance breakdown for table data above.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200">
+                          <span>In Scope: {allRows.length} Students</span>
+                        </span>
+                        {activeFilter && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs font-black text-amber-700 dark:text-amber-300">
+                            <span>Filtered View: {conditionStats.totalStudents}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 1. Problem Solve Distribution Cohorts (4/4, 3/4, 2/4, 1/4, 0/4, Not Attended) */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                          Contest / Weekly Solve Distribution Cohorts
+                        </span>
+                        <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                          Click any cohort card to filter students in the table
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+                        {/* 4/4 Solved */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_4')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                            activeFilter === 'SOLVED_4'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md'
+                              : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-emerald-400 shadow-xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">4 Solved (4/4)</span>
+                            <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s4 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
+                          </div>
+                          <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight mt-1">{conditionStats.s4}</p>
+                        </div>
+
+                        {/* 3/4 Solved */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_3')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                            activeFilter === 'SOLVED_3'
+                              ? 'bg-teal-50 dark:bg-teal-950/40 border-teal-500 ring-2 ring-teal-500/30 shadow-md'
+                              : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-teal-400 shadow-xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-teal-800 dark:text-teal-300">3 Solved (3/4)</span>
+                            <span className="text-[10px] font-black text-teal-800 dark:text-teal-300 bg-teal-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s3 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
+                          </div>
+                          <p className="text-2xl font-black text-teal-800 dark:text-teal-300 tracking-tight mt-1">{conditionStats.s3}</p>
+                        </div>
+
+                        {/* 2/4 Solved */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_2')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                            activeFilter === 'SOLVED_2'
+                              ? 'bg-indigo-50 dark:bg-indigo-950/40 border-brand-500 ring-2 ring-brand-500/30 shadow-md'
+                              : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-brand-400 shadow-xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">2 Solved (2/4)</span>
+                            <span className="text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s2 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
+                          </div>
+                          <p className="text-2xl font-black text-brand-800 dark:text-brand-300 tracking-tight mt-1">{conditionStats.s2}</p>
+                        </div>
+
+                        {/* 1/4 Solved */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_1')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                            activeFilter === 'SOLVED_1'
+                              ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/30 shadow-md'
+                              : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-amber-400 shadow-xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">1 Solved (1/4)</span>
+                            <span className="text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s1 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
+                          </div>
+                          <p className="text-2xl font-black text-amber-800 dark:text-amber-300 tracking-tight mt-1">{conditionStats.s1}</p>
+                        </div>
+
+                        {/* 0/4 Solved (Attended) */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_0')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                            activeFilter === 'SOLVED_0'
+                              ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 ring-2 ring-purple-500/30 shadow-md'
+                              : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-purple-400 shadow-xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">0 Solved (Attended)</span>
+                            <span className="text-[10px] font-black text-purple-800 dark:text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s0 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
+                          </div>
+                          <p className="text-2xl font-black text-purple-800 dark:text-purple-300 tracking-tight mt-1">{conditionStats.s0}</p>
+                        </div>
+
+                        {/* Not Attended / Absent */}
+                        <div
+                          onClick={() => toggleFilter('NOT_ATTENDED')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+                            activeFilter === 'NOT_ATTENDED'
+                              ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 ring-2 ring-rose-500/30 shadow-md'
+                              : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-rose-400 shadow-xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">Not Attended</span>
+                            <span className="text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.notAttendedCount / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
+                          </div>
+                          <p className="text-2xl font-black text-rose-800 dark:text-rose-300 tracking-tight mt-1">{conditionStats.notAttendedCount}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2. Problem Difficulty Solves Split (Easy / Medium / Hard / Total) */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/10">
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Difficulty Solve Distribution (Easy • Medium • Hard)
                       </span>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {/* Easy Solves */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col justify-between shadow-xs">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Easy Solves</span>
+                          <p className="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">
+                            {conditionStats.totalEasy.toLocaleString()}
+                          </p>
+                          <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400">
+                            Foundational Solves
+                          </span>
+                        </div>
+
+                        {/* Medium Solves */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col justify-between shadow-xs">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Medium Solves</span>
+                          <p className="text-2xl sm:text-3xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">
+                            {conditionStats.totalMed.toLocaleString()}
+                          </p>
+                          <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400">
+                            Core Algorithmic Solves
+                          </span>
+                        </div>
+
+                        {/* Hard Solves */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex flex-col justify-between shadow-xs">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">Hard Solves</span>
+                          <p className="text-2xl sm:text-3xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">
+                            {conditionStats.totalHard.toLocaleString()}
+                          </p>
+                          <span className="text-[10px] font-extrabold text-purple-700 dark:text-purple-400">
+                            High Difficulty Solves
+                          </span>
+                        </div>
+
+                        {/* Total Cumulative Solves */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-brand-500/15 border border-brand-500/30 flex flex-col justify-between shadow-xs">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">Total Solves</span>
+                          <p className="text-2xl sm:text-3xl font-black text-brand-800 dark:text-brand-300 tracking-tight my-1">
+                            {conditionStats.totalSolves.toLocaleString()}
+                          </p>
+                          <span className="text-[10px] font-extrabold text-brand-700 dark:text-brand-400">
+                            Cumulative Solves
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                      Aggregated solve condition cohorts, problem difficulty metrics &amp; attendance breakdown for table data above.
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200">
-                    <Users className="w-3.5 h-3.5 text-brand-500" />
-                    <span>In Scope: {allRows.length} Students</span>
-                  </span>
-                  {activeFilter && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs font-black text-amber-700 dark:text-amber-300">
-                      <Filter className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Filtered View: {conditionStats.totalStudents}</span>
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* 1. Problem Solve Distribution Cohorts (4/4, 3/4, 2/4, 1/4, 0/4, Not Attended) */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                    <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Contest / Weekly Solve Distribution Cohorts</span>
-                  </span>
-                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
-                    Click any cohort card to filter students in the table
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
-                  {/* 4/4 Solved */}
-                  <div
-                    onClick={() => toggleFilter('SOLVED_4')}
-                    className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
-                      activeFilter === 'SOLVED_4'
-                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md'
-                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-emerald-400 shadow-xs'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300">4 Solved (4/4)</span>
-                      <Trophy className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    {/* 3. Official Condition Criteria Reference Strip */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div className="text-slate-700 dark:text-slate-300 font-bold">
+                        Evaluation Standards: 4/4 (100% Complete) • 3/4 (Advanced) • 2/4 (Intermediate) • 1/4 (Developing) • 0/4 (Participation)
+                      </div>
+                      {activeFilter && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveFilter(null)}
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-black text-[11px] transition-all cursor-pointer touch-manipulation active:scale-95 shrink-0"
+                        >
+                          <span>Clear Filter ({conditionStats.totalStudents}/{allRows.length})</span>
+                        </button>
+                      )}
                     </div>
-                    <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">{conditionStats.s4}</p>
-                    <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full w-fit">
-                      {conditionStats.totalStudents > 0 ? `${((conditionStats.s4 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                    </span>
                   </div>
-
-                  {/* 3/4 Solved */}
-                  <div
-                    onClick={() => toggleFilter('SOLVED_3')}
-                    className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
-                      activeFilter === 'SOLVED_3'
-                        ? 'bg-teal-50 dark:bg-teal-950/40 border-teal-500 ring-2 ring-teal-500/30 shadow-md'
-                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-teal-400 shadow-xs'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] font-black uppercase text-teal-800 dark:text-teal-300">3 Solved (3/4)</span>
-                      <Sparkles className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
-                    </div>
-                    <p className="text-2xl font-black text-teal-800 dark:text-teal-300 tracking-tight my-1">{conditionStats.s3}</p>
-                    <span className="text-[10px] font-black text-teal-800 dark:text-teal-300 bg-teal-500/10 px-2 py-0.5 rounded-full w-fit">
-                      {conditionStats.totalStudents > 0 ? `${((conditionStats.s3 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                    </span>
-                  </div>
-
-                  {/* 2/4 Solved */}
-                  <div
-                    onClick={() => toggleFilter('SOLVED_2')}
-                    className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
-                      activeFilter === 'SOLVED_2'
-                        ? 'bg-indigo-50 dark:bg-indigo-950/40 border-brand-500 ring-2 ring-brand-500/30 shadow-md'
-                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-brand-400 shadow-xs'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] font-black uppercase text-brand-800 dark:text-brand-300">2 Solved (2/4)</span>
-                      <Zap className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
-                    </div>
-                    <p className="text-2xl font-black text-brand-800 dark:text-brand-300 tracking-tight my-1">{conditionStats.s2}</p>
-                    <span className="text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-2 py-0.5 rounded-full w-fit">
-                      {conditionStats.totalStudents > 0 ? `${((conditionStats.s2 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                    </span>
-                  </div>
-
-                  {/* 1/4 Solved */}
-                  <div
-                    onClick={() => toggleFilter('SOLVED_1')}
-                    className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
-                      activeFilter === 'SOLVED_1'
-                        ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/30 shadow-md'
-                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-amber-400 shadow-xs'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300">1 Solved (1/4)</span>
-                      <Flame className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                    </div>
-                    <p className="text-2xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">{conditionStats.s1}</p>
-                    <span className="text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full w-fit">
-                      {conditionStats.totalStudents > 0 ? `${((conditionStats.s1 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                    </span>
-                  </div>
-
-                  {/* 0/4 Solved (Attended) */}
-                  <div
-                    onClick={() => toggleFilter('SOLVED_0')}
-                    className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
-                      activeFilter === 'SOLVED_0'
-                        ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 ring-2 ring-purple-500/30 shadow-md'
-                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-purple-400 shadow-xs'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] font-black uppercase text-purple-800 dark:text-purple-300">0 Solved (Attended)</span>
-                      <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
-                    </div>
-                    <p className="text-2xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">{conditionStats.s0}</p>
-                    <span className="text-[10px] font-black text-purple-800 dark:text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full w-fit">
-                      {conditionStats.totalStudents > 0 ? `${((conditionStats.s0 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                    </span>
-                  </div>
-
-                  {/* Not Attended / Absent */}
-                  <div
-                    onClick={() => toggleFilter('NOT_ATTENDED')}
-                    className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
-                      activeFilter === 'NOT_ATTENDED'
-                        ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 ring-2 ring-rose-500/30 shadow-md'
-                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-rose-400 shadow-xs'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] font-black uppercase text-rose-800 dark:text-rose-300">Not Attended</span>
-                      <UserX className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
-                    </div>
-                    <p className="text-2xl font-black text-rose-800 dark:text-rose-300 tracking-tight my-1">{conditionStats.notAttendedCount}</p>
-                    <span className="text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded-full w-fit">
-                      {conditionStats.totalStudents > 0 ? `${((conditionStats.notAttendedCount / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 2. Problem Difficulty Solves Split (Easy / Medium / Hard / Total) */}
-              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/10">
-                <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                  <Flame className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>Difficulty Solve Distribution (Easy • Medium • Hard)</span>
-                </span>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {/* Easy Solves */}
-                  <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col justify-between shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300">Easy Solves</span>
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    </div>
-                    <p className="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">
-                      {conditionStats.totalEasy.toLocaleString()}
-                    </p>
-                    <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400">
-                      Foundational Solves
-                    </span>
-                  </div>
-
-                  {/* Medium Solves */}
-                  <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col justify-between shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300">Medium Solves</span>
-                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                    </div>
-                    <p className="text-2xl sm:text-3xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">
-                      {conditionStats.totalMed.toLocaleString()}
-                    </p>
-                    <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400">
-                      Core Algorithmic Solves
-                    </span>
-                  </div>
-
-                  {/* Hard Solves */}
-                  <div className="p-3.5 sm:p-4 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex flex-col justify-between shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase text-purple-800 dark:text-purple-300">Hard Solves</span>
-                      <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-                    </div>
-                    <p className="text-2xl sm:text-3xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">
-                      {conditionStats.totalHard.toLocaleString()}
-                    </p>
-                    <span className="text-[10px] font-extrabold text-purple-700 dark:text-purple-400">
-                      High Difficulty Solves
-                    </span>
-                  </div>
-
-                  {/* Total Cumulative Solves */}
-                  <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-brand-500/15 border border-brand-500/30 flex flex-col justify-between shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase text-brand-800 dark:text-brand-300">Total Solves</span>
-                      <Zap className="w-4 h-4 text-brand-500" />
-                    </div>
-                    <p className="text-2xl sm:text-3xl font-black text-brand-800 dark:text-brand-300 tracking-tight my-1">
-                      {conditionStats.totalSolves.toLocaleString()}
-                    </p>
-                    <span className="text-[10px] font-extrabold text-brand-700 dark:text-brand-400">
-                      Cumulative Solves
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 3. Official Condition Criteria Reference Strip */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span>Evaluation Standards: 4/4 (100% Complete) • 3/4 (Advanced) • 2/4 (Intermediate) • 1/4 (Developing) • 0/4 (Participation)</span>
-                </div>
-                {activeFilter && (
-                  <button
-                    type="button"
-                    onClick={() => setActiveFilter(null)}
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-black text-[11px] transition-all cursor-pointer touch-manipulation active:scale-95 shrink-0"
-                  >
-                    <span>Clear Filter ({conditionStats.totalStudents}/{allRows.length})</span>
-                  </button>
-                )}
-              </div>
-            </div>
           </div>
           )}
 
