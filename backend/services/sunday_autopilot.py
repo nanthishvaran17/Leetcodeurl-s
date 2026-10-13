@@ -1069,6 +1069,10 @@ class SundayAutopilotCoordinator:
         return res
 
     @classmethod
+    def phase_4_finalization_and_reconciliation(cls, session_id: Optional[int] = None, db: Optional[Session] = None) -> Dict[str, Any]:
+        return weekly_contest_autopilot.phase_4_finalization_and_reconciliation(session_id, db)
+
+    @classmethod
     async def phase_4_finalization_0930(cls, db_or_session_id: Any = None, db: Optional[Session] = None) -> Dict[str, Any]:
         if isinstance(db_or_session_id, Session):
             db, session_id = db_or_session_id, None

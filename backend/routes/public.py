@@ -8,7 +8,7 @@ from backend.models import Student
 router = APIRouter(prefix="/api/public", tags=["Public Endpoints"])
 
 @router.get("/leaderboard")
-def get_public_leaderboard(
+async def get_public_leaderboard(
     request: Request,
     limit: int = Query(100, ge=1, le=500),
     page: int = 1,
@@ -23,7 +23,7 @@ def get_public_leaderboard(
     Public read-only leaderboard route requiring no authentication.
     """
     from backend.routes.students import get_students
-    return get_students(
+    return await get_students(
         request=request,
         dept_id=dept_id,
         year_level=year_level,
@@ -37,7 +37,7 @@ def get_public_leaderboard(
         paginated=paginated,
         page=page,
         limit=limit,
-        db=db
+        request_db=db
     )
 
 @router.get("/verify-certificate/{cert_code}")
