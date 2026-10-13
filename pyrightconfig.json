@@ -11,7 +11,8 @@
     "dist",
     "logs",
     "reports",
-    "frontend"
+    "frontend",
+    "dist-windows-exe"
   ],
   "reportMissingImports": false,
   "reportMissingTypeStubs": false,
