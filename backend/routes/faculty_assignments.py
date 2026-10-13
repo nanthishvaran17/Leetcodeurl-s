@@ -593,14 +593,16 @@ def get_priority_students(
     priority_list = []
     for s in students:
         perf = calculate_student_performance_status(s)
-        if perf["status_code"] in ["AT_RISK", "NEEDS_IMPROVEMENT"] or perf["days_inactive"] >= 5:
+        days_inact = int(perf.get("days_inactive") or 0)
+        total_solved = int(s.stats.total_solved or 0) if (s.stats and s.stats.total_solved is not None) else 0
+
+        if perf.get("status_code") in ["AT_RISK", "NEEDS_IMPROVEMENT"] or days_inact >= 5:
             reasons = []
-            if perf["days_inactive"] >= 5:
-                reasons.append(f"Inactive for {perf['days_inactive']} days")
-            total_solved = s.stats.total_solved if s.stats else 0
+            if days_inact >= 5:
+                reasons.append(f"Inactive for {days_inact} days")
             if total_solved < 10:
                 reasons.append("Low problem count")
-            if perf["status_code"] == "AT_RISK":
+            if perf.get("status_code") == "AT_RISK":
                 reasons.append("At Risk performance status")
 
             priority_list.append({
@@ -611,16 +613,16 @@ def get_priority_students(
                 "year_level": s.year_level,
                 "section": s.section.name if s.section else "A",
                 "username": s.username,
-                "total_solved": s.stats.total_solved if s.stats else 0,
-                "days_inactive": perf["days_inactive"],
-                "status_label": perf["status_label"],
-                "status_code": perf["status_code"],
-                "badge_color": perf["badge_color"],
-                "trend": perf["trend_label"],
+                "total_solved": total_solved,
+                "days_inactive": days_inact,
+                "status_label": perf.get("status_label") or "At Risk",
+                "status_code": perf.get("status_code") or "AT_RISK",
+                "badge_color": perf.get("badge_color") or "red",
+                "trend": perf.get("trend_label") or "Neutral",
                 "priority_reasons": reasons
             })
 
-    priority_list.sort(key=lambda x: (x["status_code"] != "AT_RISK", -x["days_inactive"]))
+    priority_list.sort(key=lambda x: (x.get("status_code") != "AT_RISK", -int(x.get("days_inactive") or 0)))
     return priority_list
 
 
