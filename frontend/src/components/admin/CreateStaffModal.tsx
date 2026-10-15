@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   User, Shield, CheckCircle, Building2, Key, Check, Loader2, FileCheck,
   X, Briefcase, ChevronRight, ChevronLeft, Hash, Mail, Phone, Calendar,
-  Search, Sparkles, Eye, EyeOff, AlertCircle, GraduationCap, ChevronDown,
+  Search, RefreshCw, Eye, EyeOff, AlertCircle, GraduationCap, ChevronDown,
   Lock, AlertTriangle, ArrowRight, UploadCloud, FileText, CheckCircle2, ShieldCheck,
   Camera, Trash2, Image as ImageIcon
 } from 'lucide-react';
@@ -1078,7 +1078,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             className="h-12 px-3 sm:px-4 rounded-2xl bg-brand-100 dark:bg-brand-500/20 text-brand-800 dark:text-brand-300 text-xs font-black hover:bg-brand-200 transition-all flex items-center shrink-0 cursor-pointer active:scale-95 border border-brand-200 dark:border-brand-500/30"
                             title="Auto-suggest unique username"
                           >
-                            <Sparkles className="w-3.5 h-3.5 sm:mr-1.5" />
+                            <RefreshCw className="w-3.5 h-3.5 sm:mr-1.5" />
                             <span className="hidden sm:inline">Suggest Username</span>
                             <span className="sm:hidden ml-1">Suggest</span>
                           </button>
@@ -1319,7 +1319,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             }}
                             className="h-12 px-3 sm:px-4 rounded-2xl bg-brand-100 dark:bg-brand-500/20 text-brand-800 dark:text-brand-300 text-xs font-black hover:bg-brand-200 transition-all flex items-center shrink-0 cursor-pointer active:scale-95 border border-brand-200 dark:border-brand-500/30"
                           >
-                            <Sparkles className="w-3.5 h-3.5 sm:mr-1.5" />
+                            <RefreshCw className="w-3.5 h-3.5 sm:mr-1.5" />
                             <span className="hidden sm:inline">Generate ID</span>
                             <span className="sm:hidden ml-1">Generate</span>
                           </button>

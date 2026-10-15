@@ -12,6 +12,7 @@ export const AdminLoginPage = () => {
   const [step, setStep] = useState<'CREDENTIALS' | 'OTP'>('CREDENTIALS');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [targetEmail, setTargetEmail] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const { login } = useAuth();
   // const navigate = useNavigate();
@@ -25,7 +26,9 @@ export const AdminLoginPage = () => {
       const res = await api.post('/auth/admin-login', { username, password });
       if (res.data?.success && res.data?.otp_required) {
         setStep('OTP');
-        setSuccessMsg(res.data.message || 'OTP sent successfully.');
+        const emailStr = res.data.email || res.data.masked_email || '';
+        setTargetEmail(emailStr);
+        setSuccessMsg(res.data.message || `Verification code sent to ${emailStr}`);
       }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Invalid credentials or unauthorized access.');
@@ -52,6 +55,8 @@ export const AdminLoginPage = () => {
         
         // Mark session as 2FA OTP verified
         setAdminOtpVerified(true);
+        sessionStorage.setItem('admin_login_portal', 'true');
+        localStorage.setItem('admin_login_portal', 'true');
         
         if (res.data.user) {
           const userWithOtp = {
@@ -61,11 +66,11 @@ export const AdminLoginPage = () => {
           localStorage.setItem('user', JSON.stringify(userWithOtp));
         }
 
-        // Navigate directly to dashboard with fully verified session
-        window.location.href = '/dashboard';
+        // Navigate directly to Developer Studio with fully verified 2FA session
+        window.location.href = '/#/dev-studio';
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Invalid OTP.');
+      setError(err.response?.data?.detail || 'Invalid OTP code. Please check and try again.');
     } finally {
       setLoading(false);
     }
@@ -143,7 +148,7 @@ export const AdminLoginPage = () => {
               <button
                 type="submit"
                 disabled={loading || !username || !password}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer min-h-[48px] touch-manipulation active:scale-[0.98]"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                   <>
@@ -155,25 +160,77 @@ export const AdminLoginPage = () => {
             </form>
           ) : (
             <form onSubmit={handleOtpSubmit} className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">One-Time Password</label>
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  required
-                  autoFocus
-                  className="w-full bg-slate-950/50 border border-slate-700/50 rounded-xl py-4 text-center text-2xl tracking-[0.5em] text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-mono"
-                  placeholder="000000"
-                />
+              <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-start gap-2.5 text-xs text-indigo-300">
+                <Mail className="w-4 h-4 shrink-0 text-indigo-400 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-white">Enter 6-Digit Verification Code</p>
+                  <p className="mt-0.5 text-slate-300">
+                    A code has been sent to <span className="text-indigo-400 font-mono font-bold">{targetEmail || 'your email'}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block text-center">
+                  Verification Code
+                </label>
+                <div className="relative">
+                  {/* Invisible real input for mobile keyboard, autofill, and paste */}
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    required
+                    autoFocus
+                    className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-text touch-manipulation"
+                    placeholder="000000"
+                  />
+
+                  {/* 6 Animated Digit Slot Boxes */}
+                  <div className="grid grid-cols-6 gap-2 sm:gap-3 py-1">
+                    {[0, 1, 2, 3, 4, 5].map((index) => {
+                      const char = otp[index] || '';
+                      const isCurrent = otp.length === index;
+                      const isFilled = Boolean(char);
+
+                      return (
+                        <div
+                          key={index}
+                          style={{ animationDelay: `${index * 70}ms` }}
+                          className={`h-14 sm:h-16 flex flex-col items-center justify-center rounded-xl font-mono text-2xl font-bold transition-all duration-200 select-none border animate-in fade-in zoom-in-50 slide-in-from-bottom-2 fill-mode-both ${
+                            isCurrent
+                              ? 'border-cyan-400 bg-cyan-500/10 shadow-[0_0_18px_rgba(56,189,248,0.4)] scale-105 ring-2 ring-cyan-400/40'
+                              : isFilled
+                              ? 'border-indigo-500/60 bg-slate-900/90 text-cyan-300 shadow-[0_0_10px_rgba(99,102,241,0.25)]'
+                              : 'border-slate-700/60 bg-slate-950/60 text-slate-600'
+                          }`}
+                        >
+                          {char ? (
+                            <span className="animate-in zoom-in-75 duration-150 text-white font-black drop-shadow-[0_0_10px_rgba(56,189,248,0.6)]">
+                              {char}
+                            </span>
+                          ) : isCurrent ? (
+                            <span className="w-2.5 h-0.5 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_#38bdf8]" />
+                          ) : (
+                            <span className="text-slate-700 text-sm font-sans">&bull;</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading || otp.length < 6}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer min-h-[48px] touch-manipulation active:scale-[0.98]"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Verify & Login</span>}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Verify & Open Developer Studio</span>}
               </button>
 
               <button

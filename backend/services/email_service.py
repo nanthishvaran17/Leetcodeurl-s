@@ -679,91 +679,288 @@ def send_email(
     return False, last_error or "EMAIL_PROVIDER_NOT_CONFIGURED: Failed to deliver email."
 
 
-def build_otp_email_template(otp: str) -> Tuple[str, str, str]:
+def generate_animated_otp_gif(otp: str) -> bytes:
     """
-    Generates a premium, modern corporate-grade institutional HTML & plain-text email
-    for NANDHA ENGINEERING COLLEGE (AUTONOMOUS) LeetCode Tracker Admin Verification.
+    Generates a lightweight (~16KB) animated GIF showing the 6-digit OTP code
+    revealing sequentially one-by-one like magic with glowing cyan neon styling.
+    Works natively across 100% of email clients including Gmail (web & mobile),
+    Outlook, Apple Mail, and Android.
     """
-    subject = "Nandha Engineering College — Admin Verification"
-    title = "Secure Administrator Verification"
-    
-    content = f"""
-    <div style="display: inline-block; padding: 4px 12px; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 1.2px; color: #1d4ed8; text-transform: uppercase; margin-bottom: 24px;">
-        OFFICIAL ADMINISTRATOR PORTAL
-    </div>
-    
-    <p style="font-size: 14px; font-weight: 700; color: #1e293b; margin-top: 0; margin-bottom: 8px;">
-        Hello Administrator,
-    </p>
-    <p style="font-size: 14px; color: #475569; line-height: 1.6; margin-top: 0; margin-bottom: 8px;">
-        We received a request to verify administrator access to the Nandha Engineering College LeetCode Weekly Performance Tracker.
-    </p>
-    <p style="font-size: 14px; color: #475569; line-height: 1.6; margin-top: 0;">
-        Use the verification code below to continue.
-    </p>
+    from PIL import Image, ImageDraw, ImageFont
+    import io
 
-    <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #64748b; text-transform: uppercase; text-align: center; margin-top: 28px; margin-bottom: 12px;">
-        YOUR VERIFICATION CODE
-    </div>
-    <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px 16px; text-align: center;">
-        <div style="font-size: 34px; font-weight: 900; letter-spacing: 10px; color: #0f172a; font-family: Arial, Helvetica, sans-serif; line-height: 1.2;">
-            {otp}
+    width, height = 380, 80
+    num_digits = len(otp)
+    box_w, box_h = 46, 58
+    spacing = 10
+    start_x = (width - (num_digits * box_w + (num_digits - 1) * spacing)) // 2
+    start_y = (height - box_h) // 2
+
+    # Load high-readability monospace font
+    font = None
+    for font_name in ['consola.ttf', 'arial.ttf', 'calibri.ttf', 'DejaVuSansMono.ttf']:
+        try:
+            font = ImageFont.truetype(font_name, 34)
+            break
+        except Exception:
+            continue
+    if not font:
+        font = ImageFont.load_default()
+
+    frames = []
+    durations = []
+
+    for step in range(num_digits + 3):
+        img = Image.new('RGB', (width, height), color=(15, 23, 42))
+        draw = ImageDraw.Draw(img)
+
+        # Outer border
+        draw.rounded_rectangle([(1, 1), (width - 2, height - 2)], radius=12, outline=(56, 189, 248), width=1)
+
+        for i in range(num_digits):
+            bx = start_x + i * (box_w + spacing)
+            by = start_y
+
+            is_revealed = (i < step)
+            is_newest = (i == step - 1)
+            is_all_done = (step >= num_digits)
+
+            if is_all_done:
+                border_col = (129, 140, 248) if (step == num_digits + 1) else (56, 189, 248)
+                fill_col = (30, 27, 75)
+                txt_col = (255, 255, 255) if (step == num_digits + 1) else (56, 189, 248)
+                box_border_w = 2
+            elif is_revealed:
+                border_col = (56, 189, 248)
+                fill_col = (30, 27, 75)
+                txt_col = (255, 255, 255) if is_newest else (56, 189, 248)
+                box_border_w = 2 if is_newest else 1
+            else:
+                border_col = (30, 41, 59)
+                fill_col = (15, 23, 42)
+                txt_col = (71, 85, 105)
+                box_border_w = 1
+
+            draw.rounded_rectangle([(bx, by), (bx + box_w, by + box_h)], radius=8, fill=fill_col, outline=border_col, width=box_border_w)
+
+            if is_revealed:
+                char = otp[i]
+                bbox = draw.textbbox((0, 0), char, font=font)
+                tw = bbox[2] - bbox[0]
+                th = bbox[3] - bbox[1]
+                tx = bx + (box_w - tw) // 2
+                ty = by + (box_h - th) // 2 - 2
+                draw.text((tx, ty), char, fill=txt_col, font=font)
+
+        frames.append(img)
+        if step < num_digits:
+            durations.append(180)  # Each digit reveals every 180ms
+        elif step == num_digits:
+            durations.append(1500) # Hold completed code for 1.5s
+        elif step == num_digits + 1:
+            durations.append(600)  # Subtle glow pulse for 0.6s
+        else:
+            durations.append(300)
+
+    buf = io.BytesIO()
+    frames[0].save(buf, format='GIF', save_all=True, append_images=frames[1:], duration=durations, loop=0)
+    return buf.getvalue()
+
+
+def build_otp_email_template(otp: str, purpose: str = "dev_studio") -> Tuple[str, str, str]:
+    """
+    Generates a dedicated, modern corporate-grade institutional HTML & plain-text email
+    tailored specifically to the requested verification purpose:
+    - 'dev_studio': Live Developer Studio Codebase & File Editor
+    - 'admin_login': Admin 2FA Sign-in Verification
+    - 'password_reset': Administrative Account Password Reset
+    - other: General Security Verification
+    """
+    purpose_clean = (purpose or "").strip().lower()
+
+    if purpose_clean == "admin_login":
+        subject = "Admin Sign-In Verification Code — Nandha Engineering College"
+        badge_text = "ADMINISTRATIVE 2FA VERIFICATION"
+        badge_bg = "#ecfdf5"
+        badge_border = "#a7f3d0"
+        badge_color = "#047857"
+        title = "Administrative Sign-In Verification"
+        intro_greeting = "Hello Administrator,"
+        main_message = (
+            "A request has been initiated to sign into the <strong>Nandha Intelligence Administrative Portal</strong>. "
+            "Enter the 6-digit verification code below to complete your secure login:"
+        )
+        code_label = "ADMIN SIGN-IN VERIFICATION CODE"
+        code_helper = "USE THIS CODE TO COMPLETE SIGN-IN"
+        security_text = (
+            "This code verifies your administrative identity. If you did not attempt to sign in, "
+            "please contact security administrators immediately and update your password."
+        )
+    elif purpose_clean == "password_reset":
+        subject = "Password Reset Verification Code — Nandha Engineering College"
+        badge_text = "PASSWORD RESET AUTHORIZATION"
+        badge_bg = "#fef2f2"
+        badge_border = "#fecaca"
+        badge_color = "#b91c1c"
+        title = "Password Reset Verification"
+        intro_greeting = "Hello User,"
+        main_message = (
+            "A request has been received to reset the password for your account on the <strong>Nandha Intelligence Portal</strong>. "
+            "Enter the 6-digit verification code below to authorize your password update:"
+        )
+        code_label = "PASSWORD RESET VERIFICATION CODE"
+        code_helper = "USE THIS CODE TO RESET YOUR PASSWORD"
+        security_text = (
+            "If you did not request a password reset, you can safely ignore this email. "
+            "Your existing credentials remain secure."
+        )
+    else:  # Default to Developer Studio or general authorization
+        subject = "Developer Studio [LIVE] Access Code — Nandha Engineering College"
+        badge_text = "DEVELOPER STUDIO [LIVE] AUTHORIZATION"
+        badge_bg = "#fef3c7"
+        badge_border = "#fde68a"
+        badge_color = "#b45309"
+        title = "Developer Studio [LIVE] Authorization"
+        intro_greeting = "Hello Administrator,"
+        main_message = (
+            "A verification request has been initiated to open <strong>Developer Studio [LIVE]</strong> on the Nandha Intelligence server.<br/><br/>"
+            "<strong>Direct Codebase & File Access:</strong> This portal grants full authorized access to live codebase editing, repository file management, and server administration tools.<br/><br/>"
+            "Enter the 6-digit verification code below on the admin portal to immediately open <strong>Developer Studio [LIVE]</strong>:"
+        )
+        code_label = "DEVELOPER STUDIO VERIFICATION CODE"
+        code_helper = "ENTER THIS CODE TO OPEN DEVELOPER STUDIO [LIVE]"
+        security_text = (
+            "Developer Studio grants direct write access to server code files. If you did not request this verification code, "
+            "please ignore this email and notify system administrators immediately."
+        )
+
+    digits_html = "".join([
+        f'<td style="width: 44px; height: 54px; background: rgba(15, 23, 42, 0.95); border: 1.5px solid #38bdf8; border-radius: 10px; text-align: center; vertical-align: middle; font-size: 30px; font-weight: 900; color: #38bdf8; font-family: Courier New, Courier, monospace; box-shadow: inset 0 2px 4px rgba(0,0,0,0.6), 0 0 14px rgba(56,189,248,0.4); animation: magicDigitReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) {round(0.16 * i, 2)}s both;">'
+        f'<span class="otp-digit-pill otp-digit-{i}" style="display: inline-block; animation: magicPulse 2.4s ease-in-out {round(0.16 * i + 0.6, 2)}s infinite;">{d}</span>'
+        f'</td>'
+        for i, d in enumerate(otp)
+    ])
+
+    content = f"""
+    <style type="text/css">
+        @keyframes magicDigitReveal {{
+            0% {{
+                opacity: 0.15;
+                transform: scale(0.4) translateY(12px);
+                border-color: #1e293b;
+                box-shadow: none;
+            }}
+            60% {{
+                opacity: 1;
+                transform: scale(1.22) translateY(-4px);
+                border-color: #38bdf8;
+                box-shadow: 0 0 24px rgba(56, 189, 248, 0.8), inset 0 0 10px rgba(56, 189, 248, 0.4);
+            }}
+            100% {{
+                opacity: 1;
+                transform: scale(1) translateY(0);
+                border-color: #38bdf8;
+                box-shadow: inset 0 2px 4px rgba(0,0,0,0.6), 0 0 14px rgba(56,189,248,0.4);
+            }}
+        }}
+        @keyframes magicPulse {{
+            0%, 100% {{
+                color: #38bdf8;
+                transform: scale(1);
+                text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+            }}
+            50% {{
+                color: #e0f2fe;
+                transform: scale(1.12);
+                text-shadow: 0 0 22px rgba(56, 189, 248, 0.95), 0 0 32px rgba(99, 102, 241, 0.75);
+            }}
+        }}
+        @keyframes otpBoxPulse {{
+            0%, 100% {{
+                border-color: #38bdf8;
+                box-shadow: 0 0 16px rgba(56, 189, 248, 0.4), 0 10px 25px -5px rgba(30, 27, 75, 0.5);
+                transform: translateY(0);
+            }}
+            50% {{
+                border-color: #818cf8;
+                box-shadow: 0 0 30px rgba(99, 102, 241, 0.65), 0 14px 30px -5px rgba(79, 70, 229, 0.6);
+                transform: translateY(-2px);
+            }}
+        }}
+        .otp-pulse-card {{
+            animation: otpBoxPulse 2.4s ease-in-out infinite;
+        }}
+    </style>
+
+    <div style="margin-bottom: 16px;">
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">
+            LeetCode Weekly Performance Tracker &bull; OFFICIAL ADMINISTRATOR PORTAL
+        </div>
+        <div style="display: inline-block; padding: 6px 14px; background-color: {badge_bg}; border: 1px solid {badge_border}; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; color: {badge_color}; text-transform: uppercase;">
+            {badge_text}
         </div>
     </div>
-    <div style="font-size: 13px; font-weight: 700; color: #dc2626; text-align: center; margin-top: 12px;">
+    
+    <p style="font-size: 15px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px;">
+        {intro_greeting}
+    </p>
+    <p style="font-size: 14px; color: #334155; line-height: 1.6; margin-top: 0; margin-bottom: 12px;">
+        {main_message}
+    </p>
+
+    <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #64748b; text-transform: uppercase; text-align: center; margin-top: 24px; margin-bottom: 12px;">
+        {code_label}
+    </div>
+    <div class="otp-pulse-card" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 24px 14px; text-align: center; box-shadow: 0 10px 25px -5px rgba(30, 27, 75, 0.35);">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="6" align="center" style="margin: 0 auto 14px auto; display: inline-table;">
+            <tr>
+                {digits_html}
+            </tr>
+        </table>
+        <div style="font-size: 11px; color: #94a3b8; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;">
+            {code_helper}
+        </div>
+    </div>
+    <div style="font-size: 13px; font-weight: 700; color: #dc2626; text-align: center; margin-top: 14px;">
         This verification code expires in 5 minutes.
     </div>
-    <div style="font-size: 12px; color: #64748b; text-align: center; margin-top: 4px; margin-bottom: 28px;">
-        This code can only be used once.
+    <div style="font-size: 12px; color: #64748b; text-align: center; margin-top: 4px; margin-bottom: 24px;">
+        This code is single-use and will automatically self-destruct once used.
     </div>
 
-    <div class="security-notice">
-        <strong>Security notice:</strong> If you did not request this verification code, you can safely ignore this email. Never share your verification code with anyone.
+    <div class="security-notice" style="background-color: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 8px; font-size: 12px; color: #92400e; line-height: 1.5;">
+        <strong>Security Notice:</strong> {security_text}
     </div>
     """
 
     html_body = generate_professional_template(title, content)
 
-    plain_text_body = f"""NANDHA ENGINEERING COLLEGE
-(AUTONOMOUS)
+    plain_text_body = f"""NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
+LeetCode Weekly Performance Tracker • OFFICIAL ADMINISTRATOR PORTAL
 
-LeetCode Weekly Performance Tracker
+{badge_text}
 
-OFFICIAL ADMINISTRATOR PORTAL
+{intro_greeting}
 
+{main_message.replace('<strong>', '').replace('</strong>', '').replace('<br/>', '\n')}
 
-Secure Administrator Verification
-
-Hello Administrator,
-
-We received a request to verify administrator access to the Nandha Engineering College LeetCode Weekly Performance Tracker.
-
-Use the verification code below to continue.
-
-
-YOUR VERIFICATION CODE
-
+YOUR DEVELOPER STUDIO VERIFICATION CODE:
 {otp}
 
-This verification code expires in 5 minutes.
-This code can only be used once.
+Enter this verification code at http://localhost:3000/admin (or http://13.53.231.6/admin) to unlock and immediately open Developer Studio [LIVE].
 
+- This code expires in 5 minutes.
+- This code can only be used once.
 
-Security notice
-
-If you did not request this verification code, you can safely ignore this email.
-
-Never share your verification code with anyone.
-
+Security Notice: {security_text}
 
 NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
-
-LeetCode Weekly Performance Tracker
-Official Administrator Authentication System
-
-This is an automated security message.
-Please do not reply directly to this email.
+LeetCode Intelligence System • Developer Studio [LIVE]
 """
+
+    subject = strip_all_emojis(subject)
+    html_body = strip_all_emojis(html_body)
+    plain_text_body = strip_all_emojis(plain_text_body)
 
     return subject, html_body, plain_text_body
 
@@ -827,7 +1024,7 @@ def verify_smtp_transporter() -> Tuple[bool, str, Dict[str, Any]]:
         }
 
 
-def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = None) -> Tuple[bool, Optional[str], Optional[str]]:
+def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = None, purpose: str = "dev_studio") -> Tuple[bool, Optional[str], Optional[str]]:
     """
     Ultra-fast, deterministic transactional OTP dispatcher.
     Strictly restricted to authorized institutional administrators only.
@@ -836,6 +1033,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
     """
     import email.utils
     import uuid
+    from email.mime.image import MIMEImage
 
     # Step 0: Security Gate — Enforce Authoritative Administrator Recipient Allowlist
     auth_admin = (os.environ.get("ADMIN_EMAIL") or getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com")).strip().lower()
@@ -880,8 +1078,12 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
     masked_target = mask_email_str(clean_rec)
     logger.info(f"[{now_iso}] [OTP] requestId={request_id or 'direct'} recipient={masked_target} stage=request_received")
     
-    subject, html_body, text_body = build_otp_email_template(otp)
+    subject, html_body, text_body = build_otp_email_template(otp, purpose=purpose)
     
+    # Clean direct HTML digit boxes used (single display, no duplicate GIF)
+    gif_bytes = None
+    otp_attachments = None
+
     smtp_host = os.environ.get("SMTP_HOST") or getattr(settings, "SMTP_HOST", "smtp.gmail.com")
     smtp_port = int(os.environ.get("SMTP_PORT") or getattr(settings, "SMTP_PORT", 587))
     smtp_user = (os.environ.get("SMTP_USERNAME") or getattr(settings, "SMTP_USERNAME", "")).strip()
@@ -909,7 +1111,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
         for b_key in brevo_keys:
             try:
                 t_brevo_start = time.time()
-                ok, msg_id_or_err = send_email_via_brevo(b_key, brevo_sender, clean_rec, subject, html_body, None, text_body, max_retries=1)
+                ok, msg_id_or_err = send_email_via_brevo(b_key, brevo_sender, clean_rec, subject, html_body, otp_attachments, text_body, max_retries=1)
                 dur = (time.time() - t_brevo_start) * 1000
                 now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f")[:-3]
                 if ok:
@@ -939,14 +1141,77 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
         t_smtp_start = time.time()
         logger.info(f"[{now_iso}] [OTP] stage=direct_gmail_smtp host={smtp_host}:{smtp_port}")
         try:
-            msg = MIMEMultipart('alternative')
+            msg = MIMEMultipart('related')
             msg['Message-ID'] = generated_msg_id
             msg['Date'] = email.utils.formatdate(localtime=True)
             msg['From'] = f"Nandha Engineering College \u2014 LeetCode Tracker <{from_email}>"
             msg['To'] = clean_rec
             msg['Subject'] = subject
-            msg.attach(MIMEText(text_body, 'plain', 'utf-8'))
-            msg.attach(MIMEText(html_body, 'html', 'utf-8'))
+
+            msg_alt = MIMEMultipart('alternative')
+            msg_alt.attach(MIMEText(text_body, 'plain', 'utf-8'))
+            msg_alt.attach(MIMEText(html_body, 'html', 'utf-8'))
+            msg.attach(msg_alt)
+
+            if gif_bytes:
+                img_part = MIMEImage(gif_bytes, _subtype="gif")
+                img_part.add_header('Content-ID', '<otp_animation.gif>')
+                img_part.add_header('Content-Disposition', 'inline', filename='otp_animation.gif')
+                msg.attach(img_part)
+
+            ctx = ssl.create_default_context()
+            server = IPv4SMTP(smtp_host, smtp_port, timeout=5.0)
+            try:
+                server.ehlo()
+                server.starttls(context=ctx)
+                server.ehlo()
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(from_email, [clean_rec], msg.as_string())
+            finally:
+                try:
+                    server.quit()
+                except Exception:
+                    pass
+            
+            dur = (time.time() - t_smtp_start) * 1000
+            now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f")[:-3]
+            logger.info(f"[{now_iso}] [OTP] stage=smtp_accepted messageId={generated_msg_id} in {dur:.0f}ms")
+            record_email_delivery_diagnostic(
+                recipient=clean_rec,
+                smtp_server=f"{smtp_host}:{smtp_port}",
+                smtp_response="250 2.0.0 OK Message accepted for delivery",
+                delivery_status=STATUS_SMTP_ACCEPTED,
+                error_code=None,
+                is_permanent=False
+            )
+            return True, STATUS_SMTP_ACCEPTED, generated_msg_id
+        except Exception as direct_smtp_err:
+            logger.warning(f"[{now_iso}] [OTP] Direct Gmail IPv4 SMTP failed: {direct_smtp_err}")
+
+    # ================================================================
+    # LOCAL DEV PATH: Gmail SMTP FIRST (ports 587/465 available locally)
+    # ================================================================
+    if smtp_user and smtp_pass:
+        t_smtp_start = time.time()
+        logger.info(f"[{now_iso}] [OTP] stage=smtp_send_started host={smtp_host}:{smtp_port}")
+        try:
+            msg = MIMEMultipart('related')
+            msg['Message-ID'] = generated_msg_id
+            msg['Date'] = email.utils.formatdate(localtime=True)
+            msg['From'] = f"Nandha Engineering College \u2014 LeetCode Tracker <{from_email}>"
+            msg['To'] = clean_rec
+            msg['Subject'] = subject
+
+            msg_alt = MIMEMultipart('alternative')
+            msg_alt.attach(MIMEText(text_body, 'plain', 'utf-8'))
+            msg_alt.attach(MIMEText(html_body, 'html', 'utf-8'))
+            msg.attach(msg_alt)
+
+            if gif_bytes:
+                img_part = MIMEImage(gif_bytes, _subtype="gif")
+                img_part.add_header('Content-ID', '<otp_animation.gif>')
+                img_part.add_header('Content-Disposition', 'inline', filename='otp_animation.gif')
+                msg.attach(img_part)
 
             ctx = ssl.create_default_context()
             server = IPv4SMTP(smtp_host, smtp_port, timeout=5.0)

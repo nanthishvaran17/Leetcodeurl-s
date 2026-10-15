@@ -5,10 +5,9 @@ import {
   Copy, 
   Check, 
   Trophy, 
-  Flame, 
-  Sparkles,
   Award,
-  Zap
+  Calendar,
+  Target
 } from 'lucide-react';
 import { Share } from '@capacitor/share';
 import { StudentData } from './LeaderboardTable';
@@ -121,7 +120,7 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
         {/* Header bar */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-navy-800">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-500 animate-spin-slow" />
+            <Award className="w-5 h-5 text-amber-500" />
             <span className="font-bold text-slate-900 dark:text-white text-base">
               Achievement Card
             </span>
@@ -176,7 +175,7 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
               </div>
               <div className="flex flex-col items-end">
                 <div className="flex items-center gap-1 text-amber-400 font-bold text-sm">
-                  <Flame className="w-4 h-4 fill-amber-400" />
+                  <Calendar className="w-4 h-4 text-amber-400" />
                   {streak} Days
                 </div>
                 <span className="text-[10px] text-slate-400">Active Streak</span>
@@ -202,7 +201,7 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
             {/* Rating / Badge Footer */}
             <div className="pt-2 flex items-center justify-between border-t border-white/10 text-xs text-slate-400">
               <div className="flex items-center gap-1.5">
-                <Zap className="w-4 h-4 text-yellow-400" />
+                <Target className="w-4 h-4 text-amber-400" />
                 <span>Rating: <strong className="text-white">{contestRating}</strong></span>
               </div>
               <div className="flex items-center gap-1 text-emerald-400 font-medium text-[11px]">

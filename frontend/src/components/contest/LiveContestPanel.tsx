@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Activity, AlertTriangle, CheckCircle2, Clock, Zap } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import { useGlobalWebSocket } from '../../context/GlobalWebSocketProvider';
 
 export const LiveContestPanel: React.FC = () => {
@@ -90,7 +90,7 @@ export const LiveContestPanel: React.FC = () => {
                   {slug}
                 </div>
                 <div className="text-3xl font-black text-white flex items-center gap-2 relative z-10">
-                  <Zap className={`w-5 h-5 ${count > 0 ? 'text-yellow-400' : 'text-slate-600'}`} />
+                  <CheckCircle2 className={`w-5 h-5 ${count > 0 ? 'text-emerald-400' : 'text-slate-600'}`} />
                   {count}
                 </div>
                 <div className="text-[10px] text-slate-500 uppercase tracking-widest mt-1 font-bold relative z-10">

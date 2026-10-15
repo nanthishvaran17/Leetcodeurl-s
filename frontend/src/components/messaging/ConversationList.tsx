@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Inbox, PenSquare, Users, Trash2, MoreVertical, AlertTriangle, ShieldOff, Archive, Pin, PinOff, Mail, MailOpen, MinusCircle, Sparkles, ShieldCheck, CheckCircle2, Loader2, X } from 'lucide-react';
+import { Search, Inbox, PenSquare, Users, Trash2, MoreVertical, AlertTriangle, ShieldOff, Archive, Pin, PinOff, Mail, MailOpen, MinusCircle, Bot, ShieldCheck, CheckCircle2, Loader2, X } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export interface Conversation {
@@ -395,7 +395,7 @@ export const ConversationList: React.FC<Props> = ({
                   <div className="relative shrink-0">
                     <div className={clsx("w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center font-black text-xs sm:text-sm shadow-xs", getAvatarGradient(conv))}>
                       {isAi ? (
-                        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
+                        <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
                       ) : isTransparency ? (
                         <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-200" />
                       ) : (

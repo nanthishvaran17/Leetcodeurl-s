@@ -1,7 +1,8 @@
 // million-ignore
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ExternalLink, RefreshCw, FileText, Award, Zap, Target, Brain, ArrowLeft, Activity, Edit3, ShieldCheck, CheckCircle, Database, CheckCircle2, Calendar } from 'lucide-react';
+import { X, ExternalLink, RefreshCw, FileText, Award, Target, Brain, ArrowLeft, Activity, Edit3, ShieldCheck, CheckCircle, Database, CheckCircle2, Calendar } from 'lucide-react';
+import { SwipeHandle } from './SwipeHandle';
 import { StudentEditOverlay } from './StudentEditOverlay';
 import {
   ResponsiveContainer,
@@ -623,7 +624,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
     { id: 'overview', label: '1. Overview', icon: Activity },
     { id: 'dsa', label: '2. DSA Breakdown', icon: Brain },
     { id: 'contests', label: '3. Contests', icon: Award },
-    { id: 'activity', label: '4. Heatmap', icon: Zap },
+    { id: 'activity', label: '4. Heatmap', icon: Calendar },
     { id: 'submissions', label: `5. Submissions (${submissions.length})`, icon: FileText },
     { id: 'badges', label: `6. Badges (${badges.length})`, icon: Award },
     { id: 'languages', label: '7. Languages', icon: CheckCircle2 },
@@ -644,6 +645,9 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
             className="w-full max-w-4xl lg:max-w-5xl my-auto mx-auto bg-white text-slate-900 shadow-2xl border border-slate-200/80 rounded-3xl sm:rounded-[32px] overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[90vh] transition-all duration-150 shrink-0 print:max-h-none print:overflow-visible print:border-none print:shadow-none print:rounded-none"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Mobile Drag Indicator */}
+            <SwipeHandle onClose={onClose} className="py-2 sm:hidden bg-slate-900 border-b border-indigo-500/20" pillClassName="bg-slate-400" />
+
             {/* 1. TOP HERO HEADER & IDENTITY - ELEGANT PERFECTLY ALIGNED HEADER */}
             <div className="bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950 text-white px-4 sm:px-6 py-3.5 sm:py-4 border-b border-indigo-500/20 shrink-0 relative z-10 rounded-t-2xl sm:rounded-t-[32px] shadow-lg">
               <div className="flex items-center justify-between gap-3 sm:gap-4 min-w-0">
@@ -753,8 +757,8 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
               </div>
             </div>
 
-            {/* TAB SELECTOR NAVIGATION BAR - 2 COLS ON MOBILE, 4 ON DESKTOP */}
-            <div className="bg-slate-100/90 backdrop-blur-md px-3 sm:px-6 py-2.5 border-b border-slate-200/80 grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 shrink-0 sticky top-0 z-50">
+            {/* TAB SELECTOR NAVIGATION BAR - HORIZONTAL SWIPE ON MOBILE, RESPONSIVE GRID ON TABLET/DESKTOP */}
+            <div className="bg-slate-100/90 backdrop-blur-md px-3 sm:px-6 py-2 border-b border-slate-200/80 flex sm:grid sm:grid-cols-4 lg:grid-cols-5 overflow-x-auto no-scrollbar scrollbar-none gap-1.5 sm:gap-2 shrink-0 sticky top-0 z-50 touch-pan-x">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -764,14 +768,14 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                       setActiveTab(tab.id as any);
                       document.getElementById('modal-content-body')?.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className={`px-2.5 sm:px-3 py-2 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer flex items-center justify-start gap-1.5 w-full text-left shadow-2xs ${
+                    className={`px-3 py-2 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer flex items-center justify-start gap-1.5 shrink-0 sm:shrink sm:w-full whitespace-nowrap shadow-2xs touch-manipulation active:scale-95 ${
                       isActive
                         ? 'bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-brand-500/20 border border-brand-500/30 scale-[1.02] z-10'
                         : 'bg-white hover:bg-slate-200/70 text-slate-700 hover:text-slate-900 border border-slate-200/80'
                     }`}
                   >
                     <tab.icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : 'text-brand-600'}`} />
-                    <span className="truncate text-left flex-1 min-w-0">{tab.label}</span>
+                    <span className="truncate text-left">{tab.label}</span>
                   </button>
                 );
               })}
@@ -780,7 +784,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
             {/* 2. MAIN CONTENT BODY (ELEGANT LIGHT MODE) */}
             <div
               id="modal-content-body"
-              className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 bg-slate-50/70 text-slate-900 flex flex-col gap-6 pb-24 scroll-smooth custom-scrollbar print:max-h-none print:overflow-visible print:bg-white print:p-0 print:pb-0"
+              className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 bg-slate-50/70 text-slate-900 flex flex-col gap-6 pb-[max(6rem,env(safe-area-inset-bottom,24px))] scroll-smooth custom-scrollbar print:max-h-none print:overflow-visible print:bg-white print:p-0 print:pb-0"
             >
               {loading ? (
                 <div className="py-24 flex flex-col items-center justify-center gap-3">
@@ -1175,7 +1179,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                     <div id="activity" className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-6 animate-fade-in scroll-mt-20">
                       <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
                         <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                          <Zap className="w-4 h-4 text-amber-500" />
+                          <Calendar className="w-4 h-4 text-amber-500" />
                           <span>4. Coding Activity Calendar &amp; Consistency</span>
                         </h3>
                         <span className="text-[11px] font-black text-amber-900 font-mono bg-amber-50 px-3 py-1 rounded-xl border border-amber-200">
@@ -1613,7 +1617,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-black text-slate-500 uppercase tracking-wider">Fetch Latency</span>
-                            <Zap className="w-5 h-5 text-amber-500" />
+                            <Activity className="w-5 h-5 text-amber-500" />
                           </div>
                           <div className="text-2xl font-black text-amber-600 font-mono">
                             {fetchLatency ? `${fetchLatency} ms` : '15 ms'}

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { 
   User, Mail, Phone, ShieldCheck, Building2, ExternalLink, Loader2, 
-  Copy, Check, MessageSquare, Trophy, Code2, Flame, Award, Sparkles, X,
+  Copy, Check, MessageSquare, Trophy, Code2, Award, X,
   GraduationCap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

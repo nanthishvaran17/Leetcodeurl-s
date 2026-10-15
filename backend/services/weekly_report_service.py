@@ -281,7 +281,16 @@ def generate_weekly_performance_data(
 
     # Step 2: Session Resolution (Continued)
     if target_ws:
-        prev_ws = db.query(WeeklySession).filter(WeeklySession.id < target_ws.id).order_by(WeeklySession.id.desc()).first()
+        prev_ws = (
+            db.query(WeeklySession)
+            .filter(
+                WeeklySession.id < target_ws.id,
+                WeeklySession.contest_name.ilike('%Weekly Contest%'),
+                ~WeeklySession.contest_name.ilike('%Biweekly%')
+            )
+            .order_by(WeeklySession.id.desc())
+            .first()
+        )
         session_res = {
             "current_week_session": target_ws,
             "last_week_session": prev_ws,
@@ -305,7 +314,16 @@ def generate_weekly_performance_data(
 
     # Fallback resolution for last_session_id if not found by primary resolver
     if last_session_id is None and curr_session_id is not None:
-        prev_sess = db.query(WeeklySession).filter(WeeklySession.id < curr_session_id).order_by(WeeklySession.id.desc()).first()
+        prev_sess = (
+            db.query(WeeklySession)
+            .filter(
+                WeeklySession.id < curr_session_id,
+                WeeklySession.contest_name.ilike('%Weekly Contest%'),
+                ~WeeklySession.contest_name.ilike('%Biweekly%')
+            )
+            .order_by(WeeklySession.id.desc())
+            .first()
+        )
         if prev_sess:
             last_ws = prev_sess
             last_session_id = prev_sess.id
@@ -386,6 +404,24 @@ def generate_weekly_performance_data(
         for r in db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == last_session_id).all():
             last_vir_results[int(str(r.student_id))] = r
 
+    # Preload authoritative verified contest results from PreviousWeekParticipationRecord
+    from backend.models import PreviousWeekParticipationRecord
+    curr_prev_map: Dict[int, Any] = {}
+    last_prev_map: Dict[int, Any] = {}
+    if curr_session_id is not None:
+        for pr in db.query(PreviousWeekParticipationRecord).filter(
+            PreviousWeekParticipationRecord.session_id == curr_session_id,
+            PreviousWeekParticipationRecord.is_active_version == True
+        ).all():
+            curr_prev_map[int(str(pr.student_id))] = pr
+
+    if last_session_id is not None:
+        for pr in db.query(PreviousWeekParticipationRecord).filter(
+            PreviousWeekParticipationRecord.session_id == last_session_id,
+            PreviousWeekParticipationRecord.is_active_version == True
+        ).all():
+            last_prev_map[int(str(pr.student_id))] = pr
+
     # Step 5: Load Historical Snapshots if Available
     last_snapshots_by_pid: Dict[str, WeeklyStudentSnapshot] = {}
     db_snaps_last = db.query(WeeklyStudentSnapshot).filter(WeeklyStudentSnapshot.reporting_period_id == prev_period_id).all()
@@ -451,11 +487,29 @@ def generate_weekly_performance_data(
         curr_pub_outcome = classify_public_contest_outcome(curr_pub_obj)
         curr_vir_outcome = classify_virtual_contest_outcome(curr_vir_obj)
 
+        pr_curr = curr_prev_map.get(int(str(s.id)))
+        if pr_curr and (curr_pub_outcome in ("UNKNOWN", "NOT_PARTICIPATED", "PENDING", None) or (curr_pub_obj and getattr(curr_pub_obj, "participation_status", "") in ("PENDING", "UNKNOWN"))):
+            if pr_curr.problems_solved is not None and pr_curr.problems_solved > 0:
+                curr_pub_outcome = f"{pr_curr.problems_solved}_SOLVED"
+            elif pr_curr.participation_type == "PUBLIC":
+                curr_pub_outcome = "0_SOLVED"
+            elif pr_curr.participation_type == "NOT_ATTENDED":
+                curr_pub_outcome = "NOT_PARTICIPATED"
+
         # Last Week Contest Outcomes & Historical Snapshot Solved Total
         last_pub_obj = last_pub_results.get(int(str(s.id)))
         last_vir_obj = last_vir_results.get(int(str(s.id)))
         last_pub_outcome = classify_public_contest_outcome(last_pub_obj)
         last_vir_outcome = classify_virtual_contest_outcome(last_vir_obj)
+
+        pr_last = last_prev_map.get(int(str(s.id)))
+        if pr_last and (last_pub_outcome in ("UNKNOWN", "NOT_PARTICIPATED", "PENDING", None) or (last_pub_obj and getattr(last_pub_obj, "participation_status", "") in ("PENDING", "UNKNOWN"))):
+            if pr_last.problems_solved is not None and pr_last.problems_solved > 0:
+                last_pub_outcome = f"{pr_last.problems_solved}_SOLVED"
+            elif pr_last.participation_type == "PUBLIC":
+                last_pub_outcome = "0_SOLVED"
+            elif pr_last.participation_type == "NOT_ATTENDED":
+                last_pub_outcome = "NOT_PARTICIPATED"
 
         hist_snap = last_snapshots_by_pid.get(str(pid))
         curr_snap = curr_snapshots_by_pid.get(str(pid))
@@ -519,12 +573,12 @@ def generate_weekly_performance_data(
             "contest_ranking": (
                 getattr(curr_pub_obj, "contest_rank", None)
                 if curr_pub_obj and getattr(curr_pub_obj, "contest_rank", None)
-                else getattr(st, "contest_global_ranking", None)
+                else (getattr(pr_curr, "official_rank", None) if pr_curr and getattr(pr_curr, "official_rank", None) else getattr(st, "contest_global_ranking", None))
             ),
             "contest_global_ranking": (
                 getattr(curr_pub_obj, "contest_rank", None)
                 if curr_pub_obj and getattr(curr_pub_obj, "contest_rank", None)
-                else getattr(st, "contest_global_ranking", None)
+                else (getattr(pr_curr, "official_rank", None) if pr_curr and getattr(pr_curr, "official_rank", None) else getattr(st, "contest_global_ranking", None))
             ),
             "last_contest_rating": (
                 getattr(last_contest_history_map.get(s.id), "rating_after", None)
@@ -534,7 +588,7 @@ def generate_weekly_performance_data(
             "last_contest_ranking": (
                 getattr(last_pub_obj, "contest_rank", None)
                 if last_pub_obj and getattr(last_pub_obj, "contest_rank", None)
-                else None
+                else (getattr(pr_last, "official_rank", None) if pr_last and getattr(pr_last, "official_rank", None) else None)
             ),
             "last_total_solved": last_tot,
             "contest_name": f"Weekly Contest {curr_contest_num}",

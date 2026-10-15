@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, UploadCloud, CheckCircle2, AlertTriangle, FileSpreadsheet, Loader2, 
-  RefreshCw, Zap, ShieldCheck, Terminal, ArrowRight, Check, ChevronRight, ChevronLeft, 
+  RefreshCw, ShieldCheck, Terminal, ArrowRight, Check, ChevronRight, ChevronLeft, 
   Info, Building2, User, Mail, Link, Layers, Calendar, XCircle, HelpCircle, AlertCircle 
 } from 'lucide-react';
 import api from '../services/api';
@@ -761,7 +761,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                   disabled={loading}
                   className="px-6 py-2.5 sm:py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 cursor-pointer transition-all"
                 >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                   <span>Confirm & Execute Import</span>
                 </button>
               </div>

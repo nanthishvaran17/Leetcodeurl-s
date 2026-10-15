@@ -6,12 +6,10 @@ import {
   RefreshCw, 
   Search, 
   Award, 
-  Sparkles, 
   UserX, 
   HelpCircle, 
   AlertTriangle,
   WifiOff,
-  Zap,
   CheckCircle2,
   Clock,
   Building2,
@@ -1081,7 +1079,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           <div className="flex items-center justify-between gap-1.5">
             <span className="text-[10.5px] font-black uppercase text-purple-800 dark:text-purple-300 tracking-wider">Virtual Practice</span>
             <div className="w-7 h-7 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-              <Sparkles className="w-3.5 h-3.5" />
+              <Activity className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="mt-2.5 flex items-baseline justify-between">

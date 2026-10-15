@@ -93,32 +93,38 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
     return count;
   }, [selectedDept, yearLevel, solvedFilter, sortBy]);
 
-  // Normalized department options
+  // Normalized department options strictly showing departments with active enrolled students
   const deptList = useMemo(() => {
-    const list: Array<{ value: string; label: string; code: string; campus?: string }> = [];
+    const list: Array<{ value: string; label: string; code: string; campus?: string; student_count?: number }> = [];
 
     if (isFacultyRole) {
-      list.push({ value: 'all', label: 'My Allocated Mentees', code: 'ALL' });
+      list.push({ value: 'all', label: 'My Allocated Mentees', code: 'ALL', student_count: totalResults });
     } else {
-      list.push({ value: 'all', label: 'All Departments', code: 'ALL' });
+      list.push({ value: 'all', label: 'All Departments', code: 'ALL', student_count: totalResults });
     }
 
     departments.forEach((d: any) => {
-      const code = d.code || d.name || '';
-      const name = d.name || d.code || '';
+      const code = (d.code || d.name || '').trim();
+      const name = (d.name || d.code || '').trim();
       const campus = d.campus || (name.toLowerCase().includes('nct') ? 'NCT' : 'NEC');
+      const count = d.student_count ?? d.students_count ?? d.count;
+
+      // Strictly exclude departments that have 0 active students
+      if (count !== undefined && count <= 0) return;
+
       list.push({
         value: code,
         label: name,
         code: code,
-        campus
+        campus,
+        student_count: count
       });
     });
 
     if (!deptSearchQuery.trim()) return list;
     const q = deptSearchQuery.toLowerCase().trim();
     return list.filter(d => d.label.toLowerCase().includes(q) || d.code.toLowerCase().includes(q));
-  }, [departments, isFacultyRole, deptSearchQuery]);
+  }, [departments, isFacultyRole, deptSearchQuery, totalResults]);
 
   if (!isOpen && typeof document === 'undefined') return null;
 
@@ -302,7 +308,7 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
                           }`}
                         >
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center space-x-1.5">
+                            <div className="flex items-center justify-between gap-1">
                               <span className={`text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
                                 isSelected
                                   ? 'bg-white/20 text-white'
@@ -310,10 +316,24 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
                               }`}>
                                 {dept.code}
                               </span>
+                              {dept.student_count !== undefined && (
+                                <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded-md ${
+                                  isSelected
+                                    ? 'bg-white/20 text-white'
+                                    : 'bg-slate-200/80 dark:bg-navy-800 text-slate-600 dark:text-slate-300'
+                                }`}>
+                                  {dept.student_count}
+                                </span>
+                              )}
                             </div>
                             <p className={`text-[11px] font-bold truncate mt-1 ${isSelected ? 'text-white' : 'text-slate-700 dark:text-slate-300'}`}>
                               {dept.label}
                             </p>
+                            {dept.student_count !== undefined && (
+                              <p className={`text-[9px] font-semibold mt-0.5 ${isSelected ? 'text-white/80' : 'text-slate-400 dark:text-slate-500'}`}>
+                                {dept.value === 'all' ? `${dept.student_count} total enrolled` : `${dept.student_count} students`}
+                              </p>
+                            )}
                           </div>
                           {isSelected && <Check className="w-4 h-4 shrink-0 text-white stroke-[3]" />}
                         </button>

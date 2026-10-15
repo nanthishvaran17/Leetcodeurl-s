@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Award, Zap, CheckCircle2, AlertTriangle, TrendingUp, ShieldAlert, 
-  BookOpen, Target, Calendar, Flame, Activity, ChevronRight, Sparkles, RefreshCw, BarChart2
+  Award, CheckCircle2, AlertTriangle, TrendingUp, ShieldAlert, 
+  BookOpen, Target, Calendar, Activity, ChevronRight, RefreshCw, BarChart2
 } from 'lucide-react';
 import { getStudentDigitalProfile, DigitalCodingProfile } from '../services/intelligenceService';
 import { deriveYearLevelFromRegNo } from '../utils/filterUtils';
@@ -202,7 +202,7 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
               onClick={() => onOpenIntervention(studentId, profile.name)}
               className="px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-xl text-xs font-black shadow-md hover:from-brand-500 hover:to-indigo-500 transition-all cursor-pointer flex items-center space-x-2"
             >
-              <Zap className="w-4 h-4" />
+              <ShieldAlert className="w-4 h-4" />
               <span>Create Faculty Intervention</span>
             </button>
           </div>
@@ -263,7 +263,7 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
         <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-              <Zap className="w-6 h-6 stroke-[2.5]" />
+              <Target className="w-6 h-6 stroke-[2.2]" />
             </div>
             <div>
               <h3 className="text-base font-black text-slate-900 dark:text-white">Contest Readiness Engine</h3>
@@ -313,7 +313,7 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
         <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-              <Flame className="w-6 h-6 stroke-[2.5]" />
+              <Activity className="w-6 h-6 stroke-[2.2]" />
             </div>
             <div>
               <h3 className="text-base font-black text-slate-900 dark:text-white">Coding Consistency Intelligence</h3>

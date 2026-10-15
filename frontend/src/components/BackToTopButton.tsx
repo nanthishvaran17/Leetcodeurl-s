@@ -35,7 +35,7 @@ export const BackToTopButton: React.FC = () => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.7, y: 16 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
-          className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] right-4 sm:right-6 z-30 p-2.5 sm:p-3 rounded-full bg-white/90 dark:bg-navy-900/90 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 shadow-xl hover:shadow-2xl active:scale-90 transition-all cursor-pointer flex items-center justify-center group touch-manipulation"
+          className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] md:bottom-6 right-4 sm:right-6 z-30 p-2.5 sm:p-3 rounded-full bg-white/95 dark:bg-navy-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 shadow-xl hover:shadow-2xl active:scale-90 transition-all cursor-pointer flex items-center justify-center group touch-manipulation"
           title="Scroll back to top"
           aria-label="Scroll back to top"
         >

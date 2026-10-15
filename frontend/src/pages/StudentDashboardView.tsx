@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Award, Star, ExternalLink, CheckCircle2, TrendingUp, AlertCircle, Shield, User, Clock, Zap, BookOpen, BarChart2, Activity } from 'lucide-react';
+import { Award, Star, ExternalLink, CheckCircle2, TrendingUp, AlertCircle, Shield, User, Clock, Layers, BookOpen, BarChart2, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
 import { StudentData } from '../components/LeaderboardTable';
@@ -218,7 +218,7 @@ export const StudentDashboardView: React.FC = () => {
           <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center space-x-2">
-                <Zap className="w-5 h-5 text-brand-500" />
+                <Layers className="w-5 h-5 text-brand-500" />
                 <span>Difficulty Distribution</span>
               </h3>
               {!isDataConsistent && (

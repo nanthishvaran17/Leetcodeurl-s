@@ -128,6 +128,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
   const isContestReport = useMemo(() => {
     if (!report) return false;
+    if (rType === 'WEEKLY_PERFORMANCE' || rType === 'WEEKLY_STUDENT_PERFORMANCE' || !!report.batch_summaries) return false;
     return (
       rType === 'CONTEST_PERFORMANCE' ||
       rType === 'OFFICIAL_CONTEST' ||
@@ -202,7 +203,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       rType === 'WEEKLY_STUDENT_PERFORMANCE' ||
       rType === 'WEEKLY_PERFORMANCE' ||
       !!report.college_summary ||
-      !!report.department_summaries
+      !!report.department_summaries ||
+      !!report.batch_summaries
     );
   }, [report, rType]);
 
@@ -822,7 +824,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
   const getStatusBadge = (status: string) => {
     const s = (status || '').toUpperCase();
-    if (s === 'PUBLIC_ATTENDED' || s === 'PUBLIC' || s === 'PUBLIC_LIVE' || s === 'ATTENDED') {
+    if (s === 'PUBLIC_ATTENDED' || s === 'PUBLIC' || s === 'PUBLIC_LIVE' || s === 'ATTENDED' || s === 'VERIFIED' || s === 'FINALIZED') {
       return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 leading-tight shadow-2xs">PUBLIC ATTENDED</span>;
     }
     if (s === 'VIRTUAL_ATTENDED' || s === 'VIRTUAL' || s === 'VIRTUAL_PRACTICE') {
@@ -928,7 +930,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   className="ml-1 p-0.5 hover:text-rose-600 font-bold touch-manipulation active:scale-90"
                   aria-label="Clear active filter"
                 >
-                  ✕
+                  <X className="w-3 h-3 inline" />
                 </button>
               </span>
             )}
@@ -2107,7 +2109,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                 {report.currentWeek?.date || 'Latest'}
                               </span>
                             </div>
-                            <div className="grid grid-cols-5 gap-2">
+                            <div className="grid grid-cols-5 gap-1 sm:gap-2">
                               {[
                                 { label: '4/4 Solved', value: report.college_summary.metrics.current_week.q4, color: 'text-emerald-700 dark:text-emerald-300' },
                                 { label: '3/4 Solved', value: report.college_summary.metrics.current_week.q3, color: 'text-cyan-700 dark:text-cyan-300' },
@@ -2115,9 +2117,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                 { label: '1/4 Solved', value: report.college_summary.metrics.current_week.q1, color: 'text-amber-700 dark:text-amber-300' },
                                 { label: '0/4 Solved', value: report.college_summary.metrics.current_week.q0, color: 'text-rose-700 dark:text-rose-300' },
                               ].map((m, i) => (
-                                <div key={i} className="p-2 rounded-xl bg-white/80 dark:bg-navy-900/60 border border-cyan-200/60 dark:border-cyan-800/40 text-center">
-                                  <div className="text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">{m.label}</div>
-                                  <div className={`text-base sm:text-lg font-black ${m.color}`}>{m.value ?? '—'}</div>
+                                <div key={i} className="p-1 sm:p-2 rounded-xl bg-white/80 dark:bg-navy-900/60 border border-cyan-200/60 dark:border-cyan-800/40 text-center">
+                                  <div className="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5 truncate">{m.label}</div>
+                                  <div className={`text-sm sm:text-lg font-black ${m.color}`}>{m.value ?? '—'}</div>
                                 </div>
                               ))}
                             </div>
@@ -2135,7 +2137,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                 {report.lastWeek?.date || 'Past'}
                               </span>
                             </div>
-                            <div className="grid grid-cols-5 gap-2">
+                            <div className="grid grid-cols-5 gap-1 sm:gap-2">
                               {[
                                 { label: '4/4 Solved', value: report.college_summary.metrics.last_week.q4, color: 'text-emerald-700 dark:text-emerald-300' },
                                 { label: '3/4 Solved', value: report.college_summary.metrics.last_week.q3, color: 'text-cyan-700 dark:text-cyan-300' },
@@ -2143,9 +2145,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                 { label: '1/4 Solved', value: report.college_summary.metrics.last_week.q1, color: 'text-amber-700 dark:text-amber-300' },
                                 { label: '0/4 Solved', value: report.college_summary.metrics.last_week.q0, color: 'text-rose-700 dark:text-rose-300' },
                               ].map((m, i) => (
-                                <div key={i} className="p-2 rounded-xl bg-white/80 dark:bg-navy-900/60 border border-amber-200/60 dark:border-amber-800/40 text-center">
-                                  <div className="text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">{m.label}</div>
-                                  <div className={`text-base sm:text-lg font-black ${m.color}`}>{m.value ?? '—'}</div>
+                                <div key={i} className="p-1 sm:p-2 rounded-xl bg-white/80 dark:bg-navy-900/60 border border-amber-200/60 dark:border-amber-800/40 text-center">
+                                  <div className="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5 truncate">{m.label}</div>
+                                  <div className={`text-sm sm:text-lg font-black ${m.color}`}>{m.value ?? '—'}</div>
                                 </div>
                               ))}
                             </div>
@@ -2269,7 +2271,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                 })()}
                               </p>
                               <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                                Date:{report.session_date || report.contest_date || report.report_date || report.currentWeek?.date || '11.10.2026'}
+                                Date: {report.session_date || report.contest_date || report.report_date || report.currentWeek?.date || '11.10.2026'}
                               </p>
                               <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white pt-1">
                                 Leetcode Performance - Weekly Report
@@ -3646,54 +3648,56 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
         </div>
 
         {/* 4. FOOTER / EXECUTIVE EXPORT ACTIONS - Crisp White & Mobile-Sleek */}
-        <div className="px-3 py-2 sm:px-5 sm:py-3 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0 print:hidden shadow-lg">
-          <div className="flex items-center space-x-2 text-xs font-bold text-slate-700">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span className="font-extrabold tracking-wide text-slate-900 text-[11px] sm:text-xs">Official Institutional Dataset</span>
+        <div className="px-3.5 py-3 sm:px-5 sm:py-3 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 print:hidden shadow-lg pb-[max(1rem,env(safe-area-inset-bottom,16px))]">
+          <div className="flex items-center justify-between sm:justify-start space-x-2 text-xs font-bold text-slate-700">
+            <div className="flex items-center space-x-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span className="font-extrabold tracking-wide text-slate-900 text-[11px] sm:text-xs">Official Institutional Dataset</span>
+            </div>
             <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
               {allRows.length} Records Verified
             </span>
           </div>
 
-          <div className="grid grid-cols-4 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-end">
-            <button
-              onClick={() => window.print()}
-              type="button"
-              className="flex items-center justify-center space-x-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 min-h-[34px] sm:min-h-[36px] bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-md cursor-pointer hover:-translate-y-0.5 active:scale-95 touch-manipulation border border-slate-800"
-              title="Print / Save as PDF from browser"
-            >
-              <Printer className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-              <span className="truncate">Print View</span>
-            </button>
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto justify-end">
             <button
               onClick={() => downloadFile('excel')}
               type="button"
               disabled={isDownloading}
-              className="flex items-center justify-center space-x-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 min-h-[34px] sm:min-h-[36px] bg-[#10b981] hover:bg-[#059669] text-white rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-md cursor-pointer hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 touch-manipulation group"
+              className="flex items-center justify-center space-x-2 px-3.5 py-2.5 min-h-[42px] sm:min-h-[38px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer active:scale-95 disabled:opacity-50 touch-manipulation group"
               title="Download Excel spreadsheet"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform shrink-0" />
+              <FileSpreadsheet className="w-4 h-4 text-white group-hover:scale-110 transition-transform shrink-0" />
               <span className="truncate">Excel (.xlsx)</span>
             </button>
             <button
               onClick={() => downloadFile('pdf')}
               type="button"
               disabled={isDownloading}
-              className="flex items-center justify-center space-x-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 min-h-[34px] sm:min-h-[36px] bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-md cursor-pointer hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 touch-manipulation group"
+              className="flex items-center justify-center space-x-2 px-3.5 py-2.5 min-h-[42px] sm:min-h-[38px] bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer active:scale-95 disabled:opacity-50 touch-manipulation group"
               title="Download PDF document"
             >
-              <FileText className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform shrink-0" />
+              <FileText className="w-4 h-4 text-white group-hover:scale-110 transition-transform shrink-0" />
               <span className="truncate">PDF (.pdf)</span>
             </button>
             <button
               onClick={() => downloadFile('word')}
               type="button"
               disabled={isDownloading}
-              className="flex items-center justify-center space-x-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 min-h-[34px] sm:min-h-[36px] bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-md cursor-pointer hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 touch-manipulation group"
+              className="flex items-center justify-center space-x-2 px-3.5 py-2 min-h-[38px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer active:scale-95 disabled:opacity-50 touch-manipulation group"
               title="Download Word document"
             >
-              <FileText className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform shrink-0" />
+              <FileText className="w-4 h-4 text-white group-hover:scale-110 transition-transform shrink-0" />
               <span className="truncate">Word (.docx)</span>
+            </button>
+            <button
+              onClick={() => window.print()}
+              type="button"
+              className="flex items-center justify-center space-x-2 px-3.5 py-2 min-h-[38px] bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer active:scale-95 touch-manipulation border border-slate-800"
+              title="Print / Save as PDF from browser"
+            >
+              <Printer className="w-4 h-4 text-slate-300 shrink-0" />
+              <span className="truncate">Print View</span>
             </button>
           </div>
         </div>

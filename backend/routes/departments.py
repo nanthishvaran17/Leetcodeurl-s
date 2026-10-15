@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
+from sqlalchemy import func
 from backend.database import get_db
 from backend.models import Department, Section, User, Student
 from backend.schemas import DepartmentOut, DepartmentCreate, SectionOut, SectionCreate
@@ -17,16 +18,46 @@ _HOD_ROLES = frozenset({"hod", "department hod", "department_hod"})
 def get_departments(
     request: Request,
     all_depts: bool = False,
+    active_only: bool = True,
     db: Session = Depends(get_db)
 ):
     """
     Returns the list of departments.
+    - active_only=True & all_depts=False (default for student filters): Returns ONLY departments with actual enrolled active students.
+    - all_depts=True: Returns full department list for admin management.
     - HOD users: Returns ONLY their authorized departments (from HODDepartmentAllocation).
-    - Admin / Principal / Management / unauthenticated: Returns full production department list.
     """
     all_d = db.query(Department).order_by(Department.id).all()
+
+    # Calculate active student counts per department
+    student_counts = dict(
+        db.query(Student.department_id, func.count(Student.id))
+        .filter(Student.is_active == True)
+        .group_by(Student.department_id)
+        .all()
+    )
+
+    db_changed = False
+    for d in all_d:
+        count = student_counts.get(d.id, 0)
+        setattr(d, "student_count", count)
+        should_be_active = (count > 0)
+        if getattr(d, "is_active", None) != should_be_active:
+            d.is_active = should_be_active
+            db_changed = True
+
+    if db_changed:
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
+
     if not all_depts:
-        all_d = [d for d in all_d if is_production_department(str(d.code or ""), str(d.name or ""))]
+        all_d = [
+            d for d in all_d
+            if is_production_department(str(d.code or ""), str(d.name or ""))
+            and (not active_only or (getattr(d, "is_active", False) and student_counts.get(d.id, 0) > 0))
+        ]
 
     for d in all_d:
         if d.code and str(d.code).upper() == "IT" and d.name != "Information Technology":

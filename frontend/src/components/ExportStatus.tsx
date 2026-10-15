@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileSpreadsheet, CheckCircle2, AlertTriangle, X, RefreshCw, Sparkles, Loader2 } from 'lucide-react';
+import { FileSpreadsheet, CheckCircle2, AlertTriangle, X, RefreshCw, Loader2 } from 'lucide-react';
 import { DownloadState } from '../services/download/downloadTypes';
 
 interface ExportStatusProps {
@@ -131,7 +131,7 @@ export const ExportStatus: React.FC<ExportStatusProps> = ({ state, onRetry, onCl
             {/* Completed State */}
             {isCompleted && (
               <div className="flex items-start gap-2.5 bg-emerald-500/10 border border-emerald-500/10 rounded-xl p-3">
-                <Sparkles size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
                 <p className="text-[13px] text-emerald-100/90 font-medium leading-snug">
                   Your report has been successfully generated and is ready for review.
                 </p>

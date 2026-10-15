@@ -11,12 +11,9 @@ import {
 import {
   TrendingUp,
   Award,
-  Zap,
   Calendar,
   Filter,
-  Flame,
   ArrowUpRight,
-  Sparkles,
   Clock,
   ChevronRight,
   ChevronDown,
@@ -29,7 +26,9 @@ import {
   BarChart2,
   X,
   RotateCw,
-  Crown
+  Target,
+  Layers,
+  Activity
 } from 'lucide-react';
 import api from '../services/api';
 import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
@@ -339,7 +338,7 @@ export const GrowthIntelligencePage: React.FC = () => {
           {/* Header Title Section */}
           <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
             <div className="p-2.5 sm:p-3 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0 shadow-lg shadow-amber-500/10 mt-0.5 sm:mt-0">
-              <TrendingUp className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />
+              <BarChart2 className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2]" />
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex flex-wrap items-center gap-x-2.5 leading-tight">
@@ -435,7 +434,7 @@ export const GrowthIntelligencePage: React.FC = () => {
           <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider gap-2">
             <span className="text-emerald-700 dark:text-emerald-300 truncate">Total Solved Growth</span>
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30 shadow-xs">
-              <TrendingUp className="w-4 h-4 stroke-[2.5]" />
+              <BarChart2 className="w-4 h-4 stroke-[2.2]" />
             </div>
           </div>
           <div className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white font-mono">
@@ -449,7 +448,7 @@ export const GrowthIntelligencePage: React.FC = () => {
           <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider gap-2">
             <span className="text-emerald-700 dark:text-emerald-300 truncate">Easy Solved</span>
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30 shadow-xs">
-              <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+              <CheckCircle2 className="w-4 h-4 stroke-[2.2]" />
             </div>
           </div>
           <div className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-emerald-600 dark:text-emerald-400 font-mono">
@@ -463,7 +462,7 @@ export const GrowthIntelligencePage: React.FC = () => {
           <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider gap-2">
             <span className="text-amber-700 dark:text-amber-300 truncate">Medium Solved</span>
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30 shadow-xs">
-              <Zap className="w-4 h-4 stroke-[2.5]" />
+              <Layers className="w-4 h-4 stroke-[2.2]" />
             </div>
           </div>
           <div className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-amber-600 dark:text-amber-400 font-mono">
@@ -477,7 +476,7 @@ export const GrowthIntelligencePage: React.FC = () => {
           <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider gap-2">
             <span className="text-rose-700 dark:text-rose-300 truncate">Hard Solved</span>
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500/20 to-red-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/30 shadow-xs">
-              <Flame className="w-4 h-4 stroke-[2.5]" />
+              <Target className="w-4 h-4 stroke-[2.2]" />
             </div>
           </div>
           <div className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-rose-600 dark:text-rose-400 font-mono">
@@ -495,7 +494,7 @@ export const GrowthIntelligencePage: React.FC = () => {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-white/[0.08] pb-5">
           <div className="flex items-center space-x-3.5">
             <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 text-amber-500 border border-amber-500/30 shadow-md shadow-amber-500/10">
-              <Flame className="w-6 h-6 fill-amber-500" />
+              <Award className="w-6 h-6 stroke-[2.2]" />
             </div>
             <div>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
@@ -638,7 +637,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                         <div className="shrink-0">
                           {isTop1 ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/25 text-xs ring-1 ring-amber-400/60">
-                              <Crown className="w-3.5 h-3.5 fill-slate-950 shrink-0" />
+                              <Award className="w-3.5 h-3.5 text-slate-950 shrink-0" />
                               <span>#1</span>
                             </span>
                           ) : isTop2 ? (
@@ -713,7 +712,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                         <div className="inline-flex items-center gap-1 font-mono font-black text-lg text-emerald-600 dark:text-emerald-400">
                           {imp.delta_solved > 0 ? (
                             <>
-                              <TrendingUp className="w-4 h-4 stroke-[2.5]" />
+                              <ArrowUpRight className="w-4 h-4 stroke-[2.2] text-emerald-500" />
                               <span>+{imp.delta_solved}</span>
                             </>
                           ) : imp.delta_solved < 0 ? (

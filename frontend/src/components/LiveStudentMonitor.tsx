@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, RefreshCw, Zap, ShieldCheck, AlertCircle, Clock, CheckCircle2, XCircle, User, Award, TrendingUp, Filter, Download } from 'lucide-react';
+import { Search, RefreshCw, Activity, ShieldCheck, AlertCircle, Clock, CheckCircle2, XCircle, User, Award, TrendingUp, Filter, Download } from 'lucide-react';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid
 } from 'recharts';
@@ -56,7 +56,7 @@ export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialI
       <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white shadow-lg border border-brand-500/30 relative overflow-hidden mb-6 sm:mb-8">
         <div className="relative z-10 space-y-4 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
-            <Zap className="w-3.5 h-3.5 text-amber-400" />
+            <Activity className="w-3.5 h-3.5 text-brand-400" />
             <span>REAL-TIME SINGLE-STUDENT MONITORING PANEL</span>
           </div>
 

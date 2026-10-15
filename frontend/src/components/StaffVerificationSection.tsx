@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   ShieldCheck, Upload, FileText, CheckCircle2, AlertCircle, Clock, XCircle,
-  Eye, RefreshCw, Check, X, Building2, UserCheck, ChevronDown, Sparkles,
+  Eye, RefreshCw, Check, X, Building2, UserCheck, ChevronDown,
   ExternalLink, Download, Trash2, Image as ImageIcon, FileCheck
 } from 'lucide-react';
 import api from '../services/api';
@@ -514,7 +514,7 @@ export const StaffVerificationSection: React.FC = () => {
               </label>
               {(selectedFile || verificationState?.has_document) && (
                 <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center space-x-1">
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Eye className="w-3.5 h-3.5" />
                   <span>Interactive Eye Preview Available</span>
                 </span>
               )}

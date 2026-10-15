@@ -13,7 +13,6 @@ import {
   AlertTriangle,
   QrCode,
   ArrowLeft,
-  Sparkles,
   FileCode2,
   CheckCircle,
   Hash,

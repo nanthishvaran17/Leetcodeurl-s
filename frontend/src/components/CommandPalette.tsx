@@ -13,7 +13,7 @@ import {
   X,
   Command,
   User,
-  Sparkles,
+  Bot,
   FileText,
   Activity,
   Moon,
@@ -64,7 +64,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [studentResults, setStudentResults] = useState<any[]>([]);
   const [isSearchingStudents, setIsSearchingStudents] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<'All' | 'Commands' | 'Students' | 'Actions'>('All');
+  const [activeCategory, setActiveCategory] = useState<'All' | 'AI' | 'Commands' | 'Students' | 'Actions'>('All');
 
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -120,56 +120,80 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     };
   }, [search, fetchStudentSearch]);
 
-  // Context & ESC handling
-  useEffect(() => {
-    if (isOpen) {
-      pushContext('COMMAND_PALETTE');
-      const unregister = registerEscHandler(() => {
-        onClose();
-      });
-      const prevOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
+  const prevIsOpenRef = useRef(false);
+  const onCloseRef = useRef(onClose);
 
-      setTimeout(() => inputRef.current?.focus(), 80);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  // Reset state and focus input ONLY on the rising edge of isOpen (when palette initially opens)
+  useEffect(() => {
+    if (isOpen && !prevIsOpenRef.current) {
       setSearch('');
       setSelectedIndex(0);
       setStudentResults([]);
-
-      return () => {
-        document.body.style.overflow = prevOverflow || '';
-        unregister();
-        popContext('COMMAND_PALETTE');
-      };
+      setTimeout(() => inputRef.current?.focus(), 80);
     }
-  }, [isOpen, pushContext, popContext, registerEscHandler, onClose]);
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen]);
+
+  // Context & ESC handling (independent from search state to prevent auto-clearing input while typing)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    pushContext('COMMAND_PALETTE');
+    const unregister = registerEscHandler(() => {
+      onCloseRef.current();
+    });
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = prevOverflow || '';
+      unregister();
+      popContext('COMMAND_PALETTE');
+    };
+  }, [isOpen, pushContext, popContext, registerEscHandler]);
 
   // Build Command Items List
   const buildAllCommands = (): CommandItem[] => {
     const items: CommandItem[] = [];
 
-    // --- 1. Natural Language AI Query Prompt (if search typed) ---
-    const qLower = search.trim().toLowerCase();
-    const isAiQuery = qLower.length >= 3 && (
-      qLower.includes('show') || qLower.includes('count') || qLower.includes('find') ||
-      qLower.includes('how many') || qLower.includes('pending') || qLower.includes('absent') ||
-      qLower.includes('top') || qLower.includes('list') || qLower.includes('audit') ||
-      qLower.includes('mail') || qLower.includes('what') || qLower.includes('report')
-    );
-
-    if (search.trim().length >= 3) {
+    // --- 1. Natural Language AI Query Prompt & Copilot Actions ---
+    const trimmed = search.trim();
+    const qLower = trimmed.toLowerCase();
+    if (trimmed.length > 0) {
       items.push({
         id: 'ai_query_action',
         type: 'ai',
-        label: `Ask Institutional AI Copilot: "${search.trim()}"`,
-        sublabel: 'Query verified backend database using AI Assistant',
-        icon: Sparkles,
+        label: `Ask Institutional AI Copilot: "${trimmed}"`,
+        sublabel: 'Query verified student database, contest stats, run audits or draft emails',
+        icon: Bot,
         category: 'AI',
         badge: 'AI Copilot',
         action: () => {
           if (onOpenAiWithQuery) {
-            onOpenAiWithQuery(search.trim());
+            onOpenAiWithQuery(trimmed);
           } else {
-            window.dispatchEvent(new CustomEvent('open_ai_assistant', { detail: { query: search.trim() } }));
+            window.dispatchEvent(new CustomEvent('open_ai_assistant', { detail: { query: trimmed } }));
+          }
+        }
+      });
+    } else {
+      items.push({
+        id: 'ai_open_copilot',
+        type: 'ai',
+        label: 'Open Institutional AI Copilot',
+        sublabel: 'Ask questions about students, contests, analytics or run audits (Alt + H)',
+        icon: Bot,
+        category: 'AI',
+        badge: 'Alt + H',
+        action: () => {
+          if (onOpenAiWithQuery) {
+            onOpenAiWithQuery('');
+          } else {
+            window.dispatchEvent(new CustomEvent('open_ai_widget'));
           }
         }
       });
@@ -348,6 +372,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
     if (!search.trim()) return true;
 
+    // Direct dynamic AI query always matches the user's search
+    if (item.id === 'ai_query_action') return true;
+
     const sClean = search.trim().toLowerCase();
     const labelMatch = item.label.toLowerCase().includes(sClean);
     const subMatch = (item.sublabel || '').toLowerCase().includes(sClean);
@@ -456,7 +483,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
           {/* Category Filter Chips */}
           <div className="flex items-center gap-2 mt-3.5 pt-2.5 border-t border-slate-200/60 dark:border-navy-800/80 overflow-x-auto no-scrollbar">
-            {(['All', 'Commands', 'Students', 'Actions'] as const).map(cat => (
+            {(['All', 'AI', 'Commands', 'Students', 'Actions'] as const).map(cat => (
               <button
                 key={cat}
                 type="button"

@@ -5,7 +5,7 @@ import {
   XCircle,
   AlertTriangle,
   Info,
-  Sparkles,
+  Bot,
   Loader2,
   X,
   ShieldAlert,
@@ -80,7 +80,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
         return {
           bg: 'bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-brand-500/40 text-white',
           badgeBg: 'bg-brand-500/20 text-brand-300 border-brand-400/30',
-          icon: Sparkles,
+          icon: Bot,
           iconColor: 'text-amber-400 animate-pulse',
           progressBg: 'bg-gradient-to-r from-brand-400 to-amber-400',
           categoryColor: 'text-brand-300',

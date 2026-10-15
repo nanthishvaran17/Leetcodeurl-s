@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   FileText, Download, CheckCircle2, ShieldCheck, 
-  BarChart3, Users, Building, TrendingUp, Sparkles, 
+  BarChart3, Users, Building, TrendingUp, 
   Layers, Award, Filter, RefreshCw
 } from "lucide-react";
 import { downloadManager } from "../services/download/downloadManager";

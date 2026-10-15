@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   User, Mail, Phone, Calendar, Shield, Key, CheckCircle, Building2, 
   History, CreditCard, Clock, KeyRound, Award, GraduationCap, X, 
-  AlertCircle, AlertTriangle, ChevronDown, Check, Loader2, Sparkles, 
+  AlertCircle, AlertTriangle, ChevronDown, Check, Loader2, 
   Edit3, ShieldAlert, Lock, UserCheck, ShieldCheck, RefreshCcw, Briefcase,
   Camera, Trash2
 } from 'lucide-react';

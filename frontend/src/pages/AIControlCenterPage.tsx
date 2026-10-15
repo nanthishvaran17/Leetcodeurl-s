@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Sparkles, Bot, Terminal, ShieldCheck, Database, Cpu, Activity,
+  Bot, Terminal, ShieldCheck, Database, Cpu, Activity,
   RefreshCw, Search, Send, Users, Trophy, AlertOctagon, Mail, FileText,
   CheckCircle2, XCircle, AlertTriangle, Layers, ChevronRight, Play, Trash2,
-  Lock, ArrowRight, CornerDownRight, Filter, Eye, ExternalLink, Sliders, Zap,
+  Lock, ArrowRight, CornerDownRight, Filter, Eye, ExternalLink, Sliders,
   ShieldAlert, BookOpen, Building2, Clock, Check, X, HardDrive, Server,
   Radio, RotateCcw, Calendar, CheckSquare
 } from 'lucide-react';
@@ -173,7 +173,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
               disabled={isSyncing}
               className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-brand-500/30 flex items-center space-x-2 transition-all cursor-pointer transform hover:scale-105 disabled:opacity-50"
             >
-              <Zap className="w-4 h-4 text-amber-300" />
+              <RefreshCw className="w-4 h-4 text-amber-300" />
               <span>{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
             </button>
 
@@ -334,7 +334,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-black">
-                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <Activity className="w-3.5 h-3.5 text-brand-500" />
                 <span>LIVE CONTEST ENGINE</span>
               </div>
               <h3 className="text-lg font-black text-slate-900 dark:text-white">

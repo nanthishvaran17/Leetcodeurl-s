@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { 
-  Trophy, Flame, Zap, Award, Crown, Star, 
-  Sparkles, RefreshCw, Volume2, VolumeX, Maximize2, 
+  Trophy, Award, Activity, 
+  RefreshCw, Volume2, VolumeX, Maximize2, 
   Clock, ShieldCheck, ChevronRight, BarChart3, Users
 } from "lucide-react";
 import { useDepartments } from "../contexts/DepartmentContext";
@@ -158,7 +158,7 @@ export const HallOfFameKioskPage: React.FC = () => {
           <div className="animate-in fade-in zoom-in-95 duration-500 max-w-7xl mx-auto w-full">
             <div className="text-center mb-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-semibold uppercase tracking-wider mb-2">
-                <Crown className="w-4 h-4 text-amber-400" /> Grandmaster Honor Roll
+                <Award className="w-4 h-4 text-amber-400" /> Grandmaster Honor Roll
               </div>
               <h2 className="text-3xl font-black text-white">Top 10 College-Wide Solvers</h2>
               <p className="text-slate-400 text-sm mt-1">Recognizing exceptional consistency, algorithmic mastery, and problem volume</p>
@@ -223,7 +223,7 @@ export const HallOfFameKioskPage: React.FC = () => {
           <div className="animate-in fade-in zoom-in-95 duration-500 max-w-6xl mx-auto w-full">
             <div className="text-center mb-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-xs font-semibold uppercase tracking-wider mb-2">
-                <Zap className="w-4 h-4 text-cyan-400" /> LeetCode Weekly Contest
+                <Activity className="w-4 h-4 text-cyan-400" /> LeetCode Weekly Contest
               </div>
               <h2 className="text-3xl font-black text-white">Sunday Weekly Contest Podium</h2>
               <p className="text-slate-400 text-sm mt-1">Recognizing lightning-fast problem solving during the official 08:00–09:30 AM contest window</p>
@@ -335,7 +335,7 @@ export const HallOfFameKioskPage: React.FC = () => {
           <div className="animate-in fade-in zoom-in-95 duration-500 max-w-6xl mx-auto w-full">
             <div className="text-center mb-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 text-xs font-semibold uppercase tracking-wider mb-2">
-                <Flame className="w-4 h-4 text-orange-400" /> Relentless Discipline
+                <Award className="w-4 h-4 text-purple-400" /> Relentless Discipline
               </div>
               <h2 className="text-3xl font-black text-white">100-Day Streak Knights & Special Badges</h2>
               <p className="text-slate-400 text-sm mt-1">Celebrating unbroken daily problem solving consistency and elite platform badges</p>

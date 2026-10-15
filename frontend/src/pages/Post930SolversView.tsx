@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Clock, Download, RefreshCw, Search, Users, AlertCircle, ExternalLink, Eye, ArrowUpDown, ChevronRight, X, ShieldAlert, CheckCircle2, FileSpreadsheet, Filter, Zap, TrendingUp, ChevronDown, SlidersHorizontal, ArrowLeft, Activity } from 'lucide-react';
+import { Clock, Download, RefreshCw, Search, Users, AlertCircle, ExternalLink, Eye, ArrowUpDown, ChevronRight, X, ShieldAlert, CheckCircle2, FileSpreadsheet, Filter, TrendingUp, ChevronDown, SlidersHorizontal, ArrowLeft, Activity } from 'lucide-react';
 import api from '../services/api';
 import { downloadManager } from '../services/download/downloadManager';
 import { useDepartments } from '../contexts/DepartmentContext';
@@ -241,7 +241,7 @@ export const Post930SolversView: React.FC<Post930SolversViewProps> = ({ onSelect
               Post-9:30 Submissions
             </span>
             <div className="w-7 h-7 rounded-xl bg-purple-500/15 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-              <Zap className="w-3.5 h-3.5" />
+              <Clock className="w-3.5 h-3.5" />
             </div>
           </div>
           <p className="text-2xl sm:text-3xl font-black font-mono text-purple-600 dark:text-purple-400">

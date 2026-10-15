@@ -6,8 +6,8 @@ import {
   AlertTriangle, Save, CheckCircle2, XCircle, ArrowRight, Layers,
   Shield, Server, FileText, CheckCircle, FileSpreadsheet, Archive,
   Send, Fingerprint, Search, Filter, Download, Upload, Eye,
-  Check, HardDrive, Terminal, Sparkles, SlidersHorizontal, UserCheck,
-  Camera, Play, ShieldAlert, ChevronRight, ChevronDown, ChevronUp, Info, X, Copy, Code, Zap, FileCode, Bell, RotateCcw, Trash2, User
+  Check, HardDrive, Terminal, SlidersHorizontal, UserCheck,
+  Camera, Play, ShieldAlert, ChevronRight, ChevronDown, ChevronUp, Info, X, Copy, Code, FileCode, Bell, RotateCcw, Trash2, User
 } from 'lucide-react';
 import api from '../services/api';
 import { SecurityActivitySection } from '../components/SecurityActivitySection';
@@ -1133,7 +1133,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
             <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl space-y-6">
               <div className="flex items-center justify-between border-b pb-3 dark:border-navy-800">
                 <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
-                  <Sparkles className="w-4 h-4 text-emerald-500" />
+                  <Layers className="w-4 h-4 text-emerald-500" />
                   <span>2. Automated Session Lifecycle Pipeline</span>
                 </h3>
                 <span className="text-xs font-mono font-bold text-slate-400">Section I.B</span>
@@ -1529,7 +1529,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                 onClick={() => triggerAdvancedOp('rebuild-index', 'Rebuild Leaderboard Index', 'Re-index student roster mappings and historical contest scores.', 'Re-indexes 590 student roster entries.')}
                 className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-sm flex items-center space-x-1.5 cursor-pointer transition-all hover:shadow-purple-500/20"
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                <RefreshCw className="w-3.5 h-3.5" />
                 <span>Rebuild Leaderboard Index</span>
               </button>
             </div>
@@ -1580,7 +1580,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                   disabled={integrityAuditing}
                   className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-md shadow-emerald-500/20 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
                 >
-                  <Sparkles className={`w-4 h-4 ${integrityAuditing ? 'animate-spin' : ''}`} />
+                  <ShieldCheck className={`w-4 h-4 ${integrityAuditing ? 'animate-spin' : ''}`} />
                   <span>{integrityAuditing ? 'Auditing Rules...' : 'Run Integrity Audit'}</span>
                 </button>
 
@@ -2459,7 +2459,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="p-2 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 group-hover:scale-105 transition-transform">
-                      <Sparkles className="w-4 h-4" />
+                      <Activity className="w-4 h-4" />
                     </span>
                     <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-400">DIAGNOSTIC</span>
                   </div>
@@ -2574,7 +2574,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
               {[
                 { id: 'overview', label: 'Overview & Policy', icon: Info },
                 { id: 'sql', label: 'Live SQL Query', icon: Code },
-                { id: 'telemetry', label: 'Telemetry & Proof', icon: Zap },
+                { id: 'telemetry', label: 'Telemetry & Proof', icon: Activity },
                 { id: 'actions', label: 'Rule Operations', icon: SlidersHorizontal }
               ].map(tab => {
                 const TabIcon = tab.icon;
@@ -2748,7 +2748,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                       disabled={integrityAuditing}
                       className="p-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 text-center"
                     >
-                      <Sparkles className={`w-4 h-4 ${integrityAuditing ? 'animate-spin' : ''}`} />
+                      <RefreshCw className={`w-4 h-4 ${integrityAuditing ? 'animate-spin' : ''}`} />
                       <span>Re-Run Live Audit</span>
                     </button>
 

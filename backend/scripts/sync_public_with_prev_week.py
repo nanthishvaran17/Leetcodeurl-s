@@ -21,20 +21,22 @@ def sync_all_public_results():
         ).all()
 
         logger.info(f"Loaded {len(active_prev)} active verified PreviousWeekParticipationRecords.")
+        
+        # Preload all sessions and all existing public results for instant O(1) lookup
+        all_sess_ids = {s.id for s in db.query(WeeklySession.id).all()}
+        existing_wpr = {(r.session_id, r.student_id): r for r in db.query(WeeklyPublicResult).all()}
+        student_map = {s.id: s for s in db.query(Student).all()}
+
         synced_count = 0
 
-        for pr in active_prev:
-            sess = db.query(WeeklySession).filter_by(id=pr.session_id).first()
-            if not sess:
+        for idx, pr in enumerate(active_prev, 1):
+            if pr.session_id not in all_sess_ids:
                 continue
 
-            pub = db.query(WeeklyPublicResult).filter_by(
-                session_id=pr.session_id,
-                student_id=pr.student_id
-            ).first()
+            pub = existing_wpr.get((pr.session_id, pr.student_id))
 
             if not pub:
-                student = db.query(Student).filter_by(id=pr.student_id).first()
+                student = student_map.get(pr.student_id)
                 if not student:
                     continue
                 dept_name = student.department.name if student.department else "CSE-CS"
@@ -47,6 +49,7 @@ def sync_all_public_results():
                     year=student.year_level or "III Year",
                 )
                 db.add(pub)
+                existing_wpr[(pr.session_id, pr.student_id)] = pub
 
             pub.total_contest_solved = pr.problems_solved if pr.problems_solved is not None else 0
             pub.contest_score = pr.official_score if pr.official_score is not None else (pr.q1 * 3 + pr.q2 * 4 + pr.q3 * 5 + pr.q4 * 6)
@@ -56,10 +59,15 @@ def sync_all_public_results():
             pub.q2 = pr.q2 or 0
             pub.q3 = pr.q3 or 0
             pub.q4 = pr.q4 or 0
-            pub.participation_status = pr.participation_type or "PUBLIC_ATTENDED"
+            pub.participation_status = pr.participation_type or ("PUBLIC" if (pr.problems_solved or 0) > 0 else "NOT_ATTENDED")
             pub.state = "FINALIZED"
             pub.confidence = "VERIFIED"
+            pub.fetch_status = "SUCCESS"
+            pub.data_fetch_status = "DATA_AVAILABLE"
             synced_count += 1
+
+            if idx % 1000 == 0:
+                db.commit()
 
         db.commit()
         logger.info(f"Successfully reconciled {synced_count} WeeklyPublicResult entries with authoritative truth.")

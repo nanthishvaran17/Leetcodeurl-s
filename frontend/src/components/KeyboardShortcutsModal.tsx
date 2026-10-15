@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GlobalModalBackdrop } from './GlobalModalBackdrop';
-import { X, Keyboard, Navigation, Command, Search, CornerDownLeft, Sparkles, Zap } from 'lucide-react';
+import { X, Keyboard, Navigation, Command, Search, CornerDownLeft, Bot, Activity } from 'lucide-react';
 import { useKeyboardContext } from '../context/KeyboardContext';
 import { useAuth } from '../context/AuthContext';
 import { GLOBAL_SHORTCUT_REGISTRY, isShortcutAllowedForRole, ShortcutCategory } from '../services/shortcutRegistry';
@@ -62,8 +62,8 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
   const categoryIcons: Record<ShortcutCategory, any> = {
     'GLOBAL CONTROLS': Command,
     'QUICK NAVIGATION': Navigation,
-    'QUICK ACTIONS': Zap,
-    'AI ASSISTANT': Sparkles
+    'QUICK ACTIONS': Activity,
+    'AI ASSISTANT': Bot
   };
 
   return (

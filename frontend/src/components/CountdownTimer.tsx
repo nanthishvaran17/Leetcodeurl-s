@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Radio, Zap, ShieldCheck, Sparkles } from 'lucide-react';
+import { Clock, Radio, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface CountdownTimerProps {
@@ -202,7 +202,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
                 </span>
               ) : timing.phase === 'COUNTDOWN_TODAY' ? (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-mono font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/40 shadow-sm backdrop-blur-md">
-                  <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                  <Clock className="w-3.5 h-3.5 text-amber-400" />
                   <span>Starting Today</span>
                 </span>
               ) : null}

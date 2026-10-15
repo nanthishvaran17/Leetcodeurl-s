@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../../services/api';
-import { Sparkles, CheckCircle2, ShieldAlert, ArrowRight, RefreshCw, Send, AlertTriangle, Bot, User, ArrowLeft, History, Plus, Trash2, X, Maximize2, Minimize2, MoreVertical, Share2, Archive, MessageSquare, Check, Copy } from 'lucide-react';
+import { CheckCircle2, ShieldAlert, ArrowRight, RefreshCw, Send, AlertTriangle, Bot, User, ArrowLeft, History, Plus, Trash2, X, Maximize2, Minimize2, MoreVertical, Share2, Archive, MessageSquare, Check, Copy, ChevronDown } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -214,21 +214,56 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
   };
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const isNearBottomRef = useRef(true);
 
-  const scrollToBottom = () => {
+  const handleMessagesScroll = () => {
+    if (!messagesContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 120;
+    isNearBottomRef.current = isNearBottom;
+    setShowScrollBottom(!isNearBottom);
+  };
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTo({
         top: messagesContainerRef.current.scrollHeight,
-        behavior: 'smooth'
+        behavior
       });
+      isNearBottomRef.current = true;
+      setShowScrollBottom(false);
     }
-  };
+  }, []);
 
+  // Auto-scroll when messages or loading state changes
   useEffect(() => {
-    if (messages.length > 0) {
-      scrollToBottom();
+    if (messages.length === 0) return;
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage?.role === 'user') {
+      scrollToBottom('smooth');
+    } else if (isNearBottomRef.current) {
+      scrollToBottom('smooth');
     }
-  }, [messages, loading]);
+  }, [messages, loading, scrollToBottom]);
+
+  // Keep bottom anchored if user was already following and content resizes (e.g. markdown rendering, tables)
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const observer = new ResizeObserver(() => {
+      if (isNearBottomRef.current) {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'auto'
+        });
+      }
+    });
+    if (container.firstElementChild) {
+      observer.observe(container.firstElementChild);
+    }
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!messages.length) return;
@@ -292,18 +327,32 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
     if (activeChatId === chatId) startNewChat();
   };
 
+  const adjustTextareaHeight = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    const newHeight = Math.min(Math.max(el.scrollHeight, 38), 120);
+    el.style.height = `${newHeight}px`;
+    el.style.overflowY = el.scrollHeight > 120 ? 'auto' : 'hidden';
+  }, []);
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [query, adjustTextareaHeight]);
+
   useEffect(() => {
     textareaRef.current?.focus({ preventScroll: true });
   }, []);
 
   const handleSearch = async (queryText?: string) => {
     const targetQuery = typeof queryText === 'string' ? queryText : query;
-    if (!targetQuery || !targetQuery.trim()) return;
+    if (!targetQuery || !targetQuery.trim() || loading) return;
 
+    const trimmed = targetQuery.trim();
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
-      content: targetQuery
+      content: trimmed
     };
 
     const currentHistory = [...messages].slice(-10);
@@ -311,19 +360,16 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
     setQuery('');
     setLoading(true);
     setError(null);
+    isNearBottomRef.current = true;
 
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus({ preventScroll: true });
-        textareaRef.current.style.height = '44px';
-      }
-    }, 30);
+    // Smooth scroll to latest user message
+    setTimeout(() => scrollToBottom('smooth'), 40);
 
     try {
       const res = await api.post(
         '/messaging/ask-institution',
         { 
-          query: targetQuery,
+          query: trimmed,
           history: currentHistory.map(m => ({ role: m.role, text: m.content })) 
         }
       );
@@ -353,7 +399,7 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSearch();
@@ -379,7 +425,7 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
       className={`bg-white dark:bg-[#0B1120] text-slate-800 dark:text-slate-200 flex flex-col overflow-hidden ${
         isFullscreen 
           ? 'fixed inset-0 z-[99999] w-screen h-screen' 
-          : 'w-full h-full relative'
+          : 'w-full h-full min-h-0 flex-1 relative'
       }`}
       style={isFullscreen ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999 } : undefined}
     >
@@ -463,7 +509,7 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
       </div>
 
       {/* Chat Messages / Container */}
-      <div className="relative flex-1 min-h-0 flex overflow-hidden bg-slate-50/50 dark:bg-[#060B14]">
+      <div className="relative flex-1 min-h-0 h-full w-full flex overflow-hidden bg-slate-50/50 dark:bg-[#060B14]">
         {/* Mobile Backdrop Overlay */}
         <div
           onClick={() => setIsHistoryOpen(false)}
@@ -474,7 +520,7 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
         />
 
         {/* Responsive Sidebar — CSS transition toggle via isHistoryOpen */}
-        <aside className={`absolute md:relative inset-y-0 left-0 z-50 md:z-20 shrink-0 flex flex-col bg-white dark:bg-[#0B1120] transition-all duration-300 ease-in-out ${
+        <aside className={`absolute md:relative inset-y-0 left-0 z-50 md:z-20 shrink-0 flex flex-col h-full bg-white dark:bg-[#0B1120] transition-all duration-300 ease-in-out ${
           isHistoryOpen 
             ? 'w-72 md:w-64 border-r border-slate-200 dark:border-slate-800 shadow-2xl md:shadow-none opacity-100 translate-x-0 pointer-events-auto' 
             : 'w-0 md:w-0 border-0 shadow-none opacity-0 -translate-x-full md:translate-x-0 overflow-hidden pointer-events-none'
@@ -654,13 +700,16 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
         </aside>
 
         {/* Main Content Area (Scrollable Messages + Fixed Bottom Input Container) */}
-        <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden relative">
+        <div className="flex-1 min-w-0 min-h-0 h-full flex flex-col overflow-hidden relative">
           {/* Scrollable Messages Container */}
           <div 
             ref={messagesContainerRef}
-            className="flex-1 min-h-0 overflow-y-auto pt-4 sm:pt-6 pb-4 sm:pb-6 px-3 sm:px-6 flex flex-col"
+            onScroll={handleMessagesScroll}
+            className="flex-1 min-h-0 w-full overflow-y-auto pt-4 sm:pt-6 pb-4 sm:pb-6 px-3 sm:px-6 flex flex-col"
           >
-            <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col justify-center space-y-4">
+            <div className={`max-w-5xl mx-auto w-full flex-1 flex flex-col space-y-4 ${
+              messages.length === 0 ? 'justify-center' : 'justify-start'
+            }`}>
               {messages.length === 0 ? (
                 <div className="my-auto py-6 sm:py-10 px-2 w-full flex justify-center items-center animate-in fade-in zoom-in-95 duration-300">
                   <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 sm:p-8 max-w-md sm:max-w-lg w-full text-center shadow-lg hover:shadow-xl transition-all duration-300 space-y-5">
@@ -848,38 +897,47 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
             <div ref={endOfMessagesRef} />
           </div>
 
-          {/* Static Bottom Search Input Area */}
-          <div className="px-3 sm:px-6 pt-2 pb-3 sm:pb-4 bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent dark:from-[#060B14] dark:via-[#060B14]/95 dark:to-transparent shrink-0 w-full z-10">
-            <div className="max-w-5xl mx-auto w-full flex items-end gap-2.5 bg-white dark:bg-[#0B1120] border border-slate-300/90 dark:border-slate-700/80 focus-within:border-indigo-500 dark:focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 rounded-2xl px-4 py-2.5 shadow-md hover:shadow-lg transition-all">
+          {/* Floating Scroll to Bottom Button */}
+          {showScrollBottom && (
+            <button
+              type="button"
+              onClick={() => scrollToBottom('smooth')}
+              aria-label="Scroll to latest messages"
+              className="absolute bottom-20 sm:bottom-24 right-5 sm:right-8 z-20 p-2 sm:p-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5 text-xs font-bold border border-indigo-500/50 group"
+              title="Scroll to latest messages"
+            >
+              <ChevronDown className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
+              <span className="hidden sm:inline text-[11px]">Latest</span>
+            </button>
+          )}
+
+          {/* Static Bottom Search Input Area / Composer */}
+          <div className="px-3 sm:px-6 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white/95 dark:bg-[#0B1120]/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800/80 shrink-0 w-full z-10">
+            <div className="max-w-5xl mx-auto w-full flex items-end gap-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700/80 focus-within:border-indigo-500 dark:focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 rounded-2xl px-3.5 sm:px-4 py-2 shadow-xs transition-all">
               <textarea
                 ref={textareaRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={loading}
-                placeholder="Ask anything about students, performance, or reports..."
+                placeholder="Ask anything about students, performance, or reports... (Enter to send, Shift+Enter for newline)"
                 aria-label="Ask institution intelligence"
-                className="flex-1 bg-transparent text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium min-h-[32px] max-h-24 focus:outline-none resize-none placeholder-slate-400 dark:placeholder-slate-500 py-1"
+                className="flex-1 bg-transparent text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium min-h-[38px] max-h-[120px] focus:outline-none resize-none placeholder-slate-400 dark:placeholder-slate-500 py-2 leading-relaxed"
                 rows={1}
-                style={{
-                  height: 'auto',
-                  maxHeight: '96px',
-                  overflowY: query.split('\n').length > 3 ? 'auto' : 'hidden'
-                }}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement;
-                  target.style.height = 'auto';
-                  target.style.height = `${Math.min(target.scrollHeight, 96)}px`;
-                }}
               />
               <button
                 type="button"
                 onClick={() => handleSearch()}
                 disabled={!query.trim() || loading}
                 aria-label="Send message"
-                className="shrink-0 mb-0.5 w-8 h-8 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl transition-all flex items-center justify-center shadow-sm cursor-pointer disabled:cursor-not-allowed"
+                className="shrink-0 mb-1 w-9 h-9 sm:w-10 sm:h-10 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl transition-all flex items-center justify-center shadow-xs cursor-pointer disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+                title={loading ? "Generating response..." : "Send message"}
               >
-                <Send className="w-4 h-4" />
+                {loading ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>

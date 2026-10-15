@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getApiUrl, getAuthHeaders } from '../../services/api';
-import { X, Users, Sparkles, AlertCircle } from 'lucide-react';
+import { X, Users, Filter, AlertCircle } from 'lucide-react';
 
 export const SmartGroupModal: React.FC<{
   isOpen: boolean;
@@ -151,7 +151,7 @@ export const SmartGroupModal: React.FC<{
           {isDynamic && (
             <div className="bg-indigo-950/20 border border-indigo-500/20 rounded-xl p-4 space-y-4">
               <div className="flex items-center space-x-1.5 text-xs font-semibold text-indigo-400">
-                <Sparkles className="w-4 h-4" />
+                <Filter className="w-4 h-4" />
                 <span>Dynamic Criteria Rules</span>
               </div>
               <div>

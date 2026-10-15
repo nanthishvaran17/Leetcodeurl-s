@@ -15,6 +15,7 @@ import {
   shareOrOpenFile,
   normalizeBlob,
   isMobileBrowser,
+  saveFileToMobileStorage,
 } from './downloadUtils';
 
 class DownloadManager {
@@ -116,36 +117,28 @@ class DownloadManager {
 
       // 6. STORAGE & PLATFORM-SPECIFIC DISPATCH
       if (isNativeMobile()) {
-        const { Filesystem, Directory } = await import('@capacitor/filesystem');
-        const base64Data = await blobToBase64(blob);
-
-        const writeResult = await Filesystem.writeFile({
-          path: effectiveFilename,
-          data: base64Data,
-          directory: Directory.Cache,
-          recursive: true,
-        });
+        const { uri } = await saveFileToMobileStorage(blob, effectiveFilename, mimeType);
 
         const totalMs = Math.round(performance.now() - startTime);
-        console.log(`[DownloadManager] Mobile report saved to cache in ${totalMs}ms -> ${writeResult.uri}`);
+        console.log(`[DownloadManager] Mobile report saved to device in ${totalMs}ms -> ${uri}`);
 
         state.status = 'COMPLETED';
-        state.localPath = writeResult.uri;
+        state.localPath = uri;
         this.updateState(state, options.onStateChange);
 
         // Notify with full persistent file reference
         await downloadNotification.notifySuccess({
           filename: effectiveFilename,
-          localFileUri: writeResult.uri,
+          localFileUri: uri,
           mimeType,
           fileSizeBytes: blob.size,
           reportId: options.params?.report_id || options.params?.reportId
         });
 
-        // Zero-latency ultra-fast instant dispatch (1ms for event loop microtick)
+        // Zero-latency instant microtick dispatch (1ms)
         setTimeout(() => {
-          if (writeResult.uri) {
-            shareOrOpenFile(writeResult.uri, effectiveFilename, mimeType);
+          if (uri) {
+            shareOrOpenFile(uri, effectiveFilename, mimeType);
           }
         }, 1);
 
@@ -305,32 +298,24 @@ class DownloadManager {
 
       // 4. File Saving & Dispatch
       if (isNativeMobile()) {
-        const { Filesystem, Directory } = await import('@capacitor/filesystem');
-        const base64Data = await blobToBase64(blob);
-
-        const writeResult = await Filesystem.writeFile({
-          path: effectiveFilename,
-          data: base64Data,
-          directory: Directory.Cache,
-          recursive: true,
-        });
+        const { uri } = await saveFileToMobileStorage(blob, effectiveFilename, mimeType);
 
         state.status = 'COMPLETED';
-        state.localPath = writeResult.uri;
+        state.localPath = uri;
         state.filename = effectiveFilename;
         this.updateState(state, options.onStateChange);
 
         await downloadNotification.notifySuccess({
           filename: effectiveFilename,
-          localFileUri: writeResult.uri,
+          localFileUri: uri,
           mimeType,
           fileSizeBytes: blob.size,
           reportId: jobId
         });
 
         setTimeout(() => {
-          if (writeResult.uri) {
-            shareOrOpenFile(writeResult.uri, effectiveFilename, mimeType);
+          if (uri) {
+            shareOrOpenFile(uri, effectiveFilename, mimeType);
           }
         }, 1);
 
@@ -406,32 +391,26 @@ class DownloadManager {
       this.updateState(state);
 
       if (isNativeMobile()) {
-        const { Filesystem, Directory } = await import('@capacitor/filesystem');
-        const base64Data = await blobToBase64(blob);
-
-        const writeResult = await Filesystem.writeFile({
-          path: safeFilename,
-          data: base64Data,
-          directory: Directory.Cache,
-          recursive: true,
-        });
+        const { uri } = await saveFileToMobileStorage(blob, safeFilename, effectiveMime);
 
         const totalMs = Math.round(performance.now() - startTime);
-        console.log(`[DownloadManager] Native blob export completed in ${totalMs}ms`);
+        console.log(`[DownloadManager] Native blob export completed in ${totalMs}ms -> ${uri}`);
 
         state.status = 'COMPLETED';
-        state.localPath = writeResult.uri;
+        state.localPath = uri;
         this.updateState(state);
 
         await downloadNotification.notifySuccess({
           filename: safeFilename,
-          localFileUri: writeResult.uri,
+          localFileUri: uri,
           mimeType: effectiveMime,
           fileSizeBytes: blob.size
         });
 
         setTimeout(() => {
-          shareOrOpenFile(writeResult.uri, safeFilename, effectiveMime);
+          if (uri) {
+            shareOrOpenFile(uri, safeFilename, effectiveMime);
+          }
         }, 1);
 
         return { success: true, downloadId };

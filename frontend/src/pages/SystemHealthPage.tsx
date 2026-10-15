@@ -9,12 +9,11 @@ import {
   Cloud,
   Clock,
   RefreshCw,
-  Zap,
+  BrainCircuit,
   ShieldCheck,
   Cpu,
   Server,
   Layers,
-  Sparkles,
   ArrowUpRight,
   ExternalLink,
   Globe,
@@ -31,7 +30,6 @@ import {
   Lock,
   FileText,
   Key,
-  Flame,
   ChevronRight,
   Info,
   Sliders,
@@ -962,7 +960,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           { id: 'integrity', label: 'Data Integrity Command', icon: ShieldCheck, desc: 'Production validation rules' },
           { id: 'forensic', label: 'Forensic Student Trace', icon: Search, desc: 'Student x contest deep trace' },
           { id: 'lineage', label: 'Data Lineage & Parity', icon: Layers, desc: 'DB vs API vs UI verification' },
-          { id: 'automation', label: 'Autonomous Sunday Session', icon: Zap, desc: 'Zero-touch cron engine' },
+          { id: 'automation', label: 'Autonomous Sunday Session', icon: Clock, desc: 'Zero-touch cron engine' },
           { id: 'recovery', label: 'Database Recovery & Snapshots', icon: Database, desc: 'Immutable backup & restore' },
           { id: 'audit', label: 'Operations Audit Timeline', icon: Clock, desc: 'Comprehensive operational logs' }
         ].map((tab) => {
@@ -2358,7 +2356,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               {/* 6. BROWSER & DEVICE */}
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
                 <h4 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5" /> 6. BROWSER & DEVICE DETECTED
+                  <Cpu className="w-3.5 h-3.5" /> 6. BROWSER & DEVICE DETECTED
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                   <div><span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold tracking-wider">BROWSER</span><strong className="text-slate-900 dark:text-white">{selectedAuditDetail.browser || 'Web Browser'} ({selectedAuditDetail.browser_version || 'N/A'})</strong></div>
@@ -2459,7 +2457,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
           <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center">
-              <Sparkles className="w-5 h-5" />
+              <BrainCircuit className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white">NEC OPERATIONS COPILOT</h3>
@@ -2495,7 +2493,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
           {copilotLoading && (
             <div className="p-6 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200/50 flex items-center gap-3 text-xs font-bold text-indigo-700 dark:text-indigo-300 animate-pulse">
-              <Sparkles className="w-4 h-4 animate-spin" />
+              <RefreshCw className="w-4 h-4 animate-spin" />
               <span>Analyzing live database records, GraphQL history, and sentinel rules…</span>
             </div>
           )}

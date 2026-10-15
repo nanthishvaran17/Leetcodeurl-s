@@ -49,14 +49,18 @@ class ContestDiscoveryService:
         """
         discovered: Dict[str, Dict[str, Any]] = {}
 
+        now_ist = datetime.datetime.now(IST)
+
         # 1. Query ContestConfig model (Production 10/10+ Master Config)
         configs = db.query(ContestConfig).all()
         for cfg in configs:
             c_start = cls._parse_datetime_to_ist(cfg.contest_start_time)
             c_end = cls._parse_datetime_to_ist(cfg.contest_end_time)
             
-            # Check if contest falls within week boundaries
+            # Check if contest falls within week boundaries and has already started
             if c_start and (start_dt <= c_start <= end_dt or (c_end and start_dt <= c_end <= end_dt)):
+                if c_start > now_ist and end_dt > now_ist:
+                    continue  # Contest is scheduled for the future and has not occurred yet
                 c_id_str = str(cfg.contest_id).replace("wc-", "").replace("weekly-contest-", "").strip()
                 discovered[c_id_str] = {
                     "contest_id": c_id_str,
@@ -79,6 +83,8 @@ class ContestDiscoveryService:
             c_num_str = m.group(1) if m else str(getattr(sess, "session_number", None) or getattr(sess, "contest_number", None) or sess.id)
 
             if s_dt and start_dt <= s_dt <= end_dt:
+                if s_dt > now_ist and end_dt > now_ist:
+                    continue  # Upcoming session that has not yet occurred
                 if c_num_str not in discovered:
                     discovered[c_num_str] = {
                         "contest_id": c_num_str,

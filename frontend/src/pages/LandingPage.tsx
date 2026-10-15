@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CollegeLogo } from '../components/CollegeLogo';
-import { Shield, ArrowRight, Users, Layers, Activity, Star, LayoutGrid, List, RefreshCw, CheckCircle2, Clock, AlertCircle, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, Search, X, Zap, ArrowUpDown, SortAsc, SortDesc, Award, SlidersHorizontal } from 'lucide-react';
+import { Shield, ArrowRight, Users, Layers, Activity, Star, LayoutGrid, List, RefreshCw, CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronUp, Building2, GraduationCap, RotateCcw, Filter, Search, X, ArrowUpDown, SortAsc, SortDesc, Award, SlidersHorizontal } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { StudentFlipCard } from '../components/StudentFlipCard';
@@ -121,6 +121,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     last_sync_time?: string;
     triggered_by?: string;
   } | null>(null);
+  const [showSyncDetails, setShowSyncDetails] = useState<boolean>(false);
   const pollTimerRef = useRef<any>(null);
 
   // Real-time WebSocket streaming subscription for true per-student progress
@@ -393,6 +394,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       is_running: true,
       triggered_by: requesterTag
     });
+    setShowSyncDetails(true);
 
     try {
       const studentIds = targetList
@@ -550,6 +552,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     setSortBy('top_solved');
     setDisplayCount(32);
   };
+
+  // Compute live active student counts per department from current roster
+  const departmentCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    students.forEach((st: any) => {
+      const d = (typeof st.department === 'string' ? st.department : (st.department?.code || st.department?.name || '')).trim().toUpperCase();
+      if (d) {
+        counts[d] = (counts[d] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [students]);
+
+  // Only departments that actually have enrolled students in the database
+  const activeDepartmentsWithCounts = useMemo(() => {
+    return departments
+      .map(d => {
+        const code = (d.code || d.name || '').trim().toUpperCase();
+        const liveCount = departmentCounts[code] ?? d.student_count ?? 0;
+        return {
+          ...d,
+          student_count: liveCount
+        };
+      })
+      .filter(d => (d.student_count ?? 0) > 0);
+  }, [departments, departmentCounts]);
 
 
 
@@ -734,15 +762,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] text-white p-6 sm:p-8 md:p-10 shadow-2xl border border-white/[0.08]"
+        className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] text-white p-5 sm:p-8 md:p-10 shadow-xl sm:shadow-2xl border border-white/[0.08]"
       >
         {/* Ambient Radial Mesh Glow */}
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-gradient-to-br from-indigo-500/15 via-brand-500/10 to-transparent blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/3 -mb-20 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-4xl space-y-6">
-          <div className="space-y-3">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.15] font-display">
+        <div className="relative z-10 max-w-4xl space-y-4 sm:space-y-6">
+          <div className="space-y-2 sm:space-y-3">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold tracking-tight leading-tight sm:leading-[1.15] font-display">
               LeetCode Performance <br />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300">
                 Institutional Intelligence Platform
@@ -754,33 +782,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-1 sm:flex sm:flex-wrap sm:items-center sm:gap-2.5">
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             {['Real-time Telemetry', 'Contest Forensics', 'Sunday Automated Audits', 'Faculty Mentor Matrix'].map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center justify-start px-2.5 py-1.5 rounded-xl text-[10.5px] sm:text-xs font-semibold tracking-wide bg-white/[0.05] border border-white/[0.08] text-slate-200 backdrop-blur-sm shadow-2xs hover:border-white/20 transition-colors min-w-0"
+                className="inline-flex items-center justify-start px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold tracking-wide bg-white/[0.06] border border-white/10 text-slate-200 backdrop-blur-sm shadow-2xs hover:border-white/20 transition-colors"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mr-2 shrink-0" />
-                <span className="truncate">{tag}</span>
+                <span>{tag}</span>
               </span>
             ))}
           </div>
-
 
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
-            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2"
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-4 pt-1 sm:pt-2"
           >
             <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={onViewDashboard}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-sm shadow-xl shadow-emerald-500/40 flex items-center justify-center space-x-2 transition-all cursor-pointer min-h-[48px]"
+              className="w-full sm:w-auto h-11 sm:h-12 px-5 py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/30 flex items-center justify-center space-x-2 transition-all cursor-pointer"
             >
               <span>View Executive Dashboard</span>
-              <ArrowRight className="w-4 h-4 text-slate-950 stroke-[3]" />
+              <ArrowRight className="w-4 h-4 text-slate-950 stroke-[3] shrink-0" />
             </motion.button>
 
             {(() => {
@@ -791,14 +818,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
               return (
                 <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleRefreshAll}
                   disabled={refreshing || syncProgress?.is_running}
-                  className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-black text-sm backdrop-blur-md shadow-xl flex items-center justify-center space-x-2 transition-all cursor-pointer min-h-[48px]"
+                  className="w-full sm:w-auto h-11 sm:h-12 px-5 py-2.5 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-black text-xs sm:text-sm backdrop-blur-md shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer"
                   title="Perform live synchronization for active student roster"
                 >
-                  <RefreshCw className={`w-4 h-4 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 shrink-0 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
                   <span>
                     {refreshing || syncProgress?.is_running
                       ? `FETCHING ${processedCount} / ${totalProgress !== null ? totalProgress : '...'}`
@@ -844,7 +871,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.45 }}
-        className="mt-8 sm:mt-10 mb-8 space-y-3"
+        className="mt-4 sm:mt-8 mb-4 sm:mb-8 space-y-2 sm:space-y-3"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3 py-1">
           <div className="flex items-center space-x-2.5">
@@ -1292,7 +1319,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         }}
         sortBy={sortBy}
         onSelectSortBy={(val) => setSortBy(val)}
-        departments={departments}
+        departments={activeDepartmentsWithCounts.length > 0 ? activeDepartmentsWithCounts : departments}
         yearOptions={yearOptions}
         performanceOptions={performanceOptions}
         sortOptions={sortOptions}
@@ -1322,99 +1349,136 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 )}
               </div>
             </h3>
-            <button
-              onClick={handleRefreshAll}
-              disabled={refreshing || syncProgress?.is_running}
-              className={`w-full sm:w-auto min-h-[42px] flex items-center justify-center space-x-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95 ${refreshing || syncProgress?.is_running
-                ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
-                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30 cursor-pointer'
-                }`}
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
-              <span>
-                {syncProgress?.is_running
-                  ? `Syncing... ${syncProgress.processed} / ${syncProgress.total}`
-                  : refreshing 
-                    ? 'Refreshing...' 
-                    : isFiltered 
-                      ? `Refresh Filtered (${sortedList.length} Students)` 
-                      : (isFacultyRole ? `Refresh My Allocated Students (${sortedList.length})` : 'Refresh Allocated Students')
-                }
-              </span>
-            </button>
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={handleRefreshAll}
+                disabled={refreshing || syncProgress?.is_running}
+                className={`flex-1 sm:flex-initial min-h-[40px] flex items-center justify-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95 ${refreshing || syncProgress?.is_running
+                  ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                  : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30 cursor-pointer'
+                  }`}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
+                <span className="truncate">
+                  {syncProgress?.is_running
+                    ? `Syncing... ${syncProgress.processed} / ${syncProgress.total}`
+                    : refreshing 
+                      ? 'Refreshing...' 
+                      : isFiltered 
+                        ? `Refresh Filtered (${sortedList.length})` 
+                        : (isFacultyRole ? `Refresh My Allocated Students (${sortedList.length})` : 'Refresh Allocated Students')
+                  }
+                </span>
+              </button>
+
+              {syncProgress && (
+                <button
+                  type="button"
+                  onClick={() => setShowSyncDetails(prev => !prev)}
+                  className={`min-h-[40px] px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center space-x-1.5 shrink-0 ${
+                    showSyncDetails 
+                      ? 'bg-brand-500/10 border-brand-500/30 text-brand-600 dark:text-brand-400' 
+                      : 'bg-slate-100 dark:bg-navy-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800'
+                  }`}
+                  title={showSyncDetails ? "Hide sync progress report" : "Show sync progress report"}
+                >
+                  <Activity className="w-3.5 h-3.5 text-brand-500" />
+                  <span className="hidden sm:inline">{showSyncDetails ? 'Hide Sync Status' : 'Sync Status'}</span>
+                  <span className="sm:hidden">{showSyncDetails ? 'Hide' : 'Status'}</span>
+                  {showSyncDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Premium Live Sync Progress Bar */}
-          {syncProgress && (
-            <div className="p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-lg space-y-4 overflow-hidden relative">
-
-              <div className="flex justify-between items-end flex-wrap gap-2 relative z-10">
-                <div className="space-y-1">
-                  <span className="text-xs font-black uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center space-x-2">
-                    <RefreshCw className={`w-3.5 h-3.5 ${syncProgress.is_running ? 'animate-spin' : ''}`} />
-                    <span>
-                      {syncProgress.is_running 
-                        ? `Syncing ${isFiltered ? 'Filtered ' : ''}Students (${syncProgress.processed} / ${syncProgress.total})` 
-                        : 'Sync Process Complete'
-                      }
+          {/* Premium Live Sync Progress Bar (Collapsible on demand) */}
+          <AnimatePresence>
+            {syncProgress && (syncProgress.is_running || showSyncDetails) && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, scale: 0.98 }}
+                animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                exit={{ opacity: 0, height: 0, scale: 0.98 }}
+                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-md sm:shadow-lg space-y-3.5 overflow-hidden relative"
+              >
+                <div className="flex justify-between items-start gap-2 relative z-10">
+                  <div className="space-y-1 min-w-0 pr-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center space-x-2">
+                      <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${syncProgress.is_running ? 'animate-spin' : ''}`} />
+                      <span className="truncate">
+                        {syncProgress.is_running 
+                          ? `Syncing ${isFiltered ? 'Filtered ' : ''}Students (${syncProgress.processed} / ${syncProgress.total})` 
+                          : 'Sync Process Complete'
+                        }
+                      </span>
                     </span>
-                  </span>
-                  <p className="text-xs font-extrabold text-slate-700 dark:text-slate-200">
-                    {syncProgress.is_running
-                      ? `Processing Profile (${syncProgress.processed} / ${syncProgress.total}): ${syncProgress.current_student || syncProgress.current_username || 'Initializing...'}`
-                      : `Student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
-                    }
-                  </p>
+                    <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug">
+                      {syncProgress.is_running
+                        ? `Processing Profile (${syncProgress.processed} / ${syncProgress.total}): ${syncProgress.current_student || syncProgress.current_username || 'Initializing...'}`
+                        : `Student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
+                      }
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-2 shrink-0">
+                    <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tighter">
+                      {Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%
+                    </span>
+                    {!syncProgress.is_running && (
+                      <button
+                        type="button"
+                        onClick={() => setShowSyncDetails(false)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-900 transition-colors cursor-pointer"
+                        title="Hide sync report"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <div className="text-right">
-                  <span className="text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tighter">
-                    {Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%
-                  </span>
+                <div className="w-full bg-slate-100 dark:bg-navy-900 h-2 sm:h-2.5 rounded-full overflow-hidden relative z-10 shadow-inner">
+                  <div
+                    className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-600 rounded-full transition-all duration-700 ease-out relative"
+                    style={{ width: `${Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%` }}
+                  >
+                    {syncProgress.is_running && (
+                      <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-r from-transparent to-white/30 animate-pulse"></div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="w-full bg-slate-100 dark:bg-navy-950 h-2.5 rounded-full overflow-hidden relative z-10 shadow-inner">
-                <div
-                  className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-600 rounded-full transition-all duration-700 ease-out relative"
-                  style={{ width: `${Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%` }}
-                >
-                  {syncProgress.is_running && (
-                    <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-r from-transparent to-white/30 animate-pulse"></div>
-                  )}
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 relative z-10 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">Successful</span>
+                    <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                      {syncProgress.is_running
+                        ? syncProgress.successful
+                        : (syncProgress.successful > 0
+                            ? syncProgress.successful
+                            : (summaryData?.verification?.verified ?? summaryData?.verified_profiles ?? Math.max(0, syncProgress.total - (syncProgress.failed || 0) - (syncProgress.pending_usernames || 0))))}
+                    </span>
+                  </div>
+                  <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-2 sm:pl-3">
+                    <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">Pending</span>
+                    <span className="text-sm font-black text-amber-500">
+                      {syncProgress.is_running
+                        ? (syncProgress.pending_usernames ?? 0)
+                        : (syncProgress.pending_usernames !== undefined
+                            ? syncProgress.pending_usernames
+                            : (summaryData?.verification?.pending ?? summaryData?.pending_sync ?? 0))}
+                    </span>
+                  </div>
+                  <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-2 sm:pl-3">
+                    <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">Failed</span>
+                    <span className="text-sm font-black text-rose-500">
+                      {syncProgress.failed ?? (summaryData?.failed_sync ?? 0)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3 relative z-10 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest">Successful</span>
-                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-                    {syncProgress.is_running
-                      ? syncProgress.successful
-                      : (syncProgress.successful > 0
-                          ? syncProgress.successful
-                          : (summaryData?.verification?.verified ?? summaryData?.verified_profiles ?? Math.max(0, syncProgress.total - (syncProgress.failed || 0) - (syncProgress.pending_usernames || 0))))}
-                  </span>
-                </div>
-                <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-3">
-                  <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest">Pending</span>
-                  <span className="text-sm font-black text-amber-500">
-                    {syncProgress.is_running
-                      ? (syncProgress.pending_usernames ?? 0)
-                      : (syncProgress.pending_usernames !== undefined
-                          ? syncProgress.pending_usernames
-                          : (summaryData?.verification?.pending ?? summaryData?.pending_sync ?? 0))}
-                  </span>
-                </div>
-                <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-3">
-                  <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest">Failed</span>
-                  <span className="text-sm font-black text-rose-500">
-                    {syncProgress.failed ?? (summaryData?.failed_sync ?? 0)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {sortedList.length === 0 ? (
             <div className="text-center py-16 px-6 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">

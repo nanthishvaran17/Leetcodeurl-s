@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart2, Star, TrendingUp, Users, Award, Zap } from 'lucide-react';
+import { BarChart2, TrendingUp, Users, Award } from 'lucide-react';
 import api from '../../services/api';
 
 interface QuestionData {
@@ -133,7 +133,7 @@ export const QuestionAnalyticsPanel: React.FC<QuestionAnalyticsPanelProps> = ({
               {/* First solver */}
               {q.firstSolver && (
                 <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-black/10 dark:bg-white/5">
-                  <Star className="w-3 h-3 text-amber-400 shrink-0" />
+                  <Award className="w-3 h-3 text-amber-400 shrink-0" />
                   <div className="min-w-0">
                     <span className="text-[10px] font-bold text-white block truncate">{q.firstSolver.name}</span>
                     {q.firstSolver.dept && (

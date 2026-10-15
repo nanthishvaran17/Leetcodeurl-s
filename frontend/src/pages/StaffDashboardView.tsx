@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle, ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell, FileText, Clock, AlertCircle, ArrowRight, Download, Zap, ChevronDown, Check, Filter, Moon, Activity } from 'lucide-react';
+import { Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle, ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell, FileText, Clock, AlertCircle, ArrowRight, Download, ChevronDown, Check, Filter, Moon, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
 import api, { clearApiCache } from '../services/api';
@@ -400,7 +400,7 @@ export const StaffDashboardView: React.FC = () => {
               disabled={liveSyncing}
               className="min-h-[44px] flex-1 sm:flex-none justify-center px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-indigo-700 hover:from-brand-500 hover:to-indigo-600 active:scale-95 text-white text-xs font-bold shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50 touch-manipulation"
             >
-              <Zap className={`w-4 h-4 ${liveSyncing ? 'animate-bounce text-amber-400' : 'text-amber-300'}`} />
+              <RefreshCw className={`w-4 h-4 ${liveSyncing ? 'animate-spin text-amber-400' : 'text-amber-300'}`} />
               <span>{liveSyncing ? 'Fetching Live Data...' : 'FETCH LIVE DATA'}</span>
             </button>
 

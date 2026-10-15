@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, memo, useRef, useDefe
 import { createPortal } from 'react-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import { useScrollLock } from '../hooks/useScrollLock';
-import { Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet, FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp, Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward, Gauge, Terminal, Cpu, Database, FlaskConical, Check, ExternalLink, Printer, FileArchive } from 'lucide-react';
+import { Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet, FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Filter, Trash2, Mail, Send, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp, Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward, Gauge, Terminal, Cpu, Database, FlaskConical, Check, ExternalLink, Printer, FileArchive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
@@ -288,7 +288,7 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
               className="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-600 hover:text-white dark:bg-emerald-950/60 dark:hover:bg-emerald-600 text-emerald-600 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 flex items-center justify-center transition-all duration-150 hover:scale-110 active:scale-95 shadow-2xs cursor-pointer"
               title={`Force Live Sync — ${r.name}`}
             >
-              <Zap className="w-3.5 h-3.5 stroke-[2.2]" />
+              <RefreshCw className="w-3.5 h-3.5 stroke-[2.2]" />
             </button>
           )}
           <button
@@ -470,7 +470,7 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
               className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-xl bg-emerald-50 hover:bg-emerald-600 hover:text-white dark:bg-emerald-950/60 dark:hover:bg-emerald-600 text-emerald-600 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 flex items-center justify-center transition-all duration-150 active:scale-90 shadow-2xs cursor-pointer touch-manipulation"
               title={`Sync ${r.name}`}
             >
-              <Zap className="w-4 h-4 stroke-[2.2]" />
+              <RefreshCw className="w-4 h-4 stroke-[2.2]" />
             </button>
           )}
           <button
@@ -2061,7 +2061,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 title="Toggle Live Contest Monitor"
               >
                 <Activity className={`w-3.5 h-3.5 ${showAdminMonitor ? 'text-white' : 'text-emerald-400 animate-pulse'}`} />
-                <span>{showAdminMonitor ? 'Hide Monitor ✕' : 'Live Monitor'}</span>
+                <span>{showAdminMonitor ? 'Hide Monitor' : 'Live Monitor'}</span>
               </button>
             )}
           </div>
@@ -2386,7 +2386,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <div className="p-4 sm:p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3.5">
                 <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
                   <span className="text-[11px] font-black text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                    <Zap className="w-3.5 h-3.5 text-brand-400" />
+                    <Activity className="w-3.5 h-3.5 text-brand-400" />
                     <span>Live Synchronization & Execution Controls</span>
                   </span>
                 </div>
@@ -4271,7 +4271,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <span className="text-[11px] font-bold text-slate-400">Single-Source-of-Truth Aggregation</span>
               </div>
 
-              <div className="overflow-x-auto -mx-1 px-1">
+              <div className="overflow-x-auto -mx-1 px-1 touch-pan-x overscroll-x-contain">
                 <table className="w-full min-w-[700px] text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-black text-slate-400 uppercase tracking-wider">
@@ -4747,7 +4747,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
             {/* C. SCROLLABLE PREVIEW TABLE */}
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4">
-              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm touch-pan-x overscroll-x-contain">
                 <table className="w-full min-w-[780px] text-left text-xs">
                   <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 text-[11px]">
                     <tr>
@@ -5004,7 +5004,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               {/* Safe Test Section */}
               <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 space-y-2">
                 <div className="flex items-center space-x-1.5 text-xs font-black text-amber-800 dark:text-amber-300">
-                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
                   <span>Run Safe Test (Single Recipient)</span>
                 </div>
                 <div className="flex items-center space-x-2">

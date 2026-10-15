@@ -41,9 +41,9 @@ class ReportingPeriodService:
         elif isinstance(target_date, datetime.date):
             ref_dt = datetime.datetime.combine(target_date, datetime.time.min, tzinfo=IST)
         elif isinstance(target_date, str):
-            clean_str = target_date.strip()
+            clean_str = target_date.strip().replace(".", "-").replace("/", "-")
             parsed = None
-            for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%Y/%m/%d", "%d/%m/%Y"):
+            for fmt in ("%Y-%m-%d", "%d-%m-%Y"):
                 try:
                     parsed = datetime.datetime.strptime(clean_str, fmt)
                     break

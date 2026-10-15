@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Sparkles, X, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
+import { RefreshCw, X, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
 import { snapshotSyncService, SnapshotVersionInfo } from '../services/snapshotSyncService';
 
 const APP_BUILD_VERSION_KEY = 'nec_app_build_version';
@@ -107,7 +107,7 @@ export const AppUpdateNotifier: React.FC = () => {
         <div className="flex items-start space-x-3.5 pr-6">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 p-0.5 shadow-lg shrink-0 flex items-center justify-center animate-pulse">
             <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-amber-400" />
+              <ShieldCheck className="w-6 h-6 text-brand-400" />
             </div>
           </div>
 

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Shield, Lock, Eye, Database, UserCheck, Search, Printer, Copy, Check, Sparkles, Mail, Code, Cpu, CheckCircle2, Key,
+  Shield, Lock, Eye, Database, UserCheck, Search, Printer, Copy, Check, Mail, Code, Cpu, CheckCircle2, Key,
   ShieldAlert, ChevronDown, ChevronRight, Globe, Layers, Filter, HelpCircle, Activity, Layout, Terminal, Scale, 
-  FileText, ArrowRight, Zap, RefreshCw, XCircle, AlertCircle
+  FileText, ArrowRight, RefreshCw, XCircle, AlertCircle, ShieldCheck
 } from 'lucide-react';
 
 interface ContentSection {
@@ -334,7 +334,7 @@ export const PrivacyPolicyPage: React.FC = () => {
                 <span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
                   <Layers className="w-4 h-4" /> Index
                 </span>
-                <Sparkles className="w-4 h-4 text-brand-500/50" />
+                <ShieldCheck className="w-4 h-4 text-brand-500/50" />
               </div>
               <div className="p-2 flex flex-col gap-1.5">
                 {sections.map((s, idx) => {

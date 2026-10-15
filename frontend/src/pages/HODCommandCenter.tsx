@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Building2, RefreshCw, Search, Plus, Trash2, UserCheck, X, CheckCircle2, AlertTriangle, Users, Activity, TrendingUp, BarChart3, ArrowUpRight, ArrowDownRight, Zap, BookOpen, RotateCcw, ShieldCheck, Clock, Download, SlidersHorizontal, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Loader2, FileSpreadsheet, FileText, HelpCircle, Eye, Compass, Target, PieChart, Layers, BrainCircuit, Award, Filter, ChevronDown, ChevronUp, Check, AlertCircle, ArrowRight, Sliders, User, CheckCircle, XCircle, ExternalLink, Calendar, Info, UserPlus, UserMinus, Shuffle, Printer, Share2, TrendingDown, Minus, Copy } from 'lucide-react';
+import { Building2, RefreshCw, Search, Plus, Trash2, UserCheck, X, CheckCircle2, AlertTriangle, Users, Activity, TrendingUp, BarChart3, ArrowUpRight, ArrowDownRight, BookOpen, RotateCcw, ShieldCheck, Clock, Download, SlidersHorizontal, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Loader2, FileSpreadsheet, FileText, HelpCircle, Eye, Compass, Target, PieChart, Layers, BrainCircuit, Award, Filter, ChevronDown, ChevronUp, Check, AlertCircle, ArrowRight, Sliders, User, CheckCircle, XCircle, ExternalLink, Calendar, Info, UserPlus, UserMinus, Shuffle, Printer, Share2, TrendingDown, Minus, Copy } from 'lucide-react';
 import { Mail, UserX, GraduationCap, Trophy } from 'lucide-react';
 import { SwipeHandle } from '../components/SwipeHandle';
 import { StaffDetailDrawer } from '../components/admin/StaffDetailDrawer';
@@ -30,9 +30,9 @@ import { downloadManager } from '../services/download/downloadManager';
 // Shared Card Component 
 
 const Card: React.FC<{ children: React.ReactNode; className?: string; id?: string; onClick?: () => void }> = ({ children, className = '', id, onClick }) => (
- <div id={id} onClick={onClick} className={`bg-white dark:bg-navy-950 rounded-2xl border-2 border-slate-200/80 dark:border-navy-700 shadow-md hover:shadow-lg transition-all ${className}`}>
- {children}
- </div>
+  <div id={id} onClick={onClick} className={`bg-white dark:bg-navy-950 rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-navy-800 shadow-xs sm:shadow-sm hover:shadow-md transition-all ${className}`}>
+    {children}
+  </div>
 );
 
 const getDeptBadgeStyle = (code: string) => {
@@ -1687,16 +1687,16 @@ export const HODCommandCenter: React.FC = () => {
   ];
 
  return (
- <div className="max-w-full w-full box-border space-y-8 sm:space-y-10 md:space-y-12 pb-24 md:pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
+ <div className="max-w-full w-full box-border space-y-5 sm:space-y-6 md:space-y-8 pb-24 md:pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
 
 
 
  {/* 1. HEADER */}
- <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 shadow-lg border border-brand-500/30">
- <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
- <div className="space-y-3">
- <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
- <span className="uppercase tracking-tight">
+ <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 md:p-9 shadow-xl border border-brand-500/30">
+ <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6">
+ <div className="space-y-2 sm:space-y-3">
+ <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10.5px] sm:text-xs font-black">
+ <span className="uppercase tracking-wide">
  {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase())
  ? 'EXECUTIVE LEADERSHIP DECK • ALL DEPARTMENTS'
  : user?.role?.toLowerCase() === 'hod'
@@ -1706,7 +1706,7 @@ export const HODCommandCenter: React.FC = () => {
  : 'NANDHA INTELLIGENCE COMMAND'}
  </span>
  </div>
- <h1 className="text-[2rem] leading-[1.05] md:text-4xl font-black tracking-tight text-white mt-1 uppercase max-w-xl">
+ <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white uppercase max-w-xl leading-tight">
  {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase()) ? (
  <>
  CAMPUS EXECUTIVE <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">LEADERSHIP DECK</span>
@@ -1725,7 +1725,7 @@ export const HODCommandCenter: React.FC = () => {
  </>
  )}
  </h1>
- <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium leading-relaxed mt-2">
+ <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-normal leading-relaxed pt-0.5">
  {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase())
  ? 'Campus-wide departmental oversight: Inspect any department HOD process, staff mentoring allocations, student progress, and real-time operational health.'
  : user?.role?.toLowerCase() === 'hod'
@@ -1736,43 +1736,43 @@ export const HODCommandCenter: React.FC = () => {
  </p>
  </div>
 
- <div className="grid grid-cols-2 items-center gap-2 sm:gap-2.5 w-full sm:w-auto sm:flex sm:flex-wrap sm:justify-end">
+ <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto sm:justify-end pt-2 sm:pt-0">
  {/* Quick Faculty Matrix Button */}
  <button
  onClick={() => {
    document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
  }}
- className="inline-flex min-w-0 items-center justify-center gap-1.5 sm:gap-2 min-h-[42px] px-2.5 sm:px-3.5 rounded-xl bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-300 border border-indigo-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95 touch-manipulation"
+ className="inline-flex min-w-0 items-center justify-center gap-2 h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-200 sm:text-indigo-300 border border-indigo-700/50 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
  title="Jump to Faculty Mentors Performance & Progress Matrix"
  >
- <Users size={14} className="shrink-0" />
+ <Users size={15} className="shrink-0 text-indigo-400" />
  <span className="truncate">Faculty Matrix</span>
  </button>
 
  {/* HOD Staff Allocation Manager Button */}
  <button
  onClick={() => setShowStaffAllocationModal(true)}
- className="inline-flex min-w-0 items-center justify-center gap-1.5 sm:gap-2 min-h-[42px] px-2.5 sm:px-3.5 rounded-xl bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 border border-purple-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95 touch-manipulation"
+ className="inline-flex min-w-0 items-center justify-center gap-2 h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-purple-900/40 hover:bg-purple-900/60 text-purple-200 sm:text-purple-300 border border-purple-700/50 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
  >
- <Users size={14} className="shrink-0" />
+ <Users size={15} className="shrink-0 text-purple-400" />
  <span className="truncate">Staff Allocation</span>
  </button>
 
  {/* Dedicated Report Hub Button */}
  <button
  onClick={() => setShowReportHubModal(true)}
- className="inline-flex min-w-0 items-center justify-center gap-1.5 sm:gap-2 min-h-[42px] px-2.5 sm:px-3.5 rounded-xl bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-800/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95 touch-manipulation"
+ className="inline-flex min-w-0 items-center justify-center gap-2 h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-emerald-900/40 hover:bg-emerald-900/60 text-emerald-200 sm:text-emerald-300 border border-emerald-700/50 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
  >
- <FileSpreadsheet size={14} className="shrink-0" />
- <span className="truncate">Dedicated Reports</span>
+ <FileSpreadsheet size={15} className="shrink-0 text-emerald-400" />
+ <span className="truncate">Reports</span>
  </button>
 
  {/* Refresh Button */}
  <button
  onClick={() => { setRefreshing(true); clearApiCache(); loadScopedData(false, true); loadStudents(); }}
- className="inline-flex min-w-0 items-center justify-center gap-1.5 sm:gap-2 min-h-[42px] px-2.5 sm:px-3.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 border border-slate-700/50 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95 touch-manipulation"
+ className="inline-flex min-w-0 items-center justify-center gap-2 h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-slate-800/80 hover:bg-slate-700/90 text-slate-200 sm:text-slate-300 border border-slate-700/60 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
  >
- <RotateCcw size={14} className={`shrink-0 ${refreshing ? 'animate-spin' : ''}`} />
+ <RotateCcw size={15} className={`shrink-0 ${refreshing ? 'animate-spin' : ''}`} />
  <span>Refresh</span>
  </button>
  </div>
@@ -1792,41 +1792,42 @@ export const HODCommandCenter: React.FC = () => {
     ].filter(Boolean).length;
 
     return (
-      <div className="rounded-2xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-md border border-slate-200/90 dark:border-navy-800 shadow-sm overflow-hidden transition-all duration-200">
+      <div className="rounded-xl sm:rounded-2xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-md border border-slate-200/90 dark:border-navy-800 shadow-xs sm:shadow-sm overflow-hidden transition-all duration-200">
         {/* Toggle Header */}
         <div 
           onClick={() => setIsFilterOpen(prev => !prev)}
-          className="p-3 sm:p-4 flex items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-50/80 dark:hover:bg-navy-900/50 transition-colors"
+          className="p-2.5 sm:p-4 flex items-center justify-between gap-2.5 cursor-pointer select-none hover:bg-slate-50/80 dark:hover:bg-navy-900/50 transition-colors"
           role="button"
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsFilterOpen(prev => !prev); } }}
           aria-expanded={isFilterOpen}
         >
-          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-wrap">
-            <div className="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/20">
-              <Filter className="w-4 h-4" />
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/20">
+              <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 min-w-0">
-              <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white truncate">
-                Active Oversight Scope
+            <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2 min-w-0">
+              <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white truncate">
+                Active Scope
               </span>
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] sm:text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 font-bold">
+                <span className="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 font-bold truncate max-w-[160px] sm:max-w-none">
                   {scopeDeptCode} • {scopeStaffName}
                 </span>
                 {activeFilterCount > 0 && (
-                  <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-500 dark:text-brand-400 border border-brand-400/30">
-                    {activeFilterCount} Filter{activeFilterCount > 1 ? 's' : ''} Applied
+                  <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full bg-brand-500/15 text-brand-500 dark:text-brand-400 border border-brand-400/30">
+                    {activeFilterCount}
                   </span>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
             {activeFilterCount > 0 && (
               <button
-                type="button"                onClick={() => {
+                type="button"
+                onClick={() => {
                   setSelectedDept('ALL');
                   setSelectedStaff('ALL');
                   setSelectedYear('ALL');
@@ -1835,10 +1836,10 @@ export const HODCommandCenter: React.FC = () => {
                   setAllocationFilter('ALL');
                   setStaffWorkloadFilter('ALL');
                 }}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 rounded-xl transition cursor-pointer"
+                className="inline-flex items-center gap-1 px-2 py-1 text-[11px] sm:text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 rounded-lg sm:rounded-xl transition cursor-pointer"
                 title="Reset all active filters to default"
               >
-                <RotateCcw size={12} />
+                <RotateCcw size={11} />
                 <span className="hidden sm:inline">Reset All</span>
               </button>
             )}
@@ -1846,11 +1847,11 @@ export const HODCommandCenter: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsFilterOpen(prev => !prev)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-300 border border-brand-500/20 hover:border-brand-500/40 transition-all cursor-pointer shadow-xs active:scale-95"
+              className="inline-flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-300 border border-brand-500/20 hover:border-brand-500/40 transition-all cursor-pointer shadow-2xs active:scale-95"
             >
-              <SlidersHorizontal size={13} />
-              <span>{isFilterOpen ? 'Hide Filters' : 'Show Filters'}</span>
-              {isFilterOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              <SlidersHorizontal size={12} />
+              <span>{isFilterOpen ? 'Hide' : 'Filters'}</span>
+              {isFilterOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
             </button>
           </div>
         </div>
@@ -1962,10 +1963,10 @@ export const HODCommandCenter: React.FC = () => {
   })()}
 
  {/* 3. STUDENT COHORT SUMMARY BANNER */}
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 px-5 sm:px-6 py-4 sm:py-5 rounded-2xl bg-white dark:bg-navy-950 border-2 border-slate-200/80 dark:border-navy-700 shadow-sm">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 p-3.5 sm:px-6 sm:py-5 rounded-xl sm:rounded-2xl bg-white dark:bg-navy-950 border border-slate-200/90 sm:border-2 dark:border-navy-700 shadow-xs sm:shadow-sm">
  {/* Left: Cohort Identity */}
- <div className="flex items-center gap-3.5 min-w-0">
- <div className="shrink-0 w-12 h-12 flex items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 font-black font-mono text-base">
+ <div className="flex items-center gap-3 min-w-0">
+ <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg sm:rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 font-black font-mono text-sm sm:text-base border border-brand-200 dark:border-brand-900">
  {totalInScope}
  </div>
  <div className="min-w-0">
@@ -1983,78 +1984,75 @@ export const HODCommandCenter: React.FC = () => {
  </div>
 
  {/* Right: Meta + Action */}
- <div className="flex flex-col sm:items-end justify-between sm:justify-center gap-2.5 border-t sm:border-0 border-slate-200/60 dark:border-white/[0.06] pt-3 sm:pt-0 shrink-0">
+ <div className="flex items-center justify-between sm:justify-end gap-2 border-t sm:border-0 border-slate-100 dark:border-navy-900 pt-2 sm:pt-0 shrink-0">
  {/* High-Contrast Live Telemetry Pill */}
- <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/90 dark:border-white/10 text-xs font-mono shadow-xs">
- <span className="relative flex h-2 w-2">
+ <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg sm:rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/90 dark:border-white/10 text-[10px] sm:text-xs font-mono shadow-2xs">
+ <span className="relative flex h-1.5 w-1.5">
  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
- <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+ <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
  </span>
- <span className="text-slate-600 dark:text-slate-400 font-semibold">Last Activity:</span>
+ <span className="text-slate-500 dark:text-slate-400 font-semibold hidden xs:inline">Last Sync:</span>
  <span className="font-black text-slate-900 dark:text-white tracking-wide">{lastLiveTimestamp}</span>
  </div>
 
  {/* High-Contrast Interactive Unassigned Students Actions */}
  {summary?.unassigned_student_count ? (
- <div className="flex flex-wrap items-center gap-1.5">
+ <div className="flex items-center gap-1.5">
  <button
  onClick={() => {
  setAllocationFilter('UNASSIGNED');
  notify.info(`Filtered directory to ${summary.unassigned_student_count} unassigned students.`, '', { category: 'ALLOCATION' });
  document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
  }}
- className="px-3.5 py-1.5 rounded-xl bg-amber-100/90 hover:bg-amber-200/90 dark:bg-amber-950/70 dark:hover:bg-amber-900/80 text-amber-950 dark:text-amber-200 font-extrabold text-xs border border-amber-300 dark:border-amber-700/80 transition-all flex items-center gap-1.5 shadow-xs hover:shadow active:scale-95 cursor-pointer whitespace-nowrap"
+ className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-amber-100/90 hover:bg-amber-200/90 dark:bg-amber-950/70 dark:hover:bg-amber-900/80 text-amber-950 dark:text-amber-200 font-extrabold text-[11px] sm:text-xs border border-amber-300 dark:border-amber-700/80 transition-all flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer whitespace-nowrap"
  title="Click to view and filter unassigned students in directory below"
  >
- <UserX size={13} className="text-amber-700 dark:text-amber-400 shrink-0" />
+ <UserX size={12} className="text-amber-700 dark:text-amber-400 shrink-0" />
  <span className="font-mono font-black">{summary.unassigned_student_count}</span>
- <span>Unassigned Students</span>
- <span className="text-[10px] font-sans font-bold text-amber-800 dark:text-amber-300 underline underline-offset-2 ml-0.5">
- View List
- </span>
+ <span className="hidden xs:inline">Unassigned</span>
  </button>
 
  <button
  onClick={() => setShowStaffAllocationModal(true)}
- className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-black text-xs border border-amber-600/30 transition-all flex items-center gap-1.5 shadow-sm shadow-amber-600/20 active:scale-95 cursor-pointer whitespace-nowrap"
+ className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-black text-[11px] sm:text-xs border border-amber-600/30 transition-all flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer whitespace-nowrap"
  title="Open Faculty Allocation Manager to assign students"
  >
- <Users size={13} className="shrink-0" />
- <span>Assign Staff</span>
+ <Users size={12} className="shrink-0" />
+ <span>Assign</span>
  </button>
  </div>
  ) : (
- <span className="px-3.5 py-1.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-300 font-bold text-xs border border-emerald-300 dark:border-emerald-700/60 flex items-center gap-1.5 shadow-xs">
- <CheckCircle2 size={13} className="text-emerald-600 dark:text-emerald-400" />
- <span>All Assigned ✓</span>
+ <span className="px-2.5 py-1 rounded-lg sm:rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-300 font-bold text-[11px] sm:text-xs border border-emerald-300 dark:border-emerald-700/60 flex items-center gap-1 shadow-2xs">
+ <CheckCircle2 size={12} className="text-emerald-600 dark:text-emerald-400" />
+ <span>All Assigned</span>
  </span>
  )}
  </div>
  </div>
 
  {/* 4. SIX AUTHORITATIVE HOD KPI CARDS */}
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4 lg:gap-5 mb-6 sm:mb-8">
+ <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3.5 lg:gap-5 mb-4 sm:mb-8">
  <Card 
- className={`p-3.5 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer ${staffWorkloadFilter === 'ALL' && selectedStaff === 'ALL' && allocationFilter === 'ALL' && selectedStatus === 'ALL' ? '' : ''}`}
+ className={`p-2.5 sm:p-5 flex flex-col justify-between min-h-[90px] sm:min-h-[140px] transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer ${staffWorkloadFilter === 'ALL' && selectedStaff === 'ALL' && allocationFilter === 'ALL' && selectedStatus === 'ALL' ? '' : ''}`}
  onClick={() => {
  setStaffWorkloadFilter('ALL');
  document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
  }}
  >
  <div className="flex items-center justify-between text-slate-700 dark:text-slate-400">
- <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider font-mono">TOTAL STAFF</span>
- <Users size={16} className="text-indigo-500" />
+ <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider font-mono">TOTAL STAFF</span>
+ <Users size={14} className="text-indigo-500" />
  </div>
- <div className="mt-2 sm:mt-3">
- <div className="font-display text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+ <div className="mt-1.5 sm:mt-3">
+ <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
  {summary?.kpi_summary?.total_staff ?? staffList.length}
  </div>
- <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Faculty Mentors</div>
+ <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Faculty Mentors</div>
  </div>
  </Card>
 
  <Card 
- className={`p-3.5 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[145px] cursor-pointer transition-all hover:-translate-y-1 hover:shadow-xl ${selectedStatus === 'ALL' && allocationFilter === 'ALL' ? 'ring-2 ring-slate-400 bg-slate-50 dark:bg-navy-800' : ''}`}
+ className={`p-2.5 sm:p-5 flex flex-col justify-between min-h-[90px] sm:min-h-[140px] cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg ${selectedStatus === 'ALL' && allocationFilter === 'ALL' ? 'ring-2 ring-slate-400 bg-slate-50 dark:bg-navy-800' : ''}`}
  onClick={() => {
  setSelectedStatus('ALL');
  setAllocationFilter('ALL');
@@ -2063,19 +2061,19 @@ export const HODCommandCenter: React.FC = () => {
  }}
  >
  <div className="flex items-center justify-between text-slate-700 dark:text-slate-400">
- <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider font-mono">TOTAL STUDENTS</span>
- <BookOpen size={16} className="text-slate-600" />
+ <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider font-mono">TOTAL STUDENTS</span>
+ <BookOpen size={14} className="text-slate-600" />
  </div>
- <div className="mt-2 sm:mt-3">
- <div className="font-display text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+ <div className="mt-1.5 sm:mt-3">
+ <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
  {summary?.kpi_summary?.total_students ?? totalInScope}
  </div>
- <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Enrolled Scope</div>
+ <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Enrolled Scope</div>
  </div>
  </Card>
 
  <Card 
- className={`p-3.5 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer ${allocationFilter === 'ALLOCATED' ? 'ring-2 ring-brand-500 bg-brand-50/50 dark:bg-brand-950/40' : ''}`}
+ className={`p-2.5 sm:p-5 flex flex-col justify-between min-h-[90px] sm:min-h-[140px] transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer ${allocationFilter === 'ALLOCATED' ? 'ring-2 ring-brand-500 bg-brand-50/50 dark:bg-brand-950/40' : ''}`}
  onClick={() => {
  if (allocationFilter === 'ALLOCATED') {
    setAllocationFilter('ALL');
@@ -2088,19 +2086,19 @@ export const HODCommandCenter: React.FC = () => {
  }}
  >
  <div className="flex items-center justify-between text-brand-600">
- <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider font-mono">ALLOCATED</span>
- <UserCheck size={16} />
+ <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider font-mono">ALLOCATED</span>
+ <UserCheck size={14} />
  </div>
- <div className="mt-2 sm:mt-3">
- <div className="font-display text-xl sm:text-2xl lg:text-3xl font-extrabold text-brand-600 font-mono">
+ <div className="mt-1.5 sm:mt-3">
+ <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-brand-600 font-mono">
  {summary?.kpi_summary?.total_allocated ?? activeInScope}
  </div>
- <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">{summary?.kpi_summary?.unassigned ?? 0} Unassigned</div>
+ <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">{summary?.kpi_summary?.unassigned ?? 0} Unassigned</div>
  </div>
  </Card>
 
   <Card 
-    className={`p-3.5 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${selectedStatus === 'COMPLETED' ? 'ring-2 ring-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40' : ''}`}
+    className={`p-2.5 sm:p-5 flex flex-col justify-between min-h-[90px] sm:min-h-[140px] transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer group ${selectedStatus === 'COMPLETED' ? 'ring-2 ring-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40' : ''}`}
     onClick={() => {
       if (selectedStatus === 'COMPLETED') {
         setSelectedStatus('ALL');
@@ -2115,16 +2113,16 @@ export const HODCommandCenter: React.FC = () => {
     }}
   >
     <div className="flex items-center justify-between text-emerald-600">
-      <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider font-mono">COMPLETED</span>
-      <CheckCircle2 size={16} />
+      <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider font-mono">COMPLETED</span>
+      <CheckCircle2 size={14} />
     </div>
-    <div className="mt-2 sm:mt-3">
-      <div className="font-display text-xl sm:text-2xl lg:text-3xl font-extrabold text-emerald-600 font-mono">
+    <div className="mt-1.5 sm:mt-3">
+      <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-emerald-600 font-mono">
         {summary?.kpi_summary?.completed ?? 0}
       </div>
-      <div className="flex items-center justify-between text-[11px] sm:text-xs text-emerald-600 dark:text-emerald-500 font-semibold mt-0.5">
-        <span>Target Achieved</span>
-        <span className="text-[10px] font-mono font-bold group-hover:underline flex items-center gap-0.5">
+      <div className="flex items-center justify-between text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-500 font-semibold mt-0.5">
+        <span>Target Done</span>
+        <span className="text-[9px] sm:text-[10px] font-mono font-bold group-hover:underline flex items-center gap-0.5">
           {summary?.kpi_summary?.completed ?? 0} →
         </span>
       </div>
@@ -2132,7 +2130,7 @@ export const HODCommandCenter: React.FC = () => {
   </Card>
 
   <Card 
-    className={`p-3.5 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${selectedStatus === 'PENDING' ? 'ring-2 ring-amber-500 bg-amber-50/70 dark:bg-amber-950/40' : ''}`}
+    className={`p-2.5 sm:p-5 flex flex-col justify-between min-h-[90px] sm:min-h-[140px] transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer group ${selectedStatus === 'PENDING' ? 'ring-2 ring-amber-500 bg-amber-50/70 dark:bg-amber-950/40' : ''}`}
     onClick={() => {
       if (selectedStatus === 'PENDING') {
         setSelectedStatus('ALL');
@@ -2147,16 +2145,16 @@ export const HODCommandCenter: React.FC = () => {
     }}
   >
     <div className="flex items-center justify-between text-amber-600">
-      <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider font-mono">PENDING</span>
-      <Clock size={16} />
+      <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider font-mono">PENDING</span>
+      <Clock size={14} />
     </div>
-    <div className="mt-2 sm:mt-3">
-      <div className="font-display text-xl sm:text-2xl lg:text-3xl font-extrabold text-amber-600 font-mono">
+    <div className="mt-1.5 sm:mt-3">
+      <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-amber-600 font-mono">
         {summary?.kpi_summary?.pending ?? 0}
       </div>
-      <div className="flex items-center justify-between text-[11px] sm:text-xs text-amber-600 dark:text-amber-500 font-semibold mt-0.5">
+      <div className="flex items-center justify-between text-[10px] sm:text-xs text-amber-600 dark:text-amber-500 font-semibold mt-0.5">
         <span>In Progress</span>
-        <span className="text-[10px] font-mono font-bold group-hover:underline flex items-center gap-0.5">
+        <span className="text-[9px] sm:text-[10px] font-mono font-bold group-hover:underline flex items-center gap-0.5">
           {summary?.kpi_summary?.pending ?? 0} →
         </span>
       </div>
@@ -2164,18 +2162,18 @@ export const HODCommandCenter: React.FC = () => {
   </Card>
 
  <Card 
- className="p-3.5 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[145px] transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer !bg-slate-900 text-white border-slate-800"
+ className="p-2.5 sm:p-5 flex flex-col justify-between min-h-[90px] sm:min-h-[140px] transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer !bg-slate-900 text-white border-slate-800"
  >
  <div className="flex items-center justify-between text-brand-300">
- <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider font-mono text-slate-300">PROGRESS</span>
- <Zap size={16} className="text-amber-400" />
+ <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider font-mono text-slate-300">PROGRESS</span>
+ <Activity size={14} className="text-amber-400" />
  </div>
- <div className="mt-2 sm:mt-3">
- <div className="font-display text-xl sm:text-2xl lg:text-3xl font-extrabold text-amber-400 font-mono drop-shadow-sm">
+ <div className="mt-1.5 sm:mt-3">
+ <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-amber-400 font-mono drop-shadow-sm">
  {summary?.kpi_summary?.overall_progress ?? 0}%
  </div>
  <div className="flex items-center gap-1.5 mt-1">
- <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+ <span className={`px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded text-[9px] sm:text-[10px] font-mono font-bold ${
  (summary?.kpi_summary?.overall_progress ?? 0) >= 80 ? 'bg-emerald-500 text-white' :
  (summary?.kpi_summary?.overall_progress ?? 0) >= 60 ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white'
  }`}>
@@ -2201,26 +2199,26 @@ export const HODCommandCenter: React.FC = () => {
       />
 
       {/* 6. TODAY'S ACTION REQUIRED */}
- <Card className="p-6 sm:p-7 my-8 sm:my-10 shadow-md">
- <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-navy-800">
- <div className="flex items-center gap-2.5">
- <AlertTriangle className="w-5 h-5 text-amber-500" />
- <h3 className="font-display text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+ <Card className="p-3.5 sm:p-7 my-4 sm:my-8 shadow-sm">
+ <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-100 dark:border-navy-800">
+ <div className="flex items-center gap-2 sm:gap-2.5">
+ <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
+ <h3 className="font-display text-xs sm:text-base font-bold text-slate-900 dark:text-white">
  TODAY'S ACTION REQUIRED
  </h3>
  </div>
- <span className="text-xs font-bold font-mono px-3 py-1 rounded-md bg-rose-50 text-rose-700 border border-rose-200">
+ <span className="text-[10px] sm:text-xs font-bold font-mono px-2 py-0.5 sm:px-3 sm:py-1 rounded-md bg-rose-50 text-rose-700 border border-rose-200">
  REAL-TIME INTELLIGENCE
  </span>
  </div>
 
- <div className="mt-6">
+ <div className="mt-3.5 sm:mt-6">
  {summary?.action_items && summary.action_items.length > 0 ? (
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-7">
  {summary.action_items.map((action) => (
  <div
  key={action.id}
- className={`p-6 rounded-2xl border flex flex-col justify-between min-h-[160px] space-y-5 shadow-sm transition-all hover:shadow-md ${
+ className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border flex flex-col justify-between min-h-[140px] sm:min-h-[160px] space-y-3 sm:space-y-5 shadow-2xs sm:shadow-sm transition-all hover:shadow-md ${
  action.severity === 'URGENT'
  ? 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/50'
  : 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50'
@@ -2268,20 +2266,20 @@ export const HODCommandCenter: React.FC = () => {
  </Card>
 
         {/* 6. OPERATIONAL NEEDS ATTENTION */}
-        <Card className="p-6 space-y-4">
+        <Card className="p-3.5 sm:p-6 space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
             <div>
-              <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white">
+              <h3 className="font-display text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
                 Needs Operational Attention
               </h3>
-              <p className="text-xs text-slate-700 dark:text-slate-400">Actionable student cohort alerts</p>
+              <p className="text-[11px] sm:text-xs text-slate-700 dark:text-slate-400">Actionable student cohort alerts</p>
             </div>
-            <span className="text-xs font-bold font-mono px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
+            <span className="text-[10px] sm:text-xs font-bold font-mono px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
               ACTION QUEUE
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-4">
             {[
               {
                 color: 'text-rose-600 bg-rose-50 border-rose-200',
@@ -2317,7 +2315,7 @@ export const HODCommandCenter: React.FC = () => {
                 }
               }
             ].map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-800/40 min-h-[76px]">
+              <div key={idx} className="flex items-center justify-between p-3 sm:p-4 rounded-xl border border-slate-100 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-800/40 min-h-[64px] sm:min-h-[76px]">
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
                     <h4 className="font-bold text-xs text-slate-900 dark:text-white">{item.title}</h4>
@@ -2345,16 +2343,16 @@ export const HODCommandCenter: React.FC = () => {
           )}
         </Card>
 
- {/* 6. REAL-TIME INSTITUTIONAL PERFORMANCE TRAJECTORY */}
-  <div className="my-8">
+  {/* 6. REAL-TIME INSTITUTIONAL PERFORMANCE TRAJECTORY */}
+  <div className="my-4 sm:my-8">
     <PerformanceChart department={selectedDept} yearLevel={selectedYear} />
   </div>
 
   {/* 6. GRAPH ANALYTICS LAYER */}
- <AnalyticsDashboard />
+  <AnalyticsDashboard />
 
- {/* 7. LIVE STUDENT ACTIVITY (MOST IMPORTANT MAIN OPERATIONAL TABLE) */}
- <Card id="student-directory-section" className="p-5 space-y-4 scroll-mt-20">
+  {/* 7. LIVE STUDENT ACTIVITY (MOST IMPORTANT MAIN OPERATIONAL TABLE) */}
+  <Card id="student-directory-section" className="p-3.5 sm:p-5 space-y-3 sm:space-y-4 scroll-mt-20">
  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
  <div>
  <h2 className="font-display text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
@@ -3486,7 +3484,7 @@ export const HODCommandCenter: React.FC = () => {
 
                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-1">
                     <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                      <Zap size={13} className="text-amber-500" />
+                      <Activity size={13} className="text-amber-500" />
                       <span>Weekly Solve Velocity</span>
                     </div>
                     <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">

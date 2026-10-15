@@ -14,6 +14,8 @@ class DepartmentCreate(DepartmentBase):
 class DepartmentOut(DepartmentBase):
     id: int
     created_at: datetime.datetime
+    student_count: Optional[int] = 0
+    is_active: Optional[bool] = True
     model_config = ConfigDict(from_attributes=True)
 
 # Section Schemas

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Swords, Star, Award, Zap, ChevronRight, ChevronDown, Check, User, CheckCircle2, Search, Filter, RefreshCw, Building2, Users, BarChart3, TrendingUp, ArrowRightLeft, GraduationCap, School, Layers } from 'lucide-react';
+import { Swords, Award, ChevronRight, ChevronDown, Check, User, CheckCircle2, Search, Filter, RefreshCw, Building2, Users, BarChart3, TrendingUp, ArrowRightLeft, GraduationCap, School, Layers } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import { GlobalFilter } from '../components/GlobalFilter';
 import api from '../services/api';
@@ -837,7 +837,7 @@ export const ComparePage: React.FC = () => {
                       <div className="p-3 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-sm flex flex-col justify-center">
                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Contest Rating</p>
                         <p className="text-base font-black mt-1 text-indigo-600 dark:text-indigo-400 flex justify-center items-center gap-1">
-                           <Star className="w-3.5 h-3.5 fill-indigo-500/20" />
+                           <Award className="w-3.5 h-3.5 text-indigo-500" />
                            {studentA.stats?.contest_rating && Math.round(studentA.stats.contest_rating) !== 1500 ? Math.round(studentA.stats.contest_rating) : 'Unrated'}
                         </p>
                       </div>
@@ -949,7 +949,7 @@ export const ComparePage: React.FC = () => {
                       <div className="p-3 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-sm flex flex-col justify-center">
                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Contest Rating</p>
                         <p className="text-base font-black mt-1 text-indigo-600 dark:text-indigo-400 flex justify-center items-center gap-1">
-                           <Star className="w-3.5 h-3.5 fill-indigo-500/20" />
+                           <Award className="w-3.5 h-3.5 text-indigo-500" />
                            {studentB.stats?.contest_rating && Math.round(studentB.stats.contest_rating) !== 1500 ? Math.round(studentB.stats.contest_rating) : 'Unrated'}
                         </p>
                       </div>
@@ -969,7 +969,7 @@ export const ComparePage: React.FC = () => {
               {/* Side-by-Side Metric Comparison Bars */}
               <div className="glass-card p-6 rounded-3xl border space-y-5 shadow-xl">
                 <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center space-x-2">
-                  <Zap className="w-5 h-5 text-amber-500" />
+                  <BarChart3 className="w-5 h-5 text-brand-500" />
                   <span>Head-to-Head Metric Distribution</span>
                 </h3>
 

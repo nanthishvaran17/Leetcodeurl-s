@@ -123,20 +123,20 @@ export const useGlobalKeyboardShortcuts = ({
 
       // --- 9. FAST ROLE-AWARE NAVIGATION (ALT + KEY) ---
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
-        const key = e.key.toLowerCase();
+        const key = e.key ? e.key.toLowerCase() : '';
+        const code = e.code || '';
         let targetTab: string | null = null;
 
-        if (key === 'h') targetTab = 'dashboard';
-        else if (key === 'r') targetTab = 'reports';
+        if (key === 'h' || code === 'KeyH' || key === 'i' || code === 'KeyI' || key === 'a' || code === 'KeyA') {
+          e.preventDefault();
+          e.stopPropagation();
+          onToggleAiWidget();
+          return;
+        } else if (key === 'r') targetTab = 'reports';
         else if (key === 'f') targetTab = 'faculty-action-center';
         else if (key === 'm') targetTab = 'hod-command-center';
         else if (key === 'w') targetTab = 'weekly-contest';
-        else if (key === 's') targetTab = 'system-health';
-        else if (key === 'i' || key === 'a') {
-          e.preventDefault();
-          onToggleAiWidget();
-          return;
-        } else if (key === 'n') {
+        else if (key === 's') targetTab = 'system-health'; else if (key === 'n') {
           e.preventDefault();
           if (onToggleNotifications) {
             onToggleNotifications();

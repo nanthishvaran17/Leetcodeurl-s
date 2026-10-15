@@ -5,7 +5,7 @@ import '../styles/login-updates.css';
 import {
   Lock, Mail, User, Eye, EyeOff, CheckCircle2, AlertCircle,
   ArrowRight, RefreshCw, HelpCircle, ShieldCheck,
-  KeyRound, X, Check, Calendar, Building2, Sparkles, Shield,
+  KeyRound, X, Check, Calendar, Building2, Shield,
   Cpu, Layers, CheckCircle, ChevronRight, Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';

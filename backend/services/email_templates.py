@@ -293,6 +293,47 @@ def generate_professional_template(title: str, content: str, action_button: Opti
         [data-ogsc] .footer p {{ color: #f8fafc !important; }}
         [data-ogsc] .data-table td:first-child, [data-ogsc] .data-table th:first-child {{ background-color: #0f172a !important; color: #f8fafc !important; }}
         [data-ogsc] .data-table td:nth-child(2), [data-ogsc] .data-table th:nth-child(2) {{ color: #ffffff !important; }}
+
+        @keyframes magicDigitReveal {{
+            0% {{
+                opacity: 0.15;
+                transform: scale(0.4) translateY(12px);
+                border-color: #1e293b;
+            }}
+            60% {{
+                opacity: 1;
+                transform: scale(1.22) translateY(-4px);
+                border-color: #38bdf8;
+            }}
+            100% {{
+                opacity: 1;
+                transform: scale(1) translateY(0);
+                border-color: #38bdf8;
+            }}
+        }}
+        @keyframes magicPulse {{
+            0%, 100% {{
+                color: #38bdf8;
+                transform: scale(1);
+            }}
+            50% {{
+                color: #e0f2fe;
+                transform: scale(1.12);
+            }}
+        }}
+        @keyframes otpBoxPulse {{
+            0%, 100% {{
+                border-color: #38bdf8;
+                box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+            }}
+            50% {{
+                border-color: #818cf8;
+                box-shadow: 0 0 30px rgba(99, 102, 241, 0.65);
+            }}
+        }}
+        .otp-pulse-card {{
+            animation: otpBoxPulse 2.4s ease-in-out infinite;
+        }}
     </style>
 </head>
 <body style="background-color: #f4f7f6; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif;">

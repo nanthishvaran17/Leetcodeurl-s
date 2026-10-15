@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Check, LucideIcon } from 'lucide-react';
+import { ChevronDown, Check, X, LucideIcon } from 'lucide-react';
+import { SwipeHandle } from './SwipeHandle';
 
 export interface DropdownOption {
   value: string;
@@ -54,6 +55,19 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<{ top: number; left: number; width: number; maxHeight?: number; transformOrigin?: string } | null>(null);
   const lastCoordsRef = useRef<string | null>(null);
+
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 640 || window.matchMedia('(max-width: 639px)').matches;
+  });
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640 || window.matchMedia('(max-width: 639px)').matches);
+    };
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Find selected option
   const selectedOption = options.find((opt) => opt.value === value && !opt.label.toLowerCase().startsWith('select'));
@@ -197,102 +211,230 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
     };
   }, [isOpen, updateCoords, id, label, focusedIndex, selectableOptions]);
 
-  const menuPopover = isOpen && coords && typeof document !== 'undefined' ? (
-    createPortal(
-      <AnimatePresence>
-        <motion.div
-          id={`dropdown-popover-${id || label}`}
-          initial={{ opacity: 0, y: -4, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -4, scale: 0.98 }}
-          transition={{ duration: 0.12, ease: 'easeOut' }}
-          style={{
-            position: 'fixed',
-            top: `${coords.top}px`,
-            left: `${coords.left}px`,
-            width: `${coords.width}px`,
-            maxHeight: coords.maxHeight ? `${coords.maxHeight}px` : '256px',
-            transformOrigin: coords.transformOrigin || 'top',
-            zIndex: 99999999
-          }}
-          className="overflow-y-auto rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] p-2 space-y-1 focus:outline-none scrollbar-thin"
-        >
-          {selectableOptions.map((opt, idx) => {
-            const isSelected = opt.value === value;
-            const isFocused = idx === focusedIndex;
-            const OptIcon = opt.icon;
+  const menuPopover = isOpen && typeof document !== 'undefined' ? (
+    isMobile ? (
+      createPortal(
+        <AnimatePresence>
+          <div className="fixed inset-0 z-[99999999] flex flex-col justify-end" id={`dropdown-popover-${id || label}`}>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs"
+              onClick={() => setIsOpen(false)}
+            />
 
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => handleSelect(opt.value)}
-                onMouseEnter={() => setFocusedIndex(idx)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-xs font-bold transition-all duration-200 cursor-pointer group active:scale-[0.98] touch-manipulation border ${
-                  isSelected
-                    ? 'bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white border-brand-400/40 shadow-lg shadow-brand-500/25 font-black'
-                    : isFocused
-                    ? 'bg-brand-50/90 dark:bg-slate-800/90 text-brand-900 dark:text-brand-300 border-brand-500/30 scale-[1.01] shadow-xs'
-                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800/60 text-slate-800 dark:text-slate-200 hover:bg-brand-50/60 dark:hover:bg-slate-800/60 hover:border-brand-500/20'
-                }`}
-              >
-                <div className="flex items-center space-x-2.5 min-w-0 pr-2 w-full">
-                  {OptIcon && (
-                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-all duration-200 ${
-                      isSelected
-                        ? 'bg-white/20 border-white/30 text-white'
-                        : 'bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 border-brand-500/20'
-                    }`}>
-                      <OptIcon className="w-3.5 h-3.5" />
+            {/* Bottom Sheet Drawer */}
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 350 }}
+              className="relative z-10 w-full max-h-[82vh] flex flex-col bg-white dark:bg-slate-900 rounded-t-[28px] border-t border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden pb-8"
+            >
+              {/* Interactive Top Swipe Bar */}
+              <SwipeHandle 
+                onClose={() => setIsOpen(false)} 
+                className="pt-2 pb-1 shrink-0" 
+                pillClassName="bg-slate-300 dark:bg-slate-700 hover:bg-slate-400"
+              />
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-2.5 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {HeaderIcon && (
+                    <div className="w-7 h-7 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200/60 dark:border-indigo-800/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                      <HeaderIcon className="w-3.5 h-3.5" />
                     </div>
                   )}
-
-                  {opt.badge && !opt.hidePill && (
-                    <span className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${
-                      isSelected
-                        ? 'bg-white/20 text-white border border-white/30'
-                        : opt.badgeColor || 'bg-brand-500/15 text-brand-700 dark:text-brand-300 border border-brand-500/30'
-                    }`}>
-                      {opt.badge}
-                    </span>
-                  )}
-
-                  <div className="flex flex-col min-w-0 w-full">
-                    <span className={`truncate text-xs text-left ${isSelected ? 'font-black text-white' : 'font-extrabold text-slate-900 dark:text-slate-100 group-hover:text-brand-600'}`}>
-                      {opt.label}
-                    </span>
-                    {opt.sublabel && (
-                      <span className={`text-[10px] font-bold truncate text-left ${
-                        isSelected ? 'text-indigo-100' : 'text-slate-700 dark:text-slate-200'
-                      }`}>
-                        {opt.sublabel}
-                      </span>
-                    )}
-                  </div>
+                  <span className="text-sm font-black text-slate-900 dark:text-white tracking-wide truncate">
+                    {label || placeholder || 'Select Option'}
+                  </span>
                 </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-full">
+                    {selectableOptions.length} Options
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsOpen(false)}
+                    className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
 
-                <div className="flex items-center space-x-1.5 shrink-0 ml-1.5">
-                  {opt.count !== undefined && (
-                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
+              {/* Options List */}
+              <div className="p-3.5 overflow-y-auto space-y-2 max-h-[calc(80vh-90px)]">
+                {selectableOptions.map((opt) => {
+                  const isSelected = opt.value === value;
+                  const OptIcon = opt.icon;
+
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleSelect(opt.value)}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-left transition-all active:scale-[0.98] ${
+                        isSelected
+                          ? 'bg-indigo-50 dark:bg-indigo-950/70 border-2 border-indigo-500/80 text-indigo-950 dark:text-indigo-200 shadow-xs'
+                          : 'bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 text-slate-800 dark:text-slate-200 active:bg-slate-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        {OptIcon && (
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
+                            isSelected
+                              ? 'bg-indigo-500 text-white border-indigo-600'
+                              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                          }`}>
+                            <OptIcon className="w-4 h-4" />
+                          </div>
+                        )}
+                        {opt.badge && !opt.hidePill && (
+                          <span className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                            isSelected
+                              ? 'bg-indigo-600 text-white'
+                              : opt.badgeColor || 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+                          }`}>
+                            {opt.badge}
+                          </span>
+                        )}
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className={`text-sm truncate ${isSelected ? 'font-black text-indigo-950 dark:text-white' : 'font-bold text-slate-800 dark:text-slate-200'}`}>
+                            {opt.label}
+                          </span>
+                          {opt.sublabel && (
+                            <span className={`text-xs truncate ${isSelected ? 'text-indigo-600 dark:text-indigo-300 font-semibold' : 'text-slate-500 dark:text-slate-400 font-normal'}`}>
+                              {opt.sublabel}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 ml-2">
+                        {opt.count !== undefined && (
+                          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                            {opt.count}
+                          </span>
+                        )}
+                        {isSelected && (
+                          <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-white shadow-xs">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </div>
+        </AnimatePresence>,
+        document.body
+      )
+    ) : (
+      coords && (
+        createPortal(
+          <AnimatePresence>
+            <motion.div
+              id={`dropdown-popover-${id || label}`}
+              initial={{ opacity: 0, y: -4, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.98 }}
+              transition={{ duration: 0.12, ease: 'easeOut' }}
+              style={{
+                position: 'fixed',
+                top: `${coords.top}px`,
+                left: `${coords.left}px`,
+                width: `${coords.width}px`,
+                maxHeight: coords.maxHeight ? `${coords.maxHeight}px` : '256px',
+                transformOrigin: coords.transformOrigin || 'top',
+                zIndex: 99999999
+              }}
+              className="overflow-y-auto rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] p-2 space-y-1 focus:outline-none scrollbar-thin"
+            >
+              {selectableOptions.map((opt, idx) => {
+                const isSelected = opt.value === value;
+                const isFocused = idx === focusedIndex;
+                const OptIcon = opt.icon;
+
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleSelect(opt.value)}
+                    onMouseEnter={() => setFocusedIndex(idx)}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-xs font-bold transition-all duration-200 cursor-pointer group active:scale-[0.98] touch-manipulation border ${
                       isSelected
-                        ? 'bg-white/20 text-white border border-white/30'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
-                    }`}>
-                      {opt.count}
-                    </span>
-                  )}
-                  {isSelected && (
-                    <div className="p-1 rounded-full bg-white/20 border border-white/40 shadow-xs shrink-0">
-                      <Check className="w-3.5 h-3.5 text-white stroke-[3.5]" />
+                        ? 'bg-indigo-600 dark:bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-500/20 font-black'
+                        : isFocused
+                        ? 'bg-brand-50/90 dark:bg-slate-800/90 text-brand-900 dark:text-brand-300 border-brand-500/30 scale-[1.01] shadow-xs'
+                        : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800/60 text-slate-800 dark:text-slate-200 hover:bg-brand-50/60 dark:hover:bg-slate-800/60 hover:border-brand-500/20'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5 min-w-0 pr-2 w-full">
+                      {OptIcon && (
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-all duration-200 ${
+                          isSelected
+                            ? 'bg-white/20 border-white/30 text-white'
+                            : 'bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 border-brand-500/20'
+                        }`}>
+                          <OptIcon className="w-3.5 h-3.5" />
+                        </div>
+                      )}
+
+                      {opt.badge && !opt.hidePill && (
+                        <span className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${
+                          isSelected
+                            ? 'bg-white/20 text-white border border-white/30'
+                            : opt.badgeColor || 'bg-brand-500/15 text-brand-700 dark:text-brand-300 border border-brand-500/30'
+                        }`}>
+                          {opt.badge}
+                        </span>
+                      )}
+
+                      <div className="flex flex-col min-w-0 w-full">
+                        <span className={`truncate text-xs text-left ${isSelected ? 'font-black text-white' : 'font-extrabold text-slate-900 dark:text-slate-100 group-hover:text-brand-600'}`}>
+                          {opt.label}
+                        </span>
+                        {opt.sublabel && (
+                          <span className={`text-[10px] font-bold truncate text-left ${
+                            isSelected ? 'text-indigo-100' : 'text-slate-700 dark:text-slate-200'
+                          }`}>
+                            {opt.sublabel}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </motion.div>
-      </AnimatePresence>,
-      document.body
+
+                    <div className="flex items-center space-x-1.5 shrink-0 ml-1.5">
+                      {opt.count !== undefined && (
+                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
+                          isSelected
+                            ? 'bg-white/20 text-white border border-white/30'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                        }`}>
+                          {opt.count}
+                        </span>
+                      )}
+                      {isSelected && (
+                        <div className="p-1 rounded-full bg-white/20 border border-white/40 shadow-xs shrink-0">
+                          <Check className="w-3.5 h-3.5 text-white stroke-[3.5]" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>,
+          document.body
+        )
+      )
     )
   ) : null;
 

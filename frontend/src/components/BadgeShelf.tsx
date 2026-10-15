@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Flame, Trophy, Zap, ShieldCheck, Star } from 'lucide-react';
+import { Award, Trophy, ShieldCheck, Calendar, Activity } from 'lucide-react';
 
 interface BadgeItem {
   id: string;
@@ -38,7 +38,7 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
       id: 'streak-master',
       name: 'Streak Master',
       category: 'Consistency',
-      icon: Flame,
+      icon: Calendar,
       color: 'text-rose-500',
       bg: 'bg-rose-500/10 border-rose-500/30',
       unlocked: streakCount >= 5,
@@ -48,7 +48,7 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
       id: 'contest-champion',
       name: 'Contest Champion',
       category: 'Competitive',
-      icon: Star,
+      icon: Award,
       color: 'text-indigo-500',
       bg: 'bg-indigo-500/10 border-indigo-500/30',
       unlocked: rating >= 1400,
@@ -58,7 +58,7 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
       id: 'speed-demon',
       name: 'Speed Demon',
       category: 'Performance',
-      icon: Zap,
+      icon: Activity,
       color: 'text-emerald-500',
       bg: 'bg-emerald-500/10 border-emerald-500/30',
       unlocked: solvedCount >= 50,
@@ -97,11 +97,10 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
           return (
             <div
               key={b.id}
-              className={`p-4 rounded-2xl border-2 text-center transition-all duration-300 relative group ${
-                b.unlocked
+              className={`p-4 rounded-2xl border-2 text-center transition-all duration-300 relative group ${b.unlocked
                   ? `${b.bg} shadow-md hover:scale-105`
                   : 'bg-slate-100 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 opacity-50 grayscale'
-              }`}
+                }`}
             >
               <div className={`w-11 h-11 rounded-2xl mx-auto flex items-center justify-center mb-2 shadow-sm ${b.unlocked ? b.bg : 'bg-slate-200 dark:bg-slate-800'}`}>
                 <IconComp className={`w-6 h-6 ${b.unlocked ? b.color : 'text-slate-400'}`} />

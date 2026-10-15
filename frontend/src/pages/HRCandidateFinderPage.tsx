@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef, useDeferredValue } from "react";
 import { createPortal } from "react-dom";
-import { Search, RefreshCw, Filter, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, FileSpreadsheet, FileText, AlertTriangle, CheckCircle2, Brain, Star, Award, Users, Download, ExternalLink, BarChart2, Target, Zap, Code2, Shield, X, Check, Info, UserCheck, HelpCircle, Eye, Printer, LayoutGrid, List, SlidersHorizontal, ArrowUpDown, Activity } from 'lucide-react';
+import { Search, RefreshCw, Filter, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, FileSpreadsheet, FileText, AlertTriangle, CheckCircle2, Brain, Award, Users, Download, ExternalLink, BarChart2, Target, Code2, Shield, X, Check, Info, UserCheck, HelpCircle, Eye, Printer, LayoutGrid, List, SlidersHorizontal, ArrowUpDown, Activity } from 'lucide-react';
 import api from "../services/api";
 import { triggerDownload } from "../utils/mobileDownload";
 import { useKeyboardContext } from "../context/KeyboardContext";
@@ -1796,7 +1796,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           value={filters.improvement_priority}
           onChange={val => setFilters(p => ({ ...p, improvement_priority: val }))}
           options={priorityOptions}
-          icon={<Zap className="w-4 h-4 text-indigo-500" />}
+          icon={<Target className="w-4 h-4 text-indigo-500" />}
         />
       </div>
       <div>

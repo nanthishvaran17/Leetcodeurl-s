@@ -1,5 +1,5 @@
 import React from "react";
-import { Briefcase, CheckCircle2, AlertTriangle, ArrowRight, Target, Sparkles, Building2 } from "lucide-react";
+import { Briefcase, CheckCircle2, AlertTriangle, ArrowRight, Target, Building2 } from "lucide-react";
 
 interface PlacementEvaluation {
   tier: string;
@@ -113,7 +113,7 @@ export const PlacementIntelligenceCard: React.FC<PlacementIntelligenceCardProps>
       {/* Actionable Gap Analysis */}
       <div className="pt-4 border-t border-slate-800/80">
         <div className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Next Milestone Recommendations
+          <Target className="w-3.5 h-3.5 text-amber-400" /> Next Milestone Recommendations
         </div>
         <ul className="space-y-1.5">
           {evaluation.gap_analysis.map((gap, i) => (

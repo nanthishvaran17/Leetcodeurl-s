@@ -115,6 +115,13 @@
       overflow-x: clip !important;
       max-width: 100vw !important;
     }
+
+    /* Prevent disruptive iOS Safari auto-zoom on input focus */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
   }
 
   /* Zero-Tap-Delay & Native Touch Feedback across all Mobile Browsers & Android WebViews */
@@ -262,9 +269,9 @@ html.global-scroll-lock {
   inset: 0 !important;
   z-index: 999999 !important;
   display: flex !important;
-  align-items: center !important;
+  align-items: flex-end !important;
   justify-content: center !important;
-  padding: 1rem !important;
+  padding: 0 !important;
   background-color: rgba(2, 6, 23, 0.96) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
@@ -275,8 +282,19 @@ html.global-scroll-lock {
 
 @media (min-width: 640px) {
   .modal-overlay-responsive {
-    padding: 1.5rem !important;
     align-items: center !important;
+    padding: 1.5rem !important;
+  }
+}
+
+@keyframes slideUpMobileDrawer {
+  from {
+    transform: translateY(100%);
+    opacity: 0.7;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
@@ -303,6 +321,32 @@ html.global-scroll-lock {
   overflow-y: auto !important;
 }
 
+/* Mobile Bottom-Sheet Drawer Format */
+@media (max-width: 639px) {
+  .modal-container-responsive {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: auto !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 1.75rem !important;
+    border-top-right-radius: 1.75rem !important;
+    max-height: calc(90dvh - env(safe-area-inset-bottom, 0px)) !important;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5) !important;
+    animation: slideUpMobileDrawer 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  /* Native Mobile Touch Pull-down Handle Indicator:
+     Disabled on pseudo-element to prevent duplicate two-line bars when SwipeHandle component is present */
+  .modal-container-responsive::before {
+    display: none !important;
+    content: none !important;
+  }
+}
+
 @media (min-width: 640px) {
   .modal-container-responsive {
     max-height: calc(100dvh - 2.5rem) !important;
@@ -312,12 +356,16 @@ html.global-scroll-lock {
 }
 
 /* Production Responsive Layout & Table Containers */
-.responsive-table-container {
+.responsive-table-container,
+.table-responsive-container {
   width: 100%;
   max-width: 100%;
   min-width: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
+  scroll-behavior: smooth;
   position: relative;
 }
 
@@ -739,9 +787,9 @@ html.global-scroll-lock {
   inset: 0;
   z-index: 100050;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 1rem;
+  padding: 0;
   background-color: rgba(3, 7, 18, 0.88);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
@@ -749,15 +797,24 @@ html.global-scroll-lock {
   box-sizing: border-box;
 }
 
-.modal-container-responsive {
-  position: relative;
-  width: min(900px, calc(100vw - 32px));
-  max-height: calc(100dvh - 1rem);
-  display: flex;
-  flex-direction: column;
-  margin: auto;
-  overflow: hidden;
-  box-sizing: border-box;
+@media (min-width: 640px) {
+  .modal-overlay-responsive {
+    align-items: center;
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .modal-container-responsive {
+    position: relative;
+    width: min(900px, calc(100vw - 32px));
+    max-height: calc(100dvh - 1rem);
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
 }
 
 @media (max-height: 800px) {
@@ -1509,9 +1566,9 @@ video {
   max-width: 100%;
 }
 
-/* Hide AI Floating Widget when any modal is open globally */
-body:has([role="dialog"]) .ai-floating-widget,
-body:has(.modal-backdrop) .ai-floating-widget {
+/* Hide AI Floating Widget only when an external full-screen modal is open */
+body:has([role="dialog"]:not(.ai-assistant-dialog):not([aria-label*="AI Assistant"]):not([aria-label*="Copilot"])) .ai-floating-widget,
+body:has(.modal-backdrop:not(.ai-backdrop)) .ai-floating-widget {
   display: none !important;
 }
 

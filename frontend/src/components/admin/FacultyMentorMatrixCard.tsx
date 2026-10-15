@@ -4,7 +4,7 @@ import {
   Users, RotateCcw, Eye, Award, CheckCircle2, 
   Clock, ArrowRightLeft, UserX, Search, Filter,
   ShieldCheck, AlertCircle, ChevronRight, X, Activity,
-  ExternalLink, Zap, CheckCircle, TrendingUp
+  ExternalLink, CheckCircle, TrendingUp
 } from 'lucide-react';
 
 interface FacultyMentorMatrixCardProps {
@@ -66,27 +66,27 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
   return (
     <div
       id="staff-performance-section"
-      className="stagger-4 relative overflow-hidden rounded-3xl bg-white/95 dark:bg-[#0c1424]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-xl my-6 transition-all"
+      className="stagger-4 relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-[#0c1424]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-lg sm:shadow-xl my-4 sm:my-6 transition-all"
     >
       {/* Decorative ambient gradient backdrop */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-indigo-500/10 via-brand-500/5 to-transparent rounded-bl-full pointer-events-none blur-2xl" />
 
       {/* 1. Header & Controls */}
-      <div className="p-5 sm:p-7 border-b border-slate-100 dark:border-white/10 relative z-10 space-y-5">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-brand-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
-                <Users className="w-5 h-5" />
+      <div className="p-3.5 sm:p-7 border-b border-slate-100 dark:border-white/10 relative z-10 space-y-3 sm:space-y-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
+          <div className="space-y-1 sm:space-y-1.5">
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-500 to-brand-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <h3 className="font-display text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
+                <h3 className="font-display text-sm sm:text-lg font-black tracking-tight text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <span>Faculty Mentors Performance &amp; Progress Matrix</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-500/30">
+                  <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-500/30">
                     Live Telemetry
                   </span>
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-1 sm:line-clamp-none">
                   Track mentorship workload, active solver rates, Sunday contest engagement, and completion across staff members
                 </p>
               </div>
@@ -98,7 +98,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
             {staffWorkloadFilter !== 'ALL' && (
               <button
                 onClick={() => setStaffWorkloadFilter('ALL')}
-                className="min-h-[40px] px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 touch-manipulation"
+                className="h-9 sm:min-h-[40px] px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] sm:text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
               >
                 <RotateCcw size={12} className="text-slate-500" />
                 <span>Show All Staff</span>
@@ -106,9 +106,9 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
             )}
             <button
               onClick={() => setShowStaffAllocationModal(true)}
-              className="min-h-[40px] px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-indigo-700 hover:from-brand-500 hover:to-indigo-600 text-white font-black text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-indigo-600/20 active:scale-95 touch-manipulation"
+              className="h-9 sm:min-h-[40px] px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-indigo-700 hover:from-brand-500 hover:to-indigo-600 text-white font-black text-[11px] sm:text-xs flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer shadow-md shadow-indigo-600/20 active:scale-95 touch-manipulation"
             >
-              <Users size={14} className="shrink-0" />
+              <Users size={13} className="shrink-0" />
               <span>Manage Allocation</span>
             </button>
           </div>
@@ -356,7 +356,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                         : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
-                    <span>{isSelected ? 'Scoped ✓' : 'Filter Scope'}</span>
+                    <span>{isSelected ? 'Scoped' : 'Filter Scope'}</span>
                   </button>
 
                   <button
@@ -635,7 +635,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                               : `Filter entire dashboard table to ${s.username}'s mentees`
                           }
                         >
-                          <span>{isSelected ? 'Active Scope ✓' : 'Filter Scope'}</span>
+                          <span>{isSelected ? 'Active Scope' : 'Filter Scope'}</span>
                         </button>
 
                         <button

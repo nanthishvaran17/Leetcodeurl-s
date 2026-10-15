@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Send, ArrowLeft, Loader2, Info, Paperclip, Check, CheckCheck,
   MoreVertical, Reply, Edit2, Trash2, Copy, Share2, X, FileText, Download,
-  CornerDownRight, ChevronDown, Sparkles, Palette, Package, FileArchive
+  CornerDownRight, ChevronDown, MessageSquare, Palette, Package, FileArchive
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Conversation } from './ConversationList';
@@ -190,7 +190,12 @@ export const ChatWindow: React.FC<Props> = ({
     const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
     
     if (isNearBottom || messages[messages.length - 1]?.senderId === currentUserId) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({
+          top: scrollContainerRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
       setShowScrollBottom(false);
       setNewMessagesCount(0);
     } else {
@@ -594,7 +599,7 @@ export const ChatWindow: React.FC<Props> = ({
         ) : messages.length === 0 ? (
           <div className="text-center text-slate-400 py-16 flex flex-col items-center">
             <div className="w-14 h-14 bg-brand-50 dark:bg-brand-950/40 rounded-2xl flex items-center justify-center mb-3">
-              <Sparkles className="w-7 h-7 text-brand-500" />
+              <MessageSquare className="w-7 h-7 text-brand-500" />
             </div>
             <p className="font-bold text-slate-700 dark:text-slate-200 text-sm">No messages yet</p>
             <p className="text-xs text-slate-400 mt-1">Start an encrypted institutional dialogue!</p>
@@ -860,7 +865,12 @@ export const ChatWindow: React.FC<Props> = ({
       {showScrollBottom && (
         <button
           onClick={() => {
-            bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+            if (scrollContainerRef.current) {
+              scrollContainerRef.current.scrollTo({
+                top: scrollContainerRef.current.scrollHeight,
+                behavior: 'smooth'
+              });
+            }
             setShowScrollBottom(false);
             setNewMessagesCount(0);
           }}

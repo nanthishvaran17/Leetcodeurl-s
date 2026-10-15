@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   ShieldAlert, AlertTriangle, CheckCircle2, Clock, Search, RefreshCw,
   ChevronDown, ChevronUp, X, Send, Activity, User, Check, Building2, GraduationCap,
-  Calendar, Zap, FileText, ArrowUpRight, Bell, RotateCcw, Eye, Sparkles, Award
+  Calendar, Target, FileText, ArrowUpRight, Bell, RotateCcw, Eye, Award
 } from 'lucide-react';
 import {
   getFacultyActionKPIs, getFacultyActionsList, updateFacultyAction,
@@ -343,25 +343,28 @@ const StudentViewModal: React.FC<{
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[999999] flex items-center justify-center p-2 sm:p-4 bg-black/80 overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-xs overflow-y-auto animate-fade-in"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-4xl max-h-[94vh] sm:max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-xl overflow-hidden my-auto text-slate-900 dark:text-white">
+      <div className="w-full max-w-4xl max-h-[92dvh] sm:max-h-[92vh] flex flex-col rounded-t-[28px] sm:rounded-3xl bg-white dark:bg-navy-900 border-t sm:border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden text-slate-900 dark:text-white">
         
+        {/* Mobile Pull Indicator */}
+        <div className="w-10 h-1 bg-slate-300 dark:bg-navy-700 rounded-full mx-auto my-2 sm:hidden shrink-0" />
+
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50 dark:bg-navy-950/60 shrink-0">
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-500 to-indigo-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-brand-500/25">
+        <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between gap-3 bg-slate-50/50 dark:bg-navy-950/60 shrink-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-brand-500 to-indigo-600 flex items-center justify-center font-black text-lg sm:text-xl text-white shadow-lg shadow-brand-500/25">
               {item.student_name.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="flex items-start sm:items-center flex-wrap gap-2">
-                <h3 className="text-[17px] sm:text-xl font-black text-slate-900 dark:text-white truncate tracking-tight">{item.student_name}</h3>
+              <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
+                <h3 className="text-base sm:text-xl font-black text-slate-900 dark:text-white truncate tracking-tight">{item.student_name}</h3>
                 <span className="shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black bg-brand-50 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-500/30">
-                  {item.year_level} Year
+                  {item.year_level?.replace(/\s*year\b/gi, '').trim() || item.year_level} Year
                 </span>
               </div>
-              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
+              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5 sm:mt-1">
                 <span className="font-bold text-slate-700 dark:text-slate-300">{item.reg_no}</span>
                 <span className="text-slate-300 dark:text-slate-600">•</span>
                 <span className="truncate">{item.department_code}</span>
@@ -371,18 +374,19 @@ const StudentViewModal: React.FC<{
             </div>
           </div>
 
-          <div className="flex items-center self-end sm:self-auto gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {onOpenUpdate && (
               <button
                 onClick={() => { onClose(); onOpenUpdate(); }}
-                className="px-3.5 py-2 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/20 dark:hover:bg-brand-500/30 border border-brand-200 dark:border-brand-500/40 text-brand-600 dark:text-brand-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/20 dark:hover:bg-brand-500/30 border border-brand-200 dark:border-brand-500/40 text-brand-600 dark:text-brand-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
-                <FileText size={12} /> Edit Action
+                <FileText size={12} />
+                <span className="hidden xs:inline sm:inline">Edit Action</span>
               </button>
             )}
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-500 dark:text-slate-300 transition cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-500 dark:text-slate-300 transition cursor-pointer"
               title="Close modal"
             >
               <X size={18} />
@@ -390,41 +394,41 @@ const StudentViewModal: React.FC<{
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="flex flex-wrap items-center gap-2 px-4 sm:px-5 py-2.5 bg-slate-50/80 dark:bg-navy-950/40 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
+        {/* Navigation Tabs (Mobile-friendly horizontal scroll) */}
+        <div className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-slate-50/80 dark:bg-navy-950/40 border-b border-slate-100 dark:border-navy-800/80 shrink-0 overflow-x-auto no-scrollbar scroll-smooth">
           <button
             onClick={() => setActiveViewTab('pass')}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+            className={`flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
               activeViewTab === 'pass'
                 ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25'
                 : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800/60 font-bold'
             }`}
           >
-            <Award size={13} />
+            <Award size={13} className="shrink-0" />
             <span className="whitespace-nowrap">Digital Performance Pass</span>
           </button>
 
           <button
             onClick={() => setActiveViewTab('profile')}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+            className={`flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
               activeViewTab === 'profile'
                 ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
                 : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800/60 font-bold'
             }`}
           >
-            <Sparkles size={13} />
+            <Activity size={13} className="shrink-0" />
             <span className="whitespace-nowrap">AI Coding Profile</span>
           </button>
 
           <button
             onClick={() => setActiveViewTab('timeline')}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+            className={`flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
               activeViewTab === 'timeline'
                 ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25'
                 : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800/60 font-bold'
             }`}
           >
-            <Clock size={13} />
+            <Clock size={13} className="shrink-0" />
             <span className="whitespace-nowrap">Intervention Timeline ({(Array.isArray(events) ? events.length : 0)})</span>
           </button>
         </div>
@@ -441,6 +445,7 @@ const StudentViewModal: React.FC<{
                 totalSolved={item.total_solved}
                 collegeRank={1}
                 streakCount={item.last_active_days_ago <= 1 ? 5 : 0}
+                leetcodeUsername={item.leetcode_username}
               />
             </div>
           )}
@@ -652,7 +657,7 @@ const UpdateModal: React.FC<{
           {/* Signal & Recommendation Banner */}
           <div className="px-6 py-3.5 bg-gradient-to-r from-indigo-500/10 via-brand-500/5 to-purple-500/10 dark:from-indigo-950/50 dark:via-navy-900/60 dark:to-purple-950/50 border-b border-indigo-100 dark:border-navy-700/80 flex items-start gap-3">
             <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 mt-0.5 shrink-0">
-              <Sparkles size={16} />
+              <Target size={16} />
             </div>
             <div className="space-y-0.5 flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
@@ -1071,7 +1076,7 @@ export const FacultyActionCenter: React.FC = () => {
             <KPICard label="Monitoring" value={kpis.monitoring_count} colorTheme="amber"
               icon={<Activity size={14} strokeWidth={2.5} />} active={kpiFilter === 'Monitoring'} onClick={() => applyKPIFilter('Monitoring', 'status')} subtitle="Track progress" />
             <KPICard label="In Progress" value={kpis.in_progress_count} colorTheme="blue"
-              icon={<Zap size={14} strokeWidth={2.5} />} active={kpiFilter === 'In Progress'} onClick={() => applyKPIFilter('In Progress', 'status')} subtitle="Active intervention" />
+              icon={<Clock size={14} strokeWidth={2.5} />} active={kpiFilter === 'In Progress'} onClick={() => applyKPIFilter('In Progress', 'status')} subtitle="Active intervention" />
             <KPICard label="Completed" value={kpis.completed_count} colorTheme="cyan"
               icon={<CheckCircle2 size={14} strokeWidth={2.5} />} active={kpiFilter === 'Completed'} onClick={() => applyKPIFilter('Completed', 'status')} subtitle="Task finished" />
             <KPICard label="Resolved" value={kpis.resolved_count} colorTheme="emerald"
@@ -1143,7 +1148,7 @@ export const FacultyActionCenter: React.FC = () => {
             icon={<Activity size={15} />}
             options={[
               { label: 'Pending', value: 'Pending', icon: <Clock size={14} />, badge: 'PEN', badgeColor: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
-              { label: 'In Progress', value: 'In Progress', icon: <Zap size={14} />, badge: 'INP', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
+              { label: 'In Progress', value: 'In Progress', icon: <RotateCcw size={14} />, badge: 'INP', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
               { label: 'Monitoring', value: 'Monitoring', icon: <Activity size={14} />, badge: 'MON', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' },
               { label: 'Completed', value: 'Completed', icon: <CheckCircle2 size={14} />, badge: 'COM', badgeColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300' },
               { label: 'Resolved', value: 'Resolved', icon: <CheckCircle2 size={14} />, badge: 'RES', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' }
@@ -1211,7 +1216,7 @@ export const FacultyActionCenter: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 pb-4 border-b border-slate-100 dark:border-navy-800">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20 shrink-0">
-                <Sparkles className="w-4 h-4 animate-bounce-slow text-brand-500" />
+                <Activity className="w-4 h-4 text-brand-500" />
               </div>
               <div>
                 <div className="h-4 w-40 sm:w-48 bg-slate-200 dark:bg-navy-700 rounded-lg"></div>
@@ -1266,7 +1271,7 @@ export const FacultyActionCenter: React.FC = () => {
 
             {/* Pill Status Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-black uppercase tracking-widest mb-4 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5" />
+              <CheckCircle2 className="w-3.5 h-3.5" />
               <span>{hasFilters || kpiFilter ? 'Filter Scope Active' : 'Institutional Status: Optimal'}</span>
             </div>
 
@@ -1376,7 +1381,7 @@ export const FacultyActionCenter: React.FC = () => {
                       onClick={() => setUpdateItem(item)}
                       className="flex-1 min-h-[44px] py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 text-white transition-all font-black text-xs shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95 border border-white/20 touch-manipulation"
                     >
-                      <Zap size={14} className="fill-white/20 shrink-0" />
+                      <ArrowUpRight size={14} className="shrink-0" />
                       <span>Take Action</span>
                     </button>
                     <button
@@ -1520,7 +1525,7 @@ export const FacultyActionCenter: React.FC = () => {
                               title="Take Action on Student"
                               className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white transition-all cursor-pointer shadow-sm hover:shadow flex items-center gap-1.5 text-xs font-bold active:scale-95"
                             >
-                              <Zap size={12} />
+                              <ArrowUpRight size={12} />
                               <span>Take Action</span>
                             </button>
                             <button

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, UserCheck, Users, RefreshCw, Filter, GraduationCap, Building2, CheckSquare, Square, ArrowRightLeft, Sparkles, X } from 'lucide-react';
+import { Search, UserCheck, Users, RefreshCw, Filter, GraduationCap, Building2, CheckSquare, Square, ArrowRightLeft, X } from 'lucide-react';
 import api from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 import { useDepartments } from '../../contexts/DepartmentContext';

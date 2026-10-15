@@ -1,5 +1,5 @@
 import React from 'react';
-import { Radio, Wifi, WifiOff, Activity, Clock, ShieldCheck, AlertTriangle, Zap, RefreshCw } from 'lucide-react';
+import { Radio, Wifi, WifiOff, Activity, Clock, ShieldCheck, AlertTriangle, Bell, RefreshCw } from 'lucide-react';
 
 interface LiveCommandBarProps {
   isLive: boolean;
@@ -145,7 +145,7 @@ export const LiveCommandBar: React.FC<LiveCommandBarProps> = ({
         {/* Live Events */}
         <div className="flex flex-col items-center justify-center py-3 px-4">
           <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider flex items-center gap-1 mb-1">
-            <Zap className="w-3 h-3" /> EVENTS
+            <Bell className="w-3 h-3" /> EVENTS
           </span>
           <span className="text-lg font-mono font-black text-amber-400">{eventCount}</span>
         </div>

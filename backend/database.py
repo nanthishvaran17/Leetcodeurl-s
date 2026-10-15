@@ -82,11 +82,11 @@ if "postgresql" in db_url or "postgres" in db_url:
     }
 
     is_render = bool(os.environ.get("RENDER") or os.environ.get("RENDER_SERVICE_ID"))
-    raw_pool_size = int(os.environ.get("DB_POOL_SIZE", 15 if is_render else 10))
-    raw_max_overflow = int(os.environ.get("DB_MAX_OVERFLOW", 20 if is_render else 10))
+    raw_pool_size = int(os.environ.get("DB_POOL_SIZE", 30 if is_render else 25))
+    raw_max_overflow = int(os.environ.get("DB_MAX_OVERFLOW", 30 if is_render else 25))
     is_low_pool = os.environ.get("FORCE_LOW_POOL") == "true"
-    pool_size = raw_pool_size if is_low_pool else max(raw_pool_size, 10)
-    max_overflow = raw_max_overflow if is_low_pool else max(raw_max_overflow, 10)
+    pool_size = raw_pool_size if is_low_pool else max(raw_pool_size, 20)
+    max_overflow = raw_max_overflow if is_low_pool else max(raw_max_overflow, 20)
 
 
     # Always use QueuePool for better performance and to avoid SSL connection drops from connection storms,

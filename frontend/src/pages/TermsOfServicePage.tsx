@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Shield, Lock, Eye, Database, UserCheck, Search, Printer, Copy, Check, Sparkles, Mail, Code, Cpu, CheckCircle2, Key,
+  Shield, Lock, Eye, Database, UserCheck, Search, Printer, Copy, Check, Mail, Code, Cpu, CheckCircle2, Key,
   ShieldAlert, ChevronDown, ChevronRight, Globe, Layers, Filter, HelpCircle, Activity, Layout, Terminal, Scale, 
-  FileText, ArrowRight, Zap, RefreshCw, XCircle, AlertCircle, FileSignature, BookOpen, ShieldCheck
+  FileText, ArrowRight, Clock, RefreshCw, XCircle, AlertCircle, FileSignature, BookOpen, ShieldCheck
 } from 'lucide-react';
 
 interface ContentSection {
@@ -127,11 +127,11 @@ export const TermsOfServicePage: React.FC = () => {
           </p>
           <div className="space-y-2.5">
             <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-slate-50 to-white dark:from-purple-950/40 dark:via-navy-900 dark:to-navy-900 border-2 border-purple-500/20 text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-3 shadow-sm">
-              <Zap className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
+              <Activity className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
               <span>Sync frequency may fluctuate based on LeetCode API rate limits and server load.</span>
             </div>
             <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-slate-50 to-white dark:from-purple-950/40 dark:via-navy-900 dark:to-navy-900 border-2 border-purple-500/20 text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-3 shadow-sm">
-              <Zap className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
+              <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
               <span>Maintenance windows may temporarily disable live leaderboard updates.</span>
             </div>
           </div>
@@ -292,7 +292,7 @@ export const TermsOfServicePage: React.FC = () => {
                 <span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
                   <Layers className="w-4 h-4" /> Index
                 </span>
-                <Sparkles className="w-4 h-4 text-brand-500/50" />
+                <ShieldCheck className="w-4 h-4 text-brand-500/50" />
               </div>
               <div className="p-2 flex flex-col gap-1.5">
                 {sections.map((s, idx) => {

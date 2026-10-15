@@ -206,10 +206,46 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         dept_name = str(dataset.get("department_name") or "Department of CSE (Cyber Security)")
         default_coord = "M. Santhoshkumar, AP / CSE (Cyber Security)"
 
-    raw_rep_date = str(dataset.get("session_date") or dataset.get("contest_date") or dataset.get("report_date") or dataset.get("reportDate") or "11.10.2026")
-    report_date = raw_rep_date.replace("-", ".") if "-" in raw_rep_date else raw_rep_date
-    raw_c_date = str(dataset.get("contest_date") or dataset.get("session_date") or "11.10.2026")
-    contest_date = raw_c_date.replace("-", ".") if "-" in raw_c_date else raw_c_date
+    raw_rep_date = None
+    candidates = [
+        (dataset.get("current_session") or {}).get("session_date"),
+        (dataset.get("currentWeek") or {}).get("date"),
+        dataset.get("contest_date"),
+        dataset.get("contestDate"),
+        dataset.get("session_date"),
+        dataset.get("sessionDate"),
+        (dataset.get("batch_summaries") or [{}])[0].get("contest_date") if dataset.get("batch_summaries") else None,
+        dataset.get("report_date"),
+        dataset.get("reportDate"),
+    ]
+    for cand in candidates:
+        if cand:
+            c_str = str(cand).strip()
+            if not c_str.isdigit() and len(c_str) >= 8 and ('.' in c_str or '-' in c_str or '/' in c_str):
+                raw_rep_date = c_str
+                break
+
+    # If raw_rep_date was not found or candidate was a numeric session ID like "14"
+    if not raw_rep_date:
+        sid = dataset.get("session_id") or dataset.get("sessionId")
+        if sid and str(sid).strip().isdigit():
+            try:
+                from backend.database import SessionLocal
+                from backend.models import WeeklySession
+                _db = SessionLocal()
+                ws_obj = _db.query(WeeklySession).filter(WeeklySession.id == int(sid)).first()
+                if ws_obj and ws_obj.session_date:
+                    raw_rep_date = str(ws_obj.session_date).strip()
+                _db.close()
+            except Exception:
+                pass
+
+    if not raw_rep_date:
+        raw_rep_date = "11.10.2026"
+
+    report_date = raw_rep_date.replace("-", ".").replace("/", ".")
+    raw_c_date = str(dataset.get("contest_date") or dataset.get("contestDate") or report_date)
+    contest_date = raw_c_date.replace("-", ".").replace("/", ".")
     coordinator = str(dataset.get("coordinator") or dataset.get("academicCoordinator") or default_coord)
 
     # Institutional Cohort Mapping: Always ensure IV (2023-2027), III (2024-2028), II (2025-2029) are represented
@@ -267,7 +303,7 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
     ws1["C2"].alignment = ALIGN_CENTER
 
     ws1.merge_cells("C3:M3")
-    ws1["C3"] = f"Date:{report_date}"
+    ws1["C3"] = f"Date: {report_date}"
     ws1["C3"].font = FONT_DOC_SUBTITLE
     ws1["C3"].alignment = ALIGN_CENTER
 
@@ -451,7 +487,7 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
     ws2["C2"].alignment = ALIGN_CENTER
 
     ws2.merge_cells("C3:L3")
-    ws2["C3"] = f"Date:{report_date}"
+    ws2["C3"] = f"Date: {report_date}"
     ws2["C3"].font = FONT_DOC_SUBTITLE
     ws2["C3"].alignment = ALIGN_CENTER
 

@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useMessagingWebSocket } from '../hooks/useMessagingWebSocket';
 import axios from 'axios';
-import { MessageSquare, Sparkles, Users, ShieldCheck, Plus, CheckCircle, Info, ArrowLeft, X } from 'lucide-react';
+import { MessageSquare, Users, ShieldCheck, Plus, CheckCircle, Info, ArrowLeft, X } from 'lucide-react';
 
 interface MessagesPageProps {
   onNavigateTab?: (tab: string) => void;
@@ -731,10 +731,10 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
       </div>
 
       {/* ALWAYS RENDER THE LAYOUT FRAME */}
-      <div className="flex-1 min-h-0 flex overflow-hidden">
+      <div className="flex-1 min-h-0 h-full w-full flex overflow-hidden">
         
         {/* ZONE 1: Smart Inbox (Hidden when AI Agent is active to give full screen width to AskInstitutionPanel) */}
-        <div className={`w-full md:w-[320px] lg:w-[380px] shrink-0 border-r border-slate-200 dark:border-slate-800 ${
+        <div className={`w-full md:w-[320px] lg:w-[380px] shrink-0 h-full border-r border-slate-200 dark:border-slate-800 ${
           isAiAgentActive ? 'hidden' : (activeConversationId ? 'hidden md:block' : 'block')
         }`}>
           <ConversationList 
@@ -761,7 +761,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
         </div>
 
         {/* ZONE 2: Main Content Area */}
-        <div className={`flex-1 min-w-0 flex flex-col bg-slate-50 dark:bg-[#0B1120] ${
+        <div className={`flex-1 min-w-0 min-h-0 h-full flex flex-col bg-slate-50 dark:bg-[#0B1120] overflow-hidden ${
           !activeConversationId ? 'hidden md:flex' : 'flex'
         }`}>
           {!isSystemActive && (
@@ -786,13 +786,11 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
           )}
 
           {isAiAgentActive && (
-            <div className="flex-1 min-h-0 flex flex-col relative bg-white dark:bg-[#0B1120]">
-               <div className="flex-1 min-h-0 w-full flex flex-col">
-                 <AskInstitutionPanel 
-                   onBack={() => setActiveConversationId(null)} 
-                   onActionTrigger={handleActionTrigger} 
-                 />
-               </div>
+            <div className="flex-1 min-h-0 h-full w-full flex flex-col relative bg-white dark:bg-[#0B1120] overflow-hidden">
+              <AskInstitutionPanel 
+                onBack={() => setActiveConversationId(null)} 
+                onActionTrigger={handleActionTrigger} 
+              />
             </div>
           )}
 

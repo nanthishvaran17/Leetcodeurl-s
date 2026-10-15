@@ -151,7 +151,7 @@ def resolve_weekly_sessions(
             continue
 
         contest_name = str(session.contest_name or "")
-        if re.search(r'\b(test|mock)\b', contest_name, re.IGNORECASE):
+        if re.search(r'\b(test|mock|biweekly)\b', contest_name, re.IGNORECASE):
             continue
 
         parsed_date = parse_session_date(session.session_date)

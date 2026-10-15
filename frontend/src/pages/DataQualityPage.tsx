@@ -1,9 +1,9 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { 
   ShieldCheck, CheckCircle2, AlertTriangle, XCircle, RefreshCw, 
-  Layers, Search, FileText, AlertCircle, Sparkles, ExternalLink, Clock,
+  Layers, Search, FileText, AlertCircle, ExternalLink, Clock,
   Building2, GraduationCap, RotateCcw, ChevronRight, Eye, UserCheck, UserX,
-  Wifi, Zap, User, ArrowRight, Check, SlidersHorizontal, Filter, Globe
+  Wifi, User, ArrowRight, Check, SlidersHorizontal, Filter, Globe
 } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
@@ -683,7 +683,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
         ) : (
           <div className="p-10 sm:p-14 text-center rounded-3xl bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/80 dark:border-navy-700/80 shadow-lg backdrop-blur-md space-y-3 my-4">
             <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 dark:bg-emerald-950/60 text-emerald-500 border border-emerald-500/20 flex items-center justify-center mx-auto shadow-md shadow-emerald-500/10">
-              <Sparkles className="w-7 h-7 text-emerald-500" />
+              <CheckCircle2 className="w-7 h-7 text-emerald-500" />
             </div>
             <div className="space-y-1">
               <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">No Matching Issues Found</h4>

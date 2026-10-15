@@ -3,7 +3,7 @@ Centralized Production Department Constants and Helpers.
 Includes all valid institutional departments across pages and filters.
 """
 
-EXCLUDED_DEPT_KEYWORDS = ["TEST", "DEMO", "DEV", "TEMP", "CSE-EDIT-TEST", "CSE_TEST"]
+EXCLUDED_DEPT_KEYWORDS = ["TEST", "DEMO", "DEV", "TEMP", "CSE-EDIT-TEST", "CSE_TEST", "UNSEEN", "DUMMY"]
 
 def is_production_department(code: str, name: str = "") -> bool:
     if not code and not name:

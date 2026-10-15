@@ -57,14 +57,7 @@ export const GLOBAL_SHORTCUT_REGISTRY: ShortcutDefinition[] = [
   },
 
   // QUICK NAVIGATION (ROLE-AWARE)
-  {
-    id: 'nav_dashboard',
-    keys: ['Alt', 'H'],
-    description: 'Dashboard',
-    category: 'QUICK NAVIGATION',
-    targetTab: 'dashboard',
-    allowedRoles: ['admin', 'administrator', 'super_admin', 'hod', 'faculty', 'staff', 'student']
-  },
+
 
   {
     id: 'nav_reports',
@@ -140,6 +133,12 @@ export const GLOBAL_SHORTCUT_REGISTRY: ShortcutDefinition[] = [
   },
 
   // AI ASSISTANT
+  {
+    id: 'toggle_ai',
+    keys: ['Alt', 'H'],
+    description: 'Toggle Institutional AI Copilot',
+    category: 'AI ASSISTANT'
+  },
   {
     id: 'ai_send',
     keys: ['Ctrl', 'Enter'],

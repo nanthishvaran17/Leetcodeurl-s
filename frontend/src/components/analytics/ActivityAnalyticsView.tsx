@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { Loader2, Activity, Users, Percent, Flame, AlertCircle } from 'lucide-react';
+import { Loader2, Activity, Users, Percent, AlertCircle } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
@@ -167,7 +167,7 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsProps> = ({
         {!studentId && (
           <div className="bg-white dark:bg-navy-900 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm overflow-hidden flex flex-col lg:col-span-2">
             <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center">
-              <Flame className="w-5 h-5 text-orange-500 mr-2" />
+              <Users className="w-5 h-5 text-indigo-500 mr-2" />
               Most Active Students
             </h3>
             <div className="flex-1 overflow-auto pr-2">

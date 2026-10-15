@@ -8,7 +8,7 @@ import logging
 import re
 from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
-from backend.models import Student, ReportHistory
+from backend.models import Student, ReportHistory, WeeklySession
 from backend.services.report_models import ReportConfig
 from backend.services.report_data_service import fetch_normalized_students, fetch_normalized_contests, get_problem_category
 from backend.services.report_validators import validate_data_quality
@@ -172,17 +172,33 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         if config.filters and isinstance(config.filters, dict):
             eff_sess = config.filters.get("session_id") or config.filters.get("session_date") or config.filters.get("report_date")
         if eff_sess and str(eff_sess).strip().upper() not in ("LATEST", "NONE", "ALL"):
+            eff_sess_str = str(eff_sess).strip()
+            res_data["session_id"] = eff_sess_str
             if rtype_upper in ("FRIDAY_OFFICIAL_CONTEST", "FRIDAY_OFFICIAL", "FRIDAY_OFFICIAL_RESULT"):
                 from backend.services.contest_performance_service import get_friday_date_for_session
-                f_date = get_friday_date_for_session(str(eff_sess).strip())
+                f_date = get_friday_date_for_session(eff_sess_str)
                 res_data["session_date"] = f_date
                 res_data["sessionDate"] = f_date
                 res_data["contestDate"] = f_date
-                res_data["session_id"] = str(eff_sess).strip()
             else:
-                res_data["session_date"] = str(eff_sess).strip()
-                res_data["sessionDate"] = str(eff_sess).strip()
-                res_data["session_id"] = str(eff_sess).strip()
+                # If eff_sess is purely a session ID (digits like '14'), resolve the actual Sunday date from WeeklySession
+                resolved_date = None
+                if eff_sess_str.isdigit():
+                    ws_row = db.query(WeeklySession).filter(WeeklySession.id == int(eff_sess_str)).first()
+                    if ws_row and ws_row.session_date:
+                        resolved_date = str(ws_row.session_date).strip()
+                elif len(eff_sess_str) >= 8 and ('.' in eff_sess_str or '-' in eff_sess_str or '/' in eff_sess_str):
+                    resolved_date = eff_sess_str
+
+                # If we resolved a real date, set it. If not, only overwrite if res_data didn't already have a valid date
+                existing_date = res_data.get("session_date") or res_data.get("contest_date") or res_data.get("sessionDate")
+                is_existing_valid = existing_date and not str(existing_date).strip().isdigit() and len(str(existing_date).strip()) >= 8
+                
+                final_date = resolved_date or (existing_date if is_existing_valid else "11.10.2026")
+                res_data["session_date"] = final_date
+                res_data["sessionDate"] = final_date
+                res_data["contestDate"] = final_date
+                res_data["contest_date"] = final_date
         try:
             existing = db.query(ReportHistory).filter(ReportHistory.report_id == final_rid).first()
             if existing:

@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom';
 import {
   Mail, Send, RefreshCw, CheckCircle2, XCircle, Clock, AlertTriangle,
   Trash2, Plus, Users, ChevronDown, X, Eye, Loader2, RotateCcw, Download,
-  FileSpreadsheet, FileText, Play, Pause, Settings, ShieldCheck, Sparkles,
-  Filter, Search, Zap, Calendar, ArrowRight, ExternalLink, Check, CheckSquare, Square, Info, Server, Lock
+  FileSpreadsheet, FileText, Play, Pause, Settings, ShieldCheck,
+  Filter, Search, Calendar, ArrowRight, ExternalLink, Check, CheckSquare, Square, Info, Server, Lock
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -1006,7 +1006,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           <div className="flex items-center justify-between gap-1 mb-1">
             <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">Automation</span>
             <div className="w-6 h-6 rounded-xl bg-purple-500/15 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-              <Sparkles className="w-3.5 h-3.5" />
+              <Clock className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="text-lg font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 my-1">
@@ -1039,7 +1039,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               : 'bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-white/[0.06] shadow-xs'
           }`}
         >
-          <Zap className={`w-4 h-4 shrink-0 ${activeSection === 'manual' ? 'text-amber-300' : 'text-amber-500'}`} />
+          <Send className={`w-4 h-4 shrink-0 ${activeSection === 'manual' ? 'text-amber-300' : 'text-amber-500'}`} />
           <span className="truncate">Manual Dispatch</span>
         </button>
 
@@ -1188,7 +1188,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-200/80 dark:border-white/[0.08]">
             <div className="space-y-1.5 max-w-2xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500/10 via-brand-500/10 to-purple-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[11px] font-black uppercase tracking-wider">
-                <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                <Send className="w-3.5 h-3.5 text-amber-500" />
                 <span>On-Demand Executive Dispatch</span>
               </div>
               <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
@@ -1589,7 +1589,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                     {isSendingManual ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <Zap className="w-4 h-4 text-amber-300 fill-amber-300 animate-pulse" />
+                      <Send className="w-4 h-4 text-white" />
                     )}
                     <span>Send Report Now ({selectedRecipientEmails.size})</span>
                   </button>
@@ -2238,7 +2238,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
         <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-slate-950/65 dark:bg-navy-950/80 backdrop-blur-md animate-fade-in select-none">
           <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center space-x-3 text-brand-600 dark:text-brand-400">
-              <Zap className="w-6 h-6 text-amber-400" />
+              <Send className="w-6 h-6 text-brand-600 dark:text-brand-400" />
               <h3 className="text-lg font-black text-slate-900 dark:text-white">Confirm Manual Dispatch</h3>
             </div>
 

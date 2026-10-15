@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Filter, RotateCcw, Check, Sparkles, Search } from 'lucide-react';
+import { X, Filter, RotateCcw, Check, Search } from 'lucide-react';
 import { useFilters } from '../context/FilterContext';
 import { SwipeHandle } from './SwipeHandle';
 

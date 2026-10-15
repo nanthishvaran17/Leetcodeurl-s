@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import api from '../../services/api';
 import { 
   FileText, Download, Loader2, CheckCircle2, AlertCircle, User, Grid,
-  ShieldCheck, Sparkles, Award, Lock, Check, Fingerprint
+  ShieldCheck, Award, Lock, Check, Fingerprint
 } from 'lucide-react';
 import { downloadManager } from '../../services/download/downloadManager';
 import { formatDepartmentCode, deriveDepartmentFromRegNo } from '../../utils/filterUtils';

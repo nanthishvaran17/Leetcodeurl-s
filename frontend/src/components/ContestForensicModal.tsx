@@ -15,8 +15,6 @@ import {
   Check,
   UserX,
   Award,
-  Zap,
-  Sparkles,
   ChevronDown
 } from 'lucide-react';
 import {

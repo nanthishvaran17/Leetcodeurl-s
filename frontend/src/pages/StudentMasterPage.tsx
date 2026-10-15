@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom';
 import { 
   Users, Trash2, Edit2, ShieldAlert, BadgeInfo, CheckCircle, 
-  X, Check, AlertCircle, Sparkles, Building2, LayoutList, Calendar,
+  X, Check, AlertCircle, Building2, LayoutList, Calendar,
   Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight, Mail, User,
   SlidersHorizontal, Filter
 } from 'lucide-react';

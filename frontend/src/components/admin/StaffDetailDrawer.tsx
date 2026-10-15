@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { SwipeHandle } from '../SwipeHandle';
 import { StaffRecord, StudentRecord, getCommandCenterStudents } from '../../services/commandCenterService';
-import { Users, X, Code, CheckCircle, Clock, Calendar, Mail, Briefcase, Activity, RefreshCw, Gauge, Trophy, Sparkles, Target, Eye } from 'lucide-react';
+import { Users, X, Code, CheckCircle, Clock, Calendar, Mail, Briefcase, Activity, RefreshCw, Gauge, Trophy, Target, Eye } from 'lucide-react';
 
 interface StaffDetailDrawerProps {
   staff: StaffRecord | null;
@@ -189,7 +189,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
 
               {/* Active Solvers */}
               <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm shadow-slate-200/50 dark:shadow-black/10 relative overflow-hidden">
-                <Sparkles className="absolute -right-2 -top-2 text-emerald-50 dark:text-navy-800" size={58} />
+                <CheckCircle className="absolute -right-2 -top-2 text-emerald-50 dark:text-navy-800" size={58} />
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Active Solvers</div>
                 <div className="flex items-baseline gap-1">
                   <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">

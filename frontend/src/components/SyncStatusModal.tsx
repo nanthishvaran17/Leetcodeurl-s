@@ -4,6 +4,7 @@ import { useScrollLock } from '../hooks/useScrollLock';
 import { Activity, RefreshCw, X, AlertTriangle, CheckCircle2, Clock, ShieldCheck, Database, UserCheck, AlertCircle, XCircle } from 'lucide-react';
 import { getSyncStatus, getDataFreshness } from '../services/api';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
+import { SwipeHandle } from './SwipeHandle';
 
 interface SyncStatusModalProps {
   isOpen: boolean;
@@ -205,6 +206,8 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
       }}
     >
       <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-lg animate-modal-content">
+        {/* Mobile Top Swipe Bar */}
+        <SwipeHandle onClose={onClose} className="pt-2 pb-0 block sm:hidden shrink-0" />
         
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 shrink-0 safe-area-pt">
@@ -354,9 +357,11 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
                       return (
                         <div key={idx} className="flex items-center justify-between text-[10.5px] py-1 border-b border-slate-800/60 last:border-0">
                           <div className="flex items-center space-x-2 truncate">
-                            <span className={isOk ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
-                              {isOk ? '✓' : '✗'}
-                            </span>
+                            {isOk ? (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            ) : (
+                              <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                            )}
                             <span className="text-slate-100 font-sans font-bold truncate">{rec.student_name}</span>
                             {rec.username && (
                               <span className="text-slate-500 text-[10px]">@{rec.username}</span>

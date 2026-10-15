@@ -9,6 +9,7 @@ class Department(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), unique=True, nullable=False)
     code = Column(String(20), unique=True, nullable=False)
+    is_active = Column(Boolean, default=True, server_default=text("1"))
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     students = relationship("Student", back_populates="department")

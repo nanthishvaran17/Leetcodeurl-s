@@ -4,7 +4,7 @@ import { useKeyboardContext } from '../context/KeyboardContext';
 import {
   X,
   Send,
-  Sparkles,
+  Bot,
   Database,
   Loader2,
   User,
@@ -34,8 +34,7 @@ import {
   ChevronDown,
   ShieldCheck,
   TrendingUp,
-  TrendingDown,
-  Zap,
+  TrendingDown
 } from 'lucide-react';
 import api from '../services/api';
 import { getApiUrl } from '../config/apiConfig';
@@ -230,7 +229,7 @@ const TypingIndicator: React.FC = () => (
     className="flex items-start gap-2.5"
   >
     <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-      <Sparkles className="w-3 h-3 text-white" />
+      <Bot className="w-3 h-3 text-white" />
     </div>
     <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-sm bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-sm flex items-center gap-2.5">
       <div className="flex items-center gap-1">
@@ -292,24 +291,24 @@ const EmptyStateSuggestions: React.FC<{
   } else {
     suggestions = mode === 'operations'
       ? [
-          { icon: Activity, label: 'Database Audit', desc: 'Run deep bug & duplicate scan', query: 'Check the entire database for bugs, duplicate usernames, and unverified profiles', color: 'text-rose-500' },
-          { icon: Mail, label: 'Draft Warning Email', desc: 'Compose alert for low solvers', query: 'mail panu low solvers-ukku', color: 'text-purple-500' },
-          { icon: Trophy, label: 'Top 10 Solvers', desc: 'College-wide leaderboard', query: 'Who are the top 10 college solvers overall?', color: 'text-amber-500' },
-          { icon: AlertOctagon, label: 'Absentee Scan', desc: 'Find contest absentees', query: 'Find absent students in the latest Weekly Contest', color: 'text-orange-500' },
-        ]
+        { icon: Activity, label: 'Database Audit', desc: 'Run deep bug & duplicate scan', query: 'Check the entire database for bugs, duplicate usernames, and unverified profiles', color: 'text-rose-500' },
+        { icon: Mail, label: 'Draft Warning Email', desc: 'Compose alert for low solvers', query: 'mail panu low solvers-ukku', color: 'text-purple-500' },
+        { icon: Trophy, label: 'Top 10 Solvers', desc: 'College-wide leaderboard', query: 'Who are the top 10 college solvers overall?', color: 'text-amber-500' },
+        { icon: AlertOctagon, label: 'Absentee Scan', desc: 'Find contest absentees', query: 'Find absent students in the latest Weekly Contest', color: 'text-orange-500' },
+      ]
       : [
-          { icon: BarChart2, label: 'Contest Matrix', desc: 'Compare two contest sessions', query: 'Compare Contest 514 and Contest 515 performance', color: 'text-brand-500' },
-          { icon: Users, label: 'Student Lookup', desc: 'Search any student profile', query: 'Lookup Bharath K profile details', color: 'text-indigo-500' },
-          { icon: BookOpen, label: 'HOD Report', desc: 'Weekly summary for HOD', query: 'Generate HOD weekly summary report', color: 'text-emerald-500' },
-          { icon: GraduationCap, label: 'Performance Analysis', desc: 'Low solver identification', query: 'Find low solvers with less than 50 problems', color: 'text-cyan-500' },
-        ];
+        { icon: BarChart2, label: 'Contest Matrix', desc: 'Compare two contest sessions', query: 'Compare Contest 514 and Contest 515 performance', color: 'text-brand-500' },
+        { icon: Users, label: 'Student Lookup', desc: 'Search any student profile', query: 'Lookup Bharath K profile details', color: 'text-indigo-500' },
+        { icon: BookOpen, label: 'HOD Report', desc: 'Weekly summary for HOD', query: 'Generate HOD weekly summary report', color: 'text-emerald-500' },
+        { icon: GraduationCap, label: 'Performance Analysis', desc: 'Low solver identification', query: 'Find low solvers with less than 50 problems', color: 'text-cyan-500' },
+      ];
   }
 
   return (
     <div className="flex flex-col items-center justify-start py-3 px-3 sm:px-4 space-y-3 my-auto">
       <div className="space-y-1 text-center">
         <div className="w-9 h-9 mx-auto rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shadow-sm">
-          <Sparkles className="w-4.5 h-4.5 text-white" />
+          <Bot className="w-4.5 h-4.5 text-white" />
         </div>
         <p className="text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 pt-0.5">
           {activeContext ? `Ask AI about ${activeContext.type.toLowerCase()} context ${activeContext.id ? `#${activeContext.id}` : ''}` : 'Ask anything about NEC student data'}
@@ -339,7 +338,19 @@ const EmptyStateSuggestions: React.FC<{
 
 // --- Main Widget ---
 
-export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void; onClose?: () => void }> = ({ onNavigateTab, onClose }) => {
+export interface AIAssistantWidgetProps {
+  onNavigateTab?: (tab: string) => void;
+  onClose?: () => void;
+  initialQuery?: string;
+  onClearInitialQuery?: () => void;
+}
+
+export const AIAssistantWidget: React.FC<AIAssistantWidgetProps> = ({
+  onNavigateTab,
+  onClose,
+  initialQuery,
+  onClearInitialQuery,
+}) => {
   const [isOpen, setIsOpen] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showLaunchers, setShowLaunchers] = useState(false);
@@ -767,6 +778,23 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
     }
   };
 
+  useEffect(() => {
+    if (initialQuery !== undefined && initialQuery !== null) {
+      setIsOpen(true);
+      const q = initialQuery.trim();
+      if (onClearInitialQuery) onClearInitialQuery();
+      if (q) {
+        const timer = setTimeout(() => {
+          handleSend(q);
+        }, 150);
+        return () => clearTimeout(timer);
+      } else {
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 100);
+      }
+    }
+  }, [initialQuery]);
 
   const handleConfirmAction = async (msgId: string, actionId: string) => {
     setConfirmingActionId(actionId);
@@ -784,7 +812,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
   };
 
   const handleClearChat = async () => {
-    try { await api.post('/ai/clear-history').catch(() => null); } catch (_err) {}
+    try { await api.post('/ai/clear-history').catch(() => null); } catch (_err) { }
     setMessages([{ ...makeWelcomeMsg(), id: `welcome_${Date.now()}`, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
   };
 
@@ -800,18 +828,17 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
             exit={{ opacity: 0, scale: 0.95, y: 24 }}
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             role="dialog" aria-label="NEC AI Assistant"
-            className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-navy-800 shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 transition-all duration-300 ${
-              isExpanded
+            className={`ai-assistant-dialog bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-navy-800 shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 transition-all duration-300 ${isExpanded
                 ? 'w-[840px] max-w-[calc(100vw-1.5rem)] h-[800px] max-h-[calc(100dvh-3.5rem)]'
                 : 'w-[min(430px,calc(100vw-1rem))] h-[min(590px,calc(100dvh-5.5rem))]'
-            }`}
+              }`}
           >
 
             {/* HEADER */}
             <div className="px-4 py-3 bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 text-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-8 h-8 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shrink-0 shadow-inner">
-                  <Sparkles className="w-4 h-4 text-amber-300" />
+                  <Bot className="w-4 h-4 text-amber-300" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -891,11 +918,10 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                 { id: 'institutional', label: 'Intelligence', Icon: Database },
               ] as const).map(({ id, label, Icon }) => (
                 <button key={id} type="button" onClick={() => setActiveMode(id)}
-                  className={`flex-1 py-1.5 px-2.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                    activeMode === id
+                  className={`flex-1 py-1.5 px-2.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${activeMode === id
                       ? 'bg-white dark:bg-navy-950 text-brand-600 dark:text-brand-400 shadow-sm border border-slate-200 dark:border-navy-700'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                  }`}>
+                    }`}>
                   <Icon className="w-3 h-3" />
                   <span>{label}</span>
                 </button>
@@ -957,7 +983,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                   <div className="px-3 pt-2.5 pb-1 bg-slate-50 dark:bg-navy-900/70 border-b border-slate-200 dark:border-navy-800 shrink-0">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
-                        <Zap className="w-3 h-3 text-brand-500" />
+                        <Activity className="w-3 h-3 text-brand-500" />
                         <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
                           Your Intelligence Brief
                         </span>
@@ -976,31 +1002,31 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                       {briefCards.map((card, idx) => {
                         const borderColor =
                           card.type === 'SUCCESS' ? 'border-l-emerald-400'
-                          : card.type === 'ALERT'   ? 'border-l-rose-500'
-                          : card.type === 'WARNING' ? 'border-l-amber-400'
-                          : 'border-l-brand-400';
+                            : card.type === 'ALERT' ? 'border-l-rose-500'
+                              : card.type === 'WARNING' ? 'border-l-amber-400'
+                                : 'border-l-brand-400';
                         const bgColor =
                           card.type === 'SUCCESS' ? 'bg-emerald-50 dark:bg-emerald-950/20'
-                          : card.type === 'ALERT'   ? 'bg-rose-50 dark:bg-rose-950/20'
-                          : card.type === 'WARNING' ? 'bg-amber-50 dark:bg-amber-950/20'
-                          : 'bg-white dark:bg-navy-900';
+                            : card.type === 'ALERT' ? 'bg-rose-50 dark:bg-rose-950/20'
+                              : card.type === 'WARNING' ? 'bg-amber-50 dark:bg-amber-950/20'
+                                : 'bg-white dark:bg-navy-900';
                         const metricColor =
                           card.type === 'SUCCESS' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
-                          : card.type === 'ALERT'   ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300'
-                          : card.type === 'WARNING' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
-                          : 'bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300';
+                            : card.type === 'ALERT' ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300'
+                              : card.type === 'WARNING' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
+                                : 'bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300';
                         const IconComp =
-                          card.icon === 'trophy'   ? Trophy
-                          : card.icon === 'users'   ? Users
-                          : card.icon === 'shield'  ? ShieldCheck
-                          : card.icon === 'activity'? Activity
-                          : card.icon === 'zap'     ? Zap
-                          : AlertTriangle;
+                          card.icon === 'trophy' ? Trophy
+                            : card.icon === 'users' ? Users
+                              : card.icon === 'shield' ? ShieldCheck
+                                : card.icon === 'activity' ? Activity
+                                  : card.icon === 'zap' ? Activity
+                                    : AlertTriangle;
                         const iconColor =
                           card.type === 'SUCCESS' ? 'text-emerald-500'
-                          : card.type === 'ALERT'   ? 'text-rose-500'
-                          : card.type === 'WARNING' ? 'text-amber-500'
-                          : 'text-brand-500';
+                            : card.type === 'ALERT' ? 'text-rose-500'
+                              : card.type === 'WARNING' ? 'text-amber-500'
+                                : 'text-brand-500';
                         return (
                           <motion.div
                             key={idx}
@@ -1060,7 +1086,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                       <div className="px-4 pt-4 pb-2">
                         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-2.5">
                           <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                            <Sparkles className="w-3 h-3 text-white" />
+                            <Bot className="w-3 h-3 text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
@@ -1089,7 +1115,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                             {/* Avatar */}
                             {msg.sender === 'ai' && (
                               <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shrink-0 mb-5 shadow-sm">
-                                <Sparkles className="w-3 h-3 text-white" />
+                                <Bot className="w-3 h-3 text-white" />
                               </div>
                             )}
                             {msg.sender === 'user' && (
@@ -1107,24 +1133,22 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                                   <><span className="text-slate-300 dark:text-slate-700">·</span><span className="truncate max-w-[100px]">{msg.source}</span></>
                                 )}
                                 {msg.dataStatus && msg.sender === 'ai' && (
-                                  <span className={`px-1.5 py-px rounded text-[9px] font-mono font-bold border ${
-                                    msg.dataStatus === 'VERIFIED'
+                                  <span className={`px-1.5 py-px rounded text-[9px] font-mono font-bold border ${msg.dataStatus === 'VERIFIED'
                                       ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
                                       : msg.dataStatus === 'DATA_UNAVAILABLE' || msg.isError
-                                      ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800'
-                                      : 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800'
-                                  }`}>{msg.dataStatus}</span>
+                                        ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800'
+                                        : 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                                    }`}>{msg.dataStatus}</span>
                                 )}
                               </div>
 
                               {/* Bubble */}
-                              <div className={`px-3.5 py-3 rounded-2xl shadow-sm ${
-                                msg.sender === 'user'
+                              <div className={`px-3.5 py-3 rounded-2xl shadow-sm ${msg.sender === 'user'
                                   ? 'bg-gradient-to-br from-brand-600 to-indigo-600 text-white rounded-br-sm'
                                   : msg.isError
-                                  ? 'bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-bl-sm'
-                                  : 'bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-bl-sm'
-                              }`}>
+                                    ? 'bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-bl-sm'
+                                    : 'bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-bl-sm'
+                                }`}>
                                 {msg.isError && (
                                   <div className="flex items-center gap-1.5 mb-2 text-rose-600 dark:text-rose-400 text-[11px] font-semibold">
                                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
@@ -1201,7 +1225,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                                   </div>
                                 )}
 
-                                 {/* Navigation link */}
+                                {/* Navigation link */}
                                 {msg.actionLabel && (
                                   <button type="button"
                                     onClick={() => { if (msg.actionTab && onNavigateTab) { onNavigateTab(msg.actionTab); setIsOpen(false); } }}
@@ -1289,11 +1313,10 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
 
             {/* INPUT AREA / COMPOSER */}
             <div className="px-3 py-2 bg-white dark:bg-navy-950 border-t border-slate-200 dark:border-navy-800 shrink-0 space-y-1">
-              <div className={`flex items-end gap-2 px-3 py-1.5 rounded-xl border transition-all duration-150 bg-slate-50 dark:bg-navy-900 ${
-                loading
+              <div className={`flex items-end gap-2 px-3 py-1.5 rounded-xl border transition-all duration-150 bg-slate-50 dark:bg-navy-900 ${loading
                   ? 'border-slate-200 dark:border-navy-700 opacity-70'
                   : 'border-slate-200 dark:border-navy-700 focus-within:border-brand-400 dark:focus-within:border-brand-600 focus-within:ring-2 focus-within:ring-brand-500/10'
-              }`}>
+                }`}>
                 <textarea
                   ref={inputRef}
                   rows={1}
@@ -1319,11 +1342,10 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                   onClick={() => handleSend()}
                   disabled={loading || !input.trim()}
                   aria-label="Send message"
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mb-0.5 transition-all duration-150 ${
-                    !input.trim() || loading
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mb-0.5 transition-all duration-150 ${!input.trim() || loading
                       ? 'bg-slate-100 dark:bg-navy-800 text-slate-300 dark:text-slate-600 cursor-not-allowed'
                       : 'bg-gradient-to-br from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-sm cursor-pointer active:scale-95'
-                  }`}
+                    }`}
                 >
                 </button>
               </div>

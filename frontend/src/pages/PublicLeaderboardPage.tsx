@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
-import { Globe, Shield, Users, TrendingUp, Search, Star, Award, Zap, ChevronLeft, ChevronRight, BarChart3, Filter, ExternalLink, Calendar, Building2, LayoutList } from 'lucide-react';
+import { Globe, Shield, Users, TrendingUp, Search, Award, ChevronLeft, ChevronRight, BarChart3, Filter, ExternalLink, Calendar, Building2, LayoutList } from 'lucide-react';
 import { GlobalFilter } from '../components/GlobalFilter';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
@@ -148,7 +148,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
               <div className="text-[9px] sm:text-[10px] text-slate-300 font-extrabold uppercase tracking-wider truncate w-full mt-0.5">Students</div>
             </div>
             <div className="p-2.5 sm:p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center min-w-0 flex flex-col items-center justify-center shadow-xs">
-              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 mx-auto mb-1" />
+              <Award className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 mx-auto mb-1" />
               <div className="text-base xs:text-lg sm:text-2xl font-black text-emerald-400 font-mono tracking-tight truncate w-full" title={totalSolved.toLocaleString()}>{totalSolved.toLocaleString()}</div>
               <div className="text-[9px] sm:text-[10px] text-slate-300 font-extrabold uppercase tracking-wider truncate w-full mt-0.5">Total Solved</div>
             </div>

@@ -6,6 +6,7 @@ export interface Department {
   code: string;
   name: string;
   pillText?: string;
+  student_count?: number;
 }
 
 interface DepartmentContextType {
@@ -21,16 +22,11 @@ interface DepartmentContextType {
 
 const DepartmentContext = createContext<DepartmentContextType | undefined>(undefined);
 
-// Only these 3 departments are active institution-wide
+// Only institutional departments with active enrolled students in the database
 const ALL_DEPARTMENTS_FALLBACK: Department[] = [
-  { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
-  { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' },
-  { id: 4, code: 'IT', name: 'Information Technology', pillText: 'IT' },
-  { id: 3, code: 'CSE', name: 'Computer Science and Engineering', pillText: 'CSE' },
-  { id: 5, code: 'ECE', name: 'Electronics and Communication Engineering', pillText: 'ECE' },
-  { id: 6, code: 'EEE', name: 'Electrical and Electronics Engineering', pillText: 'EEE' },
-  { id: 7, code: 'AGRI', name: 'Agricultural Engineering', pillText: 'AGRI' },
-  { id: 8, code: 'AIDS', name: 'Artificial Intelligence and Data Science', pillText: 'AIDS' },
+  { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)', student_count: 159 },
+  { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)', student_count: 148 },
+  { id: 4, code: 'IT', name: 'Information Technology', pillText: 'IT', student_count: 256 },
 ];
 
 export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -104,17 +100,24 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             finalName = 'Artificial Intelligence and Machine Learning';
           }
 
+          const studentCount = d.student_count ?? d.students_count ?? 0;
           if (!uniqueMap.has(finalCode)) {
             uniqueMap.set(finalCode, {
               id: d.id,
               code: finalCode,
               name: finalName,
-              pillText: finalCode
+              pillText: finalCode,
+              student_count: studentCount
             });
+          } else {
+            const existing = uniqueMap.get(finalCode)!;
+            if (studentCount > 0 && (!existing.student_count || existing.student_count === 0)) {
+              existing.student_count = studentCount;
+            }
           }
         });
 
-        const mappedDepts = Array.from(uniqueMap.values());
+        const mappedDepts = Array.from(uniqueMap.values()).filter(d => (d.student_count === undefined || d.student_count > 0));
         setDepartments(mappedDepts.length > 0 ? mappedDepts : ALL_DEPARTMENTS_FALLBACK);
       } else {
         setDepartments(ALL_DEPARTMENTS_FALLBACK);

@@ -1,5 +1,5 @@
 import React from "react";
-import { Award, Lock, CheckCircle, Sparkles } from "lucide-react";
+import { Award, Lock, CheckCircle } from "lucide-react";
 
 interface BadgeItem {
   id: string;

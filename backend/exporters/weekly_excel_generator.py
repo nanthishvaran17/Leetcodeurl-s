@@ -21,8 +21,16 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
     wb = openpyxl.Workbook()
     wb.active
 
-    raw_date = str(data.get("session_date") or data.get("contest_date") or data.get("report_date") or "11.10.2026")
-    report_date = raw_date.replace("-", ".") if "-" in raw_date else raw_date
+    raw_date = None
+    for cand in [data.get("session_date"), data.get("contest_date"), data.get("report_date"), (data.get("current_session") or {}).get("session_date")]:
+        if cand:
+            c_str = str(cand).strip()
+            if not c_str.isdigit() and len(c_str) >= 8 and ('.' in c_str or '-' in c_str or '/' in c_str):
+                raw_date = c_str
+                break
+    if not raw_date:
+        raw_date = "11.10.2026"
+    report_date = raw_date.replace("-", ".").replace("/", ".")
     
     # Palette: Professional Institutional Restrained Navy/Slate
     navy_fill = PatternFill(start_color="002060", end_color="002060", fill_type="solid")
@@ -95,7 +103,7 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
         header_lines = [
             ("A1:M1", "NANDHA ENGINEERING COLLEGE, ERODE - 638 052.", 12, True),
             ("A2:M2", dept_display_name, 11, True),
-            ("A3:M3", f"Date:{report_date}", 11, True),
+            ("A3:M3", f"Date: {report_date}", 11, True),
             ("A4:M4", "Leetcode Performance - Weekly Report", 11, True),
             ("A5:M5", f"Name & Designation of the Academic Coordinator: {coord}", 11, True),
         ]

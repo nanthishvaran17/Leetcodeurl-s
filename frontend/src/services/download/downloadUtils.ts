@@ -123,12 +123,13 @@ export async function blobToBase64(rawBlob: any): Promise<string> {
 
 import { registerPlugin } from '@capacitor/core';
 
-interface DocumentOpenerPluginType {
+export interface DocumentOpenerPluginType {
   openDocument(options: { path: string; filename: string; mimeType?: string }): Promise<void>;
   fileExists(options: { path: string; filename: string }): Promise<{ exists: boolean; size?: number }>;
+  saveToDownloads(options: { data: string; filename: string; mimeType?: string }): Promise<{ success: boolean; path: string; fileUri: string; publicUri: string }>;
 }
 
-const DocumentOpener = registerPlugin<DocumentOpenerPluginType>('DocumentOpener');
+export const DocumentOpener = registerPlugin<DocumentOpenerPluginType>('DocumentOpener');
 
 /** Native Android file open helper via DocumentOpener (Excel/Sheets) with fallback to Share */
 export async function openDownloadedDocument(
@@ -183,6 +184,71 @@ export async function openDownloadedDocument(
   }
 
   return { success: true };
+}
+
+/**
+ * Saves a file to the user's mobile device storage.
+ * Prioritizes the native Android Public Downloads folder (MediaStore.Downloads) via DocumentOpener.saveToDownloads,
+ * so the file appears directly in the phone's "Downloads" and "My Files" apps.
+ * Falls back to Capacitor Filesystem (Directory.Documents).
+ */
+export async function saveFileToMobileStorage(
+  rawBlob: any,
+  filename: string,
+  mimeType?: string
+): Promise<{ uri: string; path: string }> {
+  const effectiveMime = mimeType || getMimeTypeFromFilename(filename);
+  const base64Data = await blobToBase64(rawBlob);
+
+  // 1. Primary: Native Android Public Downloads folder (appears in phone's Downloads app & File Manager)
+  if (isNativeMobile()) {
+    try {
+      const saveRes = await DocumentOpener.saveToDownloads({
+        data: base64Data,
+        filename,
+        mimeType: effectiveMime,
+      });
+      if (saveRes?.fileUri) {
+        console.log(`[DownloadUtils] Successfully saved to Android Public Downloads: ${filename} -> ${saveRes.publicUri || saveRes.fileUri}`);
+        return {
+          uri: saveRes.fileUri,
+          path: saveRes.path || saveRes.fileUri,
+        };
+      }
+    } catch (nativeErr) {
+      console.warn('[DownloadUtils] Native saveToDownloads failed, attempting Filesystem fallback:', nativeErr);
+    }
+
+    // 2. Fallback: Capacitor Filesystem Directory.Documents (accessible to user)
+    try {
+      const { Filesystem, Directory } = await import('@capacitor/filesystem');
+      const writeResult = await Filesystem.writeFile({
+        path: filename,
+        data: base64Data,
+        directory: Directory.Documents,
+        recursive: true,
+      });
+      return {
+        uri: writeResult.uri,
+        path: writeResult.uri,
+      };
+    } catch (docErr) {
+      console.warn('[DownloadUtils] Directory.Documents write failed, falling back to Directory.Cache:', docErr);
+      const { Filesystem, Directory } = await import('@capacitor/filesystem');
+      const writeResult = await Filesystem.writeFile({
+        path: filename,
+        data: base64Data,
+        directory: Directory.Cache,
+        recursive: true,
+      });
+      return {
+        uri: writeResult.uri,
+        path: writeResult.uri,
+      };
+    }
+  }
+
+  return { uri: '', path: '' };
 }
 
 /** Display non-disruptive user notification when file is deleted or unavailable */

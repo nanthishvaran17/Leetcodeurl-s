@@ -2,7 +2,7 @@
 import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef, startTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { App as CapacitorApp } from '@capacitor/app';
-import { Sparkles, LogOut, ChevronDown } from 'lucide-react';
+import { LogOut, ChevronDown } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import type { StudentData } from './components/LeaderboardTable';
@@ -148,6 +148,15 @@ export const App: React.FC = () => {
       </Suspense>
     );
   }
+  if (pathname === '/dev-studio' || pathname === '/dev-studio/') {
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<PageSkeleton />}>
+          <DeveloperStudio onClose={() => { window.location.href = '/dashboard'; }} />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
   if (pathname === '/hall-of-fame' || pathname === '/hall-of-fame/' || pathname === '/kiosk' || pathname === '/tv') {
     return (
       <Suspense fallback={<PageSkeleton />}>
@@ -262,7 +271,14 @@ export const App: React.FC = () => {
       window.removeEventListener('touchstart', onUserInteract);
     };
   }, []);
-  const [activeTab, setActiveTab] = useState('landing');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      if (sessionStorage.getItem('admin_login_portal') === 'true' || localStorage.getItem('admin_login_portal') === 'true' || window.location.hash.includes('dev-studio')) {
+        return 'dev-studio';
+      }
+    }
+    return 'landing';
+  });
   const [previousTab, setPreviousTab] = useState<string | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [isAppLocked, setIsAppLocked] = useState(false);
@@ -312,8 +328,24 @@ export const App: React.FC = () => {
   const [summaryData, setSummaryData] = useState<any>(() => getCachedSummary());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showAiWidget, setShowAiWidget] = useState(false);
+  const [aiInitialQuery, setAiInitialQuery] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showMobileFilterDrawer, setShowMobileFilterDrawer] = useState(false);
+
+  const handleCloseCommandPalette = useCallback(() => {
+    setShowCommandPalette(false);
+  }, []);
+
+  const handleOpenAiWithQuery = useCallback((q: string) => {
+    setAiInitialQuery(q);
+    setShowAiWidget(true);
+    window.dispatchEvent(new CustomEvent('force_open_ai_widget'));
+    window.dispatchEvent(new CustomEvent('open_ai_assistant', { detail: { query: q } }));
+  }, []);
+
+  const handleOpenShortcutsModal = useCallback(() => {
+    setShowShortcutsModal(true);
+  }, []);
 
   useGlobalKeyboardShortcuts({
     onOpenCommandPalette: () => setShowCommandPalette(true),
@@ -328,7 +360,7 @@ export const App: React.FC = () => {
     onToggleShortcutsModal: () => setShowShortcutsModal(prev => !prev),
     onNavigateTab: (tab: string) => handleTabChange(tab),
     onToggleAiWidget: () => {
-      setShowAiWidget(true);
+      setShowAiWidget(prev => !prev);
       window.dispatchEvent(new CustomEvent('toggle_ai_assistant'));
     },
     onToggleNotifications: () => window.dispatchEvent(new CustomEvent('toggle_notifications')),
@@ -357,6 +389,14 @@ export const App: React.FC = () => {
       };
       window.addEventListener('open_ai_widget', handleOpenAi);
 
+      const handleOpenAiAssistant = (e: any) => {
+        setShowAiWidget(true);
+        if (e?.detail?.query) {
+          setAiInitialQuery(e.detail.query);
+        }
+      };
+      window.addEventListener('open_ai_assistant', handleOpenAiAssistant);
+
       const handleOpenFilterDrawer = () => {
         setShowMobileFilterDrawer(true);
       };
@@ -367,6 +407,7 @@ export const App: React.FC = () => {
       return () => {
         window.removeEventListener('toggle_sidebar', handleToggleSidebar);
         window.removeEventListener('open_ai_widget', handleOpenAi);
+        window.removeEventListener('open_ai_assistant', handleOpenAiAssistant);
         window.removeEventListener('open_mobile_filter_drawer', handleOpenFilterDrawer);
         window.removeEventListener('open_share_card', handleOpenShareModal);
       };
@@ -406,9 +447,21 @@ export const App: React.FC = () => {
 
     const handleHashChange = () => {
       const hash = window.location.hash;
+      const isAdminPortal = typeof window !== 'undefined' && (
+        sessionStorage.getItem('admin_login_portal') === 'true' ||
+        localStorage.getItem('admin_login_portal') === 'true'
+      );
       if (hash && hash.startsWith('#/')) {
         const tab = normalizeRouteAlias(hash.replace('#/', '').trim());
-        if (tab && tab !== 'main-content') setActiveTab(tab);
+        if (tab && tab !== 'main-content') {
+          if (isAdminPortal && (tab === 'dashboard' || tab === 'landing')) {
+            setActiveTab('dev-studio');
+            return;
+          }
+          setActiveTab(tab);
+        }
+      } else if (isAdminPortal) {
+        setActiveTab('dev-studio');
       } else if (isAuthenticated) {
         setActiveTab('dashboard');
       }
@@ -903,8 +956,22 @@ export const App: React.FC = () => {
     );
   }
 
+  if (activeTab === 'dev-studio') {
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<PageSkeleton />}>
+          <DeveloperStudio onClose={() => {
+            window.location.href = '/admin';
+          }} />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
   return (
-    <div className="min-h-screen overflow-x-hidden bg-white dark:bg-navy-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative">
+    <div className={`overflow-x-hidden bg-white dark:bg-navy-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${
+      activeTab === 'messages' ? 'h-screen max-h-screen overflow-hidden' : 'min-h-screen'
+    }`}>
       {/* Top Page Transition Progress Loader */}
       {isNavigating && (
         <div className="fixed top-0 left-0 right-0 z-[100050] h-[3px] bg-brand-500/10 dark:bg-brand-400/10 pointer-events-none">
@@ -922,14 +989,11 @@ export const App: React.FC = () => {
       {/* COMMAND PALETTE */}
       <CommandPalette 
         isOpen={showCommandPalette}
-        onClose={() => setShowCommandPalette(false)}
-        onNavigate={(tab) => handleTabChange(tab)}
+        onClose={handleCloseCommandPalette}
+        onNavigate={handleTabChange}
         onSelectStudent={handleSelectStudent}
-        onOpenAiWithQuery={(q) => {
-          setShowAiWidget(true);
-          window.dispatchEvent(new CustomEvent('open_ai_assistant', { detail: { query: q } }));
-        }}
-        onOpenShortcutsModal={() => setShowShortcutsModal(true)}
+        onOpenAiWithQuery={handleOpenAiWithQuery}
+        onOpenShortcutsModal={handleOpenShortcutsModal}
       />
 
       {/* Top Navbar */}
@@ -942,10 +1006,10 @@ export const App: React.FC = () => {
         setIsSidebarOpen={setIsSidebarOpen}
       />
 
-      <div className={`flex-1 w-full mx-auto relative ${
+      <div className={`flex-1 min-h-0 w-full mx-auto relative flex flex-col ${
         activeTab === 'messages'
-          ? 'pt-0 pb-0 px-0 max-w-full overflow-hidden h-[calc(100dvh-56px)] sm:h-[calc(100dvh-60px)]'
-          : 'pt-3.5 sm:pt-4 pb-6 px-2.5 sm:px-4 max-w-full'
+          ? 'pt-0 pb-0 px-0 max-w-full overflow-hidden h-full'
+          : 'pt-3.5 sm:pt-4 pb-24 md:pb-6 px-2.5 sm:px-4 max-w-full'
       }`}>
         
         {/* Slide-out Sidebar Drawer */}
@@ -965,7 +1029,7 @@ export const App: React.FC = () => {
         <main
           id="main-content"
           key={activeTab}
-          className={`min-w-0 w-full animate-fade-in ${activeTab === 'messages' ? 'h-full overflow-hidden' : ''}`}
+          className={`min-w-0 w-full animate-fade-in ${activeTab === 'messages' ? 'flex-1 min-h-0 h-full flex flex-col overflow-hidden' : ''}`}
         >
 
             <ErrorBoundary>
@@ -1169,8 +1233,13 @@ export const App: React.FC = () => {
       {showAiWidget && (
         <Suspense fallback={null}>
           <AIAssistantWidget
+            initialQuery={aiInitialQuery || undefined}
+            onClearInitialQuery={() => setAiInitialQuery(null)}
             onNavigateTab={handleTabChange}
-            onClose={() => setShowAiWidget(false)}
+            onClose={() => {
+              setShowAiWidget(false);
+              setAiInitialQuery(null);
+            }}
           />
         </Suspense>
       )}
@@ -1178,7 +1247,7 @@ export const App: React.FC = () => {
       {/* Viewport-Centered Student Profile Modal */}
       {selectedStudent && activeTab !== 'profile' && typeof document !== 'undefined' && (
         <div
-          className="fixed inset-0 z-[999999] flex items-start justify-center p-3 sm:p-4 pt-3 sm:pt-20 pb-3 sm:pb-6 overflow-y-auto bg-slate-950/85 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[999999] flex items-start justify-center p-2.5 sm:p-4 pt-[max(0.75rem,env(safe-area-inset-top,12px))] sm:pt-20 pb-[max(0.75rem,env(safe-area-inset-bottom,12px))] sm:pb-6 overflow-y-auto bg-slate-950/85 backdrop-blur-md animate-fade-in"
           style={{ zIndex: 999999 }}
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
         >
@@ -1288,8 +1357,8 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Modern Floating Back to Top Button */}
-      <BackToTopButton />
+      {/* Modern Floating Back to Top Button (hidden on messages tab to prevent overlapping chat composer) */}
+      {activeTab !== 'messages' && <BackToTopButton />}
 
     </div>
   );

@@ -29,19 +29,15 @@ export const DeveloperStudio: React.FC<DeveloperStudioProps> = ({ onClose }) => 
   const { user } = useAuth();
 
   const handleExit = () => {
-    if (onClose) {
-      onClose();
-    } else {
-      try {
-        if (window.history && window.history.replaceState) {
-          window.history.replaceState(null, '', '#/dashboard');
-        } else {
-          window.location.hash = '#/dashboard';
-        }
-        window.dispatchEvent(new HashChangeEvent('hashchange'));
-      } catch (_e) {
-        window.location.hash = '#/dashboard';
-      }
+    if (selectedFile) {
+      setSelectedFile(null);
+      setShowMobileSidebar(true);
+      return;
+    }
+    if (window.confirm("Do you want to log out of Developer Studio and return to Admin Login?")) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('access_token');
+      window.location.href = '/admin';
     }
   };
 
@@ -53,7 +49,22 @@ export const DeveloperStudio: React.FC<DeveloperStudioProps> = ({ onClose }) => 
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [selectedFile]);
+
+  // Intercept mobile back gestures/buttons so it never escapes to the dashboard
+  useEffect(() => {
+    const handlePopState = () => {
+      if (selectedFile) {
+        setSelectedFile(null);
+        setShowMobileSidebar(true);
+      }
+      window.history.pushState(null, '', '#/dev-studio');
+    };
+
+    window.history.pushState(null, '', '#/dev-studio');
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [selectedFile]);
 
   const isAdmin = ['admin', 'super admin', 'administrator', 'super_admin'].includes(user?.role?.toLowerCase() || '');
   const isOtpVerified = isAdminOtpVerified();
@@ -235,14 +246,19 @@ export const DeveloperStudio: React.FC<DeveloperStudioProps> = ({ onClose }) => 
       <div className="flex items-center justify-between px-3 sm:px-4 py-2 border-b border-slate-800 bg-slate-900 shrink-0 gap-2 overflow-x-auto custom-scrollbar">
         {/* Left Section: Back Button + Terminal Icon + Title + Badge */}
         <div className="flex items-center gap-2 min-w-0 shrink-0">
-          <button
-            onClick={handleExit}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors shrink-0 cursor-pointer border border-slate-700 active:scale-95"
-            title="Back to Dashboard"
-          >
-            <ArrowLeft className="w-4 h-4 text-brand-400 shrink-0" />
-            <span className="hidden sm:inline">Back</span>
-          </button>
+          {selectedFile && (
+            <button
+              onClick={() => {
+                setSelectedFile(null);
+                setShowMobileSidebar(true);
+              }}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors shrink-0 cursor-pointer border border-slate-700 active:scale-95"
+              title="Back to Files"
+            >
+              <ArrowLeft className="w-4 h-4 text-brand-400 shrink-0" />
+              <span className="hidden sm:inline">Files</span>
+            </button>
+          )}
 
           <div className="h-4 w-[1px] bg-slate-800 mx-0.5 shrink-0 hidden sm:block" />
 

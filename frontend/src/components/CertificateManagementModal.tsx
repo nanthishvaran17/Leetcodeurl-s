@@ -16,7 +16,6 @@ import {
   FileText,
   UserCheck,
   Building2,
-  Sparkles,
   Layers,
   Check,
   AlertTriangle,
@@ -27,13 +26,11 @@ import {
   Filter,
   Eye,
   RotateCcw,
-  Zap,
   GraduationCap,
   Sliders,
   CheckCircle,
   FileCheck2,
   Hash,
-  Crown,
   Lock,
   X
 } from 'lucide-react';
@@ -45,6 +42,7 @@ import { useNotification } from '../context/NotificationContext';
 import { downloadManager } from '../services/download/downloadManager';
 import { DownloadState } from '../services/download/downloadTypes';
 import { ExportStatus } from './ExportStatus';
+import { SwipeHandle } from './SwipeHandle';
 
 interface CertificateRecord {
   id: number;
@@ -500,6 +498,8 @@ export const CertificateManagementModal: React.FC<{
         className="relative w-full max-w-[1550px] max-h-[96vh] h-[94vh] bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-navy-700 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white antialiased my-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Top Swipe Bar */}
+        <SwipeHandle onClose={onClose} className="pt-2 pb-1 block lg:hidden shrink-0 bg-slate-950" pillClassName="bg-white/40 hover:bg-white/60" />
 
         {/* TOP INSTITUTIONAL HEADER & SYSTEM STATUS */}
         <div className="px-3 sm:px-6 py-3 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-b border-brand-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-3 shrink-0 shadow-lg">
@@ -537,7 +537,7 @@ export const CertificateManagementModal: React.FC<{
                     : 'text-slate-300 hover:text-white font-bold hover:bg-slate-800/60'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <Award className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                 <span className="hidden sm:inline">Issuance Studio</span>
                 <span className="sm:hidden">Studio</span>
               </button>
@@ -835,7 +835,7 @@ export const CertificateManagementModal: React.FC<{
 
                           <div className="flex items-center justify-between border-b border-slate-800 pb-2.5 relative z-10">
                             <span className="text-xs sm:text-sm font-black text-amber-400 uppercase tracking-wider flex items-center space-x-1.5">
-                              <Sparkles className="w-4 h-4 text-amber-400" />
+                              <Award className="w-4 h-4 text-amber-400" />
                               <span>Selected Identity Card</span>
                             </span>
                             <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm flex items-center space-x-1">
@@ -878,7 +878,7 @@ export const CertificateManagementModal: React.FC<{
                               disabled={isGenerating || !selectedStudent}
                               className="w-full sm:flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center space-x-2 shadow-xl shadow-emerald-500/25 cursor-pointer transition-all transform hover:scale-[1.01] active:scale-[0.99] border border-emerald-300"
                             >
-                              <Zap className="w-4.5 h-4.5 text-slate-950 fill-current" />
+                              <Award className="w-4.5 h-4.5 text-slate-950" />
                               <span>Issue & Register Now</span>
                             </button>
                             <button
@@ -961,7 +961,7 @@ export const CertificateManagementModal: React.FC<{
                             disabled={isGenerating || !selectedStudent}
                             className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs flex items-center justify-center space-x-1.5 shadow-md cursor-pointer transition-all border border-emerald-400/40"
                           >
-                            <Zap className="w-4 h-4 text-slate-950 fill-current" />
+                            <Award className="w-4 h-4 text-slate-950" />
                             <span>Issue Now</span>
                           </button>
                           <button
@@ -1050,7 +1050,7 @@ export const CertificateManagementModal: React.FC<{
                             disabled={isGenerating || !selectedStudent}
                             className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs flex items-center justify-center space-x-1.5 shadow-md cursor-pointer transition-all border border-emerald-400/40"
                           >
-                            <Zap className="w-4 h-4 text-slate-950 fill-current" />
+                            <Award className="w-4 h-4 text-slate-950" />
                             <span>Issue Now</span>
                           </button>
                           <button
@@ -1243,7 +1243,7 @@ export const CertificateManagementModal: React.FC<{
                 <div className="lg:col-span-7 space-y-3 flex flex-col justify-start">
                   <div className="flex items-center justify-between text-xs px-1">
                     <span className="font-extrabold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-xs flex items-center space-x-1.5">
-                      <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      <Award className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                       <span>Live Official Certificate Preview Canvas</span>
                     </span>
 

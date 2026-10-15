@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sun, Moon, LogOut, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, Clock, TrendingUp, Activity, ChevronRight, Cpu, Zap, Compass, AlertOctagon, Download, Radio, X, MessageSquare, Brain, Briefcase, User } from 'lucide-react';
+import { Sun, Moon, LogOut, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, Clock, TrendingUp, Activity, ChevronRight, Cpu, Compass, AlertOctagon, Download, Radio, X, MessageSquare, Brain, Briefcase, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { CollegeLogo } from './CollegeLogo';
@@ -57,7 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       items: [
         { id: 'dashboard', label: 'Executive Dashboard', icon: LayoutDashboard, badge: 'CAMPUS', badgeColor: 'indigo' },
         { id: 'hod-command-center', label: 'Department Leadership Deck', icon: Cpu, badge: 'ALL DEPTS', badgeColor: 'purple' },
-        { id: 'faculty-action-center', label: 'Faculty & Staff Portal', icon: Zap, badge: 'STAFF', badgeColor: 'rose', pulse: true },
+        { id: 'faculty-action-center', label: 'Faculty & Staff Portal', icon: Activity, badge: 'STAFF', badgeColor: 'rose', pulse: true },
         { id: 'hr-candidate-finder', label: 'Placement Portal', icon: Briefcase, badge: 'HIRE', badgeColor: 'purple' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
@@ -92,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       items: [
         { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard, badge: 'MENTOR', badgeColor: 'indigo' },
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
-        { id: 'faculty-action-center', label: 'Faculty Portal', icon: Zap, badge: 'LIVE', badgeColor: 'rose', pulse: true },
+        { id: 'faculty-action-center', label: 'Faculty Portal', icon: Activity, badge: 'LIVE', badgeColor: 'rose', pulse: true },
         { id: 'hr-candidate-finder', label: 'Placement Portal', icon: Briefcase, badge: 'HIRE', badgeColor: 'purple' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
       ]
@@ -125,7 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       items: [
         { id: 'dashboard', label: 'Department Leadership Deck', icon: LayoutDashboard },
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
-        { id: 'faculty-action-center', label: 'Faculty Portal', icon: Zap, badge: 'FACULTY', badgeColor: 'indigo' },
+        { id: 'faculty-action-center', label: 'Faculty Portal', icon: Activity, badge: 'FACULTY', badgeColor: 'indigo' },
         { id: 'hr-candidate-finder', label: 'Placement Portal', icon: Briefcase, badge: 'HIRE', badgeColor: 'purple' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
       ]
@@ -159,7 +159,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
         { id: 'hod-command-center', label: 'Department Leadership Deck', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
-        { id: 'faculty-action-center', label: 'Faculty Portal', icon: Zap, badge: 'STAFF', badgeColor: 'indigo' },
+        { id: 'faculty-action-center', label: 'Faculty Portal', icon: Activity, badge: 'STAFF', badgeColor: 'indigo' },
         { id: 'hr-candidate-finder', label: 'Placement Portal', icon: Briefcase, badge: 'HIRE', badgeColor: 'purple' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
       ]
@@ -184,7 +184,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'account-settings', label: 'Account Settings', icon: User },
         { id: 'settings', label: 'Admin Settings', icon: Settings },
         { id: 'audit', label: 'Audit Log', icon: ShieldAlert },
-        ...(isAdminOtpVerified()
+        ...(isAdmin
           ? [{ id: 'dev-studio', label: 'Developer Studio', icon: Cpu, badge: 'LIVE' as const, badgeColor: 'amber' as const }]
           : []),
       ]
@@ -308,6 +308,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                           onMouseEnter={() => prefetchPage(item.id)}
                           onTouchStart={() => prefetchPage(item.id)}
                           onClick={() => {
+                            if (item.id === 'ai-copilot') {
+                              window.dispatchEvent(new CustomEvent('open_ai_widget'));
+                              if (window.innerWidth < 1024) onClose();
+                              return;
+                            }
                             setActiveTab(item.id);
                             if (window.innerWidth < 1024) onClose();
                           }}

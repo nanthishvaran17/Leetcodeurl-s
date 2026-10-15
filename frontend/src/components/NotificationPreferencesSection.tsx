@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Bell, Smartphone, Mail, CheckCircle2, AlertTriangle, AlertCircle, 
-  Send, Sparkles, Loader2, Shield, Calendar, FileText, Award, Megaphone, Sliders
+  Send, FileSpreadsheet, Loader2, Shield, Calendar, FileText, Award, Megaphone, Sliders
 } from 'lucide-react';
 import { useGlobalNotifications, type NotificationPreferences } from '../context/GlobalNotificationContext';
 import { useAuth } from '../context/AuthContext';
@@ -226,7 +226,7 @@ export const NotificationPreferencesSection: React.FC = () => {
     { key: 'assignments', label: 'Assignments', desc: 'New tasks, upcoming due dates, and completion status', icon: Calendar, color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
     { key: 'attendance', label: 'Attendance', desc: 'Daily attendance logs, pending verification, and alerts', icon: Shield, color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
     { key: 'exams', label: 'Exams & Marks', desc: 'CAT1/CAT2 exam schedules, published marks, and results', icon: FileText, color: 'text-cyan-500 bg-cyan-500/10 border-cyan-500/20' },
-    { key: 'reports', label: 'Reports & Summaries', desc: 'Daily faculty summaries, HOD digests, and PDF exports', icon: Sparkles, color: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' },
+    { key: 'reports', label: 'Reports & Summaries', desc: 'Daily faculty summaries, HOD digests, and PDF exports', icon: FileSpreadsheet, color: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' },
     { key: 'contests', label: 'Contests & Milestones', desc: 'Sunday LeetCode alerts, milestone solves, and ratings', icon: Award, color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' },
     { key: 'announcements', label: 'Announcements', desc: 'Institutional updates, system maintenance, and security alerts', icon: Megaphone, color: 'text-brand-500 bg-brand-500/10 border-brand-500/20' },
   ];
@@ -321,7 +321,7 @@ export const NotificationPreferencesSection: React.FC = () => {
 
           {testPushStatus && (
             <div className="p-3.5 mt-4 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs flex items-center justify-center text-center gap-2.5 font-medium shadow-xs">
-              <Sparkles size={15} className="shrink-0 animate-pulse text-brand-500" />
+              <CheckCircle2 size={15} className="shrink-0 text-brand-500" />
               <span>{testPushStatus}</span>
             </div>
           )}

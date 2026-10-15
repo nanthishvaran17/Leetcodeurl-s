@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, GraduationCap, ChevronRight, Medal, Crown, Award } from 'lucide-react';
+import { Building2, GraduationCap, ChevronRight, Medal, Award } from 'lucide-react';
 import api from '../../services/api';
 
 interface LeaderboardEntry {
@@ -106,7 +106,7 @@ const computeYearFromMatrix = (matrixRows: any[]): Record<string, LeaderboardEnt
 };
 
 const MedalIcon = ({ rank }: { rank: number }) => {
-  if (rank === 1) return <Crown className="w-4 h-4 text-amber-400" />;
+  if (rank === 1) return <Medal className="w-4 h-4 text-amber-400" />;
   if (rank === 2) return <Medal className="w-4 h-4 text-slate-300" />;
   if (rank === 3) return <Medal className="w-4 h-4 text-amber-600" />;
   return <span className="text-xs font-mono font-black text-slate-500 w-4 text-center">#{rank}</span>;

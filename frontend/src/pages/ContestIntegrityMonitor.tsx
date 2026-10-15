@@ -17,7 +17,6 @@ import {
   Check, 
   X, 
   Eye, 
-  Sparkles,
   ShieldCheck,
   Download,
   Bell,
@@ -294,7 +293,7 @@ export const ContestIntegrityMonitor: React.FC = () => {
 
           <div className="relative z-10 space-y-2 max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-[11px] sm:text-xs font-black">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
               <span>FORENSIC ACCOUNT INTEGRITY</span>
             </div>
 

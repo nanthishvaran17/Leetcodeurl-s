@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   TrendingUp, Award, Activity, Code, Cpu, AlertTriangle, CheckCircle2,
   RefreshCw, Download, Layers, Search, Filter, Calendar, ChevronRight,
-  User, BookOpen, ShieldAlert, Sparkles, Building2, GraduationCap,
+  User, BookOpen, ShieldAlert, Building2, GraduationCap,
   FileSpreadsheet, FileText, ArrowUpRight, ArrowDownRight, Clock, Check, Eye,
-  BarChart3, PieChart, Info, ShieldCheck, Flame, ChevronDown, ExternalLink
+  BarChart3, PieChart, Info, ShieldCheck, ChevronDown, ExternalLink
 } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
@@ -203,7 +203,7 @@ export const WeeklyIntelligenceReport: React.FC<WeeklyIntelligenceReportProps> =
       <div className="min-h-[600px] flex flex-col items-center justify-center space-y-4 bg-slate-900/40 rounded-2xl border border-slate-800 p-12">
         <div className="relative">
           <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-          <Sparkles className="w-6 h-6 text-blue-400 absolute inset-0 m-auto animate-pulse" />
+          <FileSpreadsheet className="w-6 h-6 text-blue-400 absolute inset-0 m-auto" />
         </div>
         <div className="text-center space-y-1">
           <h3 className="text-lg font-semibold text-slate-100">Generating Live Weekly Intelligence</h3>
@@ -247,7 +247,7 @@ export const WeeklyIntelligenceReport: React.FC<WeeklyIntelligenceReportProps> =
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2.5">
               <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full text-blue-400 text-xs font-bold tracking-wider uppercase flex items-center gap-1.5 min-h-[32px]">
-                <Sparkles className="w-3.5 h-3.5" />
+                <ShieldCheck className="w-3.5 h-3.5" />
                 Institutional Report Engine
               </span>
 
@@ -1300,7 +1300,7 @@ export const WeeklyIntelligenceReport: React.FC<WeeklyIntelligenceReportProps> =
             <div className="p-5 bg-gradient-to-br from-slate-900 to-blue-950/40 rounded-2xl border border-blue-900/40 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-blue-400 font-bold text-sm">
-                  <Sparkles className="w-4 h-4" />
+                  <ShieldAlert className="w-4 h-4" />
                   <span>Explainable AI Risk Diagnostic & Prescribed Mentorship</span>
                 </div>
                 <span className="text-xs font-mono text-slate-400">

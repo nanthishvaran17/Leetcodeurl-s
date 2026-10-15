@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, startTransition } from 'react';
-import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock, Building2, GraduationCap, ChevronDown, Check, Target, Loader2, RefreshCw, Search } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock, Building2, GraduationCap, ChevronDown, Check, Target, Loader2, RefreshCw, Search, X } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api, { getApiUrl } from '../services/api';
 import { ReportPreview } from '../components/ReportPreview';
@@ -14,10 +15,23 @@ import { downloadManager } from '../services/download/downloadManager';
 import { ExportStatus } from '../components/ExportStatus';
 import { DownloadState } from '../services/download/downloadTypes';
 import { useKeyboardContext } from '../context/KeyboardContext';
+import { SwipeHandle } from '../components/SwipeHandle';
 
 export const ReportsPage: React.FC = () => {
   const { notify } = useNotification();
   const { user, token } = useAuth();
+
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 640 || window.matchMedia('(max-width: 639px)').matches;
+  });
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640 || window.matchMedia('(max-width: 639px)').matches);
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   const [activeTab, setActiveTab] = useState<'reports' | 'email' | 'manual_email' | 'auto_email'>('reports');
   const [showCertModal, setShowCertModal] = useState<boolean>(false);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
@@ -216,40 +230,22 @@ export const ReportsPage: React.FC = () => {
     notify.dismissCategory('REPORTS');
     setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
 
-    // Parse query params from endpoint to filters first
-    const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
-    const urlParts = endpoint.split('?');
-    const filters: any = { department: effDept, year: selectedYear, output_scope: selectedOutputScope, session_id: selectedSessionId };
-    if (urlParts.length > 1) {
-      const params = new URLSearchParams(urlParts[1]);
-      params.forEach((val, key) => { filters[key] = val; });
-    }
-    if (isHodUser && (filters.department === 'ALL' || !filters.department)) {
-      filters.department = hodDeptDefault;
-    }
+    // Format target endpoint
+    const effEndpoint = endpoint.startsWith('http')
+      ? endpoint
+      : (endpoint.startsWith('/api') ? endpoint : `/api${endpoint.startsWith('/') ? '' : '/'}${endpoint}`);
 
-    // Map report_type and format dynamically
-    let report_type = filters.report_type || selectedReportType || 'STUDENT_PERFORMANCE';
-    let format = 'excel';
-    
-    if (endpoint.includes('export-official-college-summary')) { report_type = 'COLLEGE_EXECUTIVE'; format = 'excel'; }
-    else if (endpoint.includes('export-student-performance-detail')) { report_type = 'STUDENT_PERFORMANCE'; format = 'excel'; }
-    else if (endpoint.includes('export-weekly-contest-matrix')) { report_type = 'CONTEST_ATTENDANCE_PARTICIPATION'; format = 'excel'; } 
-    else if (endpoint.includes('export-master-tracker')) { report_type = 'STUDENT_MASTER'; format = 'excel'; }
-    else if (endpoint.includes('report_type=WEEKLY_PERFORMANCE')) { report_type = 'WEEKLY_PERFORMANCE'; format = 'excel'; }
-    else if (endpoint.includes('/reports/download')) { report_type = 'MASTER_10_SHEET'; format = 'excel'; }
-    else if (endpoint.includes('/reports/hod')) { report_type = 'HOD_DEPARTMENT_INTELLIGENCE'; format = 'excel'; }
-    else if (endpoint.includes('/reports/staff')) { report_type = 'FACULTY_CONSOLIDATED'; format = 'excel'; }
-    else if (endpoint.includes('/reports/principal')) { report_type = 'PRINCIPAL_EXECUTIVE'; format = 'excel'; }
-    else if (endpoint.includes('export-pdf')) { format = 'pdf'; }
-    else if (endpoint.includes('export-word')) { format = 'word'; }
-    else if (endpoint.includes('export-csv')) { format = 'csv'; }
+    const effMime = filename.endsWith('.pdf')
+      ? 'application/pdf'
+      : (filename.endsWith('.docx')
+        ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
-    const result = await downloadManager.downloadJob({
-      report_type,
-      format,
-      filters,
+    // High-Speed Direct Stream: Directly fetch pre-cached file in single request (<200ms)
+    const result = await downloadManager.download({
+      endpoint: effEndpoint,
       filename,
+      mimeType: effMime,
       onStateChange: (state) => setDownloadState(state)
     });
 
@@ -258,14 +254,12 @@ export const ReportsPage: React.FC = () => {
     if (result.success) {
       setReportError(null);
       notify.dismissCategory('REPORTS');
-      // notify.success is handled by downloadManager
     } else {
       const userFacingMsg = result.error && !result.error.includes('500') && !result.error.includes('status code')
         ? result.error
         : 'Please try again.';
 
       setReportError(userFacingMsg);
-      // Status modal will show error, so we don't necessarily need a duplicate toast
     }
   };
 
@@ -891,92 +885,186 @@ export const ReportsPage: React.FC = () => {
 
                         {/* Dropdown Panel */}
                         {rptTypeOpen && (
-                          <>
-                            {/* Backdrop click to dismiss on mobile & desktop - clean transparent dismissal */}
-                            <div 
-                              className="fixed inset-0 z-[190] bg-transparent" 
-                              onClick={() => { setRptTypeOpen(false); setRptSearch(''); }} 
-                            />
-                            <div className="absolute z-[200] top-full left-0 right-0 sm:right-auto mt-2 w-full sm:w-[500px] md:w-[740px] max-w-full sm:max-w-[calc(100vw-3rem)] rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-[#0c1222] border-2 border-slate-200 dark:border-slate-700 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.95)] animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col max-h-[min(480px,calc(100vh-140px))]">
-                              {/* Dropdown header bar */}
-                              <div className="flex items-center justify-between px-3.5 sm:px-5 py-3 bg-gradient-to-r from-[#111827] via-[#1e293b] to-[#111827] border-b border-brand-500/40 shrink-0">
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-brand-500/25 border border-brand-400/30 flex items-center justify-center shrink-0">
-                                    <LayoutTemplate className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-300" />
-                                  </div>
-                                  <span className="text-xs sm:text-sm font-black text-white tracking-wide truncate">Select Report Type</span>
-                                </div>
-                                <span className="text-[10px] sm:text-[11px] font-bold text-white bg-brand-500/30 border border-brand-400/40 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
-                                  {allOpts.length} Reports
-                                </span>
-                              </div>
-
-                              {/* Search Bar */}
-                              <div className="px-3.5 sm:px-5 py-2 bg-slate-900/95 border-b border-slate-700/80 flex items-center gap-2 shrink-0">
-                                <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                <input
-                                  type="text"
-                                  value={rptSearch}
-                                  onChange={(e) => setRptSearch(e.target.value)}
-                                  placeholder="Filter reports by name (e.g. contest, hod, faculty)..."
-                                  className="w-full bg-transparent text-xs text-white placeholder-slate-400 outline-none font-medium"
-                                  autoFocus
+                          isMobile ? (
+                            createPortal(
+                              <div className="fixed inset-0 z-[99999] flex flex-col justify-end">
+                                <div 
+                                  className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity" 
+                                  onClick={() => { setRptTypeOpen(false); setRptSearch(''); }} 
                                 />
-                                {rptSearch && (
-                                  <button
-                                    type="button"
-                                    onClick={() => setRptSearch('')}
-                                    className="text-[10px] text-slate-300 hover:text-white px-1.5 py-0.5 rounded bg-white/10"
-                                  >
-                                    Clear
-                                  </button>
-                                )}
-                              </div>
+                                <div className="relative z-10 w-full max-h-[85vh] flex flex-col bg-white dark:bg-[#0c1222] rounded-t-[28px] border-t border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden pb-8">
+                                  {/* Interactive Top Swipe Bar */}
+                                  <SwipeHandle 
+                                    onClose={() => { setRptTypeOpen(false); setRptSearch(''); }} 
+                                    className="pt-2 pb-1 shrink-0" 
+                                    pillClassName="bg-slate-300 dark:bg-slate-700 hover:bg-slate-400"
+                                  />
 
-                              {/* Two-column body on desktop, single column on mobile - constrained height & visible scrolling */}
-                              {(() => {
-                                const displayedCategories = rptSearch.trim()
-                                  ? reportCategories.map(cat => ({
-                                      ...cat,
-                                      options: cat.options.filter((opt: any) => 
-                                        opt.label.toLowerCase().includes(rptSearch.toLowerCase()) ||
-                                        opt.value.toLowerCase().includes(rptSearch.toLowerCase())
-                                      )
-                                    })).filter(cat => cat.options.length > 0)
-                                  : reportCategories;
-
-                                return (
-                                  <div 
-                                    className="grid grid-cols-1 md:grid-cols-2 flex-1 min-h-0 overflow-y-auto divide-y md:divide-y-0 divide-slate-100 dark:divide-slate-800 bg-white dark:bg-[#0c1222] pb-6 custom-scrollbar"
-                                    style={{
-                                      maxHeight: '340px',
-                                      scrollbarWidth: 'thin',
-                                      scrollbarColor: '#6366f1 rgba(15, 23, 42, 0.4)'
-                                    }}
-                                  >
-                                    {/* LEFT: Contest Reports */}
-                                    <div className="p-3 sm:p-5 bg-slate-50 dark:bg-[#0f172a] border-r-0 md:border-r border-slate-200/80 dark:border-slate-800">
-                                      {displayedCategories.find(c => c.title === 'A. CONTEST REPORTS') && 
-                                        renderCategory(displayedCategories.find(c => c.title === 'A. CONTEST REPORTS'))}
+                                  {/* Header */}
+                                  <div className="flex items-center justify-between px-5 py-2.5 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <div className="w-7 h-7 rounded-xl bg-brand-500/15 border border-brand-400/30 flex items-center justify-center text-brand-500 shrink-0">
+                                        <LayoutTemplate className="w-3.5 h-3.5" />
+                                      </div>
+                                      <span className="text-sm font-black text-slate-900 dark:text-white tracking-wide truncate">
+                                        Select Report Type
+                                      </span>
                                     </div>
-                                    {/* RIGHT: Performance, Consolidated, Executive */}
-                                    <div className="p-3 sm:p-5 bg-white dark:bg-[#0c1222] flex flex-col gap-y-3.5 sm:gap-y-5">
-                                      {displayedCategories.filter(c => c.title !== 'A. CONTEST REPORTS').map(cat => (
-                                        <div key={cat.title}>
-                                          {renderCategory(cat)}
-                                        </div>
-                                      ))}
-                                      {displayedCategories.length === 0 && (
-                                        <div className="p-6 text-center text-xs text-slate-500 dark:text-slate-400">
-                                          No reports found matching "{rptSearch}".
-                                        </div>
-                                      )}
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <span className="text-[10px] font-bold text-brand-600 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 px-2 py-0.5 rounded-full">
+                                        {allOpts.length} Reports
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => { setRptTypeOpen(false); setRptSearch(''); }}
+                                        className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
                                     </div>
                                   </div>
-                                );
-                              })()}
-                            </div>
-                          </>
+
+                                  {/* Search Bar */}
+                                  <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-slate-800 flex items-center gap-2 shrink-0">
+                                    <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    <input
+                                      type="text"
+                                      value={rptSearch}
+                                      onChange={(e) => setRptSearch(e.target.value)}
+                                      placeholder="Filter reports by name..."
+                                      className="w-full bg-transparent text-xs text-slate-900 dark:text-white placeholder-slate-400 outline-none font-medium"
+                                      autoFocus
+                                    />
+                                    {rptSearch && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setRptSearch('')}
+                                        className="text-[10px] text-slate-500 hover:text-slate-900 dark:hover:text-white px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700"
+                                      >
+                                        Clear
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  {/* Options Content */}
+                                  {(() => {
+                                    const displayedCategories = rptSearch.trim()
+                                      ? reportCategories.map(cat => ({
+                                          ...cat,
+                                          options: cat.options.filter((opt: any) => 
+                                            opt.label.toLowerCase().includes(rptSearch.toLowerCase()) ||
+                                            opt.value.toLowerCase().includes(rptSearch.toLowerCase())
+                                          )
+                                        })).filter(cat => cat.options.length > 0)
+                                      : reportCategories;
+
+                                    return (
+                                      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                        {displayedCategories.map(cat => (
+                                          <div key={cat.title}>
+                                            {renderCategory(cat)}
+                                          </div>
+                                        ))}
+                                        {displayedCategories.length === 0 && (
+                                          <div className="p-8 text-center text-xs text-slate-500 dark:text-slate-400">
+                                            No reports found matching "{rptSearch}".
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              </div>,
+                              document.body
+                            )
+                          ) : (
+                            <>
+                              {/* Backdrop click to dismiss on desktop - clean transparent dismissal */}
+                              <div 
+                                className="fixed inset-0 z-[190] bg-transparent" 
+                                onClick={() => { setRptTypeOpen(false); setRptSearch(''); }} 
+                              />
+                              <div className="absolute z-[200] top-full left-0 right-0 sm:right-auto mt-2 w-full sm:w-[500px] md:w-[740px] max-w-full sm:max-w-[calc(100vw-3rem)] rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-[#0c1222] border-2 border-slate-200 dark:border-slate-700 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.95)] animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col max-h-[min(480px,calc(100vh-140px))]">
+                                {/* Dropdown header bar */}
+                                <div className="flex items-center justify-between px-3.5 sm:px-5 py-3 bg-gradient-to-r from-[#111827] via-[#1e293b] to-[#111827] border-b border-brand-500/40 shrink-0">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-brand-500/25 border border-brand-400/30 flex items-center justify-center shrink-0">
+                                      <LayoutTemplate className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-300" />
+                                    </div>
+                                    <span className="text-xs sm:text-sm font-black text-white tracking-wide truncate">Select Report Type</span>
+                                  </div>
+                                  <span className="text-[10px] sm:text-[11px] font-bold text-white bg-brand-500/30 border border-brand-400/40 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
+                                    {allOpts.length} Reports
+                                  </span>
+                                </div>
+
+                                {/* Search Bar */}
+                                <div className="px-3.5 sm:px-5 py-2 bg-slate-900/95 border-b border-slate-700/80 flex items-center gap-2 shrink-0">
+                                  <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                  <input
+                                    type="text"
+                                    value={rptSearch}
+                                    onChange={(e) => setRptSearch(e.target.value)}
+                                    placeholder="Filter reports by name (e.g. contest, hod, faculty)..."
+                                    className="w-full bg-transparent text-xs text-white placeholder-slate-400 outline-none font-medium"
+                                    autoFocus
+                                  />
+                                  {rptSearch && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setRptSearch('')}
+                                      className="text-[10px] text-slate-300 hover:text-white px-1.5 py-0.5 rounded bg-white/10"
+                                    >
+                                      Clear
+                                    </button>
+                                  )}
+                                </div>
+
+                                {/* Two-column body on desktop, single column on mobile - constrained height & visible scrolling */}
+                                {(() => {
+                                  const displayedCategories = rptSearch.trim()
+                                    ? reportCategories.map(cat => ({
+                                        ...cat,
+                                        options: cat.options.filter((opt: any) => 
+                                          opt.label.toLowerCase().includes(rptSearch.toLowerCase()) ||
+                                          opt.value.toLowerCase().includes(rptSearch.toLowerCase())
+                                        )
+                                      })).filter(cat => cat.options.length > 0)
+                                    : reportCategories;
+
+                                  return (
+                                    <div 
+                                      className="grid grid-cols-1 md:grid-cols-2 flex-1 min-h-0 overflow-y-auto divide-y md:divide-y-0 divide-slate-100 dark:divide-slate-800 bg-white dark:bg-[#0c1222] pb-6 custom-scrollbar"
+                                      style={{
+                                        maxHeight: '340px',
+                                        scrollbarWidth: 'thin',
+                                        scrollbarColor: '#6366f1 rgba(15, 23, 42, 0.4)'
+                                      }}
+                                    >
+                                      {/* LEFT: Contest Reports */}
+                                      <div className="p-3 sm:p-5 bg-slate-50 dark:bg-[#0f172a] border-r-0 md:border-r border-slate-200/80 dark:border-slate-800">
+                                        {displayedCategories.find(c => c.title === 'A. CONTEST REPORTS') && 
+                                          renderCategory(displayedCategories.find(c => c.title === 'A. CONTEST REPORTS'))}
+                                      </div>
+                                      {/* RIGHT: Performance, Consolidated, Executive */}
+                                      <div className="p-3 sm:p-5 bg-white dark:bg-[#0c1222] flex flex-col gap-y-3.5 sm:gap-y-5">
+                                        {displayedCategories.filter(c => c.title !== 'A. CONTEST REPORTS').map(cat => (
+                                          <div key={cat.title}>
+                                            {renderCategory(cat)}
+                                          </div>
+                                        ))}
+                                        {displayedCategories.length === 0 && (
+                                          <div className="p-6 text-center text-xs text-slate-500 dark:text-slate-400">
+                                            No reports found matching "{rptSearch}".
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            </>
+                          )
                         )}
                       </>
                     );
@@ -1025,32 +1113,110 @@ export const ReportsPage: React.FC = () => {
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptYearOpen ? 'rotate-180 text-brand-500' : ''}`} />
                   </button>
                   {rptYearOpen && (
-                    <>
-                      <div 
-                        className="fixed inset-0 z-[190] bg-transparent" 
-                        onClick={() => setRptYearOpen(false)} 
-                      />
-                      <div className="absolute z-[200] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl max-h-64 overflow-y-auto p-2 space-y-1">
-                        {[
-                          { value: 'ALL', code: 'ALL', label: 'All Academic Years', pillColor: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700' },
-                          { value: '2', code: 'II', label: 'II Year', pillColor: 'bg-sky-100 text-sky-700 border-sky-300 dark:bg-sky-900/60 dark:text-sky-200 dark:border-sky-700' },
-                          { value: '3', code: 'III', label: 'III Year', pillColor: 'bg-violet-100 text-violet-700 border-violet-300 dark:bg-violet-900/60 dark:text-violet-200 dark:border-violet-700' },
-                          { value: '4', code: 'IV', label: 'IV Year', pillColor: 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700' },
-                        ].map(opt => {
-                          const isSelected = selectedYear === opt.value;
-                          return (
-                            <button key={opt.value} type="button"
-                              onClick={() => { setSelectedYear(opt.value); setRptYearOpen(false); }}
-                              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all ${isSelected ? 'bg-brand-600 text-white font-black shadow-md shadow-brand-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
-                            >
-                              <span className={`w-12 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : opt.pillColor}`}>{opt.code}</span>
-                              <span className={`text-xs truncate flex-1 ${isSelected ? 'font-black text-white' : 'font-semibold text-slate-700 dark:text-slate-200'}`}>{opt.label}</span>
-                              {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </>
+                    isMobile ? (
+                      createPortal(
+                        <div className="fixed inset-0 z-[99999] flex flex-col justify-end">
+                          <div 
+                            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity" 
+                            onClick={() => setRptYearOpen(false)} 
+                          />
+                          <div className="relative z-10 w-full max-h-[75vh] flex flex-col bg-white dark:bg-slate-900 rounded-t-[28px] border-t border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden pb-8">
+                            {/* Interactive Top Swipe Bar */}
+                            <SwipeHandle 
+                              onClose={() => setRptYearOpen(false)} 
+                              className="pt-2 pb-1 shrink-0" 
+                              pillClassName="bg-slate-300 dark:bg-slate-700 hover:bg-slate-400"
+                            />
+                            <div className="flex items-center justify-between px-5 py-2.5 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-7 h-7 rounded-xl bg-brand-500/15 border border-brand-400/30 flex items-center justify-center text-brand-500">
+                                  <GraduationCap className="w-3.5 h-3.5" />
+                                </div>
+                                <span className="text-sm font-black text-slate-900 dark:text-white tracking-wide">
+                                  Select Year / Batch
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-[10px] font-bold text-brand-600 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 px-2 py-0.5 rounded-full">
+                                  4 Batches
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => setRptYearOpen(false)}
+                                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="p-3.5 space-y-2 overflow-y-auto">
+                              {[
+                                { value: 'ALL', code: 'ALL', label: 'All Academic Years', pillColor: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700' },
+                                { value: '2', code: 'II', label: 'II Year (Second Year)', pillColor: 'bg-sky-100 text-sky-700 border-sky-300 dark:bg-sky-900/60 dark:text-sky-200 dark:border-sky-700' },
+                                { value: '3', code: 'III', label: 'III Year (Third Year)', pillColor: 'bg-violet-100 text-violet-700 border-violet-300 dark:bg-violet-900/60 dark:text-violet-200 dark:border-violet-700' },
+                                { value: '4', code: 'IV', label: 'IV Year (Final Year)', pillColor: 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700' },
+                              ].map(opt => {
+                                const isSelected = selectedYear === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => { setSelectedYear(opt.value); setRptYearOpen(false); }}
+                                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-left transition-all active:scale-[0.98] ${
+                                      isSelected
+                                        ? 'bg-indigo-50 dark:bg-indigo-950/70 border-2 border-indigo-500/80 text-indigo-950 dark:text-indigo-200 shadow-xs'
+                                        : 'bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 text-slate-800 dark:text-slate-200 active:bg-slate-100'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <span className={`w-12 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-indigo-600 text-white border-indigo-600' : opt.pillColor}`}>
+                                        {opt.code}
+                                      </span>
+                                      <span className={`text-sm truncate ${isSelected ? 'font-black text-indigo-950 dark:text-white' : 'font-bold text-slate-800 dark:text-slate-200'}`}>
+                                        {opt.label}
+                                      </span>
+                                    </div>
+                                    {isSelected && (
+                                      <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-white shrink-0 shadow-xs">
+                                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                      </div>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>,
+                        document.body
+                      )
+                    ) : (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-[190] bg-transparent" 
+                          onClick={() => setRptYearOpen(false)} 
+                        />
+                        <div className="absolute z-[200] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl max-h-64 overflow-y-auto p-2 space-y-1">
+                          {[
+                            { value: 'ALL', code: 'ALL', label: 'All Academic Years', pillColor: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700' },
+                            { value: '2', code: 'II', label: 'II Year', pillColor: 'bg-sky-100 text-sky-700 border-sky-300 dark:bg-sky-900/60 dark:text-sky-200 dark:border-sky-700' },
+                            { value: '3', code: 'III', label: 'III Year', pillColor: 'bg-violet-100 text-violet-700 border-violet-300 dark:bg-violet-900/60 dark:text-violet-200 dark:border-violet-700' },
+                            { value: '4', code: 'IV', label: 'IV Year', pillColor: 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700' },
+                          ].map(opt => {
+                            const isSelected = selectedYear === opt.value;
+                            return (
+                              <button key={opt.value} type="button"
+                                onClick={() => { setSelectedYear(opt.value); setRptYearOpen(false); }}
+                                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all ${isSelected ? 'bg-indigo-600 text-white font-black shadow-md shadow-indigo-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
+                              >
+                                <span className={`w-12 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : opt.pillColor}`}>{opt.code}</span>
+                                <span className={`text-xs truncate flex-1 ${isSelected ? 'font-black text-white' : 'font-semibold text-slate-700 dark:text-slate-200'}`}>{opt.label}</span>
+                                {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )
                   )}
                 </div>
               </div>
@@ -1100,49 +1266,148 @@ export const ReportsPage: React.FC = () => {
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptSessionOpen ? 'rotate-180 text-brand-500' : ''}`} />
                   </button>
                   {rptSessionOpen && (
-                    <>
-                      <div 
-                        className="fixed inset-0 z-[190] bg-transparent" 
-                        onClick={() => setRptSessionOpen(false)} 
-                      />
-                      <div className="absolute z-[300] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-950 border border-slate-200/90 dark:border-slate-700 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] max-h-[380px] overflow-y-auto p-2 space-y-1 custom-scrollbar">
-                      {availableSundays.map(opt => {
-                        const isSelected = selectedSessionId === opt.session_id;
-                        const formatDate = (d: string) => {
-                          if (d && d.includes('-')) {
-                            const p = d.split('-');
-                            if (p.length === 3) return `${p[2]}.${p[1]}.${p[0]}`;
-                          }
-                          if (d && d.includes('/')) {
-                            return d.replace(/\//g, '.');
-                          }
-                          return d;
-                        };
-                        const isBiweekly = opt.contest_type === 'biweekly' || (opt.label && opt.label.toLowerCase().includes('biweekly'));
-                        return (
-                          <button key={opt.session_id} type="button"
-                            onClick={() => { setSelectedSessionId(opt.session_id); setRptSessionOpen(false); }}
-                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${isSelected ? 'bg-brand-600 text-white font-black shadow-md shadow-brand-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
-                          >
-                            <span className={`w-16 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : (isBiweekly ? 'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800' : (opt.is_latest ? 'bg-brand-100 text-brand-700 border-brand-300 dark:bg-brand-950/60 dark:text-brand-300' : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700'))}`}>
-                              {isBiweekly ? 'BIWEEKLY' : (opt.is_latest ? 'LATEST' : 'PAST')}
-                            </span>
-                            <div className={`flex flex-col flex-1 min-w-0 ${isSelected ? 'text-white' : 'text-slate-800 dark:text-slate-100'}`}>
-                              <span className={`text-xs truncate ${isSelected ? 'font-black' : 'font-bold'}`}>{formatDate(opt.date)}</span>
-                              <span className={`text-[11px] truncate ${isSelected ? 'text-white/90 font-bold' : 'text-slate-600 dark:text-slate-400 font-semibold'}`}>{opt.label.split(' - ')[1] || opt.contest_name || opt.label}</span>
+                    isMobile ? (
+                      createPortal(
+                        <div className="fixed inset-0 z-[99999] flex flex-col justify-end">
+                          <div 
+                            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity" 
+                            onClick={() => setRptSessionOpen(false)} 
+                          />
+                          <div className="relative z-10 w-full max-h-[80vh] flex flex-col bg-white dark:bg-slate-900 rounded-t-[28px] border-t border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden pb-8">
+                            {/* Interactive Top Swipe Bar */}
+                            <SwipeHandle 
+                              onClose={() => setRptSessionOpen(false)} 
+                              className="pt-2 pb-1 shrink-0" 
+                              pillClassName="bg-slate-300 dark:bg-slate-700 hover:bg-slate-400"
+                            />
+                            <div className="flex items-center justify-between px-5 py-2.5 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-7 h-7 rounded-xl bg-brand-500/15 border border-brand-400/30 flex items-center justify-center text-brand-500">
+                                  <Clock className="w-3.5 h-3.5" />
+                                </div>
+                                <span className="text-sm font-black text-slate-900 dark:text-white tracking-wide">
+                                  Select Report Date / Session
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-[10px] font-bold text-brand-600 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 px-2 py-0.5 rounded-full">
+                                  {availableSundays.length} Sessions
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => setRptSessionOpen(false)}
+                                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
-                            {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
-                          </button>
-                        );
-                      })}
-                      {availableSundays.length === 0 && (
-                        <div className="px-3 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
-                          <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2 text-brand-500" />
-                          Loading available dates...
-                        </div>
-                      )}
-                    </div>
-                  </>
+                            <div className="p-3.5 space-y-2 overflow-y-auto">
+                              {availableSundays.map(opt => {
+                                const isSelected = selectedSessionId === opt.session_id;
+                                const formatDate = (d: string) => {
+                                  if (d && d.includes('-')) {
+                                    const p = d.split('-');
+                                    if (p.length === 3) return `${p[2]}.${p[1]}.${p[0]}`;
+                                  }
+                                  if (d && d.includes('/')) {
+                                    return d.replace(/\//g, '.');
+                                  }
+                                  return d;
+                                };
+                                const isBiweekly = opt.contest_type === 'biweekly' || (opt.label && opt.label.toLowerCase().includes('biweekly'));
+                                return (
+                                  <button
+                                    key={opt.session_id}
+                                    type="button"
+                                    onClick={() => { setSelectedSessionId(opt.session_id); setRptSessionOpen(false); }}
+                                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-left transition-all active:scale-[0.98] ${
+                                      isSelected
+                                        ? 'bg-indigo-50 dark:bg-indigo-950/70 border-2 border-indigo-500/80 text-indigo-950 dark:text-indigo-200 shadow-xs'
+                                        : 'bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 text-slate-800 dark:text-slate-200 active:bg-slate-100'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                                      <span className={`w-16 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${
+                                        isSelected
+                                          ? 'bg-indigo-600 text-white border-indigo-600'
+                                          : (isBiweekly ? 'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800' : (opt.is_latest ? 'bg-brand-100 text-brand-700 border-brand-300 dark:bg-brand-950/60 dark:text-brand-300' : 'bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200'))
+                                      }`}>
+                                        {isBiweekly ? 'BIWEEKLY' : (opt.is_latest ? 'LATEST' : 'PAST')}
+                                      </span>
+                                      <div className="flex flex-col min-w-0 flex-1">
+                                        <span className={`text-sm truncate ${isSelected ? 'font-black text-indigo-950 dark:text-white' : 'font-bold text-slate-800 dark:text-slate-200'}`}>
+                                          {formatDate(opt.date)}
+                                        </span>
+                                        <span className={`text-xs truncate ${isSelected ? 'text-indigo-600 dark:text-indigo-300 font-semibold' : 'text-slate-500 dark:text-slate-400 font-normal'}`}>
+                                          {opt.label.split(' - ')[1] || opt.contest_name || opt.label}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    {isSelected && (
+                                      <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-white shrink-0 ml-2 shadow-xs">
+                                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                      </div>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                              {availableSundays.length === 0 && (
+                                <div className="px-4 py-8 text-center text-xs text-slate-500 dark:text-slate-400">
+                                  <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-brand-500" />
+                                  Loading available dates...
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>,
+                        document.body
+                      )
+                    ) : (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-[190] bg-transparent" 
+                          onClick={() => setRptSessionOpen(false)} 
+                        />
+                        <div className="absolute z-[300] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-950 border border-slate-200/90 dark:border-slate-700 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] max-h-[380px] overflow-y-auto p-2 space-y-1 custom-scrollbar">
+                        {availableSundays.map(opt => {
+                          const isSelected = selectedSessionId === opt.session_id;
+                          const formatDate = (d: string) => {
+                            if (d && d.includes('-')) {
+                              const p = d.split('-');
+                              if (p.length === 3) return `${p[2]}.${p[1]}.${p[0]}`;
+                            }
+                            if (d && d.includes('/')) {
+                              return d.replace(/\//g, '.');
+                            }
+                            return d;
+                          };
+                          const isBiweekly = opt.contest_type === 'biweekly' || (opt.label && opt.label.toLowerCase().includes('biweekly'));
+                          return (
+                            <button key={opt.session_id} type="button"
+                              onClick={() => { setSelectedSessionId(opt.session_id); setRptSessionOpen(false); }}
+                              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${isSelected ? 'bg-indigo-600 text-white font-black shadow-md shadow-indigo-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
+                            >
+                              <span className={`w-16 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : (isBiweekly ? 'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800' : (opt.is_latest ? 'bg-brand-100 text-brand-700 border-brand-300 dark:bg-brand-950/60 dark:text-brand-300' : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700'))}`}>
+                                {isBiweekly ? 'BIWEEKLY' : (opt.is_latest ? 'LATEST' : 'PAST')}
+                              </span>
+                              <div className={`flex flex-col flex-1 min-w-0 ${isSelected ? 'text-white' : 'text-slate-800 dark:text-slate-100'}`}>
+                                <span className={`text-xs truncate ${isSelected ? 'font-black' : 'font-bold'}`}>{formatDate(opt.date)}</span>
+                                <span className={`text-[11px] truncate ${isSelected ? 'text-white/90 font-bold' : 'text-slate-600 dark:text-slate-400 font-semibold'}`}>{opt.label.split(' - ')[1] || opt.contest_name || opt.label}</span>
+                              </div>
+                              {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
+                            </button>
+                          );
+                        })}
+                        {availableSundays.length === 0 && (
+                          <div className="px-3 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
+                            <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2 text-brand-500" />
+                            Loading available dates...
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )
                 )}
                 </div>
               </div>

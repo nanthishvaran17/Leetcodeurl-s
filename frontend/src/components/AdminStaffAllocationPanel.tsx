@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Users, UserPlus, RefreshCw, CheckCircle2, AlertTriangle, User,
   Search, Sliders, ArrowRight, Power, Filter, X, Building2,
-  Trash2, UserCheck, ShieldAlert, Sparkles, Check, AlertOctagon, ChevronDown,
+  Trash2, UserCheck, ShieldAlert, Shuffle, Check, AlertOctagon, ChevronDown,
   Eye, BookOpen, Trophy, Award, UserMinus, Mail, Activity
 } from 'lucide-react';
 import api from '../services/api';
@@ -938,7 +938,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                 disabled={submitting || filteredUnassigned.length === 0}
                 className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white text-xs font-bold flex items-center gap-2 shadow-md transition-all cursor-pointer"
               >
-                <Sparkles className="w-4 h-4" />
+                <Shuffle className="w-4 h-4" />
                 <span>Smart Auto Assign</span>
               </button>
             </div>
@@ -970,39 +970,46 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                 </div>
               </div>
 
-              {/* Department & Academic Year: 2-column grid on mobile */}
-              <div className="grid grid-cols-2 md:flex items-end gap-2 w-full md:w-auto">
-                <div className="w-full md:w-[190px]">
-                  <CustomDropdown label="Department" options={deptOptions} value={String(selectedDept)} onChange={setSelectedDept} icon={Building2} />
+              {/* Department & Academic Year: 2-column grid on mobile with Reset button */}
+              <div className="flex items-end gap-2 w-full md:w-auto">
+                <div className="grid grid-cols-2 gap-2 flex-1 md:flex md:w-auto">
+                  <div className="w-full md:w-[190px]">
+                    <CustomDropdown label="Department" options={deptOptions} value={String(selectedDept)} onChange={setSelectedDept} icon={Building2} />
+                  </div>
+
+                  <div className="w-full md:w-[160px]">
+                    <CustomDropdown label="Academic Year" options={yearOptions} value={selectedYear} onChange={setSelectedYear} icon={Filter} />
+                  </div>
                 </div>
 
-                <div className="w-full md:w-[160px]">
-                  <CustomDropdown label="Academic Year" options={yearOptions} value={selectedYear} onChange={setSelectedYear} icon={Filter} />
-                </div>
+                {isFilterActive && (
+                  <div className="space-y-1 shrink-0 self-end">
+                    <div className="hidden md:block h-4"></div>
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="h-10 sm:h-11 px-3 rounded-2xl bg-slate-200 dark:bg-navy-700 hover:bg-slate-300 dark:hover:bg-navy-600 text-slate-600 dark:text-slate-300 transition-all cursor-pointer flex items-center justify-center gap-1 text-xs font-bold active:scale-95 shadow-xs"
+                      title="Clear filters"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span className="text-[11px] font-bold">Reset</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {isFilterActive && (
-                <div className="space-y-1 shrink-0 self-end">
-                  <div className="hidden md:block h-4"></div>
-                  <button onClick={clearFilters} className="h-10 sm:h-11 px-3 rounded-2xl bg-slate-200 dark:bg-navy-700 hover:bg-slate-300 text-slate-600 dark:text-slate-300 transition-all cursor-pointer flex items-center justify-center gap-1 text-xs font-bold" title="Clear filters">
-                    <X className="w-4 h-4" />
-                    <span className="md:hidden">Reset</span>
-                  </button>
-                </div>
-              )}
-
-              {/* Assign Controls: Mentor picker + Assign button */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:flex items-end gap-2 w-full md:w-auto pt-1 md:pt-0 border-t md:border-t-0 border-slate-200/80 dark:border-navy-700">
-                <div className="w-full md:w-[230px]">
+              {/* Assign Controls: Mentor picker + Assign button (Desktop only; mobile uses the dedicated bottom floating action bar) */}
+              <div className="hidden md:flex items-end gap-2 w-auto">
+                <div className="w-[230px]">
                   <CustomDropdown label="Assign To Staff" options={staffOptions} value={targetStaffId ? String(targetStaffId) : ''} onChange={(val) => setTargetStaffId(val ? Number(val) : '')} icon={UserPlus} align="right" hideTriggerBadge={true} placeholder="[ Select Mentor ]" />
                 </div>
 
-                <div className="w-full md:w-auto space-y-1 shrink-0">
-                  <div className="hidden md:block h-4"></div>
+                <div className="w-auto space-y-1 shrink-0">
+                  <div className="h-4"></div>
                   <button
                     onClick={handleBulkAssign}
                     disabled={submitting || selectedStudents.length === 0 || !targetStaffId}
-                    className="w-full md:w-auto px-5 h-10 sm:h-11 rounded-2xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-sky-600/25 border border-sky-400/30 transition-all cursor-pointer whitespace-nowrap active:scale-95"
+                    className="px-5 h-10 sm:h-11 rounded-2xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-sky-600/25 border border-sky-400/30 transition-all cursor-pointer whitespace-nowrap active:scale-95"
                   >
                     <span>Assign ({selectedStudents.length})</span>
                     <ArrowRight className="w-4 h-4" />
@@ -1887,62 +1894,75 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
       {/* Mobile Sticky Floating Action Bar when students are selected in Assign Tab */}
       {activeTab === 'assign' && selectedStudents.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-3 md:hidden bg-slate-900/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-700/60 shadow-2xl animate-fade-in-up pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
-          <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="w-8 h-8 rounded-xl bg-sky-500/20 text-sky-400 font-mono font-black text-xs flex items-center justify-center shrink-0 border border-sky-400/30">
-                {selectedStudents.length}
-              </span>
-              <div className="min-w-0">
-                <span className="text-xs font-black text-white block truncate">
-                  {selectedStudents.length} Selected
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-3 md:hidden bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] animate-fade-in-up pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+          <div className="max-w-lg mx-auto space-y-2">
+            {/* Primary Filter Style CustomDropdown for Mentor Selection (Opens mobile Bottom-Sheet Drawer) */}
+            <div className="w-full">
+              <CustomDropdown
+                id="mobile-assign-target-staff"
+                label=""
+                options={staffOptions}
+                value={targetStaffId ? String(targetStaffId) : ''}
+                onChange={(val) => setTargetStaffId(val ? Number(val) : '')}
+                icon={UserPlus}
+                placeholder="Select Mentor to Assign..."
+                hideTriggerBadge={false}
+                compact={true}
+                className="w-full"
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-2 pt-0.5">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 font-mono font-black text-xs flex items-center justify-center shrink-0 border border-sky-200 dark:border-sky-400/30 shadow-2xs">
+                  {selectedStudents.length}
                 </span>
+                <div className="min-w-0">
+                  <span className="text-xs font-black text-slate-800 dark:text-white block truncate">
+                    {selectedStudents.length} Selected
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStudents([])}
+                    className="text-[10px] text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white underline cursor-pointer"
+                  >
+                    Clear Selection
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={() => setSelectedStudents([])}
-                  className="text-[10px] text-slate-400 hover:text-white underline cursor-pointer"
+                  onClick={handleBulkAssign}
+                  disabled={submitting || !targetStaffId}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 disabled:opacity-40 text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-sky-600/25 active:scale-95 transition-all cursor-pointer"
                 >
-                  Clear Selection
+                  <span>Assign ({selectedStudents.length})</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={handleBulkAssign}
-                disabled={submitting || !targetStaffId}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 disabled:opacity-40 text-white text-xs font-black flex items-center gap-1.5 shadow-lg shadow-sky-600/30 active:scale-95 transition-all cursor-pointer"
-              >
-                <span>Assign ({selectedStudents.length})</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
           </div>
-          {!targetStaffId && (
-            <p className="text-[10px] text-amber-300 font-semibold mt-1.5 text-center">
-              ⚠️ Select a mentor in the dropdown above to assign
-            </p>
-          )}
         </div>
       )}
 
       {/* Mobile Sticky Floating Action Bar when students are selected in Unassign Tab */}
       {activeTab === 'unassign' && selectedAssignedStudents.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-3 md:hidden bg-slate-900/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-rose-900/60 shadow-2xl animate-fade-in-up pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-3 md:hidden bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-rose-200/90 dark:border-rose-900/60 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] animate-fade-in-up pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
           <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 font-mono font-black text-xs flex items-center justify-center shrink-0 border border-rose-400/30">
+              <span className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-mono font-black text-xs flex items-center justify-center shrink-0 border border-rose-200 dark:border-rose-400/30 shadow-2xs">
                 {selectedAssignedStudents.length}
               </span>
               <div className="min-w-0">
-                <span className="text-xs font-black text-white block truncate">
+                <span className="text-xs font-black text-slate-800 dark:text-white block truncate">
                   {selectedAssignedStudents.length} Selected to Remove
                 </span>
                 <button
                   type="button"
                   onClick={() => setSelectedAssignedStudents([])}
-                  className="text-[10px] text-slate-400 hover:text-white underline cursor-pointer"
+                  className="text-[10px] text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white underline cursor-pointer"
                 >
                   Clear Selection
                 </button>

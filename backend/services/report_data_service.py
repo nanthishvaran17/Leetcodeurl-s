@@ -210,7 +210,7 @@ def fetch_normalized_students(
             target_ws = resolve_target_weekly_session(db, session_id)
             sess_id_int = target_ws.id if target_ws else (int(session_id) if str(session_id).isdigit() else None)
             if sess_id_int:
-                from backend.models import WeeklyPublicResult, WeeklyVirtualResult
+                from backend.models import WeeklyPublicResult, WeeklyVirtualResult, PreviousWeekParticipationRecord
                 pub_recs = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == sess_id_int).all()
                 for pr in pub_recs:
                     session_result_map[pr.student_id] = pr
@@ -218,6 +218,15 @@ def fetch_normalized_students(
                 for vr in virt_recs:
                     if vr.student_id not in session_result_map:
                         session_result_map[vr.student_id] = vr
+                # Augment from authoritative PreviousWeekParticipationRecord
+                pw_recs = db.query(PreviousWeekParticipationRecord).filter(
+                    PreviousWeekParticipationRecord.session_id == sess_id_int,
+                    PreviousWeekParticipationRecord.is_active_version == True
+                ).all()
+                for pw in pw_recs:
+                    cur = session_result_map.get(pw.student_id)
+                    if not cur or getattr(cur, "participation_status", "") in ("PENDING", "UNKNOWN", "DATA_UNAVAILABLE") or (getattr(cur, "total_contest_solved", 0) == 0 and (pw.problems_solved or 0) > 0):
+                        session_result_map[pw.student_id] = pw
             
             if target_ws and target_ws.contest_name:
                 from backend.models import LeetCodeContestRatingHistory
@@ -347,7 +356,11 @@ def fetch_normalized_students(
             c_easy = 1 if (getattr(sess_rec, 'q1', False) or str(getattr(sess_rec, 'q1_display', '')).startswith('1')) else 0
             c_med = (1 if (getattr(sess_rec, 'q2', False) or str(getattr(sess_rec, 'q2_display', '')).startswith('1')) else 0) + (1 if (getattr(sess_rec, 'q3', False) or str(getattr(sess_rec, 'q3_display', '')).startswith('1')) else 0)
             c_hard = 1 if (getattr(sess_rec, 'q4', False) or str(getattr(sess_rec, 'q4_display', '')).startswith('1')) else 0
-            c_solved = getattr(sess_rec, 'questions_solved', None)
+            c_solved = getattr(sess_rec, 'total_contest_solved', None)
+            if c_solved is None:
+                c_solved = getattr(sess_rec, 'problems_solved', None)
+            if c_solved is None:
+                c_solved = getattr(sess_rec, 'questions_solved', None)
             if c_solved is None:
                 c_solved = c_easy + c_med + c_hard
         elif session_id and str(session_id).lower() not in ("all", "none", "latest"):
@@ -368,6 +381,22 @@ def fetch_normalized_students(
             medium = c_med
             hard = c_hard
             total_solved = c_solved
+
+        if session_id and str(session_id).lower() not in ("all", "none", "latest"):
+            if sess_rec:
+                part_st = getattr(sess_rec, 'participation_type', None) or getattr(sess_rec, 'participation_status', None)
+                if part_st in ('PUBLIC', 'ATTENDED', 'PUBLIC_ATTENDED', 'VERIFIED', 'FINALIZED'):
+                    row_status = 'PUBLIC_ATTENDED'
+                elif part_st in ('VIRTUAL', 'VIRTUAL_ATTENDED'):
+                    row_status = 'VIRTUAL_ATTENDED'
+                elif part_st in ('NOT_ATTENDED', 'ABSENT'):
+                    row_status = 'NOT_ATTENDED'
+                else:
+                    row_status = 'PUBLIC_ATTENDED' if (c_solved and c_solved > 0) else ('NOT_ATTENDED' if getattr(s, 'username', None) else 'PENDING_USERNAME')
+            else:
+                row_status = 'NOT_ATTENDED'
+        else:
+            row_status = "VERIFIED" if is_verified else "UNVERIFIED"
 
         rows.append(StudentRow(
             s_no=idx,
@@ -395,7 +424,7 @@ def fetch_normalized_students(
             rating=round(effective_rating, 1) if (is_verified and effective_rating is not None) else None,
             global_rank=g_rank,
             category=category,
-            status="VERIFIED" if is_verified else "UNVERIFIED",
+            status=row_status,
             accommodation=getattr(s, 'accommodation', '') or '',
             twelfth_cutoff=float(s.twelfth_cutoff) if (hasattr(s, 'twelfth_cutoff') and s.twelfth_cutoff is not None) else None,
             cutoff=float(s.twelfth_cutoff) if (hasattr(s, 'twelfth_cutoff') and s.twelfth_cutoff is not None) else None,
