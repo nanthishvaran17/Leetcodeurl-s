@@ -187,6 +187,18 @@ function evaluateNumeric(val: number | string | null | undefined, filter: Numeri
   }
 }
 
+const formatGlobalRank = (gr: any): string => {
+  if (gr === null || gr === undefined || gr === "" || gr === "N/A" || gr === "—") return "0";
+  if (typeof gr === "string") {
+    const s = gr.trim();
+    if (s.startsWith("#")) return s;
+    const num = parseInt(s.replace(/\D/g, ""), 10);
+    return !isNaN(num) && num > 0 ? `#${num.toLocaleString()}` : (s === "—" ? "0" : s);
+  }
+  if (typeof gr === "number" && gr > 0) return `#${gr.toLocaleString()}`;
+  return "0";
+};
+
 const BadgeCard = ({ badge }: { badge: any }) => {
   const [imgError, setImgError] = useState(false);
   const rawUrl = badge.icon_url || "";
@@ -499,16 +511,22 @@ export const HRCandidateFinderPage: React.FC = () => {
 
   const { pushContext, popContext, registerEscHandler } = useKeyboardContext();
 
+  useScrollLock(Boolean(selectedCandidate));
+  useScrollLock(isMobileFilterOpen);
+
+  useEffect(() => {
+    return () => {
+      forceUnlockScroll();
+    };
+  }, []);
+
   useEffect(() => {
     if (selectedCandidate) {
       pushContext('DRAWER');
-      const origOverflow = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
       const unregister = registerEscHandler(() => {
         setSelectedCandidate(null);
       });
       return () => {
-        document.body.style.overflow = origOverflow;
         unregister();
         popContext('DRAWER');
       };
@@ -2739,7 +2757,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                         <div
                           key={c.id}
                           onClick={() => setSelectedCandidate(c)}
-                          className="bg-white dark:bg-navy-950 rounded-xl border border-slate-200/80 dark:border-navy-800 p-3 shadow-2xs hover:border-blue-500/50 hover:shadow-xs flex items-center justify-between gap-3 active:scale-[0.99] transition-all cursor-pointer group"
+                          className="bg-white dark:bg-navy-950 rounded-xl border border-slate-200/80 dark:border-navy-800 p-3 shadow-2xs hover:border-blue-500/50 hover:shadow-xs flex items-center justify-between gap-3 smooth-scroll-compact-card transition-colors duration-150 cursor-pointer group touch-manipulation"
                         >
                           {/* Avatar & Core Student Identity */}
                           <div className="flex items-center gap-2.5 min-w-0 flex-1">
