@@ -18,6 +18,7 @@ import {
   ChevronRight,
   SlidersHorizontal
 } from 'lucide-react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import { DropdownOption } from '../CustomDropdown';
 
 export interface MobileStudentShowcaseFiltersProps {
@@ -73,18 +74,14 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
   const [activeTab, setActiveTab] = useState<'all' | 'department' | 'year' | 'performance' | 'sort'>('all');
   const [deptSearchQuery, setDeptSearchQuery] = useState('');
 
+  useScrollLock(isOpen);
+
   useEffect(() => {
     if (isOpen) {
       setActiveTab(initialTab);
-      // Lock body scroll
-      document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = '';
       setDeptSearchQuery('');
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isOpen, initialTab]);
 
   const activeFiltersCount = useMemo(() => {

@@ -987,22 +987,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5 max-w-2xl">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 border border-white/15 text-slate-200 text-[11px] font-mono font-bold">
-                <Calendar className="w-3 h-3 text-indigo-400" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-slate-200 text-xs font-mono font-bold shadow-xs">
+                <Calendar className="w-3.5 h-3.5 text-indigo-400" />
                 <span>Target: {summary?.target_date_ist || '—'}</span>
               </span>
-
-              {wsStatus === 'LIVE' ? (
-                <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono font-black flex items-center gap-1.5 shadow-xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>LIVE SYNC ACTIVE</span>
-                </span>
-              ) : (
-                <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-black flex items-center gap-1.5 shadow-xs">
-                  <WifiOff className="w-3 h-3 text-amber-400" />
-                  <span>AUTO-POLLING ACTIVE</span>
-                </span>
-              )}
             </div>
 
             <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight flex items-center gap-2">
@@ -1012,7 +1000,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             </h2>
 
             <p className="text-xs sm:text-[13px] text-slate-300 font-medium leading-relaxed">
-              Authoritative question-level contest telemetry • 08:00 AM – 09:30 AM IST Official Window • Realtime Ingestion
+              Authoritative question-level contest telemetry • Realtime Ingestion
             </p>
           </div>
 

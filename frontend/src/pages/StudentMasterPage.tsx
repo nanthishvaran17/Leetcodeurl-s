@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { 
   Users, Trash2, Edit2, ShieldAlert, BadgeInfo, CheckCircle, 
   X, Check, AlertCircle, Sparkles, Building2, LayoutList, Calendar,
-  Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight, Mail, User
+  Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight, Mail, User,
+  SlidersHorizontal, Filter
 } from 'lucide-react';
 import { GlobalFilter } from '../components/GlobalFilter';
 import api from '../services/api';
@@ -16,6 +17,8 @@ import { studentLiveStore } from '../stores/studentLiveStore';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { useDepartmentsQuery } from '../hooks/useDashboardQueries';
 import { useFilters } from '../context/FilterContext';
+import { useScrollLock } from '../hooks/useScrollLock';
+import { MobileFilterDrawer } from '../components/MobileFilterDrawer';
 
 // Validation state machine 
 type LcValidationState =
@@ -160,6 +163,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   // Removed useFilteredStudents client-side filtering
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [loading, setLoading] = useState(false);
   const { data: initialStudents = [] } = useStudentsQuery();
   const globalTotalCount = initialStudents.length > 0 ? initialStudents.length : 0;
@@ -333,6 +337,8 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     setLcValidation({ status: 'idle' });
   };
 
+  useScrollLock(showAddModal);
+
   useEffect(() => {
     if (!showAddModal) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -341,11 +347,8 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       }
     };
     document.addEventListener('keydown', handleKeyDown);
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = originalOverflow;
     };
   }, [showAddModal]);
 
@@ -537,35 +540,86 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         </div>
       </div>
 
-      {/* Search Bar - Redesigned */}
-      <div className="bg-white dark:bg-navy-950 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-navy-700 space-y-4 sm:space-y-5 mb-6 sm:mb-10">
-        <div className="relative flex items-center">
-          <input
-            type="text"
-            value={localSearch}
-            onChange={(e) => setLocalSearch(e.target.value)}
-            placeholder="Search students by name, reg no..."
-            autoComplete="off"
-            className="w-full pl-11 pr-10 py-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all text-ellipsis"
-          />
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 z-10 text-slate-500 dark:text-slate-400">
-            <Search className="w-5 h-5" />
+      {/* Search & Mobile Filter Bar */}
+      <div className="bg-white dark:bg-navy-950 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-navy-700 space-y-3 sm:space-y-4 mb-6 sm:mb-10">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 flex items-center min-w-0">
+            <input
+              type="text"
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+              placeholder="Search students by name, reg no..."
+              autoComplete="off"
+              className="w-full pl-11 pr-10 py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all text-ellipsis"
+            />
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 z-10 text-slate-500 dark:text-slate-400">
+              <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            {localSearch && (
+              <button
+                type="button"
+                onClick={() => {
+                  setLocalSearch('');
+                  filters.setSearchQuery('');
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex items-center justify-center cursor-pointer"
+                title="Clear search"
+              >
+                <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            )}
           </div>
-          {localSearch && (
+
+          {/* Mobile Filter Button (< 768px) */}
+          <button
+            type="button"
+            onClick={() => setShowMobileFilters(true)}
+            className="md:hidden flex items-center justify-center gap-1.5 px-3.5 py-3 rounded-xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-slate-800 dark:text-slate-200 font-bold text-xs shrink-0 active:scale-95 transition-all shadow-xs cursor-pointer min-h-[46px]"
+            title="Filter by Department & Year"
+          >
+            <SlidersHorizontal className="w-4 h-4 text-brand-500 shrink-0" />
+            <span className="hidden xs:inline font-black">Filters</span>
+            {filters.isFilteringActive && (
+              <span className="w-2 h-2 rounded-full bg-brand-500 shrink-0" />
+            )}
+          </button>
+        </div>
+
+        {/* Quick Horizontal Department Scroll Chips (< 768px) */}
+        {globalDepts && globalDepts.length > 0 && (
+          <div className="md:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 touch-pan-x">
             <button
               type="button"
-              onClick={() => {
-                setLocalSearch('');
-                filters.setSearchQuery('');
-              }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex items-center justify-center cursor-pointer"
-              title="Clear search"
+              onClick={() => filters.setDepartment('ALL')}
+              className={`px-3 py-1 rounded-lg text-[11px] font-black whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
+                filters.department === 'ALL'
+                  ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                  : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-200'
+              }`}
             >
-              <XCircle className="w-5 h-5" />
+              All Depts
             </button>
-          )}
-        </div>
-        
+            {globalDepts.map((d: any) => {
+              const code = d.code || d.name;
+              const isSelected = String(filters.department) === String(d.id) || String(filters.department) === code;
+              return (
+                <button
+                  key={d.id || code}
+                  type="button"
+                  onClick={() => filters.setDepartment(isSelected ? 'ALL' : String(code || d.id))}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
+                    isSelected
+                      ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                      : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-200'
+                  }`}
+                >
+                  {code}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <div className="flex items-center justify-between px-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
           {filters.isFilteringActive ? (
             <span>
@@ -574,8 +628,27 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           ) : (
             <span>Showing all {serverTotalCount} students</span>
           )}
+          {filters.isFilteringActive && (
+            <button
+              type="button"
+              onClick={() => {
+                setLocalSearch('');
+                filters.resetFilters();
+              }}
+              className="text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer"
+            >
+              Reset Filters
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Mobile Filter Bottom Drawer */}
+      <MobileFilterDrawer
+        isOpen={showMobileFilters}
+        onClose={() => setShowMobileFilters(false)}
+        departments={globalDepts}
+      />
 
       {isTableLoading ? (
         <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-3xl border border-slate-200 bg-white dark:border-navy-700 dark:bg-navy-950">
@@ -620,7 +693,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             />
           ) : (
         <div className="flex flex-col gap-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
             {displayedStudents.map((st) => (
               <StudentFlipCard
                 key={st.id}

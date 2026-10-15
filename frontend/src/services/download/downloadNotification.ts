@@ -194,8 +194,8 @@ class DownloadNotificationService {
             if (reg && reg.showNotification) {
               await reg.showNotification(title, {
                 body,
-                icon: '/logo.png',
-                badge: '/logo.png',
+                icon: '/nec_25_logo.png',
+                badge: '/nec_25_logo.png',
                 tag: `download-${notifId}`,
                 data: {
                   type: 'DOWNLOAD_COMPLETE',

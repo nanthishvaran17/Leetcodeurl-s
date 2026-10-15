@@ -18,6 +18,7 @@ import { useScrollLock, forceUnlockScroll } from './hooks/useScrollLock';
 import { StudentProfileSkeleton } from './components/StudentProfileSkeleton';
 import { StudentShareCardModal } from './components/StudentShareCardModal';
 import { MobileFilterDrawer } from './components/MobileFilterDrawer';
+import { BackToTopButton } from './components/BackToTopButton';
 import { isAdminOtpVerified } from './utils/adminOtpAuth';
 
 const LandingPage = safeLazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
@@ -1286,6 +1287,9 @@ export const App: React.FC = () => {
           onClose={() => setShowMobileFilterDrawer(false)}
         />
       )}
+
+      {/* Modern Floating Back to Top Button */}
+      <BackToTopButton />
 
     </div>
   );

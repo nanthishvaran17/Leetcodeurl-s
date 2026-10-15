@@ -2845,13 +2845,13 @@ export const HRCandidateFinderPage: React.FC = () => {
                         <div
                           key={c.id}
                           onClick={() => setSelectedCandidate(c)}
-                          className="bg-white dark:bg-navy-950 rounded-2xl border border-slate-200/90 dark:border-navy-800 p-4 shadow-sm hover:shadow-md transition-all space-y-3 relative active:scale-[0.99] cursor-pointer group hover:border-blue-500/40"
+                          className="bg-white dark:bg-navy-950 rounded-2xl border border-slate-200/90 dark:border-navy-800 p-4 shadow-sm smooth-scroll-card transition-colors duration-150 space-y-3 relative cursor-pointer group hover:border-blue-500/40 touch-manipulation"
                         >
                           {/* Card Header: Avatar + Student Name + Leetcode Link & Rating */}
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                               {/* Avatar with Refined Gradient */}
-                              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm text-white shrink-0 shadow-2xs transition-transform group-hover:scale-105 ${
+                              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm text-white shrink-0 shadow-2xs ${
                                 isHighRated
                                   ? 'bg-gradient-to-br from-amber-500 to-orange-600 ring-2 ring-amber-400/30 shadow-amber-500/10'
                                   : 'bg-gradient-to-br from-indigo-600 to-blue-600 ring-1 ring-indigo-500/20 shadow-indigo-500/10'
@@ -2909,7 +2909,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                                 href={c.leetcode_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="p-1.5 rounded-xl bg-slate-100 hover:bg-amber-50 dark:bg-navy-900 dark:hover:bg-amber-950/40 text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 border border-slate-200/80 dark:border-navy-700 hover:border-amber-300 transition-all flex items-center justify-center shrink-0"
+                                className="p-1.5 rounded-xl bg-slate-100 hover:bg-amber-50 dark:bg-navy-900 dark:hover:bg-amber-950/40 text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 border border-slate-200/80 dark:border-navy-700 hover:border-amber-300 transition-colors flex items-center justify-center shrink-0"
                                 title="Open LeetCode Profile"
                               >
                                 <ExternalLink className="w-3.5 h-3.5" />
@@ -2951,18 +2951,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                             <div className="bg-slate-50/80 dark:bg-navy-900/60 p-2 rounded-xl border border-slate-100 dark:border-navy-800">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">LeetCode Rank</span>
                               <span className="font-mono font-black text-xs text-slate-800 dark:text-slate-200 mt-0.5 block truncate">
-                                {(() => {
-                                  const gr: any = c.global_rank;
-                                  if (gr === null || gr === undefined || gr === "" || gr === "N/A" || gr === "—") return "0";
-                                  if (typeof gr === "string") {
-                                    const s = gr.trim();
-                                    if (s.startsWith("#")) return s;
-                                    const num = parseInt(s.replace(/\D/g, ""), 10);
-                                    return !isNaN(num) && num > 0 ? `#${num.toLocaleString()}` : (s === "—" ? "0" : s);
-                                  }
-                                  if (typeof gr === "number" && gr > 0) return `#${gr.toLocaleString()}`;
-                                  return "0";
-                                })()}
+                                {formatGlobalRank(c.global_rank)}
                               </span>
                             </div>
 
@@ -2980,17 +2969,17 @@ export const HRCandidateFinderPage: React.FC = () => {
                             <div className="h-1.5 w-full bg-slate-100 dark:bg-navy-800 rounded-full overflow-hidden flex">
                               <div
                                 style={{ width: `${easyPct}%` }}
-                                className="bg-emerald-500 h-full transition-all"
+                                className="bg-emerald-500 h-full"
                                 title={`Easy: ${c.easy_solved} (${easyPct}%)`}
                               />
                               <div
                                 style={{ width: `${medPct}%` }}
-                                className="bg-amber-500 h-full transition-all"
+                                className="bg-amber-500 h-full"
                                 title={`Medium: ${c.medium_solved} (${medPct}%)`}
                               />
                               <div
                                 style={{ width: `${hardPct}%` }}
-                                className="bg-rose-500 h-full transition-all"
+                                className="bg-rose-500 h-full"
                                 title={`Hard: ${c.hard_solved} (${hardPct}%)`}
                               />
                             </div>
@@ -3015,7 +3004,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setSelectedCandidate(c)}
-                            className="w-full py-2.5 px-3.5 rounded-xl bg-slate-50 hover:bg-indigo-50/70 dark:bg-navy-900/60 dark:hover:bg-navy-800 border border-slate-200/90 dark:border-navy-700/80 hover:border-indigo-300 dark:hover:border-indigo-500/40 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs transition-all flex items-center justify-between cursor-pointer group/btn shadow-2xs"
+                            className="w-full py-2.5 px-3.5 rounded-xl bg-slate-50 hover:bg-indigo-50/70 dark:bg-navy-900/60 dark:hover:bg-navy-800 border border-slate-200/90 dark:border-navy-700/80 hover:border-indigo-300 dark:hover:border-indigo-500/40 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs transition-colors duration-150 flex items-center justify-between cursor-pointer group/btn shadow-2xs touch-manipulation"
                           >
                             <div className="flex items-center gap-2">
                               <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center transition-colors group-hover/btn:bg-indigo-600 group-hover/btn:text-white">
@@ -3025,7 +3014,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                                 View Intelligence Profile
                               </span>
                             </div>
-                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover/btn:text-indigo-600 group-hover/btn:translate-x-0.5 transition-all" />
+                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover/btn:text-indigo-600 group-hover/btn:translate-x-0.5 transition-colors" />
                           </button>
                         </div>
                       );

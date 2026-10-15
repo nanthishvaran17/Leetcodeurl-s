@@ -27,8 +27,8 @@ messaging.onBackgroundMessage((payload) => {
   
   const notificationOptions = {
     body: notificationBody,
-    icon: '/android-chrome-192x192.png',
-    badge: '/favicon-32x32.png',
+    icon: '/nec_25_logo.png',
+    badge: '/nec_25_logo.png',
     vibrate: [200, 100, 200, 100, 200], // Phone vibration pattern (like WhatsApp/SMS)
     requireInteraction: true,           // Keeps notification visible on lock screen/desktop
     silent: false,                      // Ensures audio chime & vibration trigger

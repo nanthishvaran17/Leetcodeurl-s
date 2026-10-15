@@ -1935,27 +1935,6 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </span>
               ) : null}
 
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/[0.06] text-slate-200 text-[11px] font-mono font-medium border border-white/10 backdrop-blur-md">
-                <Clock className="w-3 h-3 text-brand-400 shrink-0" />
-                <span>08:00 AM – 09:30 AM IST</span>
-              </span>
-
-              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold border shadow-xs ${
-                wsStatus === 'LIVE' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' :
-                wsStatus === 'RECONNECTING' ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 animate-pulse' :
-                'bg-rose-500/15 text-rose-300 border-rose-500/30'
-              }`}>
-                <Radio className={`w-3 h-3 ${wsStatus === 'LIVE' ? 'text-emerald-400 animate-pulse' : 'text-amber-400'}`} />
-                <span>{wsStatus === 'LIVE' ? 'LIVE' : wsStatus === 'RECONNECTING' ? 'RECONNECTING...' : 'OFFLINE'}</span>
-              </span>
-
-              {wsLastSyncAt && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 text-slate-400 text-[11px] font-mono border border-white/10">
-                  <Clock className="w-2.5 h-2.5 text-slate-500 shrink-0" />
-                  <span>Synced {wsLastSyncAt}</span>
-                </span>
-              )}
-
               {wsSyncState === 'INITIAL_SYNC' && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[11px] font-mono font-bold animate-pulse">
                   <RefreshCw className="w-2.5 h-2.5 text-indigo-400 animate-spin shrink-0" />

@@ -1451,7 +1451,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     transition: { staggerChildren: 0.025 }
                   }
                 }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6"
               >
                 <AnimatePresence mode="popLayout">
                   {sortedList.slice(0, displayCount).map((st, idx) => (
