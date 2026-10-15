@@ -492,10 +492,10 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     med_cnt = int(s.get("medium") or 0)
     hard_cnt = int(s.get("hard") or 0)
     raw_rat = s.get("contest_rating") or s.get("rating")
-    if raw_rat is not None and str(raw_rat).strip() not in ("—", "None", "nan", "NaN", "null", "", "0", "1500", "1500.0"):
+    if raw_rat is not None and str(raw_rat).strip() not in ("—", "None", "nan", "NaN", "null", "", "0"):
         try:
             r_num = round(float(str(raw_rat).replace(",", "")))
-            rating_val = f"{r_num:,}" if r_num > 0 and r_num != 1500 else "—"
+            rating_val = f"{r_num:,}" if r_num > 0 else "—"
         except (ValueError, TypeError):
             rating_val = str(raw_rat)
     else:
