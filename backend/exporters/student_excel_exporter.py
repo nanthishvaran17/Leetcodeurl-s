@@ -195,9 +195,7 @@ def export_student_excel_from_dataset(dataset: dict, report_type: str = "STUDENT
 
         raw_c_hist_e2 = s.get("contest_history", [])
         if not raw_c_hist_e2:
-            contest_history = [
-                {"contest_name": "Weekly Contest 470", "contest_date": "2026-09-07", "rank": 1050, "score": "3 / 4", "rating_before": "1,730.9", "rating_after": "1,746.3", "participation_type": "OFFICIAL"}
-            ]
+            contest_history = []
         else:
             chrono_e2 = list(reversed(raw_c_hist_e2))
             prev_after_e2 = None
@@ -375,10 +373,7 @@ def export_student_excel_from_dataset(dataset: dict, report_type: str = "STUDENT
             
         raw_c_hist_e4 = s.get("contest_history", [])
         if not raw_c_hist_e4:
-            contest_history = [
-                {"contest_name": "Weekly Contest 470", "contest_date": "2026-09-07", "rank": 1050, "score": "3 / 4", "rating_before": "1,730.9", "rating_after": "1,746.3", "participation_type": "OFFICIAL"},
-                {"contest_name": "Biweekly Contest 138", "contest_date": "2026-08-31", "rank": 1420, "score": "3 / 4", "rating_before": "1,712.5", "rating_after": "1,730.9", "participation_type": "OFFICIAL"}
-            ]
+            contest_history = []
         else:
             chrono_e4 = list(reversed(raw_c_hist_e4))
             prev_after_e4 = None
@@ -397,7 +392,9 @@ def export_student_excel_from_dataset(dataset: dict, report_type: str = "STUDENT
         for idx, ch in enumerate(contest_history, start=4):
             ws4.cell(row=idx, column=1, value=ch.get('contest_name')).font = bold_font
             ws4.cell(row=idx, column=2, value=str(ch.get('contest_date'))).font = normal_font
-            ws4.cell(row=idx, column=3, value=str(ch.get('rank'))).font = bold_font
+            raw_r = ch.get('rank')
+            r_str = "Unranked" if raw_r in (None, 0, "0", "N/A", "None", "—") else (f"#{raw_r:,}" if isinstance(raw_r, int) else str(raw_r))
+            ws4.cell(row=idx, column=3, value=r_str).font = bold_font
             ws4.cell(row=idx, column=4, value=str(ch.get('score'))).font = normal_font
             ws4.cell(row=idx, column=5, value=str(ch.get('rating_before'))).font = normal_font
             ws4.cell(row=idx, column=6, value=str(ch.get('rating_after'))).font = bold_font
@@ -428,13 +425,6 @@ def export_student_excel_from_dataset(dataset: dict, report_type: str = "STUDENT
             cell.border = thin_border
             
         dsa_topics = s.get("dsa_topics", [])
-        if not dsa_topics:
-            dsa_topics = [
-                {"topic": "Arrays & Hash Table", "tier": "Fundamental", "solved": int(tot * 0.28), "proficiency": "Mastered"},
-                {"topic": "String Manipulation", "tier": "Fundamental", "solved": int(tot * 0.18), "proficiency": "Mastered"},
-                {"topic": "Two Pointers & Sliding Window", "tier": "Intermediate", "solved": int(tot * 0.14), "proficiency": "Proficient"},
-                {"topic": "Dynamic Programming", "tier": "Advanced", "solved": int(tot * 0.08), "proficiency": "Developing"}
-            ]
             
         for idx, dsa in enumerate(dsa_topics, start=4):
             ws5.cell(row=idx, column=1, value=dsa.get('topic')).font = bold_font

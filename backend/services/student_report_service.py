@@ -176,19 +176,19 @@ def generate_student_report(
         # For report display, newest contests come first
         contest_history = list(reversed(chrono_history))
 
-        # If no DB contest rows exist but student has rating/contest stats, build derived history
-        if not contest_history and (contest_rating > 0 or (contest_stats and contest_stats.questions_solved > 0)):
-            c_name = contest_stats.contest_name if contest_stats and contest_stats.contest_name else "Weekly Contest 470"
-            c_solved = contest_stats.questions_solved if contest_stats else 3
-            c_total = contest_stats.questions_total if contest_stats else 4
+        # Only add derived contest if valid contest_stats actually exists with non-zero solves
+        if not contest_history and (contest_stats and contest_stats.contest_name and contest_stats.questions_solved > 0):
+            c_name = contest_stats.contest_name
+            c_solved = contest_stats.questions_solved
+            c_total = contest_stats.questions_total or 4
             contest_history.append({
                 "contest_name": c_name,
                 "contest_date": datetime.date.today().strftime("%Y-%m-%d"),
-                "rank": 1050 if contest_rating > 1700 else 2450,
+                "rank": contest_stats.contest_rank if contest_stats.contest_rank else "Unranked",
                 "solved": c_solved,
                 "score": f"{c_solved} / {c_total}",
-                "rating_before": round(contest_rating - 15.4, 1) if contest_rating > 15 else "—",  # type: ignore
-                "rating_after": round(contest_rating, 1) if contest_rating > 0 else "—",  # type: ignore
+                "rating_before": "—",
+                "rating_after": round(contest_rating, 1) if contest_rating > 0 else "—",
                 "participation_type": "OFFICIAL"
             })
 
@@ -217,6 +217,19 @@ def generate_student_report(
             LeetCodeTopicStats.problems_solved > 0
         ).order_by(LeetCodeTopicStats.problems_solved.desc()).all()
 
+        # If student has solved problems but no topic rows cached yet, fetch on-demand
+        if not topic_rows and student.username:
+            try:
+                import asyncio
+                from backend.sync_engine import sync_single_student_by_id
+                asyncio.run(sync_single_student_by_id(student_id))
+                topic_rows = db.query(LeetCodeTopicStats).filter(
+                    LeetCodeTopicStats.student_id == student_id,
+                    LeetCodeTopicStats.problems_solved > 0
+                ).order_by(LeetCodeTopicStats.problems_solved.desc()).all()
+            except Exception:
+                pass
+
         def _proficiency_label(solved: int) -> str:
             if solved >= 20:
                 return "Mastered"
@@ -239,17 +252,6 @@ def generate_student_report(
                         "solved": solved_count,
                         "proficiency": _proficiency_label(solved_count)  # type: ignore
                     })
-        elif total_solved > 0:
-            solved_val = int(total_solved or 0)
-            dsa_topics = [
-                {"topic": "Arrays & Hash Table", "tier": "Fundamental", "solved": int(solved_val * 0.28), "proficiency": "Mastered"},
-                {"topic": "String Manipulation", "tier": "Fundamental", "solved": int(solved_val * 0.18), "proficiency": "Mastered"},
-                {"topic": "Two Pointers & Sliding Window", "tier": "Intermediate", "solved": int(solved_val * 0.14), "proficiency": "Proficient"},
-                {"topic": "Binary Search", "tier": "Intermediate", "solved": int(solved_val * 0.10), "proficiency": "Proficient"},
-                {"topic": "Trees & Binary Search Trees", "tier": "Advanced", "solved": int(solved_val * 0.09), "proficiency": "Proficient"},
-                {"topic": "Dynamic Programming", "tier": "Advanced", "solved": int(solved_val * 0.08), "proficiency": "Developing"},
-                {"topic": "Graphs & BFS/DFS", "tier": "Advanced", "solved": int(solved_val * 0.07), "proficiency": "Developing"}
-            ]
 
         acceptance_rate = 74.0 if total_solved > 100 else 68.5
 

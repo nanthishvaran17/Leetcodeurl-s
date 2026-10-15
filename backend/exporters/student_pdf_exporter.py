@@ -335,24 +335,30 @@ def _get_common_styles():
 
 
 def _add_institutional_header(story: list, title_text: str, subtitle_text: str, tag_text: str, styles: dict):
-    base_dir = os.path.dirname(os.path.dirname(__file__))
+    backend_dir = os.path.dirname(os.path.dirname(__file__))
+    repo_root = os.path.dirname(backend_dir)
 
-    # 1. Left Emblem Logo
-    emblem_path = os.path.join(base_dir, "frontend", "public", "nandha_emblem.png")
-    if not os.path.exists(emblem_path):
-        emblem_path = os.path.join(base_dir, "assets", "nandha_emblem.png")
-    if not os.path.exists(emblem_path):
-        emblem_path = os.path.join(base_dir, "static", "nandha_emblem.png")
+    # 1. Left Emblem Logo (Nandha Engineering College emblem)
+    emblem_candidates = [
+        os.path.join(repo_root, "frontend", "public", "nandha_emblem.png"),
+        os.path.join(backend_dir, "static", "nandha_emblem.png"),
+        os.path.join(backend_dir, "assets", "nandha_emblem.png"),
+        os.path.join(backend_dir, "assets", "nandha_logo.png"),
+    ]
+    emblem_path = next((p for p in emblem_candidates if os.path.exists(p)), None)
 
     # 2. Right 25 Years Jubilee Logo
-    logo25_path = os.path.join(base_dir, "frontend", "public", "nec_25_logo.png")
-    if not os.path.exists(logo25_path):
-        logo25_path = os.path.join(base_dir, "static", "nec_25_logo.png")
-    if not os.path.exists(logo25_path):
-        logo25_path = os.path.join(base_dir, "assets", "nec_25_logo.png")
+    logo25_candidates = [
+        os.path.join(repo_root, "frontend", "public", "nec_25_logo.png"),
+        os.path.join(backend_dir, "static", "nec_25_logo.png"),
+        os.path.join(backend_dir, "assets", "nec_25_years_logo.png"),
+        os.path.join(backend_dir, "assets", "nec_25_logo.png"),
+        os.path.join(repo_root, "frontend", "public", "logo.png"),
+    ]
+    logo25_path = next((p for p in logo25_candidates if os.path.exists(p)), None)
 
     img_left = None
-    if os.path.exists(emblem_path):
+    if emblem_path and os.path.exists(emblem_path):
         try:
             img_left = Image(emblem_path, width=1.35*inch, height=0.60*inch)
             img_left.hAlign = 'LEFT'
@@ -360,7 +366,7 @@ def _add_institutional_header(story: list, title_text: str, subtitle_text: str, 
             img_left = None
 
     img_right = None
-    if os.path.exists(logo25_path):
+    if logo25_path and os.path.exists(logo25_path):
         try:
             img_right = Image(logo25_path, width=1.35*inch, height=0.60*inch)
             img_right.hAlign = 'RIGHT'
@@ -645,11 +651,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
 
     raw_c_hist = s.get("contest_history", [])
     if not raw_c_hist:
-        contest_history = [
-            {"contest_name": "Weekly Contest 470", "contest_date": "2026-09-07", "rank": 1050, "solved": 3, "score": "3 / 4", "rating_before": "1,730.9", "rating_after": "1,746.3", "participation_type": "OFFICIAL"},
-            {"contest_name": "Biweekly Contest 138", "contest_date": "2026-08-31", "rank": 1420, "solved": 3, "score": "3 / 4", "rating_before": "1,712.5", "rating_after": "1,730.9", "participation_type": "OFFICIAL"},
-            {"contest_name": "Weekly Contest 469", "contest_date": "2026-08-24", "rank": 980, "solved": 4, "score": "4 / 4", "rating_before": "1,680.0", "rating_after": "1,712.5", "participation_type": "OFFICIAL"}
-        ]
+        contest_history = []
     else:
         # Process chronologically (oldest first) to compute rating_before chain
         chrono = list(reversed(raw_c_hist))
@@ -678,16 +680,34 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
         ]
     ]
 
-    for ch in contest_history:
+    if not contest_history:
         c_table_data.append([
-            Paragraph(f"<b>{ch.get('contest_name', 'Weekly Contest')}</b>", styles['td_left']),
-            Paragraph(str(ch.get('contest_date', '—')), styles['td']),
-            Paragraph(f"#{ch.get('rank', 'N/A'):,}" if isinstance(ch.get('rank'), int) else str(ch.get('rank', 'N/A')), styles['td_bold']),
-            Paragraph(str(ch.get('score', ch.get('solved', 0))), styles['td']),
-            Paragraph(str(ch.get('rating_before', '—')), styles['td']),
-            Paragraph(f"<b>{ch.get('rating_after', '—')}</b>", styles['td']),
-            Paragraph(f"<font color='#059669'><b>{ch.get('participation_type', 'OFFICIAL')}</b></font>", styles['td'])
+            Paragraph("<i>No official contest participation recorded on LeetCode</i>", styles['td_left']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td'])
         ])
+    else:
+        for ch in contest_history:
+            raw_r = ch.get('rank')
+            if raw_r in (None, 0, "0", "N/A", "None", "—"):
+                rank_disp = "Unranked"
+            elif isinstance(raw_r, int):
+                rank_disp = f"#{raw_r:,}"
+            else:
+                rank_disp = str(raw_r)
+            c_table_data.append([
+                Paragraph(f"<b>{ch.get('contest_name', 'Weekly Contest')}</b>", styles['td_left']),
+                Paragraph(str(ch.get('contest_date', '—')), styles['td']),
+                Paragraph(rank_disp, styles['td_bold']),
+                Paragraph(str(ch.get('score', ch.get('solved', 0))), styles['td']),
+                Paragraph(str(ch.get('rating_before', '—')), styles['td']),
+                Paragraph(f"<b>{ch.get('rating_after', '—')}</b>", styles['td']),
+                Paragraph(f"<font color='#059669'><b>{ch.get('participation_type', 'OFFICIAL')}</b></font>", styles['td'])
+            ])
 
     t_contest = Table(c_table_data, colWidths=[2.0*inch, 0.9*inch, 1.0*inch, 0.8*inch, 0.9*inch, 0.9*inch, 0.8*inch])
     t_contest.setStyle(TableStyle([
@@ -701,11 +721,26 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     story.append(t_contest)
     story.append(Spacer(1, 14))
 
+    contest_rank_val = s.get("contest_rank")
+    if not contest_rank_val or str(contest_rank_val).strip() in ("N/A", "None", "0", "#0", "—", ""):
+        c_rank_desc = "Global Contest Rank: Locked / Unranked"
+    else:
+        c_rank_desc = f"Global Contest Rank: {contest_rank_val}"
+
+    tot_contest_solves = sum(int(ch.get('solved') or 0) for ch in contest_history)
+    if contest_history and tot_contest_solves > 0:
+        avg_solve = round(tot_contest_solves / len(contest_history), 1)
+        speed_desc = f"Consistently averages {avg_solve} problem(s) solved per live contest session."
+    elif contest_history:
+        speed_desc = "Attended contest sessions recorded; actively practicing to unlock official contest global ranking."
+    else:
+        speed_desc = "Actively preparing to participate in upcoming weekly institutional contests."
+
     c_insights = (
         f"<b>Contest Rating Trajectory & Insights:</b><br/>"
-        f"• <b>Current Contest Rating:</b> <b>{rating_val}</b> (Global Contest Rank percentile: {global_rank}).<br/>"
+        f"• <b>Current Contest Rating:</b> <b>{rating_val}</b> ({c_rank_desc}).<br/>"
         f"• <b>Contest Frequency:</b> Participated in <b>{len(contest_history)} official contest sessions</b>.<br/>"
-        f"• <b>Solving Speed Benchmark:</b> Consistently solves 3 out of 4 contest problems within live timed contest windows."
+        f"• <b>Solving Speed Benchmark:</b> {speed_desc}"
     )
     t_c_ins = Table([[Paragraph(c_insights, styles['summary_box'])]], colWidths=[7.3*inch])
     t_c_ins.setStyle(TableStyle([
@@ -1022,11 +1057,7 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
 
     raw_c_hist_p4 = s.get("contest_history", [])
     if not raw_c_hist_p4:
-        contest_history = [
-            {"contest_name": "Weekly Contest 470", "contest_date": "2026-09-07", "rank": 1050, "solved": 3, "score": "3 / 4", "rating_before": "1,730.9", "rating_after": "1,746.3", "participation_type": "OFFICIAL"},
-            {"contest_name": "Biweekly Contest 138", "contest_date": "2026-08-31", "rank": 1420, "solved": 3, "score": "3 / 4", "rating_before": "1,712.5", "rating_after": "1,730.9", "participation_type": "OFFICIAL"},
-            {"contest_name": "Weekly Contest 469", "contest_date": "2026-08-24", "rank": 980, "solved": 4, "score": "4 / 4", "rating_before": "1,680.0", "rating_after": "1,712.5", "participation_type": "OFFICIAL"}
-        ]
+        contest_history = []
     else:
         chrono_p4 = list(reversed(raw_c_hist_p4))
         prev_after_p4 = None
@@ -1054,19 +1085,18 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
 
     contests_cnt = str(len(contest_history))
 
-    raw_glob = s.get("global_rank") or s.get("contest_global_ranking") or s.get("profile_rank") or s.get("public_profile_ranking")
-    if raw_glob is not None and str(raw_glob).strip() not in ("—", "None", "nan", "NaN", "null", "", "0", "N/A"):
-        clean_num = re.sub(r'[^0-9]', '', str(raw_glob))
-        global_rank = f"#{int(clean_num):,}" if clean_num and int(clean_num) > 0 and int(clean_num) != 5000001 else "—"
+    contest_rank_val = s.get("contest_rank")
+    if not contest_rank_val or str(contest_rank_val).strip() in ("N/A", "None", "0", "#0", "—", ""):
+        contest_rank_disp = "Unranked"
     else:
-        global_rank = "—"
+        contest_rank_disp = str(contest_rank_val)
 
     matrix_kpis = [
         [
             [Paragraph(str(rating_val), styles['kpi_num']), Paragraph("CURRENT RATING", styles['kpi_lbl'])],  # type: ignore
             [Paragraph(contests_cnt, styles['kpi_num']), Paragraph("CONTESTS ATTENDED", styles['kpi_lbl'])],
-            [Paragraph(global_rank, styles['kpi_num']), Paragraph("GLOBAL RANK", styles['kpi_lbl'])],
-            [Paragraph("OFFICIAL", styles['kpi_num']), Paragraph("PARTICIPATION STATUS", styles['kpi_lbl'])],
+            [Paragraph(contest_rank_disp, styles['kpi_num']), Paragraph("CONTEST RANK", styles['kpi_lbl'])],
+            [Paragraph("OFFICIAL" if contest_history else "UNRANKED", styles['kpi_num']), Paragraph("PARTICIPATION STATUS", styles['kpi_lbl'])],
         ]
     ]
     t_mkpi = Table(matrix_kpis, colWidths=[1.825*inch]*4)
@@ -1096,24 +1126,44 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
 
     c_matrix_data = [matrix_headers]
 
-    for ch in contest_history:
-        r_before = float(str(ch.get('rating_before', '0')).replace(',', '').replace('—', '0') or 0)
-        r_after = float(str(ch.get('rating_after', '0')).replace(',', '').replace('—', '0') or 0)
-        diff = round(r_after - r_before, 1) if (r_after > 0 and r_before > 0) else 0.0
-        
-        diff_str = f"+{diff}" if diff > 0 else (f"{diff}" if diff < 0 else "0.0")
-        diff_color = "#059669" if diff >= 0 else "#DC2626"
-
+    if not contest_history:
         c_matrix_data.append([
-            Paragraph(f"<b>{ch.get('contest_name', 'Weekly Contest')}</b>", styles['td_left']),
-            Paragraph(str(ch.get('contest_date', '—')), styles['td']),
-            Paragraph(f"#{ch.get('rank', 'N/A'):,}" if isinstance(ch.get('rank'), int) else str(ch.get('rank', 'N/A')), styles['td_bold']),
-            Paragraph(str(ch.get('score', ch.get('solved', '0'))), styles['td']),
-            Paragraph(str(ch.get('rating_before', '—')), styles['td']),
-            Paragraph(f"<b>{ch.get('rating_after', '—')}</b>", styles['td']),
-            Paragraph(f"<font color='{diff_color}'><b>{diff_str}</b></font>", styles['td']),
-            Paragraph(f"<font color='#059669'><b>{ch.get('participation_type', 'OFFICIAL')}</b></font>", styles['td'])
+            Paragraph("<i>No official contest participation recorded on LeetCode</i>", styles['td_left']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td']),
+            Paragraph("—", styles['td'])
         ])
+    else:
+        for ch in contest_history:
+            r_before = float(str(ch.get('rating_before', '0')).replace(',', '').replace('—', '0') or 0)
+            r_after = float(str(ch.get('rating_after', '0')).replace(',', '').replace('—', '0') or 0)
+            diff = round(r_after - r_before, 1) if (r_after > 0 and r_before > 0) else 0.0
+            
+            diff_str = f"+{diff}" if diff > 0 else (f"{diff}" if diff < 0 else "0.0")
+            diff_color = "#059669" if diff >= 0 else "#DC2626"
+
+            raw_r = ch.get('rank')
+            if raw_r in (None, 0, "0", "N/A", "None", "—"):
+                rank_disp = "Unranked"
+            elif isinstance(raw_r, int):
+                rank_disp = f"#{raw_r:,}"
+            else:
+                rank_disp = str(raw_r)
+
+            c_matrix_data.append([
+                Paragraph(f"<b>{ch.get('contest_name', 'Weekly Contest')}</b>", styles['td_left']),
+                Paragraph(str(ch.get('contest_date', '—')), styles['td']),
+                Paragraph(rank_disp, styles['td_bold']),
+                Paragraph(str(ch.get('score', ch.get('solved', '0'))), styles['td']),
+                Paragraph(str(ch.get('rating_before', '—')), styles['td']),
+                Paragraph(f"<b>{ch.get('rating_after', '—')}</b>", styles['td']),
+                Paragraph(f"<font color='{diff_color}'><b>{diff_str}</b></font>", styles['td']),
+                Paragraph(f"<font color='#059669'><b>{ch.get('participation_type', 'OFFICIAL')}</b></font>", styles['td'])
+            ])
 
     t_matrix = Table(c_matrix_data, colWidths=[1.8*inch, 0.8*inch, 0.85*inch, 0.7*inch, 0.8*inch, 0.8*inch, 0.75*inch, 0.8*inch])
     t_matrix.setStyle(TableStyle([
