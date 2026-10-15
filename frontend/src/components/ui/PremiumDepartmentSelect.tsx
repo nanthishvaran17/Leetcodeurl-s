@@ -14,6 +14,7 @@ interface PremiumDepartmentSelectProps {
   dropdownWidth?: string;
   variant?: 'default' | 'dark' | 'glass';
   compact?: boolean;
+  showAllDepartments?: boolean;
 }
 
 const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({ 
@@ -24,14 +25,22 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
   useIdAsValue = true,
   dropdownWidth = 'min-w-[320px] max-w-[480px]',
   variant = 'default',
-  compact = false
+  compact = false,
+  showAllDepartments = false
 }) => {
-  const { departments, isHodScope, isGlobalAccess } = useDepartments();
+  const { departments, allDepartments, isHodScope, isGlobalAccess } = useDepartments();
+
+  const activeDepts = useMemo(() => {
+    if (showAllDepartments || isGlobalAccess) {
+      return (allDepartments && allDepartments.length > 0) ? allDepartments : departments;
+    }
+    return departments;
+  }, [showAllDepartments, isGlobalAccess, allDepartments, departments]);
 
   // If HOD has scoped departments, auto-select their first department if current value is 'ALL' or invalid
   useEffect(() => {
-    if (isHodScope && !isGlobalAccess && departments.length > 0) {
-      const validValues = departments.map(d => useIdAsValue ? String(d.id || '') : (formatDepartmentCode(d) || d.code));
+    if (!showAllDepartments && isHodScope && !isGlobalAccess && activeDepts.length > 0) {
+      const validValues = activeDepts.map(d => useIdAsValue ? String(d.id || '') : (formatDepartmentCode(d) || d.code));
       if (selectedDept === 'ALL' || !selectedDept || (!validValues.includes(selectedDept) && selectedDept !== 'MY_DEPARTMENTS')) {
         const defaultVal = validValues[0];
         if (defaultVal) {
@@ -39,11 +48,11 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
         }
       }
     }
-  }, [isHodScope, isGlobalAccess, departments, selectedDept, useIdAsValue, onChange]);
+  }, [showAllDepartments, isHodScope, isGlobalAccess, activeDepts, selectedDept, useIdAsValue, onChange]);
 
   // Options generator strictly respecting HOD scope
   const options = useMemo(() => {
-    const deptOpts = departments.map(d => {
+    const deptOpts = activeDepts.map(d => {
       const code = formatDepartmentCode(d) || d.code;
       const name = formatDepartmentName(d) || d.name;
       return {
@@ -53,8 +62,8 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
       };
     });
 
-    if (isHodScope && !isGlobalAccess) {
-      if (departments.length > 1) {
+    if (!showAllDepartments && isHodScope && !isGlobalAccess) {
+      if (activeDepts.length > 1) {
         return [
           { value: 'MY_DEPARTMENTS', label: 'All My Authorized Departments', pillText: 'MY DEPTS' },
           ...deptOpts
@@ -67,7 +76,7 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
       { value: 'ALL', label: 'All Departments', pillText: 'ALL' },
       ...deptOpts
     ];
-  }, [departments, isHodScope, isGlobalAccess, useIdAsValue]);
+  }, [activeDepts, showAllDepartments, isHodScope, isGlobalAccess, useIdAsValue]);
 
   return (
     <GlobalFilter

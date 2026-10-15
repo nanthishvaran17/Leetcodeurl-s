@@ -28,8 +28,8 @@ const CAPTIONS = [
   },
   {
     scene: "06",
-    badge: "DATA INTEGRITY",
-    caption: "INSIGHTFUL ANALYTICS. DATA INTEGRITY."
+    badge: "GROWTH INTELLIGENCE",
+    caption: "HISTORICAL DELTAS. PERFORMANCE TIME MACHINE."
   },
   {
     scene: "07",

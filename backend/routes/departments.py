@@ -80,8 +80,8 @@ def get_departments(
                 pass
             current_user = None
 
-    # Scope restrictions by role (HOD & Staff/Faculty Mentors):
-    if current_user:
+    # Scope restrictions by role (HOD & Staff/Faculty Mentors) only when all_depts=False:
+    if current_user and not all_depts:
         from backend.services.authorization_service import _HOD_ROLES, _STAFF_ROLES
         role = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
         if role in _HOD_ROLES:

@@ -346,20 +346,11 @@ def generate_weekly_performance_data(
     # Step 3: Load Full Master Roster
     from backend.services.authorization_service import apply_role_based_student_filter
     from backend.services.contest_performance_service import matches_dept, matches_year
-
     student_query = db.query(Student).options(joinedload(Student.department)).filter((Student.is_active == True) | (Student.is_active.is_(None)))
-    
-    if current_user:
-        student_query = apply_role_based_student_filter(student_query, current_user, db)
-        
-    students = student_query.order_by(Student.department_id, Student.year_level, Student.reg_no).all()
 
-    u_role = (getattr(current_user, "role", "") or "").lower().strip()
-    if u_role in ("hod", "department hod", "department_hod"):
-        from backend.services.authorization_service import get_hod_authorized_department_codes
-        auth_codes = get_hod_authorized_department_codes(db, current_user)
-        if auth_codes and (not dept_filter or dept_filter.upper() == "ALL" or dept_filter not in auth_codes):
-            dept_filter = auth_codes[0]
+    # For institutional coordinator weekly performance report, all college departments are available for review.
+    # We load all active students, and then apply the selected department/cohort filter below.
+    students = student_query.order_by(Student.department_id, Student.year_level, Student.reg_no).all()
 
     # Apply department and year/batch filters if provided
     if dept_filter and dept_filter.upper() != "ALL":

@@ -1175,6 +1175,8 @@ def download_session_report_by_format(
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 headers={"Content-Disposition": f'attachment; filename="{r_filename}.xlsx"'}
             )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"[EXPORT ERROR] /{session_id}/{format}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to generate {format.upper()} report: {str(e)}")
@@ -1218,7 +1220,8 @@ def generate_universal_report(
 
         # Security Enforcement: Strict HOD Role Department Scoping
         user_role = (getattr(current_user, "role", "") or "").lower().strip()
-        if user_role in ("hod", "department hod", "department_hod"):
+        is_coord_report = (payload.report_type or "").upper() in ("WEEKLY_PERFORMANCE", "COORDINATOR", "COORDINATOR_WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_CONTEST_INTELLIGENCE")
+        if user_role in ("hod", "department hod", "department_hod") and not is_coord_report:
             from backend.services.authorization_service import get_hod_authorized_department_codes
             auth_codes = get_hod_authorized_department_codes(db, current_user)
             if auth_codes and (dept in ("ALL", "", None) or dept not in auth_codes):

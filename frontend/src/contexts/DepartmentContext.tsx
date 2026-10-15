@@ -11,6 +11,7 @@ export interface Department {
 
 interface DepartmentContextType {
   departments: Department[];
+  allDepartments: Department[];
   isLoading: boolean;
   error: string | null;
   refreshDepartments: () => Promise<void>;
@@ -22,15 +23,22 @@ interface DepartmentContextType {
 
 const DepartmentContext = createContext<DepartmentContextType | undefined>(undefined);
 
-// Only institutional departments with active enrolled students in the database
+// Institutional departments across Nandha Engineering College
 const ALL_DEPARTMENTS_FALLBACK: Department[] = [
   { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)', student_count: 159 },
   { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)', student_count: 148 },
   { id: 4, code: 'IT', name: 'Information Technology', pillText: 'IT', student_count: 256 },
+  { id: 10, code: 'AIDS', name: 'Artificial Intelligence and Data Science', pillText: 'AIDS', student_count: 0 },
+  { id: 12, code: 'ECE', name: 'Electronics and Communication Engineering', pillText: 'ECE', student_count: 0 },
+  { id: 8, code: 'EEE', name: 'Electrical and Electronics Engineering', pillText: 'EEE', student_count: 0 },
+  { id: 18, code: 'MECH', name: 'Mechanical Engineering', pillText: 'MECH', student_count: 0 },
+  { id: 19, code: 'CIVIL', name: 'Civil Engineering', pillText: 'CIVIL', student_count: 0 },
+  { id: 17, code: 'AGRI', name: 'Agricultural Engineering', pillText: 'AGRI', student_count: 0 },
 ];
 
 export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [departments, setDepartments] = useState<Department[]>(ALL_DEPARTMENTS_FALLBACK);
+  const [departments, setDepartments] = useState<Department[]>(ALL_DEPARTMENTS_FALLBACK.slice(0, 3));
+  const [allDepartments, setAllDepartments] = useState<Department[]>(ALL_DEPARTMENTS_FALLBACK);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isHodScope, setIsHodScope] = useState(false);
@@ -50,13 +58,15 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setIsLoading(true);
     setError(null);
     try {
-      // Backend returns scoped list for HOD, full list for others
-      const res = await api.get('/departments');
-      if (res.data && Array.isArray(res.data)) {
-        const sourceData = res.data;
-        const uniqueMap = new Map<string, Department>();
+      // Fetch departments (and full list with all_depts=true)
+      const [resScoped, resAll] = await Promise.allSettled([
+        api.get('/departments'),
+        api.get('/departments?all_depts=true')
+      ]);
 
-        sourceData.forEach((d: any) => {
+      const parseDeptList = (rawData: any[]) => {
+        const uniqueMap = new Map<string, Department>();
+        rawData.forEach((d: any) => {
           const code = (d.code || d.name || '').trim();
           const rawName = (d.name || d.code || '').trim();
           const upperCode = code.toUpperCase();
@@ -116,24 +126,43 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             }
           }
         });
+        return Array.from(uniqueMap.values());
+      };
 
-        const mappedDepts = Array.from(uniqueMap.values()).filter(d => (d.student_count === undefined || d.student_count > 0));
-        setDepartments(mappedDepts.length > 0 ? mappedDepts : ALL_DEPARTMENTS_FALLBACK);
+      const scopedData = (resScoped.status === 'fulfilled' && Array.isArray(resScoped.value.data)) ? resScoped.value.data : [];
+      const allData = (resAll.status === 'fulfilled' && Array.isArray(resAll.value.data)) ? resAll.value.data : [];
+
+      if (allData.length > 0) {
+        const parsedAll = parseDeptList(allData);
+        // Merge with fallback to ensure all official departments are present
+        const mergedMap = new Map<string, Department>();
+        ALL_DEPARTMENTS_FALLBACK.forEach(d => mergedMap.set(d.code, { ...d }));
+        parsedAll.forEach(d => mergedMap.set(d.code, { ...mergedMap.get(d.code), ...d }));
+        setAllDepartments(Array.from(mergedMap.values()));
       } else {
-        setDepartments(ALL_DEPARTMENTS_FALLBACK);
+        setAllDepartments(ALL_DEPARTMENTS_FALLBACK);
+      }
+
+      if (scopedData.length > 0) {
+        const parsedScoped = parseDeptList(scopedData);
+        const mappedDepts = parsedScoped.filter(d => (d.student_count === undefined || d.student_count > 0));
+        setDepartments(mappedDepts.length > 0 ? mappedDepts : ALL_DEPARTMENTS_FALLBACK.slice(0, 3));
+      } else {
+        setDepartments(ALL_DEPARTMENTS_FALLBACK.slice(0, 3));
       }
 
       // Determine scope flags from user role
       const u = getUserSnapshot();
       const role = ((u?.role) || '').trim().toLowerCase();
       const hodRoles = ['hod', 'department hod', 'department_hod', 'placement coordinator'];
-      const globalRoles = ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management'];
+      const globalRoles = ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'coordinator', 'academic coordinator'];
       setIsHodScope(hodRoles.includes(role));
       setIsGlobalAccess(globalRoles.includes(role));
     } catch (err: any) {
       console.error('[DepartmentContext] Failed to fetch departments:', err);
       setError(err.message || 'Failed to fetch departments');
-      setDepartments(ALL_DEPARTMENTS_FALLBACK);
+      setDepartments(ALL_DEPARTMENTS_FALLBACK.slice(0, 3));
+      setAllDepartments(ALL_DEPARTMENTS_FALLBACK);
     } finally {
       setIsLoading(false);
     }
@@ -169,6 +198,7 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   return (
     <DepartmentContext.Provider value={{
       departments,
+      allDepartments,
       isLoading,
       error,
       refreshDepartments: fetchDepartments,
@@ -186,6 +216,7 @@ export const useDepartments = () => {
     console.warn('useDepartments must be used within a DepartmentProvider');
     return {
       departments: [],
+      allDepartments: [],
       isLoading: false,
       error: null,
       refreshDepartments: async () => {},

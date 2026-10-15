@@ -81,7 +81,8 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
     # 0. Check in-memory dataset cache for sub-millisecond responses (< 5ms)
     user_role = (getattr(current_user, "role", "") or "").lower().strip()
     user_dept = str(getattr(current_user, "department_id", "") or "")
-    if user_role in ("hod", "department hod", "department_hod"):
+    is_coord_report = canon_report_code in ("WEEKLY_PERFORMANCE", "COORDINATOR", "COORDINATOR_WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_CONTEST_INTELLIGENCE")
+    if user_role in ("hod", "department hod", "department_hod") and not is_coord_report:
         from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
         h_ids = get_hod_authorized_department_ids(db, current_user)
         user_dept = ",".join(map(str, sorted(h_ids))) if h_ids else user_dept

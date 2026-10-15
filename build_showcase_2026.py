@@ -13,110 +13,111 @@ SEGS_DIR = os.path.join(OUTPUT_DIR, "intermediate_showcase_2026")
 os.makedirs(SEGS_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# 10 Professional Scenes for the 49.0s Master Film
-# trans_dur = 0.25s crossfade between scenes
-# For scenes 0-8, pad by 0.25s so crossfade does not steal scene time.
+# ─────────────────────────────────────────────────────────────────────────────
+# 10-SCENE MASTER — TARGET ~55 SECONDS
+#   Trans dur = 0.25s crossfade between every adjacent scene.
+#   Scenes 01-09 carry pad=0.25s so crossfade does not steal visible time.
+#   Scene 10 (last) has pad=0.0.
+#
+# Scene durations (target_dur):
+#   01:4.0s  02:4.0s  03:5.0s  04:6.0s  05:6.0s
+#   06:6.5s  07:6.5s  08:6.5s  09:6.5s  10:7.0s
+# Raw total=58.0s, minus 9x0.25=2.25s xfade => ~55.75s
+# ─────────────────────────────────────────────────────────────────────────────
+
 SCENE_SPECS = [
-    # Scene 01: Institutional Brand Opening (3.0s)
+    # Scene 01: Institutional Brand Opening (4.0s)
     {
         "id": "01",
         "type": "image",
         "file": os.path.join(BRANDS_DIR, "scene_01_intro.png"),
-        "target_dur": 3.0,
+        "target_dur": 4.0,
         "pad": 0.25,
         "fade_in": True
     },
-    # Scene 02: Login Page (3.0s)
+    # Scene 02: Login Page (4.0s)
     {
         "id": "02",
         "type": "single_video",
         "file": os.path.join(RAW_CLIPS_DIR, "clip_02_login.webm"),
         "ss": 2.0,
-        "target_dur": 3.0,
+        "target_dur": 4.0,
         "pad": 0.25,
         "caption": os.path.join(OVERLAYS_DIR, "caption_scene_02.png")
     },
-    # Scene 03: Executive Dashboard (4.0s)
+    # Scene 03: Executive Dashboard (5.0s)
     {
         "id": "03",
         "type": "single_video",
         "file": os.path.join(RAW_CLIPS_DIR, "clip_03_dashboard.webm"),
         "ss": 4.0,
-        "target_dur": 4.0,
+        "target_dur": 5.0,
         "pad": 0.25,
         "caption": os.path.join(OVERLAYS_DIR, "caption_scene_03.png")
     },
-    # Scene 04: Student Directory & Individual Analytics (5.0s = 2.5s directory + 2.5s radar)
+    # Scene 04: Student Directory & Individual Analytics (6.0s = 2.75s directory + 3.25s radar)
     {
         "id": "04",
         "type": "dual_video",
         "file_a": os.path.join(RAW_CLIPS_DIR, "clip_04_students.webm"),
         "ss_a": 4.0,
-        "dur_a": 2.5,
+        "dur_a": 2.75,
         "file_b": os.path.join(RAW_CLIPS_DIR, "clip_05_profile.webm"),
         "ss_b": 7.0,
-        "dur_b": 2.75, # 2.5s + 0.25s pad
-        "target_dur": 5.0,
+        "dur_b": 3.5,  # 3.25s + 0.25s pad
+        "target_dur": 6.0,
         "pad": 0.25,
         "caption": os.path.join(OVERLAYS_DIR, "caption_scene_04.png")
     },
-    # Scene 05: Departments & Weekly Contest (5.0s = 2.5s institutional cohort + 2.5s weekly contest)
+    # Scene 05: Departments & Weekly Contest (6.0s = 3.0s cohort + 3.25s contest)
     {
         "id": "05",
         "type": "dual_video",
         "file_a": os.path.join(RAW_CLIPS_DIR, "clip_07_hod.webm"),
         "ss_a": 10.0,
-        "dur_a": 2.5,
+        "dur_a": 3.0,
         "file_b": os.path.join(RAW_CLIPS_DIR, "clip_09_weekly_contest.webm"),
         "ss_b": 7.5,
-        "dur_b": 2.75,
-        "target_dur": 5.0,
-        "pad": 0.25,
-        "caption": os.path.join(OVERLAYS_DIR, "caption_scene_05.png")
-    },
-    # Scene 06: Integrity, Growth & Data Quality (6.0s = 3.0s integrity + 3.0s growth)
-    {
-        "id": "06",
-        "type": "dual_video",
-        "file_a": os.path.join(RAW_CLIPS_DIR, "clip_10_integrity.webm"),
-        "ss_a": 7.5,
-        "dur_a": 3.0,
-        "file_b": os.path.join(RAW_CLIPS_DIR, "clip_11_growth.webm"),
-        "ss_b": 13.0,
         "dur_b": 3.25,
         "target_dur": 6.0,
         "pad": 0.25,
+        "caption": os.path.join(OVERLAYS_DIR, "caption_scene_05.png")
+    },
+    # Scene 06: Growth Intelligence & Time Machine (6.5s) -- SINGLE CLIP, replacing integrity dual-ID
+    {
+        "id": "06",
+        "type": "single_video",
+        "file": os.path.join(RAW_CLIPS_DIR, "clip_11_growth.webm"),
+        "ss": 10.0,
+        "target_dur": 6.5,
+        "pad": 0.25,
         "caption": os.path.join(OVERLAYS_DIR, "caption_scene_06.png")
     },
-    # Scene 07: Faculty, Mentorship & Recruitment (6.0s = 3.0s faculty + 3.0s hr finder)
+    # Scene 07: Faculty, Mentorship & Recruitment (6.5s = 3.25s faculty + 3.5s hr finder)
     {
         "id": "07",
         "type": "dual_video",
         "file_a": os.path.join(RAW_CLIPS_DIR, "clip_15_faculty.webm"),
         "ss_a": 4.0,
-        "dur_a": 3.0,
+        "dur_a": 3.25,
         "file_b": os.path.join(RAW_CLIPS_DIR, "clip_14_hr_finder.webm"),
         "ss_b": 9.0,
-        "dur_b": 3.25,
-        "target_dur": 6.0,
+        "dur_b": 3.5,
+        "target_dur": 6.5,
         "pad": 0.25,
         "caption": os.path.join(OVERLAYS_DIR, "caption_scene_07.png")
     },
-    # Scene 08: AI, System Health & Audit (6.0s = 3.0s operations + 3.0s data quality)
+    # Scene 08: System Health & Audit (6.5s) -- SINGLE CLIP, no AI dual split
     {
         "id": "08",
-        "type": "dual_video",
-        "file_a": os.path.join(RAW_CLIPS_DIR, "clip_16_ai_control.webm"),
-        "ss_a": 3.5,
-        "dur_a": 3.0,
-        "file_b": os.path.join(RAW_CLIPS_DIR, "clip_12_quality.webm"),
-        "ss_b": 7.0,
-        "dur_b": 3.25,
-        "target_dur": 6.0,
+        "type": "single_video",
+        "file": os.path.join(RAW_CLIPS_DIR, "clip_17_system_health.webm"),
+        "ss": 3.0,
+        "target_dur": 6.5,
         "pad": 0.25,
         "caption": os.path.join(OVERLAYS_DIR, "caption_scene_08.png")
     },
-    # Scene 09: Reports & Public Leaderboard (6.0s = 3.0s reports + 3.0s public auditorium kiosk)
+    # Scene 09: Reports & Public Leaderboard (6.5s = 3.0s reports + 3.75s kiosk)
     {
         "id": "09",
         "type": "dual_video",
@@ -125,40 +126,51 @@ SCENE_SPECS = [
         "dur_a": 3.0,
         "file_b": os.path.join(BRANDS_DIR, "kiosk_public.png"),
         "ss_b": 0.0,
-        "dur_b": 3.25,
-        "target_dur": 6.0,
+        "dur_b": 3.75,
+        "target_dur": 6.5,
         "pad": 0.25,
         "caption": os.path.join(OVERLAYS_DIR, "caption_scene_09.png")
     },
-    # Scene 10: Team Credits & Closing (5.0s, English only)
+    # Scene 10: Team Credits -- Frame-accurate Letter Reveal Animation (7.0s, no pad)
     {
         "id": "10",
-        "type": "image",
-        "file": os.path.join(BRANDS_DIR, "scene_10_closing_credits.png"),
-        "target_dur": 5.0,
-        "pad": 0.0,
-        "fade_out": True
+        "type": "animated_video",
+        "file": os.path.join(BRANDS_DIR, "scene_10_animated.mp4"),
+        "target_dur": 7.0,
+        "pad": 0.0
     }
 ]
 
 def render_segment(spec):
     out_file = os.path.join(SEGS_DIR, f"seg_{spec['id']}.mp4")
     total_dur = spec["target_dur"] + spec["pad"]
-    print(f"\n[BUILD SEGMENT {spec['id']}/10] Duration={total_dur}s...")
+    print(f"\n[BUILD SEGMENT {spec['id']}/10] Duration={total_dur:.2f}s ...")
 
-    if spec["type"] == "image":
-        # Professional restrained camera push-in
+    if spec["type"] == "animated_video":
+        cmd = [
+            FFMPEG, "-y",
+            "-i", spec["file"],
+            "-t", str(spec["target_dur"]),
+            "-c:v", "libx264", "-preset", "fast", "-crf", "16",
+            "-pix_fmt", "yuv420p", "-an",
+            out_file
+        ]
+        subprocess.run(cmd, check=True)
+        print(f"  -> Segment {spec['id']} (animated video) complete")
+        return out_file
+
+    elif spec["type"] == "image":
         fade_chain = []
         if spec.get("fade_in"):
-            fade_chain.append("fade=t=in:st=0:d=0.6")
+            fade_chain.append("fade=t=in:st=0:d=0.7")
         if spec.get("fade_out"):
-            fade_chain.append(f"fade=t=out:st={total_dur - 0.8:.2f}:d=0.8")
-        
+            fade_chain.append(f"fade=t=out:st={total_dur - 0.9:.2f}:d=0.9")
+
         post_vf = ("," + ",".join(fade_chain)) if fade_chain else ""
         vf = (
             f"loop=loop={int(total_dur*30)}:size=1:start=0,"
             "scale=1920:1080,"
-            "zoompan=z='min(zoom+0.0006,1.03)':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1920x1080:fps=30,"
+            "zoompan=z='min(zoom+0.0005,1.025)':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1920x1080:fps=30,"
             f"format=yuv420p{post_vf}"
         )
         cmd = [
@@ -167,15 +179,42 @@ def render_segment(spec):
             "-i", spec["file"],
             "-t", str(total_dur),
             "-vf", vf,
-            "-c:v", "libx264",
-            "-preset", "fast",
-            "-crf", "16",
-            "-pix_fmt", "yuv420p",
-            "-an",
+            "-c:v", "libx264", "-preset", "fast", "-crf", "16",
+            "-pix_fmt", "yuv420p", "-an",
             out_file
         ]
         subprocess.run(cmd, check=True)
-        print(f"Segment {spec['id']} Complete: {out_file}")
+        print(f"  -> Segment {spec['id']} complete")
+        return out_file
+
+    elif spec["type"] == "credits_reveal":
+        # 4-phase letter/image reveal: black -> fade-in -> hold -> fade-out
+        # Phase timeline:
+        #   0.0 - 0.8s : full black (image not yet visible)
+        #   0.8 - 1.8s : fade in (d=1.0s)
+        #   1.8 - 5.5s : hold full opacity
+        #   5.5 - 7.0s : fade out (d=1.5s)
+        reveal_dur = spec["target_dur"]  # 7.0s, pad=0
+        vf = (
+            f"loop=loop={int(reveal_dur*30)}:size=1:start=0,"
+            "scale=1920:1080,"
+            "zoompan=z='min(zoom+0.0003,1.012)':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1920x1080:fps=30,"
+            "format=yuv420p,"
+            "fade=t=in:st=0.8:d=1.0,"
+            "fade=t=out:st=5.5:d=1.5"
+        )
+        cmd = [
+            FFMPEG, "-y",
+            "-loop", "1",
+            "-i", spec["file"],
+            "-t", str(reveal_dur),
+            "-vf", vf,
+            "-c:v", "libx264", "-preset", "fast", "-crf", "16",
+            "-pix_fmt", "yuv420p", "-an",
+            out_file
+        ]
+        subprocess.run(cmd, check=True)
+        print(f"  -> Segment {spec['id']} (credits reveal) complete")
         return out_file
 
     elif spec["type"] == "single_video":
@@ -289,7 +328,11 @@ def get_exact_duration(filepath):
     return 5.0
 
 def assemble_master():
-    print("\n[ASSEMBLY] Rendering all 10 Scenes for 2026 Master Film...")
+    print("\n" + "=" * 60)
+    print("  NANDHA LEETCODE INTELLIGENCE - 2026 SHOWCASE FILM")
+    print("  Target: ~55 seconds | Silent | 1920x1080 | H.264")
+    print("=" * 60)
+
     seg_paths = []
     for spec in SCENE_SPECS:
         seg_paths.append(render_segment(spec))
@@ -297,9 +340,9 @@ def assemble_master():
     durs = [get_exact_duration(p) for p in seg_paths]
     print("\n[SEGMENT DURATIONS]")
     for i, (p, d) in enumerate(zip(seg_paths, durs)):
-        print(f"Scene {i+1:02d}: {d:.2f}s ({p})")
+        print(f"  Scene {i+1:02d}: {d:.3f}s  <- {os.path.basename(p)}")
 
-    trans_dur = 0.25 # subtle 0.25s cinematic dissolve between scenes
+    trans_dur = 0.25  # crossfade overlap between every pair of adjacent scenes
     cmd = [FFMPEG, "-y"]
     for sp in seg_paths:
         cmd.extend(["-i", sp])
@@ -317,10 +360,10 @@ def assemble_master():
         )
         last_v = out_v
 
-    print(f"\n[TIMELINE] Total Master Film Duration: {running_len:.2f}s (~{running_len/60:.2f} mins)")
+    print(f"\n[TIMELINE] Master Film Duration: {running_len:.2f}s (~{running_len/60:.2f} min)")
     final_v_filter = ";".join(filter_parts)
-    
-    # Primary Deliverable: nandha_leetcode_intelligence_showcase_2026.mp4
+
+    # PRIMARY DELIVERABLE
     # Audio Policy: COMPLETELY SILENT (-an, no audio stream)
     master_output = os.path.join(OUTPUT_DIR, "nandha_leetcode_intelligence_showcase_2026.mp4")
 
@@ -332,16 +375,19 @@ def assemble_master():
         "-crf", "16",
         "-pix_fmt", "yuv420p",
         "-movflags", "+faststart",
-        "-an", # ABSOLUTELY NO AUDIO TRACK
+        "-an",  # NO AUDIO TRACK
         master_output
     ])
 
-    print(f"\n[RENDER] Exporting Final Master: {master_output}...")
+    print(f"\n[RENDER] Exporting -> {master_output} ...")
     subprocess.run(cmd, check=True)
     size_mb = os.path.getsize(master_output) / (1024 * 1024)
-    print(f"[COMPLETE] Master Showcase Film: {master_output} ({size_mb:.2f} MB)")
+    print(f"\n[COMPLETE] {master_output}")
+    print(f"           Size  : {size_mb:.2f} MB")
+    print(f"           Length: {running_len:.2f}s")
+    print(f"           Audio : Silent (no audio track)")
+    print(f"           Lang  : English only")
 
-    # Also mirror to marketing deliverables for easy access
     shutil.copyfile(master_output, os.path.join(OUTPUT_DIR, "nandha_tracker_marketing.mp4"))
     shutil.copyfile(master_output, os.path.join(OUTPUT_DIR, "nandha_tracker_worldclass_marketing.mp4"))
     return master_output, running_len
@@ -349,8 +395,9 @@ def assemble_master():
 if __name__ == "__main__":
     t0 = time.time()
     out_video, total_time = assemble_master()
-    print(f"\n[SUCCESS] 2026 Enterprise Film Assembled in {time.time() - t0:.1f}s")
-    print(f"File: {out_video}")
-    print(f"Duration: {total_time:.2f} seconds (Target: 45-50s)")
-    print(f"Audio: Strictly None (Silent Master)")
-    print(f"Language: 100% English Only")
+    elapsed = time.time() - t0
+    print(f"\n[SUCCESS] Built in {elapsed:.1f}s")
+    print(f"  Output : {out_video}")
+    print(f"  Length : {total_time:.2f}s (Target: ~55s)")
+    print(f"  Audio  : Silent")
+    print(f"  Format : 1920x1080 H.264 MP4")

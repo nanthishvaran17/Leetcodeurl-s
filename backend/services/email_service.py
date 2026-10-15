@@ -911,7 +911,8 @@ def build_otp_email_template(otp: str, purpose: str = "dev_studio") -> Tuple[str
     <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #64748b; text-transform: uppercase; text-align: center; margin-top: 24px; margin-bottom: 12px;">
         {code_label}
     </div>
-    <div class="otp-pulse-card" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 24px 14px; text-align: center; box-shadow: 0 10px 25px -5px rgba(30, 27, 75, 0.35);">
+    <div class="otp-pulse-card" data-otp="{otp}" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 24px 14px; text-align: center; box-shadow: 0 10px 25px -5px rgba(30, 27, 75, 0.35);">
+        <span style="display:none; visibility:hidden; mso-hide:all; font-size:1px; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;">{otp}</span>
         <table role="presentation" border="0" cellpadding="0" cellspacing="6" align="center" style="margin: 0 auto 14px auto; display: inline-table;">
             <tr>
                 {digits_html}
@@ -935,6 +936,8 @@ def build_otp_email_template(otp: str, purpose: str = "dev_studio") -> Tuple[str
 
     html_body = generate_professional_template(title, content)
 
+    clean_main_message = main_message.replace('<strong>', '').replace('</strong>', '').replace('<br/>', '\n')
+
     plain_text_body = f"""NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
 LeetCode Weekly Performance Tracker • OFFICIAL ADMINISTRATOR PORTAL
 
@@ -942,7 +945,7 @@ LeetCode Weekly Performance Tracker • OFFICIAL ADMINISTRATOR PORTAL
 
 {intro_greeting}
 
-{main_message.replace('<strong>', '').replace('</strong>', '').replace('<br/>', '\n')}
+{clean_main_message}
 
 YOUR DEVELOPER STUDIO VERIFICATION CODE:
 {otp}

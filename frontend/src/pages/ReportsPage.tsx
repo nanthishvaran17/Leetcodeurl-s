@@ -57,10 +57,10 @@ export const ReportsPage: React.FC = () => {
   const [selectedDept, setSelectedDept] = useState<string>(() => hodDeptDefault);
 
   useEffect(() => {
-    if (isHodUser && hodDeptDefault !== 'ALL' && (selectedDept === 'ALL' || !selectedDept)) {
+    if (isHodUser && selectedReportType !== 'WEEKLY_PERFORMANCE' && hodDeptDefault !== 'ALL' && !selectedDept) {
       setSelectedDept(hodDeptDefault);
     }
-  }, [isHodUser, hodDeptDefault, selectedDept]);
+  }, [isHodUser, hodDeptDefault, selectedDept, selectedReportType]);
 
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
   const [selectedOutputScope, setSelectedOutputScope] = useState<string>('COLLEGE');
@@ -94,7 +94,7 @@ export const ReportsPage: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (navigator.onLine) {
-        const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
+        const effDept = (isHodUser && selectedReportType !== 'WEEKLY_PERFORMANCE' && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
         api.post('/reports/generate', {
           report_type: selectedReportType,
           department: effDept,
@@ -265,7 +265,7 @@ export const ReportsPage: React.FC = () => {
 
   const getActiveFilterQueryParams = (extraParams?: Record<string, string>) => {
     const params = new URLSearchParams();
-    const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
+    const effDept = (isHodUser && selectedReportType !== 'WEEKLY_PERFORMANCE' && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
     if (effDept && effDept !== 'ALL') params.append('department', effDept);
     if (selectedYear && selectedYear !== 'ALL') params.append('year', selectedYear);
     if (selectedOutputScope && selectedOutputScope !== 'ALL') params.append('output_scope', selectedOutputScope);
@@ -376,7 +376,7 @@ export const ReportsPage: React.FC = () => {
     try {
       const reportType = overrideType || selectedReportType;
       const rawDept = overrideFilters?.department || selectedDept;
-      const department = (isHodUser && (rawDept === 'ALL' || !rawDept)) ? hodDeptDefault : rawDept;
+      const department = (isHodUser && reportType !== 'WEEKLY_PERFORMANCE' && (rawDept === 'ALL' || !rawDept)) ? hodDeptDefault : rawDept;
       const year = overrideFilters?.year || selectedYear;
       const output_scope = overrideFilters?.output_scope || selectedOutputScope;
 
@@ -1079,6 +1079,8 @@ export const ReportsPage: React.FC = () => {
                   onChange={setSelectedDept}
                   label="Department"
                   className="!w-full"
+                  showAllDepartments={true}
+                  useIdAsValue={false}
                 />
               </div>
 

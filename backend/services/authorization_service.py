@@ -20,7 +20,7 @@ from backend.services.faculty_assignment_service import faculty_assignment_servi
 
 _GLOBAL_ACCESS_ROLES = frozenset({
     "admin", "administrator", "super admin", "super_admin",
-    "principal", "management"
+    "principal", "management", "coordinator", "academic coordinator"
 })
 
 _HOD_ROLES = frozenset({
