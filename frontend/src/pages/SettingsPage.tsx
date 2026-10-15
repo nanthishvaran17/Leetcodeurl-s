@@ -7,7 +7,7 @@ import {
   Shield, Server, FileText, CheckCircle, FileSpreadsheet, Archive,
   Send, Fingerprint, Search, Filter, Download, Upload, Eye,
   Check, HardDrive, Terminal, Sparkles, SlidersHorizontal, UserCheck,
-  Camera, Play, ShieldAlert, ChevronRight, Info, X, Copy, Code, Zap, FileCode, Bell, RotateCcw, Trash2, User
+  Camera, Play, ShieldAlert, ChevronRight, ChevronDown, ChevronUp, Info, X, Copy, Code, Zap, FileCode, Bell, RotateCcw, Trash2, User
 } from 'lucide-react';
 import api from '../services/api';
 import { SecurityActivitySection } from '../components/SecurityActivitySection';
@@ -95,6 +95,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ initialSection }) =>
   const [isProbing, setIsProbing] = useState(false);
   const [lastProbed, setLastProbed] = useState<Date | null>(null);
   const [probeKey, setProbeKey] = useState(0); // increments each probe to re-trigger card animations
+  const [isProbesExpanded, setIsProbesExpanded] = useState<boolean>(false);
   const [saving, setSaving] = useState(false);
   const [saveDiffMsg, setSaveDiffMsg] = useState<string | null>(null);
   const [testingEmail, setTestingEmail] = useState(false);
@@ -638,6 +639,12 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
     { key: 'dataIntegrity', label: 'Data Integrity' },
   ];
 
+  // Count healthy probes
+  const healthyCount = HEALTH_ITEMS.filter(item => {
+    const rawVal = systemHealth?.components?.[item.key];
+    return rawVal === 'HEALTHY' || (!isProbing && systemHealth !== null && !rawVal);
+  }).length;
+
   // Filtered Audit Logs
   const filteredAuditLogs = auditLogs.filter(l => {
     if (auditActionFilter !== 'ALL' && !l.action.includes(auditActionFilter)) return false;
@@ -679,18 +686,34 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
     <div className="space-y-6 pb-16 text-xs text-slate-800 dark:text-slate-200">
 
       {/* 1. RICH INSTITUTIONAL PAGE HEADER BANNER */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
-        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-4 sm:p-6 md:p-8 shadow-xl border border-brand-500/25">
+        <div className="absolute -right-10 -bottom-10 w-52 h-52 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-32 top-0 w-36 h-36 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
 
-          {/* Left: Title Block */}
-          <div className="space-y-2.5 max-w-2xl min-w-0 flex-1">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black uppercase max-w-full">
-              <span className="whitespace-normal sm:whitespace-nowrap leading-tight">
-                {isAdmin ? 'Institutional Configuration • System Control Center' : 'Staff Self-Service • Account & Profile Management'}
+        <div className="relative z-10 flex flex-col gap-3 sm:gap-4">
+          {/* Top Row: Pill Badge + Role / Status Tag */}
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black uppercase tracking-wider max-w-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse shrink-0" />
+              <span className="truncate">
+                {isAdmin ? 'System Control Center • NEC' : 'Account Management'}
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span
+                className="h-6 sm:h-7 px-2.5 sm:px-3 rounded-full font-bold text-[10px] sm:text-xs border inline-flex items-center space-x-1.5 whitespace-nowrap leading-none"
+                style={{ background: 'rgba(16,185,129,0.15)', borderColor: 'rgba(16,185,129,0.3)', color: '#34d399' }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span>{currentUser?.role ? currentUser.role.toUpperCase() : 'ACTIVE'}</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Title & Description */}
+          <div className="space-y-1 sm:space-y-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
               {isAdmin ? (
                 <>Admin System <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Control Center</span></>
               ) : (
@@ -698,31 +721,18 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
               )}
             </h1>
 
-            <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
+            <p className="text-[11px] sm:text-xs md:text-sm text-slate-300/90 font-medium sm:font-bold leading-relaxed max-w-2xl">
               {isAdmin
                 ? 'Manage institutional parameters, staff profiles & access, system synchronization health, and background data integrity checks.'
                 : 'Manage your personal staff details, profile photo, contact number, date of birth, and security credentials.'}
             </p>
           </div>
 
-          {/* Right: Badges + Actions */}
-          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full lg:w-auto">
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className="h-7 px-3 rounded-full font-bold text-xs border inline-flex items-center justify-center space-x-1.5 whitespace-nowrap shrink-0 leading-none"
-                style={{ background: 'rgba(16,185,129,0.15)', borderColor: 'rgba(16,185,129,0.3)', color: '#34d399' }}
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span>{currentUser?.role ? currentUser.role.toUpperCase() : 'ACTIVE'}</span>
-              </span>
-
-              <span
-                className="h-7 px-3 rounded-full font-bold text-xs border inline-flex items-center justify-center space-x-1.5 whitespace-nowrap shrink-0 leading-none"
-                style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)', color: '#cbd5e1' }}
-              >
-                <Clock className="w-3.5 h-3.5 shrink-0 text-slate-400" />
-                <span>Asia/Kolkata (IST)</span>
-              </span>
+          {/* Bottom Bar: Timezone + Action Buttons */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-3 border-t border-white/10 mt-1">
+            <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-mono text-slate-400">
+              <Clock className="w-3.5 h-3.5 text-brand-400 shrink-0" />
+              <span>Asia/Kolkata (IST)</span>
             </div>
 
             {isAdmin && (
@@ -730,7 +740,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                 <button
                   type="button"
                   onClick={handleExportConfigJson}
-                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap"
+                  className="flex-1 sm:flex-initial h-8 px-3.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap active:scale-95 shadow-xs"
                   style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.35)', color: '#a5b4fc' }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.35)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.2)')}
@@ -743,7 +753,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                 <button
                   type="button"
                   onClick={() => configFileInputRef.current?.click()}
-                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap"
+                  className="flex-1 sm:flex-initial h-8 px-3.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap active:scale-95 shadow-xs"
                   style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.35)', color: '#a5b4fc' }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.35)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.2)')}
@@ -767,105 +777,143 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
 
       {/* 2. COMPACT SYSTEM STATUS STRIP WITH LIVE PROBING (Admin Only) */}
       {isAdmin && (
-        <div className="glass-card p-4 sm:p-6 rounded-3xl border border-slate-200 dark:border-navy-700 space-y-5 shadow-sm">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 sm:pb-5 border-b border-slate-100 dark:border-navy-800">
-            <div className="flex flex-col gap-3 sm:gap-3.5">
-              <div className="flex items-center gap-2.5">
-                <Activity className={`w-5 h-5 ${isProbing ? 'text-amber-500 animate-spin' : 'text-emerald-500'}`} />
-                <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-950 dark:text-white leading-tight">
-                  Live Subsystem Health Probes
-                </h3>
+        <div className="glass-card rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-navy-700 shadow-sm overflow-hidden transition-all duration-300">
+          {/* Clickable Header Bar to Expand / Collapse */}
+          <div
+            onClick={() => setIsProbesExpanded(!isProbesExpanded)}
+            className="p-3 sm:p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-navy-900/40 transition-colors select-none"
+          >
+            {/* Left: Icon + Title + Status Pill */}
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-2 rounded-xl bg-slate-100 dark:bg-navy-800 shrink-0">
+                <Activity className={`w-4 h-4 ${isProbing ? 'text-amber-500 animate-spin' : 'text-emerald-500'}`} />
               </div>
-              {lastProbed && !isProbing ? (
-                <div className="flex flex-wrap items-center gap-2 text-xs font-mono font-bold text-slate-600 dark:text-slate-300">
-                  <Clock className="w-4 h-4 text-brand-500 shrink-0" />
-                  <span className="inline-flex items-center gap-1.5 flex-wrap">
-                    <span>Last probed at</span>
-                    <strong className="text-slate-950 dark:text-white px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xs">
-                      {lastProbed.toLocaleTimeString()}
-                    </strong>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-950 dark:text-white truncate">
+                    Live Subsystem Health Probes
+                  </h3>
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+                    isProbing
+                      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 animate-pulse'
+                      : healthyCount === HEALTH_ITEMS.length
+                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                        : 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${isProbing ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                    <span>{isProbing ? 'Probing...' : `${healthyCount}/${HEALTH_ITEMS.length} Healthy`}</span>
                   </span>
                 </div>
-              ) : (
-                <div className="text-[11px] font-bold text-slate-400">
-                  Automatic real-time system monitoring & health diagnostics
-                </div>
-              )}
+                {lastProbed && !isProbing ? (
+                  <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                    Last probed: {lastProbed.toLocaleTimeString()}
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                    {isProbing ? 'Running telemetry diagnostic checks...' : 'Click to view / hide all 8 subsystem probes'}
+                  </p>
+                )}
+              </div>
             </div>
 
-            {/* Probe Now button aligned top right */}
-            <button
-              type="button"
-              onClick={fetchSystemHealth}
-              disabled={isProbing}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all shadow-md active:scale-95 cursor-pointer shrink-0 mt-3 sm:mt-0 ${isProbing
-                  ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 cursor-not-allowed'
-                  : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-500/25 border border-brand-500'
-                }`}
-            >
-              <RefreshCw className={`w-3.5 h-3.5 text-white ${isProbing ? 'animate-spin' : ''}`} />
-              <span>{isProbing ? 'Probing...' : 'Probe Now'}</span>
-            </button>
+            {/* Right: Actions */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fetchSystemHealth();
+                }}
+                disabled={isProbing}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shadow-xs active:scale-95 cursor-pointer shrink-0 ${isProbing
+                    ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 cursor-not-allowed'
+                    : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-500/20'
+                  }`}
+                title="Trigger immediate health probe"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 text-white ${isProbing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">{isProbing ? 'Probing...' : 'Probe Now'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsProbesExpanded(!isProbesExpanded)}
+                className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all flex items-center gap-1 text-xs font-bold"
+                aria-label={isProbesExpanded ? 'Collapse probes' : 'Expand probes'}
+              >
+                <span className="text-[11px] font-bold">{isProbesExpanded ? 'Hide' : 'Open'}</span>
+                {isProbesExpanded ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-slate-500" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Inject ripple keyframe once */}
-          <style>{`
-            @keyframes probe-ripple { to { transform: scale(2.5); opacity: 0; } }
-            @keyframes card-pop { 0% { transform: scale(0.94); opacity: 0.5; } 60% { transform: scale(1.03); } 100% { transform: scale(1); opacity: 1; } }
-          `}</style>
+          {/* Expandable Probes Body */}
+          {isProbesExpanded && (
+            <div className="p-3 sm:p-5 pt-0 border-t border-slate-100 dark:border-navy-800 space-y-3 animate-fade-in">
+              {/* Inject ripple keyframe once */}
+              <style>{`
+                @keyframes probe-ripple { to { transform: scale(2.5); opacity: 0; } }
+                @keyframes card-pop { 0% { transform: scale(0.94); opacity: 0.5; } 60% { transform: scale(1.03); } 100% { transform: scale(1); opacity: 1; } }
+              `}</style>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2.5 font-mono text-[11px]">
-            {HEALTH_ITEMS.map((item, idx) => {
-              const rawVal = systemHealth?.components?.[item.key];
-              const isChecking = isProbing || systemHealth === null;
-              const isHealthy = rawVal === 'HEALTHY' || (!isChecking && !rawVal);
-              const isDegraded = rawVal === 'DEGRADED';
-              const isOffline = rawVal === 'OFFLINE';
-              const isUnknown = rawVal === 'UNKNOWN';
-              const isFailed = rawVal === 'FAILED';
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 font-mono text-[11px] pt-3">
+                {HEALTH_ITEMS.map((item, idx) => {
+                  const rawVal = systemHealth?.components?.[item.key];
+                  const isChecking = isProbing || systemHealth === null;
+                  const isHealthy = rawVal === 'HEALTHY' || (!isChecking && !rawVal);
+                  const isDegraded = rawVal === 'DEGRADED';
+                  const isOffline = rawVal === 'OFFLINE';
+                  const isUnknown = rawVal === 'UNKNOWN';
+                  const isFailed = rawVal === 'FAILED';
 
-              return (
-                <div
-                  key={`${item.key}-${probeKey}`}
-                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 shadow-2xs ${isChecking
-                      ? 'bg-slate-50 dark:bg-navy-900/60 border-slate-200 dark:border-navy-700'
-                      : isHealthy
-                        ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-emerald-400/60 dark:border-emerald-600/60 hover:border-emerald-500'
-                        : isDegraded
-                          ? 'bg-amber-500/5 dark:bg-amber-950/20 border-amber-400/60 dark:border-amber-600/60'
-                          : isFailed
-                            ? 'bg-rose-500/5 dark:bg-rose-950/20 border-rose-400/60 dark:border-rose-600/60'
-                            : 'bg-slate-50 dark:bg-navy-900/60 border-slate-200 dark:border-navy-700'
-                    }`}
-                  style={{
-                    animation: probeKey > 0 ? `card-pop 0.35s cubic-bezier(0.4,0,0.2,1) ${idx * 40}ms both` : 'none'
-                  }}
-                >
-                  <span className="text-[10.5px] uppercase font-black text-slate-900 dark:text-white tracking-wider truncate w-full text-center">{item.label}</span>
-                  <span className={`font-black text-[10px] mt-2 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${isChecking
-                      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 animate-pulse'
-                      : isHealthy
-                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
-                        : isDegraded
-                          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30'
-                          : isOffline || isUnknown
-                            ? 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30'
-                            : 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30'
-                    }`}>
-                    {isChecking && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />}
-                    {isHealthy && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
-                    {isChecking ? 'Checking' : isHealthy ? 'Healthy' : isDegraded ? 'Degraded' : isOffline ? 'Offline' : isUnknown ? 'Unknown' : isFailed ? 'Failed' : 'Healthy'}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+                  return (
+                    <div
+                      key={`${item.key}-${probeKey}`}
+                      className={`flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 shadow-2xs ${isChecking
+                          ? 'bg-slate-50 dark:bg-navy-900/60 border-slate-200 dark:border-navy-700'
+                          : isHealthy
+                            ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-emerald-400/60 dark:border-emerald-600/60 hover:border-emerald-500'
+                            : isDegraded
+                              ? 'bg-amber-500/5 dark:bg-amber-950/20 border-amber-400/60 dark:border-amber-600/60'
+                              : isFailed
+                                ? 'bg-rose-500/5 dark:bg-rose-950/20 border-rose-400/60 dark:border-rose-600/60'
+                                : 'bg-slate-50 dark:bg-navy-900/60 border-slate-200 dark:border-navy-700'
+                        }`}
+                      style={{
+                        animation: probeKey > 0 ? `card-pop 0.35s cubic-bezier(0.4,0,0.2,1) ${idx * 40}ms both` : 'none'
+                      }}
+                    >
+                      <span className="text-[10px] uppercase font-black text-slate-900 dark:text-white tracking-wider truncate w-full text-center">{item.label}</span>
+                      <span className={`font-black text-[9.5px] mt-1.5 px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${isChecking
+                          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 animate-pulse'
+                          : isHealthy
+                            ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                            : isDegraded
+                              ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30'
+                              : isOffline || isUnknown
+                                ? 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30'
+                                : 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30'
+                        }`}>
+                        {isChecking && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />}
+                        {isHealthy && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                        {isChecking ? 'Checking' : isHealthy ? 'Healthy' : isDegraded ? 'Degraded' : isOffline ? 'Offline' : isUnknown ? 'Unknown' : isFailed ? 'Failed' : 'Healthy'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* 3. QUICK JUMP / SECTION NAVIGATION BAR */}
-      <div className="flex flex-col gap-3 p-3 sm:p-4 rounded-2xl glass-card border border-slate-200 dark:border-navy-700">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-navy-800">
+      <div className="flex flex-col gap-2.5 p-3 sm:p-4 rounded-2xl glass-card border border-slate-200 dark:border-navy-700">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pb-2 border-b border-slate-100 dark:border-navy-800">
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="w-4 h-4 text-brand-500" />
             <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
@@ -895,7 +943,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
         </div>
 
         {/* Responsive Section Buttons - Grid Layout for Uniform Box Alignment */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
           {[
             { id: 'staff', label: 'Staff Management', icon: Shield },
             { id: 'staff_verification', label: 'Staff Verification', icon: UserCheck },
@@ -918,13 +966,13 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveSectionFilter(tab.id)}
-                  className={`w-full min-w-0 px-3 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer text-left ${isActive
+                  className={`w-full min-w-0 px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-xl font-bold text-[11px] sm:text-xs transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer text-left active:scale-95 ${isActive
                       ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25 ring-2 ring-brand-500/30'
                       : 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-200/80 dark:border-slate-800'
                     }`}
                   title={tab.label}
                 >
-                  <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-brand-500'}`} />
+                  <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-brand-500'}`} />
                   <span className="truncate">{tab.label}</span>
                 </button>
               );

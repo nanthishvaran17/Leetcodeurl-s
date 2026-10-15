@@ -6,6 +6,7 @@ import { queryClient } from '../lib/react-query';
 import { AuthState, AuthUser } from '../services/auth/authTypes';
 import { isMobileBrowser } from '../services/googleAuth';
 import { AuthContext } from './authContextDef';
+import { clearAdminOtpVerification } from '../utils/adminOtpAuth';
 
 // AuthContext and useAuth are defined in authContextDef.ts — import from there.
 // This file only exports AuthProvider to satisfy Vite Fast Refresh (components-only exports).
@@ -50,7 +51,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (checkSessionExpired()) {
         localStorage.removeItem('user');
         localStorage.removeItem('token');
+        localStorage.removeItem('access_token');
         localStorage.removeItem(LAST_ACTIVITY_KEY);
+        clearAdminOtpVerification();
         return null;
       }
       const saved = localStorage.getItem('user');
@@ -139,9 +142,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     localStorage.removeItem('admin_user');
     localStorage.removeItem(LAST_ACTIVITY_KEY);
+    clearAdminOtpVerification();
     sessionStorage.clear();
     clearApiCache();
     clearContestCache();

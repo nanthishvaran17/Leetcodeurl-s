@@ -6,6 +6,7 @@ import { triggerDownload } from "../utils/mobileDownload";
 import { useKeyboardContext } from "../context/KeyboardContext";
 import { StudentIntelligenceProfileModal } from "../components/StudentIntelligenceProfileModal";
 import { SwipeHandle } from "../components/SwipeHandle";
+import { useScrollLock, forceUnlockScroll } from "../hooks/useScrollLock";
 
 export interface Candidate {
   id: number;
@@ -2831,18 +2832,18 @@ export const HRCandidateFinderPage: React.FC = () => {
                           {/* Card Header: Avatar + Student Name + Leetcode Link & Rating */}
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3 min-w-0 flex-1">
-                              {/* Avatar with Glow Ring */}
-                              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm text-white shrink-0 shadow-sm transition-transform group-hover:scale-105 ${
+                              {/* Avatar with Refined Gradient */}
+                              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm text-white shrink-0 shadow-2xs transition-transform group-hover:scale-105 ${
                                 isHighRated
-                                  ? 'bg-gradient-to-br from-amber-500 via-purple-600 to-indigo-600 ring-2 ring-purple-500/40 shadow-purple-500/20'
-                                  : 'bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 ring-1 ring-blue-400/30 shadow-blue-500/15'
+                                  ? 'bg-gradient-to-br from-amber-500 to-orange-600 ring-2 ring-amber-400/30 shadow-amber-500/10'
+                                  : 'bg-gradient-to-br from-indigo-600 to-blue-600 ring-1 ring-indigo-500/20 shadow-indigo-500/10'
                               }`}>
                                 {c.name.charAt(0)}
                               </div>
 
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5 min-w-0">
-                                  <h5 className="font-extrabold text-slate-900 dark:text-white text-sm leading-tight truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                  <h5 className="font-extrabold text-slate-900 dark:text-white text-sm leading-tight truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                                     {c.name}
                                   </h5>
                                   {isHighRated && (
@@ -2870,14 +2871,14 @@ export const HRCandidateFinderPage: React.FC = () => {
                             <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                               {ratingVal > 0 ? (
                                 <div
-                                  className={`px-2.5 py-1 rounded-xl font-mono font-black text-xs flex items-center gap-1 border shadow-2xs ${
+                                  className={`px-2.5 py-1 rounded-xl font-mono font-black text-xs flex items-center gap-1.5 border shadow-2xs ${
                                     isHighRated
-                                      ? 'bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
-                                      : 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900'
+                                      ? 'bg-amber-50/80 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200/70 dark:border-amber-800/50'
+                                      : 'bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-100 dark:border-indigo-900/40'
                                   }`}
                                   title={`Exact Rating: ${Number(c.contest_rating).toFixed(2)}`}
                                 >
-                                  <Activity className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 fill-purple-500/30" />
+                                  <Activity className={`w-3.5 h-3.5 ${isHighRated ? 'text-amber-600 dark:text-amber-400' : 'text-indigo-600 dark:text-indigo-400'}`} />
                                   <span>{ratingVal.toLocaleString()}</span>
                                 </div>
                               ) : (
@@ -2890,7 +2891,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                                 href={c.leetcode_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="p-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-all flex items-center justify-center shrink-0"
+                                className="p-1.5 rounded-xl bg-slate-100 hover:bg-amber-50 dark:bg-navy-900 dark:hover:bg-amber-950/40 text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 border border-slate-200/80 dark:border-navy-700 hover:border-amber-300 transition-all flex items-center justify-center shrink-0"
                                 title="Open LeetCode Profile"
                               >
                                 <ExternalLink className="w-3.5 h-3.5" />
@@ -2900,38 +2901,38 @@ export const HRCandidateFinderPage: React.FC = () => {
 
                           {/* Academic Tags Strip */}
                           <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                            <span className="px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-extrabold text-[10px] border border-blue-200/50 dark:border-blue-900/40">
+                            <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 font-extrabold text-[10px] border border-slate-200/70 dark:border-navy-700">
                               {c.dept_code}
                             </span>
-                            <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 font-semibold text-[10px]">
+                            <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-400 font-medium text-[10px]">
                               {c.batch}
                             </span>
                             {c.twelfth_cutoff !== null && c.twelfth_cutoff !== undefined && (
-                              <span className="px-2 py-0.5 rounded-lg bg-cyan-50 dark:bg-cyan-950/50 text-cyan-700 dark:text-cyan-300 font-mono font-black text-[10px] border border-cyan-200/60 dark:border-cyan-900/50">
+                              <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 font-mono font-bold text-[10px] border border-slate-200/70 dark:border-navy-700">
                                 Cutoff: {Number(c.twelfth_cutoff).toFixed(1)}
                               </span>
                             )}
                             {c.primary_language && (
-                              <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400 font-mono text-[10px]">
+                              <span className="px-2 py-0.5 rounded-lg bg-slate-100/70 dark:bg-navy-900/70 text-slate-500 dark:text-slate-400 font-mono text-[10px]">
                                 {c.primary_language}
                               </span>
                             )}
                           </div>
 
-                          {/* 3-Column Fintech Performance Metric Grid */}
+                          {/* 3-Column Performance Metric Grid (Unified, Clean Slate Glass) */}
                           <div className="grid grid-cols-3 gap-2 text-center pt-0.5">
                             {/* 1. Total Solved */}
-                            <div className="bg-slate-50 dark:bg-navy-900/70 p-2 rounded-xl border border-slate-100 dark:border-navy-800">
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Total Solved</span>
+                            <div className="bg-slate-50/80 dark:bg-navy-900/60 p-2 rounded-xl border border-slate-100 dark:border-navy-800">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Solved</span>
                               <span className="font-mono font-black text-sm text-slate-900 dark:text-white mt-0.5 block">
                                 {c.total_solved}
                               </span>
                             </div>
 
                             {/* 2. Global Rank */}
-                            <div className="bg-blue-50/60 dark:bg-blue-950/30 p-2 rounded-xl border border-blue-100 dark:border-blue-900/40">
-                              <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider block">LeetCode Rank</span>
-                              <span className="font-mono font-black text-xs text-blue-700 dark:text-blue-300 mt-0.5 block truncate">
+                            <div className="bg-slate-50/80 dark:bg-navy-900/60 p-2 rounded-xl border border-slate-100 dark:border-navy-800">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">LeetCode Rank</span>
+                              <span className="font-mono font-black text-xs text-slate-800 dark:text-slate-200 mt-0.5 block truncate">
                                 {(() => {
                                   const gr: any = c.global_rank;
                                   if (gr === null || gr === undefined || gr === "" || gr === "N/A" || gr === "—") return "0";
@@ -2947,10 +2948,10 @@ export const HRCandidateFinderPage: React.FC = () => {
                               </span>
                             </div>
 
-                            {/* 3. Acceptance / Contests */}
-                            <div className="bg-purple-50/60 dark:bg-purple-950/30 p-2 rounded-xl border border-purple-100 dark:border-purple-900/40">
-                              <span className="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-wider block">Acceptance</span>
-                              <span className="font-mono font-black text-xs text-purple-700 dark:text-purple-300 mt-0.5 block">
+                            {/* 3. Acceptance */}
+                            <div className="bg-slate-50/80 dark:bg-navy-900/60 p-2 rounded-xl border border-slate-100 dark:border-navy-800">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Acceptance</span>
+                              <span className="font-mono font-black text-xs text-slate-800 dark:text-slate-200 mt-0.5 block">
                                 {c.acceptance_rate ? `${Number(c.acceptance_rate).toFixed(1)}%` : "—"}
                               </span>
                             </div>
@@ -2958,7 +2959,7 @@ export const HRCandidateFinderPage: React.FC = () => {
 
                           {/* Problem Difficulty Segmented Distribution Bar */}
                           <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-navy-800/80">
-                            <div className="h-2 w-full bg-slate-100 dark:bg-navy-800 rounded-full overflow-hidden flex">
+                            <div className="h-1.5 w-full bg-slate-100 dark:bg-navy-800 rounded-full overflow-hidden flex">
                               <div
                                 style={{ width: `${easyPct}%` }}
                                 className="bg-emerald-500 h-full transition-all"
@@ -2976,7 +2977,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                               />
                             </div>
 
-                            <div className="flex items-center justify-between text-[10px] font-mono font-bold px-0.5">
+                            <div className="flex items-center justify-between text-[10px] font-mono font-semibold px-0.5">
                               <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
                                 {c.easy_solved} Easy
@@ -2992,17 +2993,21 @@ export const HRCandidateFinderPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Bottom Action Button */}
+                          {/* Bottom Action Button - Clean, High-Affordance Interactive Row */}
                           <button
                             type="button"
                             onClick={() => setSelectedCandidate(c)}
-                            className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 active:scale-98 text-white font-extrabold text-xs shadow-md shadow-blue-600/20 transition-all flex items-center justify-between cursor-pointer"
+                            className="w-full py-2.5 px-3.5 rounded-xl bg-slate-50 hover:bg-indigo-50/70 dark:bg-navy-900/60 dark:hover:bg-navy-800 border border-slate-200/90 dark:border-navy-700/80 hover:border-indigo-300 dark:hover:border-indigo-500/40 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs transition-all flex items-center justify-between cursor-pointer group/btn shadow-2xs"
                           >
-                            <div className="flex items-center gap-1.5">
-                              <Eye className="w-3.5 h-3.5 text-blue-100" />
-                              <span>View Intelligence Profile</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center transition-colors group-hover/btn:bg-indigo-600 group-hover/btn:text-white">
+                                <Eye className="w-3.5 h-3.5" />
+                              </div>
+                              <span className="font-extrabold text-slate-800 dark:text-slate-100 group-hover/btn:text-indigo-600 dark:group-hover/btn:text-indigo-400 transition-colors">
+                                View Intelligence Profile
+                              </span>
                             </div>
-                            <ChevronRight className="w-3.5 h-3.5 text-blue-200" />
+                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover/btn:text-indigo-600 group-hover/btn:translate-x-0.5 transition-all" />
                           </button>
                         </div>
                       );

@@ -45,7 +45,32 @@ messaging.onBackgroundMessage((payload) => {
 // Handle notification click (Deep linking)
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
-  const targetUrl = event.notification.data?.url || '/';
+  const notificationData = event.notification.data || {};
+
+  // Handle downloaded report notification click
+  if (notificationData.type === 'DOWNLOAD_COMPLETE') {
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+        for (let i = 0; i < windowClients.length; i++) {
+          const client = windowClients[i];
+          if ('focus' in client) {
+            client.focus();
+            client.postMessage({
+              type: 'OPEN_DOWNLOADED_FILE',
+              payload: notificationData,
+            });
+            return;
+          }
+        }
+        if (clients.openWindow) {
+          return clients.openWindow('/');
+        }
+      })
+    );
+    return;
+  }
+
+  const targetUrl = notificationData.url || '/';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {

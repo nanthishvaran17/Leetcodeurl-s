@@ -182,14 +182,14 @@ def normalize_row_data(r: dict) -> dict:
         "trend": trend
     }
 
-def export_weekly_performance_excel(dataset: dict) -> bytes:
+def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = False) -> bytes:
     """
     COORDINATOR WEEKLY PERFORMANCE EXCEL EXPORTER
     Generates the official institutional workbook matching the exact templates:
       Sheet 1: Weekly Performance (Leetcode Performance - Weekly Report, Image 1)
-      Sheet 2: Contest Performance (Leetcode Contest Performance - Weekly Report, Image 2)
-      Sheet 3: Department Summary
-      Sheet 4: Full Student Roster
+      Optional Sheet 2: Contest Performance (Image 2)
+      Optional Sheet 3: Department Summary
+      Optional Sheet 4: Full Student Roster
     """
     wb = openpyxl.Workbook()
     if wb.active is not None:
@@ -367,11 +367,9 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
         ws1.cell(row=cur_r1, column=10, value=lw.get("q2", 0)).font = FONT_NUMERIC_BOLD
         ws1.cell(row=cur_r1, column=11, value=lw.get("q1", 0)).font = FONT_NUMERIC_BOLD
 
-        # Rating / Ranking (dash if 0)
-        lw_r = lw.get("rating_above_1500") or lw.get("rating_1500") or 0
-        lw_rnk = lw.get("rank_below_20000") or lw.get("ranking_20000") or 0
-        ws1.cell(row=cur_r1, column=12, value=lw_r if lw_r > 0 else "-").font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=13, value=lw_rnk if lw_rnk > 0 else "-").font = FONT_NUMERIC_BOLD
+        # Rating / Ranking (Last week rating/ranking are not reported in official format, always "-")
+        ws1.cell(row=cur_r1, column=12, value="-").font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=13, value="-").font = FONT_NUMERIC_BOLD
 
         # Row 2: Current Week
         cur_r1 += 1
@@ -416,6 +414,14 @@ def export_weekly_performance_excel(dataset: dict) -> bytes:
     col_w1 = {1: 18, 2: 15, 3: 13, 4: 13, 5: 13, 6: 13, 7: 13, 8: 11, 9: 11, 10: 11, 11: 11, 12: 16, 13: 16}
     for c_i, w in col_w1.items():
         ws1.column_dimensions[get_column_letter(c_i)].width = w
+
+    # If extra sheets are not explicitly requested, return ONLY the official single Weekly Performance sheet
+    include_extra = include_extra_sheets or bool(dataset.get("include_all_sheets")) or bool(dataset.get("full_workbook"))
+    if not include_extra:
+        wb.active = ws1
+        output = io.BytesIO()
+        wb.save(output)
+        return output.getvalue()
 
     # =========================================================================
     # SHEET 2: LEETCODE CONTEST PERFORMANCE - WEEKLY REPORT (Image 2)

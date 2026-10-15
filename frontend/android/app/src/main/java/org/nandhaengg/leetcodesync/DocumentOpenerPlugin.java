@@ -24,11 +24,28 @@ public class DocumentOpenerPlugin extends Plugin {
         }
 
         try {
-            String cleanPath = rawPath.replace("file://", "");
+            // Normalize MIME type specifically for Excel / Office documents
+            String lowerName = filename.toLowerCase();
+            if (mimeType == null || mimeType.equals("*/*") || mimeType.equals("application/octet-stream") || mimeType.isEmpty()) {
+                if (lowerName.endsWith(".xlsx")) {
+                    mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                } else if (lowerName.endsWith(".xls")) {
+                    mimeType = "application/vnd.ms-excel";
+                } else if (lowerName.endsWith(".csv")) {
+                    mimeType = "text/csv";
+                } else if (lowerName.endsWith(".pdf")) {
+                    mimeType = "application/pdf";
+                } else if (lowerName.endsWith(".docx")) {
+                    mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                }
+            }
+
+            Uri parsedUri = Uri.parse(rawPath);
+            String cleanPath = parsedUri.getPath() != null ? parsedUri.getPath() : rawPath.replace("file://", "");
             File targetFile = new File(cleanPath);
 
-            // Fallback search in internal cache/files directory if relative path given
-            if (!targetFile.exists()) {
+            // Fallback search in cache, files, externalCache, and externalFiles if path not directly found
+            if (!targetFile.exists() || targetFile.length() == 0) {
                 File cacheCandidate = new File(getContext().getCacheDir(), filename);
                 if (cacheCandidate.exists() && cacheCandidate.length() > 0) {
                     targetFile = cacheCandidate;
@@ -36,6 +53,11 @@ public class DocumentOpenerPlugin extends Plugin {
                     File filesCandidate = new File(getContext().getFilesDir(), filename);
                     if (filesCandidate.exists() && filesCandidate.length() > 0) {
                         targetFile = filesCandidate;
+                    } else if (getContext().getExternalCacheDir() != null) {
+                        File extCacheCandidate = new File(getContext().getExternalCacheDir(), filename);
+                        if (extCacheCandidate.exists() && extCacheCandidate.length() > 0) {
+                            targetFile = extCacheCandidate;
+                        }
                     }
                 }
             }
@@ -53,7 +75,16 @@ public class DocumentOpenerPlugin extends Plugin {
             viewIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             viewIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
+            // Grant read permission explicitly to any apps that can handle this intent (Excel, Sheets, etc.)
+            android.content.pm.PackageManager pm = getContext().getPackageManager();
+            java.util.List<android.content.pm.ResolveInfo> resInfoList = pm.queryIntentActivities(viewIntent, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY);
+            for (android.content.pm.ResolveInfo resolveInfo : resInfoList) {
+                String packageName = resolveInfo.activityInfo.packageName;
+                getContext().grantUriPermission(packageName, contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            }
+
             Intent chooserIntent = Intent.createChooser(viewIntent, "Open " + filename);
+            chooserIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
             getContext().startActivity(chooserIntent);

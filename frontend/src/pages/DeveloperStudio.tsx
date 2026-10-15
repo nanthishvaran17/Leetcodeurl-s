@@ -6,6 +6,7 @@ import {
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
+import { isAdminOtpVerified } from '../utils/adminOtpAuth';
 import { createPortal } from 'react-dom';
 
 interface DeveloperStudioProps {
@@ -55,12 +56,14 @@ export const DeveloperStudio: React.FC<DeveloperStudioProps> = ({ onClose }) => 
   }, [onClose]);
 
   const isAdmin = ['admin', 'super admin', 'administrator', 'super_admin'].includes(user?.role?.toLowerCase() || '');
+  const isOtpVerified = isAdminOtpVerified();
+  const hasAccess = isAdmin && isOtpVerified;
 
   useEffect(() => {
-    if (isAdmin) {
+    if (hasAccess) {
       fetchFiles('');
     }
-  }, [isAdmin]);
+  }, [hasAccess]);
 
   const fetchFiles = async (dirPath: string) => {
     setLoading(true);
@@ -144,12 +147,30 @@ export const DeveloperStudio: React.FC<DeveloperStudioProps> = ({ onClose }) => 
     setExpandedDirs(newExpanded);
   };
 
-  if (!isAdmin) {
+  if (!hasAccess) {
     return (
-      <div className="p-8 text-center">
-        <AlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
-        <h2 className="text-xl font-bold">Access Denied</h2>
-        <p className="text-slate-500">Developer Studio is restricted to system administrators.</p>
+      <div className="min-h-[70vh] flex items-center justify-center p-8 text-center">
+        <div className="max-w-md bg-slate-900/90 border border-slate-700/60 rounded-2xl p-8 backdrop-blur-md shadow-2xl">
+          <AlertTriangle className="mx-auto h-12 w-12 text-amber-400 mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Developer Studio Restricted</h2>
+          <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+            Developer Studio contains live codebase editing tools and is strictly protected. Access requires logging in through the official <b className="text-indigo-400 font-mono">/admin</b> portal with your credentials and 2-Factor OTP verification.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => { window.location.href = '/admin'; }}
+              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition-all shadow-lg shadow-indigo-600/30 cursor-pointer"
+            >
+              Go to /admin Portal
+            </button>
+            <button
+              onClick={handleExit}
+              className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm transition-all border border-slate-700 cursor-pointer"
+            >
+              Return to Dashboard
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

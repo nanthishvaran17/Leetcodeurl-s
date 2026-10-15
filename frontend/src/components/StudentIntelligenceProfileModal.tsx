@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface StudentIntelligenceProfileModalProps {
   studentId: number;
@@ -79,6 +80,8 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
     }
   }, [studentId]);
 
+  useScrollLock(true);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -86,11 +89,8 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
       }
     };
     document.addEventListener('keydown', handleKeyDown);
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = originalOverflow || '';
     };
   }, [onClose]);
 

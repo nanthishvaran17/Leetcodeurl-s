@@ -513,21 +513,26 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   const progressPercent = Math.round((activeStep / 5) * 100);
 
   return (
-    <GlobalModalBackdrop isOpen={true} onClose={onClose} zIndex={100000} className="flex items-end sm:items-center justify-center p-0 sm:p-6 bg-navy-950/70 backdrop-blur-md overflow-hidden">
-      <div className="bg-white dark:bg-navy-950 rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[94dvh] sm:h-[92vh] sm:max-h-[850px] overflow-hidden border-t sm:border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
+    <GlobalModalBackdrop isOpen={true} onClose={onClose} zIndex={100000} className="flex items-end sm:items-center justify-center p-0 sm:p-6 bg-navy-950/75 backdrop-blur-md overflow-hidden">
+      <div className="bg-white dark:bg-navy-950 rounded-t-[2.25rem] sm:rounded-[2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[92dvh] sm:h-[92vh] sm:max-h-[850px] overflow-hidden border-t sm:border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
+
+        {/* MOBILE DRAG PULL HANDLE */}
+        <div className="sm:hidden pt-2.5 pb-1 flex justify-center bg-slate-900 cursor-pointer" onClick={onClose}>
+          <div className="w-12 h-1.5 rounded-full bg-slate-600/70 hover:bg-slate-500 transition-colors" />
+        </div>
 
         {/* RICH HEADER BANNER */}
-        <div className="px-4 sm:px-6 py-4 sm:py-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border-b border-indigo-500/30 flex items-center justify-between shrink-0 z-20 shadow-md relative overflow-hidden">
+        <div className="px-4 sm:px-6 py-3 sm:py-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border-b border-indigo-500/30 flex items-center justify-between shrink-0 z-20 shadow-md relative overflow-hidden">
           {/* Ambient Lighting Glow Effects */}
           <div className="absolute -top-12 -left-12 w-48 h-48 bg-brand-500/15 rounded-full blur-2xl pointer-events-none" />
           <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-indigo-500/15 rounded-full blur-2xl pointer-events-none" />
 
-          <div className="flex items-center gap-3 min-w-0 flex-1 relative z-10">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-brand-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/25 border border-brand-400/40 shrink-0">
-              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 relative z-10">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-brand-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/25 border border-brand-400/40 shrink-0">
+              <ShieldCheck className="w-4.5 h-4.5 sm:w-6 sm:h-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="hidden sm:flex items-center gap-2 flex-wrap">
                 <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-lg bg-brand-500/20 text-brand-300 border border-brand-400/30 backdrop-blur-md whitespace-nowrap">
                   Nandha Engineering College
                 </span>
@@ -535,23 +540,28 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Secure Provisioning
                 </span>
               </div>
-              <h2 className="text-base sm:text-xl font-black text-white tracking-tight mt-0.5 truncate">
+              <div className="sm:hidden flex items-center gap-1.5 mb-0.5">
+                <span className="text-[9px] font-black uppercase tracking-wider text-brand-300">Nandha Engg</span>
+                <span className="text-[9px] text-slate-500">•</span>
+                <span className="text-[9px] font-bold text-emerald-400">Step {activeStep} of 5</span>
+              </div>
+              <h2 className="text-sm sm:text-xl font-black text-white tracking-tight truncate">
                 Create Institutional Account
               </h2>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0 ml-2 relative z-10">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2 relative z-10">
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/20 text-indigo-300 text-xs font-mono font-black border border-indigo-400/30 backdrop-blur-md">
               <Lock className="w-3.5 h-3.5 text-indigo-400" /> SECURE ADMINISTRATION
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-rose-500/30 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 active:scale-95"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-rose-500/30 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 active:scale-95"
               title="Close Modal"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
@@ -614,13 +624,13 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
             </div>
           </div>
         ) : (
-          /* MAIN FORM BODY WITH TOP HORIZONTAL STEPPER */
+          /* MAIN FORM BODY WITH HORIZONTAL STEPPER */
           <div className="flex-1 flex flex-col overflow-hidden bg-slate-50/50 dark:bg-navy-950/30">
 
-            {/* TOP STEPPER BAR (CENTERED TIMELINE - ALL 5 STEPS FIT 100% ON EVERY SCREEN SIZE) */}
-            <div className="px-3 sm:px-8 py-3 sm:py-3.5 bg-white dark:bg-navy-950 border-b border-slate-300 dark:border-navy-800 shrink-0 z-10 shadow-xs">
+            {/* DESKTOP STEPPER BAR (CENTERED TIMELINE) */}
+            <div className="hidden sm:block px-8 py-3.5 bg-white dark:bg-navy-950 border-b border-slate-300 dark:border-navy-800 shrink-0 z-10 shadow-xs">
               <div className="max-w-4xl mx-auto">
-                <div className="flex items-center sm:items-start justify-between">
+                <div className="flex items-start justify-between">
                   {stepsList.map((s, idx) => {
                     const isCurrent = activeStep === s.num;
                     const isCompleted = activeStep > s.num;
@@ -635,19 +645,18 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                           className="flex flex-col items-center group cursor-pointer focus:outline-none shrink-0"
                         >
                           <div
-                            className={`w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl flex items-center justify-center font-mono text-[11px] sm:text-xs font-black transition-all shrink-0 ${
+                            className={`w-10 h-10 rounded-2xl flex items-center justify-center font-mono text-xs font-black transition-all shrink-0 ${
                               isCurrent
-                                ? 'bg-brand-600 text-white shadow-md shadow-brand-500/30 ring-2 sm:ring-4 ring-brand-500/20 scale-105'
+                                ? 'bg-brand-600 text-white shadow-md shadow-brand-500/30 ring-4 ring-brand-500/20 scale-105'
                                 : isCompleted
                                 ? 'bg-emerald-600 text-white shadow-xs'
                                 : 'bg-slate-100 dark:bg-navy-900 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-800'
                             }`}
                           >
-                            {isCompleted ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" /> : s.id}
+                            {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : s.id}
                           </div>
 
-                          {/* DESKTOP/TABLET TITLES (HIDDEN ON MOBILE TO PREVENT CUTOFF) */}
-                          <div className="hidden sm:flex mt-1.5 flex-col items-center text-center max-w-[120px]">
+                          <div className="flex mt-1.5 flex-col items-center text-center max-w-[120px]">
                             <span
                               className={`text-xs truncate w-full ${
                                 isCurrent
@@ -676,7 +685,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                         {/* CONNECTING PROGRESS LINE */}
                         {!isLast && (
-                          <div className="flex-1 my-auto sm:mt-5 mx-1 sm:mx-3 h-1 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden min-w-[12px]">
+                          <div className="flex-1 my-auto mt-5 mx-3 h-1 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden min-w-[12px]">
                             <div
                               className={`h-full transition-all duration-300 ${
                                 isCompleted ? 'bg-emerald-500' : isCurrent ? 'bg-brand-500/60' : 'bg-transparent'
@@ -688,16 +697,42 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                     );
                   })}
                 </div>
+              </div>
+            </div>
 
-                {/* MOBILE ACTIVE STEP BANNER (CLEAR, FIT IN 100% MOBILE SCREEN) */}
-                <div className="sm:hidden text-center mt-2 pt-1 border-t border-slate-100 dark:border-navy-800/60 flex items-center justify-center gap-1.5">
-                  <span className="text-[10px] font-mono font-black uppercase tracking-widest px-2 py-0.5 rounded bg-brand-100 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300">
+            {/* MOBILE STEPPER (SLEEK 5-SEGMENT PROGRESS BAR + STEP CHIP) */}
+            <div className="sm:hidden px-4 py-2.5 bg-white dark:bg-navy-950 border-b border-slate-200 dark:border-navy-800 shrink-0 z-10 shadow-xs">
+              <div className="flex items-center gap-1.5">
+                {stepsList.map(s => {
+                  const isCompleted = activeStep > s.num;
+                  const isCurrent = activeStep === s.num;
+                  return (
+                    <button
+                      key={s.num}
+                      type="button"
+                      onClick={() => handleStepClick(s.num)}
+                      className="flex-1 py-1 focus:outline-none"
+                      title={s.title}
+                    >
+                      <div className={`h-1.5 rounded-full transition-all duration-300 ${
+                        isCompleted ? 'bg-emerald-500' : isCurrent ? 'bg-brand-600 shadow-sm shadow-brand-500/50' : 'bg-slate-200 dark:bg-navy-800'
+                      }`} />
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[10px] font-mono font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-brand-100 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300 shrink-0">
                     Step {activeStep} of 5
                   </span>
-                  <span className="text-xs font-black text-slate-900 dark:text-white truncate max-w-[200px]">
+                  <span className="text-xs font-black text-slate-900 dark:text-white truncate">
                     {stepsList[activeStep - 1]?.title}
                   </span>
                 </div>
+                <span className="text-[11px] font-mono font-black text-brand-600 dark:text-brand-400 shrink-0">
+                  {progressPercent}%
+                </span>
               </div>
             </div>
 
@@ -738,8 +773,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                 {/* STEP 1: ROLE & ACADEMIC SCOPE */}
                 {activeStep === 1 && (
-                  <section className="space-y-6 animate-fade-in">
-                    <div>
+                  <section className="space-y-4 sm:space-y-6 animate-fade-in">
+                    <div className="hidden sm:block">
                       <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                         <Building2 className="w-5 h-5 text-brand-500" /> 1. Role & Academic Scope
                       </h3>
@@ -748,7 +783,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5">
 
                       {/* Staff Role Trigger */}
                       {(() => {
@@ -975,8 +1010,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                 {/* STEP 2: IDENTITY & CREDENTIALS */}
                 {activeStep === 2 && (
-                  <section className="space-y-6 animate-fade-in">
-                    <div>
+                  <section className="space-y-4 sm:space-y-6 animate-fade-in">
+                    <div className="hidden sm:block">
                       <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                         <User className="w-5 h-5 text-indigo-500" /> 2. Identity & Credentials
                       </h3>
@@ -985,7 +1020,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5">
 
                       {/* Full Legal Name */}
                       <div className="space-y-1.5 col-span-1 sm:col-span-2">
@@ -1040,10 +1075,12 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                           <button
                             type="button"
                             onClick={() => generateUniqueUsername()}
-                            className="h-12 px-4 rounded-2xl bg-brand-100 dark:bg-brand-500/20 text-brand-800 dark:text-brand-300 text-xs font-black hover:bg-brand-200 transition-all flex items-center shrink-0 cursor-pointer active:scale-95 border border-brand-200 dark:border-brand-500/30"
+                            className="h-12 px-3 sm:px-4 rounded-2xl bg-brand-100 dark:bg-brand-500/20 text-brand-800 dark:text-brand-300 text-xs font-black hover:bg-brand-200 transition-all flex items-center shrink-0 cursor-pointer active:scale-95 border border-brand-200 dark:border-brand-500/30"
                             title="Auto-suggest unique username"
                           >
-                            <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Suggest Username
+                            <Sparkles className="w-3.5 h-3.5 sm:mr-1.5" />
+                            <span className="hidden sm:inline">Suggest Username</span>
+                            <span className="sm:hidden ml-1">Suggest</span>
                           </button>
                         </div>
 
@@ -1197,8 +1234,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                 {/* STEP 3: CONTACT INFORMATION */}
                 {activeStep === 3 && (
-                  <section className="space-y-6 animate-fade-in">
-                    <div>
+                  <section className="space-y-4 sm:space-y-6 animate-fade-in">
+                    <div className="hidden sm:block">
                       <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                         <Mail className="w-5 h-5 text-brand-500" /> 3. Contact Information
                       </h3>
@@ -1207,7 +1244,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5">
 
                       {/* Email Address */}
                       <div className="space-y-1.5 col-span-1 sm:col-span-2">
@@ -1280,9 +1317,11 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                                 else if (formData.role === 'Staff Mentor') rolePrefix = 'STAFF';
                                 setFormData(prev => ({ ...prev, institutional_id: `NEC-${rolePrefix}-${professionalId}` }));
                             }}
-                            className="h-12 px-4 rounded-2xl bg-brand-100 dark:bg-brand-500/20 text-brand-800 dark:text-brand-300 text-xs font-black hover:bg-brand-200 transition-all flex items-center shrink-0 cursor-pointer border border-brand-200 dark:border-brand-500/30"
+                            className="h-12 px-3 sm:px-4 rounded-2xl bg-brand-100 dark:bg-brand-500/20 text-brand-800 dark:text-brand-300 text-xs font-black hover:bg-brand-200 transition-all flex items-center shrink-0 cursor-pointer active:scale-95 border border-brand-200 dark:border-brand-500/30"
                           >
-                            <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Generate ID
+                            <Sparkles className="w-3.5 h-3.5 sm:mr-1.5" />
+                            <span className="hidden sm:inline">Generate ID</span>
+                            <span className="sm:hidden ml-1">Generate</span>
                           </button>
                         </div>
                         {formErrors.institutional_id && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.institutional_id}</p>}
@@ -1294,8 +1333,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                 {/* STEP 4: STAFF VERIFICATION */}
                 {activeStep === 4 && (
-                  <section className="space-y-6 animate-fade-in">
-                    <div>
+                  <section className="space-y-4 sm:space-y-6 animate-fade-in">
+                    <div className="hidden sm:block">
                       <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                         <FileCheck className="w-5 h-5 text-emerald-500" /> 4. Staff Verification & Profile Media
                       </h3>
@@ -1304,7 +1343,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                       </p>
                     </div>
 
-                    <div className="space-y-5">
+                    <div className="space-y-4 sm:space-y-5">
 
                       {/* Profile Photo Upload Section */}
                       <div className="p-4 rounded-3xl bg-slate-50 dark:bg-navy-900/60 border border-slate-200 dark:border-navy-800 space-y-3">
@@ -1426,8 +1465,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                 {/* STEP 5: PERMISSIONS & AGREEMENT */}
                 {activeStep === 5 && (
-                  <section className="space-y-6 animate-fade-in">
-                    <div>
+                  <section className="space-y-4 sm:space-y-6 animate-fade-in">
+                    <div className="hidden sm:block">
                       <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                         <Shield className="w-5 h-5 text-indigo-500" /> 5. Permissions & Agreement
                       </h3>
@@ -1552,70 +1591,82 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                 )}
               </div>
             )}
-            <div className="px-3.5 sm:px-6 py-2.5 sm:py-4 bg-slate-50/95 dark:bg-navy-950/95 border-t border-slate-300 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 shrink-0 z-20 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
-              <div className="flex items-center justify-between sm:justify-start gap-2.5 w-full sm:w-auto">
-                <span className="text-[11px] sm:text-xs font-mono font-black text-slate-800 dark:text-slate-200 whitespace-nowrap">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-50/95 dark:bg-navy-950/95 border-t border-slate-300 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+              {/* DESKTOP PROGRESS INDICATOR */}
+              <div className="hidden sm:flex items-center gap-2.5">
+                <span className="text-xs font-mono font-black text-slate-800 dark:text-slate-200 whitespace-nowrap">
                   Step {activeStep} of 5
                 </span>
-                <div className="flex-1 sm:w-36 h-1.5 sm:h-2 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden">
+                <div className="w-36 h-2 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden">
                   <div className="h-full bg-brand-600 transition-all duration-300" style={{ width: `${progressPercent}%` }} />
                 </div>
-                <span className="text-[11px] sm:text-xs font-mono font-bold text-brand-600 dark:text-brand-400 whitespace-nowrap">
+                <span className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 whitespace-nowrap">
                   {progressPercent}%
                 </span>
               </div>
 
-              <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto mt-1 sm:mt-0">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={isSubmitting}
-                  className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-navy-800 transition-all cursor-pointer min-h-[40px] sm:min-h-[44px] flex items-center justify-center"
-                >
-                  Cancel
-                </button>
-
-                <div className="flex items-center gap-2">
-                  {activeStep > 1 && (
+              {/* ACTION BUTTONS (MOBILE FULL-WIDTH THUMB-FRIENDLY) */}
+              <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+                {/* Secondary: Cancel (Step 1) or Back (Step 2+) */}
+                {activeStep === 1 ? (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    disabled={isSubmitting}
+                    className="flex-1 sm:flex-none px-4 py-3 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-black text-slate-700 dark:text-slate-200 bg-slate-200/80 dark:bg-navy-850 hover:bg-slate-300 dark:hover:bg-navy-800 transition-all cursor-pointer min-h-[44px] flex items-center justify-center active:scale-95"
+                  >
+                    Cancel
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      disabled={isSubmitting}
+                      className="hidden sm:flex px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-navy-800 transition-all cursor-pointer min-h-[44px] items-center justify-center"
+                    >
+                      Cancel
+                    </button>
                     <button
                       type="button"
                       onClick={handlePrevStep}
                       disabled={isSubmitting}
-                      className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-navy-800 border border-slate-300 dark:border-navy-700 hover:bg-slate-100 transition-all flex items-center gap-1 cursor-pointer min-h-[40px] sm:min-h-[44px]"
+                      className="flex-1 sm:flex-none px-4 py-3 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-black text-slate-800 dark:text-slate-100 bg-white dark:bg-navy-800 border border-slate-300 dark:border-navy-700 hover:bg-slate-100 dark:hover:bg-navy-750 transition-all flex items-center justify-center gap-1 cursor-pointer min-h-[44px] active:scale-95 shadow-xs"
                     >
                       <ChevronLeft className="w-4 h-4" /> Back
                     </button>
-                  )}
+                  </>
+                )}
 
-                  {activeStep < 5 ? (
-                    <button
-                      type="button"
-                      onClick={handleNextStep}
-                      className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 transition-all shadow-md shadow-brand-500/20 flex items-center gap-1 cursor-pointer min-h-[40px] sm:min-h-[44px]"
-                    >
-                      Continue <ChevronRight className="w-4 h-4" />
-                    </button>
-                  ) : (
-                    <button
-                      form="create-staff-form"
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-lg shadow-brand-500/25 flex items-center gap-2 cursor-pointer min-h-[40px] sm:min-h-[44px]"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Creating...
-                        </>
-                      ) : (
-                        <>
-                          <ShieldCheck className="w-4 h-4" />
-                          Create Institutional Account
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
+                {/* Primary: Continue or Submit */}
+                {activeStep < 5 ? (
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="flex-[2] sm:flex-none px-5 sm:px-6 py-3 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-black text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-md shadow-brand-500/25 flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px] active:scale-95"
+                  >
+                    Continue <ChevronRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    form="create-staff-form"
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-[2] sm:flex-none px-5 sm:px-6 py-3 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-black text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2 cursor-pointer min-h-[44px] active:scale-95"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-4 h-4" />
+                        Create Account
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -2279,7 +2279,14 @@ def admin_verify_otp(data: AdminVerifyOTPRequest, request: Request, response: Re
     except Exception:
         db.rollback()
 
-    access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
+    access_token = create_access_token(data={
+        "sub": user.username,
+        "role": user.role,
+        "email": user.email,
+        "user_id": user.id,
+        "admin_otp_verified": True,
+        "login_channel": "admin_otp"
+    })
     dept_scope = _get_user_dept_scope(db, user)
     
     return {
@@ -2287,12 +2294,14 @@ def admin_verify_otp(data: AdminVerifyOTPRequest, request: Request, response: Re
         "access_token": access_token,
         "refresh_token": refresh_token_value,
         "token_type": "bearer",
+        "admin_otp_verified": True,
         "user": {
             "id": user.id,
             "username": user.username,
             "full_name": getattr(user, "full_name", None) or user.username,
             "email": user.email,
             "role": user.role,
+            "admin_otp_verified": True,
             "department_id": user.department_id,
             "section_id": user.section_id,
             "require_password_change": getattr(user, "require_password_change", False),

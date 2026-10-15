@@ -31,6 +31,99 @@ function hashStringToId(str: string): number {
 }
 
 class DownloadNotificationService {
+  private initialized = false;
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      this.initNotificationListeners();
+    }
+  }
+
+  /**
+   * Initializes notification tap listeners and action categories.
+   * Guarantees tapping the notification opens the report directly in Excel or document viewer.
+   */
+  async initNotificationListeners(): Promise<void> {
+    if (this.initialized) return;
+    this.initialized = true;
+
+    if (isNativeMobile()) {
+      try {
+        // Register Action Types (Action buttons on Android notification drawer)
+        await LocalNotifications.registerActionTypes({
+          types: [
+            {
+              id: 'DOWNLOAD_ACTIONS',
+              actions: [
+                {
+                  id: 'OPEN_EXCEL',
+                  title: 'Open in Excel',
+                },
+                {
+                  id: 'SHARE_FILE',
+                  title: 'Share',
+                },
+              ],
+            },
+          ],
+        }).catch(() => {});
+
+        // Listen for user tapping or selecting an action on the notification
+        LocalNotifications.addListener('localNotificationActionPerformed', async (action) => {
+          console.log('[DownloadNotification] Notification tapped by user:', action);
+          const extra = action.notification?.extra || {};
+          const actionId = action.actionId;
+
+          const filePath = extra.filePath || extra.localFileUri || '';
+          const filename = extra.filename || action.notification?.body || 'report.xlsx';
+          const mimeType = extra.mimeType || getMimeTypeFromFilename(filename);
+
+          if (actionId === 'SHARE_FILE') {
+            try {
+              const { Share } = await import('@capacitor/share');
+              await Share.share({
+                title: filename,
+                text: `Report: ${filename}`,
+                url: filePath,
+                dialogTitle: `Share ${filename}`,
+              });
+              return;
+            } catch (err) {
+              console.warn('[DownloadNotification] Share action fallback failed:', err);
+            }
+          }
+
+          // Default tap on the notification card OR 'Open in Excel' button
+          if (filePath || filename) {
+            console.log(`[DownloadNotification] Opening ${filename} in Excel/document viewer...`);
+            await openDownloadedDocument(filePath, filename, mimeType);
+          }
+        });
+
+        console.log('[DownloadNotification] Native notification action listeners successfully initialized.');
+      } catch (err) {
+        console.warn('[DownloadNotification] Failed to initialize native notification listeners:', err);
+      }
+    }
+
+    // Web / PWA ServiceWorker notification click listener
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      try {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (event.data && event.data.type === 'OPEN_DOWNLOADED_FILE') {
+            const payload = event.data.payload || {};
+            console.log('[DownloadNotification] Received OPEN_DOWNLOADED_FILE from ServiceWorker:', payload);
+            if (payload.localFileUri || payload.filename) {
+              openDownloadedDocument(payload.localFileUri, payload.filename, payload.mimeType);
+            }
+          }
+        });
+      } catch (swMsgErr) {
+        console.warn('[DownloadNotification] SW message listener error:', swMsgErr);
+      }
+    }
+  }
+
   /**
    * NEVER SHOW START NOTIFICATION.
    * Start notifications are completely disabled per production specification.
@@ -69,6 +162,7 @@ class DownloadNotificationService {
               channelId: 'leetcode_intelligence_channel',
               smallIcon: 'ic_stat_notification',
               iconColor: '#3b82f6',
+              actionTypeId: 'DOWNLOAD_ACTIONS',
               extra: {
                 type: 'DOWNLOAD_COMPLETE',
                 filePath: localFileUri,

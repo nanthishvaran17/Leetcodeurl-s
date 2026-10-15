@@ -14,10 +14,11 @@ import { useKeyboardContext } from './context/KeyboardContext';
 import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
 import { InstallAppPrompt } from './components/InstallAppPrompt';
 import { AppUpdateNotifier } from './components/AppUpdateNotifier';
-import { useScrollLock } from './hooks/useScrollLock';
+import { useScrollLock, forceUnlockScroll } from './hooks/useScrollLock';
 import { StudentProfileSkeleton } from './components/StudentProfileSkeleton';
 import { StudentShareCardModal } from './components/StudentShareCardModal';
 import { MobileFilterDrawer } from './components/MobileFilterDrawer';
+import { isAdminOtpVerified } from './utils/adminOtpAuth';
 
 const LandingPage = safeLazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
 import { LoginPage } from './pages/LoginPage';
@@ -189,6 +190,13 @@ export const App: React.FC = () => {
 
   const { user, isAuthenticated, login } = useAuth();
   
+  // Initialize Download Notification tap listener early on app boot
+  useEffect(() => {
+    import('./services/download/downloadNotification').then(({ downloadNotification }) => {
+      downloadNotification.initNotificationListeners();
+    }).catch(err => console.warn('[DownloadNotification] Init note:', err));
+  }, []);
+
   // Initialize Web Push Notifications (Lazy-loaded after authentication)
   useEffect(() => {
     if (isAuthenticated && user?.id) {
@@ -289,6 +297,7 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     setIsNavigating(true);
+    forceUnlockScroll();
     const timer = setTimeout(() => setIsNavigating(false), 350);
     return () => clearTimeout(timer);
   }, [activeTab]);
@@ -650,6 +659,7 @@ export const App: React.FC = () => {
       }
     } catch (_e) {}
     // Robust scroll-to-top: covers window, html, and any scrollable main container
+    forceUnlockScroll();
     window.scrollTo(0, 0);
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
@@ -676,18 +686,16 @@ export const App: React.FC = () => {
   }, [activeTab, previousTab, isAuthenticated]);
 
   // Lock body scroll securely preserving exact viewport scroll position when selectedStudent modal is open
+  useScrollLock(Boolean(selectedStudent));
+
   useEffect(() => {
     if (selectedStudent) {
-      const prevOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-
       const onKey = (ev: KeyboardEvent) => {
         if (ev.key === 'Escape') setSelectedStudent(null);
       };
       window.addEventListener('keydown', onKey);
 
       return () => {
-        document.body.style.overflow = prevOverflow || '';
         window.removeEventListener('keydown', onKey);
       };
     }
@@ -785,6 +793,12 @@ export const App: React.FC = () => {
       : (tab === 'hr' || tab === 'candidate-finder') ? 'hr-candidate-finder'
       : (tab === 'issues' || tab === 'student-data-issues') ? 'data-issues'
       : tab;
+
+    if (tab === 'dev-studio' || normalized === 'dev-studio') {
+      const isAdminRole = ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean);
+      return isAdminRole && isAdminOtpVerified();
+    }
+
     const allowed = ROLE_PERMISSIONS[roleClean] || ALL_ACADEMIC_TABS;
     return allowed.includes(normalized) || allowed.includes(tab);
   }, [isAuthenticated, roleClean, ROLE_PERMISSIONS, ALL_ACADEMIC_TABS]);
@@ -1096,7 +1110,7 @@ export const App: React.FC = () => {
               {activeTab === 'dev-studio' && (
                 isTabAllowed('dev-studio')
                   ? <DeveloperStudio onClose={() => handleTabChange('dashboard')} />
-                  : renderAccessDenied('Developer Studio — Admin Only')
+                  : renderAccessDenied('Developer Studio — Restricted (Requires 2FA OTP Authentication via /admin portal)')
               )}
             </Suspense>
           </ErrorBoundary>

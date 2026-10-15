@@ -254,7 +254,6 @@
 body.global-scroll-lock,
 html.global-scroll-lock {
   overflow: hidden !important;
-  touch-action: none !important;
 }
 
 /* Viewport-Centered Auto-Fit Responsive Modal System (GPU Hardware Accelerated) */
@@ -1682,8 +1681,9 @@ body {
 
 @media (max-width: 768px) {
   html, body {
-    overscroll-behavior-y: none;
+    overscroll-behavior-y: auto;
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
 
   .mobile-safe-bottom {
@@ -1696,13 +1696,26 @@ body {
   }
 
   .mobile-card-interactive {
-    touch-action: manipulation;
+    touch-action: pan-y;
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .mobile-card-interactive:active {
     transform: scale(0.98);
   }
+}
+
+/* 60FPS Silky Smooth Candidate Cards Hardware Acceleration */
+.smooth-scroll-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 280px;
+  touch-action: pan-y;
+}
+
+.smooth-scroll-compact-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 64px;
+  touch-action: pan-y;
 }
 
 /* Executive Crisp White Theme for Report Preview Modal */

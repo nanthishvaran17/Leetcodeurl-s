@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from 'react';
+import { useLayoutEffect } from 'react';
 
 // Global counter for active scroll locks
 let scrollLockCount = 0;
@@ -21,6 +21,7 @@ export const useScrollLock = (lock: boolean = true) => {
     
     if (scrollLockCount === 1) {
       document.body.classList.add('global-scroll-lock');
+      document.documentElement.classList.add('global-scroll-lock');
     }
 
     return () => {
@@ -29,7 +30,25 @@ export const useScrollLock = (lock: boolean = true) => {
       
       if (scrollLockCount === 0) {
         document.body.classList.remove('global-scroll-lock');
+        document.documentElement.classList.remove('global-scroll-lock');
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        document.body.style.touchAction = '';
       }
     };
   }, [lock]);
+};
+
+/**
+ * Global failsafe to unlock scroll when switching tabs or closing all overlays
+ */
+export const forceUnlockScroll = () => {
+  scrollLockCount = 0;
+  if (typeof document !== 'undefined') {
+    document.body.classList.remove('global-scroll-lock');
+    document.documentElement.classList.remove('global-scroll-lock');
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    document.body.style.touchAction = '';
+  }
 };

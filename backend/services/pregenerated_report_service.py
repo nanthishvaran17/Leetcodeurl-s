@@ -478,12 +478,10 @@ def generate_report_bytes(
     search = flt.get("search") or ""
     session_id = flt.get("session_id") or flt.get("week_id") or "latest"
 
-    # 1. Weekly 19-Sheet Performance Workbook
-    if rpt in ("WEEKLY_PERFORMANCE", "WEEKLY_PERFORMANCE_19_SHEET"):
-        import tempfile
-        import uuid
+    # 1. Weekly Performance Institutional Workbook
+    if rpt in ("WEEKLY_PERFORMANCE", "WEEKLY_PERFORMANCE_19_SHEET", "WEEKLY_COORDINATOR", "COORDINATOR"):
         from backend.services.weekly_report_service import generate_weekly_performance_data
-        from backend.exporters.weekly_excel_generator import build_weekly_performance_excel
+        from backend.exporters.excel_exporter import export_weekly_performance_excel
 
         dept_val = dept if dept != "ALL" else (flt.get("department") or flt.get("dept") or "ALL")
         year_val = year if year != "ALL" else (flt.get("year") or flt.get("year_level") or "ALL")
@@ -500,16 +498,7 @@ def generate_report_bytes(
             batch_filter=batch,
             session_id=flt.get("session_id")
         )
-        temp_dir = tempfile.gettempdir()
-        temp_path = os.path.join(temp_dir, f"temp_report_{uuid.uuid4().hex}.xlsx")
-        build_weekly_performance_excel(data, temp_path)
-        with open(temp_path, "rb") as f:
-            content = f.read()
-        try:
-            os.remove(temp_path)
-        except Exception:
-            pass
-        return content
+        return export_weekly_performance_excel(data, include_extra_sheets=False)
 
     # 2. College 2-Sheet OpenPyXL Format
     if rpt in ("COLLEGE_FORMAT", "COLLEGE_WEEKLY_FORMAT"):

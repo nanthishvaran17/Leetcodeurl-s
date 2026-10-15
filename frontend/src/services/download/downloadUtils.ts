@@ -121,7 +121,16 @@ export async function blobToBase64(rawBlob: any): Promise<string> {
   return btoa(chunks.join(''));
 }
 
-/** Native Android file open/share helper via DocumentOpener / FileProvider / Capacitor Share */
+import { registerPlugin } from '@capacitor/core';
+
+interface DocumentOpenerPluginType {
+  openDocument(options: { path: string; filename: string; mimeType?: string }): Promise<void>;
+  fileExists(options: { path: string; filename: string }): Promise<{ exists: boolean; size?: number }>;
+}
+
+const DocumentOpener = registerPlugin<DocumentOpenerPluginType>('DocumentOpener');
+
+/** Native Android file open helper via DocumentOpener (Excel/Sheets) with fallback to Share */
 export async function openDownloadedDocument(
   fileUri: string,
   filename: string,
@@ -130,18 +139,46 @@ export async function openDownloadedDocument(
   const effectiveMime = mimeType || getMimeTypeFromFilename(filename);
 
   if (isNativeMobile()) {
+    // 1. Primary: Launch directly into Microsoft Excel / Google Sheets via Android Intent
+    try {
+      await DocumentOpener.openDocument({
+        path: fileUri,
+        filename,
+        mimeType: effectiveMime,
+      });
+      console.log(`[DownloadUtils] DocumentOpener successfully launched for ${filename}`);
+      return { success: true };
+    } catch (err: any) {
+      console.warn('[DownloadUtils] DocumentOpener launch failed, falling back to Share:', err);
+    }
+
+    // 2. Fallback: Capacitor Share (user selects Excel or other installed apps)
     try {
       const { Share } = await import('@capacitor/share');
       await Share.share({
         title: filename,
-        text: `Shared document: ${filename}`,
+        text: `Open report: ${filename}`,
         url: fileUri,
-        dialogTitle: `Share or Save ${filename}`,
+        dialogTitle: `Open ${filename} with...`,
       });
       return { success: true };
     } catch (err: any) {
-      console.warn('[DownloadUtils] Capacitor Share failed:', err);
-      return { success: false, error: 'Unable to open share dialog.' };
+      console.warn('[DownloadUtils] Capacitor Share fallback failed:', err);
+      return { success: false, error: 'Unable to open file in document viewer.' };
+    }
+  }
+
+  // 3. Web browser environment
+  if (typeof window !== 'undefined' && fileUri) {
+    try {
+      if (fileUri.startsWith('blob:') || fileUri.startsWith('http') || fileUri.startsWith('data:')) {
+        const opened = window.open(fileUri, '_blank');
+        if (!opened) {
+          window.location.href = fileUri;
+        }
+      }
+    } catch (e) {
+      console.warn('[DownloadUtils] Web open error:', e);
     }
   }
 

@@ -1121,7 +1121,7 @@ def download_session_report_by_format(
                 or "COORDINATOR" in str(dataset.get("title") or "").upper()
             ):
                 from backend.exporters.excel_exporter import export_weekly_performance_excel
-                excel_bytes = export_weekly_performance_excel(dataset)
+                excel_bytes = export_weekly_performance_excel(dataset, include_extra_sheets=False)
                 return Response(
                     content=excel_bytes,
                     media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -2038,7 +2038,7 @@ def _get_dataset_for_id(
             rows = filtered_rows
 
         # RBAC: Scoping for ReportHistory
-        if current_user is not None:
+        if current_user is not None and not hasattr(current_user, "dependency"):
             from backend.services.authorization_service import _normalize_role, _STAFF_ROLES, _HOD_ROLES
             from backend.services.faculty_assignment_service import FacultyAssignmentService
             role_clean = _normalize_role(current_user)
@@ -2100,9 +2100,9 @@ def _get_dataset_for_id(
         dataset = None
 
         # Fallback 1: If report_id is a dynamic RPT-, REP-, or REPORT- code, build dataset via build_universal_report
-        if report_id.startswith("RPT-") or report_id.startswith("REP-") or report_id.startswith("REPORT-") or "REP" in report_id.upper():
+        rid_u = report_id.upper()
+        if rid_u.startswith("RPT") or rid_u.startswith("REP") or "REP" in rid_u:
             rtype = report_type or "STUDENT_PERFORMANCE"
-            rid_u = report_id.upper()
             if not report_type:
                 if "HIST" in rid_u:
                     rtype = "HISTORICAL_CONTEST_INTELLIGENCE"
@@ -2531,7 +2531,7 @@ def download_universal_excel(
             or "COORDINATOR" in str(dataset.get("title") or "").upper()
         ):
             from backend.exporters.excel_exporter import export_weekly_performance_excel
-            excel_bytes = export_weekly_performance_excel(dataset)
+            excel_bytes = export_weekly_performance_excel(dataset, include_extra_sheets=False)
             
             if not excel_bytes or len(excel_bytes) < 100:
                 raise ValueError("Generated Excel file is empty or corrupted.")

@@ -7,6 +7,7 @@ import { useTheme } from '../context/ThemeContext';
 import { CollegeLogo } from './CollegeLogo';
 import { SignOutConfirmModal } from './SignOutConfirmModal';
 import { getApiUrl } from '../services/api';
+import { isAdminOtpVerified } from '../utils/adminOtpAuth';
 
 interface SidebarProps {
   activeTab: string;
@@ -183,7 +184,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'account-settings', label: 'Account Settings', icon: User },
         { id: 'settings', label: 'Admin Settings', icon: Settings },
         { id: 'audit', label: 'Audit Log', icon: ShieldAlert },
-        { id: 'dev-studio', label: 'Developer Studio', icon: Cpu, badge: 'LIVE', badgeColor: 'amber' },
+        ...(isAdminOtpVerified()
+          ? [{ id: 'dev-studio', label: 'Developer Studio', icon: Cpu, badge: 'LIVE' as const, badgeColor: 'amber' as const }]
+          : []),
       ]
     }
   ];

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 // removed react-router-dom
 import { Shield, Key, Mail, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import api from '../services/api';
+import { setAdminOtpVerified } from '../utils/adminOtpAuth';
 import { useAuth } from '../context/AuthContext';
 
 export const AdminLoginPage = () => {
@@ -41,14 +42,26 @@ export const AdminLoginPage = () => {
     try {
       const res = await api.post('/auth/admin-verify-otp', { username, password, otp });
       if (res.data?.success && res.data?.access_token) {
-        // Authenticated successfully
-        // We can just use the login function from AuthContext or manually set tokens.
-        // Assuming login context can handle the tokens.
-        localStorage.setItem('access_token', res.data.access_token);
+        // Authenticated successfully with 2FA OTP
+        const token = res.data.access_token;
+        localStorage.setItem('token', token);
+        localStorage.setItem('access_token', token);
         if (res.data.refresh_token) {
           localStorage.setItem('refresh_token', res.data.refresh_token);
         }
-        // Instead of calling context login which might make another API call, we just reload or navigate.
+        
+        // Mark session as 2FA OTP verified
+        setAdminOtpVerified(true);
+        
+        if (res.data.user) {
+          const userWithOtp = {
+            ...res.data.user,
+            admin_otp_verified: true,
+          };
+          localStorage.setItem('user', JSON.stringify(userWithOtp));
+        }
+
+        // Navigate directly to dashboard with fully verified session
         window.location.href = '/dashboard';
       }
     } catch (err: any) {
