@@ -69,7 +69,6 @@ const PriorityBadge: React.FC<{ priority: string; score: number; reason: string 
   );
 };
 
-// Custom Dropdown Select 
 const CustomSelect: React.FC<{
   value: string;
   onChange: (v: string) => void;
@@ -81,8 +80,36 @@ const CustomSelect: React.FC<{
   const [open, setOpen] = useState(false);
   const selected = options.find(o => o.value === value);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const [dropdownSide, setDropdownSide] = useState<'left' | 'right'>(alignRight ? 'right' : 'left');
 
-  // Close on outside click
+  const updateAlignment = useCallback(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const expectedMenuWidth = 280;
+
+      // Smart boundary check:
+      // 1. If opening right-aligned would overflow the left edge of viewport (e.g. mobile left column), align left.
+      // 2. If opening left-aligned would overflow the right edge of viewport (e.g. mobile right column), align right.
+      // 3. Otherwise, use alignRight preference.
+      if (rect.right - expectedMenuWidth < 8) {
+        setDropdownSide('left');
+      } else if (rect.left + expectedMenuWidth > viewportWidth - 8) {
+        setDropdownSide('right');
+      } else {
+        setDropdownSide(alignRight ? 'right' : 'left');
+      }
+    }
+  }, [alignRight]);
+
+  const toggleDropdown = () => {
+    if (!open) {
+      updateAlignment();
+    }
+    setOpen(prev => !prev);
+  };
+
+  // Close on outside click and update alignment on resize
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -91,14 +118,18 @@ const CustomSelect: React.FC<{
     };
     if (open) {
       document.addEventListener('mousedown', handleClick);
+      window.addEventListener('resize', updateAlignment);
     }
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [open]);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      window.removeEventListener('resize', updateAlignment);
+    };
+  }, [open, updateAlignment]);
 
   return (
     <div className="relative flex-1 w-full md:w-auto md:flex-initial min-w-0 md:min-w-[102px]" ref={containerRef}>
       <button
-        onClick={() => setOpen(!open)}
+        onClick={toggleDropdown}
         className={`flex items-center justify-between gap-1.5 sm:gap-2 w-full sm:w-auto md:min-w-[115px] lg:min-w-[125px] xl:min-w-[135px] px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-xs ${
           open 
             ? 'border-indigo-500 bg-white dark:bg-navy-950 ring-4 ring-indigo-500/10' 
@@ -122,7 +153,7 @@ const CustomSelect: React.FC<{
       </button>
 
       {open && (
-        <div className={`absolute z-50 top-[110%] ${alignRight ? 'right-0' : 'left-0'} w-[280px] sm:min-w-[320px] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up`}>
+        <div className={`absolute z-50 top-[110%] ${dropdownSide === 'right' ? 'right-0' : 'left-0'} w-[280px] sm:min-w-[320px] max-w-[calc(100vw-24px)] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up`}>
           <button
             onClick={() => { onChange(''); setOpen(false); }}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
@@ -1208,7 +1239,6 @@ export const FacultyActionCenter: React.FC = () => {
             onChange={v => { setFilterDept(v); setPage(1); }}
             placeholder="All Departments"
             icon={<Building2 size={15} />}
-            alignRight={true}
             options={deptOptions}
           />
           </div>

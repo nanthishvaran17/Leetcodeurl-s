@@ -1079,11 +1079,11 @@ export const AdminStaffAllocationPanel: React.FC = () => {
               </div>
 
               {/* Right: Custom Range Inputs */}
-              <div className="flex items-center justify-between sm:justify-start gap-2 pt-1 xl:pt-0 border-t xl:border-t-0 border-slate-100 dark:border-navy-800">
-                <div className="flex items-center p-1 bg-slate-100/80 dark:bg-navy-950/80 rounded-xl sm:rounded-2xl border border-slate-200/60 dark:border-navy-800/60">
-                  <span className="font-black text-slate-500 dark:text-navy-400 text-[10px] uppercase tracking-wider px-1.5">Range</span>
+              <div className="flex flex-wrap items-center justify-between sm:justify-start gap-1.5 sm:gap-2 pt-1 xl:pt-0 border-t xl:border-t-0 border-slate-100 dark:border-navy-800">
+                <div className="flex items-center p-1 bg-slate-100/80 dark:bg-navy-950/80 rounded-xl sm:rounded-2xl border border-slate-200/60 dark:border-navy-800/60 shrink-0">
+                  <span className="font-black text-slate-500 dark:text-navy-400 text-[9px] sm:text-[10px] uppercase tracking-wider px-1 sm:px-1.5">Range</span>
                   <div className="flex items-center gap-1">
-                    <span className="text-[10px] font-mono text-slate-400">#</span>
+                    <span className="text-[9px] sm:text-[10px] font-mono text-slate-400">#</span>
                     <input
                       type="number"
                       min={1}
@@ -1091,10 +1091,10 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                       value={rangeFrom}
                       onChange={(e) => setRangeFrom(e.target.value)}
                       placeholder="1"
-                      className="w-10 sm:w-12 h-7 sm:h-8 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-lg text-center font-black text-xs text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-500"
+                      className="w-8 sm:w-12 h-7 sm:h-8 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-lg text-center font-black text-xs text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-500 px-0.5"
                     />
-                    <span className="text-[10px] text-slate-400 px-0.5">to</span>
-                    <span className="text-[10px] font-mono text-slate-400">#</span>
+                    <span className="text-[9px] sm:text-[10px] text-slate-400 px-0.5">to</span>
+                    <span className="text-[9px] sm:text-[10px] font-mono text-slate-400">#</span>
                     <input
                       type="number"
                       min={1}
@@ -1102,12 +1102,12 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                       value={rangeTo}
                       onChange={(e) => setRangeTo(e.target.value)}
                       placeholder="20"
-                      className="w-10 sm:w-12 h-7 sm:h-8 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-lg text-center font-black text-xs text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-500"
+                      className="w-8 sm:w-12 h-7 sm:h-8 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-lg text-center font-black text-xs text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-500 px-0.5"
                     />
                     <button
                       type="button"
                       onClick={() => selectRange(rangeFrom, rangeTo)}
-                      className="ml-1 px-2.5 h-7 sm:h-8 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-black text-xs transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-xs"
+                      className="ml-0.5 sm:ml-1 px-2 sm:px-2.5 h-7 sm:h-8 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-black text-xs transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-xs shrink-0"
                     >
                       <Check className="w-3 h-3 stroke-[3]" />
                       <span>Apply</span>
@@ -1116,9 +1116,9 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                 </div>
 
                 {selectedStudents.length > 0 && (
-                  <div className="flex items-center px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 shrink-0">
+                  <div className="flex items-center px-2 sm:px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 shrink-0 ml-auto sm:ml-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1.5"></span>
-                    <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider">
+                    <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider whitespace-nowrap">
                       {selectedStudents.length} Selected
                     </span>
                   </div>
