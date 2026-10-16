@@ -365,6 +365,10 @@ def run_migrations():
                         ADD COLUMN IF NOT EXISTS reporting_manager_id INTEGER;
                     """,
                     """
+                    ALTER TABLE departments
+                        ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
+                    """,
+                    """
                     CREATE TABLE IF NOT EXISTS user_passkeys (
                         id SERIAL PRIMARY KEY,
                         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -666,6 +670,16 @@ def run_migrations():
                         conn.execute(sqlalchemy.text(sql))
                         conn.commit()
                         print(f"[DB Migration] Added column: {col_name}")
+
+            # Check departments columns
+            result_dept = conn.execute(
+                sqlalchemy.text("PRAGMA table_info(departments)")
+            )
+            dept_cols = {row[1] for row in result_dept}
+            if dept_cols and "is_active" not in dept_cols:
+                conn.execute(sqlalchemy.text("ALTER TABLE departments ADD COLUMN is_active BOOLEAN DEFAULT 1"))
+                conn.commit()
+                print("[DB Migration] Added departments column: is_active")
 
             # Check hod_snapshots columns
             result_hod = conn.execute(

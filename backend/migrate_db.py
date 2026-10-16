@@ -68,6 +68,8 @@ def run_db_migrations():
             ("users", "webauthn_challenge", "ALTER TABLE users ADD COLUMN IF NOT EXISTS webauthn_challenge VARCHAR(255)"),
             ("users", "created_at", "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP"),
             ("users", "reporting_manager_id", "ALTER TABLE users ADD COLUMN IF NOT EXISTS reporting_manager_id INTEGER"),
+            # departments table
+            ("departments", "is_active", "ALTER TABLE departments ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE"),
             # report_jobs table
             ("report_jobs", "institution_id", "ALTER TABLE report_jobs ADD COLUMN IF NOT EXISTS institution_id VARCHAR(100)"),
             ("report_jobs", "department_id", "ALTER TABLE report_jobs ADD COLUMN IF NOT EXISTS department_id VARCHAR(100)"),
@@ -573,6 +575,17 @@ def run_db_migrations():
             cursor.execute("ALTER TABLE email_otp_records ADD COLUMN request_ip_hash VARCHAR(128);")
         except Exception:
             pass  # Already exists
+
+        # Ensure departments table has is_active in SQLite
+        try:
+            cursor.execute("PRAGMA table_info(departments)")
+            dept_cols = [info[1] for info in cursor.fetchall()]
+            if "is_active" not in dept_cols:
+                cursor.execute("ALTER TABLE departments ADD COLUMN is_active BOOLEAN DEFAULT 1")
+                conn.commit()
+                print("[DB Migration] Added is_active column to departments table in SQLite.")
+        except Exception as _dept_col_err:
+            print(f"[DB Migration] departments is_active migration note: {_dept_col_err}")
 
         # Ensure students table has people_id column in SQLite
         try:

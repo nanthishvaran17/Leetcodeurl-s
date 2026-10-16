@@ -34,6 +34,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Run Database Migrations
+        run: |
+          python -c "
+          from backend.migrate_db import run_db_migrations
+          from backend.database import run_migrations
+          run_db_migrations()
+          run_migrations()
+          print('✅ Database migrations successfully applied.')
+          "
+
       - name: Execute Sync Worker
         run: |
           python -c "
@@ -43,3 +53,4 @@ jobs:
           with SessionLocal() as db:
               asyncio.run(run_full_sync(db))
           "
+

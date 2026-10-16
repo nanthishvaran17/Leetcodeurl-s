@@ -722,6 +722,15 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 15, per
         except ValueError:
             pass
 
+    # Ensure schema migrations are up to date before querying
+    try:
+        from backend.migrate_db import run_db_migrations
+        from backend.database import run_migrations
+        run_db_migrations()
+        run_migrations()
+    except Exception as _mig_err:
+        logger.warning(f"[SYNC_ENGINE] Pre-flight schema migration check note: {_mig_err}")
+
     db = SessionLocal()
     try:
         query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
