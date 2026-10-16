@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 # Add project root to path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-from backend.database import SessionLocal
+from backend.database import SessionLocal, engine
 from backend.models import (
     Student,
     WeeklySession,
@@ -19,6 +19,15 @@ from backend.models import (
 )
 from backend.ranking import update_all_rankings_and_badges
 from backend.cache import cache
+
+# Configure sqlite timeout and WAL mode to prevent 'database is locked' errors
+if "sqlite" in str(engine.url):
+    with engine.connect() as conn:
+        try:
+            conn.exec_driver_sql("PRAGMA journal_mode=WAL;")
+            conn.exec_driver_sql("PRAGMA busy_timeout=60000;")
+        except Exception:
+            pass
 
 IST = ZoneInfo("Asia/Kolkata")
 
@@ -184,13 +193,32 @@ async def sync_all_student_ratings():
                                 if global_rank:
                                     wpr.contest_rank = global_rank
 
-                db.commit()
+                for attempt in range(5):
+                    try:
+                        db.commit()
+                        break
+                    except Exception as e:
+                        db.rollback()
+                        if attempt < 4 and "locked" in str(e).lower():
+                            await asyncio.sleep(0.5 * (attempt + 1))
+                            continue
+                        raise
+
                 done = min(b_idx + batch_size, total)
                 print(f"   ⏳ Processed {done}/{total} students...")
 
         print("\n🏆 Recalculating College Rank & Department Badges...")
         update_all_rankings_and_badges(db)
-        db.commit()
+        for attempt in range(5):
+            try:
+                db.commit()
+                break
+            except Exception as e:
+                db.rollback()
+                if attempt < 4 and "locked" in str(e).lower():
+                    await asyncio.sleep(0.5 * (attempt + 1))
+                    continue
+                raise
 
         try:
             cache.clear()
