@@ -1,7 +1,9 @@
 package org.nandhaengg.leetcodesync;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.ClipData;
+import android.content.ClipDescription;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -10,6 +12,8 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Base64;
 import androidx.core.content.FileProvider;
@@ -26,10 +30,19 @@ import java.util.List;
 @CapacitorPlugin(name = "DocumentOpener")
 public class DocumentOpenerPlugin extends Plugin {
 
+    private static long lastOpenTime = 0;
+    private static long lastShareTime = 0;
+
     public static boolean nativeOpenFile(Context context, String rawPath, String filename, String mimeType) {
-        if (context == null || rawPath == null || rawPath.trim().isEmpty()) {
+        if (context == null) {
             return false;
         }
+
+        long now = System.currentTimeMillis();
+        if (now - lastOpenTime < 1500) {
+            return true;
+        }
+        lastOpenTime = now;
 
         try {
             String lowerName = (filename != null) ? filename.toLowerCase() : "";
@@ -50,55 +63,85 @@ public class DocumentOpenerPlugin extends Plugin {
                     mimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
                 } else if (lowerName.endsWith(".ppt")) {
                     mimeType = "application/vnd.ms-powerpoint";
+                } else {
+                    mimeType = "application/octet-stream";
                 }
             }
 
-            Uri parsedUri = Uri.parse(rawPath);
-            Uri contentUri;
+            Uri contentUri = null;
+            File targetFile = null;
 
-            if (rawPath.startsWith("content://")) {
-                contentUri = parsedUri;
-            } else {
-                String cleanPath = parsedUri.getPath() != null ? parsedUri.getPath() : rawPath.replace("file://", "");
-                File targetFile = new File(cleanPath);
+            if (rawPath != null && !rawPath.trim().isEmpty()) {
+                if (rawPath.startsWith("content://")) {
+                    contentUri = Uri.parse(rawPath);
+                } else {
+                    String cleanPath = rawPath.replace("file://", "");
+                    targetFile = new File(cleanPath);
+                }
+            }
 
-                if (!targetFile.exists() || targetFile.length() == 0) {
-                    File cacheCandidate = new File(context.getCacheDir(), filename);
-                    if (cacheCandidate.exists() && cacheCandidate.length() > 0) {
-                        targetFile = cacheCandidate;
-                    } else {
-                        File filesCandidate = new File(context.getFilesDir(), filename);
-                        if (filesCandidate.exists() && filesCandidate.length() > 0) {
-                            targetFile = filesCandidate;
-                        } else if (context.getExternalCacheDir() != null) {
-                            File extCacheCandidate = new File(context.getExternalCacheDir(), filename);
-                            if (extCacheCandidate.exists() && extCacheCandidate.length() > 0) {
+            if (contentUri == null) {
+                if (targetFile == null || !targetFile.exists() || targetFile.length() == 0) {
+                    if (filename != null && !filename.trim().isEmpty()) {
+                        File cacheCandidate = new File(context.getCacheDir(), filename);
+                        if (cacheCandidate.exists() && cacheCandidate.length() > 0) {
+                            targetFile = cacheCandidate;
+                        } else {
+                            File filesCandidate = new File(context.getFilesDir(), filename);
+                            if (filesCandidate.exists() && filesCandidate.length() > 0) {
+                                targetFile = filesCandidate;
+                            } else if (context.getExternalCacheDir() != null) {
+                                File extCacheCandidate = new File(context.getExternalCacheDir(), filename);
+                                if (extCacheCandidate.exists() && extCacheCandidate.length() > 0) {
                                 targetFile = extCacheCandidate;
+                                }
                             }
                         }
                     }
                 }
 
-                if (!targetFile.exists() || targetFile.length() == 0) {
-                    return false;
+                if (targetFile != null && targetFile.exists() && targetFile.length() > 0) {
+                    String authority = context.getPackageName() + ".fileprovider";
+                    contentUri = FileProvider.getUriForFile(context, authority, targetFile);
                 }
+            }
 
-                String authority = context.getPackageName() + ".fileprovider";
-                contentUri = FileProvider.getUriForFile(context, authority, targetFile);
+            if (contentUri == null) {
+                return false;
             }
 
             Intent viewIntent = new Intent(Intent.ACTION_VIEW);
             viewIntent.setDataAndType(contentUri, mimeType);
             viewIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            viewIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            viewIntent.setClipData(ClipData.newRawUri(filename, contentUri));
+            ClipData clip = new ClipData(new ClipDescription(filename != null ? filename : "Document", new String[]{ mimeType }), new ClipData.Item(contentUri));
+            viewIntent.setClipData(clip);
 
-            Intent chooserIntent = Intent.createChooser(viewIntent, "Open " + filename);
+            // Grant permission to all apps that can view this document
+            try {
+                PackageManager pm = context.getPackageManager();
+                List<ResolveInfo> resInfoList = pm.queryIntentActivities(viewIntent, 0);
+                for (ResolveInfo resolveInfo : resInfoList) {
+                    String packageName = resolveInfo.activityInfo.packageName;
+                    context.grantUriPermission(packageName, contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                }
+            } catch (Exception ignored) {}
+
+            Intent chooserIntent = Intent.createChooser(viewIntent, "Open " + (filename != null ? filename : "Document"));
             chooserIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            chooserIntent.setClipData(ClipData.newRawUri(filename, contentUri));
+            chooserIntent.setClipData(clip);
 
-            context.startActivity(chooserIntent);
+            new Handler(Looper.getMainLooper()).post(() -> {
+                try {
+                    if (context instanceof Activity) {
+                        ((Activity) context).startActivity(chooserIntent);
+                    } else {
+                        chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(chooserIntent);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -107,9 +150,15 @@ public class DocumentOpenerPlugin extends Plugin {
     }
 
     public static boolean nativeShareFile(Context context, String rawPath, String filename, String mimeType) {
-        if (context == null || rawPath == null || rawPath.trim().isEmpty()) {
+        if (context == null) {
             return false;
         }
+
+        long now = System.currentTimeMillis();
+        if (now - lastShareTime < 1500) {
+            return true;
+        }
+        lastShareTime = now;
 
         try {
             String lowerName = (filename != null) ? filename.toLowerCase() : "";
@@ -130,28 +179,42 @@ public class DocumentOpenerPlugin extends Plugin {
                     mimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
                 } else if (lowerName.endsWith(".ppt")) {
                     mimeType = "application/vnd.ms-powerpoint";
+                } else {
+                    mimeType = "application/octet-stream";
                 }
             }
 
-            Uri parsedUri = Uri.parse(rawPath);
-            Uri contentUri;
+            Uri contentUri = null;
+            File targetFile = null;
+            String authority = context.getPackageName() + ".fileprovider";
+            String baseName = (filename != null && !filename.trim().isEmpty()) ? new File(filename).getName() : "";
 
-            if (rawPath.startsWith("content://")) {
-                contentUri = parsedUri;
-            } else {
-                String cleanPath = parsedUri.getPath() != null ? parsedUri.getPath() : rawPath.replace("file://", "");
-                File targetFile = new File(cleanPath);
+            // Prioritize local FileProvider cache copy: FileProvider grants permissions reliably to all receiving apps (WhatsApp, Gmail, etc.)
+            if (!baseName.isEmpty()) {
+                File cacheCandidate = new File(context.getCacheDir(), baseName);
+                if (cacheCandidate.exists() && cacheCandidate.length() > 0) {
+                    targetFile = cacheCandidate;
+                    contentUri = FileProvider.getUriForFile(context, authority, cacheCandidate);
+                }
+            }
 
-                if (!targetFile.exists() || targetFile.length() == 0) {
-                    File cacheCandidate = new File(context.getCacheDir(), filename);
-                    if (cacheCandidate.exists() && cacheCandidate.length() > 0) {
-                        targetFile = cacheCandidate;
+            if (contentUri == null) {
+                if (rawPath != null && !rawPath.trim().isEmpty()) {
+                    if (rawPath.startsWith("content://")) {
+                        contentUri = Uri.parse(rawPath);
                     } else {
-                        File filesCandidate = new File(context.getFilesDir(), filename);
+                        String cleanPath = rawPath.replace("file://", "");
+                        targetFile = new File(cleanPath);
+                    }
+                }
+
+                if (targetFile == null || !targetFile.exists() || targetFile.length() == 0) {
+                    if (!baseName.isEmpty()) {
+                        File filesCandidate = new File(context.getFilesDir(), baseName);
                         if (filesCandidate.exists() && filesCandidate.length() > 0) {
                             targetFile = filesCandidate;
                         } else if (context.getExternalCacheDir() != null) {
-                            File extCacheCandidate = new File(context.getExternalCacheDir(), filename);
+                            File extCacheCandidate = new File(context.getExternalCacheDir(), baseName);
                             if (extCacheCandidate.exists() && extCacheCandidate.length() > 0) {
                                 targetFile = extCacheCandidate;
                             }
@@ -159,29 +222,53 @@ public class DocumentOpenerPlugin extends Plugin {
                     }
                 }
 
-                if (!targetFile.exists() || targetFile.length() == 0) {
-                    return false;
+                if (contentUri == null && targetFile != null && targetFile.exists() && targetFile.length() > 0) {
+                    contentUri = FileProvider.getUriForFile(context, authority, targetFile);
                 }
+            }
 
-                String authority = context.getPackageName() + ".fileprovider";
-                contentUri = FileProvider.getUriForFile(context, authority, targetFile);
+            if (contentUri == null) {
+                return false;
             }
 
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.setType(mimeType);
             shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
-            if (filename != null && !filename.isEmpty()) {
-                shareIntent.putExtra(Intent.EXTRA_SUBJECT, filename);
+            if (!baseName.isEmpty()) {
+                shareIntent.putExtra(Intent.EXTRA_SUBJECT, baseName);
             }
             shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            shareIntent.setClipData(ClipData.newRawUri(filename, contentUri));
+            shareIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
-            Intent chooserIntent = Intent.createChooser(shareIntent, "Share " + (filename != null ? filename : "Document"));
+            ClipData clip = new ClipData(new ClipDescription(!baseName.isEmpty() ? baseName : "Document", new String[]{ mimeType }), new ClipData.Item(contentUri));
+            shareIntent.setClipData(clip);
+
+            // Grant permission to all apps that can handle this share intent (WhatsApp, Gmail, Telegram, Drive, etc.)
+            try {
+                PackageManager pm = context.getPackageManager();
+                List<ResolveInfo> resInfoList = pm.queryIntentActivities(shareIntent, 0);
+                for (ResolveInfo resolveInfo : resInfoList) {
+                    String packageName = resolveInfo.activityInfo.packageName;
+                    context.grantUriPermission(packageName, contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                }
+            } catch (Exception ignored) {}
+
+            Intent chooserIntent = Intent.createChooser(shareIntent, "Share " + (!baseName.isEmpty() ? baseName : "Document"));
             chooserIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            chooserIntent.setClipData(ClipData.newRawUri(filename, contentUri));
+            chooserIntent.setClipData(clip);
 
-            context.startActivity(chooserIntent);
+            new Handler(Looper.getMainLooper()).post(() -> {
+                try {
+                    if (context instanceof Activity) {
+                        ((Activity) context).startActivity(chooserIntent);
+                    } else {
+                        chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(chooserIntent);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -191,12 +278,12 @@ public class DocumentOpenerPlugin extends Plugin {
 
     @PluginMethod
     public void openDocument(PluginCall call) {
-        String rawPath = call.getString("path");
+        String rawPath = call.getString("path", "");
         String mimeType = call.getString("mimeType", "*/*");
         String filename = call.getString("filename", "document");
 
-        if (rawPath == null || rawPath.trim().isEmpty()) {
-            call.reject("PATH_REQUIRED", "Must provide a valid file path");
+        if ((rawPath == null || rawPath.trim().isEmpty()) && (filename == null || filename.trim().isEmpty())) {
+            call.reject("PATH_REQUIRED", "Must provide a valid file path or filename");
             return;
         }
 
@@ -210,12 +297,12 @@ public class DocumentOpenerPlugin extends Plugin {
 
     @PluginMethod
     public void shareDocument(PluginCall call) {
-        String rawPath = call.getString("path");
+        String rawPath = call.getString("path", "");
         String mimeType = call.getString("mimeType", "*/*");
         String filename = call.getString("filename", "document");
 
-        if (rawPath == null || rawPath.trim().isEmpty()) {
-            call.reject("PATH_REQUIRED", "Must provide a valid file path");
+        if ((rawPath == null || rawPath.trim().isEmpty()) && (filename == null || filename.trim().isEmpty())) {
+            call.reject("PATH_REQUIRED", "Must provide a valid file path or filename");
             return;
         }
 
