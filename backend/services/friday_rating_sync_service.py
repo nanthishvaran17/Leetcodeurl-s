@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 IST = ZoneInfo("Asia/Kolkata")
 
 CONTEST_RATING_GQL = """
-query userContestRatingProfile($username: String!) {
+query userContestAndProfile($username: String!) {
   userContestRanking(username: $username) {
     attendedContestsCount
     rating
@@ -63,6 +63,14 @@ query userContestRatingProfile($username: String!) {
     contest {
       title
       startTime
+    }
+  }
+  matchedUser(username: $username) {
+    submitStatsGlobal {
+      acSubmissionNum {
+        difficulty
+        count
+      }
     }
   }
 }
@@ -134,6 +142,8 @@ async def run_friday_rating_sync():
 
                     cr = data.get("userContestRanking") or {}
                     hist = data.get("userContestRankingHistory") or []
+                    matched = data.get("matchedUser") or {}
+                    ac_subs = (matched.get("submitStatsGlobal") or {}).get("acSubmissionNum") or []
 
                     official_rating = float(cr.get("rating") or 0.0) if cr.get("rating") else None
                     global_rank = int(cr.get("globalRanking") or 0) if cr.get("globalRanking") else None
@@ -144,10 +154,27 @@ async def run_friday_rating_sync():
                         stats = LeetCodeProfileStats(student_id=s.id)
                         db.add(stats)
 
+                    # Update solved problem metrics if available
+                    for ac in ac_subs:
+                        diff = (ac.get("difficulty") or "").lower()
+                        cnt = int(ac.get("count") or 0)
+                        if diff == "all":
+                            stats.total_solved = cnt
+                        elif diff == "easy":
+                            stats.easy_solved = cnt
+                        elif diff == "medium":
+                            stats.medium_solved = cnt
+                        elif diff == "hard":
+                            stats.hard_solved = cnt
+
                     if official_rating and official_rating > 0:
                         prev_rating = stats.contest_rating or 0.0
                         stats.contest_rating = round(official_rating, 1)
                         stats.contest_global_ranking = global_rank
+                        stats.contest_sync_status = "ok"
+                        stats.last_verified_at = datetime.datetime.now(datetime.timezone.utc)
+                    else:
+                        stats.contest_sync_status = "ok"
                         stats.last_verified_at = datetime.datetime.now(datetime.timezone.utc)
 
                     # 2. Update WeeklyPublicResult for recent sessions
