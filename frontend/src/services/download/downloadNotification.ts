@@ -213,8 +213,16 @@ class DownloadNotificationService {
    * NEVER SHOW START NOTIFICATION.
    * Start notifications are completely disabled per production specification.
    */
-  async notifyStart(_filename: string, _mimeType?: string): Promise<void> {
-    // Intentionally no-op: notifications must only appear after download completes.
+  /**
+   * Zero-latency instant click feedback toast so user sees response the very millisecond they click.
+   */
+  async notifyStart(filename: string, _mimeType?: string): Promise<void> {
+    if (typeof window !== 'undefined' && (window as any).__nec_notify__) {
+      (window as any).__nec_notify__.info('Downloading report...', filename, {
+        category: 'REPORTS',
+        duration: 2500,
+      });
+    }
   }
 
   /**
@@ -236,7 +244,15 @@ class DownloadNotificationService {
     const body = filename;
     const { actionTypeId, openTitle } = getReportActionConfig(filename);
 
-    // 1. Native Mobile (Capacitor LocalNotifications)
+    // Show immediate in-app toast popup (zero millisecond latency)
+    if (typeof window !== 'undefined' && (window as any).__nec_notify__) {
+      (window as any).__nec_notify__.success('Report downloaded', filename, {
+        category: 'REPORTS',
+        duration: 4000,
+      });
+    }
+
+    // 1. Native Mobile (Capacitor LocalNotifications) - Instant synchronous dispatch without AlarmManager delay
     if (isNativeMobile()) {
       try {
         await LocalNotifications.schedule({
@@ -260,11 +276,10 @@ class DownloadNotificationService {
                 createdAt: Date.now(),
                 reportId: reportId,
               },
-              schedule: { at: new Date(Date.now() + 50) },
             },
           ],
         });
-        console.log(`[DownloadNotification] Native completion notification posted: id=${notifId} file="${filename}" actionType="${actionTypeId}" ("${openTitle}")`);
+        console.log(`[DownloadNotification] Native completion notification posted immediately: id=${notifId} file="${filename}" actionType="${actionTypeId}" ("${openTitle}")`);
         return;
       } catch (err) {
         console.warn('[DownloadNotification] Native local notification error:', err);
@@ -338,7 +353,6 @@ class DownloadNotificationService {
               smallIcon: 'ic_stat_notification',
               iconColor: '#ef4444',
               extra: { type: 'DOWNLOAD_FAILED', filename },
-              schedule: { at: new Date(Date.now() + 50) },
             },
           ],
         });

@@ -66,6 +66,7 @@ class DownloadManager {
     };
 
     this.updateState(state, options.onStateChange);
+    downloadNotification.notifyStart(filename, mimeType);
 
     try {
       // 2. AUTHENTICATION HEADERS (Supports JWT in localStorage and Firebase Auth Tokens)
@@ -215,6 +216,7 @@ class DownloadManager {
     };
 
     this.updateState(state, options.onStateChange);
+    downloadNotification.notifyStart(filename, mimeType);
 
     try {
       const authHeaders = await getAuthHeaders();
@@ -380,6 +382,7 @@ class DownloadManager {
     };
 
     this.updateState(state);
+    downloadNotification.notifyStart(safeFilename, effectiveMime);
 
     try {
       const validation = await validateFileBlob(blob, effectiveMime);
