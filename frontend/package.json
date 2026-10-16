@@ -1,7 +1,7 @@
 {
   "name": "college-leetcode-tracker-frontend",
   "private": true,
-  "version": "2.8.7",
+  "version": "2.8.8",
   "description": "Nandha Intelligence LeetCode Tracker Desktop Application",
   "author": "Nandha Engineering College",
   "main": "electron/main.cjs",
@@ -16,7 +16,7 @@
     "android": "npx cap open android",
     "sync": "npx cap sync android",
     "cap:sync": "npm run build && npx cap sync android",
-    "build:apk": "npm run build && npx cap sync android && cd android && .\\gradlew.bat assembleDebug && cd .. && node -e \"const fs=require('fs'); fs.copyFileSync('android/app/build/outputs/apk/debug/app-debug.apk', 'public/nandha-leetcode-tracker-latest.apk'); fs.copyFileSync('android/app/build/outputs/apk/debug/app-debug.apk', 'public/nandha-leetcode-tracker-v2.8.7.apk'); fs.copyFileSync('android/app/build/outputs/apk/debug/app-debug.apk', '../Nandha_LeetCode_Intelligence_v2.8.7_latest.apk'); fs.copyFileSync('android/app/build/outputs/apk/debug/app-debug.apk', '../Nandha_LeetCode_Intelligence_v2_latest.apk'); console.log('APK successfully copied to all destinations');\""
+    "build:apk": "npm run build && npx cap sync android && cd android && .\\gradlew.bat assembleDebug && cd .. && node -e \"const fs=require('fs'); fs.copyFileSync('android/app/build/outputs/apk/debug/app-debug.apk', 'public/nandha-leetcode-tracker-latest.apk'); fs.copyFileSync('android/app/build/outputs/apk/debug/app-debug.apk', 'public/nandha-leetcode-tracker-v2.8.8.apk'); fs.copyFileSync('android/app/build/outputs/apk/debug/app-debug.apk', '../Nandha_LeetCode_Intelligence_v2.8.8_latest.apk'); fs.copyFileSync('android/app/build/outputs/apk/debug/app-debug.apk', '../Nandha_LeetCode_Intelligence_v2_latest.apk'); console.log('APK successfully copied to all destinations');\""
   },
   "dependencies": {
     "@capacitor/browser": "^7.0.5",
