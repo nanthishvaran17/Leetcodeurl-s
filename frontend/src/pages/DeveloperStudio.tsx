@@ -34,10 +34,19 @@ export const DeveloperStudio: React.FC<DeveloperStudioProps> = ({ onClose }) => 
       setShowMobileSidebar(true);
       return;
     }
-    if (window.confirm("Do you want to log out of Developer Studio and return to Admin Login?")) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('access_token');
-      window.location.href = '/admin';
+    try {
+      sessionStorage.removeItem('admin_login_portal');
+      localStorage.removeItem('admin_login_portal');
+      if (window.location.hash.includes('dev-studio')) {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    } catch {
+      // ignore
+    }
+    if (onClose) {
+      onClose();
+    } else {
+      window.location.href = '/';
     }
   };
 
@@ -49,19 +58,17 @@ export const DeveloperStudio: React.FC<DeveloperStudioProps> = ({ onClose }) => 
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedFile]);
+  }, [selectedFile, onClose]);
 
-  // Intercept mobile back gestures/buttons so it never escapes to the dashboard
+  // Clean popstate handler when viewing files
   useEffect(() => {
     const handlePopState = () => {
       if (selectedFile) {
         setSelectedFile(null);
         setShowMobileSidebar(true);
       }
-      window.history.pushState(null, '', '#/dev-studio');
     };
 
-    window.history.pushState(null, '', '#/dev-studio');
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [selectedFile]);

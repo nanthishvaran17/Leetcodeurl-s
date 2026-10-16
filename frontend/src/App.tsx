@@ -152,7 +152,13 @@ export const App: React.FC = () => {
     return (
       <ErrorBoundary>
         <Suspense fallback={<PageSkeleton />}>
-          <DeveloperStudio onClose={() => { window.location.href = '/dashboard'; }} />
+          <DeveloperStudio onClose={() => {
+            try {
+              sessionStorage.removeItem('admin_login_portal');
+              localStorage.removeItem('admin_login_portal');
+            } catch {}
+            window.location.href = '/';
+          }} />
         </Suspense>
       </ErrorBoundary>
     );
@@ -961,7 +967,14 @@ export const App: React.FC = () => {
       <ErrorBoundary>
         <Suspense fallback={<PageSkeleton />}>
           <DeveloperStudio onClose={() => {
-            window.location.href = '/admin';
+            try {
+              sessionStorage.removeItem('admin_login_portal');
+              localStorage.removeItem('admin_login_portal');
+              if (window.location.hash.includes('dev-studio')) {
+                window.history.replaceState(null, '', window.location.pathname);
+              }
+            } catch {}
+            handleTabChange(isAuthenticated ? 'dashboard' : 'landing');
           }} />
         </Suspense>
       </ErrorBoundary>
