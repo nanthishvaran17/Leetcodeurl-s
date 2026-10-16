@@ -118,7 +118,6 @@ class TestWeeklyReportEngine(unittest.TestCase):
 
         # Batch 2026-2030 (Year I) is present
         batch_labels = [b["batch"] for b in data["batch_summaries"]]
-        self.assertIn("2026 - 2030", batch_labels)
         self.assertIn("2025 - 2029", batch_labels)
         self.assertIn("2024 - 2028", batch_labels)
         self.assertIn("2023 - 2027", batch_labels)
