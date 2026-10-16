@@ -509,6 +509,7 @@ export const AccountProfileSettings: React.FC = () => {
   const [isFaceModalOpen, setIsFaceModalOpen] = useState<boolean>(false);
   const [faceModalMode, setFaceModalMode] = useState<'enroll' | 'test'>('enroll');
   const [isRemovingFace, setIsRemovingFace] = useState<boolean>(false);
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState<boolean>(false);
 
   const fetchFaceStatus = async () => {
     try {
@@ -527,13 +528,13 @@ export const AccountProfileSettings: React.FC = () => {
   }, []);
 
   const handleRemoveFace = async () => {
-    if (!window.confirm('Are you sure you want to deactivate Face ID for your account?')) return;
     setIsRemovingFace(true);
     try {
       const res = await api.delete('/auth/face/remove');
       if (res.data?.success) {
         setFaceIdEnabled(false);
         setFaceEnrolledAt(null);
+        setShowDeactivateConfirm(false);
         notify.success('Face ID has been deactivated.', '', { category: 'ADMIN' });
       }
     } catch (err: any) {
@@ -3090,7 +3091,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         <button
                           type="button"
                           disabled={isRemovingFace}
-                          onClick={handleRemoveFace}
+                          onClick={() => setShowDeactivateConfirm(true)}
                           className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:border-rose-800 dark:text-rose-300 text-xs font-black transition-all cursor-pointer inline-flex items-center gap-1 shrink-0"
                         >
                           {isRemovingFace ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
@@ -4346,6 +4347,60 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <span>Apply Crop</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </GlobalModalBackdrop>
+      )}
+
+      {/* Centered Deactivate Face ID Confirmation Modal */}
+      {showDeactivateConfirm && (
+        <GlobalModalBackdrop
+          isOpen={showDeactivateConfirm}
+          onClose={() => !isRemovingFace && setShowDeactivateConfirm(false)}
+          className="flex items-center justify-center p-4 z-[9999]"
+        >
+          <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 text-center animate-in fade-in zoom-in-95 duration-200">
+            {/* Trash / Red Alert Icon */}
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 flex items-center justify-center text-rose-600 dark:text-rose-400 shadow-sm">
+              <Trash2 className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="text-base font-black text-slate-900 dark:text-white">
+                Deactivate Face ID?
+              </h3>
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
+                Are you sure you want to remove Face ID from your account? You will need to re-scan your face if you wish to use it again.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                disabled={isRemovingFace}
+                onClick={() => setShowDeactivateConfirm(false)}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isRemovingFace}
+                onClick={handleRemoveFace}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-md shadow-rose-600/20 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                {isRemovingFace ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Removing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Deactivate</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </GlobalModalBackdrop>

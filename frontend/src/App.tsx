@@ -798,7 +798,7 @@ export const App: React.FC = () => {
     if (['staff', 'faculty', 'professor', 'faculty mentor', 'faculty_mentor', 'staff mentor', 'staff_mentor'].includes(roleClean)) {
       return <StaffDashboardView />;
     }
-    if (['hod', 'head of department', 'head_of_department', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean)) {
+    if (roleClean.includes('hod') || ['head of department', 'head_of_department', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean)) {
       return <HODCommandCenter />;
     }
     return (
@@ -859,7 +859,8 @@ export const App: React.FC = () => {
       return isAdminRole && isAdminOtpVerified();
     }
 
-    const allowed = ROLE_PERMISSIONS[roleClean] || ALL_ACADEMIC_TABS;
+    const isHodRole = roleClean.includes('hod') || ['head of department', 'head_of_department', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
+    const allowed = ROLE_PERMISSIONS[roleClean] || (isHodRole ? ROLE_PERMISSIONS['hod'] : ALL_ACADEMIC_TABS);
     return allowed.includes(normalized) || allowed.includes(tab);
   }, [isAuthenticated, roleClean, ROLE_PERMISSIONS, ALL_ACADEMIC_TABS]);
 

@@ -149,8 +149,17 @@ def get_command_center_summary(
     is_global_admin = role_clean in ["admin", "super_admin", "super admin", "administrator", "principal", "management", "director"]
     
     # Strictly enforce server-side department isolation for non-admin HODs
-    if current_user and not is_global_admin and role_clean in ["hod", "head of department"] and current_user.department_id:
-        dept_id = current_user.department_id  # type: ignore
+    is_hod = "hod" in role_clean or "head of department" in role_clean or role_clean in ["department hod", "department_hod", "placement coordinator"]
+    if current_user and not is_global_admin and is_hod:
+        from backend.services.authorization_service import get_hod_authorized_department_ids
+        auth_dept_ids = get_hod_authorized_department_ids(db, current_user)
+        if auth_dept_ids:
+            if dept_id and dept_id in auth_dept_ids:
+                pass
+            else:
+                dept_id = auth_dept_ids[0] if len(auth_dept_ids) == 1 else (dept_id if (dept_id and dept_id in auth_dept_ids) else None)
+        elif current_user.department_id:
+            dept_id = current_user.department_id
 
     scope_key = f"global" if is_global_admin else f"user_{uid}"
     cache_key = f"cmd_center_summary:{scope_key}:d{dept_id or 'all'}:s{staff_id or 'all'}:y{year_level or 'all'}:sec{section_id or 'all'}"
@@ -180,7 +189,13 @@ def get_command_center_summary(
         kpi_summary = calculate_department_kpi_summary(
             db, current_user, dept_id=dept_id, staff_id=staff_id, year_level=year_level, section_id=section_id
         )
-        action_items = get_todays_action_items(db, current_user, dept_id=dept_id)
+        action_items = get_todays_action_items(
+            db, current_user,
+            dept_id=dept_id,
+            staff_id=staff_id,
+            year_level=year_level,
+            section_id=section_id
+        )
         heatmap_matrix = get_year_section_heatmap(db, current_user, dept_id=dept_id)
 
         # Department metadata
@@ -460,7 +475,7 @@ def get_students(
         q = q.filter(Student.section.has(Section.name.ilike(section)))
         
     if status_filter and status_filter != "ALL":
-        if status_filter == "INACTIVE":
+        if status_filter in ["INACTIVE", "ZERO_SOLVED", "ZERO", "ZERO_SOLVED_PENDING"]:
             q = q.outerjoin(LeetCodeProfileStats).filter(or_(LeetCodeProfileStats.id == None, LeetCodeProfileStats.total_solved == 0))
         elif status_filter == "ACTIVE":
             q = q.join(LeetCodeProfileStats).filter(LeetCodeProfileStats.total_solved > 0)

@@ -625,12 +625,12 @@ export const StudentDataIssuesPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Right Hero Action Buttons */}
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
+          {/* Right Hero Action Buttons - Stacked on Mobile, Inline on Desktop */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto shrink-0">
             <button
               onClick={handleManualRefresh}
               disabled={refreshing}
-              className="flex items-center space-x-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl text-xs font-bold border border-slate-700 shadow-md transition-all cursor-pointer"
+              className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl text-xs font-bold border border-slate-700 shadow-md transition-all cursor-pointer w-full sm:w-auto active:scale-98"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
               <span>{refreshing ? 'Refreshing...' : 'Refresh Ledger'}</span>
@@ -639,10 +639,10 @@ export const StudentDataIssuesPage: React.FC = () => {
             <button
               onClick={handleDownloadExcel}
               disabled={isExporting || students.length === 0}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-600/30 transition-all cursor-pointer transform hover:scale-[1.02]"
+              className="flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-600/30 transition-all cursor-pointer transform hover:scale-[1.02] active:scale-98 w-full sm:w-auto"
             >
               <FileSpreadsheet className="w-4 h-4" />
-              <span>{isExporting ? 'Exporting...' : 'Download Excel (50)'}</span>
+              <span>{isExporting ? 'Exporting...' : `Download Excel (${students.length})`}</span>
             </button>
           </div>
         </div>

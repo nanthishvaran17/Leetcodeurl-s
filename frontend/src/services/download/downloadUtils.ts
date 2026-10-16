@@ -128,9 +128,21 @@ export interface DocumentOpenerPluginType {
   shareDocument(options: { path: string; filename: string; mimeType?: string }): Promise<void>;
   fileExists(options: { path: string; filename: string }): Promise<{ exists: boolean; size?: number }>;
   saveToDownloads(options: { data: string; filename: string; mimeType?: string }): Promise<{ success: boolean; path: string; fileUri: string; publicUri: string }>;
+  openAppSettings(): Promise<{ success: boolean }>;
 }
 
 export const DocumentOpener = registerPlugin<DocumentOpenerPluginType>('DocumentOpener');
+
+/** Launch device app details / permission settings page */
+export async function openNativeAppSettings(): Promise<void> {
+  if (isNativeMobile()) {
+    try {
+      await DocumentOpener.openAppSettings();
+    } catch (e) {
+      console.warn('Failed to open app settings:', e);
+    }
+  }
+}
 
 /** Native Android file open helper via DocumentOpener (Excel/Sheets) with fallback to Share */
 export async function openDownloadedDocument(

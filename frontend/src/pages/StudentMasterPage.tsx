@@ -586,39 +586,30 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         </div>
 
         {/* Quick Horizontal Department Scroll Chips (< 768px) */}
-        {globalDepts && globalDepts.length > 0 && (
-          <div className="md:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 touch-pan-x">
+        <div className="md:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 touch-pan-x">
+          <button
+            type="button"
+            onClick={() => filters.setDepartment('ALL')}
+            className={`px-3 py-1 rounded-lg text-[11px] font-black whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
+              filters.department === 'ALL'
+                ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-200'
+            }`}
+          >
+            All Depts
+          </button>
+          {filters.department && filters.department !== 'ALL' && (
             <button
               type="button"
               onClick={() => filters.setDepartment('ALL')}
-              className={`px-3 py-1 rounded-lg text-[11px] font-black whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
-                filters.department === 'ALL'
-                  ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-                  : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-200'
-              }`}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap bg-brand-600 text-white border border-brand-600 shadow-sm flex items-center gap-1 cursor-pointer"
+              title="Clear department filter"
             >
-              All Depts
+              <span>{filters.department}</span>
+              <span className="text-[10px] ml-0.5 opacity-80">✕</span>
             </button>
-            {globalDepts.map((d: any) => {
-              const code = d.code || d.name;
-              const isSelected = String(filters.department) === String(d.id) || String(filters.department) === code;
-              return (
-                <button
-                  key={d.id || code}
-                  type="button"
-                  onClick={() => filters.setDepartment(isSelected ? 'ALL' : String(code || d.id))}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
-                    isSelected
-                      ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-                      : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-200'
-                  }`}
-                >
-                  {code}
-                </button>
-              );
-            })}
-          </div>
-        )}
+          )}
+        </div>
 
         <div className="flex items-center justify-between px-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
           {filters.isFilteringActive ? (
@@ -647,7 +638,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       <MobileFilterDrawer
         isOpen={showMobileFilters}
         onClose={() => setShowMobileFilters(false)}
-        departments={globalDepts}
+        departments={departments}
       />
 
       {isTableLoading ? (

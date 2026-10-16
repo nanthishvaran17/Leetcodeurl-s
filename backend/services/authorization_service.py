@@ -130,7 +130,7 @@ def get_authorized_department_scope(db: Session, user: Optional[User]) -> Dict[s
     if role in _GLOBAL_ACCESS_ROLES:
         return {"role": role, "department_ids": [], "department_codes": [], "is_global_access": True}
 
-    if role in _HOD_ROLES:
+    if role in _HOD_ROLES or "hod" in role or "head of department" in role:
         dept_ids = get_hod_authorized_department_ids(db, user)
         dept_codes = get_hod_authorized_department_codes(db, user)
         return {
@@ -163,7 +163,7 @@ def get_authorized_student_ids(db: Session, user: Optional[User]) -> Optional[Li
         return None  # None = unrestricted
 
     # 2. HOD → department-scoped via HODDepartmentAllocation (multi-dept aware)
-    if role in _HOD_ROLES:
+    if role in _HOD_ROLES or "hod" in role or "head of department" in role:
         dept_ids = get_hod_authorized_department_ids(db, user)
         if not dept_ids:
             real_dept_ids = [d.id for d in db.query(Department).all() if d.code and "TEST" not in d.code.upper()]

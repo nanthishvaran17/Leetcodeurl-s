@@ -14,6 +14,7 @@ import { IDCardGenerator } from '../components/IDCardGenerator';
 import { StudentCodingProfileView } from '../components/StudentCodingProfileView';
 import { GlobalFilter } from '../components/GlobalFilter';
 import { useKeyboardContext } from '../context/KeyboardContext';
+import { useDepartments } from '../contexts/DepartmentContext';
 
 // Priority Config (Red=Critical, Orange=High, Amber=Medium, Green=Low)
 const PRIORITY_CONFIG: Record<string, { tw: string; dot: string; icon: React.ReactNode }> = {
@@ -72,7 +73,7 @@ const PriorityBadge: React.FC<{ priority: string; score: number; reason: string 
 const CustomSelect: React.FC<{
   value: string;
   onChange: (v: string) => void;
-  options: { label: string; value: string; icon?: React.ReactNode; badge?: string; badgeColor?: string }[];
+  options: { label: string; value: string; shortLabel?: string; icon?: React.ReactNode; badge?: string; badgeColor?: string }[];
   placeholder: string;
   icon?: React.ReactNode;
   alignRight?: boolean;
@@ -114,7 +115,7 @@ const CustomSelect: React.FC<{
                 {selected.badge}
               </span>
             )}
-            <span className="truncate text-left text-[11px] sm:text-sm whitespace-nowrap">{selected ? selected.label : placeholder}</span>
+            <span className="truncate text-left text-[11px] sm:text-sm whitespace-nowrap">{selected ? (selected.shortLabel || selected.label) : placeholder}</span>
           </div>
         </div>
         <ChevronDown size={14} className={`transition-transform duration-300 shrink-0 ${open ? 'rotate-180 text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
@@ -868,16 +869,33 @@ export const FacultyActionCenter: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState('');
 
+  const { departments, allDepartments, isGlobalAccess } = useDepartments();
+
   // Filters
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [filterPriority, setFilterPriority] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterDept, setFilterDept] = useState('');
   const [filterYear, setFilterYear] = useState('');
   const [search, setSearch] = useState('');
   const [filterOverdue, setFilterOverdue] = useState(false);
   const [filterEscalated, setFilterEscalated] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768 ? 10 : 50);
+
+  const deptOptions = React.useMemo(() => {
+    const list = (isGlobalAccess && allDepartments.length > 0) ? allDepartments : departments;
+    return list
+      .filter(d => Boolean(d.id && !d.name.toLowerCase().includes('test') && !d.code.toLowerCase().includes('test')))
+      .map(d => ({
+        label: d.name,
+        value: String(d.id),
+        shortLabel: d.code,
+        icon: <Building2 size={14} />,
+        badge: d.code,
+        badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'
+      }));
+  }, [departments, allDepartments, isGlobalAccess]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -946,12 +964,14 @@ export const FacultyActionCenter: React.FC = () => {
       const params: Record<string, any> = { page, page_size: pageSize, sort_by: sortBy, sort_dir: sortDir };
       if (filterPriority) params.priority = filterPriority;
       if (filterStatus) params.status = filterStatus;
+      if (filterDept) params.dept_id = Number(filterDept);
       if (filterYear) params.year_level = filterYear;
       if (search.trim()) params.search = search.trim();
       if (filterOverdue) params.is_overdue = true;
       if (filterEscalated) params.is_escalated = true;
 
       const kpiParams: any = {};
+      if (filterDept) kpiParams.dept_id = Number(filterDept);
       if (filterYear) kpiParams.year_level = filterYear;
       if (search.trim()) kpiParams.search = search.trim();
 
@@ -968,7 +988,7 @@ export const FacultyActionCenter: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, sortBy, sortDir, filterPriority, filterStatus, filterYear, search, filterOverdue, filterEscalated]);
+  }, [page, pageSize, sortBy, sortDir, filterPriority, filterStatus, filterDept, filterYear, search, filterOverdue, filterEscalated]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -1012,7 +1032,7 @@ export const FacultyActionCenter: React.FC = () => {
       : null;
 
   const totalPages = Math.ceil(filteredCount / pageSize);
-  const hasFilters = !!(filterPriority || filterStatus || filterYear || search);
+  const hasFilters = !!(filterPriority || filterStatus || filterDept || filterYear || search);
 
   const thCls = "text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-left py-3.5 px-3.5 first:pl-5";
   const tdCls = "py-3.5 px-3.5 text-sm first:pl-5";
@@ -1123,7 +1143,7 @@ export const FacultyActionCenter: React.FC = () => {
               setPage(1); 
             }}
             placeholder="All Priorities"
-            icon={<Building2 size={15} />}
+            icon={<ShieldAlert size={15} />}
             options={[
               { label: 'Critical', value: 'Critical', icon: <ShieldAlert size={14} />, badge: 'P1', badgeColor: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' },
               { label: 'High', value: 'High', icon: <AlertTriangle size={14} />, badge: 'P2', badgeColor: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300' },
@@ -1156,7 +1176,18 @@ export const FacultyActionCenter: React.FC = () => {
           />
           </div>
 
-          <div className="col-span-2 min-w-0 w-1/2 justify-self-center md:col-auto md:w-auto md:justify-self-auto shrink-0">
+          <div className="col-span-1 min-w-0 w-full md:w-auto shrink-0">
+          <CustomSelect
+            value={filterDept}
+            onChange={v => { setFilterDept(v); setPage(1); }}
+            placeholder="All Departments"
+            icon={<Building2 size={15} />}
+            alignRight={true}
+            options={deptOptions}
+          />
+          </div>
+
+          <div className="col-span-1 min-w-0 w-full md:w-auto shrink-0">
           <CustomSelect
             value={filterYear}
             onChange={v => { setFilterYear(v); setPage(1); }}
@@ -1184,7 +1215,7 @@ export const FacultyActionCenter: React.FC = () => {
               )}
             </span>
             {(hasFilters || kpiFilter) && (
-               <button onClick={() => { setFilterPriority(''); setFilterStatus(''); setFilterYear(''); setSearch(''); setFilterOverdue(false); setFilterEscalated(false); setKpiFilter(''); setPage(1); }}
+               <button onClick={() => { setFilterPriority(''); setFilterStatus(''); setFilterDept(''); setFilterYear(''); setSearch(''); setFilterOverdue(false); setFilterEscalated(false); setKpiFilter(''); setPage(1); }}
                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition flex items-center gap-0.5 ml-1 shrink-0">
                  <X size={14} /> Clear
                </button>
@@ -1294,6 +1325,7 @@ export const FacultyActionCenter: React.FC = () => {
                   onClick={() => {
                     setFilterPriority('');
                     setFilterStatus('');
+                    setFilterDept('');
                     setFilterYear('');
                     setSearch('');
                     setKpiFilter(null);

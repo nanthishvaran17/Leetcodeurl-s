@@ -257,7 +257,7 @@ export interface UpdateActionPayload {
   reason?: string;
 }
 
-export const getFacultyActionKPIs = async (params?: { dept_id?: number, year_level?: string, search?: string }): Promise<FacultyActionKPIs> => {
+export const getFacultyActionKPIs = async (params?: { dept_id?: number; department_id?: number; year_level?: string; search?: string }): Promise<FacultyActionKPIs> => {
   const response = await api.get('/intelligence/faculty/actions/kpis', { params });
   return response.data;
 };
@@ -266,6 +266,7 @@ export const getFacultyActionsList = async (params: {
   priority?: string;
   status?: string;
   dept_id?: number;
+  department_id?: number;
   year_level?: string;
   search?: string;
   sort_by?: string;

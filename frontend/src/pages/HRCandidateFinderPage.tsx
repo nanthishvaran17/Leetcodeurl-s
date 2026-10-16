@@ -1528,7 +1528,7 @@ export const HRCandidateFinderPage: React.FC = () => {
   };
 
   const renderAcademicSection = () => (
-    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${showSectionFilter ? 'xl:grid-cols-7' : 'xl:grid-cols-6'} gap-3 pt-2 pb-1`}>
+    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${showSectionFilter ? 'xl:grid-cols-6' : 'xl:grid-cols-5'} gap-3 pt-2 pb-1`}>
       <div>
         <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Department</label>
         <CustomSelectPopover
@@ -1554,15 +1554,6 @@ export const HRCandidateFinderPage: React.FC = () => {
           onChange={val => setFilters(p => ({ ...p, batch: val }))}
           options={batchOptions}
           icon={<Target className="w-4 h-4 text-indigo-500" />}
-        />
-      </div>
-      <div>
-        <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Academic Year</label>
-        <CustomSelectPopover
-          value={filters.year_level}
-          onChange={val => setFilters(p => ({ ...p, year_level: val }))}
-          options={yearOptions}
-          icon={<CheckCircle2 className="w-4 h-4 text-cyan-500" />}
         />
       </div>
       {showSectionFilter && (
@@ -1853,7 +1844,6 @@ export const HRCandidateFinderPage: React.FC = () => {
         filters.department !== "all",
         filters.degree !== "all",
         filters.batch !== "all",
-        filters.year_level !== "all",
         filters.section !== "all",
         filters.accommodation !== "all",
         filters.twelfth_cutoff.active && filters.twelfth_cutoff.val1 > 0,

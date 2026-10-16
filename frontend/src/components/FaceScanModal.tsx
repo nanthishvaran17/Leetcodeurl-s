@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, X, CheckCircle2, AlertCircle, RefreshCw, ShieldCheck, SwitchCamera, Sparkles } from 'lucide-react';
+import { Camera, X, CheckCircle2, AlertCircle, RefreshCw, ShieldCheck, SwitchCamera } from 'lucide-react';
 import { extractFaceDescriptor, FaceExtractionResult } from '../utils/faceBiometrics';
 import api from '../services/api';
+import { isNativeMobile, openNativeAppSettings } from '../services/download/downloadUtils';
 
 interface FaceScanModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export const FaceScanModal: React.FC<FaceScanModalProps> = ({
 
   const [cameraState, setCameraState] = useState<'requesting' | 'active' | 'error'>('requesting');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [isPermissionDenied, setIsPermissionDenied] = useState<boolean>(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [feedback, setFeedback] = useState<string>('Align face inside oval frame');
   const [scanProgress, setScanProgress] = useState<number>(0);
@@ -49,6 +51,7 @@ export const FaceScanModal: React.FC<FaceScanModalProps> = ({
   const resetState = () => {
     setCameraState('requesting');
     setErrorMessage('');
+    setIsPermissionDenied(false);
     setFeedback('Align face inside oval frame');
     setScanProgress(0);
     setIsProcessing(false);
@@ -61,19 +64,30 @@ export const FaceScanModal: React.FC<FaceScanModalProps> = ({
     stopCamera();
     setCameraState('requesting');
     setErrorMessage('');
+    setIsPermissionDenied(false);
     try {
       if (!navigator?.mediaDevices?.getUserMedia) {
-        throw new Error('Camera access is not supported by your browser.');
+        throw new Error('Camera access is not supported by your browser or environment.');
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: facingMode,
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-        },
-        audio: false,
-      });
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: facingMode,
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+          },
+          audio: false,
+        });
+      } catch (firstErr: any) {
+        // If ideal constraints or facingMode fail, retry with permissive video constraint
+        console.warn('Initial camera constraints failed, attempting fallback video stream:', firstErr);
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
 
       streamRef.current = stream;
       if (videoRef.current) {
@@ -87,9 +101,23 @@ export const FaceScanModal: React.FC<FaceScanModalProps> = ({
     } catch (err: any) {
       console.error('Camera open failed:', err);
       setCameraState('error');
-      setErrorMessage(
-        err?.message || 'Unable to access camera. Please allow camera permissions in your browser or device settings.'
-      );
+      const rawMsg = err?.message || '';
+      const denied =
+        err?.name === 'NotAllowedError' ||
+        err?.name === 'PermissionDeniedError' ||
+        rawMsg.toLowerCase().includes('denied') ||
+        rawMsg.toLowerCase().includes('permission');
+
+      setIsPermissionDenied(denied);
+      if (denied) {
+        setErrorMessage(
+          'Camera permission was denied. Tap "Open App Settings" below to allow Camera access for this app, then tap "Try Again".'
+        );
+      } else {
+        setErrorMessage(
+          rawMsg || 'Unable to access camera. Please allow camera permissions in your browser or device settings.'
+        );
+      }
     }
   };
 
@@ -155,7 +183,7 @@ export const FaceScanModal: React.FC<FaceScanModalProps> = ({
 
     try {
       if (mode === 'enroll') {
-        const res = await api.post('/auth/face/enroll', { descriptor: averaged });
+        const res = await api.post('/auth/face/enroll', { descriptor: averaged, anchors: frames });
         if (res.data?.success) {
           setVerifiedSuccess(true);
           setFeedback('Face ID enrolled successfully!');
@@ -221,20 +249,15 @@ export const FaceScanModal: React.FC<FaceScanModalProps> = ({
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-950/50">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
-              <Sparkles size={18} />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">
-                {mode === 'enroll'
-                  ? 'Enroll Face ID'
-                  : mode === 'login'
-                  ? 'Face ID Sign In'
-                  : 'Test Face ID Match'}
-              </h3>
-              <p className="text-[11px] text-slate-400">Secure Biometric Facial Recognition</p>
-            </div>
+          <div>
+            <h3 className="text-sm font-bold text-white">
+              {mode === 'enroll'
+                ? 'Enroll Face ID'
+                : mode === 'login'
+                ? 'Face ID Sign In'
+                : 'Test Face ID Match'}
+            </h3>
+            <p className="text-[11px] text-slate-400">Secure Biometric Facial Recognition</p>
           </div>
           <button
             onClick={onClose}
@@ -256,15 +279,31 @@ export const FaceScanModal: React.FC<FaceScanModalProps> = ({
 
           {cameraState === 'error' && (
             <div className="flex flex-col items-center gap-3 p-6 text-center text-rose-300">
-              <AlertCircle className="w-10 h-10 text-rose-500" />
-              <p className="text-xs font-medium">{errorMessage}</p>
-              <button
-                type="button"
-                onClick={startCamera}
-                className="px-4 py-2 mt-2 text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white rounded-xl border border-slate-700"
-              >
-                Try Again
-              </button>
+              <AlertCircle className="w-10 h-10 text-rose-500 animate-pulse" />
+              <p className="text-xs font-semibold text-rose-200 max-w-xs leading-relaxed">{errorMessage}</p>
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+                {isNativeMobile() && isPermissionDenied && (
+                  <button
+                    type="button"
+                    onClick={() => openNativeAppSettings()}
+                    className="px-4 py-2 text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl shadow-lg transition-colors flex items-center gap-1.5"
+                  >
+                    Open App Settings
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={startCamera}
+                  className="px-4 py-2 text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white rounded-xl border border-slate-700 transition-colors shadow-sm"
+                >
+                  Try Again
+                </button>
+              </div>
+              {isPermissionDenied && (
+                <p className="text-[11px] text-slate-400 max-w-xs mt-1">
+                  Tip: In App Info, tap <span className="text-white font-medium">Permissions &rarr; Camera &rarr; Allow while using app</span>, then return and tap Try Again.
+                </p>
+              )}
             </div>
           )}
 

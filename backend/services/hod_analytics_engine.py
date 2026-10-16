@@ -645,15 +645,52 @@ def calculate_department_kpi_summary(
 def get_todays_action_items(
     db: Session,
     current_user: Optional[User] = None,
-    dept_id: Optional[int] = None
+    dept_id: Optional[int] = None,
+    staff_id: Optional[int] = None,
+    year_level: Optional[str] = None,
+    section_id: Optional[int] = None
 ) -> List[Dict[str, Any]]:
-    """Data-driven action items (URGENT red & ATTENTION amber)."""
+    """Data-driven action items (URGENT red & ATTENTION amber). Fully dynamic to active scope."""
+    from backend.services.authorization_service import get_hod_authorized_department_ids
+
+    # Real production departments
+    real_dept_ids = [d.id for d in db.query(Department).all() if d.code and "TEST" not in d.code.upper()]
+
     if current_user:
         role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
-        if role_clean in ["hod", "head of department"] and current_user.department_id:
-            dept_id = current_user.department_id
+        is_hod = "hod" in role_clean or "head of department" in role_clean or role_clean in ["department hod", "department_hod", "placement coordinator"]
+        is_global = role_clean in ["admin", "super admin", "super_admin", "administrator", "principal", "management", "director"]
+        if is_hod and not is_global:
+            auth_depts = get_hod_authorized_department_ids(db, current_user)
+            if auth_depts:
+                if dept_id and dept_id in auth_depts:
+                    pass
+                else:
+                    dept_id = auth_depts[0] if len(auth_depts) == 1 else None
+                    if not dept_id:
+                        real_dept_ids = [did for did in real_dept_ids if did in auth_depts]
 
     actions = []
+
+    # Year level matching
+    y_matches = None
+    if year_level and year_level != "ALL":
+        years_map_dict = {
+            "I": ["1", "I", "1st", "I Year", "1 Year"],
+            "1": ["1", "I", "1st", "I Year", "1 Year"],
+            "1ST": ["1", "I", "1st", "I Year", "1 Year"],
+            "II": ["2", "II", "2nd", "II Year", "2 Year"],
+            "2": ["2", "II", "2nd", "II Year", "2 Year"],
+            "2ND": ["2", "II", "2nd", "II Year", "2 Year"],
+            "III": ["3", "III", "3rd", "III Year", "3 Year"],
+            "3": ["3", "III", "3rd", "III Year", "3 Year"],
+            "3RD": ["3", "III", "3rd", "III Year", "3 Year"],
+            "IV": ["4", "IV", "4th", "IV Year", "4 Year"],
+            "4": ["4", "IV", "4th", "IV Year", "4 Year"],
+            "4TH": ["4", "IV", "4th", "IV Year", "4 Year"],
+        }
+        clean_yr_key = year_level.upper().replace("YEAR", "").strip()
+        y_matches = years_map_dict.get(clean_yr_key) or years_map_dict.get(year_level.upper()) or [year_level]
 
     # 1. Unassigned students alert
     unassigned_q = db.query(Student).outerjoin(
@@ -665,6 +702,13 @@ def get_todays_action_items(
     )
     if dept_id:
         unassigned_q = unassigned_q.filter(Student.department_id == dept_id)
+    else:
+        unassigned_q = unassigned_q.filter(Student.department_id.in_(real_dept_ids))
+    
+    if y_matches:
+        unassigned_q = unassigned_q.filter(Student.year_level.in_(y_matches))
+    if section_id and str(section_id) != "ALL":
+        unassigned_q = unassigned_q.filter(Student.section_id == section_id)
     
     unassigned_count = unassigned_q.count()
     if unassigned_count > 0:
@@ -682,18 +726,29 @@ def get_todays_action_items(
     # 2. Staff with progress < 60% (Red threshold)
     staff_users = db.query(User).filter(
         User.is_active == True,
-        User.role != "Student"
+        User.role != "Student",
+        ~User.username.ilike("test_%"),
+        ~User.username.ilike("dummy_%"),
+        ~User.username.ilike("sec_test_%"),
+        ~User.username.ilike("hardening_%")
     )
     if dept_id:
         staff_users = staff_users.filter(User.department_id == dept_id)
+    else:
+        staff_users = staff_users.filter(User.department_id.in_(real_dept_ids))
+    
+    if staff_id:
+        staff_users = staff_users.filter(User.id == staff_id)
     
     low_progress_staff = []
     for s in staff_users.all():
         assigned = db.query(FacultyStudentAssignment.student_id).filter(
             FacultyStudentAssignment.faculty_id == s.id,
             FacultyStudentAssignment.is_active == True
-        ).all()
-        a_ids = [r[0] for r in assigned]
+        )
+        if y_matches:
+            assigned = assigned.join(Student, FacultyStudentAssignment.student_id == Student.id).filter(Student.year_level.in_(y_matches))
+        a_ids = [r[0] for r in assigned.all()]
         if len(a_ids) > 0:
             comp = db.query(LeetCodeProfileStats).filter(
                 LeetCodeProfileStats.student_id.in_(a_ids),
@@ -728,6 +783,15 @@ def get_todays_action_items(
     )
     if dept_id:
         pending_zero = pending_zero.filter(Student.department_id == dept_id)
+    else:
+        pending_zero = pending_zero.filter(Student.department_id.in_(real_dept_ids))
+    
+    if staff_id:
+        pending_zero = pending_zero.filter(FacultyStudentAssignment.faculty_id == staff_id)
+    if y_matches:
+        pending_zero = pending_zero.filter(Student.year_level.in_(y_matches))
+    if section_id and str(section_id) != "ALL":
+        pending_zero = pending_zero.filter(Student.section_id == section_id)
     
     zero_count = pending_zero.count()
     if zero_count > 0:

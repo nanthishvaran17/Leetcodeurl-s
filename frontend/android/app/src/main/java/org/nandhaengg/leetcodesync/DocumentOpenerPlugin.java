@@ -348,4 +348,20 @@ public class DocumentOpenerPlugin extends Plugin {
             call.resolve(ret);
         }
     }
+
+    @PluginMethod
+    public void openAppSettings(PluginCall call) {
+        try {
+            Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            Uri uri = Uri.fromParts("package", getContext().getPackageName(), null);
+            intent.setData(uri);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(intent);
+            JSObject ret = new JSObject();
+            ret.put("success", true);
+            call.resolve(ret);
+        } catch (Exception e) {
+            call.reject("FAILED_TO_OPEN_SETTINGS", e.getMessage());
+        }
+    }
 }

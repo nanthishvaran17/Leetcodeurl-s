@@ -135,6 +135,7 @@ class FacultyEscalateRequest(BaseModel):
 @router.get("/faculty/actions/kpis")
 def get_faculty_kpis_endpoint(
     dept_id: Optional[int] = Query(None),
+    department_id: Optional[int] = Query(None),
     year_level: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     db: Session = Depends(get_db),
@@ -150,7 +151,7 @@ def get_faculty_kpis_endpoint(
     role_clean = _normalize_role(current_user)
     faculty_id = current_user.id if role_clean in _STAFF_ROLES else None
     
-    clean_dept_id = dept_id if isinstance(dept_id, int) else None
+    clean_dept_id = department_id if isinstance(department_id, int) else (dept_id if isinstance(dept_id, int) else None)
     clean_year = year_level if isinstance(year_level, str) else None
     clean_search = search if isinstance(search, str) else None
     eff_dept_id = clean_dept_id

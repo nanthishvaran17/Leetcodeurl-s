@@ -578,6 +578,8 @@ def require_security_access(
             "super_admin": "admin"
         }
         effective_role = role_alias_map.get(user_role_clean, user_role_clean)
+        if "hod" in user_role_clean or "head of department" in user_role_clean:
+            effective_role = "hod"
 
         # 2. ROLE & PERMISSION CHECK
         # Global roles get universal bypass (they can access anything)
@@ -738,7 +740,7 @@ def get_authenticated_user_scope(db: Session, user: User) -> dict:
     if role in ["admin", "super admin", "super_admin", "administrator", "principal", "management", "placement coordinator"]:
         return {"type": "GLOBAL"}
         
-    elif role in ["hod", "department hod", "department_hod"]:
+    elif role in ["hod", "department hod", "department_hod"] or "hod" in role or "head of department" in role:
         from backend.services.authorization_service import get_hod_authorized_department_ids
         dept_ids = get_hod_authorized_department_ids(db, user)
         return {"type": "DEPARTMENT", "dept_ids": dept_ids, "dept_id": dept_ids[0] if dept_ids else None}

@@ -1271,15 +1271,29 @@ export const institutionalSkillGaps: InstitutionalSkillGap[] = [
 export const HODCommandCenter: React.FC = () => {
  const { user } = useAuth();
  const { notify } = useNotification();
+ const roleClean = useMemo(() => (user?.role || '').trim().toLowerCase(), [user?.role]);
+ const isGlobalAdmin = useMemo(() => ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean), [roleClean]);
+
  // Multi-Dimensional View Scope 
  const [selectedStaff, setSelectedStaff] = useState<string>('ALL');
- const [selectedDept, setSelectedDept] = useState<string>('ALL');
+ const [selectedDept, setSelectedDept] = useState<string>(() => {
+   if (user?.department_id && !['admin', 'administrator', 'super admin', 'super_admin'].includes((user?.role || '').trim().toLowerCase())) {
+     return String(user.department_id);
+   }
+   return 'ALL';
+ });
  const [selectedYear, setSelectedYear] = useState<string>('ALL');
  const [selectedSection, setSelectedSection] = useState<string>('ALL');
  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
  const [allocationFilter, setAllocationFilter] = useState<'ALL' | 'ALLOCATED' | 'UNASSIGNED'>('ALL');
  const [staffWorkloadFilter, setStaffWorkloadFilter] = useState<'ALL' | 'PENDING' | 'COMPLETED'>('ALL');
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
+
+ useEffect(() => {
+   if (user?.department_id && !isGlobalAdmin && selectedDept === 'ALL') {
+     setSelectedDept(String(user.department_id));
+   }
+ }, [user?.department_id, isGlobalAdmin, selectedDept]);
 
  // Summary & Metadata
  const [summary, setSummary] = useState<CommandCenterSummary | null>(null);
@@ -2186,17 +2200,19 @@ export const HODCommandCenter: React.FC = () => {
  </div>
 
       {/* 5. FACULTY MENTORS PERFORMANCE & PROGRESS MATRIX (PRIMARY HOD VIEW) */}
-      <FacultyMentorMatrixCard
-        staffList={staffList}
-        staffWorkloadFilter={staffWorkloadFilter}
-        setStaffWorkloadFilter={(f: string) => setStaffWorkloadFilter(f as any)}
-        setShowStaffAllocationModal={setShowStaffAllocationModal}
-        selectedStaff={selectedStaff}
-        handleFilterByStaff={handleFilterByStaff}
-        setSelectedStaffDetail={setSelectedStaffDetail}
-        handleUnassignAllForStaff={handleUnassignAllForStaff}
-        getDeptBadgeStyle={getDeptBadgeStyle}
-      />
+      <div id="staff-performance-section" className="scroll-mt-20">
+        <FacultyMentorMatrixCard
+          staffList={staffList}
+          staffWorkloadFilter={staffWorkloadFilter}
+          setStaffWorkloadFilter={(f: string) => setStaffWorkloadFilter(f as any)}
+          setShowStaffAllocationModal={setShowStaffAllocationModal}
+          selectedStaff={selectedStaff}
+          handleFilterByStaff={handleFilterByStaff}
+          setSelectedStaffDetail={setSelectedStaffDetail}
+          handleUnassignAllForStaff={handleUnassignAllForStaff}
+          getDeptBadgeStyle={getDeptBadgeStyle}
+        />
+      </div>
 
       {/* 6. TODAY'S ACTION REQUIRED */}
  <Card className="p-3.5 sm:p-7 my-4 sm:my-8 shadow-sm">
@@ -2215,47 +2231,85 @@ export const HODCommandCenter: React.FC = () => {
  <div className="mt-3.5 sm:mt-6">
  {summary?.action_items && summary.action_items.length > 0 ? (
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-7">
- {summary.action_items.map((action) => (
- <div
- key={action.id}
- className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border flex flex-col justify-between min-h-[140px] sm:min-h-[160px] space-y-3 sm:space-y-5 shadow-2xs sm:shadow-sm transition-all hover:shadow-md ${
- action.severity === 'URGENT'
- ? 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/50'
- : 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50'
- }`}
- >
- <div className="space-y-2.5">
- <div className="flex items-center justify-between">
- <span className={`text-xs font-bold font-mono px-2.5 py-0.5 rounded ${
- action.severity === 'URGENT' ? 'bg-rose-600 text-white' : 'bg-amber-600 text-white'
- }`}>
- {action.severity}
- </span>
- <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-400">Count: {action.count}</span>
- </div>
- <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white pt-1">{action.title}</h4>
- <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{action.reason}</p>
- </div>
- <button
- onClick={() => {
- if (action.target_tab === 'unassigned') {
- setShowStaffAllocationModal(true);
- } else if (action.target_tab === 'staff-performance') {
- document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
- } else {
- document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
- }
- }}
- className={`w-full py-2.5 rounded-xl text-xs font-bold transition shadow-xs ${
- action.severity === 'URGENT'
- ? 'bg-rose-600 hover:bg-rose-700 text-white'
- : 'bg-amber-600 hover:bg-amber-700 text-white'
- }`}
- >
- {action.action_label} →
- </button>
- </div>
- ))}
+ {summary.action_items.map((action) => {
+   const isZeroSolved = action.id === 'action_zero_solved' || action.type === 'ZERO_SOLVED_PENDING' || action.target_tab === 'pending';
+   const isUnassigned = action.id === 'action_unassigned' || action.type === 'UNASSIGNED_STUDENTS' || action.target_tab === 'unassigned';
+   const isLowStaff = action.id === 'action_low_staff' || action.type === 'LOW_PROGRESS_STAFF' || action.target_tab === 'staff-performance';
+
+   const handleActionClick = (mode?: 'modal' | 'table') => {
+     if (isZeroSolved) {
+       setAllocationFilter('ALLOCATED');
+       setSelectedStatus('ZERO_SOLVED');
+       setStudentsPage(1);
+       notify.warning(`Filtered student directory to ${action.count} allocated student(s) with 0 completed problems.`, '', { category: 'ALLOCATION' });
+       setTimeout(() => {
+         document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+       }, 50);
+     } else if (isUnassigned) {
+       setAllocationFilter('UNASSIGNED');
+       setSelectedStatus('ALL');
+       setStudentsPage(1);
+       if (mode === 'table') {
+         notify.info(`Filtered student directory to ${action.count} unassigned student(s).`, '', { category: 'ALLOCATION' });
+         setTimeout(() => {
+           document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+         }, 50);
+       } else {
+         setShowStaffAllocationModal(true);
+         notify.info(`Opened faculty allocation manager for ${action.count} unassigned student(s).`, '', { category: 'ALLOCATION' });
+       }
+     } else if (isLowStaff) {
+       document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+     } else {
+       document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+     }
+   };
+
+   return (
+     <div
+       key={action.id}
+       className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border flex flex-col justify-between min-h-[140px] sm:min-h-[160px] space-y-3 sm:space-y-5 shadow-2xs sm:shadow-sm transition-all hover:shadow-md ${
+         action.severity === 'URGENT'
+           ? 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/50'
+           : 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50'
+       }`}
+     >
+       <div className="space-y-2.5">
+         <div className="flex items-center justify-between">
+           <span className={`text-xs font-bold font-mono px-2.5 py-0.5 rounded ${
+             action.severity === 'URGENT' ? 'bg-rose-600 text-white' : 'bg-amber-600 text-white'
+           }`}>
+             {action.severity}
+           </span>
+           <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-400">Count: {action.count}</span>
+         </div>
+         <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white pt-1">{action.title}</h4>
+         <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{action.reason}</p>
+       </div>
+       <div className="flex items-center gap-2 pt-1">
+         <button
+           onClick={() => handleActionClick(isUnassigned ? 'modal' : undefined)}
+           className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer ${
+             action.severity === 'URGENT'
+               ? 'bg-rose-600 hover:bg-rose-700 text-white'
+               : 'bg-amber-600 hover:bg-amber-700 text-white'
+           }`}
+         >
+           {action.action_label} →
+         </button>
+         {isUnassigned && (
+           <button
+             onClick={() => handleActionClick('table')}
+             className="px-3 py-2.5 rounded-xl text-xs font-bold border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 hover:bg-rose-100/60 dark:hover:bg-rose-950/40 transition cursor-pointer whitespace-nowrap"
+             title="View unassigned students in table"
+           >
+             View Table →
+           </button>
+         )}
+       </div>
+     </div>
+   );
+ })}
  </div>
  ) : (
  <div className="p-6 text-center text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl border border-emerald-200">
@@ -2364,6 +2418,10 @@ export const HODCommandCenter: React.FC = () => {
        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
        : selectedStatus === 'PENDING'
        ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+       : selectedStatus === 'ZERO_SOLVED' || selectedStatus === 'INACTIVE'
+       ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-700'
+       : selectedStatus === 'IMPROVING'
+       ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-700'
        : allocationFilter === 'ALLOCATED'
        ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300'
        : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
@@ -2371,6 +2429,9 @@ export const HODCommandCenter: React.FC = () => {
      Showing: {
        selectedStatus === 'COMPLETED' ? 'Target Achieved (10+ Solved)' :
        selectedStatus === 'PENDING' ? 'Target In Progress (< 10 Solved)' :
+       selectedStatus === 'ZERO_SOLVED' ? 'Allocated with 0 Problems Solved' :
+       selectedStatus === 'INACTIVE' ? '0 Problems Solved' :
+       selectedStatus === 'IMPROVING' ? 'Accelerating Solvers' :
        allocationFilter === 'ALLOCATED' ? 'Allocated Only' : 'Unassigned Only'
      }
    </span>
