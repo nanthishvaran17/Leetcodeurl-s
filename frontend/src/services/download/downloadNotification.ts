@@ -161,18 +161,19 @@ class DownloadNotificationService {
         // Listen for user tapping or selecting an action on the notification
         LocalNotifications.addListener('localNotificationActionPerformed', async (action) => {
           console.log('[DownloadNotification] Notification action performed by user:', action);
-          const extra = action.notification?.extra || {};
+          const notif = action.notification || (action as any) || {};
+          const extra = notif?.extra || (action as any)?.extra || {};
           const rawActionId = String(
             action.actionId ||
             (action as any).action ||
             (action as any).id ||
-            (action.notification as any)?.actionId ||
+            notif?.actionId ||
             ''
           ).trim();
           const lowerActionId = rawActionId.toLowerCase();
 
-          const filePath = extra.filePath || extra.localFileUri || '';
-          const filename = extra.filename || action.notification?.body || 'report.xlsx';
+          const filePath = extra.filePath || extra.localFileUri || notif.filePath || notif.localFileUri || '';
+          const filename = extra.filename || notif.body || 'report.xlsx';
           const mimeType = extra.mimeType || getMimeTypeFromFilename(filename);
 
           const isShareAction = 

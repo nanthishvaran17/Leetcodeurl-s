@@ -1,5 +1,6 @@
 package org.nandhaengg.leetcodesync;
 
+import android.content.Context;
 import android.content.ClipData;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -25,20 +26,13 @@ import java.util.List;
 @CapacitorPlugin(name = "DocumentOpener")
 public class DocumentOpenerPlugin extends Plugin {
 
-    @PluginMethod
-    public void openDocument(PluginCall call) {
-        String rawPath = call.getString("path");
-        String mimeType = call.getString("mimeType", "*/*");
-        String filename = call.getString("filename", "document");
-
-        if (rawPath == null || rawPath.trim().isEmpty()) {
-            call.reject("PATH_REQUIRED", "Must provide a valid file path");
-            return;
+    public static boolean nativeOpenFile(Context context, String rawPath, String filename, String mimeType) {
+        if (context == null || rawPath == null || rawPath.trim().isEmpty()) {
+            return false;
         }
 
         try {
-            // Normalize MIME type specifically for Excel / Office documents
-            String lowerName = filename.toLowerCase();
+            String lowerName = (filename != null) ? filename.toLowerCase() : "";
             if (mimeType == null || mimeType.equals("*/*") || mimeType.equals("application/octet-stream") || mimeType.isEmpty()) {
                 if (lowerName.endsWith(".xlsx")) {
                     mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -68,17 +62,16 @@ public class DocumentOpenerPlugin extends Plugin {
                 String cleanPath = parsedUri.getPath() != null ? parsedUri.getPath() : rawPath.replace("file://", "");
                 File targetFile = new File(cleanPath);
 
-                // Fallback search in cache, files, externalCache, and externalFiles if path not directly found
                 if (!targetFile.exists() || targetFile.length() == 0) {
-                    File cacheCandidate = new File(getContext().getCacheDir(), filename);
+                    File cacheCandidate = new File(context.getCacheDir(), filename);
                     if (cacheCandidate.exists() && cacheCandidate.length() > 0) {
                         targetFile = cacheCandidate;
                     } else {
-                        File filesCandidate = new File(getContext().getFilesDir(), filename);
+                        File filesCandidate = new File(context.getFilesDir(), filename);
                         if (filesCandidate.exists() && filesCandidate.length() > 0) {
                             targetFile = filesCandidate;
-                        } else if (getContext().getExternalCacheDir() != null) {
-                            File extCacheCandidate = new File(getContext().getExternalCacheDir(), filename);
+                        } else if (context.getExternalCacheDir() != null) {
+                            File extCacheCandidate = new File(context.getExternalCacheDir(), filename);
                             if (extCacheCandidate.exists() && extCacheCandidate.length() > 0) {
                                 targetFile = extCacheCandidate;
                             }
@@ -87,44 +80,131 @@ public class DocumentOpenerPlugin extends Plugin {
                 }
 
                 if (!targetFile.exists() || targetFile.length() == 0) {
-                    call.reject("FILE_NOT_FOUND", "File is no longer available.");
-                    return;
+                    return false;
                 }
 
-                String authority = getContext().getPackageName() + ".fileprovider";
-                contentUri = FileProvider.getUriForFile(getContext(), authority, targetFile);
+                String authority = context.getPackageName() + ".fileprovider";
+                contentUri = FileProvider.getUriForFile(context, authority, targetFile);
             }
 
             Intent viewIntent = new Intent(Intent.ACTION_VIEW);
             viewIntent.setDataAndType(contentUri, mimeType);
             viewIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             viewIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            // Grant read permission explicitly to any apps that can handle this intent (Excel, Sheets, etc.)
-            try {
-                PackageManager pm = getContext().getPackageManager();
-                List<ResolveInfo> resInfoList = pm.queryIntentActivities(viewIntent, PackageManager.MATCH_DEFAULT_ONLY);
-                for (ResolveInfo resolveInfo : resInfoList) {
-                    String packageName = resolveInfo.activityInfo.packageName;
-                    getContext().grantUriPermission(packageName, contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                }
-            } catch (Exception ignored) {}
+            viewIntent.setClipData(ClipData.newRawUri(filename, contentUri));
 
             Intent chooserIntent = Intent.createChooser(viewIntent, "Open " + filename);
             chooserIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                chooserIntent.setClipData(ClipData.newRawUri("", contentUri));
+            chooserIntent.setClipData(ClipData.newRawUri(filename, contentUri));
+
+            context.startActivity(chooserIntent);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean nativeShareFile(Context context, String rawPath, String filename, String mimeType) {
+        if (context == null || rawPath == null || rawPath.trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            String lowerName = (filename != null) ? filename.toLowerCase() : "";
+            if (mimeType == null || mimeType.equals("*/*") || mimeType.equals("application/octet-stream") || mimeType.isEmpty()) {
+                if (lowerName.endsWith(".xlsx")) {
+                    mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                } else if (lowerName.endsWith(".xls")) {
+                    mimeType = "application/vnd.ms-excel";
+                } else if (lowerName.endsWith(".csv")) {
+                    mimeType = "text/csv";
+                } else if (lowerName.endsWith(".pdf")) {
+                    mimeType = "application/pdf";
+                } else if (lowerName.endsWith(".docx")) {
+                    mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                } else if (lowerName.endsWith(".doc")) {
+                    mimeType = "application/msword";
+                } else if (lowerName.endsWith(".pptx")) {
+                    mimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+                } else if (lowerName.endsWith(".ppt")) {
+                    mimeType = "application/vnd.ms-powerpoint";
+                }
             }
 
-            if (getActivity() != null) {
-                getActivity().startActivity(chooserIntent);
+            Uri parsedUri = Uri.parse(rawPath);
+            Uri contentUri;
+
+            if (rawPath.startsWith("content://")) {
+                contentUri = parsedUri;
             } else {
-                getContext().startActivity(chooserIntent);
+                String cleanPath = parsedUri.getPath() != null ? parsedUri.getPath() : rawPath.replace("file://", "");
+                File targetFile = new File(cleanPath);
+
+                if (!targetFile.exists() || targetFile.length() == 0) {
+                    File cacheCandidate = new File(context.getCacheDir(), filename);
+                    if (cacheCandidate.exists() && cacheCandidate.length() > 0) {
+                        targetFile = cacheCandidate;
+                    } else {
+                        File filesCandidate = new File(context.getFilesDir(), filename);
+                        if (filesCandidate.exists() && filesCandidate.length() > 0) {
+                            targetFile = filesCandidate;
+                        } else if (context.getExternalCacheDir() != null) {
+                            File extCacheCandidate = new File(context.getExternalCacheDir(), filename);
+                            if (extCacheCandidate.exists() && extCacheCandidate.length() > 0) {
+                                targetFile = extCacheCandidate;
+                            }
+                        }
+                    }
+                }
+
+                if (!targetFile.exists() || targetFile.length() == 0) {
+                    return false;
+                }
+
+                String authority = context.getPackageName() + ".fileprovider";
+                contentUri = FileProvider.getUriForFile(context, authority, targetFile);
             }
-            call.resolve();
+
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType(mimeType);
+            shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
+            if (filename != null && !filename.isEmpty()) {
+                shareIntent.putExtra(Intent.EXTRA_SUBJECT, filename);
+            }
+            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            shareIntent.setClipData(ClipData.newRawUri(filename, contentUri));
+
+            Intent chooserIntent = Intent.createChooser(shareIntent, "Share " + (filename != null ? filename : "Document"));
+            chooserIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            chooserIntent.setClipData(ClipData.newRawUri(filename, contentUri));
+
+            context.startActivity(chooserIntent);
+            return true;
         } catch (Exception e) {
-            call.reject("OPEN_FAILED", "Failed to open document: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @PluginMethod
+    public void openDocument(PluginCall call) {
+        String rawPath = call.getString("path");
+        String mimeType = call.getString("mimeType", "*/*");
+        String filename = call.getString("filename", "document");
+
+        if (rawPath == null || rawPath.trim().isEmpty()) {
+            call.reject("PATH_REQUIRED", "Must provide a valid file path");
+            return;
+        }
+
+        boolean ok = nativeOpenFile(getActivity() != null ? getActivity() : getContext(), rawPath, filename, mimeType);
+        if (ok) {
+            call.resolve();
+        } else {
+            call.reject("OPEN_FAILED", "Failed to open document");
         }
     }
 
@@ -139,102 +219,11 @@ public class DocumentOpenerPlugin extends Plugin {
             return;
         }
 
-        try {
-            // Normalize MIME type specifically for Excel / Office documents
-            String lowerName = filename.toLowerCase();
-            if (mimeType == null || mimeType.equals("*/*") || mimeType.equals("application/octet-stream") || mimeType.isEmpty()) {
-                if (lowerName.endsWith(".xlsx")) {
-                    mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-                } else if (lowerName.endsWith(".xls")) {
-                    mimeType = "application/vnd.ms-excel";
-                } else if (lowerName.endsWith(".csv")) {
-                    mimeType = "text/csv";
-                } else if (lowerName.endsWith(".pdf")) {
-                    mimeType = "application/pdf";
-                } else if (lowerName.endsWith(".docx")) {
-                    mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-                } else if (lowerName.endsWith(".doc")) {
-                    mimeType = "application/msword";
-                } else if (lowerName.endsWith(".pptx")) {
-                    mimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-                } else if (lowerName.endsWith(".ppt")) {
-                    mimeType = "application/vnd.ms-powerpoint";
-                }
-            }
-
-            Uri parsedUri = Uri.parse(rawPath);
-            Uri contentUri;
-
-            if (rawPath.startsWith("content://")) {
-                contentUri = parsedUri;
-            } else {
-                String cleanPath = parsedUri.getPath() != null ? parsedUri.getPath() : rawPath.replace("file://", "");
-                File targetFile = new File(cleanPath);
-
-                // Fallback search in cache, files, externalCache, and externalFiles if path not directly found
-                if (!targetFile.exists() || targetFile.length() == 0) {
-                    File cacheCandidate = new File(getContext().getCacheDir(), filename);
-                    if (cacheCandidate.exists() && cacheCandidate.length() > 0) {
-                        targetFile = cacheCandidate;
-                    } else {
-                        File filesCandidate = new File(getContext().getFilesDir(), filename);
-                        if (filesCandidate.exists() && filesCandidate.length() > 0) {
-                            targetFile = filesCandidate;
-                        } else if (getContext().getExternalCacheDir() != null) {
-                            File extCacheCandidate = new File(getContext().getExternalCacheDir(), filename);
-                            if (extCacheCandidate.exists() && extCacheCandidate.length() > 0) {
-                                targetFile = extCacheCandidate;
-                            }
-                        }
-                    }
-                }
-
-                if (!targetFile.exists() || targetFile.length() == 0) {
-                    call.reject("FILE_NOT_FOUND", "File is no longer available.");
-                    return;
-                }
-
-                String authority = getContext().getPackageName() + ".fileprovider";
-                contentUri = FileProvider.getUriForFile(getContext(), authority, targetFile);
-            }
-
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType(mimeType);
-            shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, filename);
-            shareIntent.putExtra(Intent.EXTRA_TEXT, "Report: " + filename);
-            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                shareIntent.setClipData(ClipData.newRawUri("", contentUri));
-            }
-
-            // Grant read permission explicitly to any apps that can handle this share intent
-            try {
-                PackageManager pm = getContext().getPackageManager();
-                List<ResolveInfo> resInfoList = pm.queryIntentActivities(shareIntent, PackageManager.MATCH_DEFAULT_ONLY);
-                for (ResolveInfo resolveInfo : resInfoList) {
-                    String packageName = resolveInfo.activityInfo.packageName;
-                    getContext().grantUriPermission(packageName, contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                }
-            } catch (Exception ignored) {}
-
-            Intent chooserIntent = Intent.createChooser(shareIntent, "Share " + filename);
-            chooserIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                chooserIntent.setClipData(ClipData.newRawUri("", contentUri));
-            }
-
-            if (getActivity() != null) {
-                getActivity().startActivity(chooserIntent);
-            } else {
-                getContext().startActivity(chooserIntent);
-            }
+        boolean ok = nativeShareFile(getActivity() != null ? getActivity() : getContext(), rawPath, filename, mimeType);
+        if (ok) {
             call.resolve();
-        } catch (Exception e) {
-            call.reject("SHARE_FAILED", "Failed to share document: " + e.getMessage());
+        } else {
+            call.reject("SHARE_FAILED", "Failed to share document");
         }
     }
 
