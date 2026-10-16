@@ -232,91 +232,6 @@ def _aggregate_cohort_metrics(student_list: List[Dict[str, Any]]) -> Dict[str, A
     }
 
 
-FEMALE_KEYWORDS = (
-    "SHREE", "DEVI", "PRIYA", "SRI", "DHARSHINI", "VARSHINI", "JANANI", "SOWMIYA",
-    "SHARMILA", "POOMITHA", "RITHIKA", "RITHANIKA", "KIRUTHIKAA", "AMRUTHA", "DHANUSHYA",
-    "HARDIKA", "INIYA", "LAKSANA", "NETHRA", "NIVETHYTHA", "NIVETHA", "PRITHIKA",
-    "RADHISRI", "SUPRIYA", "VEDHASREE", "YAZHINI", "GAYATHRI", "KAVYA", "SNEHA",
-    "SWETHA", "NANDHINI", "ABINAYA", "KEERTHANA", "PAVITHRA", "ANANYA", "DEEPIKA",
-    "ARCHANA", "HARINI", "MONISHA", "SANDHIYA", "SUBHASHINI", "SUBASHREE", "BHUVANESHWARI",
-    "SOUNDARYA", "AISWARYA", "AISHWARYA", "MEENA", "KARTHIKA", "DIVYA", "POOJA",
-    "MADHUMITHA", "MITHRA", "SWATHI", "THANANYA", "SUSHMITHA", "LAVANYA", "HEMA",
-    "PREETHI", "RESHMA", "SARANYA", "SUJITHA", "SUGANYA", "RAMYA", "REVATHI", "GOWRI",
-    "PRIYADHARSHINI", "AARATHANA", "AARSIKA", "SAHANAJ", "SURUTHI", "SUSITHA",
-    "GOWRIPRIYA", "JAYASRI", "JEEVITHA", "PRADEEPA", "THARANYA", "SUVATHI",
-    "KANISHAA", "KANISKA", "JANARANSHINI", "MOWNAVARTHINI", "SRIVIDHYA", "STEFFY",
-    "SUBITHA", "ABIRAMI", "CHRISTINA", "SHRUTI"
-)
-MALE_OVERRIDE = ("SELVAN", "SANJAY", "SRIDHAR")
-
-
-def _is_girl_student(s: Dict[str, Any]) -> bool:
-    g = str(s.get("gender") or "").strip().upper()
-    if g in ("F", "FEMALE", "GIRL", "WOMAN"):
-        return True
-    if g in ("M", "MALE", "BOY", "MAN"):
-        return False
-    name = str(s.get("name") or s.get("student") or s.get("student_name") or "").strip().upper()
-    if any(m in name for m in MALE_OVERRIDE):
-        return False
-    return any(f in name for f in FEMALE_KEYWORDS)
-
-
-def _is_hosteler_student(s: Dict[str, Any]) -> bool:
-    acc = str(s.get("accommodation") or s.get("accom") or s.get("accommodation_type") or "").strip().upper()
-    return "HOSTEL" in acc or acc == "H"
-
-
-def build_demographic_consolidation_summary(student_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """
-    Builds the 5 canonical demographic consolidation summary rows:
-    1. TOTAL SOLVED COUNT
-    2. BOYS SOLVED COUNT
-    3. GIRLS SOLVED COUNT
-    4. DAY SCHOLARS (D) SOLVED COUNT
-    5. HOSTELERS (H) SOLVED COUNT
-    """
-    configs = [
-        ("TOTAL SOLVED COUNT", lambda s: True, "E6F0FA"),
-        ("BOYS SOLVED COUNT", lambda s: not _is_girl_student(s), "FFFFFF"),
-        ("GIRLS SOLVED COUNT", lambda s: _is_girl_student(s), "F8FAFC"),
-        ("DAY SCHOLARS (D) SOLVED COUNT", lambda s: not _is_hosteler_student(s), "FFFFFF"),
-        ("HOSTELERS (H) SOLVED COUNT", lambda s: _is_hosteler_student(s), "F8FAFC"),
-    ]
-
-    summary = []
-    for label, flt, fill_color in configs:
-        sub = [s for s in student_list if flt(s)]
-        m = _aggregate_cohort_metrics(sub)
-        cw = m.get("current_week") or {}
-        summary.append({
-            "label": label,
-            "category": label,
-            "total_students": len(sub),
-            "num_students": len(sub),
-            "above_500": m.get("above_500", 0),
-            "prob_above_500": m.get("above_500", 0),
-            "prob_250_500": m.get("250_500", 0),
-            "250_500": m.get("250_500", 0),
-            "prob_100_249": m.get("101_250", 0),
-            "101_250": m.get("101_250", 0),
-            "prob_1_99": m.get("less_100", 0),
-            "less_100": m.get("less_100", 0),
-            "prob_0": m.get("not_started", 0),
-            "not_started": m.get("not_started", 0),
-            "q4": cw.get("q4", 0),
-            "q3": cw.get("q3", 0),
-            "q2": cw.get("q2", 0),
-            "q1": cw.get("q1", 0),
-            "rating_above_1500": cw.get("rating_1500", 0),
-            "rating_1500": cw.get("rating_1500", 0),
-            "rank_below_20000": cw.get("ranking_20000", 0),
-            "ranking_20000": cw.get("ranking_20000", 0),
-            "fill_color": fill_color
-        })
-    return summary
-
-
 def generate_weekly_performance_data(
     db: Session,
     last_week_contest: Optional[int] = None,
@@ -956,8 +871,6 @@ def generate_weekly_performance_data(
 
         "department_summaries": dept_summaries,
         "batch_summaries": batch_summaries,
-        "demographic_summary": build_demographic_consolidation_summary(all_students_current),
-        "demographic_summaries": build_demographic_consolidation_summary(all_students_current),
 
         "all_students_current": all_students_current,
         "all_students_last_week": all_students_last_week,

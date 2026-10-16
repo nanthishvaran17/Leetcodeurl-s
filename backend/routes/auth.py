@@ -2492,31 +2492,69 @@ async def passkey_register_verify(request: Request, db: Session = Depends(get_db
         return {"success": False, "message": f"Passkey verification failed: {str(e)}"}
 
 
+def _calculate_vector_similarity(v1: list, v2: list) -> float:
+    """Calculates cosine similarity between two numeric vectors."""
+    try:
+        import math
+        if not v1 or not v2:
+            return 0.0
+        if len(v1) != len(v2):
+            min_len = min(len(v1), len(v2))
+            v1 = v1[:min_len]
+            v2 = v2[:min_len]
+        
+        dot = sum(float(a) * float(b) for a, b in zip(v1, v2))
+        norm1 = math.sqrt(sum(float(a) * float(a) for a in v1))
+        norm2 = math.sqrt(sum(float(b) * float(b) for b in v2))
+        if norm1 == 0 or norm2 == 0:
+            return 0.0
+        return float(dot / (norm1 * norm2))
+    except Exception:
+        return 0.0
+
+
 @router.post("/passkey/login-options")
-def passkey_login_options(request: Request, body: dict, db: Session = Depends(get_db)):
+def passkey_login_options(request: Request, body: dict = Body(default={}), db: Session = Depends(get_db)):
     """
     Generates WebAuthn authentication options for passkey login.
+    Supports both user-specific and discoverable (user-less) passkeys.
     """
     from webauthn import generate_authentication_options, options_to_json
     from webauthn.helpers import bytes_to_base64url
+    from backend.cache import cache
 
     username = (body.get("username") or "").strip().lower()
     user = None
     if username:
         user = db.query(User).filter(
-            or_(func.lower(User.username) == username, func.lower(User.email) == username)
+            or_(func.lower(User.username) == username, func.lower(User.email) == username, func.lower(User.institutional_id) == username)
         ).first()
+
+    allow_credentials = []
+    if user and getattr(user, "passkeys", None):
+        from webauthn.helpers.structs import PublicKeyCredentialDescriptor
+        from webauthn.helpers import base64url_to_bytes
+        for p in user.passkeys:
+            try:
+                allow_credentials.append(PublicKeyCredentialDescriptor(id=base64url_to_bytes(p.credential_id)))
+            except Exception:
+                pass
 
     rp_id, _ = _get_webauthn_config(request)
     options = generate_authentication_options(
         rp_id=rp_id,
-        allow_credentials=[]
+        allow_credentials=allow_credentials if allow_credentials else None
     )
 
     challenge_b64 = bytes_to_base64url(options.challenge)
     if user:
         user.webauthn_challenge = challenge_b64
         db.commit()
+
+    try:
+        cache.set(f"webauthn_challenge_{challenge_b64}", challenge_b64, ttl_seconds=300)
+    except Exception:
+        pass
 
     options_dict = json.loads(options_to_json(options))
     return {
@@ -2534,6 +2572,7 @@ async def passkey_login_verify(request: Request, response: Response, db: Session
     from webauthn import verify_authentication_response
     from webauthn.helpers import base64url_to_bytes
     from backend.models import UserPasskey
+    from backend.cache import cache
 
     try:
         body = await request.json()
@@ -2557,14 +2596,29 @@ async def passkey_login_verify(request: Request, response: Response, db: Session
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User associated with passkey not found.")
 
-    if not user.webauthn_challenge:
+    challenge_to_verify = user.webauthn_challenge
+    if not challenge_to_verify:
+        client_data_raw = credential_data.get("response", {}).get("clientDataJSON") if isinstance(credential_data, dict) else None
+        if client_data_raw:
+            try:
+                import json as _j, base64 as _b64
+                # Add padding if needed
+                padded = client_data_raw + "=" * (-len(client_data_raw) % 4)
+                client_data_decoded = _j.loads(_b64.urlsafe_b64decode(padded))
+                challenge_in_client = client_data_decoded.get("challenge")
+                if challenge_in_client and cache.get(f"webauthn_challenge_{challenge_in_client}"):
+                    challenge_to_verify = challenge_in_client
+            except Exception:
+                pass
+
+    if not challenge_to_verify:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No active authentication challenge. Please request login options first.")
 
     rp_id, allowed_origins = _get_webauthn_config(request)
 
     try:
         pub_key_bytes = base64url_to_bytes(passkey.public_key)
-        challenge_bytes = base64url_to_bytes(user.webauthn_challenge)
+        challenge_bytes = base64url_to_bytes(challenge_to_verify)
 
         verification = verify_authentication_response(
             credential=credential_data,
@@ -2614,6 +2668,258 @@ async def passkey_login_verify(request: Request, response: Response, db: Session
     except Exception as e:
         logger.error(f"[PASSKEY] Login verification error: {e}")
         return JSONResponse(status_code=400, content={"success": False, "message": f"Authentication failed: {str(e)}"})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FACE ID BIOMETRIC AUTHENTICATION ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.get("/face/status")
+def get_face_status(request: Request, db: Session = Depends(get_db)):
+    """Check if the currently authenticated user has Face ID enabled."""
+    current_user = get_current_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+    return {
+        "success": True,
+        "face_id_enabled": bool(getattr(current_user, "face_id_enabled", False)),
+        "face_enrolled_at": getattr(current_user, "face_enrolled_at", None),
+    }
+
+
+@router.post("/face/enroll")
+async def enroll_face(request: Request, db: Session = Depends(get_db)):
+    """Enrolls facial biometric descriptor for the current user."""
+    current_user = get_current_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+
+    body = await request.json()
+    descriptor = body.get("descriptor")
+    if not descriptor or not isinstance(descriptor, list) or len(descriptor) < 32:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid facial biometric descriptor. Please align your face inside the camera guide.")
+
+    current_user.face_descriptor = json.dumps(descriptor)
+    current_user.face_id_enabled = True
+    current_user.face_enrolled_at = datetime.datetime.now(datetime.timezone.utc)
+    db.commit()
+
+    logger.info(f"[FACE_ID] Face enrolled successfully for user {current_user.username} (ID: {current_user.id})")
+    return {
+        "success": True,
+        "message": "Face ID activated successfully! You can now use Face ID to sign in."
+    }
+
+
+@router.delete("/face/remove")
+def remove_face(request: Request, db: Session = Depends(get_db)):
+    """Disables and clears Face ID for the current user."""
+    current_user = get_current_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+
+    current_user.face_id_enabled = False
+    current_user.face_descriptor = None
+    current_user.face_enrolled_at = None
+    db.commit()
+
+    logger.info(f"[FACE_ID] Face ID deactivated for user {current_user.username}")
+    return {"success": True, "message": "Face ID has been deactivated."}
+
+
+@router.post("/face/test-verify")
+async def test_face_verify(request: Request, db: Session = Depends(get_db)):
+    """Tests face descriptor match against current logged-in user."""
+    current_user = get_current_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+
+    if not getattr(current_user, "face_id_enabled", False) or not getattr(current_user, "face_descriptor", None):
+        return {"success": False, "match": False, "message": "Face ID is not enrolled for this account."}
+
+    body = await request.json()
+    descriptor = body.get("descriptor")
+    if not descriptor or not isinstance(descriptor, list):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid descriptor.")
+
+    try:
+        stored = json.loads(current_user.face_descriptor)
+        similarity = _calculate_vector_similarity(descriptor, stored)
+        is_match = similarity >= 0.80
+        return {
+            "success": True,
+            "match": is_match,
+            "similarity": round(similarity * 100, 1),
+            "message": f"Face verified! {round(similarity * 100, 1)}% match confidence." if is_match else f"Face did not match adequately ({round(similarity * 100, 1)}%). Position clearly in good lighting."
+        }
+    except Exception as e:
+        return {"success": False, "match": False, "message": f"Comparison error: {str(e)}"}
+
+
+@router.post("/face/login-verify")
+async def login_with_face(request: Request, response: Response, db: Session = Depends(get_db)):
+    """Authenticates a user via their facial biometric descriptor and issues JWT access tokens."""
+    body = await request.json()
+    descriptor = body.get("descriptor")
+    username_hint = (body.get("username") or "").strip().lower()
+
+    if not descriptor or not isinstance(descriptor, list) or len(descriptor) < 32:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Valid face descriptor required.")
+
+    best_user = None
+    best_score = -1.0
+
+    if username_hint:
+        target_user = db.query(User).filter(
+            or_(func.lower(User.username) == username_hint, func.lower(User.email) == username_hint, func.lower(User.institutional_id) == username_hint)
+        ).first()
+        if not target_user or not getattr(target_user, "face_id_enabled", False) or not getattr(target_user, "face_descriptor", None):
+            return JSONResponse(status_code=400, content={"success": False, "message": "Face ID is not activated for this user ID. Please use password or activate Face ID in Profile Settings."})
+
+        try:
+            stored = json.loads(target_user.face_descriptor)
+            score = _calculate_vector_similarity(descriptor, stored)
+            if score >= 0.80:
+                best_user = target_user
+                best_score = score
+            else:
+                best_score = score
+        except Exception:
+            pass
+    else:
+        candidates = db.query(User).filter(User.face_id_enabled == True, User.is_active == True).all()
+        for cand in candidates:
+            if not cand.face_descriptor:
+                continue
+            try:
+                stored = json.loads(cand.face_descriptor)
+                score = _calculate_vector_similarity(descriptor, stored)
+                if score > best_score:
+                    best_score = score
+                    best_user = cand
+            except Exception:
+                continue
+
+    if not best_user or best_score < 0.80:
+        return JSONResponse(status_code=401, content={
+            "success": False,
+            "message": f"Face not recognized (confidence: {round(max(best_score, 0) * 100, 1)}%). Please position your face clearly or use your password."
+        })
+
+    _record_user_login(db, best_user, request)
+    session_id, refresh_token_value = None, None
+    try:
+        refresh_token_value, session_id = create_server_admin_session(db, best_user, request, response)
+    except Exception:
+        db.rollback()
+
+    access_token = create_access_token(data={"sub": best_user.username, "role": best_user.role, "email": best_user.email, "user_id": best_user.id})
+    dept_scope = _get_user_dept_scope(db, best_user)
+
+    logger.info(f"[FACE_ID] Login successful for user {best_user.username} (confidence: {round(best_score * 100, 1)}%)")
+    return {
+        "success": True,
+        "access_token": access_token,
+        "token": access_token,
+        "refresh_token": refresh_token_value,
+        "token_type": "bearer",
+        "match_confidence": round(best_score * 100, 1),
+        "user": {
+            "id": best_user.id,
+            "username": best_user.username,
+            "full_name": getattr(best_user, "full_name", None) or best_user.username,
+            "email": best_user.email,
+            "role": best_user.role,
+            "department_id": best_user.department_id,
+            "section_id": best_user.section_id,
+            "require_password_change": getattr(best_user, "require_password_change", False),
+            "profile_photo": getattr(best_user, "profile_photo", None) or "",
+            **dept_scope
+        }
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MOBILE DEVICE BIOMETRIC QUICK LOGIN (NATIVE CAPACITOR)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.post("/biometric/device-enroll")
+def enroll_device_biometric(request: Request, db: Session = Depends(get_db)):
+    """Issues a high-entropy device-bound biometric key for the current user."""
+    from backend.cache import cache
+    import secrets
+
+    current_user = get_current_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+
+    device_key = secrets.token_urlsafe(48)
+    try:
+        cache.set(f"device_biometric_{device_key}", current_user.id, ttl_seconds=86400 * 90)
+    except Exception:
+        pass
+
+    return {
+        "success": True,
+        "device_key": device_key,
+        "username": current_user.username,
+        "full_name": getattr(current_user, "full_name", None) or current_user.username
+    }
+
+
+@router.post("/biometric/device-login")
+async def device_biometric_login(request: Request, response: Response, db: Session = Depends(get_db)):
+    """Exchanges a validated device biometric key (verified by NativeBiometric) for an access token."""
+    from backend.cache import cache
+
+    body = await request.json()
+    device_key = (body.get("device_key") or "").strip()
+    if not device_key:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Device biometric key missing.")
+
+    user_id = None
+    try:
+        user_id = cache.get(f"device_biometric_{device_key}")
+    except Exception:
+        pass
+
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Biometric session expired. Please log in with password to re-enable biometric access.")
+
+    user = db.query(User).filter(User.id == int(user_id), User.is_active == True).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    _record_user_login(db, user, request)
+    session_id, refresh_token_value = None, None
+    try:
+        refresh_token_value, session_id = create_server_admin_session(db, user, request, response)
+    except Exception:
+        db.rollback()
+
+    access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
+    dept_scope = _get_user_dept_scope(db, user)
+
+    logger.info(f"[BIOMETRIC] Device biometric login successful for user {user.username} (ID: {user.id})")
+    return {
+        "success": True,
+        "access_token": access_token,
+        "token": access_token,
+        "refresh_token": refresh_token_value,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "full_name": getattr(user, "full_name", None) or user.username,
+            "email": user.email,
+            "role": user.role,
+            "department_id": user.department_id,
+            "section_id": user.section_id,
+            "require_password_change": getattr(user, "require_password_change", False),
+            "profile_photo": getattr(user, "profile_photo", None) or "",
+            **dept_scope
+        }
+    }
 
 @router.get("/sessions")
 def get_user_sessions(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

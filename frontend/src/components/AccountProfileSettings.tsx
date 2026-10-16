@@ -22,6 +22,7 @@ import 'react-easy-crop/react-easy-crop.css';
 import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import { Capacitor } from '@capacitor/core';
 import { downloadManager } from '../services/download/downloadManager';
+import { FaceScanModal } from './FaceScanModal';
 
 const getCroppedImg = (imageSrc: string, pixelCrop: any): Promise<string> => {
   const canvas = document.createElement('canvas');
@@ -501,6 +502,47 @@ export const AccountProfileSettings: React.FC = () => {
       { category: 'ADMIN' }
     );
   };
+
+  // Camera Face ID Biometrics State
+  const [faceIdEnabled, setFaceIdEnabled] = useState<boolean>(false);
+  const [faceEnrolledAt, setFaceEnrolledAt] = useState<string | null>(null);
+  const [isFaceModalOpen, setIsFaceModalOpen] = useState<boolean>(false);
+  const [faceModalMode, setFaceModalMode] = useState<'enroll' | 'test'>('enroll');
+  const [isRemovingFace, setIsRemovingFace] = useState<boolean>(false);
+
+  const fetchFaceStatus = async () => {
+    try {
+      const res = await api.get('/auth/face/status');
+      if (res.data?.success) {
+        setFaceIdEnabled(Boolean(res.data.face_id_enabled));
+        setFaceEnrolledAt(res.data.face_enrolled_at || null);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    fetchFaceStatus();
+  }, []);
+
+  const handleRemoveFace = async () => {
+    if (!window.confirm('Are you sure you want to deactivate Face ID for your account?')) return;
+    setIsRemovingFace(true);
+    try {
+      const res = await api.delete('/auth/face/remove');
+      if (res.data?.success) {
+        setFaceIdEnabled(false);
+        setFaceEnrolledAt(null);
+        notify.success('Face ID has been deactivated.', '', { category: 'ADMIN' });
+      }
+    } catch (err: any) {
+      notify.error(err?.message || 'Failed to remove Face ID.', '', { category: 'ADMIN' });
+    } finally {
+      setIsRemovingFace(false);
+    }
+  };
+
   const [totpCodeInput, setTotpCodeInput] = useState<string>('');
   const [totpSecret, setTotpSecret] = useState<string>('');
   const [totpUri, setTotpUri] = useState<string>('');
@@ -2995,6 +3037,83 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 )}
               </div>
 
+              {/* Camera Face ID Recognition (Optional User Activation) */}
+              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
+                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-cyan-600" /> Camera Face ID Recognition
+                  </h3>
+                  <span className={`text-xs font-black px-2.5 py-0.5 rounded-md border ${
+                    faceIdEnabled
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300'
+                      : 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-navy-950/80 dark:text-slate-300'
+                  }`}>
+                    {faceIdEnabled ? 'ENROLLED & ACTIVE' : 'OPTIONAL — USER CHOICE'}
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs font-black text-slate-950 dark:text-white">AI Face Authentication</h4>
+                      {faceIdEnabled ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
+                          <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-700 dark:bg-navy-800 dark:text-slate-300">
+                          Optional
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                      {faceIdEnabled
+                        ? `Face ID is active. You can log in instantly with your face scan. Enrolled: ${faceEnrolledAt ? new Date(faceEnrolledAt).toLocaleDateString() : 'Active session'}.`
+                        : "You can optionally activate Face ID to sign in without typing passwords using your camera."}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {faceIdEnabled ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFaceModalMode('test');
+                            setIsFaceModalOpen(true);
+                          }}
+                          className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          <span>Test Face Scan</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isRemovingFace}
+                          onClick={handleRemoveFace}
+                          className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:border-rose-800 dark:text-rose-300 text-xs font-black transition-all cursor-pointer inline-flex items-center gap-1 shrink-0"
+                        >
+                          {isRemovingFace ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                          <span>Deactivate</span>
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFaceModalMode('enroll');
+                          setIsFaceModalOpen(true);
+                        }}
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>Activate Face ID</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Two-Factor Authentication 2FA */}
               <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
@@ -4231,6 +4350,23 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           </div>
         </GlobalModalBackdrop>
       )}
+
+      {/* Face Scan Modal */}
+      <FaceScanModal
+        isOpen={isFaceModalOpen}
+        mode={faceModalMode}
+        onClose={() => setIsFaceModalOpen(false)}
+        onSuccess={() => {
+          fetchFaceStatus();
+          notify.success(
+            faceModalMode === 'enroll'
+              ? 'Face ID enrolled and activated successfully!'
+              : 'Face verification passed!',
+            '',
+            { category: 'ADMIN' }
+          );
+        }}
+      />
 
     </div>
   );

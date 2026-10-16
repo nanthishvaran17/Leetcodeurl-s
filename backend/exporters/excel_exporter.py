@@ -447,57 +447,7 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
                 cell_item.alignment = ALIGN_CENTER
         cur_r1 += 1
 
-    # ── Demographic Consolidation Summary Block (TOTAL, BOYS, GIRLS, DAY SCHOLARS, HOSTELERS) ──
-    demo_list = dataset.get("demographic_summary") or dataset.get("demographic_summaries")
-    if not demo_list:
-        try:
-            from backend.services.weekly_report_service import build_demographic_consolidation_summary
-            demo_students = dataset.get("all_students_current") or dataset.get("allStudents") or dataset.get("rows") or []
-            if demo_students:
-                demo_list = build_demographic_consolidation_summary(demo_students)
-        except Exception as _e:
-            pass
-
-    if demo_list:
-        _DOUBLE_BOTTOM_BORDER = Border(
-            left=_THIN_SIDE,
-            right=_THIN_SIDE,
-            top=_THIN_SIDE,
-            bottom=Side(style='double', color='1B365D')
-        )
-        for d_idx, demo in enumerate(demo_list):
-            is_last = (d_idx == len(demo_list) - 1)
-            f_color = demo.get("fill_color") or ("E6F0FA" if d_idx == 0 else ("F8FAFC" if d_idx % 2 == 0 else "FFFFFF"))
-            d_fill = PatternFill(start_color=f_color, end_color=f_color, fill_type="solid")
-            d_font = Font(name=FONT_TNR, size=10, bold=True, color="1B365D")
-            d_border = _DOUBLE_BOTTOM_BORDER if is_last else _THIN_BORDER
-
-            ws1.row_dimensions[cur_r1].height = 24
-            ws1.cell(row=cur_r1, column=1, value=demo.get("label", "")).font = d_font
-            ws1.cell(row=cur_r1, column=2, value=demo.get("total_students", 0)).font = d_font
-            ws1.cell(row=cur_r1, column=3, value=demo.get("above_500", 0)).font = d_font
-            ws1.cell(row=cur_r1, column=4, value=demo.get("prob_250_500", 0)).font = d_font
-            ws1.cell(row=cur_r1, column=5, value=demo.get("prob_100_249", 0)).font = d_font
-            ws1.cell(row=cur_r1, column=6, value=demo.get("prob_1_99", 0)).font = d_font
-            ws1.cell(row=cur_r1, column=7, value=demo.get("prob_0", 0)).font = d_font
-            ws1.cell(row=cur_r1, column=8, value=demo.get("q4", 0)).font = d_font
-            ws1.cell(row=cur_r1, column=9, value=demo.get("q3", 0)).font = d_font
-            ws1.cell(row=cur_r1, column=10, value=demo.get("q2", 0)).font = d_font
-            q1_val = demo.get("q1", 0)
-            ws1.cell(row=cur_r1, column=11, value=q1_val if q1_val > 0 else "—").font = d_font
-            r1500 = demo.get("rating_above_1500", 0) or demo.get("rating_1500", 0)
-            rnk20 = demo.get("rank_below_20000", 0) or demo.get("ranking_20000", 0)
-            ws1.cell(row=cur_r1, column=12, value=r1500 if r1500 > 0 else "—").font = d_font
-            ws1.cell(row=cur_r1, column=13, value=rnk20 if rnk20 > 0 else "—").font = d_font
-
-            for c_x in range(1, 14):
-                c_cell = ws1.cell(row=cur_r1, column=c_x)
-                c_cell.fill = d_fill
-                c_cell.border = d_border
-                c_cell.alignment = ALIGN_CENTER
-            cur_r1 += 1
-
-    col_w1 = {1: 32, 2: 15, 3: 13, 4: 13, 5: 13, 6: 13, 7: 13, 8: 11, 9: 11, 10: 11, 11: 11, 12: 16, 13: 16}
+    col_w1 = {1: 18, 2: 15, 3: 13, 4: 13, 5: 13, 6: 13, 7: 13, 8: 11, 9: 11, 10: 11, 11: 11, 12: 16, 13: 16}
     for c_i, w in col_w1.items():
         ws1.column_dimensions[get_column_letter(c_i)].width = w
 

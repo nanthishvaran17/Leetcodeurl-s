@@ -357,8 +357,24 @@ def run_migrations():
                         ADD COLUMN IF NOT EXISTS last_activity TIMESTAMP WITH TIME ZONE,
                         ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(100),
                         ADD COLUMN IF NOT EXISTS is_2fa_enabled BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS webauthn_challenge VARCHAR(255),
+                        ADD COLUMN IF NOT EXISTS face_id_enabled BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS face_descriptor TEXT,
+                        ADD COLUMN IF NOT EXISTS face_enrolled_at TIMESTAMP WITH TIME ZONE,
                         ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                         ADD COLUMN IF NOT EXISTS reporting_manager_id INTEGER;
+                    """,
+                    """
+                    CREATE TABLE IF NOT EXISTS user_passkeys (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        credential_id VARCHAR(255) NOT NULL UNIQUE,
+                        public_key TEXT NOT NULL,
+                        sign_count INTEGER DEFAULT 0,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE INDEX IF NOT EXISTS ix_user_passkeys_user_id ON user_passkeys(user_id);
+                    CREATE UNIQUE INDEX IF NOT EXISTS ix_user_passkeys_credential_id ON user_passkeys(credential_id);
                     """,
                     """
                     ALTER TABLE students
@@ -896,6 +912,10 @@ def run_migrations():
                     ("totp_secret", "ALTER TABLE users ADD COLUMN totp_secret VARCHAR(100)"),
                     ("is_2fa_enabled", "ALTER TABLE users ADD COLUMN is_2fa_enabled BOOLEAN DEFAULT 0"),
                     ("reporting_manager_id", "ALTER TABLE users ADD COLUMN reporting_manager_id INTEGER"),
+                    ("webauthn_challenge", "ALTER TABLE users ADD COLUMN webauthn_challenge VARCHAR(255)"),
+                    ("face_id_enabled", "ALTER TABLE users ADD COLUMN face_id_enabled BOOLEAN DEFAULT 0"),
+                    ("face_descriptor", "ALTER TABLE users ADD COLUMN face_descriptor TEXT"),
+                    ("face_enrolled_at", "ALTER TABLE users ADD COLUMN face_enrolled_at DATETIME"),
                 ]
                 for col_name, sql in user_migrations:
                     if col_name not in users_cols:
@@ -905,6 +925,25 @@ def run_migrations():
                             print(f"[DB Migration] Added users column: {col_name}")
                         except Exception as col_err:
                             print(f"[DB Migration Warning] Could not add column {col_name} to users: {col_err}")
+
+            # Ensure user_passkeys table exists in SQLite
+            try:
+                conn.execute(sqlalchemy.text("""
+                    CREATE TABLE IF NOT EXISTS user_passkeys (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL,
+                        credential_id VARCHAR(255) NOT NULL UNIQUE,
+                        public_key TEXT NOT NULL,
+                        sign_count INTEGER DEFAULT 0,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+                    );
+                """))
+                conn.execute(sqlalchemy.text("CREATE INDEX IF NOT EXISTS ix_user_passkeys_user_id ON user_passkeys(user_id);"))
+                conn.execute(sqlalchemy.text("CREATE UNIQUE INDEX IF NOT EXISTS ix_user_passkeys_credential_id ON user_passkeys(credential_id);"))
+                conn.commit()
+            except Exception as _pk_err:
+                pass
 
             # Check scheduled_job_executions table columns
             result_job_exec = conn.execute(

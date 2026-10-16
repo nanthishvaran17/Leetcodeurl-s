@@ -11,7 +11,7 @@
  */
 
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { isNativeMobile, getMimeTypeFromFilename, openDownloadedDocument } from './downloadUtils';
+import { isNativeMobile, getMimeTypeFromFilename, openDownloadedDocument, shareDownloadedDocument } from './downloadUtils';
 
 export interface DownloadCompletionPayload {
   filename: string;
@@ -30,6 +30,31 @@ function hashStringToId(str: string): number {
   return (Math.abs(hash) % 2147483647) || 1;
 }
 
+/**
+ * Resolves the dynamic notification action configuration based on file extension.
+ * Excel/CSV: "Open in Excel"
+ * PDF: "Open in PDF"
+ * Word: "Open in Word"
+ * PowerPoint: "Open in PowerPoint"
+ * Others: "Open File"
+ */
+export function getReportActionConfig(filename: string): { actionTypeId: string; openTitle: string } {
+  const ext = filename.split('.').pop()?.toLowerCase() || '';
+  if (['xlsx', 'xls', 'csv'].includes(ext)) {
+    return { actionTypeId: 'DOWNLOAD_ACTION_EXCEL', openTitle: 'Open in Excel' };
+  }
+  if (ext === 'pdf') {
+    return { actionTypeId: 'DOWNLOAD_ACTION_PDF', openTitle: 'Open in PDF' };
+  }
+  if (['docx', 'doc'].includes(ext)) {
+    return { actionTypeId: 'DOWNLOAD_ACTION_WORD', openTitle: 'Open in Word' };
+  }
+  if (['pptx', 'ppt'].includes(ext)) {
+    return { actionTypeId: 'DOWNLOAD_ACTION_PPT', openTitle: 'Open in PowerPoint' };
+  }
+  return { actionTypeId: 'DOWNLOAD_ACTION_GENERIC', openTitle: 'Open File' };
+}
+
 class DownloadNotificationService {
   private initialized = false;
 
@@ -40,8 +65,8 @@ class DownloadNotificationService {
   }
 
   /**
-   * Initializes notification tap listeners and action categories.
-   * Guarantees tapping the notification opens the report directly in Excel or document viewer.
+   * Initializes notification tap listeners and dynamic action categories.
+   * Guarantees tapping the notification opens the report directly in Excel, Word, PDF or document viewer.
    */
   async initNotificationListeners(): Promise<void> {
     if (this.initialized) return;
@@ -49,9 +74,74 @@ class DownloadNotificationService {
 
     if (isNativeMobile()) {
       try {
-        // Register Action Types (Action buttons on Android notification drawer)
+        // Register Action Types dynamically based on document formats
         await LocalNotifications.registerActionTypes({
           types: [
+            {
+              id: 'DOWNLOAD_ACTION_EXCEL',
+              actions: [
+                {
+                  id: 'OPEN_EXCEL',
+                  title: 'Open in Excel',
+                },
+                {
+                  id: 'SHARE_FILE',
+                  title: 'Share',
+                },
+              ],
+            },
+            {
+              id: 'DOWNLOAD_ACTION_PDF',
+              actions: [
+                {
+                  id: 'OPEN_PDF',
+                  title: 'Open in PDF',
+                },
+                {
+                  id: 'SHARE_FILE',
+                  title: 'Share',
+                },
+              ],
+            },
+            {
+              id: 'DOWNLOAD_ACTION_WORD',
+              actions: [
+                {
+                  id: 'OPEN_WORD',
+                  title: 'Open in Word',
+                },
+                {
+                  id: 'SHARE_FILE',
+                  title: 'Share',
+                },
+              ],
+            },
+            {
+              id: 'DOWNLOAD_ACTION_PPT',
+              actions: [
+                {
+                  id: 'OPEN_PPT',
+                  title: 'Open in PowerPoint',
+                },
+                {
+                  id: 'SHARE_FILE',
+                  title: 'Share',
+                },
+              ],
+            },
+            {
+              id: 'DOWNLOAD_ACTION_GENERIC',
+              actions: [
+                {
+                  id: 'OPEN_FILE',
+                  title: 'Open File',
+                },
+                {
+                  id: 'SHARE_FILE',
+                  title: 'Share',
+                },
+              ],
+            },
             {
               id: 'DOWNLOAD_ACTIONS',
               actions: [
@@ -70,7 +160,7 @@ class DownloadNotificationService {
 
         // Listen for user tapping or selecting an action on the notification
         LocalNotifications.addListener('localNotificationActionPerformed', async (action) => {
-          console.log('[DownloadNotification] Notification tapped by user:', action);
+          console.log('[DownloadNotification] Notification action performed by user:', action);
           const extra = action.notification?.extra || {};
           const actionId = action.actionId;
 
@@ -79,23 +169,18 @@ class DownloadNotificationService {
           const mimeType = extra.mimeType || getMimeTypeFromFilename(filename);
 
           if (actionId === 'SHARE_FILE') {
+            console.log(`[DownloadNotification] Triggering share for: ${filename}`);
             try {
-              const { Share } = await import('@capacitor/share');
-              await Share.share({
-                title: filename,
-                text: `Report: ${filename}`,
-                url: filePath,
-                dialogTitle: `Share ${filename}`,
-              });
-              return;
+              await shareDownloadedDocument(filePath, filename, mimeType);
             } catch (err) {
-              console.warn('[DownloadNotification] Share action fallback failed:', err);
+              console.warn('[DownloadNotification] Share action failed:', err);
             }
+            return; // STRICT RETURN: Do not fall through to openDownloadedDocument!
           }
 
-          // Default tap on the notification card OR 'Open in Excel' button
+          // User tapped 'OPEN_EXCEL', 'OPEN_PDF', 'OPEN_WORD', 'OPEN_FILE' OR notification body ('tap')
           if (filePath || filename) {
-            console.log(`[DownloadNotification] Opening ${filename} in Excel/document viewer...`);
+            console.log(`[DownloadNotification] Opening ${filename} in document viewer... (action: ${actionId})`);
             await openDownloadedDocument(filePath, filename, mimeType);
           }
         });
@@ -149,6 +234,7 @@ class DownloadNotificationService {
 
     const title = 'Report downloaded';
     const body = filename;
+    const { actionTypeId, openTitle } = getReportActionConfig(filename);
 
     // 1. Native Mobile (Capacitor LocalNotifications)
     if (isNativeMobile()) {
@@ -162,7 +248,7 @@ class DownloadNotificationService {
               channelId: 'leetcode_intelligence_channel',
               smallIcon: 'ic_stat_notification',
               iconColor: '#3b82f6',
-              actionTypeId: 'DOWNLOAD_ACTIONS',
+              actionTypeId: actionTypeId,
               extra: {
                 type: 'DOWNLOAD_COMPLETE',
                 filePath: localFileUri,
@@ -178,7 +264,7 @@ class DownloadNotificationService {
             },
           ],
         });
-        console.log(`[DownloadNotification] Native completion notification posted: id=${notifId} file="${filename}"`);
+        console.log(`[DownloadNotification] Native completion notification posted: id=${notifId} file="${filename}" actionType="${actionTypeId}" ("${openTitle}")`);
         return;
       } catch (err) {
         console.warn('[DownloadNotification] Native local notification error:', err);
@@ -197,6 +283,10 @@ class DownloadNotificationService {
                 icon: '/nec_25_logo.png',
                 badge: '/nec_25_logo.png',
                 tag: `download-${notifId}`,
+                actions: [
+                  { action: 'open_file', title: openTitle },
+                  { action: 'share_file', title: 'Share' },
+                ],
                 data: {
                   type: 'DOWNLOAD_COMPLETE',
                   filename,

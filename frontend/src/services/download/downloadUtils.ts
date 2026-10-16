@@ -125,6 +125,7 @@ import { registerPlugin } from '@capacitor/core';
 
 export interface DocumentOpenerPluginType {
   openDocument(options: { path: string; filename: string; mimeType?: string }): Promise<void>;
+  shareDocument(options: { path: string; filename: string; mimeType?: string }): Promise<void>;
   fileExists(options: { path: string; filename: string }): Promise<{ exists: boolean; size?: number }>;
   saveToDownloads(options: { data: string; filename: string; mimeType?: string }): Promise<{ success: boolean; path: string; fileUri: string; publicUri: string }>;
 }
@@ -273,7 +274,70 @@ export function showFileUnavailableNotice(filename?: string) {
   }
 }
 
-/** Native Android file open/share helper via Capacitor Share plugin */
+/** Native Android file share helper via DocumentOpener.shareDocument with fallback to Share plugin and Web Share */
+export async function shareDownloadedDocument(
+  fileUri: string,
+  filename: string,
+  mimeType?: string
+): Promise<{ success: boolean; error?: string }> {
+  const effectiveMime = mimeType || getMimeTypeFromFilename(filename);
+
+  if (isNativeMobile()) {
+    // 1. Primary: Android Native ACTION_SEND chooser via DocumentOpener
+    try {
+      await DocumentOpener.shareDocument({
+        path: fileUri,
+        filename,
+        mimeType: effectiveMime,
+      });
+      console.log(`[DownloadUtils] Native shareDocument launched for ${filename}`);
+      return { success: true };
+    } catch (pluginErr) {
+      console.warn('[DownloadUtils] DocumentOpener.shareDocument failed, trying Capacitor Share fallback:', pluginErr);
+    }
+
+    // 2. Fallback: Capacitor Share plugin
+    try {
+      const { Share } = await import('@capacitor/share');
+      let shareUrl: string | undefined = fileUri;
+      if (!shareUrl.startsWith('file:') && !shareUrl.startsWith('http')) {
+        if (shareUrl.startsWith('/')) {
+          shareUrl = `file://${shareUrl}`;
+        } else {
+          shareUrl = undefined;
+        }
+      }
+
+      await Share.share({
+        title: filename,
+        text: `Report: ${filename}`,
+        url: shareUrl,
+        dialogTitle: `Share ${filename}`,
+      });
+      return { success: true };
+    } catch (shareErr: any) {
+      console.warn('[DownloadUtils] Capacitor Share failed:', shareErr);
+      return { success: false, error: shareErr?.message || 'Failed to share file' };
+    }
+  }
+
+  // 3. Web Navigator Share fallback
+  if (typeof navigator !== 'undefined' && (navigator as any).share) {
+    try {
+      await (navigator as any).share({
+        title: filename,
+        text: `Report: ${filename}`,
+      });
+      return { success: true };
+    } catch (webErr) {
+      console.warn('[DownloadUtils] Web share error:', webErr);
+    }
+  }
+
+  return { success: false, error: 'Sharing not supported on this platform' };
+}
+
+/** Native Android file open/share helper via DocumentOpener/Share plugin */
 export async function shareOrOpenFile(fileUri: string, filename: string, mimeType?: string): Promise<void> {
   await openDownloadedDocument(fileUri, filename, mimeType);
 }

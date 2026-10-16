@@ -672,6 +672,9 @@ class User(Base):
     totp_secret = Column(String(100), nullable=True)
     is_2fa_enabled = Column(Boolean, default=False)
     webauthn_challenge = Column(String(255), nullable=True)
+    face_id_enabled = Column(Boolean, default=False)
+    face_descriptor = Column(Text, nullable=True)
+    face_enrolled_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     passkeys = relationship("UserPasskey", back_populates="user", cascade="all, delete-orphan")

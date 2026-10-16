@@ -2240,86 +2240,6 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       return { batch: cb.label, year: cb.year, total_students: 0, current_week: {}, last_week: {} };
                     });
 
-                    // Canonical Demographic & Accommodation Breakdown: TOTAL, BOYS, GIRLS, DAY SCHOLAR, HOSTEL
-                    let demographicSummaries: any[] = Array.isArray(report.demographic_summary) && report.demographic_summary.length > 0
-                      ? report.demographic_summary
-                      : (Array.isArray(report.demographic_summaries) && report.demographic_summaries.length > 0 ? report.demographic_summaries : []);
-
-                    if (!demographicSummaries || demographicSummaries.length === 0) {
-                      const roster = report.all_students_current || report.allStudents || report.rows || report.student_list || [];
-                      if (Array.isArray(roster) && roster.length > 0) {
-                        const FEMALE_KEYWORDS = [
-                          'SHREE', 'DEVI', 'PRIYA', 'SRI', 'DHARSHINI', 'VARSHINI', 'JANANI', 'SOWMIYA',
-                          'SHARMILA', 'POOMITHA', 'RITHIKA', 'RITHANIKA', 'KIRUTHIKAA', 'AMRUTHA', 'DHANUSHYA',
-                          'HARDIKA', 'INIYA', 'LAKSANA', 'NETHRA', 'NIVETHYTHA', 'NIVETHA', 'PRITHIKA',
-                          'RADHISRI', 'SUPRIYA', 'VEDHASREE', 'YAZHINI', 'GAYATHRI', 'KAVYA', 'SNEHA',
-                          'SWETHA', 'NANDHINI', 'ABINAYA', 'KEERTHANA', 'PAVITHRA', 'ANANYA', 'DEEPIKA',
-                          'ARCHANA', 'HARINI', 'MONISHA', 'SANDHIYA', 'SUBHASHINI', 'SUBASHREE', 'BHUVANESHWARI',
-                          'SOUNDARYA', 'AISWARYA', 'AISHWARYA', 'MEENA', 'KARTHIKA', 'DIVYA', 'POOJA',
-                          'MADHUMITHA', 'MITHRA', 'SWATHI', 'THANANYA', 'SUSHMITHA', 'LAVANYA', 'HEMA',
-                          'PREETHI', 'RESHMA', 'SARANYA', 'SUJITHA', 'SUGANYA', 'RAMYA', 'REVATHI', 'GOWRI',
-                          'PRIYADHARSHINI', 'AARATHANA', 'AARSIKA', 'SAHANAJ', 'SURUTHI', 'SUSITHA',
-                          'GOWRIPRIYA', 'JAYASRI', 'JEEVITHA', 'PRADEEPA', 'THARANYA', 'SUVATHI',
-                          'KANISHAA', 'KANISKA', 'JANARANSHINI', 'MOWNAVARTHINI', 'SRIVIDHYA', 'STEFFY',
-                          'SUBITHA', 'ABIRAMI', 'CHRISTINA', 'SHRUTI'
-                        ];
-                        const MALE_OVERRIDE = ['SELVAN', 'SANJAY', 'SRIDHAR'];
-
-                        const isGirl = (s: any) => {
-                          const g = String(s.gender || '').trim().toUpperCase();
-                          if (['F', 'FEMALE', 'GIRL', 'WOMAN'].includes(g)) return true;
-                          if (['M', 'MALE', 'BOY', 'MAN'].includes(g)) return false;
-                          const name = String(s.name || s.student || s.student_name || '').trim().toUpperCase();
-                          if (MALE_OVERRIDE.some(m => name.includes(m))) return false;
-                          return FEMALE_KEYWORDS.some(f => name.includes(f));
-                        };
-
-                        const isHostel = (s: any) => {
-                          const acc = String(s.accommodation || s.accom || s.accommodation_type || '').trim().toUpperCase();
-                          return acc.includes('HOSTEL') || acc === 'H';
-                        };
-
-                        const cfgs = [
-                          { label: 'TOTAL SOLVED COUNT', filter: () => true, bg: 'bg-[#E6F0FA] dark:bg-[#162747]', text: 'text-[#1B365D] dark:text-[#E2E8F0]' },
-                          { label: 'BOYS SOLVED COUNT', filter: (s: any) => !isGirl(s), bg: 'bg-white dark:bg-navy-950', text: 'text-[#1B365D] dark:text-[#CBD5E1]' },
-                          { label: 'GIRLS SOLVED COUNT', filter: (s: any) => isGirl(s), bg: 'bg-[#F8FAFC] dark:bg-navy-900/50', text: 'text-[#1B365D] dark:text-[#CBD5E1]' },
-                          { label: 'DAY SCHOLARS (D) SOLVED COUNT', filter: (s: any) => !isHostel(s), bg: 'bg-white dark:bg-navy-950', text: 'text-[#1B365D] dark:text-[#CBD5E1]' },
-                          { label: 'HOSTELERS (H) SOLVED COUNT', filter: (s: any) => isHostel(s), bg: 'bg-[#F8FAFC] dark:bg-navy-900/50', text: 'text-[#1B365D] dark:text-[#CBD5E1]' },
-                        ];
-
-                        demographicSummaries = cfgs.map(cfg => {
-                          const sub = roster.filter(cfg.filter);
-                          const tot = sub.length;
-                          const above500 = sub.filter((s: any) => Number(s.total_solved || s.solved || 0) > 500).length;
-                          const p250_500 = sub.filter((s: any) => { const n = Number(s.total_solved || s.solved || 0); return n >= 250 && n <= 500; }).length;
-                          const p100_249 = sub.filter((s: any) => { const n = Number(s.total_solved || s.solved || 0); return n >= 100 && n < 250; }).length;
-                          const p1_99 = sub.filter((s: any) => { const n = Number(s.total_solved || s.solved || 0); return n >= 1 && n < 100; }).length;
-                          const p0 = sub.filter((s: any) => Number(s.total_solved || s.solved || 0) === 0).length;
-                          const q4 = sub.filter((s: any) => String(s.public_result || '') === '4_SOLVED').length;
-                          const q3 = sub.filter((s: any) => String(s.public_result || '') === '3_SOLVED').length;
-                          const q2 = sub.filter((s: any) => String(s.public_result || '') === '2_SOLVED').length;
-                          const q1 = sub.filter((s: any) => String(s.public_result || '') === '1_SOLVED').length;
-                          const r1500 = sub.filter((s: any) => Number(s.contest_rating || 0) > 1500).length;
-                          const rnk20 = sub.filter((s: any) => { const r = Number(s.contest_ranking || s.contest_global_ranking || 0); return r > 0 && r < 20000; }).length;
-
-                          return {
-                            label: cfg.label,
-                            total_students: tot,
-                            above_500: above500,
-                            prob_250_500: p250_500,
-                            prob_100_249: p100_249,
-                            prob_1_99: p1_99,
-                            prob_0: p0,
-                            q4, q3, q2, q1,
-                            rating_above_1500: r1500,
-                            rank_below_20000: rnk20,
-                            bgClass: cfg.bg,
-                            textClass: cfg.text
-                          };
-                        });
-                      }
-                    }
-
                     return (
                       <div className="space-y-4">
                         {/* Institutional Official Paper Header Card */}
@@ -2435,38 +2355,6 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               </div>
                             );
                           })}
-
-                          {/* Mobile Demographic Summary Cards */}
-                          {demographicSummaries && demographicSummaries.length > 0 && (
-                            <div className="space-y-2 pt-2 border-t-2 border-slate-300 dark:border-slate-700">
-                              <div className="text-[11px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">
-                                Demographic &amp; Accommodation Summary
-                              </div>
-                              <div className="grid grid-cols-1 gap-2">
-                                {demographicSummaries.map((d: any, dIdx: number) => (
-                                  <div key={`m-demo-${dIdx}`} className={`p-3 rounded-xl border-2 border-slate-300 dark:border-slate-700 ${dIdx === 0 ? 'bg-[#E6F0FA]/90 dark:bg-[#162747]/70' : 'bg-white dark:bg-navy-950'} shadow-2xs space-y-1.5`}>
-                                    <div className="flex items-center justify-between pb-1 border-b border-slate-200 dark:border-slate-800">
-                                      <span className="text-xs font-black text-[#1B365D] dark:text-[#E2E8F0] uppercase tracking-wide">{d.label}</span>
-                                      <span className="text-xs font-black px-2 py-0.5 rounded bg-brand-100 dark:bg-brand-950 text-brand-800 dark:text-brand-300 font-mono">
-                                        {d.total_students ?? d.num_students ?? 0} Students
-                                      </span>
-                                    </div>
-                                    <div className="grid grid-cols-5 gap-1 text-center text-[10px]">
-                                      <div className="p-1 rounded bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">&gt;500</div><div className="font-black text-slate-900 dark:text-white">{d.above_500 ?? d.prob_above_500 ?? 0}</div></div>
-                                      <div className="p-1 rounded bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">250-500</div><div className="font-black text-slate-900 dark:text-white">{d.prob_250_500 ?? d['250_500'] ?? 0}</div></div>
-                                      <div className="p-1 rounded bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">&lt;250</div><div className="font-black text-slate-900 dark:text-white">{d.prob_100_249 ?? d['101_250'] ?? 0}</div></div>
-                                      <div className="p-1 rounded bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">&lt;100</div><div className="font-black text-slate-900 dark:text-white">{d.prob_1_99 ?? d.less_100 ?? 0}</div></div>
-                                      <div className="p-1 rounded bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">Not start</div><div className="font-black text-slate-900 dark:text-white">{d.prob_0 ?? d.not_started ?? 0}</div></div>
-                                    </div>
-                                    <div className="flex items-center justify-between text-[10px] pt-0.5 text-slate-600 dark:text-slate-400 font-mono">
-                                      <span>Contest Solves:</span>
-                                      <span className="font-bold">4Q: {d.q4 ?? 0} | 3Q: {d.q3 ?? 0} | 2Q: {d.q2 ?? 0} | 1Q: {(d.q1 ?? 0) > 0 ? d.q1 : '—'}</span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
                         </div>
 
                         {/* Desktop Multi-Level Institutional Table (>= md) */}
@@ -2564,58 +2452,6 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                       </td>
                                     </tr>
                                   </React.Fragment>
-                                );
-                              })}
-
-                              {/* ── Consolidation Summary Block (TOTAL, BOYS, GIRLS, DAY SCHOLARS, HOSTELERS) ── */}
-                              {demographicSummaries && demographicSummaries.map((d: any, dIdx: number) => {
-                                const isLast = dIdx === demographicSummaries.length - 1;
-                                const bg = d.bgClass || (dIdx === 0 ? 'bg-[#E6F0FA] dark:bg-[#162747]' : (dIdx % 2 === 0 ? 'bg-[#F8FAFC] dark:bg-navy-900/50' : 'bg-white dark:bg-navy-950'));
-                                const text = d.textClass || (dIdx === 0 ? 'text-[#1B365D] dark:text-[#E2E8F0] font-black' : 'text-[#1B365D] dark:text-[#CBD5E1] font-bold');
-                                const borderBottom = isLast ? 'border-b-2 border-b-[#1B365D] dark:border-b-blue-400' : 'border-b border-slate-300 dark:border-slate-700';
-
-                                return (
-                                  <tr key={`demo-${dIdx}`} className={`${bg} ${borderBottom} transition-colors`}>
-                                    <td className={`px-3.5 py-2.5 border border-slate-400 dark:border-slate-600 ${text} text-center uppercase tracking-wider text-[11px] sm:text-xs font-black`}>
-                                      {d.label}
-                                    </td>
-                                    <td className={`px-2 py-2.5 border border-slate-400 dark:border-slate-600 text-center font-black ${text}`}>
-                                      {d.total_students ?? d.num_students ?? 0}
-                                    </td>
-                                    <td className={`px-2 py-2.5 border border-slate-400 dark:border-slate-600 text-center font-bold ${text}`}>
-                                      {d.above_500 ?? d.prob_above_500 ?? 0}
-                                    </td>
-                                    <td className={`px-2 py-2.5 border border-slate-400 dark:border-slate-600 text-center font-bold ${text}`}>
-                                      {d.prob_250_500 ?? d['250_500'] ?? 0}
-                                    </td>
-                                    <td className={`px-2 py-2.5 border border-slate-400 dark:border-slate-600 text-center font-bold ${text}`}>
-                                      {d.prob_100_249 ?? d['101_250'] ?? 0}
-                                    </td>
-                                    <td className={`px-2 py-2.5 border border-slate-400 dark:border-slate-600 text-center font-bold ${text}`}>
-                                      {d.prob_1_99 ?? d.less_100 ?? 0}
-                                    </td>
-                                    <td className={`px-2 py-2.5 border border-slate-400 dark:border-slate-600 text-center font-bold ${text}`}>
-                                      {d.prob_0 ?? d.not_started ?? 0}
-                                    </td>
-                                    <td className={`px-2 py-2.5 border border-slate-400 dark:border-slate-600 text-center font-bold ${text}`}>
-                                      {d.q4 ?? 0}
-                                    </td>
-                                    <td className={`px-2 py-2.5 border border-slate-400 dark:border-slate-600 text-center font-bold ${text}`}>
-                                      {d.q3 ?? 0}
-                                    </td>
-                                    <td className={`px-2 py-2.5 border border-slate-400 dark:border-slate-600 text-center font-bold ${text}`}>
-                                      {d.q2 ?? 0}
-                                    </td>
-                                    <td className={`px-2 py-2.5 border border-slate-400 dark:border-slate-600 text-center font-bold ${text}`}>
-                                      {(d.q1 ?? 0) > 0 ? d.q1 : '—'}
-                                    </td>
-                                    <td className={`px-2 py-2.5 border border-slate-400 dark:border-slate-600 text-center font-bold ${text}`}>
-                                      {(d.rating_above_1500 ?? d.rating_1500 ?? 0) > 0 ? (d.rating_above_1500 ?? d.rating_1500) : '—'}
-                                    </td>
-                                    <td className={`px-2 py-2.5 border border-slate-400 dark:border-slate-600 text-center font-bold ${text}`}>
-                                      {(d.rank_below_20000 ?? d.ranking_20000 ?? 0) > 0 ? (d.rank_below_20000 ?? d.ranking_20000) : '—'}
-                                    </td>
-                                  </tr>
                                 );
                               })}
                             </tbody>

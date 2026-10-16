@@ -6,13 +6,16 @@ import {
   Lock, Mail, User, Eye, EyeOff, CheckCircle2, AlertCircle,
   ArrowRight, RefreshCw, HelpCircle, ShieldCheck,
   KeyRound, X, Check, Calendar, Building2, Shield,
-  Cpu, Layers, CheckCircle, ChevronRight, Loader2
+  Cpu, Layers, CheckCircle, ChevronRight, Loader2,
+  Fingerprint, Camera, Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 import { CollegeLogo } from '../components/CollegeLogo';
 import api from '../services/api';
 import { isCapacitorNative } from '../config/apiConfig';
+import { FaceScanModal } from '../components/FaceScanModal';
+import { startAuthentication, browserSupportsWebAuthn } from '@simplewebauthn/browser';
 
 interface LoginPageProps {
   onSuccess: () => void;
@@ -275,6 +278,97 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     } catch (e) {}
   }, []);
 
+  // Biometric & Face ID States
+  const [isFaceModalOpen, setIsFaceModalOpen] = useState(false);
+  const [isNativeBiometricAvailable, setIsNativeBiometricAvailable] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isCapacitorNative()) {
+      import('@capgo/capacitor-native-biometric').then(({ NativeBiometric }) => {
+        NativeBiometric.isAvailable().then(res => {
+          setIsNativeBiometricAvailable(Boolean(res.isAvailable));
+        }).catch(() => setIsNativeBiometricAvailable(false));
+      }).catch(() => setIsNativeBiometricAvailable(false));
+    }
+  }, []);
+
+  const handleFaceLoginSuccess = (data: any) => {
+    if (data?.access_token || data?.token) {
+      setSuccessMsg(`Welcome back, ${data?.user?.full_name || data?.user?.username || 'User'}!`);
+      login(data.access_token || data.token, data.user);
+      setTimeout(() => { onSuccess(); }, 300);
+    }
+  };
+
+  const handlePasskeyLogin = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      clearAuthError();
+      setAuthStatusText('Awaiting biometric confirmation...');
+
+      const optionsRes = await api.post('/auth/passkey/login-options', {
+        username: username.trim() || undefined
+      });
+      const options = optionsRes.data?.options || optionsRes.data;
+      if (!options || !options.challenge) {
+        throw new Error('Could not retrieve passkey options from server.');
+      }
+
+      const authResp = await startAuthentication(options);
+      setAuthStatusText('Verifying credential...');
+      const verifyRes = await api.post('/auth/passkey/login-verify', authResp);
+
+      if (verifyRes.data?.success && (verifyRes.data?.access_token || verifyRes.data?.token)) {
+        setSuccessMsg(`Authenticated successfully via Passkey!`);
+        login(verifyRes.data.access_token || verifyRes.data.token, verifyRes.data.user);
+        setTimeout(() => { onSuccess(); }, 200);
+      } else {
+        throw new Error(verifyRes.data?.message || 'Passkey authentication failed.');
+      }
+    } catch (err: any) {
+      console.warn('Passkey error:', err);
+      setError(err?.response?.data?.message || err?.message || 'Biometric verification cancelled or not recognized.');
+      triggerShake();
+    } finally {
+      setLoading(false);
+      setAuthStatusText('');
+    }
+  };
+
+  const handleNativeBiometricLogin = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      clearAuthError();
+      const { NativeBiometric } = await import('@capgo/capacitor-native-biometric');
+      await NativeBiometric.verifyIdentity({
+        reason: 'Sign into Nandha LeetCode Intelligence with your fingerprint or face',
+        title: 'Device Biometric Login',
+        subtitle: 'Touch sensor or scan face'
+      });
+
+      const deviceKey = localStorage.getItem('nec_device_biometric_key');
+      if (deviceKey) {
+        const res = await api.post('/auth/biometric/device-login', { device_key: deviceKey });
+        if (res.data?.success) {
+          setSuccessMsg(`Welcome back, ${res.data?.user?.full_name || res.data?.user?.username || 'User'}!`);
+          login(res.data.access_token || res.data.token, res.data.user);
+          setTimeout(() => { onSuccess(); }, 200);
+          return;
+        }
+      }
+      setError('No saved biometric session found on this device. Sign in with password once to link your device biometrics.');
+      triggerShake();
+    } catch (err: any) {
+      console.warn('Native biometric error:', err);
+      setError(err?.message || 'Biometric verification cancelled.');
+      triggerShake();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 1. Password Login Handler
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -309,6 +403,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           localStorage.removeItem('nec_remembered_password');
         }
         login(res.data.access_token, res.data.user);
+        // Silently enroll device biometric key for 1-tap subsequent unlock
+        api.post('/auth/biometric/device-enroll').then(r => {
+          if (r.data?.device_key) localStorage.setItem('nec_device_biometric_key', r.data.device_key);
+        }).catch(() => {});
         setTimeout(() => { onSuccess(); }, 180);
       }
     } catch (err: any) {
@@ -829,6 +927,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                     >
                       Secure OTP
                     </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={authMode === 'passkey'}
+                      className={authMode === 'passkey' ? 'active' : ''}
+                      onClick={() => { setAuthMode('passkey'); setError(''); clearAuthError(); }}
+                    >
+                      <Fingerprint size={15} className="inline mr-1" /> Biometrics
+                    </button>
                   </motion.div>
 
                   {/* Password Form */}
@@ -914,7 +1021,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                         )}
                       </motion.button>
                     </form>
-                  ) : (
+                  ) : authMode === 'otp' ? (
                     /* OTP Form */
                     <form onSubmit={otpStep === 'email' ? handleSendOtp : handleVerifyOtp} noValidate>
                       <div className="field">
@@ -991,6 +1098,82 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                         {!loading && <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />}
                       </button>
                     </form>
+                  ) : (
+                    /* Biometric / Face ID Mode */
+                    <div className="biometric-login-view space-y-4 pt-1">
+                      <div className="text-center space-y-1 mb-4">
+                        <div className="w-12 h-12 mx-auto rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-800 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shadow-xs">
+                          <Fingerprint size={24} />
+                        </div>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Biometric & Face Sign In</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Authenticate securely using facial recognition or hardware biometrics
+                        </p>
+                      </div>
+
+                      <div className="field mb-3">
+                        <label htmlFor="biometricUserId">Institutional Email or User ID (Optional)</label>
+                        <div className="input-wrap">
+                          <User className="input-icon" size={19} aria-hidden="true" />
+                          <input
+                            id="biometricUserId"
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="username or email (optional)"
+                            autoComplete="username"
+                            autoCapitalize="none"
+                            spellCheck={false}
+                            disabled={loading}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Primary Action 1: Camera Face ID */}
+                      <button
+                        type="button"
+                        onClick={() => setIsFaceModalOpen(true)}
+                        disabled={loading}
+                        className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white text-xs font-black flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99] cursor-pointer"
+                      >
+                        <Camera size={18} />
+                        <span>Scan Face to Sign In</span>
+                        <Sparkles size={14} className="text-cyan-200" />
+                      </button>
+
+                      {/* Primary Action 2: Mobile Fingerprint / Device Passkey */}
+                      {isCapacitorNative() ? (
+                        <button
+                          type="button"
+                          onClick={handleNativeBiometricLogin}
+                          disabled={loading}
+                          className="w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-navy-800 dark:hover:bg-navy-700 border border-slate-700 text-xs font-black flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.99] cursor-pointer"
+                        >
+                          <Fingerprint size={18} className="text-cyan-400" />
+                          <span>Device Fingerprint / Face Unlock</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handlePasskeyLogin}
+                          disabled={loading}
+                          className="w-full py-3.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-white border border-slate-300 dark:border-navy-700 text-xs font-black flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.99] cursor-pointer"
+                        >
+                          <Fingerprint size={18} className="text-cyan-600 dark:text-cyan-400" />
+                          <span>Windows Hello / Touch ID / Passkey</span>
+                        </button>
+                      )}
+
+                      <div className="text-center pt-2">
+                        <button
+                          type="button"
+                          onClick={() => { setAuthMode('password'); setError(''); }}
+                          className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:underline"
+                        >
+                          Use Password instead
+                        </button>
+                      </div>
+                    </div>
                   )}
 
                   {/* Single Institutional Help Row */}
@@ -1322,6 +1505,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           LEARN | SERVE | SUCCEED
         </p>
       </footer>
+
+      {/* Face Scan Modal for Login */}
+      <FaceScanModal
+        isOpen={isFaceModalOpen}
+        mode="login"
+        usernameHint={username.trim() || undefined}
+        onClose={() => setIsFaceModalOpen(false)}
+        onSuccess={handleFaceLoginSuccess}
+      />
     </div>
   );
 };
