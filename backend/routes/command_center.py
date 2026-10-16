@@ -198,15 +198,20 @@ def get_command_center_summary(
         )
         heatmap_matrix = get_year_section_heatmap(db, current_user, dept_id=dept_id)
 
+        auth_depts = get_hod_authorized_department_ids(db, current_user) if (is_hod and not is_global_admin) else None
+        prod_dept_ids = auth_depts if auth_depts else [d.id for d in db.query(Department).all() if _is_real_dept(str(d.code))]
+
         # Department metadata
         dept_obj = db.query(Department).filter(Department.id == dept_id).first() if dept_id else (
             current_user.department if current_user and current_user.department else None
         )
-        dept_name = dept_obj.name if dept_obj else "Computer Science & Engineering"
-        dept_code = dept_obj.code if dept_obj else "CSE"
+        if not dept_id and auth_depts and len(auth_depts) > 1:
+            dept_name = "All Authorized Departments"
+            dept_code = "ALL"
+        else:
+            dept_name = dept_obj.name if dept_obj else "Computer Science & Engineering"
+            dept_code = dept_obj.code if dept_obj else "CSE"
         hod_name = current_user.username if current_user else "Head of Department"
-
-        prod_dept_ids = [d.id for d in db.query(Department).all() if _is_real_dept(str(d.code))]
 
         # Active staff list for Scope Selector & Performance Table
         staff_users_q = db.query(User).options(joinedload(User.department)).filter(
@@ -1496,9 +1501,22 @@ def delete_student(reg_no: str, db: Session = Depends(get_db)):
 @router.get("/departments")
 def get_departments(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
+    is_hod = "hod" in role_clean or "head of department" in role_clean or role_clean in ["department hod", "department_hod", "placement coordinator"]
     
-    if role_clean == "hod" and current_user.department_id:
-        depts = db.query(Department).filter(Department.id == current_user.department_id).all()
+    if is_hod:
+        from backend.services.authorization_service import get_hod_authorized_department_ids
+        auth_dept_ids = get_hod_authorized_department_ids(db, current_user)
+        if auth_dept_ids:
+            depts = db.query(Department).filter(Department.id.in_(auth_dept_ids)).all()
+        elif current_user.department_id:
+            depts = db.query(Department).filter(Department.id == current_user.department_id).all()
+        else:
+            depts = []
+    elif role_clean in ["staff", "faculty", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"]:
+        if current_user.department_id:
+            depts = db.query(Department).filter(Department.id == current_user.department_id).all()
+        else:
+            depts = []
     else:
         # Load all production departments (exclude test/demo departments)
         from backend.constants import is_production_department
@@ -1518,6 +1536,8 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
             continue
         
         count = dept_counts.get(d.id, 0)
+        if count == 0:
+            continue
         name = "Information Technology" if (d.code and d.code.upper() == "IT") else d.name
         
         result.append({

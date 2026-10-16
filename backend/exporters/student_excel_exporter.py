@@ -425,12 +425,16 @@ def export_student_excel_from_dataset(dataset: dict, report_type: str = "STUDENT
             cell.border = thin_border
             
         dsa_topics = s.get("dsa_topics", [])
+        from backend.exporters.student_pdf_exporter import get_topic_proficiency
             
         for idx, dsa in enumerate(dsa_topics, start=4):
+            tier_val = dsa.get('tier', 'Intermediate')
+            solved_val = dsa.get('solved', 0)
+            prof_label, _ = get_topic_proficiency(solved_val, tier_val)
             ws5.cell(row=idx, column=1, value=dsa.get('topic')).font = bold_font
-            ws5.cell(row=idx, column=2, value=dsa.get('tier')).font = normal_font
-            ws5.cell(row=idx, column=3, value=dsa.get('solved')).font = bold_font
-            ws5.cell(row=idx, column=4, value=dsa.get('proficiency')).font = bold_font
+            ws5.cell(row=idx, column=2, value=tier_val).font = normal_font
+            ws5.cell(row=idx, column=3, value=solved_val).font = bold_font
+            ws5.cell(row=idx, column=4, value=prof_label).font = bold_font
             ws5.cell(row=idx, column=1).alignment = left_align
             ws5.cell(row=idx, column=2).alignment = center_align
             ws5.cell(row=idx, column=3).alignment = center_align

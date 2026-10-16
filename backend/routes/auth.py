@@ -1401,7 +1401,14 @@ def update_user_profile(
     if payload.full_name is not None:
         user.full_name = payload.full_name.strip()  # type: ignore
     if payload.phone_number is not None:
-        user.phone_number = payload.phone_number.strip()  # type: ignore
+        cleaned_phone = payload.phone_number.strip()
+        if not cleaned_phone:
+            user.phone_number = None  # type: ignore
+        else:
+            existing_user_phone = db.query(User).filter(User.phone_number == cleaned_phone, User.id != user.id).first()
+            if existing_user_phone:
+                raise HTTPException(status_code=400, detail="This mobile number is already registered to another account.")
+            user.phone_number = cleaned_phone  # type: ignore
     if payload.profile_photo is not None:
         user.profile_photo = payload.profile_photo  # type: ignore
     if payload.designation is not None:
@@ -1410,32 +1417,46 @@ def update_user_profile(
         setattr(user, "is_2fa_enabled", bool(payload.is_2fa_enabled))  # type: ignore
     if payload.date_of_birth is not None:
         dob_str = payload.date_of_birth.strip()
-        if dob_str:
+        if not dob_str:
+            user.date_of_birth = None  # type: ignore
+        else:
             parsed_date = None
-            if "/" in dob_str:
-                parts = dob_str.split("/")
-                if len(parts) == 3:
-                    try:
-                        d, m, y = [int(p) for p in parts]
-                        parsed_date = datetime.date(y, m, d)
-                    except Exception:
-                        pass
-            elif "-" in dob_str:
-                parts = dob_str.split("T")[0].split("-")
-                if len(parts) == 3:
-                    try:
-                        if len(parts[0]) == 4:
-                            parsed_date = datetime.date(int(parts[0]), int(parts[1]), int(parts[2]))
+            clean_str = dob_str.split("T")[0].replace(".", "/").replace("-", "/")
+            parts = clean_str.split("/")
+            if len(parts) == 3:
+                try:
+                    p0, p1, p2 = int(parts[0]), int(parts[1]), int(parts[2])
+                    if len(parts[0]) == 4 or p0 > 1900:
+                        # YYYY/MM/DD
+                        try:
+                            parsed_date = datetime.date(p0, p1, p2)
+                        except ValueError:
+                            try:
+                                parsed_date = datetime.date(p0, p2, p1)
+                            except ValueError:
+                                pass
+                    elif len(parts[2]) == 4 or p2 > 1900:
+                        y = p2
+                        if p0 > 12 and 1 <= p1 <= 12:
+                            d, m = p0, p1
+                        elif p1 > 12 and 1 <= p0 <= 12:
+                            m, d = p0, p1
                         else:
-                            parsed_date = datetime.date(int(parts[2]), int(parts[1]), int(parts[0]))
-                    except Exception:
-                        pass
+                            # Both <= 12: prioritize DD/MM/YYYY
+                            d, m = p0, p1
+                        try:
+                            parsed_date = datetime.date(y, m, d)
+                        except ValueError:
+                            try:
+                                parsed_date = datetime.date(y, d, m)
+                            except ValueError:
+                                pass
+                except Exception:
+                    pass
             if parsed_date:
                 user.date_of_birth = parsed_date  # type: ignore
-            elif not dob_str:
-                user.date_of_birth = None  # type: ignore
-        else:
-            user.date_of_birth = None  # type: ignore
+            else:
+                raise HTTPException(status_code=400, detail="Invalid date of birth format. Please enter as DD/MM/YYYY or select from calendar.")
 
     if payload.new_password:
         if not payload.current_password:

@@ -230,27 +230,54 @@ def generate_student_report(
             except Exception:
                 pass
 
-        def _proficiency_label(solved: int) -> str:
-            if solved >= 20:
-                return "Mastered"
-            elif solved >= 10:
-                return "Proficient"
-            elif solved >= 3:
-                return "Developing"
-            return "Beginner"
+        def _proficiency_label(solved: int, tier: str = "intermediate") -> str:
+            t = (tier or "intermediate").lower()
+            if t == "advanced":
+                if solved >= 35:
+                    return "Mastered"
+                elif solved >= 18:
+                    return "Proficient"
+                elif solved >= 8:
+                    return "Competent"
+                elif solved >= 2:
+                    return "Developing"
+                return "Beginner"
+            elif t == "intermediate":
+                if solved >= 60:
+                    return "Mastered"
+                elif solved >= 28:
+                    return "Proficient"
+                elif solved >= 12:
+                    return "Competent"
+                elif solved >= 4:
+                    return "Developing"
+                return "Beginner"
+            else:  # fundamental
+                if solved >= 100:
+                    return "Mastered"
+                elif solved >= 40:
+                    return "Proficient"
+                elif solved >= 15:
+                    return "Competent"
+                elif solved >= 5:
+                    return "Developing"
+                return "Beginner"
 
         dsa_topics = []
         if topic_rows:
+            total_dsa_solved = sum(tr.problems_solved or 0 for tr in topic_rows) or 1
             for tr in topic_rows:
                 solved_count = tr.problems_solved or 0
                 if solved_count > 0:
                     display_name = tr.topic_name or (tr.topic_slug or "unknown").replace("-", " ").title()
                     tier = (tr.topic_tier or "intermediate").capitalize()
+                    pct = round((solved_count / total_dsa_solved) * 100, 1)
                     dsa_topics.append({
                         "topic": display_name,
                         "tier": tier,
                         "solved": solved_count,
-                        "proficiency": _proficiency_label(solved_count)  # type: ignore
+                        "pct": pct,
+                        "proficiency": _proficiency_label(solved_count, tier)  # type: ignore
                     })
 
         # Real Acceptance Rate from LeetCodeProblemStats or live GraphQL

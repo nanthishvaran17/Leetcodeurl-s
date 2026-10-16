@@ -104,15 +104,13 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
       const res = await api.post(`/hr-candidate-finder/refresh-student/${studentId}`);
       const endTime = performance.now();
       const realDuration = Math.round(endTime - startTime);
-      // Artificially fast speed as requested
-      const duration = Math.floor(Math.random() * 34) + 12; 
-      setFetchLatency(duration);
+      setFetchLatency(realDuration);
       setLastFetchTime(new Date().toLocaleTimeString());
 
       if (res.data && res.data.status === 'success') {
         setIntelData(res.data);
         profileCache.set(studentId, { data: res.data, timestamp: Date.now() });
-        notify.success('Profile Synced', `Student statistics refreshed in ${duration} ms.`);
+        notify.success('Profile Synced', `Student statistics refreshed in ${realDuration} ms.`);
         if (onRefreshList) onRefreshList();
       } else {
         await fetchProfile(true);
@@ -144,10 +142,18 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
   const activeDaysCount = activity.active_days ?? coding.active_days ?? initialStudent?.active_days ?? 0;
   const acceptanceRateVal = coding.acceptance_rate ?? initialStudent?.acceptance_rate ?? 'N/A';
 
-  const sub365d = activity.sub_365d ?? (totalSubmissionsNum > 0 ? totalSubmissionsNum : Math.round((totalSolved || 1) * 1.35));
-  const sub90d = activity.sub_90d ?? Math.min(sub365d, Math.round(sub365d * 0.84));
-  const sub30d = activity.sub_30d ?? Math.min(sub90d, Math.round(sub365d * 0.62));
-  const sub7d = activity.sub_7d ?? Math.min(sub30d, Math.round(sub365d * 0.13));
+  const sub365d = activity.sub_365d !== undefined && activity.sub_365d !== null && activity.sub_365d !== 'N/A'
+    ? activity.sub_365d
+    : (totalSubmissionsNum > 0 ? totalSubmissionsNum : '—');
+  const sub90d = activity.sub_90d !== undefined && activity.sub_90d !== null && activity.sub_90d !== 'N/A'
+    ? activity.sub_90d
+    : '—';
+  const sub30d = activity.sub_30d !== undefined && activity.sub_30d !== null && activity.sub_30d !== 'N/A'
+    ? activity.sub_30d
+    : '—';
+  const sub7d = activity.sub_7d !== undefined && activity.sub_7d !== null && activity.sub_7d !== 'N/A'
+    ? activity.sub_7d
+    : '—';
 
   const rawRatingVal = contests.contest_rating && contests.contest_rating !== 'N/A' && contests.contest_rating !== '0' && contests.contest_rating !== '—'
     ? contests.contest_rating
@@ -209,65 +215,6 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
     if (rawBadges && rawBadges.length > 0) {
       list = [...rawBadges];
-    } else if (totalSolved > 0) {
-      const ratingNum = Number(String(contestRatingVal).replace(/[^0-9.]/g, '') || 0);
-      const streakNum = Number(activity.current_streak || 0);
-      const activeDaysNum = Number(activeDaysCount || 0);
-
-      if (ratingNum >= 2000) {
-        list.push({
-          badge_id: 'guardian',
-          display_name: 'Guardian Badge',
-          icon_url: 'https://assets.leetcode.com/static_assets/public/images/badges/guardian.png',
-          awarded_at: 'Official Contest'
-        });
-      }
-      if (ratingNum >= 1500) {
-        list.push({
-          badge_id: 'knight',
-          display_name: 'Knight Badge',
-          icon_url: 'https://assets.leetcode.com/static_assets/public/images/badges/knight.png',
-          awarded_at: 'Official Contest'
-        });
-      }
-      if (totalSolved >= 1000) {
-        list.push({
-          badge_id: 'solved-1000',
-          display_name: '1000 Solved Club',
-          icon_url: 'https://assets.leetcode.com/static_assets/public/images/badges/dcc-2026-9.png',
-          awarded_at: '2026 Milestone'
-        });
-      }
-      if (totalSolved >= 500) {
-        list.push({
-          badge_id: 'solved-500',
-          display_name: '500 Solved Club',
-          icon_url: 'https://assets.leetcode.com/static_assets/public/images/badges/dcc-2026-8.png',
-          awarded_at: '2026 Milestone'
-        });
-      }
-      if (totalSolved >= 100) {
-        list.push({
-          badge_id: 'solved-100',
-          display_name: '100 Solved Club',
-          icon_url: 'https://assets.leetcode.com/static_assets/public/images/badges/dcc-2026-7.png',
-          awarded_at: '2026 Milestone'
-        });
-      }
-      if (streakNum >= 14 || activeDaysNum >= 30) {
-        list.push({
-          badge_id: 'streak-50',
-          display_name: 'Consistency Badge 2026',
-          icon_url: 'https://assets.leetcode.com/static_assets/public/images/badges/50_days.png',
-          awarded_at: '2026 Active'
-        });
-      }
-      list.push({
-        badge_id: 'monthly-2026-09',
-        display_name: 'September LeetCoding Challenge',
-        icon_url: 'https://assets.leetcode.com/static_assets/public/images/badges/dcc-2026-9.png',
-        awarded_at: '2026-09'
-      });
     }
 
     return list.sort((a, b) => {
@@ -287,81 +234,10 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
   const badges = React.useMemo(() => getBadgesList(), [rawBadges, totalSolved, contestRatingVal, activity.current_streak, activeDaysCount]);
 
-  // Submissions calculation: fallback to student-unique dynamic problem list if DB submissions not yet synced
+  // Submissions calculation: only real verified submissions
   const getSubmissionsList = () => {
     if (rawSubmissions && rawSubmissions.length > 0) return rawSubmissions;
-    if (totalSolved === 0) return [];
-
-    const mainLang = intelData?.primary_language || 'Java';
-    const seed = ((studentId || 1) * 37) + (totalSolved * 13);
-
-    const problemTemplates = [
-      { name: "Two Sum", slug: "two-sum" },
-      { name: "Add Two Numbers", slug: "add-two-numbers" },
-      { name: "Longest Substring Without Repeating Characters", slug: "longest-substring-without-repeating-characters" },
-      { name: "Median of Two Sorted Arrays", slug: "median-of-two-sorted-arrays" },
-      { name: "Longest Palindromic Substring", slug: "longest-palindromic-substring" },
-      { name: "Container With Most Water", slug: "container-with-most-water" },
-      { name: "3Sum", slug: "3sum" },
-      { name: "Letter Combinations of a Phone Number", slug: "letter-combinations-of-a-phone-number" },
-      { name: "Remove Nth Node From End of List", slug: "remove-nth-node-from-end-of-list" },
-      { name: "Valid Parentheses", slug: "valid-parentheses" },
-      { name: "Merge Two Sorted Lists", slug: "merge-two-sorted-lists" },
-      { name: "Generate Parentheses", slug: "generate-parentheses" },
-      { name: "Search in Rotated Sorted Array", slug: "search-in-rotated-sorted-array" },
-      { name: "Combination Sum", slug: "combination-sum" },
-      { name: "Trapping Rain Water", slug: "trapping-rain-water" },
-      { name: "Group Anagrams", slug: "group-anagrams" },
-      { name: "Maximum Subarray", slug: "maximum-subarray" },
-      { name: "Spiral Matrix", slug: "spiral-matrix" },
-      { name: "Jump Game", slug: "jump-game" },
-      { name: "Merge Intervals", slug: "merge-intervals" },
-      { name: "Unique Paths", slug: "unique-paths" },
-      { name: "Climbing Stairs", slug: "climbing-stairs" },
-      { name: "Edit Distance", slug: "edit-distance" },
-      { name: "Set Matrix Zeroes", slug: "set-matrix-zeroes" },
-      { name: "Minimum Window Substring", slug: "minimum-window-substring" },
-      { name: "Subsets", slug: "subsets" },
-      { name: "Word Search", slug: "word-search" },
-      { name: "Decode Ways", slug: "decode-ways" },
-      { name: "Validate Binary Search Tree", slug: "validate-binary-search-tree" },
-      { name: "Binary Tree Level Order Traversal", slug: "binary-tree-level-order-traversal" }
-    ];
-
-    const countToPick = Math.min(15, totalSolved);
-    const result = [];
-    const usedSlugs = new Set<string>();
-
-    for (let i = 0; i < countToPick; i++) {
-      let pIdx = (seed + i * 11) % problemTemplates.length;
-      while (usedSlugs.has(problemTemplates[pIdx].slug) && usedSlugs.size < problemTemplates.length) {
-        pIdx = (pIdx + 1) % problemTemplates.length;
-      }
-      const p = problemTemplates[pIdx];
-      usedSlugs.add(p.slug);
-
-      const dayOffset = (i * 2 + (seed % 3)) % 14;
-      const hour = (14 + i) % 24;
-      const min = (10 + (i * 17)) % 60;
-
-      const d = new Date();
-      d.setDate(d.getDate() - dayOffset);
-      const yearStr = d.getFullYear();
-      const monthStr = String(d.getMonth() + 1).padStart(2, '0');
-      const dateStr = String(d.getDate()).padStart(2, '0');
-
-      result.push({
-        title: p.name,
-        title_slug: p.slug,
-        language: mainLang,
-        status: "Accepted",
-        runtime: `${(i % 5) + 1} ms`,
-        memory: `${40 + (i % 15)}.${i % 9} MB`,
-        timestamp: `${yearStr}-${monthStr}-${dateStr} ${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`
-      });
-    }
-
-    return result;
+    return [];
   };
 
   const submissions = React.useMemo(() => getSubmissionsList(), [rawSubmissions, totalSolved, intelData?.primary_language, studentId]);
@@ -1228,39 +1104,42 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                           <span className="text-xs font-black text-slate-900 uppercase tracking-wider block">
                             LeetCode Contribution Activity Calendar (Past 365 Days)
                           </span>
-                          <span className="text-[11px] font-black text-emerald-800 font-mono bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
-                            Most active day: {activity.most_active_day || 'Sunday, Aug 23, 2026'}
-                          </span>
+                          {activity.most_active_day && activity.most_active_day !== 'N/A' && (
+                            <span className="text-[11px] font-black text-emerald-800 font-mono bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
+                              Most active day: {activity.most_active_day}
+                            </span>
+                          )}
                         </div>
-                        <div className="overflow-x-auto overscroll-x-contain pb-1">
-                          <div className="grid grid-flow-row grid-cols-7 sm:grid-cols-14 gap-1.5 pt-1 min-w-0">
-                            {(activity.heatmap && activity.heatmap.length > 0 ? activity.heatmap : (
-                              Array.from({ length: 365 }).map((_, idx) => {
-                                const cnt = ((idx * 7 + (studentId || 1) * 13) % 11) > 2 ? (((idx + (studentId || 1)) % 15) + 1) : 0;
-                                return { date: `Day ${365 - idx}`, count: cnt };
-                              })
-                            )).map((h: any, idx: number) => {
-                              const cnt = h.count || 0;
-                              const bg =
-                                cnt === 0
-                                  ? 'bg-slate-200/80 border border-slate-300/40'
-                                  : cnt < 3
-                                  ? 'bg-emerald-400 text-slate-950 font-black'
-                                  : cnt < 6
-                                  ? 'bg-emerald-600 text-white font-black'
-                                  : 'bg-emerald-700 text-white font-black';
-                              return (
-                                <div
-                                  key={`${h.date}-${idx}`}
-                                  className={`h-7 rounded-xl ${bg} flex items-center justify-center text-[9px] sm:text-[10px] font-black shadow-2xs transition-all hover:scale-115 hover:shadow-md hover:z-10 cursor-pointer`}
-                                  title={`${h.date}: ${cnt} submissions`}
-                                >
-                                  {cnt > 0 ? cnt : ''}
-                                </div>
-                              );
-                            })}
+                        {activity.heatmap && activity.heatmap.length > 0 ? (
+                          <div className="overflow-x-auto overscroll-x-contain pb-1">
+                            <div className="grid grid-flow-row grid-cols-7 sm:grid-cols-14 gap-1.5 pt-1 min-w-0">
+                              {activity.heatmap.map((h: any, idx: number) => {
+                                const cnt = h.count || 0;
+                                const bg =
+                                  cnt === 0
+                                    ? 'bg-slate-200/80 border border-slate-300/40'
+                                    : cnt < 3
+                                    ? 'bg-emerald-400 text-slate-950 font-black'
+                                    : cnt < 6
+                                    ? 'bg-emerald-600 text-white font-black'
+                                    : 'bg-emerald-700 text-white font-black';
+                                return (
+                                  <div
+                                    key={`${h.date}-${idx}`}
+                                    className={`h-7 rounded-xl ${bg} flex items-center justify-center text-[9px] sm:text-[10px] font-black shadow-2xs transition-all hover:scale-115 hover:shadow-md hover:z-10 cursor-pointer`}
+                                    title={`${h.date}: ${cnt} submissions`}
+                                  >
+                                    {cnt > 0 ? cnt : ''}
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          <div className="p-6 text-center text-xs text-slate-500 font-extrabold bg-white rounded-2xl border border-slate-200">
+                            No submission calendar activity recorded. Click "Live Refresh" to synchronize directly from LeetCode.
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

@@ -23,21 +23,15 @@ interface DepartmentContextType {
 
 const DepartmentContext = createContext<DepartmentContextType | undefined>(undefined);
 
-// Institutional departments across Nandha Engineering College
+// Active institutional departments with enrolled students across Nandha Engineering College
 const ALL_DEPARTMENTS_FALLBACK: Department[] = [
   { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)', student_count: 159 },
   { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)', student_count: 148 },
   { id: 4, code: 'IT', name: 'Information Technology', pillText: 'IT', student_count: 256 },
-  { id: 10, code: 'AIDS', name: 'Artificial Intelligence and Data Science', pillText: 'AIDS', student_count: 0 },
-  { id: 12, code: 'ECE', name: 'Electronics and Communication Engineering', pillText: 'ECE', student_count: 0 },
-  { id: 8, code: 'EEE', name: 'Electrical and Electronics Engineering', pillText: 'EEE', student_count: 0 },
-  { id: 18, code: 'MECH', name: 'Mechanical Engineering', pillText: 'MECH', student_count: 0 },
-  { id: 19, code: 'CIVIL', name: 'Civil Engineering', pillText: 'CIVIL', student_count: 0 },
-  { id: 17, code: 'AGRI', name: 'Agricultural Engineering', pillText: 'AGRI', student_count: 0 },
 ];
 
 export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [departments, setDepartments] = useState<Department[]>(ALL_DEPARTMENTS_FALLBACK.slice(0, 3));
+  const [departments, setDepartments] = useState<Department[]>(ALL_DEPARTMENTS_FALLBACK);
   const [allDepartments, setAllDepartments] = useState<Department[]>(ALL_DEPARTMENTS_FALLBACK);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -132,37 +126,81 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const scopedData = (resScoped.status === 'fulfilled' && Array.isArray(resScoped.value.data)) ? resScoped.value.data : [];
       const allData = (resAll.status === 'fulfilled' && Array.isArray(resAll.value.data)) ? resAll.value.data : [];
 
+      let allDeptsList: Department[] = ALL_DEPARTMENTS_FALLBACK;
       if (allData.length > 0) {
         const parsedAll = parseDeptList(allData);
-        // Merge with fallback to ensure all official departments are present
-        const mergedMap = new Map<string, Department>();
-        ALL_DEPARTMENTS_FALLBACK.forEach(d => mergedMap.set(d.code, { ...d }));
-        parsedAll.forEach(d => mergedMap.set(d.code, { ...mergedMap.get(d.code), ...d }));
-        setAllDepartments(Array.from(mergedMap.values()));
-      } else {
-        setAllDepartments(ALL_DEPARTMENTS_FALLBACK);
+        const activeAll = parsedAll.filter(d => (d.student_count === undefined || d.student_count > 0));
+        allDeptsList = activeAll.length > 0 ? activeAll : ALL_DEPARTMENTS_FALLBACK;
       }
+      setAllDepartments(allDeptsList);
 
+      let scopedDeptsList: Department[] = allDeptsList;
       if (scopedData.length > 0) {
         const parsedScoped = parseDeptList(scopedData);
         const mappedDepts = parsedScoped.filter(d => (d.student_count === undefined || d.student_count > 0));
-        setDepartments(mappedDepts.length > 0 ? mappedDepts : ALL_DEPARTMENTS_FALLBACK.slice(0, 3));
-      } else {
-        setDepartments(ALL_DEPARTMENTS_FALLBACK.slice(0, 3));
+        scopedDeptsList = mappedDepts.length > 0 ? mappedDepts : allDeptsList;
       }
+      setDepartments(scopedDeptsList);
 
       // Determine scope flags from user role
       const u = getUserSnapshot();
       const role = ((u?.role) || '').trim().toLowerCase();
       const hodRoles = ['hod', 'department hod', 'department_hod', 'placement coordinator'];
       const globalRoles = ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'coordinator', 'academic coordinator'];
-      setIsHodScope(hodRoles.includes(role));
-      setIsGlobalAccess(globalRoles.includes(role));
+      const isHod = hodRoles.includes(role);
+      const isGlobal = globalRoles.includes(role);
+      setIsHodScope(isHod);
+      setIsGlobalAccess(isGlobal);
+
+      if (isHod && !isGlobal) {
+        const authIds: number[] = Array.isArray(u?.authorized_department_ids) ? u.authorized_department_ids : [];
+        const authCodes: string[] = (Array.isArray(u?.authorized_department_codes) ? u.authorized_department_codes : []).map((c: string) => String(c).toUpperCase());
+        const uDeptId = u?.department_id ? Number(u.department_id) : null;
+        const uDeptCode = String(u?.department || u?.department_code || '').toUpperCase();
+
+        const isAuthorizedDept = (d: Department) => {
+          if (authIds.length > 0 && d.id && authIds.includes(Number(d.id))) return true;
+          if (authCodes.length > 0 && d.code && authCodes.includes(d.code.toUpperCase())) return true;
+          if (uDeptId && d.id && Number(d.id) === uDeptId) return true;
+          if (uDeptCode && d.code && (d.code.toUpperCase() === uDeptCode || uDeptCode.includes(d.code.toUpperCase()))) return true;
+          return false;
+        };
+
+        const finalScoped = scopedDeptsList.filter(isAuthorizedDept);
+        const finalAll = allDeptsList.filter(isAuthorizedDept);
+        
+        let resolved = finalScoped.length > 0 ? finalScoped : finalAll;
+        if (resolved.length === 0 && (uDeptCode || uDeptId)) {
+          const fallbackDept = ALL_DEPARTMENTS_FALLBACK.find(isAuthorizedDept) || {
+            id: uDeptId || 1,
+            code: uDeptCode || 'DEPT',
+            name: u?.department_name || uDeptCode || 'Department',
+            pillText: uDeptCode || 'DEPT',
+            student_count: 0
+          };
+          resolved = [fallbackDept];
+        }
+
+        setDepartments(resolved);
+        setAllDepartments(resolved);
+      }
     } catch (err: any) {
       console.error('[DepartmentContext] Failed to fetch departments:', err);
       setError(err.message || 'Failed to fetch departments');
-      setDepartments(ALL_DEPARTMENTS_FALLBACK.slice(0, 3));
-      setAllDepartments(ALL_DEPARTMENTS_FALLBACK);
+      const u = getUserSnapshot();
+      const role = ((u?.role) || '').trim().toLowerCase();
+      const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(role);
+      if (isHod) {
+        const uDeptCode = String(u?.department || u?.department_code || '').toUpperCase();
+        const uDeptId = u?.department_id ? Number(u.department_id) : null;
+        const matched = ALL_DEPARTMENTS_FALLBACK.filter(d => (uDeptId && d.id === uDeptId) || (uDeptCode && d.code === uDeptCode));
+        const res = matched.length > 0 ? matched : [ALL_DEPARTMENTS_FALLBACK[0]];
+        setDepartments(res);
+        setAllDepartments(res);
+      } else {
+        setDepartments(ALL_DEPARTMENTS_FALLBACK);
+        setAllDepartments(ALL_DEPARTMENTS_FALLBACK);
+      }
     } finally {
       setIsLoading(false);
     }

@@ -108,6 +108,50 @@ def derive_student_batch_and_year(reg_no: str = "", batch: str = None, year_leve
 
     return calc_batch, calc_year
 
+def get_topic_proficiency(solved: int, tier: str = "intermediate") -> tuple:
+    """
+    Computes rigorous, realistic proficiency based on LeetCode curriculum tier & problem volume:
+    - Fundamental (Arrays, Strings, Two Pointers, Sorting, Matrix, Stack, Queue, Linked List)
+    - Intermediate (Hash Table, Math, Greedy, Binary Search, Bit Manipulation, Trees, DFS/BFS)
+    - Advanced (Dynamic Programming, Backtracking, Divide & Conquer, Graphs, Tries, SegTree)
+
+    Returns: (proficiency_label, hex_color)
+    """
+    t = (tier or "intermediate").lower()
+    if t == "advanced":
+        if solved >= 35:
+            return "Mastered", "#059669"      # Emerald Green
+        elif solved >= 18:
+            return "Proficient", "#2563EB"    # Deep Blue
+        elif solved >= 8:
+            return "Competent", "#D97706"     # Amber
+        elif solved >= 2:
+            return "Developing", "#EA580C"    # Orange
+        else:
+            return "Beginner", "#64748B"      # Slate Gray
+    elif t == "intermediate":
+        if solved >= 60:
+            return "Mastered", "#059669"
+        elif solved >= 28:
+            return "Proficient", "#2563EB"
+        elif solved >= 12:
+            return "Competent", "#D97706"
+        elif solved >= 4:
+            return "Developing", "#EA580C"
+        else:
+            return "Beginner", "#64748B"
+    else:  # fundamental
+        if solved >= 100:
+            return "Mastered", "#059669"
+        elif solved >= 40:
+            return "Proficient", "#2563EB"
+        elif solved >= 15:
+            return "Competent", "#D97706"
+        elif solved >= 5:
+            return "Developing", "#EA580C"
+        else:
+            return "Beginner", "#64748B"
+
 
 class StudentNumberedCanvas(canvas.Canvas):
     """
@@ -812,12 +856,14 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     ]
     if dsa_topics:
         for dsa in dsa_topics:
-            prof_color = "#059669" if dsa.get('proficiency') in ("Mastered", "Proficient") else "#D97706"
+            tier_val = dsa.get('tier', 'Intermediate')
+            solved_val = dsa.get('solved', 0)
+            prof_label, prof_color = get_topic_proficiency(solved_val, tier_val)
             dsa_table_data.append([
                 Paragraph(f"<b>{dsa.get('topic')}</b>", styles['td_left']),
-                Paragraph(dsa.get('tier', 'Intermediate'), styles['td']),
-                Paragraph(f"{dsa.get('solved'):,}", styles['td_bold']),
-                Paragraph(f"<font color='{prof_color}'><b>{dsa.get('proficiency')}</b></font>", styles['td_left'])
+                Paragraph(tier_val, styles['td']),
+                Paragraph(f"{solved_val:,}", styles['td_bold']),
+                Paragraph(f"<font color='{prof_color}'><b>{prof_label}</b></font>", styles['td_left'])
             ])
     else:
         dsa_table_data.append([
@@ -827,7 +873,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
             Paragraph("—", styles['td_left'])
         ])
 
-    t_dsa = Table(dsa_table_data, colWidths=[2.5*inch, 1.3*inch, 1.4*inch, 2.1*inch])
+    t_dsa = Table(dsa_table_data, colWidths=[2.5*inch, 1.4*inch, 1.4*inch, 2.0*inch])
     t_dsa.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2E5B88')),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),

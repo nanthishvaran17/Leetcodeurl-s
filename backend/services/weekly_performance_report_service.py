@@ -84,6 +84,27 @@ def prefetch_global_ranks(db: Session, student_ids: List[int], date_limit: datet
             ranks[snap.student_id] = snap.global_rank if snap.global_rank else 999999
     return ranks
 
+def _parse_session_dt(sess) -> datetime.datetime:
+    if not sess or not sess.session_date:
+        return datetime.datetime.now(datetime.timezone.utc)
+    s = str(sess.session_date).strip()
+    try:
+        return datetime.datetime.fromisoformat(s)
+    except Exception:
+        pass
+    if "." in s:
+        p = s.split(".")
+        if len(p) == 3:
+            return datetime.datetime(int(p[2]), int(p[1]), int(p[0]), tzinfo=datetime.timezone.utc)
+    if "-" in s:
+        p = s.split("-")
+        if len(p) == 3:
+            if len(p[0]) == 4:
+                return datetime.datetime(int(p[0]), int(p[1]), int(p[2]), tzinfo=datetime.timezone.utc)
+            else:
+                return datetime.datetime(int(p[2]), int(p[1]), int(p[0]), tzinfo=datetime.timezone.utc)
+    return datetime.datetime.now(datetime.timezone.utc)
+
 def build_batch_report(db: Session, last_session_id: int, current_session_id: int, target_dept_id: int) -> Dict[str, Any]:
     last_contest, last_prog = get_snapshot_data(db, last_session_id)
     curr_contest, curr_prog = get_snapshot_data(db, current_session_id)
@@ -91,8 +112,8 @@ def build_batch_report(db: Session, last_session_id: int, current_session_id: in
     last_session = db.query(WeeklySession).filter(WeeklySession.id == last_session_id).first()
     curr_session = db.query(WeeklySession).filter(WeeklySession.id == current_session_id).first()
     
-    last_date = datetime.datetime.fromisoformat(last_session.session_date) if last_session else datetime.datetime.now(datetime.timezone.utc)
-    curr_date = datetime.datetime.fromisoformat(curr_session.session_date) if curr_session else datetime.datetime.now(datetime.timezone.utc)
+    last_date = _parse_session_dt(last_session)
+    curr_date = _parse_session_dt(curr_session)
     
     students = db.query(Student).filter(
         Student.is_active == True,
@@ -108,6 +129,10 @@ def build_batch_report(db: Session, last_session_id: int, current_session_id: in
     
     def process_week(st: Student, contest_map: dict, prog_map: dict, date_limit: datetime.datetime, is_last: bool):
         batch = st.batch
+        if not batch:
+            from backend.config.report_config import derive_student_batch
+            batch = derive_student_batch(str(st.year_level) if st.year_level else None)
+        batch = str(batch).replace(" ", "")
         if batch not in report:
             return
             
@@ -316,17 +341,23 @@ def generate_weekly_performance_excel(db: Session, target_dept_name: str = None)
     if "Sheet" in wb.sheetnames:
         wb.remove(wb["Sheet"])
         
-    departments = ["Cyber Security", "Internet of Things"]
+    if target_dept_name and target_dept_name.upper() not in ("ALL", "NONE", ""):
+        target_depts = [target_dept_name]
+    else:
+        target_depts = ["Cyber Security", "Internet of Things"]
     
-    for dept_name in departments:
-        dept = db.query(Department).filter(Department.name == dept_name).first()
+    for d_query in target_depts:
+        dept = db.query(Department).filter(
+            (Department.name.ilike(f"%{d_query}%")) | (Department.code.ilike(f"%{d_query}%"))
+        ).first()
         if not dept:
             continue
             
         report_data = build_batch_report(db, last_session_id, current_session_id, dept.id)
         
-        ws = wb.create_sheet(title=dept_name)
-        _render_sheet(ws, dept_name, report_data, current_session_id)
+        sheet_title = dept.code or d_query
+        ws = wb.create_sheet(title=sheet_title)
+        _render_sheet(ws, dept.name or d_query, report_data, current_session_id)
         
     if not wb.sheetnames:
         ws = wb.create_sheet("Empty")

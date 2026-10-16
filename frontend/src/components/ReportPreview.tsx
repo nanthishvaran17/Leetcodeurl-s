@@ -2228,17 +2228,32 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
                   {/* Batch Summaries - Institutional Official Report Layout */}
                   {(() => {
-                    const canonicalBatches = [
+                    const allCanonical = [
                       { label: '2023 - 2027', year: 'IV' },
                       { label: '2024 - 2028', year: 'III' },
                       { label: '2025 - 2029', year: 'II' }
                     ];
+                    const rawYr = (report.year || report.yearFilter || report.year_filter || (report.filters && report.filters.year) || 'ALL').toString().trim().toUpperCase();
+                    const targetYear = rawYr === '2' ? 'II' : (rawYr === '3' ? 'III' : (rawYr === '4' ? 'IV' : (rawYr === '1' ? 'I' : rawYr)));
+
+                    const activeCanonical = (targetYear === 'ALL' || !targetYear)
+                      ? allCanonical
+                      : allCanonical.filter(cb => cb.year === targetYear || cb.label.replace(/\s+/g, '').includes(rawYr.replace(/\s+/g, '')));
+
                     const rawBatches = Array.isArray(report.batch_summaries) ? report.batch_summaries : [];
-                    const batchesToDisplay = canonicalBatches.map(cb => {
-                      const found = rawBatches.find((b: any) => (b.batch || '').replace(/\s+/g, '') === cb.label.replace(/\s+/g, ''));
+                    let batchesToDisplay = activeCanonical.map(cb => {
+                      const found = rawBatches.find((b: any) => 
+                        (b.batch || '').replace(/\s+/g, '') === cb.label.replace(/\s+/g, '') ||
+                        (b.year && b.year === cb.year)
+                      );
                       if (found) return found;
                       return { batch: cb.label, year: cb.year, total_students: 0, current_week: {}, last_week: {} };
                     });
+
+                    // If filtered to a specific year, remove any 0-student dummy cohorts if we have a matching active cohort
+                    if (targetYear !== 'ALL' && batchesToDisplay.some(b => (b.total_students || 0) > 0)) {
+                      batchesToDisplay = batchesToDisplay.filter(b => (b.total_students || 0) > 0);
+                    }
 
                     return (
                       <div className="space-y-4">
@@ -2456,6 +2471,179 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               })}
                             </tbody>
                           </table>
+                        </div>
+
+                        {/* Institutional Table 2: Leetcode Contest Performance - Weekly Report (Image 2 Current Week Match) */}
+                        <div className="space-y-4 pt-4 border-t-2 border-dashed border-slate-300 dark:border-slate-700">
+                          {/* Institutional Header Card for Table 2 */}
+                          <div className="p-4 sm:p-5 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white shadow-sm space-y-2 font-sans">
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
+                              <img
+                                src="/black_white_logo.png"
+                                alt="Nandha Engineering College"
+                                className="h-12 sm:h-14 w-auto object-contain shrink-0"
+                                onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+                              />
+                              <div className="space-y-1">
+                                <h2 className="text-sm sm:text-base font-black tracking-wider uppercase text-slate-950 dark:text-white">
+                                  NANDHA ENGINEERING COLLEGE, ERODE - 638 052.
+                                </h2>
+                                <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                                  {(() => {
+                                    const dRaw = (report.department_name || report.department || '').toString().trim();
+                                    if (dRaw.includes('Cyber') || dRaw === '1' || dRaw === 'CSE(CS)') {
+                                      return 'Department of CSE(Cyber Security)';
+                                    }
+                                    if (dRaw.includes('Things') || dRaw.includes('IoT') || dRaw === '2' || dRaw === 'CSE(IOT)') {
+                                      return 'Department of CSE (Internet of Things )';
+                                    }
+                                    if (report.department_name && !report.department_name.match(/Department of \d+/i)) {
+                                      return report.department_name;
+                                    }
+                                    return 'Department of CSE(Cyber Security)';
+                                  })()}
+                                </p>
+                                <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                  Date: {report.session_date || report.contest_date || report.report_date || report.currentWeek?.date || '11.10.2026'}
+                                </p>
+                                <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white pt-1">
+                                  Leetcode Contest Performance - Weekly Report
+                                </h3>
+                                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                  Name &amp; Designation of the Academic Coordinator: <span className="font-black text-brand-700 dark:text-brand-400">
+                                    {(() => {
+                                      const dRaw = (report.department_name || report.department || '').toString().trim();
+                                      if (dRaw.includes('Things') || dRaw.includes('IoT') || dRaw === '2' || dRaw === 'CSE(IOT)') {
+                                        return 'P.Devayani /AP';
+                                      }
+                                      return report.coordinator || 'M.Santhosh Kumar/AP';
+                                    })()}
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Mobile Card View (< md) */}
+                          <div className="block md:hidden print:hidden space-y-3">
+                            {batchesToDisplay.map((b: any, idx: number) => {
+                              const cw = b.current_week || {};
+                              const lw = b.last_week || {};
+                              const totStudents = b.total_students || lw.total_students || cw.total_students || 0;
+                              const cDate = b.contest_date || report.contest_date || report.session_date || '11.10.2026';
+                              const q4 = cw.q4 ?? 0;
+                              const q3 = cw.q3 ?? 0;
+                              const q2 = cw.q2 ?? 0;
+                              const q1 = cw.q1 ?? 0;
+                              const q0 = cw.q0 !== undefined && cw.q0 > 0 ? cw.q0 : Math.max(0, totStudents - (q4 + q3 + q2 + q1));
+                              const r2000 = cw.rating_above_2000 ?? cw.rating_2000 ?? 0;
+                              const r1500 = cw.rating_above_1500 ?? cw.rating_1500 ?? 0;
+                              const r1250 = cw.rating_above_1250 ?? cw.rating_1250 ?? 0;
+                              const rk20k = cw.rank_below_20000 ?? cw.ranking_20000 ?? 0;
+
+                              return (
+                                <div key={idx} className="p-3.5 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 shadow-sm space-y-2.5 font-sans">
+                                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                                    <span className="text-xs font-black text-slate-900 dark:text-white">{b.batch}</span>
+                                    <span className="text-xs font-black px-2 py-0.5 rounded bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200">
+                                      {totStudents} Students • {cDate}
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-5 gap-1 text-center text-[10px]">
+                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">4 Q</div><div className="font-black text-slate-900 dark:text-white">{q4}</div></div>
+                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">3 Q</div><div className="font-black text-slate-900 dark:text-white">{q3}</div></div>
+                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">2 Q</div><div className="font-black text-slate-900 dark:text-white">{q2}</div></div>
+                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">1 Q</div><div className="font-black text-slate-900 dark:text-white">{q1}</div></div>
+                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">0 Q</div><div className="font-black text-slate-900 dark:text-white">{q0}</div></div>
+                                  </div>
+                                  <div className="flex items-center justify-between text-[11px] pt-1 text-slate-600 dark:text-slate-400 font-bold border-t border-slate-100 dark:border-slate-800">
+                                    <span>Ratings: &gt;2000: {r2000 > 0 ? r2000 : '—'} | &gt;1500: {r1500 > 0 ? r1500 : '—'} | &gt;1250: {r1250 > 0 ? r1250 : '—'}</span>
+                                    <span>Rank &lt;20k: {rk20k > 0 ? rk20k : '—'}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* Desktop Table (>= md) Matching Exact Uploaded Image */}
+                          <div className="hidden md:block print:block border-2 border-slate-400 dark:border-slate-600 rounded-xl overflow-x-auto shadow-sm bg-white dark:bg-navy-950">
+                            <table className="w-full text-left text-xs min-w-[980px] border-collapse font-sans">
+                              <thead>
+                                <tr className="bg-slate-100 dark:bg-navy-900 text-slate-950 dark:text-white font-black text-xs uppercase border-b-2 border-slate-400 dark:border-slate-600">
+                                  <th rowSpan={2} className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-black">
+                                    Batch
+                                  </th>
+                                  <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[130px] leading-tight">
+                                    Number of Students<br />(Total Count)
+                                  </th>
+                                  <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[130px] leading-tight">
+                                    Contest taken on -<br />---(Date)
+                                  </th>
+                                  <th colSpan={5} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
+                                    Number of Problems Solved
+                                  </th>
+                                  <th colSpan={3} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
+                                    Leetcode Contest Rating and Ranking
+                                  </th>
+                                  <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[110px] leading-tight">
+                                    Global Ranking<br />Below 20000
+                                  </th>
+                                </tr>
+                                <tr className="bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-slate-100 text-[11px] font-black border-b border-slate-400 dark:border-slate-600">
+                                  {/* Problems Solved */}
+                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">4</th>
+                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">3</th>
+                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">2</th>
+                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">1</th>
+                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">0</th>
+                                  {/* Ratings */}
+                                  <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Above 2000</th>
+                                  <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Above 1500</th>
+                                  <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Above 1250</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-400 dark:divide-slate-600 font-sans text-xs">
+                                {batchesToDisplay.map((b: any, idx: number) => {
+                                  const cw = b.current_week || {};
+                                  const lw = b.last_week || {};
+                                  const totalStudents = b.total_students || lw.total_students || cw.total_students || 0;
+                                  const cDate = b.contest_date || report.contest_date || report.session_date || '11.10.2026';
+                                  const q4 = cw.q4 ?? 0;
+                                  const q3 = cw.q3 ?? 0;
+                                  const q2 = cw.q2 ?? 0;
+                                  const q1 = cw.q1 ?? 0;
+                                  const q0 = cw.q0 !== undefined && cw.q0 > 0 ? cw.q0 : Math.max(0, totalStudents - (q4 + q3 + q2 + q1));
+                                  const r2000 = cw.rating_above_2000 ?? cw.rating_2000 ?? 0;
+                                  const r1500 = cw.rating_above_1500 ?? cw.rating_1500 ?? 0;
+                                  const r1250 = cw.rating_above_1250 ?? cw.rating_1250 ?? 0;
+                                  const rk20k = cw.rank_below_20000 ?? cw.ranking_20000 ?? 0;
+
+                                  return (
+                                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-900/30 transition-colors">
+                                      <td className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 font-bold text-slate-900 dark:text-white text-center">
+                                        {b.batch}
+                                      </td>
+                                      <td className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white text-sm">
+                                        {totalStudents}
+                                      </td>
+                                      <td className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">
+                                        {cDate}
+                                      </td>
+                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q4}</td>
+                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q3}</td>
+                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q2}</td>
+                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q1}</td>
+                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{r2000 > 0 ? r2000 : '—'}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{r1500 > 0 ? r1500 : '—'}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{r1250 > 0 ? r1250 : '—'}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{rk20k > 0 ? rk20k : '—'}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
                       </div>
                     );

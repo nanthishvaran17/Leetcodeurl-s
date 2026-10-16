@@ -564,6 +564,30 @@ def get_department_comparison(
             ~Department.code.ilike('%test%'),
             ~Department.name.ilike('%test%')
         ).all()
+
+        if current_user:
+            from backend.services.authorization_service import _HOD_ROLES, _STAFF_ROLES, get_hod_authorized_department_ids, _normalize_role
+            role_clean = _normalize_role(current_user)
+            if role_clean in _HOD_ROLES:
+                auth_ids = get_hod_authorized_department_ids(db, current_user)
+                if auth_ids:
+                    departments = [d for d in departments if d.id in auth_ids]
+                elif current_user.department_id:
+                    departments = [d for d in departments if d.id == current_user.department_id]
+                else:
+                    departments = []
+            elif role_clean in _STAFF_ROLES:
+                if current_user.department_id:
+                    departments = [d for d in departments if d.id == current_user.department_id]
+                else:
+                    departments = []
+
+        from backend.constants import is_production_department
+        departments = [
+            d for d in departments 
+            if is_production_department(str(d.code or ""), str(d.name or ""))
+        ]
+
         res = []
         for dept in departments:
             # Base query for students in this department
@@ -578,18 +602,6 @@ def get_department_comparison(
             total_students = len(student_ids)
             
             if total_students == 0:
-                res.append({
-                    "department_id": dept.id,
-                    "department_name": dept.name,
-                    "department_code": dept.code,
-                    "total_students": 0,
-                    "active_students": 0,
-                    "active_count": 0,
-                    "participation_rate": 0,
-                    "avg_solved": 0,
-                    "avg_rating": 0,
-                    "top_performer": None
-                })
                 continue
                 
             stats = db.query(

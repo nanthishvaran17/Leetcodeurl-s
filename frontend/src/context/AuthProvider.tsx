@@ -233,7 +233,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (e.detail) {
         setUser((prev) => {
           if (!prev) return prev;
-          const updated = { ...prev, ...e.detail };
+          const updated = {
+            ...prev,
+            ...e.detail,
+            name: (e.detail.full_name || e.detail.name || prev.name || '').trim(),
+            displayName: (e.detail.full_name || e.detail.displayName || prev.displayName || '').trim(),
+            full_name: e.detail.full_name || prev.full_name,
+            phone_number: e.detail.phone_number !== undefined ? e.detail.phone_number : prev.phone_number,
+            date_of_birth: e.detail.date_of_birth !== undefined ? e.detail.date_of_birth : prev.date_of_birth,
+            designation: e.detail.designation !== undefined ? e.detail.designation : prev.designation,
+            profile_photo: e.detail.profile_photo !== undefined ? e.detail.profile_photo : prev.profile_photo,
+            photoURL: e.detail.profile_photo || prev.photoURL,
+          };
           localStorage.setItem('user', JSON.stringify(updated));
           return updated;
         });

@@ -10,6 +10,7 @@ import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { useDepartments } from '../contexts/DepartmentContext';
+import { useAuth } from '../context/AuthContext';
 import { studentLiveStore } from '../stores/studentLiveStore';
 import { MobileStudentShowcaseFilters } from '../components/mobile/MobileStudentShowcaseFilters';
 
@@ -20,8 +21,34 @@ interface DepartmentDashboardProps {
 export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSelectStudent }) => {
   const { notify, confirmAction } = useNotification();
   const { refreshAllData } = useGlobalData();
-  const { departments = [] } = useDepartments();
-  const [selectedDept, setSelectedDept] = useState<string>('all');
+  const { departments = [], isHodScope, isGlobalAccess } = useDepartments();
+  const { user } = useAuth();
+  const isRestrictedHod = isHodScope && !isGlobalAccess;
+
+  const defaultDeptId = useMemo(() => {
+    if (isRestrictedHod) {
+      if (departments.length > 1) {
+        return 'all'; // Multi-dept HOD defaults to combined view of all authorized depts (150 + 150 = 300)
+      }
+      if (departments.length === 1 && departments[0].id) {
+        return String(departments[0].id);
+      }
+      if (user?.department_id) return String(user.department_id);
+    }
+    return 'all';
+  }, [isRestrictedHod, departments, user]);
+
+  const [selectedDept, setSelectedDept] = useState<string>(() => defaultDeptId);
+
+  useEffect(() => {
+    if (isRestrictedHod) {
+      if (departments.length === 1 && (selectedDept === 'all' || selectedDept === 'ALL')) {
+        setSelectedDept(defaultDeptId);
+      } else if (!selectedDept) {
+        setSelectedDept(defaultDeptId);
+      }
+    }
+  }, [isRestrictedHod, defaultDeptId, selectedDept, departments.length]);
   const [yearLevel, setYearLevel] = useState<string>('all');
   const [nameSearch, setNameSearch] = useState<string>('');
   const deferredNameSearch = useDeferredValue(nameSearch);
@@ -94,7 +121,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   };
 
   const handleResetFilters = () => {
-    setSelectedDept('all');
+    setSelectedDept(defaultDeptId);
     setYearLevel('all');
     setNameSearch('');
     setSolvedFilter('all');
@@ -207,7 +234,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           <div className="space-y-3.5 max-w-2xl">
             {/* Status Pill */}
             <div className="inline-flex items-center space-x-2 px-3 sm:px-3.5 py-1 sm:py-1 rounded-xl sm:rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[9px] sm:text-xs font-black uppercase tracking-wider backdrop-blur-md shadow-xs max-w-full">
-              <span className="whitespace-normal sm:whitespace-nowrap leading-tight">DEPARTMENT ANALYTICS • INSTITUTIONAL EDITION (ALL DEPARTMENTS)</span>
+              <span className="whitespace-normal sm:whitespace-nowrap leading-tight">{isRestrictedHod ? 'DEPARTMENT ANALYTICS • HOD LEADERSHIP SCOPE' : 'DEPARTMENT ANALYTICS • INSTITUTIONAL EDITION (ALL DEPARTMENTS)'}</span>
             </div>
 
             <div className="space-y-1.5">
@@ -279,7 +306,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
             <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">Dept:</span>
             {[
-              { id: 'all', label: 'All Depts' },
+              ...(isRestrictedHod && departments.length <= 1 ? [] : [{ id: 'all', label: isRestrictedHod ? 'All My Depts' : 'All Depts' }]),
               ...departments.map(d => ({ id: String(d.id), label: d.code || d.name }))
             ].map(d => {
               const isSelected = selectedDept === d.id || (d.id === 'all' && (selectedDept === 'all' || selectedDept === 'ALL'));

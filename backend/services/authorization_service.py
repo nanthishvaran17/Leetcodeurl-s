@@ -210,7 +210,7 @@ def apply_role_based_student_filter(query, user: Optional[User], db: Session):
         return query
 
     # 2. HOD → filter by authorized department IDs from HODDepartmentAllocation
-    if role in _HOD_ROLES:
+    if role in _HOD_ROLES or "hod" in role or "head of department" in role:
         dept_ids = get_hod_authorized_department_ids(db, user)
         if not dept_ids:
             # Fallback to all real production department IDs if no specific allocation configured
@@ -263,7 +263,7 @@ def require_staff_student_access(db: Session, user: Optional[User], student_id: 
         return
 
     # HOD — check student is in authorized departments
-    if role in _HOD_ROLES:
+    if role in _HOD_ROLES or "hod" in role or "head of department" in role:
         dept_ids = get_hod_authorized_department_ids(db, user)
         if not dept_ids:
             dept_ids = [d.id for d in db.query(Department).all() if d.code and "TEST" not in d.code.upper()]

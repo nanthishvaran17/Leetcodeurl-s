@@ -386,7 +386,16 @@ export const ReportsPage: React.FC = () => {
         year: year,
         output_scope: output_scope,
         filters: { session_id: selectedSessionId, ...(overrideFilters || {}) }
+      }, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store',
+          'Pragma': 'no-cache'
+        }
       });
+
+      if (!res.data || typeof res.data !== 'object') {
+        throw new Error('Unable to retrieve report dataset. Please try again.');
+      }
 
       setActiveUniversalPreviewData(res.data);
       setActiveUniversalPreviewId(res.data.reportId || res.data.report_id || `rpt_${Date.now()}`);

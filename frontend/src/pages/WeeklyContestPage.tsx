@@ -511,8 +511,36 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [sessionsList, setSessionsList] = useState<any[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
   const [currentSession, setCurrentSession] = useState<any>(null);
-  const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>('ALL');
+  const userRoleClean = (user?.role || '').trim().toLowerCase();
+  const isUserHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(userRoleClean);
+  const isUserGlobal = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(userRoleClean);
+  const initialDeptFilter = useMemo(() => {
+    if (isUserHod && !isUserGlobal) {
+      const authCodes: string[] = Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : [];
+      if (authCodes.length > 1) {
+        return 'ALL'; // Multi-dept HOD defaults to combined view of both departments (150 + 150 = 300)
+      }
+      if (authCodes.length === 1) {
+        return authCodes[0];
+      }
+      if (typeof user?.department === 'string') return user.department;
+      if ((user?.department as any)?.code) return (user?.department as any).code;
+    }
+    return 'ALL';
+  }, [isUserHod, isUserGlobal, user]);
+  const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>(() => initialDeptFilter);
   const [selectedYearFilter, setSelectedYearFilter] = useState<string>('ALL');
+
+  useEffect(() => {
+    if (isUserHod && !isUserGlobal) {
+      const authCodes: string[] = Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : [];
+      if (authCodes.length === 1 && (selectedDeptFilter === 'ALL' || !selectedDeptFilter)) {
+        setSelectedDeptFilter(initialDeptFilter);
+      } else if (!selectedDeptFilter) {
+        setSelectedDeptFilter(initialDeptFilter);
+      }
+    }
+  }, [isUserHod, isUserGlobal, initialDeptFilter, selectedDeptFilter, user?.authorized_department_codes]);
   const [selectedAttendanceFilter, setSelectedAttendanceFilter] = useState<string>('ALL');
   const [matrixRows, setMatrixRows] = useState<any[]>([]);
   const [allSessionRows, setAllSessionRows] = useState<any[]>([]);
@@ -3104,13 +3132,30 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 items-end">
           {/* Department Filter */}
           {(() => {
-            const isStaffMentor = ['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes((user?.role || '').toLowerCase());
-            const userDeptCode = (typeof user?.department === 'string' ? user.department : (user?.department as any)?.code) || (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes[0]) || 'CSE(CS)';
+            const roleClean = (user?.role || '').trim().toLowerCase();
+            const isStaffMentor = ['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes(roleClean);
+            const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
+            const isGlobalRole = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(roleClean);
+            const userDeptCode = (typeof user?.department === 'string' ? user.department : (user?.department as any)?.code) || (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes[0]) || '';
+
+            const hodAuthCodes = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map(c => String(c).toUpperCase());
+            const filteredDepts = (isHod && !isGlobalRole)
+              ? departments.filter(d => hodAuthCodes.includes(d.code.toUpperCase()) || (userDeptCode && d.code.toUpperCase() === userDeptCode.toUpperCase()))
+              : departments;
 
             const deptOptions: GlobalFilterOption[] = isStaffMentor
               ? [
                   { value: 'ALL', label: 'My Allocated Mentees', pillText: 'MENTEES' },
-                  { value: userDeptCode, label: `${userDeptCode} (My Department)`, pillText: userDeptCode }
+                  ...(userDeptCode ? [{ value: userDeptCode, label: `${userDeptCode} (My Department)`, pillText: userDeptCode }] : [])
+                ]
+              : (isHod && !isGlobalRole)
+              ? [
+                  ...(filteredDepts.length > 1 ? [{ value: 'ALL', label: 'All My Authorized Departments', pillText: 'ALL' }] : []),
+                  ...filteredDepts.map((d) => ({
+                    value: d.code,
+                    label: d.name,
+                    pillText: d.code
+                  }))
                 ]
               : [
                   { value: 'ALL', label: 'All Departments', pillText: 'ALL' },

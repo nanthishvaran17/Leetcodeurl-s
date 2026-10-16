@@ -34,6 +34,9 @@ export interface AuthUser {
   institutional_id?: string | null;
   designation?: string | null;
   staff_verification_status?: string;
+  phone_number?: string | null;
+  date_of_birth?: string | null;
+  is_2fa_enabled?: boolean;
   /** HOD multi-department scope: list of department IDs this HOD is authorized to access.
    *  Empty array means global access (for Admin/Principal/Management roles). */
   authorized_department_ids?: number[];

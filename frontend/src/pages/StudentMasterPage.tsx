@@ -589,19 +589,19 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         <div className="md:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 touch-pan-x">
           <button
             type="button"
-            onClick={() => filters.setDepartment('ALL')}
+            onClick={() => filters.setDepartment(filters.hodDefaultDepartment)}
             className={`px-3 py-1 rounded-lg text-[11px] font-black whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
-              filters.department === 'ALL'
+              filters.department === filters.hodDefaultDepartment || filters.department === 'ALL'
                 ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
                 : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-200'
             }`}
           >
-            All Depts
+            {filters.hodDefaultDepartment !== 'ALL' ? filters.hodDefaultDepartment : 'All Depts'}
           </button>
-          {filters.department && filters.department !== 'ALL' && (
+          {filters.department && filters.department !== filters.hodDefaultDepartment && (
             <button
               type="button"
-              onClick={() => filters.setDepartment('ALL')}
+              onClick={() => filters.setDepartment(filters.hodDefaultDepartment)}
               className="px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap bg-brand-600 text-white border border-brand-600 shadow-sm flex items-center gap-1 cursor-pointer"
               title="Clear department filter"
             >

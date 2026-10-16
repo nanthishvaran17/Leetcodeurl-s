@@ -894,8 +894,8 @@ const ReportHubModal: React.FC<{
  onChange={val => setSelectedDeptId(val ? (isNaN(Number(val)) ? val : Number(val)) : undefined)}
  dropdownWidth="min-w-[460px]"
  options={[
- { value: "", label: "All Institutional Departments", pillText: "ALL" },
- ...departments.map((d: any) => ({ value: String(d.id ?? d.code), label: d.name, pillText: d.code }))
+   ...(departments.length > 1 ? [{ value: "", label: "All Authorized Departments", pillText: "ALL" }] : []),
+   ...departments.map((d: any) => ({ value: String(d.id ?? d.code), label: d.name, pillText: d.code }))
  ]}
  icon={<Building2 className="w-4 h-4 text-indigo-500" />}
  />
@@ -1273,15 +1273,26 @@ export const HODCommandCenter: React.FC = () => {
  const { notify } = useNotification();
  const roleClean = useMemo(() => (user?.role || '').trim().toLowerCase(), [user?.role]);
  const isGlobalAdmin = useMemo(() => ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean), [roleClean]);
+ const isHod = useMemo(() => ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean), [roleClean]);
+ const isGlobalRole = useMemo(() => ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(roleClean), [roleClean]);
+
+ const defaultDeptValue = useMemo(() => {
+   if (isHod && !isGlobalRole) {
+     const authIds: number[] = Array.isArray(user?.authorized_department_ids) ? user.authorized_department_ids : [];
+     if (authIds.length > 1) {
+       return 'ALL'; // Multi-dept HOD defaults to combined view of all authorized depts (e.g. 150 + 150 = 300)
+     }
+     if (authIds.length === 1) {
+       return String(authIds[0]);
+     }
+     if (user?.department_id) return String(user.department_id);
+   }
+   return 'ALL';
+ }, [isHod, isGlobalRole, user]);
 
  // Multi-Dimensional View Scope 
  const [selectedStaff, setSelectedStaff] = useState<string>('ALL');
- const [selectedDept, setSelectedDept] = useState<string>(() => {
-   if (user?.department_id && !['admin', 'administrator', 'super admin', 'super_admin'].includes((user?.role || '').trim().toLowerCase())) {
-     return String(user.department_id);
-   }
-   return 'ALL';
- });
+ const [selectedDept, setSelectedDept] = useState<string>(() => defaultDeptValue);
  const [selectedYear, setSelectedYear] = useState<string>('ALL');
  const [selectedSection, setSelectedSection] = useState<string>('ALL');
  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
@@ -1290,14 +1301,58 @@ export const HODCommandCenter: React.FC = () => {
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
 
  useEffect(() => {
-   if (user?.department_id && !isGlobalAdmin && selectedDept === 'ALL') {
-     setSelectedDept(String(user.department_id));
+   if (isHod && !isGlobalAdmin) {
+     const authIds: number[] = Array.isArray(user?.authorized_department_ids) ? user.authorized_department_ids : [];
+     // Only lock to single department if HOD has exactly 1 authorized department
+     if (authIds.length === 1 && (selectedDept === 'ALL' || !selectedDept)) {
+       setSelectedDept(String(authIds[0]));
+     } else if (!selectedDept) {
+       setSelectedDept(defaultDeptValue);
+     }
    }
- }, [user?.department_id, isGlobalAdmin, selectedDept]);
+ }, [isHod, isGlobalAdmin, defaultDeptValue, selectedDept, user?.authorized_department_ids]);
 
  // Summary & Metadata
  const [summary, setSummary] = useState<CommandCenterSummary | null>(null);
  const [departments, setDepartments] = useState<DepartmentRecord[]>([]);
+
+ const filteredDepartments = useMemo(() => {
+   if (isGlobalRole) return departments;
+   if (isHod) {
+     const authIds: number[] = Array.isArray(user?.authorized_department_ids) ? user.authorized_department_ids : [];
+     const authCodes: string[] = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map((c: string) => String(c).toUpperCase());
+     const uDeptId = user?.department_id ? Number(user.department_id) : null;
+     const uDeptCode = String(user?.department || (user as any)?.department_code || '').toUpperCase();
+
+     const matched = departments.filter(d => {
+       if (authIds.length > 0 && d.id && authIds.includes(Number(d.id))) return true;
+       if (authCodes.length > 0 && d.code && authCodes.includes(d.code.toUpperCase())) return true;
+       if (uDeptId && d.id && Number(d.id) === uDeptId) return true;
+       if (uDeptCode && d.code && (d.code.toUpperCase() === uDeptCode || uDeptCode.includes(d.code.toUpperCase()))) return true;
+       return false;
+     });
+
+     return matched.length > 0 ? matched : departments;
+   }
+   return departments;
+ }, [departments, isGlobalRole, isHod, user]);
+
+ const deptOptions = useMemo(() => {
+   const list = filteredDepartments.filter(d => (d as any).student_count === undefined || (d as any).student_count > 0);
+   const opts = list.map(d => ({ value: String(d.id), label: d.name, pillText: d.code }));
+
+   if (isGlobalRole) {
+     return [{ value: 'ALL', label: 'All Institutional Departments', pillText: 'ALL' }, ...opts];
+   }
+   if (isHod) {
+     if (list.length > 1) {
+       return [{ value: 'ALL', label: 'All My Authorized Departments', pillText: 'ALL' }, ...opts];
+     }
+     return opts;
+   }
+   return [{ value: 'ALL', label: 'All Departments', pillText: 'ALL' }, ...opts];
+ }, [filteredDepartments, isGlobalRole, isHod]);
+
  const [staffList, setStaffList] = useState<StaffRecord[]>([]);
  const [loading, setLoading] = useState<boolean>(true);
  const [scopeLoading, setScopeLoading] = useState<boolean>(false);
@@ -1661,16 +1716,9 @@ export const HODCommandCenter: React.FC = () => {
  const scopeStaffName = staffList.find(s => String(s.id) === selectedStaff)?.username || 'All Staff';
  const scopeDeptCode = departments.find(d => String(d.id) === selectedDept)?.code || 'All Departments';
 
-  const isGlobalRole = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase());
-
   const staffOptions = [
-    { value: 'ALL', label: isGlobalRole ? 'All Campus Faculty Mentors' : user?.role?.toLowerCase() === 'hod' ? 'All Department Staff Mentors' : 'All Staff Mentors', pillText: 'ALL' },
+    { value: 'ALL', label: isGlobalRole ? 'All Campus Faculty Mentors' : isHod ? 'All Department Staff Mentors' : 'All Staff Mentors', pillText: 'ALL' },
     ...staffList.map(s => ({ value: String(s.id), label: `${s.username} (${s.assigned_count}/20)`, pillText: `${s.assigned_count}/20` }))
-  ];
-
-  const deptOptions = [
-    ...(isGlobalRole ? [{ value: 'ALL', label: 'All Institutional Departments', pillText: 'ALL' }] : (user?.role?.toLowerCase() === 'hod' ? [] : [{ value: 'ALL', label: 'All Departments', pillText: 'ALL' }])),
-    ...departments.map(d => ({ value: String(d.id), label: d.name, pillText: d.code }))
   ];
 
   const yearOptions = [
@@ -1842,7 +1890,7 @@ export const HODCommandCenter: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
-                  setSelectedDept('ALL');
+                  setSelectedDept(defaultDeptValue);
                   setSelectedStaff('ALL');
                   setSelectedYear('ALL');
                   setSelectedSection('ALL');
@@ -3230,7 +3278,7 @@ export const HODCommandCenter: React.FC = () => {
  isOpen={showStaffAllocationModal}
  onClose={() => setShowStaffAllocationModal(false)}
  deptId={selectedDept !== 'ALL' ? Number(selectedDept) : undefined}
- departments={departments}
+ departments={filteredDepartments}
  onRefreshAll={() => { loadScopedData(false); loadStudents(); }}
  />
 
@@ -3294,7 +3342,7 @@ export const HODCommandCenter: React.FC = () => {
  isOpen={showReportHubModal}
  onClose={() => setShowReportHubModal(false)}
  deptId={selectedDept !== 'ALL' ? Number(selectedDept) : undefined}
- departments={departments}
+ departments={filteredDepartments}
  />
 
  {/* View Methodology Modal */}
@@ -3612,26 +3660,26 @@ export const HODCommandCenter: React.FC = () => {
           ========================================================================= */}
       {selectedSkillGap && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in"
+          className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex items-center justify-center p-2 sm:p-4 bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in"
           onClick={e => e.target === e.currentTarget && setSelectedSkillGap(null)}
         >
-          <div className="w-full max-w-3xl sm:max-w-4xl bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden flex flex-col max-h-[94vh]">
+          <div className="w-full max-w-3xl sm:max-w-4xl bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden flex flex-col max-h-[88dvh] sm:max-h-[90vh]">
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between gap-3 shrink-0 bg-slate-50/50 dark:bg-navy-900/50">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${
+            <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between gap-2.5 shrink-0 bg-slate-50/50 dark:bg-navy-900/50">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center shrink-0 ${
                   selectedSkillGap.color === 'rose'
                     ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/60 dark:border-rose-800'
                     : selectedSkillGap.color === 'amber'
                     ? 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950/60 dark:border-amber-800'
                     : 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/60 dark:border-blue-800'
                 }`}>
-                  <Target size={20} />
+                  <Target size={18} />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-display text-base font-bold text-slate-900 dark:text-white truncate flex items-center gap-2">
-                    <span>{selectedSkillGap.name}</span>
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${
+                  <h3 className="font-display text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate flex items-center gap-2">
+                    <span className="truncate">{selectedSkillGap.name}</span>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border shrink-0 ${
                       selectedSkillGap.color === 'rose'
                         ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300'
                         : selectedSkillGap.color === 'amber'
@@ -3641,7 +3689,7 @@ export const HODCommandCenter: React.FC = () => {
                       {selectedSkillGap.status}
                     </span>
                   </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 font-sans mt-0.5 truncate">
+                  <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 font-sans mt-0.5 truncate">
                     Institutional algorithmic gap diagnostic & faculty-led 2-week laboratory intervention plan
                   </p>
                 </div>
@@ -3649,7 +3697,7 @@ export const HODCommandCenter: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedSkillGap(null)}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition"
+                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition shrink-0"
                 title="Close Deck"
               >
                 <X size={18} />
@@ -3657,7 +3705,7 @@ export const HODCommandCenter: React.FC = () => {
             </div>
 
             {/* Scrollable Body */}
-            <div className="p-4 sm:p-6 overflow-y-auto space-y-5 custom-scrollbar text-xs font-sans">
+            <div className="p-3.5 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5 custom-scrollbar text-xs font-sans flex-1 min-h-0">
               {/* Telemetry Metric Strip */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800">
@@ -3831,8 +3879,8 @@ export const HODCommandCenter: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 sm:p-5 border-t border-slate-100 dark:border-navy-800 bg-slate-50/70 dark:bg-navy-950/50 flex flex-wrap items-center justify-between gap-3 shrink-0">
-              <div className="flex items-center gap-2 flex-wrap">
+            <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-navy-800 bg-slate-50/90 dark:bg-navy-950/90 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -3842,10 +3890,10 @@ export const HODCommandCenter: React.FC = () => {
                     notify.success('Sprint syllabus copied to clipboard!', '', { category: 'SYSTEM' });
                     setTimeout(() => setCopiedSkillPlan(false), 2000);
                   }}
-                  className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs flex items-center gap-1.5 transition"
+                  className="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
                 >
                   <Copy size={13} className="text-slate-600" />
-                  <span>{copiedSkillPlan ? 'Copied to Clipboard!' : 'Copy Sprint Syllabus'}</span>
+                  <span className="truncate">{copiedSkillPlan ? 'Copied!' : 'Copy Sprint Syllabus'}</span>
                 </button>
 
                 <button
@@ -3855,10 +3903,10 @@ export const HODCommandCenter: React.FC = () => {
                     setSelectedSkillGap(null);
                     setShowAIModal(true);
                   }}
-                  className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs flex items-center gap-1.5 transition"
+                  className="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
                 >
                   <CheckCircle2 size={13} className="text-brand-600" />
-                  <span>Ask AI for Lesson Plan</span>
+                  <span className="truncate">Ask AI for Lesson Plan</span>
                 </button>
               </div>
 
@@ -3873,16 +3921,16 @@ export const HODCommandCenter: React.FC = () => {
                       document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }, 100);
                   }}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-sm"
+                  className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-sm active:scale-95 cursor-pointer"
                 >
                   <Filter size={13} />
-                  <span>Filter Struggling Solvers Below</span>
+                  <span className="truncate">Filter Struggling Solvers Below</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setSelectedSkillGap(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-navy-800 text-slate-800 dark:text-slate-200 hover:bg-slate-300 font-bold text-xs transition"
+                  className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-navy-800 text-slate-800 dark:text-slate-200 hover:bg-slate-300 font-bold text-xs transition active:scale-95 cursor-pointer shrink-0"
                 >
                   Close
                 </button>

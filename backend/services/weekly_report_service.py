@@ -754,6 +754,13 @@ def generate_weekly_performance_data(
     order_map = {"IV": 1, "III": 2, "II": 3, "I": 4}
     batch_summaries.sort(key=lambda b: order_map.get(b.get("year", ""), 99))
 
+    # If a specific year filter was requested (e.g. '3' / 'III'), only keep the active cohort
+    if year_filter and str(year_filter).upper() not in ("ALL", "NONE", ""):
+        y_norm = "II" if str(year_filter) in ("2", "II") else ("III" if str(year_filter) in ("3", "III") else ("IV" if str(year_filter) in ("4", "IV") else str(year_filter).upper()))
+        filtered_b = [b for b in batch_summaries if b.get("year") == y_norm]
+        if filtered_b:
+            batch_summaries = filtered_b
+
     # College-wide Summary
     college_metrics = _aggregate_cohort_metrics(all_students_current)
 
@@ -816,6 +823,16 @@ def generate_weekly_performance_data(
         "contest_date": curr_date,
         "department": clean_dept_slug,
         "department_name": dept_display,
+        "year": year_filter,
+        "year_filter": year_filter,
+        "yearFilter": year_filter,
+        "filters": {
+            "dept": dept_filter,
+            "department": clean_dept_slug,
+            "year": year_filter,
+            "batch": batch_filter,
+            "session_id": session_id
+        },
         "coordinator": coordinator_display,
         "coordinator_name": coordinator_display,
         "academicCoordinator": coordinator_display,

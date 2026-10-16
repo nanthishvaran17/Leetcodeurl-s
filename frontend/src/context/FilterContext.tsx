@@ -35,9 +35,11 @@ function getHodDefaultDepartment(): string {
     const isHod = role === 'hod' || role === 'department hod' || role === 'department_hod' || role === 'placement coordinator';
     if (!isHod) return 'ALL';
     const codes: string[] = user?.authorized_department_codes || [];
-    if (codes.length === 0) return 'ALL';
     if (codes.length === 1) return codes[0];
-    return 'MY_DEPARTMENTS';
+    if (codes.length > 1) return 'MY_DEPARTMENTS';
+    if (user?.department) return user.department;
+    if (user?.department_code) return user.department_code;
+    return 'ALL';
   } catch {
     return 'ALL';
   }

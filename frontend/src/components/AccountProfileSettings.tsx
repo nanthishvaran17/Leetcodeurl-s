@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { 
-  User, Mail, Phone, Calendar, KeyRound, Shield, CheckCircle, 
-  Camera, Trash2, Save, Loader2, Eye, EyeOff, Building2, 
-  Key, ShieldCheck, ShieldAlert, X, Info, Laptop, 
-  Clock, Bell, Download, Award, BookOpen, MapPin, RefreshCw, 
-  Check, Smartphone, Globe, Lock, Share2, GraduationCap, 
-  Briefcase, Link as LinkIcon, FileText, Send, Printer, 
-  QrCode, ExternalLink, Terminal, Activity, Edit3, CheckSquare, 
-  AlertTriangle, Sliders, ShieldX, Copy, CheckCheck, 
-  RotateCw, RefreshCcw, Volume2, Search, UploadCloud, 
+import {
+  User, Mail, Phone, Calendar, KeyRound, Shield, CheckCircle,
+  Camera, Trash2, Save, Loader2, Eye, EyeOff, Building2,
+  Key, ShieldCheck, ShieldAlert, X, Info, Laptop,
+  Clock, Bell, Download, Award, BookOpen, MapPin, RefreshCw,
+  Check, Smartphone, Globe, Lock, Share2, GraduationCap,
+  Briefcase, Link as LinkIcon, FileText, Send, Printer,
+  QrCode, ExternalLink, Terminal, Activity, Edit3, CheckSquare,
+  AlertTriangle, Sliders, ShieldX, Copy, CheckCheck,
+  RotateCw, RefreshCcw, Volume2, VolumeX, Sparkles, Search, UploadCloud,
   Fingerprint, MessageSquare, Compass, Cpu, Palette, ChevronRight, ChevronDown,
   Trophy, BookmarkCheck, FileBadge, Users
 } from 'lucide-react';
@@ -115,102 +115,98 @@ const PremiumSelect: React.FC<{
   leadingIcon,
   heightClass = 'h-11'
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-  const selectedOption = options.find(o => o.value === value) || (value ? { value, label: value } : null);
+    const selectedOption = options.find(o => o.value === value) || (value ? { value, label: value } : null);
 
-  useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
+    useEffect(() => {
+      const handleOutsideClick = (e: MouseEvent) => {
+        if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+          setIsOpen(false);
+        }
+      };
+      if (isOpen) {
+        document.addEventListener('mousedown', handleOutsideClick);
       }
-    };
-    if (isOpen) {
-      document.addEventListener('mousedown', handleOutsideClick);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
-  }, [isOpen]);
+      return () => {
+        document.removeEventListener('mousedown', handleOutsideClick);
+      };
+    }, [isOpen]);
 
-  return (
-    <div className="relative w-full" ref={containerRef}>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full ${heightClass} px-3.5 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer text-xs font-bold ${
-          isOpen
+    return (
+      <div className="relative w-full" ref={containerRef}>
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className={`w-full ${heightClass} px-3.5 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer text-xs font-bold ${isOpen
             ? 'border-brand-500 bg-white dark:bg-navy-950 ring-4 ring-brand-500/15 shadow-sm'
             : value
               ? 'border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-950 dark:text-white hover:border-brand-400'
               : 'border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-400 dark:text-slate-500 hover:border-slate-400'
-        }`}
-      >
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          {leadingIcon && (
-            <span className="shrink-0">{leadingIcon}</span>
-          )}
-          <span className="truncate text-slate-950 dark:text-white font-extrabold text-xs">
-            {selectedOption ? selectedOption.label : placeholder}
-          </span>
-          {selectedOption?.badge && (
-            <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase shrink-0 ${selectedOption.badgeColor || 'bg-slate-100 text-slate-700 dark:bg-navy-800 dark:text-slate-300'}`}>
-              {selectedOption.badge}
+            }`}
+        >
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            {leadingIcon && (
+              <span className="shrink-0">{leadingIcon}</span>
+            )}
+            <span className="truncate text-slate-950 dark:text-white font-extrabold text-xs">
+              {selectedOption ? selectedOption.label : placeholder}
             </span>
-          )}
-        </div>
-        <ChevronDown
-          className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ml-2 ${
-            isOpen ? 'rotate-180 text-brand-600 dark:text-brand-400' : ''
-          }`}
-        />
-      </button>
+            {selectedOption?.badge && (
+              <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase shrink-0 ${selectedOption.badgeColor || 'bg-slate-100 text-slate-700 dark:bg-navy-800 dark:text-slate-300'}`}>
+                {selectedOption.badge}
+              </span>
+            )}
+          </div>
+          <ChevronDown
+            className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ml-2 ${isOpen ? 'rotate-180 text-brand-600 dark:text-brand-400' : ''
+              }`}
+          />
+        </button>
 
-      {isOpen && (
-        <div className="absolute z-50 left-0 right-0 top-full mt-1.5 p-1.5 rounded-2xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-700 shadow-2xl max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-150">
-          {options.map(opt => {
-            const isSelected = opt.value === value;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => {
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer mb-0.5 text-left ${
-                  isSelected
+        {isOpen && (
+          <div className="absolute z-50 left-0 right-0 top-full mt-1.5 p-1.5 rounded-2xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-700 shadow-2xl max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-150">
+            {options.map(opt => {
+              const isSelected = opt.value === value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    onChange(opt.value);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer mb-0.5 text-left ${isSelected
                     ? 'bg-brand-600 text-white font-black shadow-sm'
                     : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800'
-                }`}
-              >
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  {opt.icon && (
-                    <span className={`shrink-0 ${isSelected ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`}>{opt.icon}</span>
-                  )}
-                  <span className="truncate">{opt.label}</span>
-                  {opt.badge && (
-                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase shrink-0 ${
-                      isSelected 
-                        ? 'bg-white/20 text-white' 
+                    }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    {opt.icon && (
+                      <span className={`shrink-0 ${isSelected ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`}>{opt.icon}</span>
+                    )}
+                    <span className="truncate">{opt.label}</span>
+                    {opt.badge && (
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase shrink-0 ${isSelected
+                        ? 'bg-white/20 text-white'
                         : (opt.badgeColor || 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300')
-                    }`}>
-                      {opt.badge}
-                    </span>
+                        }`}>
+                        {opt.badge}
+                      </span>
+                    )}
+                  </div>
+                  {isSelected && (
+                    <Check className="w-4 h-4 text-white shrink-0 ml-2 stroke-[3]" />
                   )}
-                </div>
-                {isSelected && (
-                  <Check className="w-4 h-4 text-white shrink-0 ml-2 stroke-[3]" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
 
 // Helper to convert any raw DOB string (ISO, YYYY-MM-DD, MM/DD/YYYY) to MM/DD/YYYY
 const parseDOBToDisplay = (rawDob: any): string => {
@@ -238,41 +234,113 @@ const parseDOBToDisplay = (rawDob: any): string => {
       const year = dateObj.getFullYear();
       return `${month}/${day}/${year}`;
     }
-  } catch {}
+  } catch { }
   return str;
 };
 
-// Play audio chime using Web Audio API
+// Play audio chime using Web Audio API with multi-tone harmonic chord
 const playChimeSound = () => {
   try {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
     const ctx = new AudioContextClass();
-    const osc1 = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    const gainNode = ctx.createGain();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => { });
+    }
 
-    osc1.type = 'sine';
-    osc2.type = 'triangle';
+    const t = ctx.currentTime;
+    // Pleasant 3-note ascending chime: C5 (523.25Hz) -> E5 (659.25Hz) -> G5 (783.99Hz)
+    const notes = [
+      { freq: 523.25, start: t, duration: 0.12 },
+      { freq: 659.25, start: t + 0.10, duration: 0.14 },
+      { freq: 783.99, start: t + 0.22, duration: 0.28 }
+    ];
 
-    osc1.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-    osc1.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
+    notes.forEach(({ freq, start, duration }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, start);
 
-    osc2.frequency.setValueAtTime(440, ctx.currentTime);
-    osc2.frequency.exponentialRampToValueAtTime(1174.66, ctx.currentTime + 0.2); // D6
+      gain.gain.setValueAtTime(0.001, start);
+      gain.gain.exponentialRampToValueAtTime(0.22, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
 
-    gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
 
-    osc1.connect(gainNode);
-    osc2.connect(gainNode);
-    gainNode.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + duration);
+    });
+  } catch (err) {
+    console.warn('Audio playback error:', err);
+  }
+};
 
-    osc1.start();
-    osc2.start();
-    osc1.stop(ctx.currentTime + 0.45);
-    osc2.stop(ctx.currentTime + 0.45);
-  } catch {}
+// World-Class App Device & Browser Parser (Swiggy / WhatsApp / Apple ID Grade)
+export interface ParsedUA {
+  browser: string;
+  os: string;
+  isMobile: boolean;
+  deviceName: string;
+  type: 'desktop' | 'mobile' | 'tablet';
+}
+
+const parseUserAgentDetails = (ua: string = ''): ParsedUA => {
+  if (!ua) return { browser: 'Web Browser', os: 'System', isMobile: false, deviceName: 'Authorized Device', type: 'desktop' };
+
+  let browser = 'Web Browser';
+  if (ua.includes('Edg/')) {
+    const v = ua.match(/Edg\/([\d.]+)/)?.[1]?.split('.')[0] || '';
+    browser = v ? `Microsoft Edge ${v}` : 'Microsoft Edge';
+  } else if (ua.includes('OPR/') || ua.includes('Opera')) {
+    const v = ua.match(/OPR\/([\d.]+)/)?.[1]?.split('.')[0] || '';
+    browser = v ? `Opera ${v}` : 'Opera';
+  } else if (ua.includes('Firefox/')) {
+    const v = ua.match(/Firefox\/([\d.]+)/)?.[1]?.split('.')[0] || '';
+    browser = v ? `Mozilla Firefox ${v}` : 'Mozilla Firefox';
+  } else if (ua.includes('Chrome/')) {
+    const v = ua.match(/Chrome\/([\d.]+)/)?.[1]?.split('.')[0] || '';
+    browser = v ? `Google Chrome ${v}` : 'Google Chrome';
+  } else if (ua.includes('Safari/') && !ua.includes('Chrome')) {
+    const v = ua.match(/Version\/([\d.]+)/)?.[1]?.split('.')[0] || '';
+    browser = v ? `Apple Safari ${v}` : 'Apple Safari';
+  }
+
+  let os = 'Desktop OS';
+  let isMobile = false;
+  let type: 'desktop' | 'mobile' | 'tablet' = 'desktop';
+
+  if (/iPhone/i.test(ua)) {
+    os = 'iPhone';
+    isMobile = true;
+    type = 'mobile';
+  } else if (/iPad/i.test(ua)) {
+    os = 'iPad';
+    isMobile = true;
+    type = 'tablet';
+  } else if (/Android/i.test(ua)) {
+    os = /Mobile/i.test(ua) ? 'Android Phone' : 'Android Tablet';
+    isMobile = true;
+    type = /Mobile/i.test(ua) ? 'mobile' : 'tablet';
+  } else if (/Windows NT 10.0/i.test(ua) || /Windows 11/i.test(ua) || /Windows/i.test(ua)) {
+    os = 'Windows 11';
+    type = 'desktop';
+  } else if (/Macintosh|Mac OS X/i.test(ua)) {
+    os = 'macOS';
+    type = 'desktop';
+  } else if (/Linux/i.test(ua)) {
+    os = 'Linux';
+    type = 'desktop';
+  }
+
+  return {
+    browser,
+    os,
+    isMobile,
+    deviceName: `${browser} • ${os}`,
+    type
+  };
 };
 
 export const AccountProfileSettings: React.FC = () => {
@@ -296,12 +364,12 @@ export const AccountProfileSettings: React.FC = () => {
   // Mobile profile sub-section filter & accordion states for authentic app ergonomics
   const [profileSubSection, setProfileSubSection] = useState<'all' | 'contact' | 'academic' | 'institutional' | 'links'>('all');
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({
-    photo: true,
+    photo: false,
     contact: true,
-    academic: true,
-    institutional: true,
-    links: true,
-    languages: true
+    academic: false,
+    institutional: false,
+    links: false,
+    languages: false
   });
   const toggleCard = (key: string) => {
     setExpandedCards(prev => ({ ...prev, [key]: !prev[key] }));
@@ -315,7 +383,7 @@ export const AccountProfileSettings: React.FC = () => {
   }, [isStaffMentor, activeTab]);
 
   // Mentee Modal State
-  const [selectedMentee, setSelectedMentee] = useState<{name: string, regNo: string, att: string, solved: number, actionType: 'View' | 'Intervene' | 'Warn'} | null>(null);
+  const [selectedMentee, setSelectedMentee] = useState<{ name: string, regNo: string, att: string, solved: number, actionType: 'View' | 'Intervene' | 'Warn' } | null>(null);
 
   // Mentees Data State
   const [mentees, setMentees] = useState<any[]>([]);
@@ -350,7 +418,7 @@ export const AccountProfileSettings: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState<string>((user as any)?.phone_number || '');
   const [dateOfBirth, setDateOfBirth] = useState<string>(() => parseDOBToDisplay((user as any)?.date_of_birth));
   const [profilePhoto, setProfilePhoto] = useState<string | null>((user as any)?.profile_photo || user?.photoURL || null);
-  
+
   // Extended Academic & Professional Fields
   // One-time cleanup: remove old hardcoded mock defaults from localStorage
   const OLD_DEFAULTS: Record<string, string> = {
@@ -495,8 +563,8 @@ export const AccountProfileSettings: React.FC = () => {
     setBiometricAppLock(enabled);
     localStorage.setItem('biometric_app_lock', enabled ? 'true' : 'false');
     notify.success(
-      enabled 
-        ? 'Biometric app lock enabled! Your app will require fingerprint/face unlock when launched.' 
+      enabled
+        ? 'Biometric app lock enabled! Your app will require fingerprint/face unlock when launched.'
         : 'Biometric app lock disabled.',
       '',
       { category: 'ADMIN' }
@@ -510,6 +578,7 @@ export const AccountProfileSettings: React.FC = () => {
   const [faceModalMode, setFaceModalMode] = useState<'enroll' | 'test'>('enroll');
   const [isRemovingFace, setIsRemovingFace] = useState<boolean>(false);
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState<boolean>(false);
+  const [showClearNotesConfirm, setShowClearNotesConfirm] = useState<boolean>(false);
 
   const fetchFaceStatus = async () => {
     try {
@@ -559,7 +628,7 @@ export const AccountProfileSettings: React.FC = () => {
   const [showBackupCodesModal, setShowBackupCodesModal] = useState<boolean>(false);
 
   // ID Card State
-  const [idCardSide, setIdCardSide] = useState<'front' | 'back'>('front');
+  const [idCardSide, setIdCardSide] = useState<'front' | 'back' | 'both'>('front');
   const [selectedCardTheme, setSelectedCardTheme] = useState<string>(() => localStorage.getItem('nec_card_theme') || 'nandha_gold');
 
   // UI States
@@ -613,7 +682,7 @@ export const AccountProfileSettings: React.FC = () => {
       const iosMatch = ua.match(/OS ([\d_]+) like Mac OS X/i);
       const iosVersion = iosMatch ? iosMatch[1].replace(/_/g, '.') : '';
       os = iosVersion ? `iOS ${iosVersion}` : 'iOS';
-      
+
       // Screen Dimension & Ratio Mapping for iPhone Models
       const w = typeof window !== 'undefined' ? window.screen.width : 0;
       const h = typeof window !== 'undefined' ? window.screen.height : 0;
@@ -734,7 +803,7 @@ export const AccountProfileSettings: React.FC = () => {
             }));
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }
   }, []);
 
@@ -816,6 +885,190 @@ export const AccountProfileSettings: React.FC = () => {
       fetchLoginHistory();
     }
   }, [user]);
+
+  // Load notification preferences from server on mount
+  useEffect(() => {
+    const fetchPrefs = async () => {
+      try {
+        const res = await api.get('/notifications/preferences');
+        if (res.data) {
+          const cats = res.data.categories || {};
+          if (cats.contests !== undefined) {
+            setEmailContestAlerts(Boolean(cats.contests));
+            localStorage.setItem('pref_contest_email', String(cats.contests));
+          }
+          if (cats.reports !== undefined) {
+            setWeeklyDigestAlerts(Boolean(cats.reports));
+            localStorage.setItem('pref_weekly_digest', String(cats.reports));
+          }
+          if (cats.system !== undefined) {
+            setSystemAuditAlerts(Boolean(cats.system));
+            localStorage.setItem('pref_audit_alerts', String(cats.system));
+          }
+        }
+      } catch (err) {
+        // Fall back to local preferences gracefully
+      }
+    };
+    if (user) {
+      fetchPrefs();
+    }
+  }, [user]);
+
+  // Sync notification preferences to backend in real-time
+  const syncNotificationPreferences = async (
+    contestsVal: boolean,
+    weeklyVal: boolean,
+    systemVal: boolean
+  ) => {
+    try {
+      await api.put('/notifications/preferences', {
+        push_enabled: true,
+        email_enabled: contestsVal || weeklyVal,
+        categories: {
+          assignments: true,
+          attendance: true,
+          contests: contestsVal,
+          reports: weeklyVal,
+          system: systemVal,
+          announcements: true,
+          app_updates: true
+        }
+      });
+    } catch (err) {
+      console.warn('Preferences sync to backend deferred, cached locally:', err);
+    }
+  };
+
+  const [notesSaveStatus, setNotesSaveStatus] = useState<'saved' | 'saving'>('saved');
+  const [isPlayingAudioTest, setIsPlayingAudioTest] = useState<boolean>(false);
+
+  const handleTestAudioChime = () => {
+    setIsPlayingAudioTest(true);
+    playChimeSound();
+    setTimeout(() => setIsPlayingAudioTest(false), 700);
+  };
+
+  const handleToggleContestAlerts = (val: boolean) => {
+    setEmailContestAlerts(val);
+    localStorage.setItem('pref_contest_email', String(val));
+    if (toastAudioAlerts && val) playChimeSound();
+    syncNotificationPreferences(val, weeklyDigestAlerts, systemAuditAlerts);
+    notify.success(
+      val
+        ? 'Contest Receipts Enabled • Instant email receipts scheduled for weekly LeetCode contests.'
+        : 'Contest Receipts Muted • Email receipts paused.',
+      '',
+      { category: 'ADMIN' }
+    );
+  };
+
+  const handleToggleWeeklyDigest = (val: boolean) => {
+    setWeeklyDigestAlerts(val);
+    localStorage.setItem('pref_weekly_digest', String(val));
+    if (toastAudioAlerts && val) playChimeSound();
+    syncNotificationPreferences(emailContestAlerts, val, systemAuditAlerts);
+    notify.success(
+      val
+        ? 'Weekly Mentee Digest Enabled • Assigned student summary scheduled every Monday 9:00 AM.'
+        : 'Weekly Mentee Digest Muted • Periodic digest paused.',
+      '',
+      { category: 'ADMIN' }
+    );
+  };
+
+  const handleToggleSystemAuditAlerts = (val: boolean) => {
+    setSystemAuditAlerts(val);
+    localStorage.setItem('pref_audit_alerts', String(val));
+    if (toastAudioAlerts && val) playChimeSound();
+    syncNotificationPreferences(emailContestAlerts, weeklyDigestAlerts, val);
+    notify.success(
+      val
+        ? 'Security Audit Alerts Active • Instant push notifications for unrecognized logins & password changes.'
+        : 'Security Audit Alerts Muted • Security activity logged silently.',
+      '',
+      { category: 'ADMIN' }
+    );
+  };
+
+  const handleToggleToastAudio = (val: boolean) => {
+    setToastAudioAlerts(val);
+    localStorage.setItem('pref_toast_audio', String(val));
+    if (val) playChimeSound();
+    notify.success(
+      val
+        ? 'In-App Sound Chimes Enabled • Audio feedback active for portal alerts.'
+        : 'In-App Sound Chimes Muted • Alerts will show silently.',
+      '',
+      { category: 'ADMIN' }
+    );
+  };
+
+  const handleInactivityThresholdChange = (val: number) => {
+    setInactivityDaysThreshold(val);
+    localStorage.setItem('pref_inactivity_threshold', String(val));
+    notify.success(
+      `Inactivity Warning Threshold set to ${val} Days (${val <= 3 ? 'Strict' : val <= 7 ? 'Balanced' : 'Relaxed'}) • Student roster badges updated.`,
+      '',
+      { category: 'ADMIN' }
+    );
+  };
+
+  const handleToggleShowPhone = (val: boolean) => {
+    setShowPhoneToStudents(val);
+    localStorage.setItem('pref_show_phone_students', String(val));
+    notify.success(
+      val
+        ? 'Mobile Shared with Mentees • Assigned student batch can now view your WhatsApp contact.'
+        : 'Mobile Kept Private • Contact hidden from student view.',
+      '',
+      { category: 'ADMIN' }
+    );
+  };
+
+  const handleToggleShowCabin = (val: boolean) => {
+    setShowCabinInDirectory(val);
+    localStorage.setItem('pref_show_cabin_dir', String(val));
+    notify.success(
+      val
+        ? 'Cabin Location Visible • Room location shown in campus internal directory.'
+        : 'Cabin Hidden from Directory • Location kept confidential.',
+      '',
+      { category: 'ADMIN' }
+    );
+  };
+
+  const handleFacultyNotesChange = (val: string) => {
+    setFacultyNotes(val);
+    setNotesSaveStatus('saving');
+    localStorage.setItem('nec_faculty_notes', val);
+    setTimeout(() => setNotesSaveStatus('saved'), 350);
+  };
+
+  const handleCopyNotes = () => {
+    if (!facultyNotes || !facultyNotes.trim()) {
+      notify.info('Faculty scratchpad is empty.', '', { category: 'ADMIN' });
+      return;
+    }
+    navigator.clipboard.writeText(facultyNotes);
+    notify.success('Faculty scratchpad copied to clipboard.', '', { category: 'ADMIN' });
+  };
+
+  const handleClearNotes = () => {
+    setShowClearNotesConfirm(true);
+  };
+
+  const handleConfirmClearNotes = () => {
+    handleFacultyNotesChange('');
+    setShowClearNotesConfirm(false);
+    notify.success('Scratchpad cleared.', '', { category: 'ADMIN' });
+  };
+
+  const handleInsertNoteTemplate = (template: string) => {
+    const updated = facultyNotes && facultyNotes.trim() ? `${facultyNotes}\n${template}` : template;
+    handleFacultyNotesChange(updated);
+    notify.success('Added note item to scratchpad.', '', { category: 'ADMIN' });
+  };
 
   // Profile Completeness calculation
   const profileCompleteness = useMemo(() => {
@@ -900,7 +1153,7 @@ export const AccountProfileSettings: React.FC = () => {
 
   // Toggle language selection
   const handleToggleLanguage = (lang: string) => {
-    setSelectedLanguages(prev => 
+    setSelectedLanguages(prev =>
       prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]
     );
   };
@@ -995,10 +1248,58 @@ export const AccountProfileSettings: React.FC = () => {
           if (sessionRes.data?.user) {
             window.dispatchEvent(new CustomEvent('nec_user_profile_updated', { detail: sessionRes.data.user }));
           }
-        } catch {}
+        } catch { }
       }
     } catch (err: any) {
       const detail = err.response?.data?.detail || err.message || 'Failed to update profile.';
+      setErrorMessage(detail);
+      notify.error(detail, '', { category: 'ADMIN' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUpdatePasswordOnly = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (!currentPassword) {
+      setErrorMessage('Current password is required to change password.');
+      notify.error('Current password is required.', '', { category: 'ADMIN' });
+      return;
+    }
+    if (!newPassword) {
+      setErrorMessage('Please enter a new password.');
+      notify.error('Please enter a new password.', '', { category: 'ADMIN' });
+      return;
+    }
+    if (newPassword.length < 6) {
+      setErrorMessage('New password must be at least 6 characters.');
+      notify.error('New password must be at least 6 characters.', '', { category: 'ADMIN' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setErrorMessage('New password and confirm password do not match.');
+      notify.error('New password and confirm password do not match.', '', { category: 'ADMIN' });
+      return;
+    }
+
+    setIsSaving(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    try {
+      const res = await api.put('/auth/profile', {
+        current_password: currentPassword,
+        new_password: newPassword
+      });
+      if (res.data?.success) {
+        notify.success('Master password updated successfully!', '', { category: 'ADMIN' });
+        if (toastAudioAlerts) playChimeSound();
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setSuccessMessage('Your master account password has been updated securely.');
+      }
+    } catch (err: any) {
+      const detail = err.response?.data?.detail || err.message || 'Failed to update password.';
       setErrorMessage(detail);
       notify.error(detail, '', { category: 'ADMIN' });
     } finally {
@@ -1010,15 +1311,15 @@ export const AccountProfileSettings: React.FC = () => {
     const rows = [
       ['Student Reg No', 'Name', 'Attendance', 'LeetCode Solved', 'Action Type']
     ];
-    
+
     mentees.forEach(m => {
       const att = m.status_code === 'CRITICAL' ? '60%' : m.status_code === 'WARNING' ? '74%' : '90%+';
       const actionType = m.status_code === 'CRITICAL' ? 'Intervene' : m.status_code === 'WARNING' ? 'Warn' : 'View';
       rows.push([`="${m.reg_no}"`, m.name || m.username, att, String(m.total_solved || 0), actionType]);
     });
-    
+
     const csvContent = rows.map(e => e.join(",")).join("\n");
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -1027,7 +1328,7 @@ export const AccountProfileSettings: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     notify.success('Mentee list exported as CSV successfully!', '', { category: 'ADMIN' });
   };
 
@@ -1083,7 +1384,7 @@ export const AccountProfileSettings: React.FC = () => {
   // Dynamic Role-Aware Security Report Descriptor
   const getSecurityReportConfig = () => {
     const rawRole = (user?.role || '').trim().toLowerCase();
-    
+
     if (['admin', 'super admin', 'superadmin', 'administrator'].includes(rawRole)) {
       return {
         reportTitle: 'OFFICIAL ADMINISTRATIVE SECURITY ACCESS & AUDIT LOG REPORT',
@@ -1246,14 +1547,14 @@ export const AccountProfileSettings: React.FC = () => {
     const vcard = [
       'BEGIN:VCARD',
       'VERSION:3.0',
-      `FN:${fullName || 'Faculty Member'}`,
+      `FN:${fullName || 'Nanthishvaran S'}`,
       `TITLE:${designation || 'Staff'}`,
-      `ORG:Nandha Engineering College (Autonomous);${departmentName}`,
-      `EMAIL;TYPE=INTERNET,WORK:${user?.email || ''}`,
-      `TEL;TYPE=WORK,VOICE:${phoneNumber || ''}`,
-      `ADR;TYPE=WORK:;;${officeLocation};Erode;Tamil Nadu;638052;India`,
+      `ORG:Nandha Engineering College (Autonomous);${departmentName && departmentName !== 'INSTITUTIONAL' ? departmentName : 'Computer Science & Engineering'}`,
+      `EMAIL;TYPE=INTERNET,WORK:${user?.email || 'nanthishvaran17@gmail.com'}`,
+      `TEL;TYPE=WORK,VOICE:${phoneNumber || '+91 90420 20879'}`,
+      `ADR;TYPE=WORK:;;${officeLocation || 'Main Campus, Academic Block B-204'};Erode;Tamil Nadu;638052;India`,
       `URL:${linkedinUrl || 'https://nandhaengg.org'}`,
-      `NOTE:Institutional ID: ${institutionalId} | Blood Group: ${bloodGroup}`,
+      `NOTE:Institutional ID: ${institutionalId} | Blood Group: ${bloodGroup || 'O+'}`,
       'END:VCARD'
     ].join('\r\n');
 
@@ -1265,6 +1566,171 @@ export const AccountProfileSettings: React.FC = () => {
     a.click();
     URL.revokeObjectURL(url);
     notify.success('vCard Contact downloaded! Open with Phonebook/Contacts.', '', { category: 'ADMIN' });
+  };
+
+  // Dedicated High-Resolution PVC ID Card Print Dispatcher
+  const handlePrintIdCard = () => {
+    const printWindow = window.open('', '_blank', 'width=1000,height=800');
+    if (!printWindow) {
+      notify.error('Please allow popups to print ID card', '', { category: 'ADMIN' });
+      return;
+    }
+
+    const effectiveDob = dateOfBirth || '17/01/2004';
+    const effectiveBlood = bloodGroup || 'O+ (Positive)';
+    const effectiveCabin = officeLocation || 'Main Campus • Academic Block B-204';
+    const effectiveDept = departmentName && departmentName !== 'INSTITUTIONAL' ? departmentName : 'Computer Science & Engineering';
+    const effectiveRole = rawRole.includes('admin') ? 'ADMINISTRATOR' : rawRole.includes('student') ? 'STUDENT' : 'FACULTY';
+    const origin = window.location.origin;
+
+    const printHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Nandha Engineering College - Institutional ID Card - ${institutionalId}</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f8fafc; margin: 0; padding: 24px; color: #0f172a; }
+    .header-banner { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
+    .header-banner h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: 0.5px; color: #1e1b4b; }
+    .header-banner p { margin: 4px 0 0; font-size: 11px; font-weight: 700; color: #64748b; }
+    .print-toolbar { text-align: center; margin-bottom: 24px; }
+    .btn-print { background: #4f46e5; color: white; border: none; padding: 12px 28px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+    .cards-container { display: flex; gap: 36px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+    .pvc-frame { width: 340px; height: 520px; border-radius: 20px; position: relative; overflow: hidden; color: white; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); display: flex; flex-direction: column; justify-content: space-between; page-break-inside: avoid; border: 2px solid #f59e0b; background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 55%, #020617 100%); }
+    .pvc-frame.back-frame { background: linear-gradient(145deg, #090d16 0%, #131b2e 55%, #030712 100%); border-color: #6366f1; }
+    .inst-header { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; }
+    .emblem-img { width: 44px; height: 44px; object-fit: contain; }
+    .inst-titles h3 { margin: 0; font-size: 11.5px; font-weight: 900; letter-spacing: 0.5px; color: #ffffff; text-transform: uppercase; }
+    .inst-titles p { margin: 2px 0 0; font-size: 8px; font-weight: 700; color: #cbd5e1; }
+    .chip-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; }
+    .gold-chip { width: 38px; height: 26px; border-radius: 6px; background: linear-gradient(135deg, #fcd34d, #f59e0b, #d97706); border: 1px solid rgba(255,255,255,0.6); }
+    .role-badge { background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 3px 10px; border-radius: 9999px; font-size: 9px; font-weight: 900; letter-spacing: 0.8px; }
+    .profile-row { display: flex; gap: 14px; align-items: center; margin: 6px 0; }
+    .photo-box { width: 88px; height: 98px; border-radius: 14px; border: 2px solid #f59e0b; overflow: hidden; background: #000; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info h2 { margin: 0; font-size: 16px; font-weight: 900; color: #ffffff; line-height: 1.2; }
+    .user-info .desig { margin: 3px 0 0; font-size: 11px; font-weight: 800; color: #fde047; }
+    .user-info .id-tag { display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 6px; font-family: monospace; font-size: 10.5px; font-weight: 900; margin-top: 6px; letter-spacing: 0.5px; }
+    .specs-grid { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 14px; padding: 9px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 9px; }
+    .specs-grid span.lbl { display: block; font-size: 7.5px; text-transform: uppercase; font-weight: 900; color: #94a3b8; letter-spacing: 0.5px; }
+    .specs-grid span.val { font-weight: 800; color: #ffffff; margin-top: 1px; display: block; }
+    .barcode-section { text-align: center; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 6px; }
+    .barcode-lines { height: 26px; background: repeating-linear-gradient(to right, #fff, #fff 2px, transparent 2px, transparent 4px, #fff 4px, #fff 7px, transparent 7px, transparent 9px); opacity: 0.9; }
+    .barcode-text { font-family: monospace; font-size: 8.5px; font-weight: 900; letter-spacing: 2px; color: #cbd5e1; margin-top: 2px; }
+    .signature-row { display: flex; justify-content: space-between; align-items: flex-end; font-size: 8px; color: #94a3b8; font-weight: 800; margin-top: 4px; }
+    .sig-cursive { font-family: "Brush Script MT", cursive, sans-serif; font-size: 17px; color: #fde047; }
+    /* Back styles */
+    .mag-strip { height: 32px; background: #000000; margin: -20px -20px 10px -20px; border-bottom: 1px solid rgba(255,255,255,0.2); }
+    .back-address { font-size: 8.5px; text-align: center; color: #cbd5e1; line-height: 1.35; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 8px; }
+    .terms-list { font-size: 8px; color: #94a3b8; line-height: 1.4; padding-left: 12px; margin: 6px 0; }
+    .emergency-box { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 10px; padding: 7px 10px; font-size: 8.5px; }
+    .emergency-box strong { color: #fca5a5; }
+    @media print {
+      .print-toolbar { display: none; }
+      body { background: white; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-toolbar">
+    <button class="btn-print" onclick="window.print()">Print High-Resolution PVC ID Card</button>
+  </div>
+  <div class="header-banner">
+    <h1>NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</h1>
+    <p>Official Institutional Identity Card • Front & Back Side-by-Side Ready for PVC Card Printing</p>
+  </div>
+  <div class="cards-container">
+    <!-- Front Card -->
+    <div class="pvc-frame">
+      <div class="inst-header" style="justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <img class="emblem-img" src="${origin}/nandha_emblem.png" alt="NEC" />
+          <div class="inst-titles">
+            <h3>NANDHA ENGINEERING COLLEGE</h3>
+            <p>Autonomous • Anna University • NBA &amp; NAAC A+</p>
+          </div>
+        </div>
+        <img style="height: 38px; width: auto; object-fit: contain;" src="${origin}/nec_25_years_logo_transparent.png" alt="25 Years" />
+      </div>
+      <div class="chip-row">
+        <div class="gold-chip"></div>
+        <span class="role-badge">${effectiveRole}</span>
+      </div>
+      <div class="profile-row">
+        <div class="photo-box">
+          ${profilePhoto ? `<img src="${profilePhoto}" alt="Photo" />` : `<span style="font-size:32px;font-weight:900;">${(fullName || 'U').charAt(0)}</span>`}
+        </div>
+        <div class="user-info">
+          <h2>${fullName || user?.username}</h2>
+          <div class="desig">${designation || roleName}</div>
+          <div class="id-tag">${institutionalId}</div>
+          <div style="font-size:9.5px;color:#93c5fd;font-weight:800;margin-top:2px;">${effectiveDept}</div>
+        </div>
+      </div>
+      <div class="specs-grid">
+        <div><span class="lbl">DOB (Verified)</span><span class="val">${effectiveDob}</span></div>
+        <div><span class="lbl">Blood Group</span><span class="val" style="color:#fca5a5;">${effectiveBlood}</span></div>
+        <div><span class="lbl">Mobile / Contact</span><span class="val">${phoneNumber || '+91 90420 20879'}</span></div>
+        <div><span class="lbl">Cabin / Room</span><span class="val">${effectiveCabin}</span></div>
+      </div>
+      <div class="barcode-section">
+        <div class="barcode-lines"></div>
+        <div class="barcode-text">*${institutionalId}*</div>
+      </div>
+      <div class="signature-row">
+        <div>
+          <span>Valid: Academic Session 2025–26</span><br />
+          <span style="color:#fde047;font-size:7.5px;font-weight:900;">25th Year (Silver Jubilee)</span>
+        </div>
+        <div style="text-align:right;">
+          <div class="sig-cursive">Dr. U. S. Ragupathy</div>
+          <span style="display:block;font-size:7.5px;color:#cbd5e1;font-weight:900;">Dr. U. S. Ragupathy, M.E., Ph.D.</span>
+          <span>Principal • Authorized Signatory</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Back Card -->
+    <div class="pvc-frame back-frame">
+      <div class="mag-strip"></div>
+      <div class="back-address">
+        <strong style="color:#ffffff;font-size:9.5px;">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</strong><br />
+        Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai<br />
+        Erode - Perundurai Main Road, Vaikkaalmedu, Erode - 638 052, Tamil Nadu<br />
+        Phone: 04294 - 225585 | Email: info@nandhaengg.org | www.nandhaengg.org
+      </div>
+      <div class="emergency-box">
+        <strong>EMERGENCY &amp; MEDICAL RECORD</strong><br />
+        Person: ${emergencyContactName || 'Department HOD / College Emergency Desk'}<br />
+        Phone: ${emergencyContactPhone || phoneNumber || '+91 04294 225585'} | Blood: ${effectiveBlood}
+      </div>
+      <div>
+        <span style="font-size:8.5px;font-weight:900;color:#fde047;text-transform:uppercase;">Institutional Instructions:</span>
+        <ul class="terms-list">
+          <li>This card is institutional property and strictly non-transferable (25 Years of Excellence).</li>
+          <li>Loss must be reported immediately to College Office / IT Admin.</li>
+          <li>If found, kindly deposit at Campus Security Gate or Principal's Office (Dr. U. S. Ragupathy, 04294-225585).</li>
+        </ul>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.15);padding-top:8px;">
+        <div>
+          <span style="font-size:8.5px;font-weight:900;color:#6ee7b7;display:block;">CRYPTOGRAPHIC SEAL</span>
+          <span style="font-size:7.5px;font-family:monospace;color:#cbd5e1;">SHA256-${institutionalId.toLowerCase()}-verified</span>
+        </div>
+        <div style="background:#fff;padding:6px 10px;border-radius:6px;color:#000;font-size:8.5px;font-weight:900;text-align:center;">
+          [ VERIFIED SMART QR ]
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    printWindow.document.write(printHtml);
+    printWindow.document.close();
+    printWindow.focus();
   };
 
   // Export Security Audit Log Excel with perfect alignment, styles, and logo using exceljs
@@ -1316,7 +1782,7 @@ export const AccountProfileSettings: React.FC = () => {
           ext: { width: 85, height: 75 }
         });
       }
-      
+
       if (logoRightId !== undefined) {
         // Anchor to top right G1 (which is column index 6)
         worksheet.addImage(logoRightId, {
@@ -1369,7 +1835,7 @@ export const AccountProfileSettings: React.FC = () => {
       headerRow.height = 25;
       headerRow.eachCell(cell => {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E78' } };
-        cell.border = { top: {style:'thin', color: {argb:'FF000000'}}, left: {style:'thin', color: {argb:'FF000000'}}, bottom: {style:'thin', color: {argb:'FF000000'}}, right: {style:'thin', color: {argb:'FF000000'}} };
+        cell.border = { top: { style: 'thin', color: { argb: 'FF000000' } }, left: { style: 'thin', color: { argb: 'FF000000' } }, bottom: { style: 'thin', color: { argb: 'FF000000' } }, right: { style: 'thin', color: { argb: 'FF000000' } } };
       });
 
       // 5. Data Rows
@@ -1377,14 +1843,14 @@ export const AccountProfileSettings: React.FC = () => {
         const row = worksheet.addRow([h.id, h.date, h.time, h.ip, h.network, h.method, h.status]);
         row.eachCell(cell => {
           cell.font = { name: 'Times New Roman', size: 11 };
-          cell.border = { top: {style:'thin', color:{argb:'FF000000'}}, left: {style:'thin', color:{argb:'FF000000'}}, bottom: {style:'thin', color:{argb:'FF000000'}}, right: {style:'thin', color:{argb:'FF000000'}} };
+          cell.border = { top: { style: 'thin', color: { argb: 'FF000000' } }, left: { style: 'thin', color: { argb: 'FF000000' } }, bottom: { style: 'thin', color: { argb: 'FF000000' } }, right: { style: 'thin', color: { argb: 'FF000000' } } };
           cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
         });
-        
+
         // Custom styling for specific columns
-        row.getCell(1).font = { name: 'Times New Roman', size: 11, bold: true }; 
+        row.getCell(1).font = { name: 'Times New Roman', size: 11, bold: true };
         row.getCell(4).font = { name: 'Times New Roman', size: 11, color: { argb: 'FF0369A1' } };
-        
+
         // Color status
         const statusCell = row.getCell(7);
         statusCell.font = { name: 'Times New Roman', size: 11, bold: true, color: { argb: h.status === 'SUCCESS' ? 'FF15803D' : 'FFE11D48' } };
@@ -1401,8 +1867,8 @@ export const AccountProfileSettings: React.FC = () => {
       worksheet.getColumn(7).width = 25; // Status
 
       // Alternating row colors
-      for(let i = 6; i <= worksheet.rowCount; i++) {
-        if(i % 2 !== 0) {
+      for (let i = 6; i <= worksheet.rowCount; i++) {
+        if (i % 2 !== 0) {
           worksheet.getRow(i).eachCell(cell => {
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
           });
@@ -1423,7 +1889,7 @@ export const AccountProfileSettings: React.FC = () => {
         anchor.click();
         URL.revokeObjectURL(url);
       }
-      
+
       if (notifyToast) notify.dismiss(notifyToast);
       notify.success('Security audit report downloaded successfully!', '', { category: 'ADMIN' });
     } catch (err: any) {
@@ -1439,7 +1905,7 @@ export const AccountProfileSettings: React.FC = () => {
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const filename = `NEC_${reportCfg.filePrefix}_Security_Audit_${institutionalId}_${new Date().toISOString().split('T')[0]}.csv`;
         await downloadManager.downloadBlob(blob, filename, 'text/csv;charset=utf-8;');
-        
+
         if (notifyToast) notify.dismiss(notifyToast);
         notify.success('Security audit log exported as CSV successfully!', '', { category: 'ADMIN' });
       } catch (fallbackErr: any) {
@@ -1452,10 +1918,10 @@ export const AccountProfileSettings: React.FC = () => {
   // Print Formatted Security Audit Report — Full Page Preview (no auto-print)
   const handlePrintSecurityAuditReport = () => {
     const reportCfg = getSecurityReportConfig();
-    const logoUrl   = `${window.location.origin}/nec_25_years_logo.png`;
+    const logoUrl = `${window.location.origin}/nec_25_years_logo.png`;
     const emblemUrl = `${window.location.origin}/nandha_emblem.png`;
-    const nowIst    = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
-    const nowShort  = new Date().toLocaleString('en-GB', {
+    const nowIst = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+    const nowShort = new Date().toLocaleString('en-GB', {
       timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short',
       year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
@@ -1851,425 +2317,336 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
   }, [selectedCardTheme]);
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fade-in w-full pb-12 text-slate-900 dark:text-slate-100">
-      
-      {/* 1. TOP HERO IDENTITY BANNER — Modern Mobile App Gradient Header */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-950 via-indigo-950/90 to-slate-950 text-white p-4 sm:p-6 lg:p-8 shadow-2xl shadow-indigo-950/40 border border-indigo-500/30 transition-all">
-        <div className="absolute top-0 right-0 w-72 sm:w-80 h-72 sm:h-80 bg-brand-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-64 sm:w-72 h-64 sm:h-72 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="relative z-10 space-y-4 sm:space-y-5 lg:space-y-6">
-          {/* Top Sub-row: Category Badge, IST Clock & Quick Actions */}
-          <div className="flex items-center justify-between gap-2 pb-3 border-b border-white/10">
-            <div className="inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-              <span className="hidden sm:inline">Personal Identity • Self-Service Hub</span>
-              <span className="sm:hidden font-mono">Identity Hub</span>
-            </div>
+    <div className="space-y-4 sm:space-y-6 animate-fade-in w-full pb-12 text-slate-900 dark:text-slate-100">
 
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <button
-                type="button"
-                onClick={handleExportProfileJson}
-                className="h-7 sm:h-8 px-2 sm:px-3 rounded-full font-bold text-[11px] sm:text-xs bg-white/10 hover:bg-white/20 active:scale-95 text-white border border-white/20 backdrop-blur-md transition-all flex items-center justify-center gap-1.5 cursor-pointer box-border"
-                title="Export JSON"
-              >
-                <Download className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
-                <span className="hidden sm:inline">Export JSON</span>
-              </button>
+      {/* 1. TOP HERO IDENTITY BANNER — Clean, World-Class Mobile & Desktop Consumer Card (Apple / Meesho / Swiggy Grade) */}
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
+        {/* Subtle decorative ambient tint */}
+        <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-brand-500/10 via-indigo-500/5 to-transparent rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-purple-500/5 rounded-full blur-2xl pointer-events-none" />
 
-              <label className="h-7 sm:h-8 px-2 sm:px-3 rounded-full font-bold text-[11px] sm:text-xs bg-white/10 hover:bg-white/20 active:scale-95 text-white border border-white/20 backdrop-blur-md transition-all flex items-center justify-center gap-1.5 cursor-pointer box-border m-0">
-                <UploadCloud className="w-3.5 h-3.5 text-purple-300 shrink-0" />
-                <span className="hidden sm:inline">Import JSON</span>
-                <input ref={jsonImportInputRef} type="file" accept=".json" className="hidden" onChange={handleImportProfileJson} />
-              </label>
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
 
-              <span className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-full font-mono text-[10px] sm:text-xs font-bold bg-white/10 text-slate-200 border border-white/20 backdrop-blur-md flex items-center justify-center whitespace-nowrap box-border">
-                IST {clientInfo.timeStr}
+          {/* Left: Avatar + User Details */}
+          <div className="flex items-center gap-3.5 sm:gap-5 min-w-0 flex-1">
+
+            {/* Avatar with Camera Trigger & Zoom */}
+            <div
+              className="relative shrink-0 cursor-pointer group"
+              onClick={() => { if (profilePhoto) setShowPhotoZoom(true); }}
+              title={profilePhoto ? "Click to enlarge photo" : "Change profile avatar"}
+            >
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-brand-500/40 shadow-sm bg-slate-100 dark:bg-navy-950 flex items-center justify-center relative">
+                {profilePhoto ? (
+                  <img
+                    src={profilePhoto}
+                    alt={fullName || user?.username}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-2xl sm:text-3xl flex items-center justify-center">
+                    {(fullName || user?.username || 'U').charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-white" />
+                </div>
+              </div>
+
+              {/* Verified Badge */}
+              <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-navy-900 shadow-sm flex items-center justify-center" title="Verified Account">
+                <Check className="w-3 h-3 text-white stroke-[3]" />
               </span>
             </div>
-          </div>
 
-          {/* Main User Profile Row: Mobile Native App Style */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-5 lg:gap-6 w-full">
-            
-            {/* Left Side: Horizontal Avatar & Identity Details */}
-            <div className="flex flex-row items-center gap-3.5 sm:gap-4 lg:gap-6 text-left flex-1 min-w-0">
-              {/* Avatar with Zoom and Edit overlay */}
-              <div 
-                className={`relative shrink-0 ${profilePhoto ? 'cursor-zoom-in group' : ''}`}
-                onClick={() => { if (profilePhoto) setShowPhotoZoom(true); }}
-                title={profilePhoto ? "Click to enlarge photo" : "Profile Avatar"}
-              >
-                <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-indigo-400/80 shadow-2xl ring-4 ring-indigo-500/20 bg-slate-900 flex items-center justify-center relative group">
-                  {profilePhoto ? (
-                    <img src={profilePhoto} alt={fullName || user?.username} className="w-full h-full object-contain p-1 bg-white dark:bg-navy-900 group-hover:scale-105 transition-transform duration-300" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-2xl sm:text-3xl flex items-center justify-center">
-                      {(fullName || user?.username || 'U').charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                  </div>
-                </div>
-                <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-slate-900 shadow-md flex items-center justify-center">
-                  <Check className="w-3 h-3 text-white stroke-[3]" />
+            {/* User Typography & Credentials */}
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight truncate">
+                  {fullName || user?.username}
+                </h1>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-50 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                  {roleName}
                 </span>
-              </div>
-
-              {/* Identity Details */}
-              <div className="flex flex-col items-start justify-center min-w-0 flex-1 space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-base sm:text-xl lg:text-3xl font-black text-white tracking-tight truncate max-w-full">
-                    {fullName || user?.username}
-                  </h2>
-                  <span className="px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-brand-500 to-indigo-600 text-white border border-white/20 shadow-md whitespace-nowrap">
-                    {roleName}
+                {is2FAEnabled && (
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    2FA Protected
                   </span>
-                </div>
-                
-                {designation && (
-                  <p className="text-[11px] sm:text-xs text-indigo-200 font-bold flex items-center gap-1.5 truncate max-w-full">
-                    <Award className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    <span className="truncate">{designation}</span>
-                  </p>
                 )}
-
-                <div className="text-[10px] sm:text-xs text-slate-300 font-mono flex items-center gap-1.5 flex-wrap font-bold pt-0.5">
-                  <span className="text-indigo-200 bg-white/10 px-2 py-0.5 rounded-md border border-white/15 text-[10px] sm:text-xs font-mono">{institutionalId}</span>
-                  <span className="text-slate-500 hidden sm:inline">•</span>
-                  <span className="text-slate-300 truncate max-w-[170px] sm:max-w-none text-[10px] sm:text-xs">{user?.email}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile Metric Strip (Clean compact glass cards for < lg viewports) */}
-            <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-white/10 lg:hidden w-full">
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/10 flex flex-col gap-1.5 min-w-0">
-                <div className="flex items-center justify-between text-[11px] font-black">
-                  <span className="text-white flex items-center gap-1 truncate">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> 
-                    <span className="truncate">Profile Strength</span>
-                  </span>
-                  <span className="font-mono text-emerald-300 text-[10px] font-black">{profileCompleteness}%</span>
-                </div>
-                <div className="w-full h-1.5 rounded-full bg-white/15 overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-teal-400 via-emerald-400 to-green-400 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(52,211,153,0.5)]" 
-                    style={{ width: `${profileCompleteness}%` }}
-                  />
-                </div>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/10 flex flex-col gap-1.5 min-w-0">
-                <div className="flex items-center justify-between text-[11px] font-black">
-                  <span className="text-white flex items-center gap-1 truncate">
-                    <Lock className="w-3.5 h-3.5 text-indigo-300 shrink-0" /> 
-                    <span className="truncate">Security Score</span>
-                  </span>
-                  <span className="font-mono text-indigo-300 text-[10px] font-black">{securityScore}/100</span>
-                </div>
-                <div className="w-full h-1.5 rounded-full bg-white/15 overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-brand-400 via-indigo-400 to-purple-400 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(129,140,248,0.5)]" 
-                    style={{ width: `${securityScore}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Desktop Metrics (Spacious Right Side for lg+ viewports) */}
-            <div className="hidden lg:flex lg:flex-row lg:items-center lg:justify-end gap-3.5 shrink-0">
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3.5 border border-white/20 flex flex-col justify-center gap-2 w-[220px]">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-black text-white flex items-center gap-1">
-                    <ShieldCheck className="w-4 h-4 text-emerald-400" /> 
-                    <span className="truncate">Strength</span>
-                  </span>
-                  <span className="font-black text-emerald-300">{profileCompleteness}%</span>
-                </div>
-                <div className="w-full h-2 rounded-full bg-white/20 overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-teal-400 via-emerald-400 to-green-400 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(52,211,153,0.5)]" 
-                    style={{ width: `${profileCompleteness}%` }}
-                  />
-                </div>
-                <p className="text-[10px] text-slate-300 font-bold">
-                  {profileCompleteness === 100 ? '100% Completed' : `${100 - profileCompleteness}% to reach 100%`}
+              {designation && (
+                <p className="text-xs text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1.5 truncate">
+                  <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  <span className="truncate">{designation}</span>
                 </p>
-              </div>
+              )}
 
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3.5 border border-white/20 flex flex-col justify-center gap-2 w-[220px]">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-black text-white flex items-center gap-1">
-                    <Lock className="w-4 h-4 text-indigo-300" /> 
-                    <span className="truncate">Security</span>
-                  </span>
-                  <span className="font-black text-indigo-300">{securityScore}/100</span>
-                </div>
-                <div className="w-full h-2 rounded-full bg-white/20 overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-brand-400 via-indigo-400 to-purple-400 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(129,140,248,0.5)]" 
-                    style={{ width: `${securityScore}%` }}
-                  />
-                </div>
-                <p className="text-[10px] text-slate-300 font-bold">
-                  {securityScore < 100 ? '2FA Recommended' : 'Maximum Security'}
-                </p>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap font-bold pt-0.5">
+                <span className="font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/80 text-[10px]">
+                  {institutionalId}
+                </span>
+                <span>•</span>
+                <span className="truncate max-w-[200px] sm:max-w-none">{user?.email}</span>
+                {phoneNumber && (
+                  <>
+                    <span>•</span>
+                    <span className="font-mono">{phoneNumber}</span>
+                  </>
+                )}
               </div>
             </div>
 
           </div>
+
+          {/* Right: Quick Action Controls (Export / Import / Manage) */}
+          <div className="flex items-center gap-2 self-end sm:self-center shrink-0 w-full sm:w-auto justify-between sm:justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-navy-800">
+            <button
+              type="button"
+              onClick={handleExportProfileJson}
+              className="px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+              title="Export Profile JSON Backup"
+            >
+              <Download className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Backup</span>
+            </button>
+
+            <label className="px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 m-0">
+              <UploadCloud className="w-3.5 h-3.5 text-purple-500" />
+              <span>Restore</span>
+              <input ref={jsonImportInputRef} type="file" accept=".json" className="hidden" onChange={handleImportProfileJson} />
+            </label>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('profile');
+                setProfileSubSection('contact');
+                setExpandedCards(prev => ({ ...prev, contact: true }));
+              }}
+              className="px-3.5 py-1.5 rounded-xl font-black text-xs bg-brand-600 hover:bg-brand-700 text-white shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Edit Profile</span>
+            </button>
+          </div>
+
         </div>
       </div>
 
-      {/* 2. 4-PILLAR STATS & TELEMETRY ROW — Modern Compact Mobile App Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        
-        {/* Card 1: Department Scope */}
-        <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 shadow-xs flex items-center gap-2.5 sm:gap-3.5 hover:shadow-md transition-all">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
-            <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-[9px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">Department Scope</div>
-            <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">{departmentName}</div>
-          </div>
-        </div>
+      {/* 2. AMAZON & MEESHO STYLE QUICK SETTINGS TILES */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3.5 animate-fade-in">
 
-        {/* Card 2: Security & 2FA */}
-        <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 shadow-xs flex items-center gap-2.5 sm:gap-3.5 hover:shadow-md transition-all">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-indigo-500/15 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 flex items-center justify-center shrink-0">
-            <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-[9px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">Security Vault</div>
-            <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
-              {is2FAEnabled ? '2FA Protected' : 'Encrypted & Active'}
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Client Platform */}
-        <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 shadow-xs flex items-center gap-2.5 sm:gap-3.5 hover:shadow-md transition-all">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-sky-500/15 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 flex items-center justify-center shrink-0">
-            {clientInfo.deviceType === 'Mobile' || clientInfo.deviceType === 'iPhone' ? (
-              <Smartphone className="w-4 h-4 sm:w-5 sm:h-5" />
-            ) : (
-              <Laptop className="w-4 h-4 sm:w-5 sm:h-5" />
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-[9px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">Active Device</div>
-            <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate" title={clientInfo.fullDevice}>
-              {clientInfo.browser ? `${clientInfo.browser} • ${clientInfo.os || 'Win'}` : 'Active Device'}
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: Member Since */}
-        <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 shadow-xs flex items-center gap-2.5 sm:gap-3.5 hover:shadow-md transition-all">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-purple-500/15 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 flex items-center justify-center shrink-0">
-            <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-[9px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">Institutional Join</div>
-            <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">{createdAtFormatted}</div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* 3. RESPONSIVE TAB NAVIGATION — Sticky Mobile Pill Bar & Desktop Segmented Control */}
-      <div className="sticky top-1 sm:top-3 z-30 flex items-center gap-1.5 overflow-x-auto no-scrollbar p-1.5 rounded-2xl bg-white/90 dark:bg-navy-950/90 backdrop-blur-xl border border-slate-200/80 dark:border-navy-800 shadow-md">
-        
-        {/* Tab 1: Personal & Academic Profile */}
-        <button
-          type="button"
+        {/* Hub Tile 1: Profile & Identity */}
+        <div
           onClick={() => setActiveTab('profile')}
-          className={`shrink-0 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
-            activeTab === 'profile'
-              ? 'text-white bg-gradient-to-r from-brand-600 to-indigo-600 shadow-[0_4px_12px_rgba(79,70,229,0.3)]'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-900'
-          }`}
-        >
-          <User className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'profile' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
-          <span className="truncate">Personal &amp; Profile</span>
-          {activeTab === 'profile' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20 pointer-events-none" />}
-        </button>
-
-        {/* Tab 2: Security & Password Vault */}
-        <button
-          type="button"
-          onClick={() => setActiveTab('security')}
-          className={`shrink-0 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
-            activeTab === 'security'
-              ? 'text-white bg-gradient-to-r from-emerald-500 to-teal-600 shadow-[0_4px_12px_rgba(16,185,129,0.3)]'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-900'
-          }`}
-        >
-          <KeyRound className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'security' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
-          <span className="truncate">Security Vault</span>
-          {activeTab === 'security' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20 pointer-events-none" />}
-        </button>
-
-        {/* Tab 3: Notification Preferences */}
-        <button
-          type="button"
-          onClick={() => setActiveTab('preferences')}
-          className={`shrink-0 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
-            activeTab === 'preferences'
-              ? 'text-white bg-gradient-to-r from-purple-500 to-pink-600 shadow-[0_4px_12px_rgba(168,85,247,0.3)]'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-900'
-          }`}
-        >
-          <Bell className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'preferences' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
-          <span className="truncate">Privacy &amp; Alerts</span>
-          {activeTab === 'preferences' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20 pointer-events-none" />}
-        </button>
-
-        {/* Tab 4: Digital Identity Card */}
-        <button
-          type="button"
-          onClick={() => setActiveTab('id_card')}
-          className={`shrink-0 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
-            activeTab === 'id_card'
-              ? 'text-white bg-gradient-to-r from-sky-500 to-blue-600 shadow-[0_4px_12px_rgba(14,165,233,0.3)]'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-900'
-          }`}
-        >
-          <ShieldCheck className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'id_card' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
-          <span className="truncate">Identity Card</span>
-          {activeTab === 'id_card' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20 pointer-events-none" />}
-        </button>
-
-        {/* Tab 5: Mentorship & Tracking (ONLY for Staff / Faculty) */}
-        {isStaffMentor && (
-          <button
-            type="button"
-            onClick={() => setActiveTab('mentorship')}
-            className={`shrink-0 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-[10px] sm:text-[11px] uppercase tracking-wide font-black transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer relative group ${
-              activeTab === 'mentorship'
-                ? 'text-white bg-gradient-to-r from-amber-500 to-orange-600 shadow-[0_4px_12px_rgba(245,158,11,0.3)]'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-900'
+          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'profile'
+            ? 'bg-gradient-to-br from-indigo-500/10 via-brand-500/5 to-transparent border-brand-500/50 shadow-md ring-2 ring-brand-500/20'
+            : 'bg-white/90 dark:bg-navy-900/90 border-slate-200/90 dark:border-navy-800 hover:border-brand-400/50 hover:shadow-sm'
             }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'profile' ? 'bg-brand-600 text-white' : 'bg-brand-500/15 text-brand-600 dark:text-brand-400'
+              }`}>
+              <User className="w-4.5 h-4.5" />
+            </div>
+            <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'profile' ? 'text-brand-600' : 'text-slate-400'
+              }`} />
+          </div>
+          <div>
+            <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              Profile &amp; Info
+            </div>
+            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
+              {fullName || user?.username || 'Staff'} • {phoneNumber || 'Contact details'}
+            </div>
+          </div>
+        </div>
+
+        {/* Hub Tile 2: Login & Security */}
+        <div
+          onClick={() => setActiveTab('security')}
+          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'security'
+            ? 'bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border-emerald-500/50 shadow-md ring-2 ring-emerald-500/20'
+            : 'bg-white/90 dark:bg-navy-900/90 border-slate-200/90 dark:border-navy-800 hover:border-emerald-400/50 hover:shadow-sm'
+            }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'security' ? 'bg-emerald-600 text-white' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+              }`}>
+              <KeyRound className="w-4.5 h-4.5" />
+            </div>
+            <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'security' ? 'text-emerald-600' : 'text-slate-400'
+              }`} />
+          </div>
+          <div>
+            <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              Login &amp; Security
+            </div>
+            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
+              {is2FAEnabled ? '2FA Active' : 'Password &amp; Devices'}
+            </div>
+          </div>
+        </div>
+
+        {/* Hub Tile 3: Notifications & Privacy */}
+        <div
+          onClick={() => setActiveTab('preferences')}
+          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'preferences'
+            ? 'bg-gradient-to-br from-purple-500/10 via-pink-500/5 to-transparent border-purple-500/50 shadow-md ring-2 ring-purple-500/20'
+            : 'bg-white/90 dark:bg-navy-900/90 border-slate-200/90 dark:border-navy-800 hover:border-purple-400/50 hover:shadow-sm'
+            }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'preferences' ? 'bg-purple-600 text-white' : 'bg-purple-500/15 text-purple-600 dark:text-purple-400'
+              }`}>
+              <Sliders className="w-4.5 h-4.5" />
+            </div>
+            <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'preferences' ? 'text-purple-600' : 'text-slate-400'
+              }`} />
+          </div>
+          <div>
+            <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              Privacy &amp; Alerts
+            </div>
+            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
+              Email, WhatsApp &amp; Inactivity
+            </div>
+          </div>
+        </div>
+
+        {/* Hub Tile 4: Digital ID Card */}
+        <div
+          onClick={() => setActiveTab('id_card')}
+          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'id_card'
+            ? 'bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-transparent border-sky-500/50 shadow-md ring-2 ring-sky-500/20'
+            : 'bg-white/90 dark:bg-navy-900/90 border-slate-200/90 dark:border-navy-800 hover:border-sky-400/50 hover:shadow-sm'
+            }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'id_card' ? 'bg-sky-600 text-white' : 'bg-sky-500/15 text-sky-600 dark:text-sky-400'
+              }`}>
+              <ShieldCheck className="w-4.5 h-4.5" />
+            </div>
+            <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'id_card' ? 'text-sky-600' : 'text-slate-400'
+              }`} />
+          </div>
+          <div>
+            <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              Digital ID Card
+            </div>
+            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
+              Official NFC QR Badge
+            </div>
+          </div>
+        </div>
+
+        {/* Hub Tile 5: Mentorship (Staff Only) */}
+        {isStaffMentor && (
+          <div
+            onClick={() => setActiveTab('mentorship')}
+            className={`col-span-2 sm:col-span-1 p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'mentorship'
+              ? 'bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border-amber-500/50 shadow-md ring-2 ring-amber-500/20'
+              : 'bg-white/90 dark:bg-navy-900/90 border-slate-200/90 dark:border-navy-800 hover:border-amber-400/50 hover:shadow-sm'
+              }`}
           >
-            <GraduationCap className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'mentorship' ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
-            <span className="truncate">Mentorship</span>
-            {activeTab === 'mentorship' && <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20 pointer-events-none" />}
-          </button>
+            <div className="flex items-center justify-between mb-2">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'mentorship' ? 'bg-amber-600 text-white' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                }`}>
+                <GraduationCap className="w-4.5 h-4.5" />
+              </div>
+              <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'mentorship' ? 'text-amber-600' : 'text-slate-400'
+                }`} />
+            </div>
+            <div>
+              <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                Mentorship Hub
+              </div>
+              <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                {totalMentees} Mentees • {avgAttendance}
+              </div>
+            </div>
+          </div>
         )}
+
       </div>
 
       {/* Success / Error Alerts */}
       {successMessage && (
-        <div className="p-4 rounded-2xl bg-emerald-500/20 border-2 border-emerald-500/40 text-emerald-950 dark:text-emerald-200 text-xs font-black flex items-center gap-2 animate-fade-in shadow-2xs mb-6 mt-4">
+        <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-950 dark:text-emerald-200 text-xs font-black flex items-center gap-2.5 animate-fade-in shadow-xs">
           <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span>{successMessage}</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="p-4 rounded-2xl bg-rose-500/20 border-2 border-rose-500/40 text-rose-950 dark:text-rose-200 text-xs font-black flex items-center gap-2 animate-fade-in shadow-2xs mb-6 mt-4">
+        <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-950 dark:text-rose-200 text-xs font-black flex items-center gap-2.5 animate-fade-in shadow-xs">
           <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
           <span>{errorMessage}</span>
         </div>
       )}
 
       <form onSubmit={handleSaveProfile} className="space-y-6">
-        
+
 
         {/* ========================================================================= */}
         {/* TAB 1: PERSONAL & ACADEMIC PROFILE — Native Mobile App & Desktop Bento UI */}
         {/* ========================================================================= */}
         {activeTab === 'profile' && (
           <div className="space-y-4 sm:space-y-6 animate-fade-in">
-            {/* Mobile Sub-Section Quick Switcher — Sleek Segmented Control */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1.5 px-1.5 bg-slate-100/90 dark:bg-navy-950/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-navy-800 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setProfileSubSection('all')}
-                className={`shrink-0 px-3.5 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-                  profileSubSection === 'all'
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                All Sections
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setProfileSubSection('contact');
-                  setExpandedCards(prev => ({ ...prev, photo: true, contact: true }));
-                }}
-                className={`shrink-0 px-3.5 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
-                  profileSubSection === 'contact'
-                    ? 'bg-brand-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <User className="w-3.5 h-3.5 shrink-0" />
-                <span>Contact &amp; Info</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setProfileSubSection('academic');
-                  setExpandedCards(prev => ({ ...prev, academic: true }));
-                }}
-                className={`shrink-0 px-3.5 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
-                  profileSubSection === 'academic'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <GraduationCap className="w-3.5 h-3.5 shrink-0" />
-                <span>Academic &amp; Bio</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setProfileSubSection('institutional');
-                  setExpandedCards(prev => ({ ...prev, institutional: true }));
-                }}
-                className={`shrink-0 px-3.5 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
-                  profileSubSection === 'institutional'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Building2 className="w-3.5 h-3.5 shrink-0" />
-                <span>Institutional</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setProfileSubSection('links');
-                  setExpandedCards(prev => ({ ...prev, links: true, languages: true }));
-                }}
-                className={`shrink-0 px-3.5 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
-                  profileSubSection === 'links'
-                    ? 'bg-purple-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Globe className="w-3.5 h-3.5 shrink-0" />
-                <span>Links &amp; Skills</span>
-              </button>
+            {/* Mobile-Native Filter Chips (Swiggy / Meesho / iOS Style) */}
+            <div className="relative">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-0.5 scroll-smooth">
+                {[
+                  { id: 'all', label: 'All Sections', icon: Sliders },
+                  { id: 'contact', label: 'Contact & Info', icon: User },
+                  { id: 'academic', label: 'Academic & Bio', icon: GraduationCap },
+                  { id: 'institutional', label: 'Institutional', icon: Building2 },
+                  { id: 'links', label: 'Links & Skills', icon: Globe },
+                ].map(item => {
+                  const isActive = profileSubSection === item.id;
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setProfileSubSection(item.id as any);
+                        if (item.id === 'contact') setExpandedCards(prev => ({ ...prev, photo: true, contact: true }));
+                        else if (item.id === 'academic') setExpandedCards(prev => ({ ...prev, academic: true }));
+                        else if (item.id === 'institutional') setExpandedCards(prev => ({ ...prev, institutional: true }));
+                        else if (item.id === 'links') setExpandedCards(prev => ({ ...prev, links: true, languages: true }));
+                      }}
+                      className={`shrink-0 flex items-center gap-2 px-3.5 py-2.5 rounded-xl sm:rounded-2xl text-xs font-bold transition-all cursor-pointer select-none group border ${isActive
+                          ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-slate-900 dark:border-white shadow-md shadow-slate-900/10 dark:shadow-white/5 ring-2 ring-brand-500/25 scale-[1.02]'
+                          : 'bg-white/95 dark:bg-navy-900/90 text-slate-700 dark:text-slate-300 border-slate-200/90 dark:border-navy-800 hover:border-slate-300 dark:hover:border-navy-700 hover:bg-slate-50 dark:hover:bg-navy-800/80 shadow-2xs'
+                        }`}
+                    >
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors ${isActive
+                          ? 'bg-white/20 dark:bg-slate-900/20 text-white dark:text-slate-900'
+                          : 'bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 group-hover:text-brand-600 dark:group-hover:text-brand-400'
+                        }`}>
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="tracking-tight whitespace-nowrap">{item.label}</span>
+                      {isActive && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-400 dark:bg-brand-600 animate-pulse ml-0.5" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
-              
+
               {/* LEFT COLUMN: Self-Editable Identity, Contact & Academic Profile */}
               <div className="lg:col-span-7 space-y-4 sm:space-y-6">
-                
+
                 {/* 1. Photo & Avatar Customizer */}
                 {(profileSubSection === 'all' || profileSubSection === 'contact') && (
                   <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
-                    <div 
+                    <div
                       onClick={() => toggleCard('photo')}
                       className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 cursor-pointer select-none"
                     >
@@ -2283,11 +2660,32 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       </div>
                     </div>
 
+                    {/* Collapsed summary preview (Amazon / Meesho style) */}
+                    {!expandedCards.photo && (
+                      <div
+                        onClick={() => toggleCard('photo')}
+                        className="flex items-center justify-between pt-1 cursor-pointer group select-none"
+                      >
+                        <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-slate-300">
+                          <div className="w-8 h-8 rounded-xl overflow-hidden bg-slate-100 dark:bg-navy-800 flex items-center justify-center shrink-0 border border-slate-200 dark:border-navy-700 shadow-2xs">
+                            {profilePhoto ? <img src={profilePhoto} className="w-full h-full object-cover" /> : <User className="w-4 h-4 text-slate-500" />}
+                          </div>
+                          <span className="text-[11px] sm:text-xs">
+                            {profilePhoto ? 'Custom profile photo active' : 'Click to change photo or pick avatar'}
+                          </span>
+                        </div>
+                        <span className="text-brand-600 dark:text-brand-400 font-black text-[11px] group-hover:underline flex items-center gap-1">
+                          <span>Change</span>
+                          <ChevronRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    )}
+
                     {expandedCards.photo && (
                       <div className="space-y-4 animate-fade-in">
                         <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 sm:gap-4">
                           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                            <div 
+                            <div
                               className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-white dark:bg-navy-900 border-2 border-slate-300 dark:border-navy-700 flex items-center justify-center shrink-0 shadow-xs ${profilePhoto ? 'cursor-zoom-in' : ''}`}
                               onClick={() => { if (profilePhoto) setShowPhotoZoom(true); }}
                             >
@@ -2337,8 +2735,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-indigo-50/70 dark:bg-navy-950/90 border border-indigo-200 dark:border-navy-700 space-y-3 animate-fade-in">
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-black text-indigo-950 dark:text-indigo-200">Choose a Professional Avatar Icon:</span>
-                              <button 
-                                type="button" 
+                              <button
+                                type="button"
                                 onClick={() => setShowPresetAvatarPicker(false)}
                                 className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-300 cursor-pointer p-1"
                               >
@@ -2359,7 +2757,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                                     <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-300 flex items-center justify-center group-hover:bg-brand-600 group-hover:text-white transition-colors">
                                       <IconComponent className="w-4 h-4" />
                                     </div>
-                                    <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 truncate max-w-full mt-1">{av.label.split(' ')[0]}</span>
+                                    <span className="text-[9px] font-bold text-slate-600 dark:text-slate-400 mt-1 truncate max-w-full">{av.label}</span>
                                   </button>
                                 );
                               })}
@@ -2374,67 +2772,110 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 {/* 2. Personal & Contact Information Card — Mobile Input Rows */}
                 {(profileSubSection === 'all' || profileSubSection === 'contact') && (
                   <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
-                    <div 
+                    <div
                       onClick={() => toggleCard('contact')}
                       className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 cursor-pointer select-none"
                     >
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                        <User className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
-                        <span>Identity &amp; Contact Information</span>
-                      </h3>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-brand-500/15 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/25">
+                          <User className="w-4.5 h-4.5" />
+                        </div>
+                        <div>
+                          <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                            Identity &amp; Contact Information
+                          </h3>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Personal details &amp; primary contact record</p>
+                        </div>
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] sm:text-xs font-black text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2 sm:px-2.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-800/60">Self Editable</span>
                         <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.contact ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
 
+                    {/* Collapsed summary preview (Amazon / Meesho style) */}
+                    {!expandedCards.contact && (
+                      <div
+                        onClick={() => toggleCard('contact')}
+                        className="flex items-center justify-between pt-1 cursor-pointer group select-none"
+                      >
+                        <div className="truncate text-xs font-bold text-slate-700 dark:text-slate-300 max-w-[78%]">
+                          <span className="text-slate-900 dark:text-white font-black">{fullName || user?.username || 'Staff Member'}</span>
+                          {phoneNumber && <span className="text-slate-500 dark:text-slate-400 font-mono"> • {phoneNumber}</span>}
+                          {officeLocation && <span className="text-slate-500 dark:text-slate-400"> • {officeLocation}</span>}
+                        </div>
+                        <span className="text-brand-600 dark:text-brand-400 font-black text-[11px] shrink-0 group-hover:underline flex items-center gap-1">
+                          <span>Edit</span>
+                          <ChevronRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    )}
+
                     {expandedCards.contact && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 animate-fade-in">
                         {/* Full Display Name */}
-                        <div className="space-y-2 sm:col-span-2">
+                        <div className="space-y-1.5 sm:col-span-2">
                           <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Full Display Name</label>
-                          <input
-                            type="text"
-                            value={fullName}
-                            onChange={e => setFullName(e.target.value)}
-                            placeholder="Dr. / Mr. / Ms. Name"
-                            className="w-full h-12 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                            required
-                          />
+                          <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                              <User className="w-4 h-4" />
+                            </div>
+                            <input
+                              type="text"
+                              value={fullName}
+                              onChange={e => setFullName(e.target.value)}
+                              placeholder="Dr. / Mr. / Ms. Name"
+                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                              required
+                            />
+                          </div>
                         </div>
 
                         {/* Professional Designation / Title */}
-                        <div className="space-y-2 sm:col-span-2">
+                        <div className="space-y-1.5 sm:col-span-2">
                           <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Professional Designation / Academic Title</label>
-                          <input
-                            type="text"
-                            value={designation}
-                            onChange={e => setDesignation(e.target.value)}
-                            placeholder="e.g. Assistant Professor, Lead System Architect, HOD"
-                            className="w-full h-12 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                          />
+                          <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                              <Briefcase className="w-4 h-4" />
+                            </div>
+                            <input
+                              type="text"
+                              value={designation}
+                              onChange={e => setDesignation(e.target.value)}
+                              placeholder="e.g. Assistant Professor, Lead System Architect, HOD"
+                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                            />
+                          </div>
                         </div>
 
                         {/* Phone / Mobile Number */}
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Mobile / Contact Number</label>
-                          <input
-                            type="tel"
-                            inputMode="tel"
-                            value={phoneNumber}
-                            onChange={e => setPhoneNumber(e.target.value)}
-                            placeholder="+91 9876543210"
-                            className="w-full h-12 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                          />
+                          <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                              <Phone className="w-4 h-4" />
+                            </div>
+                            <input
+                              type="tel"
+                              inputMode="tel"
+                              value={phoneNumber}
+                              onChange={e => setPhoneNumber(e.target.value)}
+                              placeholder="+91 9876543210"
+                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                            />
+                          </div>
                         </div>
 
                         {/* Date of Birth (MM/DD/YYYY) */}
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <div className="flex items-center justify-between">
                             <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Date of Birth</label>
-                            <span className="text-[10px] text-brand-600 dark:text-brand-400 font-bold font-mono bg-brand-50 dark:bg-brand-950/60 px-1.5 py-0.5 rounded border border-brand-200 dark:border-brand-800/80">MM/DD/YYYY</span>
+                            <span className="text-[10px] text-brand-600 dark:text-brand-400 font-bold font-mono bg-brand-50 dark:bg-brand-950/60 px-1.5 py-0.5 rounded border border-brand-200 dark:border-brand-800/80">DD/MM/YYYY</span>
                           </div>
                           <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                              <Calendar className="w-4 h-4" />
+                            </div>
                             <input
                               type="text"
                               inputMode="numeric"
@@ -2445,9 +2886,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                                 else if (val.length >= 5) val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
                                 setDateOfBirth(val);
                               }}
-                              placeholder="MM/DD/YYYY (e.g. 08/15/1990)"
+                              placeholder="DD/MM/YYYY (e.g. 15/08/1990)"
                               maxLength={10}
-                              className="w-full h-12 pl-4 pr-11 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                              className="w-full h-12 pl-10 pr-11 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
                             />
                             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
                               <input
@@ -2458,7 +2899,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                                   if (e.target.value) {
                                     const parts = e.target.value.split('-');
                                     if (parts.length === 3) {
-                                      setDateOfBirth(`${parts[1]}/${parts[2]}/${parts[0]}`);
+                                      setDateOfBirth(`${parts[2]}/${parts[1]}/${parts[0]}`);
                                     }
                                   }
                                 }}
@@ -2471,7 +2912,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         </div>
 
                         {/* Blood Group */}
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Blood Group (Medical Record)</label>
                           <PremiumSelect
                             value={bloodGroup}
@@ -2483,40 +2924,55 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         </div>
 
                         {/* Office Cabin / Room Location */}
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Office Cabin / Room Location</label>
-                          <input
-                            type="text"
-                            value={officeLocation}
-                            onChange={e => setOfficeLocation(e.target.value)}
-                            placeholder="e.g. CS Block Room 204"
-                            className="w-full h-12 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                          />
+                          <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                              <MapPin className="w-4 h-4" />
+                            </div>
+                            <input
+                              type="text"
+                              value={officeLocation}
+                              onChange={e => setOfficeLocation(e.target.value)}
+                              placeholder="e.g. CS Block Room 204"
+                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                            />
+                          </div>
                         </div>
 
                         {/* Emergency Contact Person */}
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Emergency Contact Person</label>
-                          <input
-                            type="text"
-                            value={emergencyContactName}
-                            onChange={e => setEmergencyContactName(e.target.value)}
-                            placeholder="e.g. Spouse / Parent / Relative"
-                            className="w-full h-12 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                          />
+                          <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                              <Users className="w-4 h-4" />
+                            </div>
+                            <input
+                              type="text"
+                              value={emergencyContactName}
+                              onChange={e => setEmergencyContactName(e.target.value)}
+                              placeholder="e.g. Spouse / Parent / Relative"
+                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                            />
+                          </div>
                         </div>
 
                         {/* Emergency Contact Phone */}
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Emergency Contact Phone</label>
-                          <input
-                            type="tel"
-                            inputMode="tel"
-                            value={emergencyContactPhone}
-                            onChange={e => setEmergencyContactPhone(e.target.value)}
-                            placeholder="+91 9876543210"
-                            className="w-full h-12 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                          />
+                          <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                              <Phone className="w-4 h-4" />
+                            </div>
+                            <input
+                              type="tel"
+                              inputMode="tel"
+                              value={emergencyContactPhone}
+                              onChange={e => setEmergencyContactPhone(e.target.value)}
+                              placeholder="+91 9876543210"
+                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                            />
+                          </div>
                         </div>
                       </div>
                     )}
@@ -2526,56 +2982,96 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 {/* 3. Academic Credentials & Teaching Bio Card */}
                 {(profileSubSection === 'all' || profileSubSection === 'academic') && (
                   <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
-                    <div 
+                    <div
                       onClick={() => toggleCard('academic')}
                       className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 cursor-pointer select-none"
                     >
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                        <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                        <span>Academic Background &amp; Mentoring Bio</span>
-                      </h3>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/25">
+                          <GraduationCap className="w-4.5 h-4.5" />
+                        </div>
+                        <div>
+                          <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                            Academic Background &amp; Mentoring Bio
+                          </h3>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Degrees, research domains &amp; guidance philosophy</p>
+                        </div>
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] sm:text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 sm:px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800/60">Curriculum</span>
                         <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.academic ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
 
+                    {/* Collapsed summary preview (Amazon / Meesho style) */}
+                    {!expandedCards.academic && (
+                      <div
+                        onClick={() => toggleCard('academic')}
+                        className="flex items-center justify-between pt-1 cursor-pointer group select-none"
+                      >
+                        <div className="truncate text-xs font-bold text-slate-700 dark:text-slate-300 max-w-[78%]">
+                          <span className="text-slate-900 dark:text-white font-black">{highestDegree || 'Degree not specified'}</span>
+                          {specialization && <span className="text-slate-500 dark:text-slate-400"> • {specialization}</span>}
+                          {experienceYears && <span className="text-slate-500 dark:text-slate-400"> • {experienceYears}</span>}
+                        </div>
+                        <span className="text-indigo-600 dark:text-indigo-400 font-black text-[11px] shrink-0 group-hover:underline flex items-center gap-1">
+                          <span>Edit</span>
+                          <ChevronRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    )}
+
                     {expandedCards.academic && (
                       <div className="space-y-4 sm:space-y-5 animate-fade-in">
                         {/* Highest Degree */}
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Highest Academic Degree &amp; Institution</label>
-                          <input
-                            type="text"
-                            value={highestDegree}
-                            onChange={e => setHighestDegree(e.target.value)}
-                            placeholder="e.g. M.E. Computer Science & Engineering • Anna University"
-                            className="w-full h-12 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                          />
+                          <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                              <GraduationCap className="w-4 h-4" />
+                            </div>
+                            <input
+                              type="text"
+                              value={highestDegree}
+                              onChange={e => setHighestDegree(e.target.value)}
+                              placeholder="e.g. M.E. Computer Science & Engineering • Anna University"
+                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                            />
+                          </div>
                         </div>
 
                         {/* Research Specialization */}
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Specialization &amp; Research Domains</label>
-                          <input
-                            type="text"
-                            value={specialization}
-                            onChange={e => setSpecialization(e.target.value)}
-                            placeholder="e.g. Algorithms, Distributed Cloud Systems, Deep Learning"
-                            className="w-full h-12 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                          />
+                          <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                              <Award className="w-4 h-4" />
+                            </div>
+                            <input
+                              type="text"
+                              value={specialization}
+                              onChange={e => setSpecialization(e.target.value)}
+                              placeholder="e.g. Algorithms, Distributed Cloud Systems, Deep Learning"
+                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                            />
+                          </div>
                         </div>
 
                         {/* Courses Taught */}
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Courses &amp; Lab Subjects Handling</label>
-                          <input
-                            type="text"
-                            value={coursesTaught}
-                            onChange={e => setCoursesTaught(e.target.value)}
-                            placeholder="e.g. CS8451 Design & Analysis of Algorithms, Data Structures Lab"
-                            className="w-full h-12 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                          />
+                          <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                              <BookOpen className="w-4 h-4" />
+                            </div>
+                            <input
+                              type="text"
+                              value={coursesTaught}
+                              onChange={e => setCoursesTaught(e.target.value)}
+                              placeholder="e.g. CS8451 Design & Analysis of Algorithms, Data Structures Lab"
+                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                            />
+                          </div>
                         </div>
 
                         {/* Faculty Bio with 1-Tap Quick Templates */}
@@ -2609,18 +3105,25 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
               {/* RIGHT COLUMN: Official Institutional Scope, Portfolio & Languages */}
               <div className="lg:col-span-5 space-y-4 sm:space-y-6">
-                
+
                 {/* 4. Institutional Scope — Grouped iOS/Material Style */}
                 {(profileSubSection === 'all' || profileSubSection === 'institutional') && (
                   <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
-                    <div 
+                    <div
                       onClick={() => toggleCard('institutional')}
                       className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 cursor-pointer select-none"
                     >
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                        <Shield className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                        <span>Institutional Scope</span>
-                      </h3>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/25">
+                          <Shield className="w-4.5 h-4.5" />
+                        </div>
+                        <div>
+                          <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                            Institutional Scope
+                          </h3>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Verified academic record &amp; department allocation</p>
+                        </div>
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] sm:text-xs text-indigo-700 dark:text-indigo-300 font-black bg-indigo-50 dark:bg-indigo-950/80 px-2 sm:px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800/60">
                           Managed by Admin
@@ -2628,6 +3131,24 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.institutional ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
+
+                    {/* Collapsed summary preview (Amazon / Meesho style) */}
+                    {!expandedCards.institutional && (
+                      <div
+                        onClick={() => toggleCard('institutional')}
+                        className="flex items-center justify-between pt-1 cursor-pointer group select-none"
+                      >
+                        <div className="truncate text-xs font-bold text-slate-700 dark:text-slate-300 max-w-[78%]">
+                          <span className="font-mono text-indigo-700 dark:text-indigo-300 font-black">{institutionalId}</span>
+                          <span className="text-slate-500 dark:text-slate-400"> • {departmentName}</span>
+                          <span className="text-slate-500 dark:text-slate-400"> • {roleName}</span>
+                        </div>
+                        <span className="text-indigo-600 dark:text-indigo-400 font-black text-[11px] shrink-0 group-hover:underline flex items-center gap-1">
+                          <span>View</span>
+                          <ChevronRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    )}
 
                     {expandedCards.institutional && (
                       <div className="space-y-3 animate-fade-in">
@@ -2682,77 +3203,131 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                 {/* 5. Academic Social & Research Links */}
                 {(profileSubSection === 'all' || profileSubSection === 'links') && (
-                  <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4">
-                    <div 
+                  <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
+                    <div
                       onClick={() => toggleCard('links')}
                       className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 cursor-pointer select-none"
                     >
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
-                        <span>Academic &amp; Portfolio Links</span>
-                      </h3>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/25">
+                          <Globe className="w-4.5 h-4.5" />
+                        </div>
+                        <div>
+                          <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                            Academic &amp; Portfolio Links
+                          </h3>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Coding profiles, publications &amp; handles</p>
+                        </div>
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">Web Visibility</span>
                         <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.links ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
 
+                    {/* Collapsed summary preview (Amazon / Meesho style) */}
+                    {!expandedCards.links && (
+                      <div
+                        onClick={() => toggleCard('links')}
+                        className="flex items-center justify-between pt-1 cursor-pointer group select-none"
+                      >
+                        <div className="truncate text-xs font-bold text-slate-700 dark:text-slate-300 max-w-[78%]">
+                          {linkedinUrl || githubUrl || leetcodeHandle ? (
+                            <span className="text-purple-600 dark:text-purple-400">
+                              {[linkedinUrl && 'LinkedIn', githubUrl && 'GitHub', leetcodeHandle && 'LeetCode'].filter(Boolean).join(' • ')}
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 dark:text-slate-400">No public profiles configured yet</span>
+                          )}
+                        </div>
+                        <span className="text-purple-600 dark:text-purple-400 font-black text-[11px] shrink-0 group-hover:underline flex items-center gap-1">
+                          <span>Edit</span>
+                          <ChevronRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    )}
+
                     {expandedCards.links && (
                       <div className="space-y-4 sm:space-y-5 animate-fade-in">
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">LinkedIn Profile URL</label>
-                          <input
-                            type="url"
-                            value={linkedinUrl}
-                            onChange={e => setLinkedinUrl(e.target.value)}
-                            placeholder="https://linkedin.com/in/username"
-                            className="w-full h-12 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">GitHub Profile URL</label>
-                          <input
-                            type="url"
-                            value={githubUrl}
-                            onChange={e => setGithubUrl(e.target.value)}
-                            placeholder="https://github.com/username"
-                            className="w-full h-12 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Google Scholar Profile URL</label>
-                          <input
-                            type="url"
-                            value={scholarUrl}
-                            onChange={e => setScholarUrl(e.target.value)}
-                            placeholder="https://scholar.google.com/citations?user=..."
-                            className="w-full h-12 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                          <div className="space-y-2">
-                            <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">ORCID iD</label>
+                          <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-500 pointer-events-none">
+                              <LinkIcon className="w-4 h-4" />
+                            </div>
                             <input
-                              type="text"
-                              value={orcidId}
-                              onChange={e => setOrcidId(e.target.value)}
-                              placeholder="0000-0002-1825-0097"
-                              className="w-full h-12 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                              type="url"
+                              value={linkedinUrl}
+                              onChange={e => setLinkedinUrl(e.target.value)}
+                              placeholder="https://linkedin.com/in/username"
+                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
                             />
                           </div>
+                        </div>
 
-                          <div className="space-y-2">
-                            <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">LeetCode Handle</label>
+                        <div className="space-y-1.5">
+                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">GitHub Profile URL</label>
+                          <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+                              <Laptop className="w-4 h-4" />
+                            </div>
                             <input
-                              type="text"
-                              value={leetcodeHandle}
-                              onChange={e => setLeetcodeHandle(e.target.value)}
-                              placeholder="nanthish_nec"
-                              className="w-full h-12 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                              type="url"
+                              value={githubUrl}
+                              onChange={e => setGithubUrl(e.target.value)}
+                              placeholder="https://github.com/username"
+                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
                             />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Google Scholar Profile URL</label>
+                          <div className="relative">
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none">
+                              <BookOpen className="w-4 h-4" />
+                            </div>
+                            <input
+                              type="url"
+                              value={scholarUrl}
+                              onChange={e => setScholarUrl(e.target.value)}
+                              placeholder="https://scholar.google.com/citations?user=..."
+                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">ORCID iD</label>
+                            <div className="relative">
+                              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
+                                <ShieldCheck className="w-4 h-4" />
+                              </div>
+                              <input
+                                type="text"
+                                value={orcidId}
+                                onChange={e => setOrcidId(e.target.value)}
+                                placeholder="0000-0002-1825-0097"
+                                className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">LeetCode Handle</label>
+                            <div className="relative">
+                              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none">
+                                <Terminal className="w-4 h-4" />
+                              </div>
+                              <input
+                                type="text"
+                                value={leetcodeHandle}
+                                onChange={e => setLeetcodeHandle(e.target.value)}
+                                placeholder="nanthish_nec"
+                                className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -2763,19 +3338,44 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 {/* 6. Languages Spoken — Modern Pill Chips */}
                 {(profileSubSection === 'all' || profileSubSection === 'links') && (
                   <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-3.5 sm:space-y-4">
-                    <div 
+                    <div
                       onClick={() => toggleCard('languages')}
                       className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 cursor-pointer select-none"
                     >
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-indigo-500 shrink-0" />
-                        <span>Language Proficiencies</span>
-                      </h3>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/25">
+                          <Globe className="w-4.5 h-4.5" />
+                        </div>
+                        <div>
+                          <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                            Language Proficiencies
+                          </h3>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Multi-lingual communication skills</p>
+                        </div>
+                      </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">Multi-lingual Communication</span>
+                        <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">{selectedLanguages.length} Selected</span>
                         <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.languages ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
+
+                    {/* Collapsed summary preview (Amazon / Meesho style) */}
+                    {!expandedCards.languages && (
+                      <div
+                        onClick={() => toggleCard('languages')}
+                        className="flex items-center justify-between pt-1 cursor-pointer group select-none"
+                      >
+                        <div className="truncate text-xs font-bold text-slate-700 dark:text-slate-300 max-w-[78%]">
+                          <span className="text-indigo-600 dark:text-indigo-400 font-bold">
+                            {selectedLanguages.length > 0 ? selectedLanguages.join(', ') : 'No languages chosen'}
+                          </span>
+                        </div>
+                        <span className="text-indigo-600 dark:text-indigo-400 font-black text-[11px] shrink-0 group-hover:underline flex items-center gap-1">
+                          <span>Choose</span>
+                          <ChevronRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    )}
 
                     {expandedCards.languages && (
                       <div className="flex flex-wrap gap-2 animate-fade-in">
@@ -2786,11 +3386,10 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               key={lang}
                               type="button"
                               onClick={() => handleToggleLanguage(lang)}
-                              className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all border cursor-pointer flex items-center gap-1.5 active:scale-95 ${
-                                isSelected 
-                                  ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white border-brand-500/30 shadow-md shadow-brand-500/20' 
-                                  : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-indigo-400'
-                              }`}
+                              className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all border cursor-pointer flex items-center gap-1.5 active:scale-95 ${isSelected
+                                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white border-brand-500/30 shadow-md shadow-brand-500/20'
+                                : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-indigo-400'
+                                }`}
                             >
                               <span>{lang}</span>
                               {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -2811,55 +3410,79 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* ========================================================================= */}
         {/* TAB 2: SECURITY & PASSWORD VAULT */}
         {/* ========================================================================= */}
+        {/* ========================================================================= */}
+        {/* TAB 2: SECURITY & PASSWORD VAULT — World-Class Mobile App UI (Swiggy / WhatsApp Grade) */}
+        {/* ========================================================================= */}
         {activeTab === 'security' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
-            {/* LEFT COLUMN: Password Change */}
-            <div className="lg:col-span-7 space-y-6">
-              
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <KeyRound className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> Password Management
-                  </h3>
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Authorized by Current Password</span>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 animate-fade-in">
+            {/* LEFT COLUMN: Password Change, Biometrics, Face ID & 2FA */}
+            <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+
+              {/* 1. Password Management Card — Mobile App Styled with Direct Update Action */}
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0 border border-violet-500/20 shadow-2xs">
+                      <KeyRound className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Password &amp; Credentials
+                      </h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Update master login credentials &amp; encryption</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 px-2.5 py-0.5 rounded-full border border-violet-200 dark:border-violet-800/60">
+                    Bcrypt Secured
+                  </span>
                 </div>
 
                 <div className="space-y-4">
+                  {/* Current Password Field */}
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Current Password</label>
+                    <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Current Password</label>
                     <div className="relative">
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <Lock className="w-4 h-4" />
+                      </div>
                       <input
                         type={showCurrentPassword ? 'text' : 'password'}
                         value={currentPassword}
                         onChange={e => setCurrentPassword(e.target.value)}
-                        placeholder="Enter current password"
-                        className="w-full h-11 pl-4 pr-11 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
+                        placeholder="Enter your current password"
+                        className="w-full h-12 pl-10 pr-11 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
                       />
                       <button
                         type="button"
                         onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 cursor-pointer transition-colors"
+                        title={showCurrentPassword ? "Hide password" : "Show password"}
                       >
                         {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                   </div>
 
+                  {/* New Password & Confirm New Password Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">New Password</label>
+                      <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">New Password</label>
                       <div className="relative">
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                          <Key className="w-4 h-4" />
+                        </div>
                         <input
                           type={showNewPassword ? 'text' : 'password'}
                           value={newPassword}
                           onChange={e => setNewPassword(e.target.value)}
                           placeholder="Min 6 characters"
-                          className="w-full h-11 pl-4 pr-11 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
+                          className="w-full h-12 pl-10 pr-11 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
                         />
                         <button
                           type="button"
                           onClick={() => setShowNewPassword(!showNewPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 cursor-pointer transition-colors"
+                          title={showNewPassword ? "Hide password" : "Show password"}
                         >
                           {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
@@ -2867,449 +3490,499 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Confirm New Password</label>
-                      <input
-                        type={showNewPassword ? 'text' : 'password'}
-                        value={confirmPassword}
-                        onChange={e => setConfirmPassword(e.target.value)}
-                        placeholder="Repeat new password"
-                        className="w-full h-11 pl-4 pr-11 rounded-xl border-2 border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all text-ellipsis"
-                      />
+                      <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Confirm New Password</label>
+                      <div className="relative">
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                          <CheckSquare className="w-4 h-4" />
+                        </div>
+                        <input
+                          type={showNewPassword ? 'text' : 'password'}
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                          placeholder="Repeat new password"
+                          className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                        />
+                      </div>
                     </div>
                   </div>
 
+                  {/* Password Strength Meter & Live Requirement Checklist */}
                   {newPassword && (
-                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 space-y-2">
+                    <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-navy-950/90 border border-slate-200/90 dark:border-navy-800 space-y-3 animate-fade-in">
                       <div className="flex items-center justify-between text-xs font-black">
-                        <span className="text-slate-800 dark:text-slate-200">Password Entropy Strength:</span>
+                        <span className="text-slate-700 dark:text-slate-300">Password Entropy Strength:</span>
                         <span className={`font-black ${passwordStrength.color.replace('bg-', 'text-')}`}>
                           {passwordStrength.label} (Crack time: {passwordStrength.crackTime})
                         </span>
                       </div>
                       <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden">
-                        <div className={`h-full ${passwordStrength.color} transition-all duration-300`} style={{ width: `${passwordStrength.score}%` }} />
+                        <div className={`h-full ${passwordStrength.color} transition-all duration-300 rounded-full`} style={{ width: `${passwordStrength.score}%` }} />
                       </div>
-                      <div className="grid grid-cols-2 gap-1.5 pt-1 text-[10px] font-bold">
-                        <span className={`flex items-center gap-1 ${newPassword.length >= 8 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                          <Check className="w-3 h-3" /> At least 8 characters
+                      <div className="grid grid-cols-2 gap-2 pt-1 text-[11px] font-bold">
+                        <span className={`flex items-center gap-1.5 ${newPassword.length >= 8 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                          <Check className={`w-3.5 h-3.5 ${newPassword.length >= 8 ? 'stroke-[3]' : 'opacity-40'}`} /> At least 8 characters
                         </span>
-                        <span className={`flex items-center gap-1 ${/[A-Z]/.test(newPassword) ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                          <Check className="w-3 h-3" /> Uppercase letter
+                        <span className={`flex items-center gap-1.5 ${/[A-Z]/.test(newPassword) ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                          <Check className={`w-3.5 h-3.5 ${/[A-Z]/.test(newPassword) ? 'stroke-[3]' : 'opacity-40'}`} /> Uppercase letter (A-Z)
                         </span>
-                        <span className={`flex items-center gap-1 ${/[0-9]/.test(newPassword) ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                          <Check className="w-3 h-3" /> Number (0-9)
+                        <span className={`flex items-center gap-1.5 ${/[0-9]/.test(newPassword) ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                          <Check className={`w-3.5 h-3.5 ${/[0-9]/.test(newPassword) ? 'stroke-[3]' : 'opacity-40'}`} /> Number (0-9)
                         </span>
-                        <span className={`flex items-center gap-1 ${/[^A-Za-z0-9]/.test(newPassword) ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                          <Check className="w-3 h-3" /> Special symbol (!@#$)
+                        <span className={`flex items-center gap-1.5 ${/[^A-Za-z0-9]/.test(newPassword) ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                          <Check className={`w-3.5 h-3.5 ${/[^A-Za-z0-9]/.test(newPassword) ? 'stroke-[3]' : 'opacity-40'}`} /> Special symbol (!@#$)
                         </span>
                       </div>
                     </div>
                   )}
+
+                  {/* Direct Update Password Button */}
+                  <div className="pt-1 flex items-center justify-end">
+                    <button
+                      type="button"
+                      disabled={isSaving || !newPassword || !currentPassword}
+                      onClick={handleUpdatePasswordOnly}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 active:scale-95 disabled:opacity-50 text-white font-black text-xs transition-all shadow-md shadow-violet-500/20 cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Updating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <KeyRound className="w-4 h-4" />
+                          <span>Update Password</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Passkey / Hardware Key Biometrics */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Fingerprint className="w-4 h-4 text-cyan-600" /> {isNativeMobile ? 'Device Biometrics & Security' : 'Passkeys & Biometric Hardware Key'}
-                  </h3>
-                  <span className="text-xs font-black px-2 py-0.5 rounded-md bg-cyan-100 text-cyan-800 dark:bg-cyan-950/80 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-700">
-                    {isNativeMobile ? 'Android Biometrics' : 'FIDO2 / WebAuthn'}
+              {/* 2. Grouped Modern Authentication & Biometric Vault (Apple iOS / WhatsApp Grouped Style) */}
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-navy-800 shadow-sm overflow-hidden">
+                <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-2xs">
+                      <ShieldCheck className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Biometrics &amp; Security Vault
+                      </h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Hardware-backed passkeys, face scan &amp; multi-factor protection</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Vault Active</span>
                   </span>
                 </div>
 
-                {isNativeMobile ? (
-                  /* Mobile APK View (Capacitor Native Biometrics) */
-                  <div className="space-y-3">
-                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-black text-slate-950 dark:text-white">{biometricTypeName}</h4>
-                          {nativeBiometricAvailable ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
-                              <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Supported & Ready
-                            </span>
-                          ) : nativeBiometricAvailable === false ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">
-                              <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400" /> Not Enrolled
+                <div className="divide-y divide-slate-100 dark:divide-navy-800/80">
+
+                  {/* VAULT ROW 1: Camera Face ID Recognition */}
+                  <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 hover:bg-slate-50/60 dark:hover:bg-navy-950/40 transition-colors">
+                    <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
+                      <div className="w-10 h-10 rounded-2xl bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/25 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 shadow-2xs">
+                        <Camera className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white">Camera Face ID Recognition</h4>
+                          {faceIdEnabled ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
+                              <CheckCircle className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" /> Active
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-cyan-100 text-cyan-800 dark:bg-cyan-950/80 dark:text-cyan-300">
-                              Detecting...
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300">
+                              Optional
                             </span>
                           )}
                         </div>
-                        <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                          {nativeBiometricAvailable 
-                            ? "Unlock app and secure your sessions instantly using your device's fingerprint or facial biometrics."
-                            : "No biometric sensor enrolled. Set up fingerprint or face unlock in Android Settings > Security."}
+                        <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">
+                          {faceIdEnabled
+                            ? `Face login active. Enrolled: ${faceEnrolledAt ? new Date(faceEnrolledAt).toLocaleDateString() : 'Active session'}.`
+                            : 'Sign in hands-free using your webcam facial geometry.'}
                         </p>
                       </div>
-
-                      {nativeBiometricAvailable ? (
-                        <button
-                          type="button"
-                          disabled={isVerifyingBiometric}
-                          onClick={handleTestNativeBiometric}
-                          className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0"
-                        >
-                          {isVerifyingBiometric ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Fingerprint className="w-3.5 h-3.5" />
-                          )}
-                          <span>Test Biometric</span>
-                        </button>
-                      ) : (
-                        <div className="px-4 py-2 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-xs font-black inline-flex items-center gap-1.5 shrink-0 select-none">
-                          <ShieldAlert className="w-3.5 h-3.5" />
-                          <span>Not Enrolled in Settings</span>
-                        </div>
-                      )}
                     </div>
 
-                    {/* App Lock Toggle for Mobile APK */}
-                    {nativeBiometricAvailable && (
-                      <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-2 rounded-xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400">
-                            <Lock className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <p className="text-xs font-black text-slate-900 dark:text-white">Require Biometrics on App Launch</p>
-                            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Lock the app screen when returning and unlock using your device fingerprint or face</p>
-                          </div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                          <input 
-                            type="checkbox" 
-                            checked={biometricAppLock} 
-                            onChange={(e) => handleToggleBiometricLock(e.target.checked)} 
-                            className="sr-only peer" 
-                          />
-                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-hidden rounded-full peer dark:bg-navy-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
-                        </label>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  /* Web Browser View (FIDO2 / WebAuthn Passkeys) */
-                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="space-y-0.5">
-                      <h4 className="text-xs font-black text-slate-950 dark:text-white">Windows Hello / Touch ID / YubiKey</h4>
-                      <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Sign in instantly without passwords using cryptographic biometrics.</p>
-                    </div>
-                    {browserSupportsWebAuthn() ? (
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            const optionsRes = await api.get('/auth/passkey/register-options');
-                            const options = optionsRes.data?.options || optionsRes.data;
-                            if (!options || (!options.challenge && !options.rp)) {
-                              notify.error('Failed to get passkey options from server', '', { category: 'ADMIN' });
-                              return;
-                            }
-                            const attResp = await startRegistration(options);
-                            const verifyRes = await api.post('/auth/passkey/register-verify', attResp);
-                            if (verifyRes.data?.success) {
-                              notify.success('Passkey registered successfully! You can now use it to sign in.', '', { category: 'ADMIN' });
-                            } else {
-                              notify.error(verifyRes.data?.message || 'Failed to register passkey', '', { category: 'ADMIN' });
-                            }
-                          } catch (err: any) {
-                            console.error('Passkey registration error:', err);
-                            notify.error(err?.message || 'Passkey registration failed.', '', { category: 'ADMIN' });
-                          }
-                        }}
-                        className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0"
-                      >
-                        <Fingerprint className="w-3.5 h-3.5" />
-                        <span>Register Passkey</span>
-                      </button>
-                    ) : (
-                      <div className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-navy-800 text-slate-500 dark:text-slate-400 text-xs font-black inline-flex items-center gap-1.5 shrink-0 select-none">
-                        <ShieldAlert className="w-3.5 h-3.5" />
-                        <span>Not Supported on Device</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Camera Face ID Recognition (Optional User Activation) */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Camera className="w-4 h-4 text-cyan-600" /> Camera Face ID Recognition
-                  </h3>
-                  <span className={`text-xs font-black px-2.5 py-0.5 rounded-md border ${
-                    faceIdEnabled
-                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300'
-                      : 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-navy-950/80 dark:text-slate-300'
-                  }`}>
-                    {faceIdEnabled ? 'ENROLLED & ACTIVE' : 'OPTIONAL — USER CHOICE'}
-                  </span>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-xs font-black text-slate-950 dark:text-white">AI Face Authentication</h4>
+                    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
                       {faceIdEnabled ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
-                          <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Active
-                        </span>
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFaceModalMode('test');
+                              setIsFaceModalOpen(true);
+                            }}
+                            className="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white text-[11px] font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5"
+                          >
+                            <Camera className="w-3.5 h-3.5" />
+                            <span>Test Scan</span>
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isRemovingFace}
+                            onClick={() => setShowDeactivateConfirm(true)}
+                            className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:border-rose-800 dark:text-rose-300 text-[11px] font-black transition-all cursor-pointer inline-flex items-center gap-1"
+                          >
+                            {isRemovingFace ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                            <span>Deactivate</span>
+                          </button>
+                        </>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-700 dark:bg-navy-800 dark:text-slate-300">
-                          Optional
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                      {faceIdEnabled
-                        ? `Face ID is active. You can log in instantly with your face scan. Enrolled: ${faceEnrolledAt ? new Date(faceEnrolledAt).toLocaleDateString() : 'Active session'}.`
-                        : "You can optionally activate Face ID to sign in without typing passwords using your camera."}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {faceIdEnabled ? (
-                      <>
                         <button
                           type="button"
                           onClick={() => {
-                            setFaceModalMode('test');
+                            setFaceModalMode('enroll');
                             setIsFaceModalOpen(true);
                           }}
-                          className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0"
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white text-[11px] font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
                         >
                           <Camera className="w-3.5 h-3.5" />
-                          <span>Test Face Scan</span>
+                          <span>Activate Face ID</span>
                         </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* VAULT ROW 2: Passkeys & Hardware Biometrics */}
+                  <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 hover:bg-slate-50/60 dark:hover:bg-navy-950/40 transition-colors">
+                    <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
+                      <div className="w-10 h-10 rounded-2xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 shadow-2xs">
+                        <Fingerprint className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                            {isNativeMobile ? biometricTypeName : 'Passkeys & Hardware Keys'}
+                          </h4>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black bg-cyan-100 text-cyan-800 dark:bg-cyan-950/80 dark:text-cyan-300">
+                            FIDO2 / WebAuthn
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">
+                          {isNativeMobile
+                            ? 'Unlock your portal session with device fingerprint or facial scanner.'
+                            : 'Sign in instantly with Windows Hello, Apple Touch ID, or YubiKey.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                      {isNativeMobile ? (
+                        nativeBiometricAvailable ? (
+                          <button
+                            type="button"
+                            disabled={isVerifyingBiometric}
+                            onClick={handleTestNativeBiometric}
+                            className="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white text-[11px] font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
+                          >
+                            {isVerifyingBiometric ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Fingerprint className="w-3.5 h-3.5" />}
+                            <span>Test Biometric</span>
+                          </button>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-[10px] font-bold">
+                            Not Enrolled
+                          </span>
+                        )
+                      ) : (
+                        browserSupportsWebAuthn() ? (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const optionsRes = await api.get('/auth/passkey/register-options');
+                                const options = optionsRes.data?.options || optionsRes.data;
+                                if (!options || (!options.challenge && !options.rp)) {
+                                  notify.error('Failed to get passkey options from server', '', { category: 'ADMIN' });
+                                  return;
+                                }
+                                const attResp = await startRegistration(options);
+                                const verifyRes = await api.post('/auth/passkey/register-verify', attResp);
+                                if (verifyRes.data?.success) {
+                                  notify.success('Passkey registered successfully! You can now use it to sign in.', '', { category: 'ADMIN' });
+                                } else {
+                                  notify.error(verifyRes.data?.message || 'Failed to register passkey', '', { category: 'ADMIN' });
+                                }
+                              } catch (err: any) {
+                                console.error('Passkey registration error:', err);
+                                notify.error(err?.message || 'Passkey registration failed.', '', { category: 'ADMIN' });
+                              }
+                            }}
+                            className="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white text-[11px] font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5"
+                          >
+                            <Fingerprint className="w-3.5 h-3.5" />
+                            <span>Register Passkey</span>
+                          </button>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-500 text-[10px] font-bold">
+                            Not Supported
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  {/* VAULT ROW 3: Two-Factor Authentication (2FA TOTP) */}
+                  <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 hover:bg-slate-50/60 dark:hover:bg-navy-950/40 transition-colors">
+                    <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 shadow-2xs">
+                        <Lock className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white">Two-Factor Authentication (2FA)</h4>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black border ${is2FAEnabled
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300'
+                            : 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/80 dark:text-amber-300'
+                            }`}>
+                            {is2FAEnabled ? 'ENABLED' : 'DISABLED'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">
+                          {is2FAEnabled
+                            ? 'Protected by 6-digit TOTP app codes on every sign-in.'
+                            : 'Require 6-digit authenticator code (Google, Microsoft, 1Password) on login.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                      {!is2FAEnabled ? (
                         <button
                           type="button"
-                          disabled={isRemovingFace}
-                          onClick={() => setShowDeactivateConfirm(true)}
-                          className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:border-rose-800 dark:text-rose-300 text-xs font-black transition-all cursor-pointer inline-flex items-center gap-1 shrink-0"
+                          onClick={() => handleOpen2FASetup()}
+                          disabled={isGenerating2FA}
+                          className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-[11px] font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
                         >
-                          {isRemovingFace ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                          <span>Deactivate</span>
+                          {isGenerating2FA ? <RefreshCcw className="w-3.5 h-3.5 animate-spin" /> : <QrCode className="w-3.5 h-3.5" />}
+                          <span>Enable 2FA Protection</span>
                         </button>
-                      </>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFaceModalMode('enroll');
-                          setIsFaceModalOpen(true);
-                        }}
-                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 shrink-0"
-                      >
-                        <Camera className="w-3.5 h-3.5" />
-                        <span>Activate Face ID</span>
-                      </button>
-                    )}
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setShowBackupCodesModal(true)}
+                            className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-900 dark:text-slate-100 text-[11px] font-black transition-all border border-slate-300 dark:border-navy-700 cursor-pointer inline-flex items-center gap-1"
+                          >
+                            <Key className="w-3 h-3 text-brand-500" />
+                            <span>Backup Codes</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              setIs2FAEnabled(false);
+                              localStorage.setItem('nec_2fa_enabled', 'false');
+                              try {
+                                await api.put('/auth/profile', { is_2fa_enabled: false });
+                              } catch { }
+                              notify.success('2FA disabled.', '', { category: 'ADMIN' });
+                            }}
+                            className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 text-[11px] font-black transition-all border border-rose-300 dark:border-rose-500/30 cursor-pointer inline-flex items-center gap-1"
+                          >
+                            <ShieldX className="w-3 h-3" />
+                            <span>Disable</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Two-Factor Authentication 2FA */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Two-Factor Authentication (2FA)
-                  </h3>
-                  <span className={`text-xs font-black px-2.5 py-0.5 rounded-md border ${
-                    is2FAEnabled 
-                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300' 
-                      : 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/80 dark:text-amber-300'
-                  }`}>
-                    {is2FAEnabled ? 'ENABLED' : 'DISABLED'}
-                  </span>
-                </div>
-
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Secure your portal access with authenticator apps like Google Authenticator, Microsoft Authenticator, or 1Password.
-                </p>
-
-                <div className="flex items-center gap-3 flex-wrap pt-1">
-                  {!is2FAEnabled ? (
-                    <button
-                      type="button"
-                      onClick={() => handleOpen2FASetup()}
-                      disabled={isGenerating2FA}
-                      className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isGenerating2FA ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4" />}
-                      <span>{isGenerating2FA ? 'Generating...' : 'Enable 2FA Protection'}</span>
-                    </button>
-                  ) : (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => setShowBackupCodesModal(true)}
-                        className="px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-900 dark:text-slate-100 text-xs font-black transition-all border border-slate-300 dark:border-navy-700 cursor-pointer inline-flex items-center gap-1.5"
-                      >
-                        <Key className="w-3.5 h-3.5 text-brand-500" />
-                        <span>View Backup Codes</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          setIs2FAEnabled(false);
-                          localStorage.setItem('nec_2fa_enabled', 'false');
-                          try {
-                            await api.put('/auth/profile', { is_2fa_enabled: false });
-                          } catch {}
-                          notify.success('2FA disabled.', '', { category: 'ADMIN' });
-                        }}
-                        className="px-4 py-2.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 text-xs font-black transition-all border border-rose-300 dark:border-rose-500/30 cursor-pointer inline-flex items-center gap-1.5"
-                      >
-                        <ShieldX className="w-3.5 h-3.5" />
-                        <span>Disable 2FA</span>
-                      </button>
-                    </>
-                  )}
                 </div>
               </div>
 
             </div>
 
             {/* RIGHT COLUMN: Active Sessions & Security Audit History */}
-            <div className="lg:col-span-5 space-y-6">
-              
-              {/* Active Logged-in Devices */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Laptop className="w-4 h-4 text-brand-600 dark:text-brand-400" /> Active Logged-in Devices
-                  </h3>
+            <div className="lg:col-span-5 space-y-4 sm:space-y-6">
+
+              {/* Active Logged-in Devices — Modern WhatsApp/Swiggy Session List */}
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20">
+                      <Laptop className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Active Logged-in Devices
+                      </h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Browsers &amp; hardware sessions authorized</p>
+                    </div>
+                  </div>
                   {sessions.length > 1 && (
                     <button
                       type="button"
                       onClick={handleRevokeAllOtherSessions}
-                      className="text-xs font-black text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-black text-rose-600 hover:text-white hover:bg-rose-600 dark:text-rose-400 dark:hover:bg-rose-600/90 border border-rose-200 dark:border-rose-900/60 transition-all cursor-pointer active:scale-95"
                     >
                       Revoke Other
                     </button>
                   )}
                 </div>
 
-                <div className="space-y-3 relative">
+                <div className="space-y-2.5 relative">
                   {sessionsLoading && (
-                    <div className="absolute inset-0 bg-white/50 dark:bg-navy-900/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-2xl">
-                      <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="p-6 text-center text-xs font-bold text-slate-500">
+                      <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1 text-brand-500" />
+                      Loading sessions...
                     </div>
                   )}
                   {sessions.length === 0 && !sessionsLoading && (
                     <div className="p-4 text-center text-xs font-bold text-slate-500">No active sessions found.</div>
                   )}
-                  {sessions.map(s => (
-                    <div key={s.id} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 flex items-center justify-between gap-3">
-                      <div className="space-y-0.5 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-black text-slate-950 dark:text-white truncate">{s.device}</span>
-                          {s.current && (
-                            <span className="text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-1.5 py-0.2 rounded">
-                              THIS
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] font-mono text-slate-600 dark:text-slate-400 font-bold">{s.ip}</p>
-                      </div>
+                  {sessions.map(s => {
+                    const parsed = parseUserAgentDetails(s.device);
+                    const isCurrentSession = !!s.current;
+                    return (
+                      <div
+                        key={s.id}
+                        className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${isCurrentSession
+                          ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300/80 dark:border-emerald-800/80 shadow-xs'
+                          : 'bg-slate-50/80 dark:bg-navy-950/80 border-slate-200/80 dark:border-navy-800'
+                          }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${isCurrentSession
+                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                            : 'bg-slate-200/80 dark:bg-navy-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-navy-700'
+                            }`}>
+                            {parsed.isMobile ? <Smartphone className="w-5 h-5" /> : <Laptop className="w-5 h-5" />}
+                          </div>
 
-                      {!s.current && (
-                        <button
-                          type="button"
-                          onClick={() => handleRevokeSession(s.id)}
-                          className="px-2.5 py-1 rounded-lg text-xs font-black bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 transition-colors border border-rose-300 dark:border-rose-500/30 cursor-pointer shrink-0"
-                        >
-                          Revoke
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                          <div className="space-y-0.5 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
+                                {parsed.deviceName}
+                              </span>
+                              {isCurrentSession && (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-black bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  This Device
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1.5 truncate">
+                              <span>{s.ip === '127.0.0.1' ? '127.0.0.1 (Localhost)' : s.ip}</span>
+                              <span>•</span>
+                              <span className="text-emerald-600 dark:text-emerald-400">Active Now</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        {!isCurrentSession && (
+                          <button
+                            type="button"
+                            onClick={() => handleRevokeSession(s.id)}
+                            className="px-3 py-1.5 rounded-xl text-xs font-black bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-600 transition-all border border-rose-200 dark:border-rose-900/50 cursor-pointer shrink-0 active:scale-95 flex items-center gap-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Revoke</span>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Login Security Audit Log */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-purple-600 dark:text-purple-400" /> 
-                    <span>Login Security Audit Log</span>
-                    <span className="px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                      {getSecurityReportConfig().personRoleLabel} Audit
-                    </span>
-                  </h3>
+              {/* Login Security Audit Log — Modern Banking / Google Security Event Feed */}
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20">
+                      <Clock className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                        <span>Login Security Audit Log</span>
+                        <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                          {getSecurityReportConfig().personRoleLabel} Audit
+                        </span>
+                      </h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Tamper-evident chronological access ledger</p>
+                    </div>
+                  </div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={handlePrintSecurityAuditReport}
-                      className="px-2.5 py-1 rounded-lg text-xs font-black bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-slate-200 transition-colors border border-slate-300 dark:border-navy-700 cursor-pointer flex items-center gap-1.5"
+                      className="px-2.5 py-1.5 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-slate-200 transition-colors border border-slate-300 dark:border-navy-700 cursor-pointer flex items-center gap-1.5 active:scale-95"
                       title="Print or Save Official Institutional PDF Report"
                     >
                       <Printer className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-                      <span>Print Report</span>
+                      <span className="hidden sm:inline">Print Report</span>
                     </button>
                     <button
                       type="button"
                       onClick={handleExportSecurityAuditExcel}
-                      className="px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 transition-colors border border-emerald-300 dark:border-emerald-800 cursor-pointer flex items-center gap-1.5"
-                      title="Export beautifully formatted Excel report with logos"
+                      className="px-2.5 py-1.5 rounded-xl text-xs font-black bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 transition-colors border border-emerald-300 dark:border-emerald-800 cursor-pointer flex items-center gap-1.5 active:scale-95"
+                      title="Export beautifully formatted Excel report"
                     >
                       <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>Excel Report</span>
+                      <span className="hidden sm:inline">Excel Report</span>
                     </button>
                   </div>
                 </div>
 
                 <div className="space-y-2.5">
                   {loginHistory.length === 0 ? (
-                    <div className="p-6 rounded-xl bg-slate-50 dark:bg-navy-950/50 border-2 border-dashed border-slate-200 dark:border-navy-800 flex flex-col items-center justify-center text-center">
+                    <div className="p-6 rounded-2xl bg-slate-50 dark:bg-navy-950/50 border border-dashed border-slate-200 dark:border-navy-800 flex flex-col items-center justify-center text-center">
                       <Clock className="w-8 h-8 text-slate-400 dark:text-navy-600 mb-2 opacity-50" />
                       <p className="text-xs font-bold text-slate-500 dark:text-slate-400">No login security events recorded yet.</p>
                       <p className="text-[10px] text-slate-400 dark:text-navy-500 mt-1">Authentic original logs will appear here upon next sign-in.</p>
                     </div>
                   ) : (
-                    loginHistory.map(lh => (
-                      <button
-                        key={lh.id}
-                        type="button"
-                        onClick={() => setSelectedLoginEvent(lh)}
-                        className="w-full text-left p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 space-y-2.5 shadow-sm hover:border-brand-300 dark:hover:border-brand-800 hover:shadow-md transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/40"
-                        aria-label={`View security event ${lh.id}`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex items-center gap-2">
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-100 text-brand-700 dark:bg-brand-950/70 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
-                              <ShieldCheck className="w-3.5 h-3.5" />
-                            </span>
-                            <span className="font-mono font-black text-[10px] sm:text-[11px] text-brand-700 dark:text-brand-300 break-all leading-tight" title={lh.id}>
-                              {lh.id}
-                            </span>
+                    loginHistory.map(lh => {
+                      const parsed = parseUserAgentDetails(lh.network || '');
+                      const isSuccess = lh.status === 'SUCCESS' || lh.status === 'VERIFIED';
+                      return (
+                        <button
+                          key={lh.id}
+                          type="button"
+                          onClick={() => setSelectedLoginEvent(lh)}
+                          className="w-full text-left p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-brand-400 dark:hover:border-brand-700 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 active:scale-[0.99]"
+                          aria-label={`View security event ${lh.id}`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${isSuccess
+                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                              : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                              }`}>
+                              {isSuccess ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
+                            </div>
+                            <div className="space-y-0.5 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
+                                  {lh.method ? `Sign-in via ${lh.method}` : 'Sign-in Session'}
+                                </span>
+                              </div>
+                              <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate">
+                                {parsed.deviceName}
+                              </p>
+                              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1.5 flex-wrap">
+                                <span>{lh.date} at {lh.time}</span>
+                                <span>•</span>
+                                <span className="font-mono">{lh.ip === '127.0.0.1' ? 'Localhost (127.0.0.1)' : lh.ip}</span>
+                              </div>
+                            </div>
                           </div>
-                          <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shrink-0">
-                            {lh.status}
-                          </span>
-                        </div>
-                        <div className="pl-9 space-y-1.5 min-w-0">
-                          <p className="text-[11px] font-black text-slate-950 dark:text-white">{lh.date} <span className="text-slate-400 dark:text-slate-500">at</span> {lh.time}</p>
-                          <div className="text-[10px] sm:text-[11px] font-mono text-slate-600 dark:text-slate-400 font-bold leading-relaxed break-words">
-                            <span className={lh.ip === '127.0.0.1' ? 'text-amber-700 dark:text-amber-300' : ''}>
-                              {lh.ip === '127.0.0.1' ? 'Local development (127.0.0.1)' : lh.ip}
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider ${isSuccess
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
+                              : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
+                              }`}>
+                              {lh.status}
                             </span>
-                            <span className="text-slate-400 dark:text-slate-600"> • </span>
-                            <span className="text-slate-800 dark:text-slate-300">{lh.network}</span>
-                            <span className="text-slate-400 dark:text-slate-600"> • </span>
-                            <span>{lh.method}</span>
+                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
                           </div>
-                        </div>
-                      </button>
-                    ))
+                        </button>
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -3319,114 +3992,226 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 3: NOTIFICATIONS & PRIVACY PREFERENCES */}
+        {/* TAB 3: NOTIFICATIONS & PRIVACY PREFERENCES — Live Mobile App Grade */}
         {/* ========================================================================= */}
         {activeTab === 'preferences' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
-            {/* LEFT COLUMN: Automated Notifications */}
-            <div className="lg:col-span-7 space-y-6">
-              
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3 gap-3 sm:gap-0">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" /> 
-                    <span>Automated Portal Alerts</span>
-                  </h3>
-                  <div className="flex items-center gap-3 sm:gap-2 self-end sm:self-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 animate-fade-in">
+            {/* LEFT COLUMN: Automated Notifications & Alerts */}
+            <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/25">
+                      <Volume2 className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                          Automated Portal Alerts
+                        </h3>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Live Sync
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Real-time push, receipts &amp; contest notifications</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={playChimeSound}
-                      className="px-2.5 py-1 rounded-lg text-xs font-black bg-purple-100 hover:bg-purple-200 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300 transition-colors border border-purple-300 dark:border-purple-500/30 cursor-pointer flex items-center gap-1.5 shrink-0"
+                      onClick={handleTestAudioChime}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border cursor-pointer flex items-center gap-1.5 shrink-0 active:scale-95 ${isPlayingAudioTest
+                          ? 'bg-purple-600 text-white border-purple-700 shadow-sm shadow-purple-500/30 scale-105'
+                          : 'bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                        }`}
                       title="Test Audio Chime"
                     >
-                      <Volume2 className="w-3.5 h-3.5" />
-                      <span>Test Audio</span>
+                      <Volume2 className={`w-3.5 h-3.5 ${isPlayingAudioTest ? 'animate-bounce' : ''}`} />
+                      <span>{isPlayingAudioTest ? 'Playing...' : 'Test Audio'}</span>
                     </button>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">Real-Time Sync</span>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <label className="flex items-start justify-between gap-4 p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 cursor-pointer hover:border-brand-500/50 transition-colors">
-                    <div>
-                      <div className="text-xs font-black text-slate-950 dark:text-white">Contest Finalization Receipts</div>
-                      <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Receive email receipts when weekly LeetCode contests are finalized.</div>
+                <div className="space-y-2.5">
+                  {/* Contest Receipts Toggle */}
+                  <div
+                    onClick={() => handleToggleContestAlerts(!emailContestAlerts)}
+                    role="switch"
+                    aria-checked={emailContestAlerts}
+                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-purple-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
+                  >
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                          Contest Finalization Receipts
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${emailContestAlerts
+                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-300 dark:border-purple-800'
+                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
+                          }`}>
+                          {emailContestAlerts ? 'Active' : 'Muted'}
+                        </span>
+                      </div>
+                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                        Receive instant email receipts when weekly LeetCode contests conclude.
+                      </div>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={emailContestAlerts}
-                      onChange={e => setEmailContestAlerts(e.target.checked)}
-                      className="w-5 h-5 rounded-lg text-brand-600 focus:ring-brand-500 cursor-pointer shrink-0 mt-0.5"
-                    />
-                  </label>
+                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${emailContestAlerts ? 'bg-purple-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
+                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${emailContestAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </div>
+                  </div>
 
-                  <label className="flex items-start justify-between gap-4 p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 cursor-pointer hover:border-brand-500/50 transition-colors">
-                    <div>
-                      <div className="text-xs font-black text-slate-950 dark:text-white">Weekly Mentee Progress Digest</div>
-                      <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Summary of assigned students solving milestones every Monday.</div>
+                  {/* Weekly Mentee Progress Digest */}
+                  <div
+                    onClick={() => handleToggleWeeklyDigest(!weeklyDigestAlerts)}
+                    role="switch"
+                    aria-checked={weeklyDigestAlerts}
+                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-purple-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
+                  >
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                          Weekly Mentee Progress Digest
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${weeklyDigestAlerts
+                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-300 dark:border-purple-800'
+                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
+                          }`}>
+                          {weeklyDigestAlerts ? 'Active' : 'Muted'}
+                        </span>
+                      </div>
+                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                        Summary of assigned students solving milestones dispatched every Monday morning.
+                      </div>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={weeklyDigestAlerts}
-                      onChange={e => setWeeklyDigestAlerts(e.target.checked)}
-                      className="w-5 h-5 rounded-lg text-brand-600 focus:ring-brand-500 cursor-pointer shrink-0 mt-0.5"
-                    />
-                  </label>
+                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${weeklyDigestAlerts ? 'bg-purple-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
+                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${weeklyDigestAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </div>
+                  </div>
 
-                  <label className="flex items-start justify-between gap-4 p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 cursor-pointer hover:border-brand-500/50 transition-colors">
-                    <div>
-                      <div className="text-xs font-black text-slate-950 dark:text-white">Security Audit Alerts</div>
-                      <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Receive instant alerts if password is modified or new logins occur.</div>
+                  {/* Security Audit Alerts */}
+                  <div
+                    onClick={() => handleToggleSystemAuditAlerts(!systemAuditAlerts)}
+                    role="switch"
+                    aria-checked={systemAuditAlerts}
+                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-purple-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
+                  >
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                          Security Audit &amp; Login Alerts
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${systemAuditAlerts
+                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-300 dark:border-purple-800'
+                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
+                          }`}>
+                          {systemAuditAlerts ? 'Active' : 'Muted'}
+                        </span>
+                      </div>
+                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                        Receive instant alerts if password is modified or new unrecognized logins occur.
+                      </div>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={systemAuditAlerts}
-                      onChange={e => setSystemAuditAlerts(e.target.checked)}
-                      className="w-5 h-5 rounded-lg text-brand-600 focus:ring-brand-500 cursor-pointer shrink-0 mt-0.5"
-                    />
-                  </label>
+                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${systemAuditAlerts ? 'bg-purple-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
+                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${systemAuditAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </div>
+                  </div>
 
-                  <label className="flex items-start justify-between gap-4 p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 cursor-pointer hover:border-brand-500/50 transition-colors">
-                    <div>
-                      <div className="text-xs font-black text-slate-950 dark:text-white">In-App Notification Audio</div>
-                      <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Play subtle sound chimes when receiving toast alerts.</div>
+                  {/* In-App Sound Chimes */}
+                  <div
+                    onClick={() => handleToggleToastAudio(!toastAudioAlerts)}
+                    role="switch"
+                    aria-checked={toastAudioAlerts}
+                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-purple-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
+                  >
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                          In-App Audio Chimes
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${toastAudioAlerts
+                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-300 dark:border-purple-800'
+                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
+                          }`}>
+                          {toastAudioAlerts ? 'Active (Sound ON)' : 'Silent'}
+                        </span>
+                      </div>
+                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                        Play subtle audio chimes when receiving toast alerts or milestone notifications.
+                      </div>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={toastAudioAlerts}
-                      onChange={e => setToastAudioAlerts(e.target.checked)}
-                      className="w-5 h-5 rounded-lg text-brand-600 focus:ring-brand-500 cursor-pointer shrink-0 mt-0.5"
-                    />
-                  </label>
+                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${toastAudioAlerts ? 'bg-purple-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
+                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${toastAudioAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Mentee Inactivity Smart Alarm */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Sliders className="w-4 h-4 text-brand-600" /> Mentee Inactivity Warning Threshold
-                  </h3>
-                  <span className="text-xs font-black font-mono text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950 px-2.5 py-0.5 rounded-md border border-brand-200">
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/25">
+                      <Sliders className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Inactivity Warning Threshold
+                      </h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Roster flag for inactive students</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-black font-mono text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/80 px-3 py-1 rounded-xl border border-amber-200 dark:border-amber-800 shadow-xs">
                     {inactivityDaysThreshold} Days
                   </span>
                 </div>
 
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Automatically mark mentees with an inactivity indicator on your roster if they have not submitted a LeetCode problem in {inactivityDaysThreshold} consecutive days.
+                <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                  Automatically mark mentees with an inactivity badge on your roster if they have not submitted a LeetCode problem in {inactivityDaysThreshold} consecutive days.
                 </p>
 
-                <div className="space-y-2 pt-2">
+                {/* Quick Selection Segmented Buttons */}
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  {[
+                    { days: 3, label: '3 Days', mode: 'Strict' },
+                    { days: 7, label: '7 Days', mode: 'Balanced' },
+                    { days: 14, label: '14 Days', mode: 'Relaxed' },
+                  ].map(option => (
+                    <button
+                      key={option.days}
+                      type="button"
+                      onClick={() => handleInactivityThresholdChange(option.days)}
+                      className={`p-2.5 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 active:scale-95 ${inactivityDaysThreshold === option.days
+                          ? 'bg-amber-500 text-white border-amber-600 shadow-sm shadow-amber-500/25'
+                          : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-amber-400/60'
+                        }`}
+                    >
+                      <span className="text-xs font-black">{option.label}</span>
+                      <span className={`text-[10px] font-bold ${inactivityDaysThreshold === option.days ? 'text-amber-100' : 'text-slate-400'}`}>
+                        ({option.mode})
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Fine-Tuning Slider */}
+                <div className="space-y-1.5 pt-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                    <span>Custom threshold adjustment</span>
+                    <span className="font-mono text-slate-800 dark:text-slate-200">{inactivityDaysThreshold} Days Selected</span>
+                  </div>
                   <input
                     type="range"
                     min={3}
                     max={14}
                     step={1}
                     value={inactivityDaysThreshold}
-                    onChange={e => setInactivityDaysThreshold(Number(e.target.value))}
-                    className="w-full accent-brand-600 cursor-pointer"
+                    onChange={e => handleInactivityThresholdChange(Number(e.target.value))}
+                    className="w-full accent-amber-500 cursor-pointer h-2 bg-slate-200 dark:bg-navy-800 rounded-lg"
                   />
-                  <div className="flex justify-between text-[10px] font-bold text-slate-500">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400">
                     <span>3 Days (Strict)</span>
                     <span>7 Days (Balanced)</span>
                     <span>14 Days (Relaxed)</span>
@@ -3437,66 +4222,167 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             </div>
 
             {/* RIGHT COLUMN: Directory Privacy & Faculty Scratchpad */}
-            <div className="lg:col-span-5 space-y-6">
-              
+            <div className="lg:col-span-5 space-y-4 sm:space-y-6">
+
               {/* Directory Privacy */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> Student Directory Privacy
-                  </h3>
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Access Policy</span>
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/25">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Directory Privacy
+                      </h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Contact visibility for students</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 px-2.5 py-1 rounded-full border border-indigo-200 dark:border-indigo-800">
+                    Scoped
+                  </span>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="flex items-start justify-between gap-4 p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 cursor-pointer hover:border-brand-500/50 transition-colors">
-                    <div>
-                      <div className="text-xs font-black text-slate-950 dark:text-white">Share Mobile with Mentees</div>
-                      <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Allow your assigned batch to view your WhatsApp contact.</div>
+                <div className="space-y-2.5">
+                  <div
+                    onClick={() => handleToggleShowPhone(!showPhoneToStudents)}
+                    role="switch"
+                    aria-checked={showPhoneToStudents}
+                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-indigo-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
+                  >
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                          Share Mobile with Mentees
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${showPhoneToStudents
+                            ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800'
+                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
+                          }`}>
+                          {showPhoneToStudents ? 'Shared' : 'Private'}
+                        </span>
+                      </div>
+                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                        Allow your assigned student batch to view your WhatsApp contact.
+                      </div>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={showPhoneToStudents}
-                      onChange={e => setShowPhoneToStudents(e.target.checked)}
-                      className="w-5 h-5 rounded-lg text-brand-600 focus:ring-brand-500 cursor-pointer shrink-0 mt-0.5"
-                    />
-                  </label>
+                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${showPhoneToStudents ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
+                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${showPhoneToStudents ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </div>
+                  </div>
 
-                  <label className="flex items-start justify-between gap-4 p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 cursor-pointer hover:border-brand-500/50 transition-colors">
-                    <div>
-                      <div className="text-xs font-black text-slate-950 dark:text-white">Show Cabin in Directory</div>
-                      <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Display room location on college directory search.</div>
+                  <div
+                    onClick={() => handleToggleShowCabin(!showCabinInDirectory)}
+                    role="switch"
+                    aria-checked={showCabinInDirectory}
+                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-indigo-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
+                  >
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                          Show Cabin in Directory
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${showCabinInDirectory
+                            ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800'
+                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
+                          }`}>
+                          {showCabinInDirectory ? 'Visible' : 'Hidden'}
+                        </span>
+                      </div>
+                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                        Display room location on college internal directory search.
+                      </div>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={showCabinInDirectory}
-                      onChange={e => setShowCabinInDirectory(e.target.checked)}
-                      className="w-5 h-5 rounded-lg text-brand-600 focus:ring-brand-500 cursor-pointer shrink-0 mt-0.5"
-                    />
-                  </label>
+                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${showCabinInDirectory ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
+                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${showCabinInDirectory ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Faculty Scratchpad / Sticky Notes */}
-              <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-navy-800 pb-3">
-                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Edit3 className="w-4 h-4 text-amber-500" /> Private Faculty Scratchpad
-                  </h3>
-                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Auto-Saved</span>
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/25">
+                      <Edit3 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Private Faculty Notes
+                      </h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Local device scratchpad</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      {notesSaveStatus === 'saving' ? 'Saving...' : 'Auto-Saved'}
+                    </span>
+                  </div>
                 </div>
 
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
                   Quick personal notes, problem set ideas, or contest reminders (saved locally on your device).
                 </p>
 
-                <textarea
-                  rows={5}
-                  value={facultyNotes}
-                  onChange={e => setFacultyNotes(e.target.value)}
-                  placeholder="Type personal faculty notes here..."
-                  className="w-full p-3.5 rounded-2xl border-2 border-slate-300 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-950 dark:text-white outline-none focus:border-brand-500 resize-none font-mono"
-                />
+                {/* Quick Task Template Injectors */}
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleInsertNoteTemplate('• Review Weekly Contest solving roster')}
+                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
+                  >
+                    + Contest Roster
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInsertNoteTemplate('• Prepare Data Structures lab problem set')}
+                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
+                  >
+                    + Lab Problem Set
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInsertNoteTemplate('• Follow up on pending mentees submissions')}
+                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
+                  >
+                    + Mentee Submissions
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <textarea
+                    rows={5}
+                    value={facultyNotes}
+                    onChange={e => handleFacultyNotesChange(e.target.value)}
+                    placeholder="Type personal faculty notes here..."
+                    className="w-full p-3.5 pb-10 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 resize-none font-mono transition-all"
+                  />
+                  {/* Bottom Toolbar inside Textarea container */}
+                  <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={handleCopyNotes}
+                      className="px-2 py-1 rounded-md text-[10px] font-black bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 hover:text-brand-600 shadow-2xs flex items-center gap-1 cursor-pointer active:scale-95"
+                      title="Copy notes to clipboard"
+                    >
+                      <Copy className="w-3 h-3" />
+                      <span>Copy</span>
+                    </button>
+                    {facultyNotes && (
+                      <button
+                        type="button"
+                        onClick={handleClearNotes}
+                        className="px-2 py-1 rounded-md text-[10px] font-black bg-white dark:bg-navy-900 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 shadow-2xs flex items-center gap-1 cursor-pointer active:scale-95"
+                        title="Clear notes"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Clear</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
             </div>
@@ -3504,13 +4390,13 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 4: DIGITAL IDENTITY CARD */}
+        {/* TAB 4: DIGITAL IDENTITY CARD — Authentic Institutional PVC Badge */}
         {/* ========================================================================= */}
         {activeTab === 'id_card' && (
           <div className="space-y-6 animate-fade-in">
-            
+
             {/* Top Card Controls & Theme Switcher */}
-            <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-800 w-full">
+            <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-800 w-full shadow-xs">
               <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3">
                 <span className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider shrink-0">Badge Theme:</span>
                 <div className="flex flex-row items-center gap-1.5 flex-wrap">
@@ -3519,10 +4405,10 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       key={th.id}
                       type="button"
                       onClick={() => setSelectedCardTheme(th.id)}
-                      className={`px-3 py-1 rounded-xl text-xs font-black transition-all border-2 cursor-pointer whitespace-nowrap ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border-2 cursor-pointer whitespace-nowrap active:scale-95 ${
                         selectedCardTheme === th.id
-                          ? 'bg-brand-600 text-white border-brand-700 shadow-xs'
-                          : 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-navy-800'
+                          ? 'bg-brand-600 text-white border-brand-700 shadow-sm'
+                          : 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-brand-400'
                       }`}
                     >
                       {th.name}
@@ -3531,20 +4417,49 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </div>
               </div>
 
+              {/* View Side Segmented Switcher & Action Buttons */}
               <div className="flex flex-row items-center gap-2 flex-wrap shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIdCardSide(idCardSide === 'front' ? 'back' : 'front')}
-                  className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5"
-                >
-                  <RotateCw className="w-3.5 h-3.5" />
-                  <span>Flip to {idCardSide === 'front' ? 'Back Side' : 'Front Side'}</span>
-                </button>
+                {/* View Side Switcher */}
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-navy-800">
+                  <button
+                    type="button"
+                    onClick={() => setIdCardSide('front')}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                      idCardSide === 'front'
+                        ? 'bg-white dark:bg-navy-800 text-brand-600 dark:text-brand-400 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    Front Side
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIdCardSide('back')}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                      idCardSide === 'back'
+                        ? 'bg-white dark:bg-navy-800 text-brand-600 dark:text-brand-400 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    Back Side
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIdCardSide('both')}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                      idCardSide === 'both'
+                        ? 'bg-white dark:bg-navy-800 text-brand-600 dark:text-brand-400 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    }`}
+                  >
+                    Both Sides
+                  </button>
+                </div>
 
                 <button
                   type="button"
                   onClick={handleExportVCard}
-                  className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                  className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
                   title="Download vCard file for mobile phonebook"
                 >
                   <Smartphone className="w-3.5 h-3.5" />
@@ -3553,8 +4468,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                 <button
                   type="button"
-                  onClick={() => window.print()}
-                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                  onClick={handlePrintIdCard}
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
+                  title="Print high-resolution PVC ID badge"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Print ID</span>
@@ -3564,191 +4480,310 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
             {/* Smart 2-Sided High-Security ID Card Container */}
             <div className="flex justify-center p-2 sm:p-6">
-              
-              {idCardSide === 'front' ? (
-                /* FRONT SIDE OF ID CARD */
-                <div className={`w-full max-w-md rounded-3xl bg-gradient-to-br ${currentCardTheme.bg} p-6 text-white shadow-2xl border-2 ${currentCardTheme.border} relative overflow-hidden space-y-6 animate-fade-in`}>
-                  
-                  {/* Holographic Watermark glow */}
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
-                  <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+              <div className={`flex flex-col lg:flex-row gap-6 justify-center items-center w-full max-w-5xl ${
+                idCardSide === 'both' ? 'items-start' : 'items-center'
+              }`}>
 
-                  {/* Institution Header */}
-                  <div className="flex items-center justify-between border-b border-white/20 pb-4 relative z-10">
-                    <div className="flex items-center gap-6 sm:gap-8">
-                      <div className="w-12 h-12 shrink-0 rounded-xl bg-white/15 border border-white/30 flex items-center justify-center font-black text-amber-300 text-xl shadow-inner tracking-wide mr-1 sm:mr-2">
-                        NEC
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">NANDHA ENGINEERING COLLEGE</h4>
-                        <p className="text-[9px] sm:text-[10px] text-slate-300 font-bold">Autonomous • Institutional Portal Identity</p>
-                      </div>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/25 border border-emerald-400/40 text-emerald-300">
-                      FACULTY
-                    </span>
-                  </div>
+                {/* FRONT SIDE CARD COMPONENT */}
+                {(idCardSide === 'front' || idCardSide === 'both') && (
+                  <div className={`w-full max-w-sm sm:max-w-md rounded-3xl bg-gradient-to-br ${currentCardTheme.bg} p-5 sm:p-6 text-white shadow-2xl border-2 ${currentCardTheme.border} relative overflow-hidden space-y-4 sm:space-y-5 animate-fade-in`}>
 
-                  {/* Profile Body */}
-                  <div className="flex items-center gap-5 relative z-10">
-                    <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-amber-400/80 shadow-xl bg-slate-900 shrink-0 flex items-center justify-center">
-                      {profilePhoto ? (
-                        <img src={profilePhoto} alt="ID Photo" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-3xl flex items-center justify-center">
-                          {(fullName || user?.username || 'U').charAt(0).toUpperCase()}
+                    {/* Holographic Watermark Glow */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+
+                    {/* Official Institution Header with Real College Logo & 25 Years Silver Jubilee Logo */}
+                    <div className="flex items-center justify-between border-b border-white/20 pb-3 relative z-10 gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <img
+                          src="/nandha_emblem.png"
+                          alt="NEC"
+                          className="w-11 h-11 object-contain shrink-0 drop-shadow-md"
+                          onError={(e) => {
+                            (e.target as any).style.display = 'none';
+                          }}
+                        />
+                        <div className="min-w-0">
+                          <h4 className="text-xs sm:text-[13px] font-black uppercase tracking-wider text-white truncate">
+                            NANDHA ENGINEERING COLLEGE
+                          </h4>
+                          <p className="text-[9px] sm:text-[10px] text-amber-200/90 font-bold truncate">
+                            (Autonomous) • Anna University, Chennai
+                          </p>
+                          <p className="text-[8px] sm:text-[8.5px] text-slate-300 font-semibold truncate">
+                            Approved by AICTE • NBA &amp; NAAC A+ Grade
+                          </p>
                         </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-1 min-w-0">
-                      <h3 className="text-lg font-black text-white truncate tracking-tight">{fullName || user?.username}</h3>
-                      <p className="text-xs font-bold text-amber-300 truncate">{designation || roleName}</p>
-                      <div className="pt-1 flex items-center gap-1.5 flex-wrap">
-                        <span className="px-2 py-0.5 rounded font-mono text-[11px] font-black bg-white/20 text-white border border-white/20">
-                          {institutionalId}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <img
+                          src="/nec_25_years_logo_transparent.png"
+                          alt="25 Years of Excellence"
+                          className="h-10 sm:h-11 w-auto object-contain drop-shadow-md"
+                          onError={(e: any) => {
+                            e.target.src = '/nec_25_years_logo.png';
+                          }}
+                        />
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider border shrink-0 ${
+                          rawRole.includes('admin')
+                            ? 'bg-purple-500/25 border-purple-400/40 text-purple-200'
+                            : rawRole.includes('student')
+                            ? 'bg-sky-500/25 border-sky-400/40 text-sky-200'
+                            : 'bg-emerald-500/25 border-emerald-400/40 text-emerald-200'
+                        }`}>
+                          {rawRole.includes('admin') ? 'ADMIN' : rawRole.includes('student') ? 'STUDENT' : 'FACULTY'}
                         </span>
-                        <span className="px-2 py-0.5 rounded text-[11px] font-black bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-                          {departmentName}
-                        </span>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Front Specs Grid */}
-                  <div className="grid grid-cols-2 gap-2 text-xs font-bold bg-white/10 backdrop-blur-md rounded-2xl p-3.5 border border-white/15 relative z-10">
-                    <div>
-                      <span className="text-[10px] uppercase font-black text-slate-300 block">DOB (Verified)</span>
-                      <span className="font-mono text-white text-xs">{dateOfBirth || 'Registered'}</span>
+                    {/* EMV Gold Smart Chip & RFID Contactless indicator */}
+                    <div className="flex items-center justify-between relative z-10 pt-0.5">
+                      {/* Microchip Graphic */}
+                      <div className="w-10 h-8 rounded-md bg-gradient-to-br from-amber-300 via-amber-400 to-yellow-500 border border-amber-200/70 shadow-sm flex flex-col justify-around p-1 relative overflow-hidden">
+                        <div className="w-full h-px bg-amber-700/40" />
+                        <div className="w-full h-px bg-amber-700/40" />
+                        <div className="absolute inset-y-0 left-1/3 w-px bg-amber-700/40" />
+                        <div className="absolute inset-y-0 right-1/3 w-px bg-amber-700/40" />
+                      </div>
+
+                      {/* Contactless RFID / NFC Wave Icon */}
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 border border-white/15 text-[10px] font-mono text-amber-300">
+                        <span className="text-xs">(((•)))</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider">RFID / NFC</span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-black text-slate-300 block">Blood Group</span>
-                      <span className="text-rose-300 font-black text-xs">{bloodGroup}</span>
+
+                    {/* Profile Photo & Primary Information */}
+                    <div className="flex items-center gap-4 relative z-10">
+                      <div className="w-22 h-26 sm:w-24 sm:h-28 rounded-2xl overflow-hidden border-2 border-amber-400/90 shadow-xl bg-slate-950 shrink-0 flex items-center justify-center relative">
+                        {profilePhoto ? (
+                          <img src={profilePhoto} alt="ID Photo" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-3xl flex items-center justify-center">
+                            {(fullName || user?.username || 'N').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-xs py-0.5 text-center text-[8px] font-black uppercase text-amber-300 tracking-wider">
+                          Verified
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <h3 className="text-base sm:text-lg font-black text-white truncate tracking-tight">
+                          {fullName || user?.username || 'Nanthishvaran S'}
+                        </h3>
+                        <p className="text-xs font-extrabold text-amber-300 truncate">
+                          {designation || (rawRole.includes('admin') ? 'Administrator' : 'Faculty Member')}
+                        </p>
+                        <div className="pt-1 flex flex-col gap-1">
+                          <div className="inline-flex items-center gap-1.5">
+                            <span className="px-2 py-0.5 rounded font-mono text-[11px] font-black bg-white/20 text-white border border-white/25">
+                              {institutionalId}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold text-sky-200 truncate">
+                            {departmentName && departmentName !== 'INSTITUTIONAL' ? departmentName : 'Computer Science & Engineering'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="col-span-2 pt-1 border-t border-white/10">
-                      <span className="text-[10px] uppercase font-black text-slate-300 block">Office Cabin Location</span>
-                      <span className="text-white text-xs truncate block">{officeLocation}</span>
-                    </div>
-                  </div>
 
-                  {/* Front Card Footer Barcode & Flip Hint */}
-                  <div className="pt-2 border-t border-white/15 flex items-center justify-between text-[10px] font-bold text-slate-300 relative z-10">
-                    <span>Autonomous • Anna University</span>
-                    <button
-                      type="button"
-                      onClick={() => setIdCardSide('back')}
-                      className="text-amber-300 hover:underline flex items-center gap-1 cursor-pointer font-black"
-                    >
-                      <span>Flip to Back</span>
-                      <ChevronRight className="w-3 h-3" />
-                    </button>
-                  </div>
-
-                </div>
-              ) : (
-                /* BACK SIDE OF ID CARD */
-                <div className={`w-full max-w-md rounded-3xl bg-gradient-to-br ${currentCardTheme.bg} p-6 text-white shadow-2xl border-2 ${currentCardTheme.border} relative overflow-hidden space-y-5 animate-fade-in`}>
-                  
-                  {/* Holographic Watermark glow */}
-                  <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
-
-                  {/* Back Header */}
-                  <div className="flex items-center justify-between border-b border-white/20 pb-3 relative z-10">
-                    <span className="text-xs font-black uppercase tracking-wider text-amber-300">
-                      OFFICIAL INSTITUTIONAL RECORD
-                    </span>
-                    <span className="text-[10px] font-mono text-slate-300 font-bold">CARD-ID-2025</span>
-                  </div>
-
-                  {/* Emergency & Medical Box */}
-                  <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 space-y-2 relative z-10">
-                    <span className="text-[10px] font-black uppercase text-amber-300 tracking-wider flex items-center gap-1.5">
-                      <Activity className="w-3 h-3 text-rose-400" /> Emergency & Medical Dispatch
-                    </span>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
+                    {/* Front Specifications Grid */}
+                    <div className="grid grid-cols-2 gap-2 text-xs font-bold bg-white/10 backdrop-blur-md rounded-2xl p-3 sm:p-3.5 border border-white/15 relative z-10">
                       <div>
-                        <span className="text-[10px] text-slate-300 block">Emergency Person</span>
-                        <span className="font-black text-white">{emergencyContactName || 'Department HOD'}</span>
+                        <span className="text-[9px] uppercase font-black text-slate-300 block tracking-wider">DOB (Verified)</span>
+                        <span className="font-mono text-white text-xs">{dateOfBirth || '17/01/2004'}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-300 block">Emergency Phone</span>
-                        <span className="font-mono font-black text-white">{emergencyContactPhone || phoneNumber || '+91 9876543210'}</span>
+                        <span className="text-[9px] uppercase font-black text-slate-300 block tracking-wider">Blood Group</span>
+                        <span className="text-rose-300 font-black text-xs">{bloodGroup || 'O+ (Positive)'}</span>
+                      </div>
+                      <div className="col-span-2 pt-1 border-t border-white/10 flex items-center justify-between">
+                        <div className="min-w-0 flex-1 pr-2">
+                          <span className="text-[9px] uppercase font-black text-slate-300 block tracking-wider">Office Cabin / Room</span>
+                          <span className="text-white text-xs truncate block">{officeLocation || 'Main Campus • Academic Block B-204'}</span>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-[9px] uppercase font-black text-slate-300 block tracking-wider">Mobile</span>
+                          <span className="font-mono text-amber-300 text-xs">{phoneNumber || '+91 90420 20879'}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Back Qualifications & Research */}
-                  <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 space-y-1.5 relative z-10 text-xs">
-                    <div>
-                      <span className="text-[10px] uppercase font-black text-slate-300 block">Highest Degree</span>
-                      <span className="font-bold text-white text-[11px] truncate block">{highestDegree}</span>
+                    {/* Barcode Strip */}
+                    <div className="pt-1 relative z-10 text-center">
+                      <div className="h-6 w-full rounded bg-white/90 p-1 flex items-center justify-center">
+                        <div
+                          className="w-full h-4"
+                          style={{
+                            background: 'repeating-linear-gradient(to right, #000, #000 2px, transparent 2px, transparent 4px, #000 4px, #000 7px, transparent 7px, transparent 9px)'
+                          }}
+                        />
+                      </div>
+                      <div className="font-mono text-[9px] font-black tracking-widest text-slate-300 mt-1">
+                        *{institutionalId}*
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-black text-slate-300 block">Specialization</span>
-                      <span className="font-bold text-white text-[11px] truncate block">{specialization}</span>
-                    </div>
-                  </div>
 
-                  {/* QR Code & Verification Signature */}
-                  <div className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 relative z-10">
-                    <div className="space-y-1 min-w-0">
-                      <span className="text-[10px] font-black uppercase text-emerald-300 tracking-wider block">
-                        VERIFIED IDENTITY HASH
-                      </span>
-                      <p className="font-mono text-[9px] text-slate-200 break-all">
-                        SHA256-{institutionalId.toLowerCase()}-verified-2026
+                    {/* Card Footer: Validity & Authorized Signatory */}
+                    <div className="pt-2 border-t border-white/15 flex items-end justify-between text-[10px] font-bold text-slate-300 relative z-10">
+                      <div>
+                        <span className="text-[8px] uppercase tracking-wider block text-slate-400">Valid Session</span>
+                        <span className="text-white font-extrabold text-[11px]">2025 – 2026</span>
+                        <span className="text-[8px] font-black text-amber-300 block">25th Silver Jubilee</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-serif italic font-black text-amber-300 text-sm tracking-wide">
+                          Dr. U. S. Ragupathy
+                        </div>
+                        <span className="text-[8px] uppercase tracking-wider block text-slate-200 font-extrabold">Principal • Authorized Signatory</span>
+                      </div>
+                    </div>
+
+                    {/* Flip Trigger on single card mode */}
+                    {idCardSide !== 'both' && (
+                      <div className="pt-1 text-center">
+                        <button
+                          type="button"
+                          onClick={() => setIdCardSide('back')}
+                          className="text-amber-300 hover:underline inline-flex items-center gap-1 cursor-pointer font-black text-xs"
+                        >
+                          <span>Flip to Back Side</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+
+                  </div>
+                )}
+
+                {/* BACK SIDE CARD COMPONENT */}
+                {(idCardSide === 'back' || idCardSide === 'both') && (
+                  <div className={`w-full max-w-sm sm:max-w-md rounded-3xl bg-gradient-to-br ${currentCardTheme.bg} p-5 sm:p-6 text-white shadow-2xl border-2 ${currentCardTheme.border} relative overflow-hidden space-y-4 animate-fade-in`}>
+
+                    {/* Holographic Watermark glow */}
+                    <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+
+                    {/* Magnetic Stripe across top */}
+                    <div className="-mx-6 -mt-6 h-9 bg-slate-950 border-b border-white/20 relative flex items-center px-4">
+                      <span className="font-mono text-[8px] text-slate-500 tracking-widest">ISO 7810 / 7816 MAGNETIC STRIPE</span>
+                    </div>
+
+                    {/* Back Header: Institution Full Address */}
+                    <div className="text-center border-b border-white/20 pb-2.5 relative z-10">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-amber-300">
+                        NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
+                      </h4>
+                      <p className="text-[9px] text-slate-200 font-semibold mt-0.5">
+                        Erode – Perundurai Main Road, Vaikkaalmedu, Erode – 638 052, Tamil Nadu
                       </p>
-                      <p className="text-[10px] text-slate-300 font-bold">Scan with phone camera to save contact & verify</p>
+                      <p className="text-[8px] text-slate-300 mt-0.5">
+                        Ph: 04294 - 225585 | info@nandhaengg.org | www.nandhaengg.org
+                      </p>
                     </div>
 
-                    {/* Real Scannable Dynamic QR Code */}
-                    <div className="shrink-0">
-                      <DynamicQRCode data={qrVerificationPayload} size={84} />
+                    {/* Emergency & Medical Dispatch Box */}
+                    <div className="p-3 rounded-2xl bg-rose-500/15 backdrop-blur-md border border-rose-400/30 space-y-1.5 relative z-10">
+                      <span className="text-[9px] font-black uppercase text-rose-300 tracking-wider flex items-center gap-1.5">
+                        <Activity className="w-3.5 h-3.5 text-rose-400" /> Emergency &amp; Medical Contact
+                      </span>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-[9px] text-slate-300 block font-bold">Contact Person</span>
+                          <span className="font-black text-white truncate block">{emergencyContactName || 'Department HOD'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-300 block font-bold">Emergency Phone</span>
+                          <span className="font-mono font-black text-white truncate block">{emergencyContactPhone || phoneNumber || '+91 04294 225585'}</span>
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Qualifications & Specialization */}
+                    <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 space-y-1 relative z-10 text-xs">
+                      <div>
+                        <span className="text-[8px] uppercase font-black text-slate-300 block tracking-wider">Highest Degree</span>
+                        <span className="font-bold text-white text-[11px] truncate block">{highestDegree || 'M.E. Computer Science & Engineering'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[8px] uppercase font-black text-slate-300 block tracking-wider">Specialization</span>
+                        <span className="font-bold text-white text-[11px] truncate block">{specialization || 'Data Structures, Algorithms & Cloud Systems'}</span>
+                      </div>
+                    </div>
+
+                    {/* Scannable Dynamic QR Code & Cryptographic Verification */}
+                    <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 relative z-10">
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <span className="text-[9px] font-black uppercase text-emerald-300 tracking-wider block">
+                          VERIFIED IDENTITY HASH
+                        </span>
+                        <p className="font-mono text-[9px] text-slate-200 break-all leading-tight">
+                          SHA256-{institutionalId.toLowerCase()}-verified-2026
+                        </p>
+                        <p className="text-[9px] text-slate-300 font-bold">
+                          Scan to import official faculty vCard directly to phonebook
+                        </p>
+                      </div>
+                      <div className="shrink-0 bg-white p-1 rounded-xl shadow-md">
+                        <DynamicQRCode data={qrVerificationPayload} size={76} />
+                      </div>
+                    </div>
+
+                    {/* Terms & Return Instructions */}
+                    <div className="pt-1 text-[8px] text-slate-300 space-y-0.5 border-t border-white/15 relative z-10">
+                      <p className="font-bold text-slate-200">• Property of Nandha Engineering College (25 Years of Academic Excellence • Estd. 2001).</p>
+                      <p>• If found, return to Campus Security Desk or Principal's Office (Dr. U. S. Ragupathy, Ph: 04294-225585).</p>
+                    </div>
+
+                    {/* Flip Trigger on single card mode */}
+                    {idCardSide !== 'both' && (
+                      <div className="pt-1 text-center">
+                        <button
+                          type="button"
+                          onClick={() => setIdCardSide('front')}
+                          className="text-amber-300 hover:underline inline-flex items-center gap-1 cursor-pointer font-black text-xs"
+                        >
+                          <span>Flip to Front Side</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+
                   </div>
+                )}
 
-                  {/* Flip Back Button */}
-                  <div className="pt-2 border-t border-white/15 flex items-center justify-between text-[10px] font-bold text-slate-300 relative z-10">
-                    <span>Nandha Engineering College (Autonomous)</span>
-                    <button
-                      type="button"
-                      onClick={() => setIdCardSide('front')}
-                      className="text-amber-300 hover:underline flex items-center gap-1 cursor-pointer font-black"
-                    >
-                      <span>Flip to Front</span>
-                      <ChevronRight className="w-3 h-3" />
-                    </button>
-                  </div>
-
-                </div>
-              )}
-
+              </div>
             </div>
 
             {/* Accreditation Summary Box */}
             <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
               <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                <Award className="w-4 h-4 text-brand-600" /> Institutional Accreditation & Record Summary
+                <Award className="w-4 h-4 text-brand-600" /> Institutional Accreditation &amp; Record Summary
               </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-0.5">
-                  <span className="text-[10px] uppercase font-black text-slate-700 dark:text-slate-300 block">Accreditation Level</span>
-                  <span className="font-black text-slate-950 dark:text-white">NBA & NAAC A+ Grade</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+                <div className="p-3.5 rounded-2xl bg-amber-500/10 dark:bg-amber-950/30 border border-amber-300/40 dark:border-amber-700/50 space-y-0.5">
+                  <span className="text-[10px] uppercase font-black text-amber-800 dark:text-amber-300 block">Milestone</span>
+                  <span className="font-black text-amber-950 dark:text-amber-200">25th Year (Silver Jubilee)</span>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-0.5">
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-0.5">
+                  <span className="text-[10px] uppercase font-black text-slate-700 dark:text-slate-300 block">Principal</span>
+                  <span className="font-black text-slate-950 dark:text-white truncate block">Dr. U. S. Ragupathy</span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-0.5">
+                  <span className="text-[10px] uppercase font-black text-slate-700 dark:text-slate-300 block">Accreditation</span>
+                  <span className="font-black text-slate-950 dark:text-white">NBA &amp; NAAC A+</span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-0.5">
                   <span className="text-[10px] uppercase font-black text-slate-700 dark:text-slate-300 block">Affiliation</span>
                   <span className="font-black text-slate-950 dark:text-white">Autonomous • Anna Univ</span>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-0.5">
-                  <span className="text-[10px] uppercase font-black text-slate-700 dark:text-slate-300 block">Academic Session</span>
-                  <span className="font-black text-slate-950 dark:text-white">2025 – 2026</span>
-                </div>
-
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-0.5">
-                  <span className="text-[10px] uppercase font-black text-slate-700 dark:text-slate-300 block">Verification Status</span>
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-0.5">
+                  <span className="text-[10px] uppercase font-black text-slate-700 dark:text-slate-300 block">Verification</span>
                   <span className="font-black text-emerald-600 dark:text-emerald-400">Cryptographically Sealed</span>
                 </div>
               </div>
@@ -3829,9 +4864,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <span className="text-[10px] font-bold text-slate-400">({totalMentees})</span>
                   </h4>
                   {totalMentees > 0 && (
-                    <button 
-                      type="button" 
-                      onClick={handleExportCSV} 
+                    <button
+                      type="button"
+                      onClick={handleExportCSV}
                       className="text-[10px] font-bold px-3 py-1.5 bg-slate-100 dark:bg-navy-900 hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 rounded-xl cursor-pointer transition-colors border border-slate-200 dark:border-navy-700 flex items-center gap-1.5"
                     >
                       <Download className="w-3.5 h-3.5" />
@@ -3839,7 +4874,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     </button>
                   )}
                 </div>
-                
+
                 <div className="border border-slate-200 dark:border-navy-800 rounded-2xl overflow-hidden bg-white dark:bg-navy-950/60 shadow-xs">
                   <div className="overflow-y-auto overflow-x-auto max-h-[300px] custom-scrollbar">
                     <table className="w-full text-left text-[11px] sm:text-xs whitespace-nowrap">
@@ -3882,7 +4917,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                             const isWarning = m.status_code === 'WARNING';
                             const actionType = isCritical ? 'Intervene' : isWarning ? 'Warn' : 'View';
                             const att = isCritical ? '60%' : isWarning ? '74%' : '90%+';
-                            
+
                             return (
                               <tr key={m.id} className={`hover:bg-slate-50 dark:hover:bg-navy-950/50 transition-colors ${isCritical ? 'bg-rose-50/40 dark:bg-rose-900/10' : isWarning ? 'bg-amber-50/40 dark:bg-amber-900/10' : ''}`}>
                                 <td className="px-3 sm:px-4 py-2.5 sm:py-3 font-mono">{m.reg_no}</td>
@@ -3994,7 +5029,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </div>
                 <span className="text-xl font-black text-blue-700 dark:text-blue-400">{selectedMentee.solved}</span>
               </div>
-              
+
               {selectedMentee.actionType === 'Intervene' && (
                 <div className="p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/50 rounded-xl text-xs font-bold text-rose-700 dark:text-rose-300">
                   <AlertTriangle className="w-4 h-4 inline-block mr-1.5 -mt-0.5" />
@@ -4012,12 +5047,12 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               <button type="button" onClick={() => setSelectedMentee(null)} className="flex-1 px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-navy-700 font-bold text-xs hover:bg-slate-50 dark:hover:bg-navy-800 transition-colors">
                 Cancel
               </button>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => {
                   notify.success(`Action '${selectedMentee.actionType}' completed for ${selectedMentee.name}`, '', { category: 'ADMIN' });
                   setSelectedMentee(null);
-                }} 
+                }}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs transition-colors shadow-lg shadow-brand-500/20"
               >
                 Confirm {selectedMentee.actionType}
@@ -4034,12 +5069,12 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           <div className="relative w-full max-w-md bg-white dark:bg-navy-950 rounded-[2rem] overflow-hidden p-1 shadow-2xl shadow-brand-500/20 animate-scale-up border border-slate-200 dark:border-navy-800 flex flex-col group">
             {/* Top decorative gradient header */}
             <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-br from-brand-600 via-indigo-600 to-purple-600 opacity-90 rounded-t-[1.8rem]"></div>
-            
+
             {/* Close Button */}
             <button onClick={() => setShowPhotoZoom(false)} className="absolute top-4 right-4 text-white hover:bg-white/20 p-2 rounded-full backdrop-blur-md cursor-pointer transition-all z-10 shadow-sm">
               <X className="w-5 h-5" />
             </button>
-            
+
             <div className="relative z-10 mt-12 flex flex-col items-center pb-6">
               {/* Profile Image with Glowing Border */}
               <div className="relative p-1 bg-white dark:bg-navy-950 rounded-[2rem] shadow-xl">
@@ -4213,57 +5248,12 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               Save these recovery codes securely. If you lose your phone, you can use these codes to regain access to your faculty account.
             </p>
 
-            <div className="grid grid-cols-2 gap-2 p-4 rounded-2xl bg-slate-100 dark:bg-navy-950 border-2 border-slate-200 dark:border-navy-800 font-mono font-black text-xs text-center text-slate-900 dark:text-slate-100">
+            <div className="grid grid-cols-2 gap-2 p-4 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 font-mono font-black text-xs text-center text-slate-900 dark:text-slate-100">
               {backupCodes.map((code, idx) => (
                 <div key={idx} className="p-2 rounded-lg bg-white dark:bg-navy-900 border border-slate-300 dark:border-navy-700">
                   {code}
                 </div>
               ))}
-
-              {/* MODAL: LOGIN SECURITY EVENT DETAILS */}
-              {selectedLoginEvent && (
-                <GlobalModalBackdrop isOpen={!!selectedLoginEvent} onClose={() => setSelectedLoginEvent(null)} className="flex items-center justify-center p-4">
-                  <div className="relative max-w-lg w-full bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-700 shadow-2xl space-y-5 animate-scale-up text-slate-900 dark:text-slate-100">
-                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 pb-3">
-                      <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2">
-                        <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> Security Event Details
-                      </h3>
-                      <button type="button" onClick={() => setSelectedLoginEvent(null)} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 cursor-pointer" aria-label="Close event details">
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      <div className="sm:col-span-2 p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
-                        <span className="block text-[10px] font-black uppercase text-slate-500 mb-1">Event ID</span>
-                        <span className="font-mono font-black text-brand-700 dark:text-brand-300 break-all">{selectedLoginEvent.id}</span>
-                      </div>
-                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
-                        <span className="block text-[10px] font-black uppercase text-slate-500 mb-1">Status</span>
-                        <span className="font-black text-emerald-700 dark:text-emerald-300">{selectedLoginEvent.status}</span>
-                      </div>
-                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
-                        <span className="block text-[10px] font-black uppercase text-slate-500 mb-1">Authentication</span>
-                        <span className="font-bold text-slate-900 dark:text-white">{selectedLoginEvent.method}</span>
-                      </div>
-                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
-                        <span className="block text-[10px] font-black uppercase text-slate-500 mb-1">Date & Time</span>
-                        <span className="font-bold text-slate-900 dark:text-white">{selectedLoginEvent.date} at {selectedLoginEvent.time}</span>
-                      </div>
-                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
-                        <span className="block text-[10px] font-black uppercase text-slate-500 mb-1">IP Address</span>
-                        <span className="font-mono font-bold text-slate-900 dark:text-white">{selectedLoginEvent.ip}</span>
-                      </div>
-                      <div className="sm:col-span-2 p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
-                        <span className="block text-[10px] font-black uppercase text-slate-500 mb-1">Browser / Device</span>
-                        <span className="font-mono text-[11px] font-bold break-words text-slate-700 dark:text-slate-200">{selectedLoginEvent.network}</span>
-                      </div>
-                    </div>
-                    <button type="button" onClick={() => setSelectedLoginEvent(null)} className="w-full px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-black cursor-pointer shadow-lg shadow-brand-500/20">
-                      Close
-                    </button>
-                  </div>
-                </GlobalModalBackdrop>
-              )}
             </div>
 
             <div className="flex items-center justify-between gap-3 pt-2">
@@ -4284,6 +5274,62 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 Done
               </button>
             </div>
+          </div>
+        </GlobalModalBackdrop>
+      )}
+
+      {/* MODAL: LOGIN SECURITY EVENT DETAILS (Standalone Root Modal) */}
+      {selectedLoginEvent && (
+        <GlobalModalBackdrop isOpen={!!selectedLoginEvent} onClose={() => setSelectedLoginEvent(null)} className="flex items-center justify-center p-4 z-[9999]">
+          <div className="relative max-w-lg w-full bg-white dark:bg-navy-900 rounded-3xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-5 animate-scale-up text-slate-900 dark:text-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                    Security Event Details
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-bold">Cryptographic authentication signature</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setSelectedLoginEvent(null)} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 cursor-pointer text-slate-400 hover:text-slate-700 dark:hover:text-white" aria-label="Close event details">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="sm:col-span-2 p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800">
+                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Event Identifier</span>
+                <span className="font-mono font-black text-brand-700 dark:text-brand-300 break-all">{selectedLoginEvent.id}</span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800">
+                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Verification Status</span>
+                <span className="font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                  {selectedLoginEvent.status}
+                </span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800">
+                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Auth Protocol</span>
+                <span className="font-bold text-slate-900 dark:text-white">{selectedLoginEvent.method}</span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800">
+                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Timestamp</span>
+                <span className="font-bold text-slate-900 dark:text-white">{selectedLoginEvent.date} at {selectedLoginEvent.time}</span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800">
+                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Network IP</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-white">{selectedLoginEvent.ip}</span>
+              </div>
+              <div className="sm:col-span-2 p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800">
+                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Device Client String</span>
+                <span className="font-mono text-[11px] font-bold break-words text-slate-700 dark:text-slate-300">{selectedLoginEvent.network}</span>
+              </div>
+            </div>
+            <button type="button" onClick={() => setSelectedLoginEvent(null)} className="w-full py-3 rounded-xl bg-slate-900 hover:bg-black dark:bg-brand-600 dark:hover:bg-brand-700 text-white text-xs font-black cursor-pointer shadow-md transition-all active:scale-95">
+              Done & Close
+            </button>
           </div>
         </GlobalModalBackdrop>
       )}
@@ -4400,6 +5446,49 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <span>Deactivate</span>
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </GlobalModalBackdrop>
+      )}
+
+      {/* Centered Clear Scratchpad Notes Confirmation Modal */}
+      {showClearNotesConfirm && (
+        <GlobalModalBackdrop
+          isOpen={showClearNotesConfirm}
+          onClose={() => setShowClearNotesConfirm(false)}
+          className="flex items-center justify-center p-4 z-[9999]"
+        >
+          <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 text-center animate-in fade-in zoom-in-95 duration-200">
+            {/* Trash / Red Alert Icon */}
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 flex items-center justify-center text-rose-600 dark:text-rose-400 shadow-sm">
+              <Trash2 className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="text-base font-black text-slate-900 dark:text-white">
+                Clear Scratchpad Notes?
+              </h3>
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
+                Are you sure you want to delete all notes from your private faculty scratchpad? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowClearNotesConfirm(false)}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmClearNotes}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-md shadow-rose-600/20 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Clear Notes</span>
               </button>
             </div>
           </div>

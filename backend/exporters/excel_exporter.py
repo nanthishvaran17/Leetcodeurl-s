@@ -97,12 +97,31 @@ def _fmt_null(val, default="—"):
 
 def _write_college_header(ws, report_title: str, dept_text: str, cols: int, metadata_block: Optional[Dict[str, str]] = None):
     from backend.exporters.nec_master_excel_design import apply_master_college_identity
+    import re
     dept_parts = dept_text.split("•")
-    dept_val = dept_parts[0].replace("DEPARTMENT OF", "").strip() if "DEPARTMENT OF" in dept_text else "ALL"
-    year_val = dept_parts[1].replace("COHORT:", "").replace("YEAR", "").strip() if len(dept_parts) > 1 else "ALL"
+    dept_raw = dept_parts[0].strip()
     
-    session_date = (metadata_block.get("Date") or "") if metadata_block else ""
-    total_roster = int(metadata_block.get("Total Roster", "0").split()[0]) if metadata_block and "Total Roster" in metadata_block else 0
+    # Strip case-insensitive "DEPARTMENT OF" prefix if present
+    dept_clean = re.sub(r'(?i)^department\s+of\s+', '', dept_raw).strip()
+    dept_val = dept_clean if dept_clean and dept_clean.upper() != "ALL" else "ALL"
+    
+    year_val = "ALL"
+    if len(dept_parts) > 1:
+        y_raw = re.sub(r'(?i)cohort:\s*', '', dept_parts[1]).strip()
+        y_raw = re.sub(r'(?i)\s*year\s*', '', y_raw).strip()
+        year_val = y_raw if y_raw else "ALL"
+    elif metadata_block and metadata_block.get("Year"):
+        year_val = metadata_block["Year"].strip()
+
+    session_date = (metadata_block.get("Date") or metadata_block.get("Report Date") or "") if metadata_block else ""
+    tot_roster_val = metadata_block.get("Total Roster", 0) if metadata_block else 0
+    if isinstance(tot_roster_val, str):
+        try:
+            total_roster = int(tot_roster_val.split()[0].replace(",", ""))
+        except Exception:
+            total_roster = 0
+    else:
+        total_roster = tot_roster_val
     
     apply_master_college_identity(
         ws=ws,
@@ -248,26 +267,54 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
     contest_date = raw_c_date.replace("-", ".").replace("/", ".")
     coordinator = str(dataset.get("coordinator") or dataset.get("academicCoordinator") or default_coord)
 
-    # Institutional Cohort Mapping: Always ensure IV (2023-2027), III (2024-2028), II (2025-2029) are represented
-    canonical_batches = [
+    # Institutional Cohort Mapping: Support filtering by year (II, III, IV) or showing all cohorts
+    all_canonical = [
         {"label": "2023 - 2027", "year": "IV"},
         {"label": "2024 - 2028", "year": "III"},
         {"label": "2025 - 2029", "year": "II"}
     ]
-    raw_batches = dataset.get("batch_summaries") or []
-    batch_summaries = []
-    for cb in canonical_batches:
-        found = next((b for b in raw_batches if str(b.get("batch", "")).replace(" ", "") == cb["label"].replace(" ", "")), None)
-        if found:
-            batch_summaries.append(found)
+    raw_yr = str(dataset.get("year") or dataset.get("yearFilter") or (dataset.get("filters") or {}).get("year") or "").strip().upper()
+    raw_batches_val = dataset.get("batch_summaries")
+    raw_batches: List[Dict[str, Any]] = [b for b in raw_batches_val if isinstance(b, dict)] if isinstance(raw_batches_val, list) else []
+
+    if not raw_yr or raw_yr in ("ALL", "NONE", ""):
+        if len(raw_batches) == 1 and raw_batches[0].get("year"):
+            target_year = raw_batches[0].get("year")
         else:
-            batch_summaries.append({
-                "batch": cb["label"],
-                "year": cb["year"],
-                "total_students": 0,
-                "current_week": {},
-                "last_week": {}
-            })
+            target_year = "ALL"
+    else:
+        target_year = "II" if raw_yr in ("2", "II") else ("III" if raw_yr in ("3", "III") else ("IV" if raw_yr in ("4", "IV") else raw_yr))
+
+    batch_summaries: List[Dict[str, Any]] = []
+    if target_year != "ALL":
+        # Strictly include only the requested cohort; never add dummy 0 rows for other years
+        batch_summaries = [b for b in raw_batches if b.get("year") == target_year or (b.get("batch") and target_year in str(b.get("batch")))]
+        if not batch_summaries:
+            found_cb = next((cb for cb in all_canonical if cb["year"] == target_year), None)
+            if found_cb:
+                batch_summaries = [{
+                    "batch": found_cb["label"],
+                    "year": found_cb["year"],
+                    "total_students": 0,
+                    "current_week": {},
+                    "last_week": {}
+                }]
+            else:
+                batch_summaries = raw_batches
+    else:
+        # ALL YEARS: Guarantee all 3 canonical cohorts in IV, III, II order
+        for cb in all_canonical:
+            found = next((b for b in raw_batches if str(b.get("batch", "")).replace(" ", "") == cb["label"].replace(" ", "") or b.get("year") == cb["year"]), None)
+            if found:
+                batch_summaries.append(found)
+            else:
+                batch_summaries.append({
+                    "batch": cb["label"],
+                    "year": cb["year"],
+                    "total_students": 0,
+                    "current_week": {},
+                    "last_week": {}
+                })
 
     logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "round_logo.png")
     if not os.path.exists(logo_path):
@@ -278,7 +325,15 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
     # =========================================================================
     ws1 = wb.create_sheet(title="Weekly Performance")
     ws1.sheet_view.showGridLines = True
+    ws1.page_setup.paperSize = ws1.PAPERSIZE_A4
     ws1.page_setup.orientation = ws1.ORIENTATION_LANDSCAPE
+    ws1.sheet_properties.pageSetUpPr.fitToPage = True
+    ws1.page_setup.fitToWidth = 1
+    ws1.page_setup.fitToHeight = 0
+    ws1.page_margins.left = 0.4
+    ws1.page_margins.right = 0.4
+    ws1.page_margins.top = 0.5
+    ws1.page_margins.bottom = 0.5
 
     # Embed Logo if available
     if os.path.exists(logo_path):
@@ -291,44 +346,51 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         except Exception:
             pass
 
-    # Header Rows 1-5 (Centered Times New Roman)
-    ws1.merge_cells("C1:M1")
-    ws1["C1"] = "NANDHA ENGINEERING COLLEGE, ERODE - 638 052."
-    ws1["C1"].font = FONT_DOC_MAIN_TITLE
-    ws1["C1"].alignment = ALIGN_CENTER
+    # Header Rows 1-5 (Centered Times New Roman across full table width)
+    ws1.merge_cells("A1:M1")
+    ws1["A1"] = "NANDHA ENGINEERING COLLEGE, ERODE - 638 052."
+    ws1["A1"].font = FONT_DOC_MAIN_TITLE
+    ws1["A1"].alignment = ALIGN_CENTER
 
-    ws1.merge_cells("C2:M2")
-    ws1["C2"] = dept_name
-    ws1["C2"].font = FONT_DOC_SUBTITLE
-    ws1["C2"].alignment = ALIGN_CENTER
+    ws1.merge_cells("A2:M2")
+    ws1["A2"] = dept_name
+    ws1["A2"].font = FONT_DOC_SUBTITLE
+    ws1["A2"].alignment = ALIGN_CENTER
 
-    ws1.merge_cells("C3:M3")
-    ws1["C3"] = f"Date: {report_date}"
-    ws1["C3"].font = FONT_DOC_SUBTITLE
-    ws1["C3"].alignment = ALIGN_CENTER
+    ws1.merge_cells("A3:M3")
+    ws1["A3"] = f"Date: {report_date}"
+    ws1["A3"].font = FONT_DOC_SUBTITLE
+    ws1["A3"].alignment = ALIGN_CENTER
 
-    ws1.merge_cells("C4:M4")
-    ws1["C4"] = "Leetcode Performance - Weekly Report"
-    ws1["C4"].font = FONT_DOC_SECTION
-    ws1["C4"].alignment = ALIGN_CENTER
+    ws1.merge_cells("A4:M4")
+    ws1["A4"] = "Leetcode Performance - Weekly Report"
+    ws1["A4"].font = FONT_DOC_SECTION
+    ws1["A4"].alignment = ALIGN_CENTER
 
-    ws1.merge_cells("C5:M5")
-    ws1["C5"] = f"Name & Designation of the Academic Coordinator: {coordinator}"
-    ws1["C5"].font = FONT_DOC_SUBTITLE
-    ws1["C5"].alignment = ALIGN_CENTER
+    ws1.merge_cells("A5:M5")
+    ws1["A5"] = f"Name & Designation of the Academic Coordinator: {coordinator}"
+    ws1["A5"].font = FONT_DOC_SUBTITLE
+    ws1["A5"].alignment = ALIGN_CENTER
+
+    ws1.row_dimensions[1].height = 26
+    ws1.row_dimensions[2].height = 20
+    ws1.row_dimensions[3].height = 20
+    ws1.row_dimensions[4].height = 24
+    ws1.row_dimensions[5].height = 30
 
     HDR_SLATE_FILL = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
     SUBHDR_SLATE_FILL = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
 
-    # Table Header Rows 7-8 (Two-level header exactly matching Image 1)
-    h_r7 = [
-        ("Batch", 1, 1, 7, 8),
-        ("Number of Students\n(Total Count)", 2, 2, 7, 8),
-        ("Number of Problems Solved", 3, 7, 7, 7),
-        ("Weekly Contest Attended: (give the\ncount here)", 8, 11, 7, 7),
-        ("Leetcode Contest Rating and\nRanking", 12, 13, 7, 7),
+    # Table Header Rows 6-7 (Two-level header exactly matching Image 1)
+
+    h_r6 = [
+        ("Batch", 1, 1, 6, 7),
+        ("Number of Students\n(Total Count)", 2, 2, 6, 7),
+        ("Number of Problems Solved", 3, 7, 6, 6),
+        ("Weekly Contest Attended:\n(give the count here)", 8, 11, 6, 6),
+        ("Leetcode Contest Rating and\nRanking", 12, 13, 6, 6),
     ]
-    for text, s_c, e_c, s_r, e_r in h_r7:
+    for text, s_c, e_c, s_r, e_r in h_r6:
         if s_c == e_c and s_r == e_r:
             c = ws1.cell(row=s_r, column=s_c, value=text)
         else:
@@ -342,7 +404,7 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
                 cell_h.fill = HDR_SLATE_FILL
                 _apply_thin_border(cell_h)
 
-    h_r8 = [
+    h_r7 = [
         (3, "Above 500"),
         (4, "250 - 500"),
         (5, "Less than 250"),
@@ -352,26 +414,27 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         (9, "3 Q Solved"),
         (10, "2 Q Solved"),
         (11, "1 Q Solved"),
-        (12, "Rating: Above 1500"),
-        (13, "Ranking: Below 20000"),
+        (12, "Rating:\nAbove 1500"),
+        (13, "Ranking:\nBelow 20000"),
     ]
-    for col_i, text in h_r8:
-        c = ws1.cell(row=8, column=col_i, value=text)
+    for col_i, text in h_r7:
+        c = ws1.cell(row=7, column=col_i, value=text)
         c.font = FONT_DOC_TBL_HDR
         c.alignment = ALIGN_CENTER
         c.fill = SUBHDR_SLATE_FILL
         _apply_thin_border(c)
 
-    ws1.row_dimensions[7].height = 28
-    ws1.row_dimensions[8].height = 28
+    ws1.row_dimensions[6].height = 42
+    ws1.row_dimensions[7].height = 36
 
     # Populate Batch Rows (2 rows per batch: Last Week & Current Week)
-    cur_r1 = 9
+    cur_r1 = 8
     for b in batch_summaries:
-        b_label = b.get("batch", "")
-        b_tot = b.get("total_students") or b.get("num_students", 0)
-        lw = b.get("last_week") or {}
-        cw = b.get("current_week") or {}
+        b_label = str(b.get("batch", ""))
+        raw_b_tot = b.get("total_students") or b.get("num_students") or 0
+        b_tot = int(raw_b_tot) if isinstance(raw_b_tot, (int, float, str)) else 0
+        lw: Dict[str, Any] = b["last_week"] if isinstance(b.get("last_week"), dict) else {}
+        cw: Dict[str, Any] = b["current_week"] if isinstance(b.get("current_week"), dict) else {}
 
         # Row 1: Last Week
         c_batch_lw = ws1.cell(row=cur_r1, column=1, value=f"{b_label}\n(Last Week)")
@@ -384,12 +447,12 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         c_tot.font = FONT_NUMERIC_BOLD
         c_tot.alignment = ALIGN_CENTER
 
-        # Last Week problem solve counts
-        lw_above_500 = lw.get("prob_above_500") if lw.get("prob_above_500") is not None else lw.get("above_500", 0)
-        lw_250_500 = lw.get("prob_250_500") if lw.get("prob_250_500") is not None else lw.get("250_500", 0)
-        lw_100_249 = lw.get("prob_100_249") if lw.get("prob_100_249") is not None else lw.get("101_250", 0)
-        lw_1_99 = lw.get("prob_1_99") if lw.get("prob_1_99") is not None else lw.get("less_100", 0)
-        lw_0 = lw.get("prob_0") if lw.get("prob_0") is not None else lw.get("not_started", 0)
+        # Last Week problem solve counts (always pure integers)
+        lw_above_500 = int(lw.get("prob_above_500") if lw.get("prob_above_500") is not None else (lw.get("above_500") or 0))
+        lw_250_500 = int(lw.get("prob_250_500") if lw.get("prob_250_500") is not None else (lw.get("250_500") or 0))
+        lw_100_249 = int(lw.get("prob_100_249") if lw.get("prob_100_249") is not None else (lw.get("101_250") or 0))
+        lw_1_99 = int(lw.get("prob_1_99") if lw.get("prob_1_99") is not None else (lw.get("less_100") or 0))
+        lw_0 = int(lw.get("prob_0") if lw.get("prob_0") is not None else (lw.get("not_started") or 0))
 
         ws1.cell(row=cur_r1, column=3, value=lw_above_500).font = FONT_NUMERIC_BOLD
         ws1.cell(row=cur_r1, column=4, value=lw_250_500).font = FONT_NUMERIC_BOLD
@@ -398,10 +461,10 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         ws1.cell(row=cur_r1, column=7, value=lw_0).font = FONT_NUMERIC_BOLD
 
         # Last Week contest attended counts
-        ws1.cell(row=cur_r1, column=8, value=lw.get("q4", 0)).font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=9, value=lw.get("q3", 0)).font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=10, value=lw.get("q2", 0)).font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=11, value=lw.get("q1", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=8, value=int(lw.get("q4", 0) or 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=9, value=int(lw.get("q3", 0) or 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=10, value=int(lw.get("q2", 0) or 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=11, value=int(lw.get("q1", 0) or 0)).font = FONT_NUMERIC_BOLD
 
         # Rating / Ranking (Last week rating/ranking are not reported in official format, always "-")
         ws1.cell(row=cur_r1, column=12, value="-").font = FONT_NUMERIC_BOLD
@@ -414,11 +477,12 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         c_batch_cw.alignment = ALIGN_CENTER
 
         # Current Week problem solve counts
-        cw_above_500 = cw.get("prob_above_500") if cw.get("prob_above_500") is not None else (cw.get("above_500") or (cw.get("categories") or {}).get("Above 500", 0))
-        cw_250_500 = cw.get("prob_250_500") if cw.get("prob_250_500") is not None else (cw.get("250_500") or (cw.get("categories") or {}).get("250 - 500", 0))
-        cw_100_249 = cw.get("prob_100_249") if cw.get("prob_100_249") is not None else (cw.get("101_250") or (cw.get("categories") or {}).get("Less than 250", 0))
-        cw_1_99 = cw.get("prob_1_99") if cw.get("prob_1_99") is not None else (cw.get("less_100") or (cw.get("categories") or {}).get("Less than 100", 0))
-        cw_0 = cw.get("prob_0") if cw.get("prob_0") is not None else (cw.get("not_started") or (cw.get("categories") or {}).get("Not Yet Started", 0))
+        cw_cats: Dict[str, Any] = cw["categories"] if isinstance(cw.get("categories"), dict) else {}
+        cw_above_500 = int(cw.get("prob_above_500") if cw.get("prob_above_500") is not None else (cw.get("above_500") or cw_cats.get("Above 500", 0) or 0))
+        cw_250_500 = int(cw.get("prob_250_500") if cw.get("prob_250_500") is not None else (cw.get("250_500") or cw_cats.get("250 - 500", 0) or 0))
+        cw_100_249 = int(cw.get("prob_100_249") if cw.get("prob_100_249") is not None else (cw.get("101_250") or cw_cats.get("Less than 250", 0) or 0))
+        cw_1_99 = int(cw.get("prob_1_99") if cw.get("prob_1_99") is not None else (cw.get("less_100") or cw_cats.get("Less than 100", 0) or 0))
+        cw_0 = int(cw.get("prob_0") if cw.get("prob_0") is not None else (cw.get("not_started") or cw_cats.get("Not Yet Started", 0) or 0))
 
         ws1.cell(row=cur_r1, column=3, value=cw_above_500).font = FONT_NUMERIC_BOLD
         ws1.cell(row=cur_r1, column=4, value=cw_250_500).font = FONT_NUMERIC_BOLD
@@ -427,44 +491,46 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         ws1.cell(row=cur_r1, column=7, value=cw_0).font = FONT_NUMERIC_BOLD
 
         # Current Week contest attended counts
-        ws1.cell(row=cur_r1, column=8, value=cw.get("q4", 0)).font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=9, value=cw.get("q3", 0)).font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=10, value=cw.get("q2", 0)).font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=11, value=cw.get("q1", 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=8, value=int(cw.get("q4", 0) or 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=9, value=int(cw.get("q3", 0) or 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=10, value=int(cw.get("q2", 0) or 0)).font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=11, value=int(cw.get("q1", 0) or 0)).font = FONT_NUMERIC_BOLD
 
         # Rating / Ranking
         cw_r = cw.get("rating_above_1500") or cw.get("rating_1500") or 0
         cw_rnk = cw.get("rank_below_20000") or cw.get("ranking_20000") or 0
-        ws1.cell(row=cur_r1, column=12, value=cw_r if cw_r > 0 else "-").font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=13, value=cw_rnk if cw_rnk > 0 else "-").font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=12, value=int(cw_r) if cw_r and int(cw_r) > 0 else "-").font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=13, value=int(cw_rnk) if cw_rnk and int(cw_rnk) > 0 else "-").font = FONT_NUMERIC_BOLD
 
-        # Apply borders and center alignment
+        # Apply borders, row height 36 for luxurious 2-line rendering, and center alignment
         for r_x in (cur_r1 - 1, cur_r1):
-            ws1.row_dimensions[r_x].height = 24
+            ws1.row_dimensions[r_x].height = 36
             for c_x in range(1, 14):
                 cell_item = ws1.cell(row=r_x, column=c_x)
                 _apply_thin_border(cell_item)
                 cell_item.alignment = ALIGN_CENTER
         cur_r1 += 1
 
-    col_w1 = {1: 18, 2: 15, 3: 13, 4: 13, 5: 13, 6: 13, 7: 13, 8: 11, 9: 11, 10: 11, 11: 11, 12: 16, 13: 16}
+    col_w1 = {1: 17.5, 2: 12.0, 3: 9.0, 4: 9.0, 5: 9.0, 6: 9.0, 7: 9.5, 8: 8.5, 9: 8.5, 10: 8.5, 11: 8.5, 12: 13.0, 13: 13.5}
     for c_i, w in col_w1.items():
         ws1.column_dimensions[get_column_letter(c_i)].width = w
 
-    # If extra sheets are not explicitly requested, return ONLY the official single Weekly Performance sheet
-    include_extra = include_extra_sheets or bool(dataset.get("include_all_sheets")) or bool(dataset.get("full_workbook"))
-    if not include_extra:
-        wb.active = ws1
-        output = io.BytesIO()
-        wb.save(output)
-        return output.getvalue()
-
     # =========================================================================
-    # SHEET 2: LEETCODE CONTEST PERFORMANCE - WEEKLY REPORT (Image 2)
+    # SHEET 2: LEETCODE CONTEST PERFORMANCE - WEEKLY REPORT (Image 2 Match)
+    # Always included: provides the single-contest breakdown with 4,3,2,1,0 solved,
+    # ratings (Above 2000, 1500, 1250), and Global Ranking below 20000.
     # =========================================================================
     ws2 = wb.create_sheet(title="Contest Performance")
     ws2.sheet_view.showGridLines = True
+    ws2.page_setup.paperSize = ws2.PAPERSIZE_A4
     ws2.page_setup.orientation = ws2.ORIENTATION_LANDSCAPE
+    ws2.sheet_properties.pageSetUpPr.fitToPage = True
+    ws2.page_setup.fitToWidth = 1
+    ws2.page_setup.fitToHeight = 1
+    ws2.page_margins.left = 0.4
+    ws2.page_margins.right = 0.4
+    ws2.page_margins.top = 0.5
+    ws2.page_margins.bottom = 0.5
 
     if os.path.exists(logo_path):
         try:
@@ -476,41 +542,47 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         except Exception:
             pass
 
-    ws2.merge_cells("C1:L1")
-    ws2["C1"] = "NANDHA ENGINEERING COLLEGE, ERODE - 638 052."
-    ws2["C1"].font = FONT_DOC_MAIN_TITLE
-    ws2["C1"].alignment = ALIGN_CENTER
+    ws2.merge_cells("A1:L1")
+    ws2["A1"] = "NANDHA ENGINEERING COLLEGE, ERODE - 638 052."
+    ws2["A1"].font = FONT_DOC_MAIN_TITLE
+    ws2["A1"].alignment = ALIGN_CENTER
 
-    ws2.merge_cells("C2:L2")
-    ws2["C2"] = dept_name
-    ws2["C2"].font = FONT_DOC_SUBTITLE
-    ws2["C2"].alignment = ALIGN_CENTER
+    ws2.merge_cells("A2:L2")
+    ws2["A2"] = dept_name
+    ws2["A2"].font = FONT_DOC_SUBTITLE
+    ws2["A2"].alignment = ALIGN_CENTER
 
-    ws2.merge_cells("C3:L3")
-    ws2["C3"] = f"Date: {report_date}"
-    ws2["C3"].font = FONT_DOC_SUBTITLE
-    ws2["C3"].alignment = ALIGN_CENTER
+    ws2.merge_cells("A3:L3")
+    ws2["A3"] = f"Date: {report_date}"
+    ws2["A3"].font = FONT_DOC_SUBTITLE
+    ws2["A3"].alignment = ALIGN_CENTER
 
-    ws2.merge_cells("C4:L4")
-    ws2["C4"] = "Leetcode Contest Performance - Weekly Report"
-    ws2["C4"].font = FONT_DOC_SECTION
-    ws2["C4"].alignment = ALIGN_CENTER
+    ws2.merge_cells("A4:L4")
+    ws2["A4"] = "Leetcode Contest Performance - Weekly Report"
+    ws2["A4"].font = FONT_DOC_SECTION
+    ws2["A4"].alignment = ALIGN_CENTER
 
-    ws2.merge_cells("C5:L5")
-    ws2["C5"] = f"Name & Designation of the Academic Coordinator: {coordinator}"
-    ws2["C5"].font = FONT_DOC_SUBTITLE
-    ws2["C5"].alignment = ALIGN_CENTER
+    ws2.merge_cells("A5:L5")
+    ws2["A5"] = f"Name & Designation of the Academic Coordinator: {coordinator}"
+    ws2["A5"].font = FONT_DOC_SUBTITLE
+    ws2["A5"].alignment = ALIGN_CENTER
 
-    # Table Header Rows 7-8 for Sheet 2
-    h2_r7 = [
-        ("Batch", 1, 1, 7, 8),
-        ("Number of Students\n(Total Count)", 2, 2, 7, 8),
-        ("Contest taken on ---\n(Date)", 3, 3, 7, 8),
-        ("Number of Problems Solved", 4, 8, 7, 7),
-        ("Leetcode Contest Rating and\nRanking", 9, 11, 7, 7),
-        ("Global Ranking\nBelow 20000", 12, 12, 7, 8),
+    ws2.row_dimensions[1].height = 26
+    ws2.row_dimensions[2].height = 20
+    ws2.row_dimensions[3].height = 20
+    ws2.row_dimensions[4].height = 24
+    ws2.row_dimensions[5].height = 30
+
+    # Table Header Rows 6-7 for Sheet 2
+    h2_r6 = [
+        ("Batch", 1, 1, 6, 7),
+        ("Number of Students\n(Total Count)", 2, 2, 6, 7),
+        ("Contest taken on ---\n(Date)", 3, 3, 6, 7),
+        ("Number of Problems Solved", 4, 8, 6, 6),
+        ("Leetcode Contest Rating and\nRanking", 9, 11, 6, 6),
+        ("Global Ranking\nBelow 20000", 12, 12, 6, 7),
     ]
-    for text, s_c, e_c, s_r, e_r in h2_r7:
+    for text, s_c, e_c, s_r, e_r in h2_r6:
         if s_c == e_c and s_r == e_r:
             c = ws2.cell(row=s_r, column=s_c, value=text)
         else:
@@ -520,57 +592,79 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         c.alignment = ALIGN_CENTER
         for r_x in range(s_r, e_r + 1):
             for c_x in range(s_c, e_c + 1):
-                _apply_thin_border(ws2.cell(row=r_x, column=c_x))
+                cell_h = ws2.cell(row=r_x, column=c_x)
+                cell_h.fill = HDR_SLATE_FILL
+                _apply_thin_border(cell_h)
 
-    h2_r8 = [
-        (4, "4"),
-        (5, "3"),
-        (6, "2"),
-        (7, "1"),
-        (8, "0"),
+    h2_r7 = [
+        (4, 4),
+        (5, 3),
+        (6, 2),
+        (7, 1),
+        (8, 0),
         (9, "Above\n2000"),
         (10, "Above\n1500"),
         (11, "Above\n1250"),
     ]
-    for col_i, text in h2_r8:
-        c = ws2.cell(row=8, column=col_i, value=text)
+    for col_i, text in h2_r7:
+        c = ws2.cell(row=7, column=col_i, value=text)
         c.font = FONT_DOC_TBL_HDR
         c.alignment = ALIGN_CENTER
+        c.fill = SUBHDR_SLATE_FILL
         _apply_thin_border(c)
 
-    ws2.row_dimensions[7].height = 28
-    ws2.row_dimensions[8].height = 28
+    ws2.row_dimensions[6].height = 42
+    ws2.row_dimensions[7].height = 36
 
-    cur_r2 = 9
+    cur_r2 = 8
     for b in batch_summaries:
-        b_label = b.get("batch", "")
-        b_tot = b.get("total_students") or b.get("num_students", 0)
-        cw = b.get("current_week") or {}
-        c_date = b.get("contest_date") or contest_date
+        b_label = str(b.get("batch", ""))
+        cw: Dict[str, Any] = b["current_week"] if isinstance(b.get("current_week"), dict) else {}
+        lw: Dict[str, Any] = b["last_week"] if isinstance(b.get("last_week"), dict) else {}
+        raw_b_tot2 = b.get("total_students") or b.get("num_students") or lw.get("total_students") or cw.get("total_students") or 0
+        b_tot = int(raw_b_tot2) if isinstance(raw_b_tot2, (int, float, str)) else 0
+        c_date = str(b.get("contest_date") or contest_date or report_date)
+
+        q4 = int(cw.get("q4", 0) or 0)
+        q3 = int(cw.get("q3", 0) or 0)
+        q2 = int(cw.get("q2", 0) or 0)
+        q1 = int(cw.get("q1", 0) or 0)
+        q0 = cw.get("q0")
+        if q0 is None or q0 == 0:
+            q0 = max(0, b_tot - (q4 + q3 + q2 + q1))
+        else:
+            q0 = int(q0)
+
+        r_2000 = cw.get("rating_above_2000") or cw.get("rating_2000") or 0
+        r_1500 = cw.get("rating_above_1500") or cw.get("rating_1500") or 0
+        r_1250 = cw.get("rating_above_1250") or cw.get("rating_1250") or 0
+        rk_20k = cw.get("rank_below_20000") or cw.get("ranking_20000") or 0
+
+        fmt_m = lambda val: int(val) if (isinstance(val, (int, float)) and val > 0) else "—"
 
         row_vals2 = [
             (1, b_label),
             (2, b_tot),
             (3, c_date),
-            (4, cw.get("q4", 0)),
-            (5, cw.get("q3", 0)),
-            (6, cw.get("q2", 0)),
-            (7, cw.get("q1", 0)),
-            (8, cw.get("q0", 0)),
-            (9, cw.get("rating_above_2000") or "—"),
-            (10, cw.get("rating_above_1500") or "—"),
-            (11, cw.get("rating_above_1250") or "—"),
-            (12, cw.get("rank_below_20000") or "—"),
+            (4, q4),
+            (5, q3),
+            (6, q2),
+            (7, q1),
+            (8, q0),
+            (9, fmt_m(r_2000)),
+            (10, fmt_m(r_1500)),
+            (11, fmt_m(r_1250)),
+            (12, fmt_m(rk_20k)),
         ]
         for col_i, val in row_vals2:
             c = ws2.cell(row=cur_r2, column=col_i, value=val)
             c.font = FONT_NUMERIC_BOLD
             c.alignment = ALIGN_CENTER
             _apply_thin_border(c)
-        ws2.row_dimensions[cur_r2].height = 24
+        ws2.row_dimensions[cur_r2].height = 28
         cur_r2 += 1
 
-    col_w2 = {1: 18, 2: 15, 3: 15, 4: 10, 5: 10, 6: 10, 7: 10, 8: 10, 9: 13, 10: 13, 11: 13, 12: 16}
+    col_w2 = {1: 17.5, 2: 12.0, 3: 12.0, 4: 7.0, 5: 7.0, 6: 7.0, 7: 7.0, 8: 7.0, 9: 9.5, 10: 9.5, 11: 9.5, 12: 13.5}
     for c_i, w in col_w2.items():
         ws2.column_dimensions[get_column_letter(c_i)].width = w
 
@@ -630,17 +724,45 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
             _apply_thin_border(c)
         d_row += 1
 
-    # SHEET 2: FULL STUDENT ROSTER
+    # SHEET 4: FULL STUDENT ROSTER
     ws_roster = wb.create_sheet(title="Full Student Roster")
     ws_roster.sheet_view.showGridLines = True
+    ws_roster.page_setup.paperSize = ws_roster.PAPERSIZE_A4
     ws_roster.page_setup.orientation = ws_roster.ORIENTATION_LANDSCAPE
+    ws_roster.sheet_properties.pageSetUpPr.fitToPage = True
+    ws_roster.page_setup.fitToWidth = 1
+    ws_roster.page_setup.fitToHeight = 0
 
-    roster_rows = dataset.get("all_students_current") or dataset.get("allStudents") or dataset.get("rows") or []
+    raw_roster = dataset.get("all_students_current") or dataset.get("allStudents") or dataset.get("rows") or []
+    if target_year != "ALL":
+        y_aliases = {target_year}
+        if target_year == "II": y_aliases.update({"2", "2ND", "II YEAR"})
+        elif target_year == "III": y_aliases.update({"3", "3RD", "III YEAR"})
+        elif target_year == "IV": y_aliases.update({"4", "4TH", "IV YEAR"})
+        filtered_roster = [
+            s for s in raw_roster 
+            if str(s.get("year") or s.get("year_level") or s.get("academic_year") or "").strip().upper() in y_aliases
+            or target_year in str(s.get("year") or s.get("year_level") or s.get("academic_year") or "").strip().upper()
+        ]
+        roster_rows = filtered_roster if filtered_roster else raw_roster
+    else:
+        roster_rows = raw_roster
+
+    yr_header_text = f"{target_year} Year" if target_year != "ALL" else "All Years"
+    r_dept_text = f"{dept_name} • COHORT: {yr_header_text}"
     _write_college_header(
         ws_roster,
-        "COORDINATOR WEEKLY PERFORMANCE REPORT — FULL STUDENT ROSTER",
-        f"TOTAL ROSTER: {len(roster_rows)} STUDENTS",
-        12
+        f"COORDINATOR WEEKLY PERFORMANCE REPORT — FULL STUDENT ROSTER ({yr_header_text.upper()})",
+        r_dept_text,
+        14,
+        {
+            "Date": report_date,
+            "Total Roster": f"{len(roster_rows)} Students",
+            "Report ID": str(dataset.get("report_id") or dataset.get("reportId") or "REP-2026"),
+            "Department": dept_name,
+            "Year": yr_header_text,
+            "Contest": str(dataset.get("contest_date") or contest_date)
+        }
     )
 
     r_hdr_row = 7
@@ -651,7 +773,7 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         c.fill = NAVY_PRIMARY
         c.alignment = ALIGN_CENTER
         _apply_thin_border(c)
-    ws_roster.row_dimensions[r_hdr_row].height = 28
+    ws_roster.row_dimensions[r_hdr_row].height = 24
 
     def _fmt_res(r_val):
         if not r_val or r_val in ("NOT_PARTICIPATED", "NOT_ATTENDED", "NONE", "—"):
@@ -702,10 +824,10 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
             c.font = FONT_BODY
             c.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
             _apply_thin_border(c)
-        ws_roster.row_dimensions[row_num].height = 22
+        ws_roster.row_dimensions[row_num].height = 20
 
-    # Column Auto-Widths & Min-Widths
-    for sheet in wb.worksheets:
+    # Column Auto-Widths & Min-Widths ONLY for ws_dept and ws_roster (ws1 and ws2 keep their exact A4 landscape widths)
+    for sheet in [ws_dept, ws_roster]:
         for col in sheet.columns:
             if not col or col[0].column is None:
                 continue
@@ -725,12 +847,12 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
                     if len(val_s) > max_len and len(val_s) < 80:
                         max_len = len(val_s)
 
-            if "REGISTER" in hdr_val: w = max(18.0, max_len + 3)
-            elif "NAME" in hdr_val: w = max(28.0, max_len + 3)
-            elif "DEPARTMENT" in hdr_val or hdr_val == "DEPT": w = max(16.0, max_len + 3)
-            elif "COORDINATOR" in hdr_val: w = max(22.0, max_len + 3)
-            elif "CATEGORY" in hdr_val: w = max(18.0, max_len + 3)
-            else: w = max(12.0, min(max_len + 3, 30.0))
+            if "REGISTER" in hdr_val: w = max(15.0, max_len + 2)
+            elif "NAME" in hdr_val: w = max(24.0, max_len + 2)
+            elif "DEPARTMENT" in hdr_val or hdr_val == "DEPT": w = max(14.0, max_len + 2)
+            elif "COORDINATOR" in hdr_val: w = max(20.0, max_len + 2)
+            elif "CATEGORY" in hdr_val: w = max(15.0, max_len + 2)
+            else: w = max(8.0, min(max_len + 2, 22.0))
             sheet.column_dimensions[col_letter].width = w
 
     try:

@@ -52,12 +52,13 @@ def get_departments(
         except Exception:
             db.rollback()
 
-    if not all_depts:
-        all_d = [
-            d for d in all_d
-            if is_production_department(str(d.code or ""), str(d.name or ""))
-            and (not active_only or (getattr(d, "is_active", False) and student_counts.get(d.id, 0) > 0))
-        ]
+    # Filter to valid production departments with active enrolled students.
+    # Strictly exclude departments that have 0 active students/stats.
+    all_d = [
+        d for d in all_d
+        if is_production_department(str(d.code or ""), str(d.name or ""))
+        and student_counts.get(d.id, 0) > 0
+    ]
 
     for d in all_d:
         if d.code and str(d.code).upper() == "IT" and d.name != "Information Technology":
@@ -80,15 +81,18 @@ def get_departments(
                 pass
             current_user = None
 
-    # Scope restrictions by role (HOD & Staff/Faculty Mentors) only when all_depts=False:
-    if current_user and not all_depts:
-        from backend.services.authorization_service import _HOD_ROLES, _STAFF_ROLES
+    # Scope restrictions by role (HOD & Staff/Faculty Mentors):
+    # HOD and Staff can NEVER see departments outside their authorized scope.
+    if current_user:
+        from backend.services.authorization_service import _HOD_ROLES, _STAFF_ROLES, _GLOBAL_ACCESS_ROLES
         role = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
         if role in _HOD_ROLES:
             from backend.services.authorization_service import get_hod_authorized_department_ids
             authorized_ids = get_hod_authorized_department_ids(db, current_user)
             if authorized_ids:
                 all_d = [d for d in all_d if d.id in authorized_ids]
+            elif current_user.department_id:
+                all_d = [d for d in all_d if d.id == current_user.department_id]
             else:
                 # HOD with no allocations — return empty list (fail closed)
                 all_d = []

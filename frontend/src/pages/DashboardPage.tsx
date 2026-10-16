@@ -52,6 +52,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     else if (Array.isArray((rawDepartments as any)?.departments)) list = (rawDepartments as any).departments;
     else if (Array.isArray((rawDepartments as any)?.data)) list = (rawDepartments as any).data;
 
+    const roleClean = (user?.role || '').trim().toLowerCase();
+    const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
+    const isGlobalRole = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(roleClean);
+
+    if (isHod && !isGlobalRole) {
+      const authCodes = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map(c => String(c).toUpperCase());
+      const uDeptCode = String(user?.department || (user as any)?.department_code || '').toUpperCase();
+      const uDeptId = user?.department_id ? Number(user.department_id) : null;
+
+      list = list.filter(dept => {
+        const dCode = String(dept.code || dept.department_code || '').toUpperCase();
+        const dId = Number(dept.id || dept.department_id);
+        if (authCodes.length > 0 && authCodes.includes(dCode)) return true;
+        if (uDeptCode && dCode === uDeptCode) return true;
+        if (uDeptId && dId === uDeptId) return true;
+        return false;
+      });
+    }
+
     if (!list || list.length === 0) return list;
 
     // Normalize department strings/objects into canonical keys

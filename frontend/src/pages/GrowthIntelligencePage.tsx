@@ -92,8 +92,25 @@ import { useAuth } from '../context/AuthContext';
 export const GrowthIntelligencePage: React.FC = () => {
   const { notify } = useNotification();
   const { user } = useAuth();
+  const roleClean = (user?.role || '').trim().toLowerCase();
+  const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
+  const isGlobalRole = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(roleClean);
+  const initialDept = useMemo(() => {
+    if (isHod && !isGlobalRole) {
+      const authCodes: string[] = Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : [];
+      if (authCodes.length > 1) {
+        return 'ALL'; // Multi-dept HOD defaults to combined view of both departments (150 + 150 = 300)
+      }
+      if (authCodes.length === 1) {
+        return authCodes[0];
+      }
+      if (typeof user?.department === 'string') return user.department;
+      if ((user?.department as any)?.code) return (user?.department as any).code;
+    }
+    return 'ALL';
+  }, [isHod, isGlobalRole, user]);
   const [period, setPeriod] = useState<'today' | '7d' | '30d' | 'all'>('today');
-  const [deptFilter, setDeptFilter] = useState<string>('ALL');
+  const [deptFilter, setDeptFilter] = useState<string>(() => initialDept);
   const [yearFilter, setYearFilter] = useState<string>('ALL');
   const [displayLimit, setDisplayLimit] = useState<number | 'ALL'>(10);
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 768);
@@ -136,12 +153,21 @@ export const GrowthIntelligencePage: React.FC = () => {
   const [activeStudentInfo, setActiveStudentInfo] = useState<any>(null);
 
   const departmentOptions: GlobalFilterOption[] = useMemo(() => {
-    const isHod = user?.role?.toLowerCase() === 'hod';
     const list: GlobalFilterOption[] = [];
-    if (!isHod) {
+    const authCodes = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map(c => String(c).toUpperCase());
+    const userDept = ((typeof user?.department === 'string' ? user.department : (user?.department as any)?.code) || '').toUpperCase();
+
+    const allowedDepts = (isHod && !isGlobalRole)
+      ? departments.filter(d => authCodes.includes((d.code || '').toUpperCase()) || (userDept && (d.code || '').toUpperCase() === userDept))
+      : departments;
+
+    if (!isHod || isGlobalRole) {
       list.push({ value: 'ALL', label: 'All Departments', pillText: 'ALL' });
+    } else if (allowedDepts.length > 1) {
+      list.push({ value: 'ALL', label: 'All My Authorized Departments', pillText: 'ALL' });
     }
-    departments.forEach((d) => {
+
+    allowedDepts.forEach((d) => {
       const codeUp = (d.code || '').toUpperCase().trim();
       const nameUp = (d.name || '').toUpperCase().trim();
       if (
@@ -160,7 +186,7 @@ export const GrowthIntelligencePage: React.FC = () => {
       });
     });
     return list;
-  }, [departments, user]);
+  }, [departments, user, isHod, isGlobalRole]);
 
   const yearOptions: GlobalFilterOption[] = useMemo(() => {
     const list: GlobalFilterOption[] = [
@@ -516,7 +542,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                 onChange={(e) => setLeaderboardSearch(e.target.value)}
                 placeholder="Search solver, reg no, username..."
                 style={{ textAlign: 'left', paddingLeft: '2.5rem' }}
-                className="w-full text-left pl-10 pr-8 py-2.5 min-h-[42px] text-xs font-semibold rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.04] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-xs"
+                className="w-full text-left pl-10 pr-8 py-2 min-h-[38px] sm:min-h-[42px] text-xs font-semibold rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.04] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-xs"
               />
               {leaderboardSearch && (
                 <button
@@ -529,52 +555,55 @@ export const GrowthIntelligencePage: React.FC = () => {
               )}
             </div>
 
-            {/* Rank By Sort Mode Toggle */}
-            <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-white/[0.05] p-1 rounded-xl border border-slate-200/80 dark:border-white/10 shrink-0">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider px-2">Rank</span>
-              <button
-                onClick={() => { setSortMode('growth'); setImprovers(prev => sortImprovers(prev, 'growth')); }}
-                className={`px-3 py-1.5 min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
-                  sortMode === 'growth'
-                    ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/25'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                Growth
-              </button>
-              <button
-                onClick={() => { setSortMode('total'); setImprovers(prev => sortImprovers(prev, 'total')); }}
-                className={`px-3 py-1.5 min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
-                  sortMode === 'total'
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/25'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                Total
-              </button>
-            </div>
-
-            {/* Display Limit Selector Pills */}
-            <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-white/[0.05] p-1 rounded-xl border border-slate-200/80 dark:border-white/10 shrink-0">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider px-2">Show</span>
-              {[10, 25, 50, 'ALL'].map((limitVal) => (
+            {/* Controls Bar with Smooth Horizontal Overflow on Mobile */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+              {/* Rank By Sort Mode Toggle */}
+              <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-white/[0.05] p-1 rounded-xl border border-slate-200/80 dark:border-white/10 shrink-0">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider px-1.5 sm:px-2">Rank</span>
                 <button
-                  key={String(limitVal)}
-                  onClick={() => setDisplayLimit(limitVal as any)}
-                  className={`px-2.5 py-1.5 min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
-                    displayLimit === limitVal
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                  onClick={() => { setSortMode('growth'); setImprovers(prev => sortImprovers(prev, 'growth')); }}
+                  className={`px-2.5 sm:px-3 py-1.5 min-h-[32px] sm:min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
+                    sortMode === 'growth'
+                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/25'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  {limitVal === 'ALL' ? 'All' : limitVal}
+                  Growth
                 </button>
-              ))}
-            </div>
+                <button
+                  onClick={() => { setSortMode('total'); setImprovers(prev => sortImprovers(prev, 'total')); }}
+                  className={`px-2.5 sm:px-3 py-1.5 min-h-[32px] sm:min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
+                    sortMode === 'total'
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/25'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  Total
+                </button>
+              </div>
 
-            {/* Active Solvers Pill */}
-            <div className="flex items-center justify-center shrink-0 min-h-[42px] px-4 bg-brand-500/10 border border-brand-500/25 rounded-xl text-brand-700 dark:text-brand-300 font-black text-xs uppercase tracking-wider shadow-xs">
-              {collegeDelta?.active_students ?? improvers.length} Solvers
+              {/* Display Limit Selector Pills */}
+              <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-white/[0.05] p-1 rounded-xl border border-slate-200/80 dark:border-white/10 shrink-0">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider px-1.5 sm:px-2">Show</span>
+                {[10, 25, 50, 'ALL'].map((limitVal) => (
+                  <button
+                    key={String(limitVal)}
+                    onClick={() => setDisplayLimit(limitVal as any)}
+                    className={`px-2 sm:px-2.5 py-1.5 min-h-[32px] sm:min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
+                      displayLimit === limitVal
+                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {limitVal === 'ALL' ? 'All' : limitVal}
+                  </button>
+                ))}
+              </div>
+
+              {/* Active Solvers Pill */}
+              <div className="flex items-center justify-center shrink-0 min-h-[36px] sm:min-h-[42px] px-3.5 bg-brand-500/10 border border-brand-500/25 rounded-xl text-brand-700 dark:text-brand-300 font-black text-xs uppercase tracking-wider shadow-xs whitespace-nowrap">
+                {collegeDelta?.active_students ?? improvers.length} Solvers
+              </div>
             </div>
           </div>
         </div>
@@ -599,8 +628,8 @@ export const GrowthIntelligencePage: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Mobile Leaderboard Cards — 2026 SaaS Luxury Redesign */}
-            <div className="block md:hidden space-y-3.5">
+            {/* Mobile Leaderboard Cards — Modern High-Density App Design */}
+            <div className="block md:hidden space-y-2.5">
               {(displayLimit === 'ALL' ? filteredImprovers : filteredImprovers.slice(0, Number(displayLimit))).map((imp, idx) => {
                 const isExpanded = String(expandedStudentId) === String(imp.student_id);
                 const initials = (imp.name || 'Student')
@@ -617,53 +646,52 @@ export const GrowthIntelligencePage: React.FC = () => {
                 return (
                   <div
                     key={imp.student_id}
-                    className={`relative overflow-hidden rounded-2xl bg-white/95 dark:bg-[#0b1220]/95 border transition-all p-4 shadow-sm space-y-3.5 backdrop-blur-xl touch-manipulation ${
+                    className={`relative overflow-hidden rounded-2xl bg-white/95 dark:bg-[#0b1220]/95 border transition-all p-3.5 shadow-xs space-y-2.5 backdrop-blur-xl touch-manipulation ${
                       isExpanded
                         ? 'border-brand-500 ring-2 ring-brand-500/25 bg-brand-500/[0.04] dark:bg-[#0f172a]'
                         : isTop1
-                        ? 'border-amber-400/50 bg-gradient-to-b from-amber-500/[0.04] to-transparent dark:from-amber-500/[0.06] hover:border-amber-400'
+                        ? 'border-amber-400/60 bg-gradient-to-b from-amber-500/[0.06] to-transparent dark:from-amber-500/[0.08]'
                         : isTop2
-                        ? 'border-slate-300/60 bg-gradient-to-b from-slate-200/[0.04] to-transparent dark:from-white/[0.03] hover:border-slate-400'
+                        ? 'border-slate-300/80 bg-gradient-to-b from-slate-200/[0.06] to-transparent dark:from-white/[0.04]'
                         : isTop3
-                        ? 'border-amber-700/50 bg-gradient-to-b from-amber-700/[0.04] to-transparent dark:from-amber-700/[0.06] hover:border-amber-600'
-                        : 'border-slate-200/90 dark:border-white/10 hover:border-brand-500/30'
+                        ? 'border-amber-700/60 bg-gradient-to-b from-amber-700/[0.06] to-transparent dark:from-amber-700/[0.08]'
+                        : 'border-slate-200/90 dark:border-white/10'
                     }`}
                   >
-                    {/* Header Row: Rank Jewel, Avatar, Name & Reg No, Dept / Year */}
-                    <div className="flex items-start justify-between gap-2.5">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        
+                    {/* Header Row: Rank, Avatar, Student Credentials & Floating Growth Delta */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         {/* Rank Badge */}
                         <div className="shrink-0">
                           {isTop1 ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/25 text-xs ring-1 ring-amber-400/60">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-slate-950 font-black shadow-sm text-xs ring-1 ring-amber-400/60">
                               <Award className="w-3.5 h-3.5 text-slate-950 shrink-0" />
                               <span>#1</span>
                             </span>
                           ) : isTop2 ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-slate-200 via-white to-slate-300 text-slate-900 font-black shadow-xs text-xs ring-1 ring-slate-300/60">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-slate-200 via-white to-slate-300 text-slate-900 font-black shadow-2xs text-xs ring-1 ring-slate-300/60">
                               <span>#2</span>
                             </span>
                           ) : isTop3 ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-amber-50 font-black shadow-xs text-xs ring-1 ring-amber-600/60">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-amber-50 font-black shadow-2xs text-xs ring-1 ring-amber-600/60">
                               <span>#3</span>
                             </span>
                           ) : (
-                            <span className="inline-flex items-center justify-center min-w-[32px] px-2 py-1 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-black text-xs">
+                            <span className="inline-flex items-center justify-center min-w-[30px] px-2 py-1 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-black text-xs">
                               #{idx + 1}
                             </span>
                           )}
                         </div>
 
                         {/* Initials Avatar */}
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-500/20 to-purple-500/20 text-brand-600 dark:text-brand-300 font-black text-xs flex items-center justify-center border border-brand-500/30 shrink-0 shadow-2xs">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500/20 to-purple-500/20 text-brand-600 dark:text-brand-300 font-black text-xs flex items-center justify-center border border-brand-500/30 shrink-0 shadow-2xs">
                           {initials}
                         </div>
 
-                        {/* Name & Credentials */}
+                        {/* Name & Academic Meta */}
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <h4 className="font-black text-sm text-slate-900 dark:text-white truncate">
+                          <div className="flex items-center gap-1">
+                            <h4 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
                               {imp.name}
                             </h4>
                             {imp.profile_url && (
@@ -675,44 +703,34 @@ export const GrowthIntelligencePage: React.FC = () => {
                                 title="Open LeetCode Profile"
                                 className="text-slate-400 hover:text-amber-500 transition-colors shrink-0"
                               >
-                                <ArrowUpRight className="w-3.5 h-3.5" />
+                                <ArrowUpRight className="w-3 h-3" />
                               </a>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 text-[11px] font-mono mt-0.5">
-                            <span className="font-bold text-brand-600 dark:text-brand-400 truncate">
+                          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
+                            <span className="font-mono font-bold text-brand-600 dark:text-brand-400">
                               {imp.reg_no}
                             </span>
+                            <span>•</span>
+                            <span className="truncate">
+                              {imp.department_code} ({imp.year_level}{!imp.year_level.toLowerCase().includes('year') ? ' Yr' : ''})
+                            </span>
                             {imp.username && (
-                              <span className="text-slate-400 dark:text-slate-500 truncate">
-                                @{imp.username}
-                              </span>
+                              <>
+                                <span>•</span>
+                                <span className="font-mono text-slate-400 truncate">@{imp.username}</span>
+                              </>
                             )}
                           </div>
                         </div>
-
                       </div>
 
-                      {/* Dept & Year Pill */}
-                      <span className="shrink-0 px-2.5 py-1 rounded-xl bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20 font-black text-[10px]">
-                        {imp.department_code} • {imp.year_level}{!imp.year_level.toLowerCase().includes('year') ? ' Year' : ''}
-                      </span>
-                    </div>
-
-                    {/* Solved Stats & Growth Delta Bento */}
-                    <div className="grid grid-cols-2 gap-2.5 bg-slate-50/90 dark:bg-white/[0.03] p-3 rounded-2xl border border-slate-200/70 dark:border-white/[0.06]">
-                      <div className="space-y-0.5">
-                        <div className="text-[10px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400">Total Solved</div>
-                        <div className="font-mono font-black text-lg text-slate-900 dark:text-white">
-                          {imp.total_solved}
-                        </div>
-                      </div>
-                      <div className="space-y-0.5 text-right">
-                        <div className="text-[10px] uppercase font-black tracking-wider text-emerald-600 dark:text-emerald-400">Growth (+Delta)</div>
-                        <div className="inline-flex items-center gap-1 font-mono font-black text-lg text-emerald-600 dark:text-emerald-400">
+                      {/* Growth (+Delta) Floating Pill */}
+                      <div className="shrink-0 text-right">
+                        <span className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-mono font-black text-xs shadow-2xs">
                           {imp.delta_solved > 0 ? (
                             <>
-                              <ArrowUpRight className="w-4 h-4 stroke-[2.2] text-emerald-500" />
+                              <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5] text-emerald-500" />
                               <span>+{imp.delta_solved}</span>
                             </>
                           ) : imp.delta_solved < 0 ? (
@@ -720,30 +738,37 @@ export const GrowthIntelligencePage: React.FC = () => {
                           ) : (
                             <span className="text-slate-400">0</span>
                           )}
-                        </div>
+                        </span>
+                        <span className="block text-[8px] uppercase font-black text-emerald-600/80 dark:text-emerald-400/80 mt-0.5 tracking-wider">
+                          Growth
+                        </span>
                       </div>
                     </div>
 
-                    {/* Difficulty Velocity 3-Pill Grid */}
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-0.5">
-                        <div className="text-[9px] font-black uppercase text-emerald-700 dark:text-emerald-300">Easy</div>
-                        <div className="font-mono font-black text-xs text-emerald-900 dark:text-emerald-100">
-                          {imp.easy_solved} <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">(+{imp.delta_easy})</span>
+                    {/* Compact Metrics Row: Total Solved + Easy + Med + Hard in 1 unified grid */}
+                    <div className="grid grid-cols-4 gap-1.5 bg-slate-50 dark:bg-white/[0.03] p-2 rounded-xl border border-slate-200/70 dark:border-white/[0.06] text-center">
+                      <div className="space-y-0.5 border-r border-slate-200/60 dark:border-white/[0.06] pr-1">
+                        <div className="text-[9px] uppercase font-black text-slate-500 dark:text-slate-400">Total</div>
+                        <div className="font-mono font-black text-xs text-slate-900 dark:text-white">
+                          {imp.total_solved}
                         </div>
                       </div>
-
-                      <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-0.5">
-                        <div className="text-[9px] font-black uppercase text-amber-700 dark:text-amber-300">Medium</div>
-                        <div className="font-mono font-black text-xs text-amber-900 dark:text-amber-100">
-                          {imp.medium_solved} <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">(+{imp.delta_medium})</span>
+                      <div className="space-y-0.5 border-r border-slate-200/60 dark:border-white/[0.06] pr-1">
+                        <div className="text-[9px] uppercase font-black text-emerald-600 dark:text-emerald-400">Easy</div>
+                        <div className="font-mono font-bold text-[11px] text-slate-800 dark:text-slate-200">
+                          {imp.easy_solved} <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-extrabold">(+{imp.delta_easy})</span>
                         </div>
                       </div>
-
-                      <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 space-y-0.5">
-                        <div className="text-[9px] font-black uppercase text-rose-700 dark:text-rose-300">Hard</div>
-                        <div className="font-mono font-black text-xs text-rose-900 dark:text-rose-100">
-                          {imp.hard_solved} <span className="text-[10px] text-rose-600 dark:text-rose-400 font-bold">(+{imp.delta_hard})</span>
+                      <div className="space-y-0.5 border-r border-slate-200/60 dark:border-white/[0.06] pr-1">
+                        <div className="text-[9px] uppercase font-black text-amber-600 dark:text-amber-400">Med</div>
+                        <div className="font-mono font-bold text-[11px] text-slate-800 dark:text-slate-200">
+                          {imp.medium_solved} <span className="text-[9px] text-amber-600 dark:text-amber-400 font-extrabold">(+{imp.delta_medium})</span>
+                        </div>
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="text-[9px] uppercase font-black text-rose-600 dark:text-rose-400">Hard</div>
+                        <div className="font-mono font-bold text-[11px] text-slate-800 dark:text-slate-200">
+                          {imp.hard_solved} <span className="text-[9px] text-rose-600 dark:text-rose-400 font-extrabold">(+{imp.delta_hard})</span>
                         </div>
                       </div>
                     </div>
@@ -752,13 +777,13 @@ export const GrowthIntelligencePage: React.FC = () => {
                     <button
                       type="button"
                       onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
-                      className={`w-full py-2.5 min-h-[42px] text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer touch-manipulation active:scale-[0.98] ${
+                      className={`w-full py-1.5 min-h-[34px] text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer touch-manipulation active:scale-[0.98] ${
                         isExpanded
                           ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20'
                           : 'bg-slate-100 hover:bg-brand-500/10 dark:bg-white/[0.06] dark:hover:bg-brand-500/20 text-slate-800 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-300 border border-slate-200/80 dark:border-white/10'
                       }`}
                     >
-                      <Clock className="w-3.5 h-3.5" />
+                      <Clock className="w-3.5 h-3.5 text-brand-500" />
                       <span>{isExpanded ? 'Close Timeline Drawer' : 'Time Machine Timeline'}</span>
                       {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                     </button>

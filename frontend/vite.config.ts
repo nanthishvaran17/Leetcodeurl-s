@@ -57,7 +57,13 @@ export default defineConfig({
       },
     },
     watch: {
-      ignored: ['**/android/**']
+      ignored: [
+        '**/android/**',
+        '**/*.apk',
+        '**/public/*.apk',
+        '**/.git/**',
+        '**/dist/**',
+      ]
     }
   },
   build: {

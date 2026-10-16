@@ -1250,18 +1250,13 @@ def generate_universal_report(
         sess_id = str(filters.get("session_id") or "latest")
         etag = f'W/"{data_ver}-{canon_code}-{dept}-{yr}-{scope}-{sess_id}"'
 
-        if_none_match = request.headers.get("if-none-match")
-        if if_none_match and if_none_match.strip() == etag:
-            from starlette.responses import Response
-            return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "private, no-cache"})
-
         dataset = build_universal_report(db, config, current_user=current_user)
         dataset = _enrich_dataset_ranks_and_ratings(dataset, db)
 
         import orjson
         json_bytes = orjson.dumps(dataset)
         from starlette.responses import Response
-        return Response(content=json_bytes, media_type="application/json", headers={"ETag": etag, "Cache-Control": "private, no-cache"})
+        return Response(content=json_bytes, media_type="application/json", headers={"ETag": etag, "Cache-Control": "no-cache, no-store, must-revalidate"})
     except HTTPException:
         raise
     except Exception as e:

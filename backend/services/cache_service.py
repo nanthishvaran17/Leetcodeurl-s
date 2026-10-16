@@ -1,7 +1,10 @@
 import json
 import logging
 from typing import Any, Optional, Callable, Dict, List
-import redis
+try:
+    import redis
+except ImportError:
+    redis = None
 from backend.config import settings
 from backend.cache import cache as in_memory_cache
 
@@ -14,11 +17,15 @@ class CacheService:
     without bringing down the application.
     """
     def __init__(self):
-        self._redis_client: Optional[redis.Redis] = None
+        self._redis_client: Optional[Any] = None
         self._is_redis_available: bool = False
         self._initialize_redis()
 
     def _initialize_redis(self):
+        if not redis:
+            logger.info("[CACHE] Redis library not installed. Using in-memory fallback cache.")
+            return
+
         redis_url = getattr(settings, "REDIS_URL", None)
         if not redis_url:
             logger.info("[CACHE] REDIS_URL not configured. Using in-memory fallback cache.")

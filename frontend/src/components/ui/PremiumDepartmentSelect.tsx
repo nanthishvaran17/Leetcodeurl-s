@@ -30,25 +30,36 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
 }) => {
   const { departments, allDepartments, isHodScope, isGlobalAccess } = useDepartments();
 
-  const activeDepts = useMemo(() => {
-    if (showAllDepartments || isGlobalAccess) {
-      return (allDepartments && allDepartments.length > 0) ? allDepartments : departments;
-    }
-    return departments;
-  }, [showAllDepartments, isGlobalAccess, allDepartments, departments]);
+  const isRestrictedHod = isHodScope && !isGlobalAccess;
 
-  // If HOD has scoped departments, auto-select their first department if current value is 'ALL' or invalid
+  const activeDepts = useMemo(() => {
+    let list = departments;
+    if (isRestrictedHod) {
+      list = departments;
+    } else if (showAllDepartments || isGlobalAccess) {
+      list = (allDepartments && allDepartments.length > 0) ? allDepartments : departments;
+    }
+    // Strictly exclude any department with 0 students/stats unless explicitly scoped
+    return list.filter(d => d.student_count === undefined || d.student_count > 0);
+  }, [isRestrictedHod, showAllDepartments, isGlobalAccess, allDepartments, departments]);
+
+  // If HOD has scoped departments, auto-select their first department if single dept, or allow 'ALL' / 'MY_DEPARTMENTS' for multi-dept
   useEffect(() => {
-    if (!showAllDepartments && isHodScope && !isGlobalAccess && activeDepts.length > 0) {
+    if (isRestrictedHod && activeDepts.length > 0) {
       const validValues = activeDepts.map(d => useIdAsValue ? String(d.id || '') : (formatDepartmentCode(d) || d.code));
-      if (selectedDept === 'ALL' || !selectedDept || (!validValues.includes(selectedDept) && selectedDept !== 'MY_DEPARTMENTS')) {
-        const defaultVal = validValues[0];
-        if (defaultVal) {
-          onChange(defaultVal);
+      if (activeDepts.length === 1) {
+        if (selectedDept === 'ALL' || selectedDept === 'MY_DEPARTMENTS' || !validValues.includes(selectedDept)) {
+          onChange(validValues[0]);
+        }
+      } else {
+        // Multi-dept HOD: allow 'ALL' or 'MY_DEPARTMENTS' (combined view of all authorized depts, e.g. 150 + 150 = 300)
+        const isCombined = selectedDept === 'ALL' || selectedDept === 'MY_DEPARTMENTS';
+        if (!selectedDept || (!validValues.includes(selectedDept) && !isCombined)) {
+          onChange('ALL');
         }
       }
     }
-  }, [showAllDepartments, isHodScope, isGlobalAccess, activeDepts, selectedDept, useIdAsValue, onChange]);
+  }, [isRestrictedHod, activeDepts, selectedDept, useIdAsValue, onChange]);
 
   // Options generator strictly respecting HOD scope
   const options = useMemo(() => {
@@ -62,10 +73,10 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
       };
     });
 
-    if (!showAllDepartments && isHodScope && !isGlobalAccess) {
+    if (isRestrictedHod) {
       if (activeDepts.length > 1) {
         return [
-          { value: 'MY_DEPARTMENTS', label: 'All My Authorized Departments', pillText: 'MY DEPTS' },
+          { value: 'ALL', label: 'All My Authorized Departments', pillText: 'ALL' },
           ...deptOpts
         ];
       }
@@ -76,7 +87,7 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
       { value: 'ALL', label: 'All Departments', pillText: 'ALL' },
       ...deptOpts
     ];
-  }, [activeDepts, showAllDepartments, isHodScope, isGlobalAccess, useIdAsValue]);
+  }, [activeDepts, isRestrictedHod, useIdAsValue]);
 
   return (
     <GlobalFilter

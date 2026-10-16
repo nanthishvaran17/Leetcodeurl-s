@@ -58,6 +58,20 @@ def calculate_department_health_score(
     Computes Scoped Coding Health Score (0–100) & KPI counts from real DB records.
     Filters by staff_id, dept_id, year_level, section_id.
     """
+    from backend.services.authorization_service import get_hod_authorized_department_ids
+    role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower() if current_user else ""
+    is_hod = "hod" in role_clean or "head of department" in role_clean or role_clean in ["department hod", "department_hod", "placement coordinator"]
+    is_global = role_clean in ["admin", "super admin", "super_admin", "administrator", "principal", "management", "director"]
+
+    auth_ids = get_hod_authorized_department_ids(db, current_user) if (is_hod and not is_global) else None
+    if auth_ids:
+        if dept_id and dept_id in auth_ids:
+            pass
+        elif dept_id and dept_id not in auth_ids:
+            dept_id = auth_ids[0]
+
+    test_dept_ids = None if (dept_id or auth_ids) else [d.id for d in db.query(Department).all() if not _is_real_dept(d.code)]
+
     base_q = db.query(Student).filter(Student.is_active == True)
 
     if staff_id:
@@ -71,10 +85,10 @@ def calculate_department_health_score(
         )
     if dept_id:
         base_q = base_q.filter(Student.department_id == dept_id)
-    else:
-        test_dept_ids = [d.id for d in db.query(Department).all() if not _is_real_dept(d.code)]
-        if test_dept_ids:
-            base_q = base_q.filter(Student.department_id.notin_(test_dept_ids))
+    elif auth_ids:
+        base_q = base_q.filter(Student.department_id.in_(auth_ids))
+    elif test_dept_ids:
+        base_q = base_q.filter(Student.department_id.notin_(test_dept_ids))
 
     if year_level and year_level != "ALL":
         base_q = base_q.filter(Student.year_level.in_(_year_matches(year_level)))
@@ -107,6 +121,8 @@ def calculate_department_health_score(
         )
     if dept_id:
         stats_q = stats_q.filter(Student.department_id == dept_id)
+    elif auth_ids:
+        stats_q = stats_q.filter(Student.department_id.in_(auth_ids))
     elif test_dept_ids:
         stats_q = stats_q.filter(Student.department_id.notin_(test_dept_ids))
 
@@ -186,13 +202,28 @@ def get_institutional_benchmarks(
     current_user: Optional[User] = None,
     dept_id: Optional[int] = None
 ) -> Dict[str, Any]:
-    if current_user:
-        role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
-        if role_clean in ["hod", "head of department"] and current_user.department_id:
-            dept_id = current_user.department_id
+    from backend.services.authorization_service import get_hod_authorized_department_ids
+    role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower() if current_user else ""
+    is_hod = "hod" in role_clean or "head of department" in role_clean or role_clean in ["department hod", "department_hod", "placement coordinator"]
+    is_global = role_clean in ["admin", "super admin", "super_admin", "administrator", "principal", "management", "director"]
+
+    auth_ids = get_hod_authorized_department_ids(db, current_user) if (is_hod and not is_global) else None
+    if auth_ids:
+        if dept_id and dept_id in auth_ids:
+            pass
+        elif dept_id and dept_id not in auth_ids:
+            dept_id = auth_ids[0]
 
     departments = db.query(Department).all()
-    dept_map = {d.id: d for d in departments if _is_real_dept(d.code)}
+    if auth_ids:
+        if dept_id:
+            dept_map = {d.id: d for d in departments if _is_real_dept(d.code) and d.id == dept_id}
+        else:
+            dept_map = {d.id: d for d in departments if _is_real_dept(d.code) and d.id in auth_ids}
+    elif dept_id:
+        dept_map = {d.id: d for d in departments if _is_real_dept(d.code) and d.id == dept_id}
+    else:
+        dept_map = {d.id: d for d in departments if _is_real_dept(d.code)}
     
     q = db.query(
         Student.id, 
@@ -357,10 +388,17 @@ def calculate_year_matrix(
     current_user: Optional[User] = None,
     dept_id: Optional[int] = None
 ) -> List[Dict[str, Any]]:
-    if current_user:
-        role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
-        if role_clean in ["hod", "head of department"] and current_user.department_id:
-            dept_id = current_user.department_id
+    from backend.services.authorization_service import get_hod_authorized_department_ids
+    role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower() if current_user else ""
+    is_hod = "hod" in role_clean or "head of department" in role_clean or role_clean in ["department hod", "department_hod", "placement coordinator"]
+    is_global = role_clean in ["admin", "super admin", "super_admin", "administrator", "principal", "management", "director"]
+
+    auth_ids = get_hod_authorized_department_ids(db, current_user) if (is_hod and not is_global) else None
+    if auth_ids:
+        if dept_id and dept_id in auth_ids:
+            pass
+        elif dept_id and dept_id not in auth_ids:
+            dept_id = auth_ids[0]
 
     departments = db.query(Department).all()
     dept_map = {d.id: d for d in departments if _is_real_dept(d.code)}
@@ -377,6 +415,8 @@ def calculate_year_matrix(
     )
     if dept_id:
         q = q.filter(Student.department_id == dept_id)
+    elif auth_ids:
+        q = q.filter(Student.department_id.in_(auth_ids))
     else:
         q = q.filter(Student.department_id.in_(dept_map.keys()))
 
@@ -534,12 +574,19 @@ def calculate_department_kpi_summary(
     Returns 6 main KPI metrics + metadata.
     """
     # Force HOD department isolation if current_user is non-admin HOD
-    if current_user:
-        role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
-        if role_clean in ["hod", "head of department"] and current_user.department_id:
-            dept_id = current_user.department_id
+    from backend.services.authorization_service import get_hod_authorized_department_ids
+    role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower() if current_user else ""
+    is_hod = "hod" in role_clean or "head of department" in role_clean or role_clean in ["department hod", "department_hod", "placement coordinator"]
+    is_global = role_clean in ["admin", "super admin", "super_admin", "administrator", "principal", "management", "director"]
 
-    prod_dept_ids = [d.id for d in db.query(Department).all() if _is_real_dept(d.code)]
+    auth_ids = get_hod_authorized_department_ids(db, current_user) if (is_hod and not is_global) else None
+    if auth_ids:
+        if dept_id and dept_id in auth_ids:
+            pass
+        elif dept_id and dept_id not in auth_ids:
+            dept_id = auth_ids[0]
+
+    prod_dept_ids = auth_ids if auth_ids else [d.id for d in db.query(Department).all() if _is_real_dept(d.code)]
 
     # 1. Total Staff in department
     staff_q = db.query(User).filter(
@@ -815,10 +862,17 @@ def get_year_section_heatmap(
     dept_id: Optional[int] = None
 ) -> List[Dict[str, Any]]:
     """Generates Year (I, II, III, IV) x Section performance matrix using DB student records."""
-    if current_user:
-        role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
-        if role_clean in ["hod", "head of department"] and current_user.department_id:
-            dept_id = current_user.department_id
+    from backend.services.authorization_service import get_hod_authorized_department_ids
+    role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower() if current_user else ""
+    is_hod = "hod" in role_clean or "head of department" in role_clean or role_clean in ["department hod", "department_hod", "placement coordinator"]
+    is_global = role_clean in ["admin", "super admin", "super_admin", "administrator", "principal", "management", "director"]
+
+    auth_ids = get_hod_authorized_department_ids(db, current_user) if (is_hod and not is_global) else None
+    if auth_ids:
+        if dept_id and dept_id in auth_ids:
+            pass
+        elif dept_id and dept_id not in auth_ids:
+            dept_id = auth_ids[0]
 
     years_map = [
         ("I", ["1", "I", "1st", "I Year", "1 Year"]),
@@ -833,6 +887,9 @@ def get_year_section_heatmap(
         q = db.query(Student).filter(Student.is_active == True, Student.year_level.in_(y_matches))
         if dept_id:
             q = q.filter(Student.department_id == dept_id)
+        elif auth_ids:
+            q = q.filter(Student.department_id.in_(auth_ids))
+        q = apply_role_based_student_filter(q, current_user, db)
         st_list = q.all()
         tot_st = len(st_list)
 
