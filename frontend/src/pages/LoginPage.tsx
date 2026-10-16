@@ -6,11 +6,12 @@ import {
   Lock, Mail, User, Eye, EyeOff, CheckCircle2, AlertCircle,
   ArrowRight, RefreshCw, HelpCircle, ShieldCheck,
   KeyRound, X, Check, Calendar, Building2, Shield,
-  Cpu, Layers, CheckCircle, ChevronRight, Loader2
+  Cpu, Layers, CheckCircle, ChevronRight, Loader2, Camera
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 import { CollegeLogo } from '../components/CollegeLogo';
+import { FaceScanModal } from '../components/FaceScanModal';
 import api from '../services/api';
 import { isCapacitorNative } from '../config/apiConfig';
 
@@ -161,6 +162,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isShaking, setIsShaking] = useState(false);
+  const [isFaceModalOpen, setIsFaceModalOpen] = useState(false);
 
   // Live Stats State — Dynamically loaded from API / local cache with 593 master fallback
   const [liveStats, setLiveStats] = useState<{
@@ -255,6 +257,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   const triggerShake = () => {
     setIsShaking(true);
     setTimeout(() => setIsShaking(false), 600);
+  };
+
+  const handleFaceLoginSuccess = (data: any) => {
+    setIsFaceModalOpen(false);
+    if (data?.access_token && data?.user) {
+      setSuccessMsg(`Welcome back, ${data?.user?.full_name || data?.user?.username || 'User'}!`);
+      login(data.access_token, data.user);
+      setTimeout(() => {
+        onSuccess();
+      }, 300);
+    }
   };
 
   // Helper to mask email for security display
@@ -1000,6 +1013,45 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
 
                   )}
 
+                  {/* Face ID Biometric Sign In Option */}
+                  <div className="face-biometric-auth-section my-3">
+                    <div className="flex items-center my-3">
+                      <div className="flex-1 border-t border-slate-200/80 dark:border-slate-800" />
+                      <span className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider uppercase">
+                        Or Sign In With Face ID
+                      </span>
+                      <div className="flex-1 border-t border-slate-200/80 dark:border-slate-800" />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setError('');
+                        clearAuthError();
+                        setIsFaceModalOpen(true);
+                      }}
+                      className="w-full py-3 px-3.5 rounded-2xl bg-slate-100/90 hover:bg-slate-200/90 dark:bg-slate-900/80 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-cyan-500/30 hover:border-cyan-500 text-slate-800 dark:text-white flex items-center justify-between transition-all active:scale-[0.99] group cursor-pointer shadow-xs"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-cyan-500/10 dark:bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-600 dark:text-cyan-400 group-hover:scale-105 transition-transform">
+                          <Camera size={19} />
+                        </div>
+                        <div className="text-left">
+                          <div className="text-xs font-bold flex items-center gap-1.5 text-slate-900 dark:text-white">
+                            <span>Sign In with Face ID</span>
+                            <span className="text-[10px] bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 font-bold px-1.5 py-0.5 rounded-full border border-cyan-500/25">
+                              Instant AI
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                            Fast biometric facial recognition login
+                          </p>
+                        </div>
+                      </div>
+                      <ArrowRight size={16} className="text-cyan-600 dark:text-cyan-400 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+
                   {/* Single Institutional Help Row */}
                   <div className="help-card-row">
                     <button
@@ -1330,6 +1382,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         </p>
       </footer>
 
+      {/* Face Scan Modal for Login */}
+      <FaceScanModal
+        isOpen={isFaceModalOpen}
+        mode="login"
+        usernameHint={username.trim() || undefined}
+        onClose={() => setIsFaceModalOpen(false)}
+        onSuccess={handleFaceLoginSuccess}
+      />
 
     </div>
   );

@@ -141,7 +141,7 @@ async def sync_all_students_contests_510_to_523(concurrency: int = 20, min_conte
                 continue
 
             session_id = session.id
-            c_slug = getattr(session, "contest_slug", None) or f"weekly-contest-{c_num}"
+            c_slug = getattr(session, "contest_id", None) or f"weekly-contest-{c_num}"
             c_title = session.contest_name or f"Weekly Contest {c_num}"
             contest_needle = f"Weekly Contest {c_num}"
 
@@ -156,7 +156,7 @@ async def sync_all_students_contests_510_to_523(concurrency: int = 20, min_conte
                 c_history = None
                 for h in hist_list:
                     title = (h.get("contest") or {}).get("title") or ""
-                    if contest_needle.lower() in title.lower() or str(c_num) in title:
+                    if contest_needle.lower() in title.lower() or f"contest {c_num}" in title.lower():
                         c_history = h
                         break
 

@@ -170,6 +170,43 @@ export const StaffManagement: React.FC = () => {
     }
   };
 
+  const getStaffDepartmentBadges = (staff: any): string[] => {
+    // 1. If hod_department_ids has IDs, look up each department code
+    if (Array.isArray(staff.hod_department_ids) && staff.hod_department_ids.length > 0) {
+      const mapped = staff.hod_department_ids
+        .map((did: any) => {
+          const found = departments.find(d => String(d.id) === String(did));
+          if (found) return found.code;
+          if (Number(did) === 1) return 'CSE(CS)';
+          if (Number(did) === 2) return 'CSE(IOT)';
+          if (Number(did) === 3) return 'AIDS';
+          if (Number(did) === 4) return 'IT';
+          return `DEPT-${did}`;
+        })
+        .filter(Boolean);
+      if (mapped.length > 0) return mapped;
+    }
+
+    // 2. If staff.departments is an array
+    if (Array.isArray(staff.departments) && staff.departments.length > 0) {
+      return staff.departments;
+    }
+
+    // 3. If staff.department has slash or comma
+    if (staff.department && (staff.department.includes('/') || staff.department.includes(','))) {
+      return staff.department.split(/[/,]/).map((s: string) => s.trim()).filter(Boolean);
+    }
+
+    // 4. Default fallback to staff.department
+    if (staff.department) return [staff.department];
+
+    // 5. Fallback based on department_id
+    if (Number(staff.department_id) === 1) return ['CSE(CS)'];
+    if (Number(staff.department_id) === 2) return ['CSE(IOT)'];
+
+    return ['INSTITUTIONAL'];
+  };
+
   const filteredStaff = useMemo(() => {
     return staffList.filter((s) => {
       if (roleFilter !== 'ALL') {
@@ -183,9 +220,11 @@ export const StaffManagement: React.FC = () => {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const u = (s.username || '').toLowerCase();
+        const f = (s.full_name || '').toLowerCase();
         const e = (s.email || '').toLowerCase();
         const i = (s.institutional_id || '').toLowerCase();
-        if (!u.includes(q) && !e.includes(q) && !i.includes(q)) return false;
+        const d = (s.department || '').toLowerCase();
+        if (!u.includes(q) && !f.includes(q) && !e.includes(q) && !i.includes(q) && !d.includes(q)) return false;
       }
       return true;
     });
@@ -778,9 +817,31 @@ export const StaffManagement: React.FC = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider border bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 shadow-2xs inline-block">
-                              {staff.department || 'INSTITUTIONAL'}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {getStaffDepartmentBadges(staff).map((deptCode: string, idx: number) => {
+                                const upper = deptCode.toUpperCase();
+                                const isCS = upper.includes('CS') || upper.includes('CYBER');
+                                const isIOT = upper.includes('IOT');
+                                const isAIDS = upper.includes('AIDS') || upper.includes('AI');
+                                
+                                const colorClass = isCS
+                                  ? 'bg-cyan-50 text-cyan-800 border-cyan-300 dark:bg-cyan-950/70 dark:text-cyan-300 dark:border-cyan-800'
+                                  : isIOT
+                                  ? 'bg-indigo-50 text-indigo-800 border-indigo-300 dark:bg-indigo-950/70 dark:text-indigo-300 dark:border-indigo-800'
+                                  : isAIDS
+                                  ? 'bg-purple-50 text-purple-800 border-purple-300 dark:bg-purple-950/70 dark:text-purple-300 dark:border-purple-800'
+                                  : 'bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700';
+
+                                return (
+                                  <span
+                                    key={idx}
+                                    className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider border shadow-2xs inline-block ${colorClass}`}
+                                  >
+                                    {deptCode}
+                                  </span>
+                                );
+                              })}
+                            </div>
                           </td>
                           <td className="px-6 py-4">
                             <span className={`px-2.5 py-1 rounded-lg text-xs font-black border shadow-2xs inline-block ${

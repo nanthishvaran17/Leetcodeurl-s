@@ -162,25 +162,38 @@ class DownloadNotificationService {
         LocalNotifications.addListener('localNotificationActionPerformed', async (action) => {
           console.log('[DownloadNotification] Notification action performed by user:', action);
           const extra = action.notification?.extra || {};
-          const actionId = action.actionId;
+          const rawActionId = String(
+            action.actionId ||
+            (action as any).action ||
+            (action as any).id ||
+            (action.notification as any)?.actionId ||
+            ''
+          ).trim();
+          const lowerActionId = rawActionId.toLowerCase();
 
           const filePath = extra.filePath || extra.localFileUri || '';
           const filename = extra.filename || action.notification?.body || 'report.xlsx';
           const mimeType = extra.mimeType || getMimeTypeFromFilename(filename);
 
-          if (actionId === 'SHARE_FILE') {
-            console.log(`[DownloadNotification] Triggering share for: ${filename}`);
+          const isShareAction = 
+            rawActionId === 'SHARE_FILE' || 
+            lowerActionId === 'share_file' || 
+            lowerActionId === 'share' || 
+            lowerActionId.includes('share');
+
+          if (isShareAction) {
+            console.log(`[DownloadNotification] Triggering share flow for: ${filename} (actionId: ${rawActionId})`);
             try {
               await shareDownloadedDocument(filePath, filename, mimeType);
             } catch (err) {
               console.warn('[DownloadNotification] Share action failed:', err);
             }
-            return; // STRICT RETURN: Do not fall through to openDownloadedDocument!
+            return; // STRICT RETURN: Under NO circumstance fall through to openDownloadedDocument!
           }
 
           // User tapped 'OPEN_EXCEL', 'OPEN_PDF', 'OPEN_WORD', 'OPEN_FILE' OR notification body ('tap')
           if (filePath || filename) {
-            console.log(`[DownloadNotification] Opening ${filename} in document viewer... (action: ${actionId})`);
+            console.log(`[DownloadNotification] Opening ${filename} in document viewer... (action: ${rawActionId})`);
             await openDownloadedDocument(filePath, filename, mimeType);
           }
         });

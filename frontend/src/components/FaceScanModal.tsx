@@ -136,6 +136,32 @@ export const FaceScanModal: React.FC<FaceScanModalProps> = ({
     setFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'));
   };
 
+  const handleManualCapture = () => {
+    if (isProcessing || verifiedSuccess) return;
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    const framesToUse = [...frameDescriptorsRef.current];
+    if (videoRef.current) {
+      const res = extractFaceDescriptor(videoRef.current);
+      if (res && res.descriptor && res.descriptor.length > 0) {
+        framesToUse.push(res.descriptor);
+      }
+    }
+
+    if (framesToUse.length === 0) {
+      setFeedback('No face detected yet. Please center your face in the oval.');
+      beginScanningLoop();
+      return;
+    }
+
+    setScanProgress(100);
+    processFinalDescriptor(framesToUse);
+  };
+
   const beginScanningLoop = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     frameDescriptorsRef.current = [];
@@ -149,19 +175,21 @@ export const FaceScanModal: React.FC<FaceScanModalProps> = ({
 
       if (!res.faceDetected) {
         setFeedback(res.feedback || 'Hold face steadily in center');
-        setScanProgress((prev) => Math.max(0, prev - 15));
         return;
       }
 
-      setFeedback(res.feedback);
+      setFeedback(res.feedback || 'Face detected. Hold still...');
       frameDescriptorsRef.current.push(res.descriptor);
       const currentFrames = frameDescriptorsRef.current.length;
-      const progress = Math.min(100, Math.round((currentFrames / 4) * 100));
+      const progress = Math.min(100, Math.round((currentFrames / 3) * 100));
       setScanProgress(progress);
 
-      // Once 4 clean frames have been captured, average them and execute action
-      if (currentFrames >= 4) {
-        if (intervalRef.current) clearInterval(intervalRef.current);
+      // Once 3 clean frames have been captured, auto-save immediately
+      if (currentFrames >= 3) {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
         processFinalDescriptor(frameDescriptorsRef.current);
       }
     }, 180);
@@ -409,6 +437,34 @@ export const FaceScanModal: React.FC<FaceScanModalProps> = ({
               {verifiedSuccess ? '100%' : `${scanProgress}%`}
             </span>
           </div>
+
+          {/* Action Button: Capture & Save / Verify */}
+          {cameraState === 'active' && !verifiedSuccess && (
+            <button
+              type="button"
+              onClick={handleManualCapture}
+              disabled={isProcessing}
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
+            >
+              {isProcessing ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                  <span>Processing Biometrics...</span>
+                </>
+              ) : (
+                <>
+                  <Camera className="w-4 h-4 text-white" />
+                  <span>
+                    {mode === 'enroll'
+                      ? (frameDescriptorsRef.current.length > 0 ? `Save Face ID Now (${frameDescriptorsRef.current.length}/3)` : 'Capture & Save Face ID')
+                      : mode === 'login'
+                      ? 'Verify & Sign In Now'
+                      : 'Capture & Test Match'}
+                  </span>
+                </>
+              )}
+            </button>
+          )}
 
           <p className="text-[10px] text-slate-500 text-center">
             {mode === 'enroll'

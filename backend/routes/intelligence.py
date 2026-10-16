@@ -7,7 +7,7 @@ Natural Language AI Query, and Alert Center.
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Any, List, Optional, Union
 from pydantic import BaseModel
 import datetime
 
@@ -149,21 +149,28 @@ def get_faculty_kpis_endpoint(
     from backend.services.faculty_action_engine import get_faculty_kpis
     from backend.services.authorization_service import _STAFF_ROLES, _HOD_ROLES, _normalize_role
     role_clean = _normalize_role(current_user)
-    faculty_id = current_user.id if role_clean in _STAFF_ROLES else None
+    raw_fac_id = getattr(current_user, "id", None)
+    faculty_id_val: Optional[int] = int(raw_fac_id) if (role_clean in _STAFF_ROLES and raw_fac_id is not None) else None
     
     clean_dept_id = department_id if isinstance(department_id, int) else (dept_id if isinstance(dept_id, int) else None)
     clean_year = year_level if isinstance(year_level, str) else None
     clean_search = search if isinstance(search, str) else None
-    eff_dept_id = clean_dept_id
+    eff_dept_id: Optional[Union[int, List[int]]] = clean_dept_id
 
-    # HOD: enforce department scope — override any client-supplied dept_id
+    # HOD: enforce department scope against authorized departments
     if role_clean in _HOD_ROLES:
-        if not current_user.department_id:
+        from backend.services.authorization_service import get_hod_authorized_department_ids
+        authorized_ids = get_hod_authorized_department_ids(db, current_user)
+        if not authorized_ids:
             return {"Critical": 0, "High": 0, "Monitoring": 0, "In Progress": 0, "Completed": 0, "Resolved": 0, "Overdue": 0, "Escalated": 0, "total": 0}
-        eff_dept_id = int(current_user.department_id) if current_user.department_id is not None else None
+        if clean_dept_id and clean_dept_id in authorized_ids:
+            eff_dept_id = clean_dept_id
+        elif clean_dept_id:
+            eff_dept_id = authorized_ids[0]
+        else:
+            eff_dept_id = authorized_ids if len(authorized_ids) > 1 else authorized_ids[0]
 
-    dept_id_val = int(eff_dept_id) if eff_dept_id is not None else None
-    faculty_id_val = int(faculty_id) if faculty_id is not None else None
+    dept_id_val: Any = eff_dept_id
     return get_faculty_kpis(db, department_id=dept_id_val, faculty_id=faculty_id_val, year_level=clean_year, search=clean_search)
 
 
@@ -195,7 +202,8 @@ def get_faculty_actions_endpoint(
     from backend.services.faculty_action_engine import get_faculty_actions_list, detect_and_sync_faculty_signals
     from backend.services.authorization_service import _STAFF_ROLES, _HOD_ROLES, _normalize_role
     role_clean = _normalize_role(current_user)
-    faculty_id = current_user.id if role_clean in _STAFF_ROLES else None
+    raw_fac_id = getattr(current_user, "id", None)
+    faculty_id_val: Optional[int] = int(raw_fac_id) if (role_clean in _STAFF_ROLES and raw_fac_id is not None) else None
 
     # Sanitize Query default objects into standard python types
     clean_priority = priority if isinstance(priority, str) else None
@@ -205,20 +213,26 @@ def get_faculty_actions_endpoint(
     clean_search = search if isinstance(search, str) else None
     clean_overdue = is_overdue if isinstance(is_overdue, bool) else None
     clean_escalated = is_escalated if isinstance(is_escalated, bool) else None
-    eff_dept_id = clean_dept_id
+    eff_dept_id: Optional[Union[int, List[int]]] = clean_dept_id
 
-    # HOD: enforce department scope — ignore any client-supplied dept_id
+    # HOD: enforce department scope against authorized departments
     if role_clean in _HOD_ROLES:
-        if not current_user.department_id:
+        from backend.services.authorization_service import get_hod_authorized_department_ids
+        authorized_ids = get_hod_authorized_department_ids(db, current_user)
+        if not authorized_ids:
             # Fail closed — HOD without department sees nothing
             return {"items": [], "total": 0, "page": page, "page_size": page_size, "kpi": {}}
-        eff_dept_id = int(current_user.department_id) if current_user.department_id is not None else None  # always override
+        if clean_dept_id and clean_dept_id in authorized_ids:
+            eff_dept_id = clean_dept_id
+        elif clean_dept_id:
+            eff_dept_id = authorized_ids[0]
+        else:
+            eff_dept_id = authorized_ids if len(authorized_ids) > 1 else authorized_ids[0]
 
     eff_limit = limit if (isinstance(limit, int) and limit > 0) else (page_size if isinstance(page_size, int) else 20)
     eff_offset = offset if isinstance(offset, int) else ((page - 1) * eff_limit if isinstance(page, int) else 0)
 
-    dept_id_val = int(eff_dept_id) if eff_dept_id is not None else None
-    faculty_id_val = int(faculty_id) if faculty_id is not None else None
+    dept_id_val: Any = eff_dept_id
 
     data = get_faculty_actions_list(
         db,

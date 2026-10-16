@@ -312,11 +312,9 @@ export async function shareDownloadedDocument(
     try {
       const { Share } = await import('@capacitor/share');
       let shareUrl: string | undefined = fileUri;
-      if (!shareUrl.startsWith('file:') && !shareUrl.startsWith('http')) {
+      if (shareUrl && !shareUrl.startsWith('file:') && !shareUrl.startsWith('http') && !shareUrl.startsWith('content:')) {
         if (shareUrl.startsWith('/')) {
           shareUrl = `file://${shareUrl}`;
-        } else {
-          shareUrl = undefined;
         }
       }
 

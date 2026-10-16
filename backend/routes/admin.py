@@ -1577,8 +1577,38 @@ def get_all_staff_users(
         except Exception:
             pass
 
-    result = [
-        {
+    dept_lookup = {}
+    try:
+        from backend.models import Department
+        for d in db.query(Department).all():
+            dept_lookup[d.id] = d.code
+    except Exception:
+        pass
+    if not dept_lookup:
+        dept_lookup = {1: "CSE(CS)", 2: "CSE(IOT)", 3: "AIDS", 4: "IT", 5: "ECE", 6: "EEE", 7: "MECH", 8: "CIVIL", 9: "BME", 10: "AGRI", 11: "MCA", 12: "MBA"}
+
+    result = []
+    for s in staff_list:
+        alloc_ids = hod_alloc_map.get(s.id, [])
+        alloc_codes = [dept_lookup.get(did, f"DEPT-{did}") for did in alloc_ids if did]
+        
+        if alloc_codes:
+            dept_display = " / ".join(alloc_codes)
+            all_dept_codes = alloc_codes
+        elif s.department:
+            dept_display = s.department.code
+            all_dept_codes = [s.department.code]
+        elif s.department_id == 1:
+            dept_display = "CSE(CS)"
+            all_dept_codes = ["CSE(CS)"]
+        elif s.department_id == 2:
+            dept_display = "CSE(IOT)"
+            all_dept_codes = ["CSE(IOT)"]
+        else:
+            dept_display = "INSTITUTIONAL"
+            all_dept_codes = ["INSTITUTIONAL"]
+
+        result.append({
             "id": s.id,
             "institutional_id": s.institutional_id or f"NEC-STAFF-{s.id:03d}",
             "full_name": s.full_name or s.username,
@@ -1589,8 +1619,9 @@ def get_all_staff_users(
             "date_of_birth": s.date_of_birth or "",
             "role": s.role,
             "department_id": s.department_id,
-            "hod_department_ids": hod_alloc_map.get(s.id, []),
-            "department": s.department.code if s.department else ("CSE(CS)" if s.department_id == 1 else ("CSE(IOT)" if s.department_id == 2 else "INSTITUTIONAL")),
+            "hod_department_ids": alloc_ids,
+            "departments": all_dept_codes,
+            "department": dept_display,
             "academic_year": s.academic_year or "",
             "mentoring_role": s.mentoring_role or "",
             "is_active": s.is_active,
@@ -1603,9 +1634,7 @@ def get_all_staff_users(
             "last_login_ip": getattr(s, "last_login_ip", None) or ip_map.get(s.id) or "127.0.0.1",
             "last_login_device": getattr(s, "last_login_device", None) or "Web Browser",
             "is_2fa_enabled": bool(getattr(s, "is_2fa_enabled", False))
-        }
-        for s in staff_list
-    ]
+        })
     cache.set(cache_key, result, ttl_seconds=15, tags=["staff_list", "admin"])
     return result
 

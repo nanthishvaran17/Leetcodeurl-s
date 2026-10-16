@@ -101,18 +101,27 @@ public class DocumentOpenerPlugin extends Plugin {
             viewIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
             // Grant read permission explicitly to any apps that can handle this intent (Excel, Sheets, etc.)
-            PackageManager pm = getContext().getPackageManager();
-            List<ResolveInfo> resInfoList = pm.queryIntentActivities(viewIntent, PackageManager.MATCH_DEFAULT_ONLY);
-            for (ResolveInfo resolveInfo : resInfoList) {
-                String packageName = resolveInfo.activityInfo.packageName;
-                getContext().grantUriPermission(packageName, contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            }
+            try {
+                PackageManager pm = getContext().getPackageManager();
+                List<ResolveInfo> resInfoList = pm.queryIntentActivities(viewIntent, PackageManager.MATCH_DEFAULT_ONLY);
+                for (ResolveInfo resolveInfo : resInfoList) {
+                    String packageName = resolveInfo.activityInfo.packageName;
+                    getContext().grantUriPermission(packageName, contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                }
+            } catch (Exception ignored) {}
 
             Intent chooserIntent = Intent.createChooser(viewIntent, "Open " + filename);
             chooserIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                chooserIntent.setClipData(ClipData.newRawUri("", contentUri));
+            }
 
-            getContext().startActivity(chooserIntent);
+            if (getActivity() != null) {
+                getActivity().startActivity(chooserIntent);
+            } else {
+                getContext().startActivity(chooserIntent);
+            }
             call.resolve();
         } catch (Exception e) {
             call.reject("OPEN_FAILED", "Failed to open document: " + e.getMessage());
@@ -202,18 +211,27 @@ public class DocumentOpenerPlugin extends Plugin {
             }
 
             // Grant read permission explicitly to any apps that can handle this share intent
-            PackageManager pm = getContext().getPackageManager();
-            List<ResolveInfo> resInfoList = pm.queryIntentActivities(shareIntent, PackageManager.MATCH_DEFAULT_ONLY);
-            for (ResolveInfo resolveInfo : resInfoList) {
-                String packageName = resolveInfo.activityInfo.packageName;
-                getContext().grantUriPermission(packageName, contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            }
+            try {
+                PackageManager pm = getContext().getPackageManager();
+                List<ResolveInfo> resInfoList = pm.queryIntentActivities(shareIntent, PackageManager.MATCH_DEFAULT_ONLY);
+                for (ResolveInfo resolveInfo : resInfoList) {
+                    String packageName = resolveInfo.activityInfo.packageName;
+                    getContext().grantUriPermission(packageName, contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                }
+            } catch (Exception ignored) {}
 
             Intent chooserIntent = Intent.createChooser(shareIntent, "Share " + filename);
             chooserIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                chooserIntent.setClipData(ClipData.newRawUri("", contentUri));
+            }
 
-            getContext().startActivity(chooserIntent);
+            if (getActivity() != null) {
+                getActivity().startActivity(chooserIntent);
+            } else {
+                getContext().startActivity(chooserIntent);
+            }
             call.resolve();
         } catch (Exception e) {
             call.reject("SHARE_FAILED", "Failed to share document: " + e.getMessage());

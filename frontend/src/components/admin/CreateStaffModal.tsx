@@ -885,7 +885,14 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                                     </span>
                                   )}
                                   <span className={`text-xs font-black truncate block min-w-0 flex-1 ${formData.hod_department_ids.length > 0 ? 'text-indigo-950 dark:text-indigo-100' : 'text-indigo-800 dark:text-indigo-300'}`}>
-                                    {formData.hod_department_ids.length === 0 ? 'Select Departments...' : `Selected`}
+                                    {formData.hod_department_ids.length === 0
+                                      ? 'Select Departments...'
+                                      : formData.hod_department_ids
+                                          .map(id => {
+                                            const found = departmentOptions.find(d => d.value === id);
+                                            return found ? (found.badge || found.label) : `Dept ${id}`;
+                                          })
+                                          .join(', ')}
                                   </span>
                                 </div>
                               </div>

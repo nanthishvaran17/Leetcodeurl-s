@@ -137,9 +137,24 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                 <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-slate-200 text-[10px] font-bold border border-white/15">
                   {staff.role || 'Staff Mentor'}
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-brand-500/25 text-brand-200 text-[10px] font-bold border border-brand-400/30 uppercase">
-                  {staff.department_code || 'FACULTY'}
-                </span>
+                {(() => {
+                  const sAny = staff as any;
+                  let depts: string[] = [];
+                  if (Array.isArray(sAny.departments) && sAny.departments.length > 0) {
+                    depts = sAny.departments;
+                  } else if (sAny.department && (sAny.department.includes('/') || sAny.department.includes(','))) {
+                    depts = sAny.department.split(/[/,]/).map((s: string) => s.trim()).filter(Boolean);
+                  } else if (sAny.department || staff.department_code) {
+                    depts = [sAny.department || staff.department_code];
+                  } else {
+                    depts = ['FACULTY'];
+                  }
+                  return depts.map((d: string, i: number) => (
+                    <span key={i} className="px-2.5 py-0.5 rounded-full bg-brand-500/25 text-brand-200 text-[10px] font-bold border border-brand-400/30 uppercase">
+                      {d}
+                    </span>
+                  ));
+                })()}
                 {staff.is_active ? (
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Active Status

@@ -122,7 +122,7 @@ const CustomSelect: React.FC<{
       </button>
 
       {open && (
-        <div className={`absolute z-50 top-[110%] ${alignRight ? 'right-0' : 'left-0'} w-[240px] sm:min-w-[260px] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up`}>
+        <div className={`absolute z-50 top-[110%] ${alignRight ? 'right-0' : 'left-0'} w-[280px] sm:min-w-[320px] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up`}>
           <button
             onClick={() => { onChange(''); setOpen(false); }}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
@@ -884,18 +884,44 @@ export const FacultyActionCenter: React.FC = () => {
   const [pageSize, setPageSize] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768 ? 10 : 50);
 
   const deptOptions = React.useMemo(() => {
-    const list = (isGlobalAccess && allDepartments.length > 0) ? allDepartments : departments;
-    return list
+    const rawList = (allDepartments && allDepartments.length > 0) ? allDepartments : departments;
+    return rawList
       .filter(d => Boolean(d.id && !d.name.toLowerCase().includes('test') && !d.code.toLowerCase().includes('test')))
-      .map(d => ({
-        label: d.name,
-        value: String(d.id),
-        shortLabel: d.code,
-        icon: <Building2 size={14} />,
-        badge: d.code,
-        badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'
-      }));
-  }, [departments, allDepartments, isGlobalAccess]);
+      .map(d => {
+        const code = (d.code || '').toUpperCase().trim();
+        const name = (d.name || '').trim();
+        const isCS = code === 'CSE(CS)' || code === 'CSE-CS' || name.toLowerCase().includes('cyber');
+        const isIoT = code === 'CSE(IOT)' || code === 'CSE-IOT' || name.toLowerCase().includes('iot');
+        const isIT = code === 'IT' || name.toLowerCase().includes('information technology');
+
+        let displayLabel = name;
+        let shortLabel = code;
+        let badgeColor = 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300';
+
+        if (isCS) {
+          shortLabel = 'Cyber Security';
+          displayLabel = 'Cyber Security — CSE(CS)';
+          badgeColor = 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300 border border-rose-300/40';
+        } else if (isIoT) {
+          shortLabel = 'IoT';
+          displayLabel = 'IoT — CSE(IOT)';
+          badgeColor = 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300 border border-cyan-300/40';
+        } else if (isIT) {
+          shortLabel = 'IT';
+          displayLabel = 'Information Technology — IT';
+          badgeColor = 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-300/40';
+        }
+
+        return {
+          label: displayLabel,
+          value: String(d.id),
+          shortLabel,
+          icon: <Building2 size={14} />,
+          badge: d.code,
+          badgeColor
+        };
+      });
+  }, [departments, allDepartments]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);

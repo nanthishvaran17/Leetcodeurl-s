@@ -1,5 +1,5 @@
-from typing import List, Optional
-from datetime import datetime, timezone
+from typing import List, Optional, Union, Dict, Any
+from datetime import datetime, date, timezone
 from sqlalchemy.orm import Session
 from backend.models import FacultyActionQueueItem as FacultyActionItem, Student, User
 from fastapi import HTTPException
@@ -85,7 +85,10 @@ class FacultyActionEngine:
                 query = query.filter(FacultyActionQueueItem.student_id == -1)
 
         if department_id:
-            query = query.filter(Student.department_id == department_id)
+            if isinstance(department_id, (list, tuple, set)):
+                query = query.filter(Student.department_id.in_(list(department_id)))
+            else:
+                query = query.filter(Student.department_id == department_id)
         if year_level and isinstance(year_level, str) and year_level.upper() not in ["ALL", ""]:
             query = query.filter(Student.year_level == year_level)
         if search and isinstance(search, str) and search.strip():
@@ -110,10 +113,12 @@ class FacultyActionEngine:
 
         for item in items:
             sid = item.student_id
-            p_rank = PRIORITY_RANK.get(item.priority or "Low", 1)
-            existing_rank = PRIORITY_RANK.get((student_priority.get(sid, {}) or {}).get("priority", "Low"), 0)
+            p_val = str(item.priority) if item.priority else "Low"
+            p_rank = PRIORITY_RANK.get(p_val, 1)
+            existing_p = str((student_priority.get(sid, {}) or {}).get("priority", "Low"))
+            existing_rank = PRIORITY_RANK.get(existing_p, 0)
             if p_rank > existing_rank:
-                student_priority[sid] = {"priority": item.priority, "status": item.status}
+                student_priority[sid] = {"priority": p_val, "status": item.status}
             # Track status from the most recent item (highest id = most recently upserted)
             if sid not in student_status:
                 student_status[sid] = item.status
@@ -299,7 +304,10 @@ def get_faculty_actions_list(
     if is_escalated:
         query = query.filter(FacultyActionQueueItem.is_escalated == True)
     if department_id:
-        query = query.filter(Student.department_id == department_id)
+        if isinstance(department_id, (list, tuple, set)):
+            query = query.filter(Student.department_id.in_(list(department_id)))
+        else:
+            query = query.filter(Student.department_id == department_id)
     if year_level and isinstance(year_level, str) and year_level.upper() not in ["ALL", ""]:
         query = query.filter(Student.year_level == year_level)
     if search and isinstance(search, str) and search.strip():
@@ -497,13 +505,13 @@ def update_faculty_action_details(
     action_taken: Optional[str] = None,
     faculty_notes: Optional[str] = None,
     evidence_remarks: Optional[str] = None,
-    follow_up_date: Optional[str] = None,
-    next_review_date: Optional[str] = None,
+    follow_up_date: Optional[Union[str, date, datetime]] = None,
+    next_review_date: Optional[Union[str, date, datetime]] = None,
     user_name: str = "Faculty Mentor",
     faculty_id: Optional[int] = None
 ) -> dict:
     from backend.models import FacultyActionQueueItem, FacultyActionAuditLog
-    from datetime import datetime, timezone
+    from datetime import datetime, date, timezone
 
     item = db.query(FacultyActionQueueItem).filter(FacultyActionQueueItem.id == item_id).first()
     if not item:
@@ -554,15 +562,25 @@ def update_faculty_action_details(
 
     if follow_up_date:
         try:
-            dt = datetime.fromisoformat(follow_up_date)
-            setattr(item, "follow_up_date", dt)
+            if isinstance(follow_up_date, datetime):
+                setattr(item, "follow_up_date", follow_up_date)
+            elif isinstance(follow_up_date, date):
+                setattr(item, "follow_up_date", datetime.combine(follow_up_date, datetime.min.time(), tzinfo=timezone.utc))
+            else:
+                dt = datetime.fromisoformat(follow_up_date)
+                setattr(item, "follow_up_date", dt)
         except Exception:
             pass
 
     if next_review_date:
         try:
-            dt = datetime.fromisoformat(next_review_date)
-            setattr(item, "next_review_date", dt)
+            if isinstance(next_review_date, datetime):
+                setattr(item, "next_review_date", next_review_date)
+            elif isinstance(next_review_date, date):
+                setattr(item, "next_review_date", datetime.combine(next_review_date, datetime.min.time(), tzinfo=timezone.utc))
+            else:
+                dt = datetime.fromisoformat(next_review_date)
+                setattr(item, "next_review_date", dt)
         except Exception:
             pass
 
