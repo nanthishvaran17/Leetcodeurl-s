@@ -691,20 +691,17 @@ async def submission_sweep_job():
 async def friday_0400_rating_rank_sync_job():
     """
     Scheduled for every Friday at 04:00 AM IST (Asia/Kolkata):
-    Automated full synchronization of LeetCode contest ratings, global rankings,
-    contest ranks, and solved metrics for all active students immediately following
-    LeetCode's weekly contest rating update window.
-    Note: start_full_sync_job manages its own GlobalSyncLock.
+    Fast, concurrent official LeetCode contest rating, rank, and solved metrics sync for all students.
+    Immediately updates Student.stats, WeeklyPublicResult, recalculates college badges,
+    clears all backend & Redis caches, and broadcasts refresh to all frontend pages.
     """
-    logger.info("[SCHEDULER] Friday 04:00 AM IST: Automated LeetCode Rating & Rank Sync STARTING...")
-    db = SessionLocal()
+    logger.info("[SCHEDULER] Friday 04:00 AM IST: Fast Official Contest Rating & Solves Sync STARTING...")
     try:
-        res = start_full_sync_job(db, triggered_by="scheduler_friday_0400_rating_rank_sync")
-        logger.info(f"[SCHEDULER] Friday 04:00 AM Rating & Rank Sync Triggered: {res}")
+        from backend.services.friday_rating_sync_service import run_friday_rating_sync
+        res = await run_friday_rating_sync()
+        logger.info(f"[SCHEDULER] Friday 04:00 AM Official Rating & Solves Sync COMPLETED: {res}")
     except Exception as e:
         logger.error(f"[SCHEDULER] Error in friday_0400_rating_rank_sync_job: {e}", exc_info=True)
-    finally:
-        db.close()
 
 
 @with_global_lock('friday_0500_official_rating_sync_job', timeout_minutes=45)
@@ -1133,11 +1130,29 @@ def start_scheduler():
         max_instances=1, coalesce=True, misfire_grace_time=3600
     )
 
+    # Friday 04:30 AM IST — Safety Polling if LeetCode results are slightly delayed
+    scheduler.add_job(
+        friday_0400_rating_rank_sync_job,
+        CronTrigger(day_of_week='fri', hour=4, minute=30, timezone=IST),
+        id='friday_0430_rating_rank_sync',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
+
     # Friday 05:00 AM IST — Official LeetCode Contest Rating & Global Rerank Sync
     scheduler.add_job(
         friday_0500_official_rating_sync_job,
         CronTrigger(day_of_week='fri', hour=5, minute=0, timezone=IST),
         id='friday_0500_official_rating_sync',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
+
+    # Friday 05:30 AM IST — Post-rerank check
+    scheduler.add_job(
+        friday_0400_rating_rank_sync_job,
+        CronTrigger(day_of_week='fri', hour=5, minute=30, timezone=IST),
+        id='friday_0530_rating_rank_sync',
         replace_existing=True,
         max_instances=1, coalesce=True, misfire_grace_time=3600
     )

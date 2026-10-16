@@ -331,9 +331,16 @@ export class LiveEventRouter {
         case 'sync_complete':
         case 'SYNC_COMPLETED':
         case 'IMPORT_COMPLETED':
+        case 'FRIDAY_OFFICIAL_RATINGS_UPDATED':
           shouldInvalidateDashboards = true;
+          shouldInvalidateContests = true;
           this.debouncedInvalidate(['students', 'canonical'], 100);
+          this.debouncedInvalidate(['students'], 100);
           this.debouncedInvalidate(['departments'], 100);
+          this.debouncedInvalidate(['leaderboard'], 100);
+          this.debouncedInvalidate(['contests'], 100);
+          window.dispatchEvent(new Event('refresh_dashboard_summary'));
+          window.dispatchEvent(new Event('refresh_students_data'));
           break;
 
         case 'STAFF_CREATED':
@@ -443,20 +450,33 @@ export class LiveEventRouter {
         this.debouncedInvalidate(['department']);
         break;
         
+      case 'FRIDAY_OFFICIAL_RATINGS_UPDATED':
       case 'SYNC_COMPLETED':
       case 'sync_complete':
-        // Sync is done — force the authoritative refetch from the backend.
-        // When the new data arrives, LeaderboardTable's useEffect will call
-        // studentLiveStore.reconcile(), completing the full pipeline:
-        //   DB → RQ canonical cache → reconcile → live store → filters → UI
-        devLog('SYNC_COMPLETED: forcing canonical refetch for full reconciliation');
+        devLog('SYNC_COMPLETED / FRIDAY_OFFICIAL_RATINGS_UPDATED: forcing canonical refetch for full reconciliation');
         this.queryClient.invalidateQueries({
           queryKey: ['students', 'canonical'],
           refetchType: 'active',
         });
+        this.queryClient.invalidateQueries({
+          queryKey: ['students'],
+          refetchType: 'active',
+        });
+        this.queryClient.invalidateQueries({
+          queryKey: ['leaderboard'],
+          refetchType: 'active',
+        });
+        this.queryClient.invalidateQueries({
+          queryKey: ['contests'],
+          refetchType: 'active',
+        });
         this.debouncedInvalidate(['dashboard', 'summary']);
+        this.debouncedInvalidate(['dashboard']);
+        this.debouncedInvalidate(['contests']);
+        this.debouncedInvalidate(['leaderboard']);
         this.debouncedInvalidate(['sync']);
         window.dispatchEvent(new Event('refresh_dashboard_summary'));
+        window.dispatchEvent(new Event('refresh_students_data'));
         break;
         
       default:
