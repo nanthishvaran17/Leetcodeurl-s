@@ -81,8 +81,10 @@
     },
     "files": [
       "dist/**/*",
+      "!dist/**/*.apk",
       "electron/**/*",
-      "public/**/*",
+      "public/desktop-icon.ico",
+      "public/desktop-icon.png",
       "package.json"
     ],
     "win": {

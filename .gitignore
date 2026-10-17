@@ -73,6 +73,8 @@ Thumbs.db
 # Scratch & Temporary Verification Files
 scratch/
 *.csv
+data/phase_x_*
+phase_x_*
 *.docx
 data/*.db-shm
 data/*.db-wal
@@ -90,10 +92,14 @@ output/*.wav
 output/*.ttf
 output/auth_state.json
 
-# Root-level DB files (SQLite) — never commit
+# Root-level DB files (SQLite) & locks — never commit
 *.db
 *.db-shm
 *.db-wal
+scheduler.lock
+*.lock
+!package-lock.json
+!skills-lock.json
 
 # Root-level generated reports (large files)
 LeetCode_Weekly_Report_*.xlsx
