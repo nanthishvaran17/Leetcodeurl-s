@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0\.."
 echo Building and Starting Frontend in Production Mode...
 echo This will serve the optimized, minified version of the React application.
 cd frontend
