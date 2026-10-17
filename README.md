@@ -134,20 +134,6 @@ Automated Multi-Channel Dispatch: WhatsApp Cloud API, Brevo Mailer, Smart TV Kio
 
 <img src="docs/assets/screenshots/snap_04_hr_candidate_finder.png" alt="HR Candidate Intelligence Finder" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 24px;" />
 
----
-
-### 5. ⚡ Sunday Live Contest AI Command Center & Control Matrix
-*Autonomous live contest tracker, multi-department solve telemetry, real-time question breakdown, and authentic solver verification.*
-
-<img src="docs/assets/screenshots/snap_05_ai_control_matrix.png" alt="Sunday Contest AI Control Matrix" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 24px;" />
-
----
-
-### 6. 📺 Fullscreen Campus Kiosk & Hall of Fame Mode
-*Optimized for 4K Smart TVs in department foyers, college reception, and placement auditoriums with automatic live cycling.*
-
-<img src="docs/assets/screenshots/snap_06_campus_kiosk.png" alt="Fullscreen Campus Kiosk Mode" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 24px;" />
-
 </div>
 
 ---
