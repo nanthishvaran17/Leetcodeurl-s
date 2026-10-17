@@ -264,16 +264,18 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       const reportTargetId = cleanReg ? `CERT-${cleanReg}-FORENSIC` : `CERT-${targetId}-FORENSIC`;
       const filename = `Forensic_Audit_Report_${reportTargetId}.pdf`;
 
-      const filtersPayload: Record<string, any> = { student_id: targetId };
-      if (sessionIdParam) {
-        filtersPayload.session_id = sessionIdParam;
-      }
+      const queryParams = new URLSearchParams();
+      if (cleanReg) queryParams.set('reg', cleanReg);
+      if (targetId) queryParams.set('student_id', String(targetId));
+      if (sessionIdParam) queryParams.set('session_id', String(sessionIdParam));
+      const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
 
-      const dlResult = await downloadManager.downloadJob({
-        report_type: 'CERTIFICATE_FORENSIC_PDF',
-        format: 'pdf',
-        filters: filtersPayload,
+      const downloadEndpoint = `/certificates/${encodeURIComponent(reportTargetId)}/download-forensic-pdf${queryStr}`;
+
+      const dlResult = await downloadManager.download({
+        endpoint: downloadEndpoint,
         filename,
+        mimeType: 'application/pdf',
         onStateChange: (state) => setDownloadState(state)
       });
       if (!dlResult.success) {

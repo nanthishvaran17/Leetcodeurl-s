@@ -76,16 +76,20 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
       const cleanReg = (record.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
       const reportTargetId = cleanReg ? `CERT-${cleanReg}-FORENSIC` : `CERT-${record.student_id}-FORENSIC`;
       const filename = `Forensic_Audit_Report_${reportTargetId}.pdf`;
-      await downloadManager.downloadJob({
-        report_type: 'CERTIFICATE_FORENSIC_PDF',
-        format: 'pdf',
-        filters: {
-          student_id: record.student_id,
-          reg_no: record.reg_no,
-          leetcode_username: record.leetcode_username,
-          session_id: record.session_id || summary?.session_id
-        },
-        filename
+      const sId = record.session_id || summary?.session_id;
+
+      const queryParams = new URLSearchParams();
+      if (cleanReg) queryParams.set('reg', cleanReg);
+      if (record.student_id) queryParams.set('student_id', String(record.student_id));
+      if (sId) queryParams.set('session_id', String(sId));
+      const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+      const downloadEndpoint = `/certificates/${encodeURIComponent(reportTargetId)}/download-forensic-pdf${queryStr}`;
+
+      await downloadManager.download({
+        endpoint: downloadEndpoint,
+        filename,
+        mimeType: 'application/pdf'
       });
       if (window.navigator?.vibrate) window.navigator.vibrate(20);
     } catch (err) {

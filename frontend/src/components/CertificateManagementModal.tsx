@@ -372,11 +372,15 @@ export const CertificateManagementModal: React.FC<{
 
     try {
       const filename = `Forensic_Audit_Report_${idToUse}.pdf`;
-      const res = await downloadManager.downloadJob({
-        report_type: 'CERTIFICATE_FORENSIC_PDF',
-        format: 'pdf',
-        filters: { search: idToUse },
+      const queryParams = new URLSearchParams();
+      if (cleanReg) queryParams.set('reg', cleanReg);
+      const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+      const downloadEndpoint = `/certificates/${encodeURIComponent(idToUse)}/download-forensic-pdf${queryStr}`;
+
+      const res = await downloadManager.download({
+        endpoint: downloadEndpoint,
         filename,
+        mimeType: 'application/pdf',
         onStateChange: (state) => setDownloadState(state)
       });
       if (res.success) {
