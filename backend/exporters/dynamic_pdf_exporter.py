@@ -203,9 +203,10 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
         canvas.restoreState()
 
     # College Branding Logo
-    logo_path = r"E:\Leetcode Web\backend\static\nec_25_logo.png"
+    assets_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets")
+    logo_path = os.path.join(assets_dir, "nec_25_logo.png")
     if not os.path.exists(logo_path):
-        logo_path = r"E:\Leetcode Web\round_logo.png"
+        logo_path = os.path.join(assets_dir, "round_logo.png")
 
     if os.path.exists(logo_path):
         img = Image(logo_path, width=48, height=48)

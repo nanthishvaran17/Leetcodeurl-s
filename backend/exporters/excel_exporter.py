@@ -316,9 +316,10 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
                     "last_week": {}
                 })
 
-    logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "round_logo.png")
+    assets_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets")
+    logo_path = os.path.join(assets_dir, "round_logo.png")
     if not os.path.exists(logo_path):
-        logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "transparent_logo.png")
+        logo_path = os.path.join(assets_dir, "nandha_emblem.png")
 
     # =========================================================================
     # SHEET 1: LEETCODE PERFORMANCE - WEEKLY REPORT (Image 1 Preview Match)

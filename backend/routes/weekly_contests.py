@@ -2928,10 +2928,11 @@ def export_post_930_solvers_excel(
     
     import os
     from openpyxl.drawing.image import Image
-    # Try finding the transparent logo in the root directory
-    logo_path = os.path.join(os.getcwd(), "transparent_logo.png")
+    # Try finding the logo in backend/assets
+    assets_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets")
+    logo_path = os.path.join(assets_dir, "round_logo.png")
     if not os.path.exists(logo_path):
-        logo_path = os.path.join(os.getcwd(), "round_logo.png")
+        logo_path = os.path.join(assets_dir, "nandha_emblem.png")
         
     if os.path.exists(logo_path):
         try:

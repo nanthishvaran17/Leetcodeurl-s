@@ -66,4 +66,4 @@ jobs:
 
       - name: Execute Sunday Automation Runner
         run: |
-          python sunday_automation_complete.py
+          python scripts/sunday_automation_complete.py

@@ -192,13 +192,13 @@ def run_production_verification():
         )
 
         # 12. Sunday Automation Runner
-        sunday_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../sunday_automation_complete.py"))
+        sunday_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../scripts/sunday_automation_complete.py"))
         has_runner = os.path.exists(sunday_script)
         record_check(
             "Sunday Automation",
             "Autopilot Complete Execution Runner",
             "PASS" if has_runner else "FAIL",
-            "sunday_automation_complete.py present with multi-phase pipeline"
+            "scripts/sunday_automation_complete.py present with multi-phase pipeline"
         )
 
         # 13. Audit Logging

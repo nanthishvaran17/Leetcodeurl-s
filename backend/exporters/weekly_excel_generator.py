@@ -122,7 +122,7 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
         ws.row_dimensions[5].height = 22
         
         # Add College Logo (Left)
-        logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "black_white_logo.png")
+        logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "black_white_logo.png")
         if os.path.exists(logo_path):
             img = Image(logo_path)
             img.width = 110

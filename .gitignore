@@ -99,7 +99,8 @@ output/auth_state.json
 scheduler.lock
 *.lock
 !package-lock.json
-!skills-lock.json
+skills-lock.json
+.mcp.json
 
 # Root-level generated reports (large files)
 LeetCode_Weekly_Report_*.xlsx
