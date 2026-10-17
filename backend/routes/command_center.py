@@ -481,22 +481,32 @@ def get_students(
         
     if status_filter and status_filter != "ALL":
         if status_filter in ["INACTIVE", "ZERO_SOLVED", "ZERO", "ZERO_SOLVED_PENDING"]:
-            q = q.outerjoin(LeetCodeProfileStats).filter(or_(LeetCodeProfileStats.id == None, LeetCodeProfileStats.total_solved == 0))
+            q = q.outerjoin(LeetCodeProfileStats).filter(
+                func.coalesce(LeetCodeProfileStats.total_solved, 0) == 0
+            )
         elif status_filter == "ACTIVE":
-            q = q.join(LeetCodeProfileStats).filter(LeetCodeProfileStats.total_solved > 0)
+            q = q.join(LeetCodeProfileStats).filter(
+                func.coalesce(LeetCodeProfileStats.total_solved, 0) > 0
+            )
         elif status_filter == "AT_RISK":
             # Approximation for DB level AT_RISK filtering (0 solved)
-            q = q.outerjoin(LeetCodeProfileStats).filter(or_(LeetCodeProfileStats.id == None, LeetCodeProfileStats.total_solved == 0))
+            q = q.outerjoin(LeetCodeProfileStats).filter(
+                func.coalesce(LeetCodeProfileStats.total_solved, 0) == 0
+            )
         elif status_filter == "IMPROVING":
             # Approximation for DB level IMPROVING filtering
-            q = q.join(LeetCodeProfileStats).filter(LeetCodeProfileStats.total_solved >= 5)
+            q = q.join(LeetCodeProfileStats).filter(
+                func.coalesce(LeetCodeProfileStats.total_solved, 0) >= 5
+            )
         elif status_filter == "COMPLETED":
             # Target Achieved: total_solved >= 10
-            q = q.join(LeetCodeProfileStats).filter(LeetCodeProfileStats.total_solved >= 10)
+            q = q.join(LeetCodeProfileStats).filter(
+                func.coalesce(LeetCodeProfileStats.total_solved, 0) >= 10
+            )
         elif status_filter == "PENDING":
-            # Target In Progress: total_solved < 10
+            # Target In Progress: total_solved < 10 (properly matches 0..9 and NULL/uncalculated)
             q = q.outerjoin(LeetCodeProfileStats).filter(
-                or_(LeetCodeProfileStats.id == None, LeetCodeProfileStats.total_solved < 10)
+                func.coalesce(LeetCodeProfileStats.total_solved, 0) < 10
             )
 
     if search and search.strip():

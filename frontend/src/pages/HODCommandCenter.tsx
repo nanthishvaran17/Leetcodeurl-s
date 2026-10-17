@@ -2287,7 +2287,7 @@ export const HODCommandCenter: React.FC = () => {
         notify.info('Cleared target completed filter. Showing all students.', '', { category: 'ALLOCATION' });
       } else {
         setSelectedStatus('COMPLETED');
-        setAllocationFilter('ALLOCATED');
+        setAllocationFilter((summary?.kpi_summary?.total_allocated ?? 0) === 0 ? 'ALL' : 'ALLOCATED');
         notify.success(`Viewing ${summary?.kpi_summary?.completed ?? 0} students who achieved target (10+ solved).`, '', { category: 'ALLOCATION' });
       }
       document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -2319,7 +2319,7 @@ export const HODCommandCenter: React.FC = () => {
         notify.info('Cleared pending target filter. Showing all students.', '', { category: 'ALLOCATION' });
       } else {
         setSelectedStatus('PENDING');
-        setAllocationFilter('ALLOCATED');
+        setAllocationFilter((summary?.kpi_summary?.total_allocated ?? 0) === 0 ? 'ALL' : 'ALLOCATED');
         notify.warning(`Viewing ${summary?.kpi_summary?.pending ?? 0} students with target in progress (< 10 solved).`, '', { category: 'ALLOCATION' });
       }
       document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
