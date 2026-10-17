@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, Lock, Eye, Database, UserCheck, Search, Printer, Copy, Check, Mail, Code, Cpu, CheckCircle2, Key,
   ShieldAlert, ChevronDown, ChevronRight, Globe, Layers, Filter, HelpCircle, Activity, Layout, Terminal, Scale, 
-  FileText, ArrowRight, Clock, RefreshCw, XCircle, AlertCircle, FileSignature, BookOpen, ShieldCheck
+  FileText, ArrowRight, Clock, RefreshCw, XCircle, AlertCircle, FileSignature, BookOpen, ShieldCheck,
+  Award, Sparkles, Users
 } from 'lucide-react';
 
 interface ContentSection {
@@ -17,11 +18,109 @@ interface ContentSection {
   content: React.ReactNode;
 }
 
-const developerInfo = {
-  name: "Nanthish S",
-  email: "nanthishvaran17@gmail.com",
-  role: "Lead Platform Engineer",
-  institution: "Nandha Engineering College (Autonomous)"
+export interface TeamMember {
+  name: string;
+  role: string;
+  badge: string;
+  badgeGradient: string;
+  image: string;
+  initials: string;
+  desc: string;
+  email?: string;
+  isAdvisor?: boolean;
+  isLead?: boolean;
+  borderColor: string;
+  glowColor: string;
+  department: string;
+}
+
+export const teamMembers: TeamMember[] = [
+  {
+    name: "Dr. S. Prabhu",
+    role: "Head of the Department & Faculty Advisor",
+    badge: "Faculty Advisor",
+    badgeGradient: "from-amber-500 via-yellow-500 to-amber-600 text-white shadow-amber-500/40",
+    image: "/team/hod_dr_s_prabhu.png",
+    initials: "SP",
+    desc: "Department Leadership, Institutional Governance & Academic Direction",
+    department: "CSE (Cyber Security & IoT)",
+    isAdvisor: true,
+    borderColor: "border-amber-500/50 dark:border-amber-400/50",
+    glowColor: "shadow-amber-500/20"
+  },
+  {
+    name: "Mr. Mohammed Affan J A",
+    role: "Security & Forensic Anti-Cheat Lead",
+    badge: "Security Head",
+    badgeGradient: "from-cyan-600 via-teal-500 to-blue-600 text-white shadow-cyan-500/30",
+    image: "/team/security_head_affan.jpg",
+    initials: "MA",
+    desc: "Forensic Contest Verification, Sentinel Guard & Auth Security Architecture",
+    department: "CSE (Cyber Security)",
+    borderColor: "border-cyan-500/40 dark:border-cyan-400/40",
+    glowColor: "shadow-cyan-500/20"
+  },
+  {
+    name: "Mr. S. Nanthish",
+    role: "Lead Platform Engineer & Full-Stack Architect",
+    badge: "Lead Developer",
+    badgeGradient: "from-blue-600 via-indigo-600 to-purple-600 text-white shadow-indigo-500/40",
+    image: "/team/lead_dev_nanthish_s.jpg",
+    initials: "NS",
+    desc: "Core Platform Architecture, Real-Time Telemetry Engine & Contest Engine",
+    email: "nanthishvaran17@gmail.com",
+    department: "CSE (Cyber Security)",
+    isLead: true,
+    borderColor: "border-indigo-500/60 dark:border-indigo-400/60",
+    glowColor: "shadow-indigo-500/30"
+  },
+  {
+    name: "Mr. B. Kavin",
+    role: "Quality Assurance & Testing Lead",
+    badge: "Testing Head",
+    badgeGradient: "from-purple-600 via-fuchsia-500 to-pink-600 text-white shadow-purple-500/30",
+    image: "/team/testing_head_kavin_b.png",
+    initials: "KB",
+    desc: "End-to-End System Testing, Contest Reconciliation & Stress Benchmarking",
+    department: "CSE (Cyber Security)",
+    borderColor: "border-purple-500/40 dark:border-purple-400/40",
+    glowColor: "shadow-purple-500/20"
+  }
+];
+
+export const TeamAvatar: React.FC<{ member: TeamMember; size?: 'sm' | 'md' | 'lg' }> = ({ member, size = 'md' }) => {
+  const [imgError, setImgError] = useState(false);
+
+  const sizeClasses = {
+    sm: "w-12 h-12 text-sm",
+    md: "w-16 h-16 sm:w-20 sm:h-20 text-lg sm:text-xl",
+    lg: "w-20 h-20 sm:w-24 sm:h-24 text-xl sm:text-2xl"
+  }[size];
+
+  return (
+    <div className={`relative ${sizeClasses} rounded-2xl overflow-hidden shrink-0 border-2 ${member.borderColor} ${member.glowColor} shadow-md bg-slate-900 flex items-center justify-center font-black text-white group`}>
+      {!imgError ? (
+        <img 
+          src={member.image} 
+          alt={member.name} 
+          onError={() => setImgError(true)}
+          className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+        />
+      ) : (
+        <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br ${
+          member.isAdvisor 
+            ? 'from-amber-600 to-yellow-800' 
+            : member.isLead 
+            ? 'from-blue-600 to-indigo-900' 
+            : member.badge.includes('Security')
+            ? 'from-cyan-700 to-slate-900'
+            : 'from-purple-700 to-slate-900'
+        } font-black text-white tracking-wider`}>
+          <span>{member.initials}</span>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export const TermsOfServicePage: React.FC = () => {
@@ -140,21 +239,97 @@ export const TermsOfServicePage: React.FC = () => {
     },
     {
       id: 'ip',
-      title: '5. Intellectual Property & Author Credits',
+      title: '5. Intellectual Property & Core Architecture Team',
       icon: Cpu,
-      badge: 'Developed by Nanthish S',
-      badgeGradient: 'from-amber-600 to-yellow-500 text-white shadow-amber-500/30',
-      cardGlow: 'border-amber-500/40 shadow-amber-500/5',
-      summary: 'System authorship credits, institutional ownership, and software protection.',
+      badge: 'Faculty & Engineering Team',
+      badgeGradient: 'from-amber-600 via-indigo-600 to-purple-600 text-white shadow-indigo-500/30',
+      cardGlow: 'border-indigo-500/40 shadow-indigo-500/5',
+      summary: 'Institutional ownership, faculty leadership, and core engineering authorship.',
       content: (
-        <div className="space-y-4 pt-3 border-t border-amber-500/20">
+        <div className="space-y-6 pt-3 border-t border-indigo-500/20">
           <p className="text-slate-800 dark:text-slate-100 font-semibold text-sm sm:text-base leading-relaxed">
-            The architecture, user interface, database schemas, and analytics algorithms of this platform were engineered and authored by <strong className="text-amber-600 dark:text-amber-400 font-black">{developerInfo.name}</strong>.
+            The platform architecture, real-time sync engines, neural telemetry, and security algorithms were engineered and deployed under institutional governance at <strong className="text-indigo-600 dark:text-indigo-400 font-black">Nandha Engineering College (Autonomous)</strong>.
           </p>
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-slate-50 to-white dark:from-amber-950/40 dark:via-navy-900 dark:to-navy-900 border-2 border-amber-500/20 text-xs sm:text-sm font-bold text-slate-900 dark:text-white space-y-2 shadow-sm">
-            <p>• <strong>System Owner:</strong> Nandha Engineering College (Autonomous)</p>
-            <p>• <strong>Lead Platform Engineer:</strong> Nanthish S ({developerInfo.email})</p>
-            <p className="text-slate-700 dark:text-slate-300 font-semibold pt-1">All platform logos, custom intelligence scripts, and analytics dashboards are protected under institutional guidelines.</p>
+
+          {/* Faculty Advisor Spotlight Card */}
+          <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-amber-500/10 via-slate-50 to-white dark:from-amber-950/30 dark:via-navy-900/90 dark:to-navy-950 border-2 border-amber-500/30 dark:border-amber-400/30 shadow-lg relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 relative z-10">
+              <TeamAvatar member={teamMembers[0]} size="lg" />
+              <div className="space-y-1.5 flex-1">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-yellow-600 text-white shadow-sm">
+                  <Award className="w-3.5 h-3.5" />
+                  <span>Faculty Advisor & Institutional Head</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  {teamMembers[0].name}
+                </h3>
+                <p className="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400">
+                  {teamMembers[0].role}
+                </p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                  {teamMembers[0].desc}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Core Engineering Trio Grid */}
+          <div>
+            <div className="flex items-center gap-2 mb-3.5">
+              <Sparkles className="w-4 h-4 text-brand-500" />
+              <h4 className="text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">
+                Core Engineering Trio
+              </h4>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {teamMembers.slice(1).map((member, idx) => (
+                <div 
+                  key={idx}
+                  className={`p-4 sm:p-5 rounded-2xl bg-white/80 dark:bg-navy-900/80 border-2 ${member.borderColor} ${member.glowColor} shadow-md flex flex-col justify-between gap-4 transition-all duration-300 hover:translate-y-[-2px] relative overflow-hidden`}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <TeamAvatar member={member} size="md" />
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r ${member.badgeGradient}`}>
+                        {member.badge}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="font-black text-slate-900 dark:text-white text-base sm:text-lg">
+                        {member.name}
+                      </h4>
+                      <p className="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 mt-0.5">
+                        {member.role}
+                      </p>
+                    </div>
+
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                      {member.desc}
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-200 dark:border-navy-700/60 flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    <span>{member.department}</span>
+                    {member.email && (
+                      <a 
+                        href={`mailto:${member.email}`} 
+                        className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline inline-flex items-center gap-1"
+                      >
+                        <Mail className="w-3 h-3" />
+                        <span>Contact</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/5 via-slate-50 to-white dark:from-indigo-950/30 dark:via-navy-900 dark:to-navy-900 border border-slate-200 dark:border-navy-700 text-xs text-slate-700 dark:text-slate-300 font-medium">
+            <p>• <strong>System Ownership:</strong> Nandha Engineering College (Autonomous), Department of CSE (Cyber Security & IoT).</p>
+            <p className="pt-1">• All proprietary algorithms, scrapers, telemetry logs, and student performance datasets are protected intellectual property.</p>
           </div>
         </div>
       )
@@ -163,35 +338,74 @@ export const TermsOfServicePage: React.FC = () => {
       id: 'contact',
       title: '6. Governance & Support Inquiries',
       icon: Mail,
-      badge: 'Developer Reachout',
+      badge: 'Official Desk Directory',
       badgeGradient: 'from-rose-600 to-orange-500 text-white shadow-rose-500/30',
       cardGlow: 'border-rose-500/40 shadow-rose-500/5',
-      summary: 'Direct developer contact desk, handle verification support, and escalations.',
+      summary: 'Direct support channels for handle corrections, security reports, and technical queries.',
       content: (
-        <div className="space-y-4 pt-3 border-t border-rose-500/20">
+        <div className="space-y-5 pt-3 border-t border-rose-500/20">
           <p className="text-slate-800 dark:text-slate-100 font-semibold text-sm sm:text-base leading-relaxed">
-            For terms clarification, handle corrections, or technical support, contact Lead Developer <strong className="text-rose-600 dark:text-rose-400 font-black">{developerInfo.name}</strong> or the Department HOD desk.
+            For operational inquiries, LeetCode handle corrections, contest escalations, or security reports, reach out to the designated team desk:
           </p>
           
-          <div className="p-6 rounded-3xl bg-gradient-to-br from-slate-950 via-navy-950 to-indigo-950 text-white border-2 border-indigo-500/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-2xl relative overflow-hidden">
-            <div className="flex items-center gap-4 relative z-10">
-              <div className="w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-2xl shadow-xl border-2 border-white/20">
-                NS
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Lead Developer Card */}
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-navy-950 to-indigo-950 text-white border-2 border-indigo-500/50 shadow-xl flex flex-col justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <TeamAvatar member={teamMembers[2]} size="md" />
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-indigo-300">Technical Desk</span>
+                  <h4 className="font-black text-white text-base sm:text-lg">{teamMembers[2].name}</h4>
+                  <p className="text-xs text-slate-300">{teamMembers[2].role}</p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-black text-white text-lg sm:text-xl">{developerInfo.name}</h4>
-                <p className="text-xs sm:text-sm text-indigo-300 font-black">{developerInfo.role}</p>
-                <p className="text-xs font-semibold text-slate-300">{developerInfo.institution}</p>
+              <a 
+                href={`mailto:${teamMembers[2].email}`}
+                className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-black text-xs rounded-xl shadow-lg shadow-indigo-500/30 transition-all border border-white/20"
+              >
+                <Mail className="w-4 h-4" />
+                <span>{teamMembers[2].email}</span>
+              </a>
+            </div>
+
+            {/* Faculty Advisor Desk */}
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-navy-950 to-amber-950 text-white border-2 border-amber-500/50 shadow-xl flex flex-col justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <TeamAvatar member={teamMembers[0]} size="md" />
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-300">Institutional Governance</span>
+                  <h4 className="font-black text-white text-base sm:text-lg">{teamMembers[0].name}</h4>
+                  <p className="text-xs text-slate-300">{teamMembers[0].role}</p>
+                </div>
+              </div>
+              <div className="py-2.5 px-4 bg-amber-500/20 rounded-xl text-center text-xs font-bold text-amber-200 border border-amber-500/30">
+                Department of CSE (Cyber Security & IoT)
               </div>
             </div>
 
-            <a 
-              href={`mailto:${developerInfo.email}`} 
-              className="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-black text-xs sm:text-sm rounded-2xl shadow-xl shadow-indigo-500/30 transition-all shrink-0 border border-white/20 relative z-10"
-            >
-              <Mail className="w-5 h-5 text-white" />
-              <span>nanthishvaran17@gmail.com</span>
-            </a>
+            {/* Security Desk */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-navy-900 border-2 border-cyan-500/40 shadow-sm flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <TeamAvatar member={teamMembers[1]} size="sm" />
+                <div>
+                  <span className="text-[10px] font-bold uppercase text-cyan-600 dark:text-cyan-400">Security & Anti-Cheat</span>
+                  <h4 className="font-black text-slate-900 dark:text-white text-xs sm:text-sm">{teamMembers[1].name}</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{teamMembers[1].role}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testing & QA Desk */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-navy-900 border-2 border-purple-500/40 shadow-sm flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <TeamAvatar member={teamMembers[3]} size="sm" />
+                <div>
+                  <span className="text-[10px] font-bold uppercase text-purple-600 dark:text-purple-400">Quality & Validation</span>
+                  <h4 className="font-black text-slate-900 dark:text-white text-xs sm:text-sm">{teamMembers[3].name}</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{teamMembers[3].role}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )
@@ -226,7 +440,7 @@ export const TermsOfServicePage: React.FC = () => {
           className="absolute w-[600px] h-[600px] rounded-full bg-purple-500/5 dark:bg-purple-500/10 blur-[100px] transition-transform duration-700 ease-out"
           style={{ transform: `translate(${mousePosition.x - 300}px, ${mousePosition.y - 300}px)` }}
         />
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.015] dark:opacity-[0.03] mix-blend-overlay" />
+        <div className="absolute inset-0 bg-transparent opacity-[0.015] dark:opacity-[0.03] mix-blend-overlay" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
