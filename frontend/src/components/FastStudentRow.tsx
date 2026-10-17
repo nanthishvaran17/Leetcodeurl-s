@@ -187,8 +187,8 @@ export const FastStudentRow = memo(({
           {/* Student Identity */}
           <div className="flex flex-col min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-black text-sm text-slate-900 dark:text-white truncate">
-                {student.name}
+              <span className="font-black text-sm text-slate-900 dark:text-white truncate uppercase">
+                {(student.name || '').toUpperCase()}
               </span>
               <div className="shrink-0">
                 {isSolver ? getRankBadge(effectiveCollegeRank) : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-500">Unranked</span>}
@@ -288,8 +288,8 @@ export const FastStudentRow = memo(({
               {student.name.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1 truncate">
-              <p className="font-black text-sm text-slate-900 dark:text-white truncate group-hover/btn:text-brand-600 dark:group-hover/btn:text-brand-400 transition-colors">
-                {student.name}
+              <p className="font-black text-sm text-slate-900 dark:text-white truncate uppercase group-hover/btn:text-brand-600 dark:group-hover/btn:text-brand-400 transition-colors">
+                {(student.name || '').toUpperCase()}
               </p>
             </div>
           </button>

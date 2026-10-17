@@ -446,10 +446,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         className="relative w-full max-w-2xl bg-white dark:bg-navy-950 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-navy-700 flex flex-col max-h-[80vh]"
       >
         {/* Search Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 bg-slate-50/70 dark:bg-navy-900/60 backdrop-blur-md">
+        <div className="p-5 sm:p-6 pb-4 sm:pb-5 border-b border-slate-100 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-900/70 backdrop-blur-md">
           <div className="relative group w-full">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center">
-              <Search className="w-5 h-5 text-brand-500 dark:text-brand-400 group-focus-within:scale-110 transition-transform" />
+            <div className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-3">
+              <Search className="w-5 h-5 text-brand-500 dark:text-brand-400 group-focus-within:scale-110 transition-transform shrink-0" />
+              <div className="w-[1.5px] h-5 bg-slate-200 dark:border-white/10 dark:bg-navy-700 shrink-0" />
             </div>
             <input
               ref={inputRef}
@@ -458,7 +459,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
-              className="w-full h-13 sm:h-14 pl-12 pr-28 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white placeholder-slate-400 text-sm sm:text-base font-semibold shadow-inner outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 transition-all"
+              className="w-full h-12 sm:h-14 pl-[60px] sm:pl-[68px] pr-28 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white placeholder-slate-400 text-sm sm:text-base font-semibold shadow-inner outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 transition-all"
               placeholder="Search commands, students (e.g. 732224CC031), pages..."
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -482,13 +483,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           </div>
 
           {/* Category Filter Chips */}
-          <div className="flex items-center gap-2 mt-3.5 pt-2.5 border-t border-slate-200/60 dark:border-navy-800/80 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-2 mt-4 pt-3.5 border-t border-slate-200/60 dark:border-navy-800/80 overflow-x-auto no-scrollbar">
             {(['All', 'AI', 'Commands', 'Students', 'Actions'] as const).map(cat => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => setActiveCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                   activeCategory === cat
                     ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
                     : 'bg-white dark:bg-navy-950 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200/80 dark:border-navy-700'
@@ -507,7 +508,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </div>
 
         {/* Results List */}
-        <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar" ref={listRef}>
+        <div className="flex-1 overflow-y-auto p-2.5 sm:p-3.5 space-y-1.5 custom-scrollbar" ref={listRef}>
           {filteredItems.length === 0 ? (
             <div className="p-10 text-center text-slate-400 dark:text-slate-500">
               <p className="text-sm font-medium">No commands or records found for "{search}"</p>

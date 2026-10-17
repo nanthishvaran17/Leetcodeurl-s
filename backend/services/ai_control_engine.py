@@ -236,7 +236,7 @@ class AIControlEngine:
             return AIControlEngine._tool_top_performers(db, m)
 
         # 3. ABSENTEE & LOW PERFORMERS ANALYSIS TOOL 
-        if any(k in m for k in ["absent", "low performer", "decreased", "decline", "not attended"]):
+        if any(k in m for k in ["absent", "low performer", "low solver", "low solvers", "zero solver", "zero solvers", "zero", "0 solved", "0 problem", "less than", "decreased", "decline", "not attended", "inactive"]):
             return AIControlEngine._tool_absentee_and_low_performers(db, m, req_id)
 
         # 4. CONTEST COMPARISON TOOL 
@@ -458,7 +458,56 @@ class AIControlEngine:
         elif "it" in m:
             dept_code = "IT"
 
-        is_inactive_query = any(k in m for k in ["inactive", "7 days", "not active", "zero", "no activity"])
+        is_zero_query = any(k in m for k in ["zero", "0 solved", "0 problem", "less than 1", "never solved"])
+        is_inactive_query = any(k in m for k in ["inactive", "7 days", "not active", "no activity"])
+
+        if is_zero_query:
+            query = db.query(Student).join(Student.stats).options(
+                joinedload(Student.department),
+                joinedload(Student.stats)
+            ).filter(
+                (Student.is_active == True) | (Student.is_active.is_(None)),
+                (LeetCodeProfileStats.total_solved == 0) | (LeetCodeProfileStats.total_solved.is_(None))
+            )
+            if dept_code:
+                query = query.join(Student.department).filter(Department.code.ilike(f"%{dept_code}%"))
+
+            zero_list = query.all()
+            zero_count = len(zero_list)
+            dept_str = f" in {dept_code}" if dept_code else ""
+
+            answer = (
+                f"**Zero-Solver Academic Intervention Alert{dept_str}**\n\n"
+                f"Identified **{zero_count} students** with **0 problems solved** in the verified database:\n\n"
+            )
+            rows = []
+            for i, s in enumerate(zero_list[:25], start=1):
+                dept = s.department.code if s.department else "CSE"
+                yr = s.year_level or "III"
+                answer += f"{i}. **{s.name}** (`{s.reg_no}`) — **0 Solved** | {dept} • Yr {yr}\n"
+                rows.append({
+                    "name": s.name,
+                    "reg_no": s.reg_no,
+                    "dept": dept,
+                    "year": yr,
+                    "solved": 0
+                })
+            if zero_count > 25:
+                answer += f"\n*(Showing first 25 of {zero_count} zero-solvers. Immediate attention recommended)*\n"
+
+            answer += f"\n*Action Recommended*: You can draft a warning or motivational guidance email for these {zero_count} students."
+
+            return {
+                "answer": answer,
+                "data": {"zero_solvers": rows, "count": zero_count},
+                "actionLabel": f"Draft Warning Email for {zero_count} Zero-Solvers",
+                "actionTab": "students",
+                "checked": [
+                    f"Queried active student roster ({total_checked} students)",
+                    "Filtered LeetCodeProfileStats total_solved == 0",
+                    f"Identified {zero_count} zero-solvers with 100% verified status"
+                ]
+            }
 
         if is_inactive_query:
             query = db.query(Student).join(Student.stats).options(

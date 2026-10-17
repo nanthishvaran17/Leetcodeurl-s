@@ -878,8 +878,8 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 {/* Name + meta */}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <h2 className="text-base sm:text-xl font-black text-white leading-tight truncate">
-                      {viewingStudent.name}
+                    <h2 className="text-base sm:text-xl font-black text-white leading-tight truncate uppercase">
+                      {(viewingStudent.name || '').toUpperCase()}
                     </h2>
                     {viewingStudent.college_rank && (
                       <span className="shrink-0 px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-400 text-amber-950 shadow-sm">

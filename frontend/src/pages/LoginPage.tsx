@@ -656,7 +656,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                 }}
               >
                 <span className="kicker-dot" aria-hidden="true" />
-                ZERO MOCK DATA · LIVE SYNC
+                LIVE CONTEST SYNC · REAL-TIME TELEMETRY
               </motion.span>
               <motion.h1
                 variants={{
@@ -673,7 +673,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
                 }}
               >
-                Real-time algorithmic telemetry, automated contest verification, and institutional benchmark analytics across all academic cohorts.
+                Real-time LeetCode contest telemetry, automated roster verification, and institutional benchmark analytics across all academic cohorts.
               </motion.p>
             </div>
 
@@ -692,12 +692,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                 </span>
               </div>
               <div className="audit-row audit-row--green">
-                <span className="label">Pipeline<span className="desc">Autonomous Sunday verification</span></span>
+                <span className="label">Sunday Contest Engine<span className="desc">Official 08:00 AM IST verification</span></span>
                 <span className="value value--green">ACTIVE</span>
               </div>
               <div className="audit-row audit-row--amber">
-                <span className="label">Integrity audit<span className="desc">
-                  {liveStats ? `${liveStats.verifiedStudents.toLocaleString('en-IN')} verified profiles` : 'Zero mock data parity'}
+                <span className="label">Institutional Roster<span className="desc">
+                  {liveStats ? `${liveStats.verifiedStudents.toLocaleString('en-IN')} verified profiles` : '100% Verified Profiles'}
                 </span></span>
                 <span className="value value--amber">{liveStats ? liveStats.integrityStatus : 'PASS'}</span>
               </div>

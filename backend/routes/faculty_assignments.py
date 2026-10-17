@@ -714,6 +714,27 @@ def create_student_note(
     db.commit()
     db.refresh(new_note)
 
+    # If note is escalated, notify HOD & Admin immediately
+    if (payload.escalation_level or "").upper() in ("HIGH", "CRITICAL", "ESCALATED", "URGENT"):
+        try:
+            from backend.services.notification_service import NotificationService
+            st = db.query(Student).filter(Student.id == payload.student_id).first()
+            st_name = st.name if st else "Student"
+            staff_name = getattr(current_user, "full_name", None) or current_user.username or "Faculty"
+            NotificationService.emit_event(
+                event_type="URGENT_ANNOUNCEMENT",
+                title=f"Student Escalation: {st_name}",
+                body=f"Dear HOD/Admin, Faculty {staff_name} escalated a case for student {st_name} ({payload.escalation_level}): \"{payload.note[:70]}\"",
+                actor_user_id=f"STAFF_{current_user.id}",
+                recipient_scope="ROLE",
+                recipient_target="HOD",
+                route="/faculty/action-center",
+                priority="high",
+                metadata={"student_id": payload.student_id, "note_id": new_note.id, "escalated_by": staff_name}
+            )
+        except Exception as notif_err:
+            logger.warning(f"[NOTE_ESCALATION_NOTIF] Failed: {notif_err}")
+
     return {
         "success": True,
         "note": {
@@ -826,6 +847,27 @@ def update_staff_follow_up(
         follow_up.completed_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore
 
     db.commit()
+
+    if payload.status.upper() == "COMPLETED":
+        try:
+            from backend.services.notification_service import NotificationService
+            st = db.query(Student).filter(Student.id == follow_up.student_id).first()
+            st_name = st.name if st else "Student"
+            staff_name = getattr(current_user, "full_name", None) or current_user.username or "Faculty"
+            NotificationService.emit_event(
+                event_type="ASSIGNMENT_COMPLETED",
+                title=f"Task Completed: {follow_up.title}",
+                body=f"Dear HOD/Admin, Faculty {staff_name} marked follow-up task '{follow_up.title}' as COMPLETED today for {st_name}.",
+                actor_user_id=f"STAFF_{current_user.id}",
+                recipient_scope="ROLE",
+                recipient_target="HOD",
+                route="/faculty/action-center",
+                priority="high",
+                metadata={"follow_up_id": follow_up_id, "student_id": follow_up.student_id, "status": "COMPLETED", "resolved_by": staff_name}
+            )
+        except Exception as notif_err:
+            logger.warning(f"[FOLLOW_UP_COMPLETED_NOTIF] Failed: {notif_err}")
+
     return {"success": True, "message": f"Follow-up status updated to {follow_up.status}."}
 
 

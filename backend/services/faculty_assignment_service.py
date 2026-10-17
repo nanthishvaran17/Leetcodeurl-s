@@ -243,6 +243,39 @@ class FacultyAssignmentService:
                     f"[FACULTY_ASSIGNMENT_EMAIL] Skipped — prerequisites not met: {', '.join(missing)}"
                 )
 
+            # Emit Real-time & Mobile FCM Push Notification to Faculty
+            try:
+                from backend.services.notification_service import NotificationService
+                assigner_name = assigner.full_name or assigner.username if assigner else "Administrator"
+                faculty_display_name = getattr(faculty, "full_name", None) or faculty.username or "Faculty"
+                
+                # Sample of student names for rich Swiggy-like preview
+                student_sample = ", ".join([s["name"] for s in students_allocated_data[:3]])
+                extra_cnt = len(students_allocated_data) - 3
+                sample_suffix = f" ({student_sample}{f' +{extra_cnt} more' if extra_cnt > 0 else ''})" if student_sample else ""
+
+                NotificationService.emit_event(
+                    event_type="ASSIGNMENT_CREATED",
+                    title=f"Allocation: {assigner_name}",
+                    body=f"Dear {faculty_display_name}, {len(new_ids)} student(s){sample_suffix} have been allocated to your mentoring portfolio by {assigner_name}.",
+                    actor_user_id=f"STAFF_{assigned_by_id}" if assigned_by_id else "SYSTEM",
+                    recipient_scope="INDIVIDUAL",
+                    recipient_target=f"STAFF_{faculty_id}",
+                    route="/faculty/action-center",
+                    priority="high",
+                    metadata={
+                        "action": "ALLOCATION",
+                        "faculty_id": faculty_id,
+                        "faculty_name": faculty_display_name,
+                        "assigned_by": assigner_name,
+                        "assigned_count": len(new_ids),
+                        "reassigned_count": reassigned_count,
+                        "total_assigned": new_total
+                    }
+                )
+            except Exception as notif_err:
+                logger.warning(f"[FACULTY_ASSIGNMENT_NOTIF] Push notification failed: {notif_err}")
+
             # Determine informational workload status
             if new_total < RECOMMENDED_FACULTY_STUDENT_RATIO:
                 workload_status = "NORMAL"
@@ -325,6 +358,31 @@ class FacultyAssignmentService:
                     faculty_name=faculty.username,  # type: ignore
                     students=students_unallocated_data
                 )
+
+        # Emit Real-time & Mobile FCM Push Notification
+        try:
+            from backend.services.notification_service import NotificationService
+            faculty = db.query(User).filter(User.id == faculty_id).first()
+            faculty_display_name = getattr(faculty, "full_name", None) or (faculty.username if faculty else "Faculty")
+            NotificationService.emit_event(
+                event_type="ASSIGNMENT_UPDATED",
+                title="Portfolio Updated",
+                body=f"Dear {faculty_display_name}, {deleted} student(s) unassigned from your mentoring portfolio. You currently have {remaining} active mentee(s).",
+                actor_user_id="SYSTEM",
+                recipient_scope="INDIVIDUAL",
+                recipient_target=f"STAFF_{faculty_id}",
+                route="/faculty/action-center",
+                priority="high",
+                metadata={
+                    "action": "UNALLOCATION",
+                    "faculty_id": faculty_id,
+                    "faculty_name": faculty_display_name,
+                    "unassigned_count": deleted,
+                    "remaining_assigned": remaining
+                }
+            )
+        except Exception as notif_err:
+            logger.warning(f"[FACULTY_UNASSIGNMENT_NOTIF] Push notification failed: {notif_err}")
 
         return {
             "success": True,
@@ -426,6 +484,36 @@ class FacultyAssignmentService:
             total_allocated += 1
 
         db.commit()
+
+        # Emit Real-time & Mobile FCM Push Notifications to all recipient faculty
+        try:
+            from backend.services.notification_service import NotificationService
+            assigner = db.query(User).filter(User.id == assigned_by_id).first() if assigned_by_id else None
+            assigner_name = assigner.full_name or assigner.username if assigner else "Administration"
+            for fc in eligible_faculty:
+                assigned_count = len(fc.get("assigned", []))
+                if assigned_count > 0:
+                    fac_user = fc["faculty"]
+                    fac_name = getattr(fac_user, "full_name", None) or fac_user.username or "Faculty"
+                    NotificationService.emit_event(
+                        event_type="ASSIGNMENT_CREATED",
+                        title=f"Auto-Allocation: {assigner_name}",
+                        body=f"Dear {fac_name}, {assigned_count} student(s) auto-allocated to your mentoring portfolio by {assigner_name}. Total assigned: {fc['current']}.",
+                        actor_user_id=f"STAFF_{assigned_by_id}" if assigned_by_id else "SYSTEM",
+                        recipient_scope="INDIVIDUAL",
+                        recipient_target=f"STAFF_{fac_user.id}",
+                        route="/faculty/action-center",
+                        priority="high",
+                        metadata={
+                            "action": "AUTO_DISTRIBUTE",
+                            "faculty_id": fac_user.id,
+                            "faculty_name": fac_name,
+                            "allocated_count": assigned_count,
+                            "total_now": fc["current"]
+                        }
+                    )
+        except Exception as notif_err:
+            logger.warning(f"[AUTO_DISTRIBUTE_NOTIF] Push notifications failed: {notif_err}")
 
         return {
             "success": True,

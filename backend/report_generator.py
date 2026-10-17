@@ -207,8 +207,8 @@ class CollegeReportGenerator:
 
             rows.append({
                 "S.No": idx,
-                "Register No": p.get("reg_no", ""),
-                "Student Name": p.get("name", ""),
+                "Register No": str(p.get("reg_no") or "").strip().upper(),
+                "Student Name": str(p.get("name") or "").strip().upper(),
                 "Dept": p.get("dept_code", "CSE"),
                 "Year": p.get("year_level", ""),
                 "Status": status_display,

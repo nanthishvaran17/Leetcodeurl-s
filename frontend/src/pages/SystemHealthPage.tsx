@@ -1133,7 +1133,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white">DATA INTEGRITY COMMAND CENTER</h3>
-              <p className="text-xs text-slate-500">Live Institutional Verification Engine (Zero Mock Data • Sentinel Guard Active)</p>
+              <p className="text-xs text-slate-500">Live Institutional Verification Engine (Sentinel Guard Active • Production Roster)</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">

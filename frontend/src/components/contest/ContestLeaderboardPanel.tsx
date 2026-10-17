@@ -233,9 +233,9 @@ export const ContestLeaderboardPanel: React.FC<ContestLeaderboardPanelProps> = (
         </div>
       )}
 
-      {/* Table */}
+      {/* Desktop Table (Hidden on Mobile) */}
       {!loading && displayEntries.length > 0 && (
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-xs border-separate border-spacing-y-0.5">
             <thead>
               <tr className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
@@ -292,6 +292,85 @@ export const ContestLeaderboardPanel: React.FC<ContestLeaderboardPanelProps> = (
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Mobile Card Feed (Zero Horizontal Scrolling on Mobile) */}
+      {!loading && displayEntries.length > 0 && (
+        <div className="block md:hidden space-y-2">
+          {displayEntries.map(e => (
+            <div 
+              key={`m-${e.rank}-${e.regNo}`}
+              className={`p-3 rounded-2xl border transition-all duration-150 flex flex-col gap-2 ${
+                e.rank <= 3 
+                  ? 'bg-amber-500/[0.04] dark:bg-amber-500/[0.05] border-amber-500/30 shadow-xs' 
+                  : 'bg-slate-50/80 dark:bg-navy-950/60 border-slate-200/80 dark:border-white/10'
+              }`}
+            >
+              {/* Card Header: Rank + Student Name + LC Rank */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="shrink-0 flex items-center justify-center w-7 h-7 rounded-xl bg-white dark:bg-navy-900 border border-slate-200/80 dark:border-white/10 shadow-2xs">
+                    <MedalIcon rank={e.rank} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="font-extrabold text-xs text-slate-900 dark:text-white truncate block">
+                      {e.name}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono block">
+                      {e.regNo}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="shrink-0 text-right">
+                  {e.contestRank ? (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono font-bold text-[10px] border border-amber-500/20">
+                      #{e.contestRank.toLocaleString()}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 text-[10px] font-mono">—</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Card Footer: Dept/Year pill + Q1-Q4 solve indicators + Total solved badge */}
+              <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-200/60 dark:border-white/[0.06]">
+                <div className="flex items-center gap-1.5">
+                  <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-bold text-[10px] border border-indigo-500/20">
+                    {e.dept}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {e.year} Yr
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {/* Micro Q1-Q4 indicators */}
+                  <div className="flex items-center gap-1">
+                    {[e.q1, e.q2, e.q3, e.q4].map((q, idx) => (
+                      <span
+                        key={idx}
+                        className={`w-4 h-4 rounded flex items-center justify-center text-[9px] font-mono font-black ${
+                          q > 0 
+                            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                            : 'bg-slate-200/60 dark:bg-navy-800 text-slate-400'
+                        }`}
+                        title={`Q${idx + 1}: ${q > 0 ? 'Solved' : 'Unsolved'}`}
+                      >
+                        {q > 0 ? '✓' : '—'}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Solved pill */}
+                  <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-mono font-black text-[11px] border border-indigo-500/30">
+                    {e.totalSolved}/4
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

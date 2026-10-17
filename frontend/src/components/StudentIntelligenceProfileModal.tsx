@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, ExternalLink, RefreshCw, FileText, Award, Target, Brain, ArrowLeft, Activity, Edit3, ShieldCheck, CheckCircle, Database, CheckCircle2, Calendar } from 'lucide-react';
-import { SwipeHandle } from './SwipeHandle';
 import { StudentEditOverlay } from './StudentEditOverlay';
 import {
   ResponsiveContainer,
@@ -512,20 +511,22 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
     ? createPortal(
         <div
           id="modal-scroll-container"
-          className="fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm animate-fade-in text-slate-900 font-sans p-2 sm:p-4 md:p-6 flex flex-col items-center justify-center overflow-y-auto print:static print:bg-white print:p-0"
+          className="fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm animate-fade-in text-slate-900 font-sans p-0 sm:p-4 md:p-6 flex flex-col items-center justify-end sm:justify-center overflow-y-auto print:static print:bg-white print:p-0"
           onClick={(e) => {
             if (e.target === e.currentTarget) onClose();
           }}
         >
           <div
-            className="w-full max-w-4xl lg:max-w-5xl my-auto mx-auto bg-white text-slate-900 shadow-2xl border border-slate-200/80 rounded-3xl sm:rounded-[32px] overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[90vh] transition-all duration-150 shrink-0 print:max-h-none print:overflow-visible print:border-none print:shadow-none print:rounded-none"
+            className="w-full max-w-4xl lg:max-w-5xl my-0 sm:my-auto mx-auto bg-white text-slate-900 shadow-2xl border border-slate-200/80 rounded-t-[28px] sm:rounded-3xl sm:rounded-[32px] overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] transition-all duration-300 shrink-0 print:max-h-none print:overflow-visible print:border-none print:shadow-none print:rounded-none animate-slide-up sm:animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Mobile Drag Indicator */}
-            <SwipeHandle onClose={onClose} className="py-2 sm:hidden bg-slate-900 border-b border-indigo-500/20" pillClassName="bg-slate-400" />
+            {/* Native iOS-style Drag Pill Handle for Mobile */}
+            <div className="sm:hidden w-full flex items-center justify-center pt-2.5 pb-1 bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950">
+              <div className="w-12 h-1.5 rounded-full bg-white/35" />
+            </div>
 
             {/* 1. TOP HERO HEADER & IDENTITY - ELEGANT PERFECTLY ALIGNED HEADER */}
-            <div className="bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950 text-white px-4 sm:px-6 py-3.5 sm:py-4 border-b border-indigo-500/20 shrink-0 relative z-10 rounded-t-2xl sm:rounded-t-[32px] shadow-lg">
+            <div className="bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950 text-white px-4 sm:px-6 py-3.5 sm:py-4 border-b border-indigo-500/20 shrink-0 relative z-10 shadow-lg">
               <div className="flex items-center justify-between gap-3 sm:gap-4 min-w-0">
                 {/* Avatar & Student Name */}
                 <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 flex-1">

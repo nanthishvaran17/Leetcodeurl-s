@@ -109,6 +109,18 @@ class Student(Base):
     contest_participation_records = relationship("StudentContestParticipation", back_populates="student", cascade="all, delete-orphan")
     faculty_assignment = relationship("FacultyStudentAssignment", back_populates="student", uselist=False, cascade="all, delete-orphan")
 
+    @validates("name")
+    def validate_name(self, key, value):
+        if value:
+            return str(value).strip().upper()
+        return value
+
+    @validates("reg_no")
+    def validate_reg_no(self, key, value):
+        if value:
+            return str(value).strip().upper()
+        return value
+
 class LeetCodeProfileStats(Base):
     __tablename__ = "leetcode_profile_stats"
     __table_args__ = (
@@ -358,6 +370,18 @@ class WeeklyPublicResult(Base):
                 raise ValueError(f"total_contest_solved must be between 0 and 4, got {value}")
         return value
 
+    @validates("name")
+    def validate_name(self, key, value):
+        if value:
+            return str(value).strip().upper()
+        return value
+
+    @validates("reg_no")
+    def validate_reg_no(self, key, value):
+        if value:
+            return str(value).strip().upper()
+        return value
+
 class WeeklyVirtualResult(Base):
     __tablename__ = "weekly_virtual_results"
     __table_args__ = (
@@ -394,6 +418,18 @@ class WeeklyVirtualResult(Base):
 
     session = relationship("WeeklySession", back_populates="virtual_results")
     student = relationship("Student")
+
+    @validates("name")
+    def validate_name(self, key, value):
+        if value:
+            return str(value).strip().upper()
+        return value
+
+    @validates("reg_no")
+    def validate_reg_no(self, key, value):
+        if value:
+            return str(value).strip().upper()
+        return value
 
 
 class VirtualContestAttempt(Base):

@@ -248,8 +248,8 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
     if is_wow:
         columns_spec = [
             ("S.No", lambda r, i: str(i), 0.8, False),
-            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")), 1.6, False),
-            ("Student Name", lambda r, i: _safe_str(r.get("name")), 2.6, True),
+            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")).upper(), 1.6, False),
+            ("Student Name", lambda r, i: _safe_str(r.get("name")).upper(), 2.6, True),
             ("Dept", lambda r, i: _safe_str(r.get("dept")), 1.3, False),
             ("Yr", lambda r, i: _safe_str(r.get("year")), 0.7, False),
             (f"{prev_c_lbl} Status", lambda r, i: ("ATTENDED" if str(r.get("prev_status") or "").upper().strip() in ("ATTENDED", "PUBLIC", "VIRTUAL") else "ABSENT", "STATUS"), 1.6, False),
@@ -265,8 +265,8 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
         sess_hdrs = dataset.get("sessionHeaders") or ["Contest 1", "Contest 2", "Contest 3", "Contest 4", "Contest 5"]
         columns_spec = [
             ("S.No", lambda r, i: str(i), 0.8, False),
-            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")), 1.6, False),
-            ("Student Name", lambda r, i: _safe_str(r.get("name")), 2.6, True),
+            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")).upper(), 1.6, False),
+            ("Student Name", lambda r, i: _safe_str(r.get("name")).upper(), 2.6, True),
             ("Dept", lambda r, i: _safe_str(r.get("dept")), 1.3, False),
             ("Yr", lambda r, i: _safe_str(r.get("year")), 0.7, False),
             (sess_hdrs[0] if len(sess_hdrs) > 0 else "C1", lambda r, i: _safe_str(r.get("c1_solved"), "—"), 1.1, False),
@@ -282,8 +282,8 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
         # Build base columns
         columns_spec = [
             ("S.No", lambda r, i: str(i), 0.8, False),
-            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")), 1.6, False),
-            ("Student Name", lambda r, i: _safe_str(r.get("name")), 2.6, True),
+            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")).upper(), 1.6, False),
+            ("Student Name", lambda r, i: _safe_str(r.get("name")).upper(), 2.6, True),
             ("Dept", lambda r, i: _safe_str(r.get("dept")), 1.3, False),
             ("Yr", lambda r, i: _safe_str(r.get("year")), 0.7, False),
         ]
@@ -325,8 +325,8 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
 
         columns_spec = [
             ("S.No", lambda r, i: str(i), 0.8, False),
-            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")), 1.6, False),
-            ("Student Name", lambda r, i: _safe_str(r.get("name")), 2.8, True),
+            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")).upper(), 1.6, False),
+            ("Student Name", lambda r, i: _safe_str(r.get("name")).upper(), 2.8, True),
             ("Dept", lambda r, i: _safe_str(r.get("dept")), 1.3, False),
             ("Yr", lambda r, i: _safe_str(r.get("year")), 0.7, False),
             ("Status", lambda r, i: (_safe_str(r.get("status") or r.get("participation_status") or r.get("category"), "ABSENT"), "STATUS"), 1.6, False),
@@ -343,8 +343,8 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
         # General cumulative roster / Leaderboard / Faculty report
         columns_spec = [
             ("S.No", lambda r, i: str(i), 0.8, False),
-            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")), 1.6, False),
-            ("Student Name", lambda r, i: _safe_str(r.get("name")), 2.8, True),
+            ("Reg No", lambda r, i: _safe_str(r.get("reg_no")).upper(), 1.6, False),
+            ("Student Name", lambda r, i: _safe_str(r.get("name")).upper(), 2.8, True),
             ("Dept", lambda r, i: _safe_str(r.get("dept")), 1.3, False),
             ("Yr", lambda r, i: _safe_str(r.get("year")), 0.7, False),
             ("Easy", lambda r, i: _safe_str(r.get("easy") or r.get("easy_solved"), "0"), 1.0, False),

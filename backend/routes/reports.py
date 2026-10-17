@@ -1816,6 +1816,12 @@ def _enrich_dataset_ranks_and_ratings(dataset: dict, db: Session) -> dict:
         for rl in row_lists:
             for r in rl:
                 if isinstance(r, dict):
+                    if r.get("name"):
+                        r["name"] = str(r["name"]).strip().upper()
+                    if r.get("student_name"):
+                        r["student_name"] = str(r["student_name"]).strip().upper()
+                    if r.get("reg_no"):
+                        r["reg_no"] = str(r["reg_no"]).strip().upper()
                     reg = str(r.get("reg_no") or r.get("register_no") or "").strip()
                     reg_u = reg.upper()
                     reg_clean = reg_u.replace("7322", "")
@@ -2343,8 +2349,8 @@ def _get_dataset_for_id(
                 score_val = r.get("score") or 0
 
                 entry = {
-                    "reg_no": r.get("reg_no", ""),
-                    "name": r.get("name", ""),
+                    "reg_no": str(r.get("reg_no", "")).strip().upper(),
+                    "name": str(r.get("name", "")).strip().upper(),
                     "dept": r.get("dept", r.get("department", "")),
                     "year": r.get("year", r.get("academic_year", "")),
                     "username": r.get("username", ""),

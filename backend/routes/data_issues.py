@@ -479,6 +479,29 @@ def repair_student_profile(
     db.commit()
     db.refresh(student)
 
+    # Notify assigned faculty mentor about the issue resolution
+    try:
+        from backend.models import FacultyStudentAssignment
+        from backend.services.notification_service import NotificationService
+        assignment = db.query(FacultyStudentAssignment).filter(
+            FacultyStudentAssignment.student_id == student_id,
+            FacultyStudentAssignment.is_active == True
+        ).first()
+        if assignment and assignment.faculty_id:
+            NotificationService.emit_event(
+                event_type="PROFILE_UPDATED",
+                title="Profile Issue Resolved",
+                body=f"LeetCode profile for {student.name} ({student.reg_no}) was repaired and verified ({stats.total_solved} solved).",
+                actor_user_id="SYSTEM",
+                recipient_scope="INDIVIDUAL",
+                recipient_target=f"STAFF_{assignment.faculty_id}",
+                route=f"/students?search={student.reg_no}",
+                priority="high",
+                metadata={"student_id": student.id, "reg_no": student.reg_no}
+            )
+    except Exception as notif_err:
+        logger.warning(f"[REPAIR_PROFILE_NOTIF] Failed: {notif_err}")
+
     return {
         "success": True,
         "message": f"Successfully updated and verified profile for {student.name} ({student.reg_no}).",

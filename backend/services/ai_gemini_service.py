@@ -1062,6 +1062,22 @@ CORE RULES:
                     "requestId": req_id
                 }
 
+            # 1.2 Action Intent: Email Preparation / Warning Draft
+            if any(kw in lower_q for kw in ["mail", "email", "draft", "notify", "anuppu", "anupu", "alert email", "warning email"]):
+                from backend.services.ai_control_engine import AIControlEngine
+                email_tool_res = AIControlEngine._tool_prepare_email(db, lower_q, req_id)
+                return {
+                    "success": True,
+                    "answer": email_tool_res.get("answer"),
+                    "why": "Resilient email preparation execution",
+                    "confidence": "VERIFIED",
+                    "actionLabel": "Review & Dispatch Email",
+                    "pending_action": email_tool_res.get("pending_action"),
+                    "source": "AI Operations Control Center",
+                    "dataStatus": "VERIFIED",
+                    "requestId": req_id
+                }
+
             # 1.4 Negative Department & Batch Validation (Pre-flight Entity Guard)
             if "department" in lower_q or "dept" in lower_q:
                 if not any(k in lower_q for k in ["cyber", "cs", "iot", "computer science"]):
@@ -1118,8 +1134,8 @@ CORE RULES:
                 }
 
             # 2. Inactive / At-Risk Student Query
-            if any(kw in lower_q for kw in ["inactive", "idle", "0 solve", "zero solve", "not active"]):
-                tool_res = execute_get_inactive_at_risk_students(db, user, limit=10)
+            if any(kw in lower_q for kw in ["inactive", "idle", "0 solve", "0 solved", "0 problem", "zero solve", "zero solver", "zero solvers", "zero", "less than 1", "not active", "low solver", "low solvers"]):
+                tool_res = execute_get_inactive_at_risk_students(db, user, limit=20)
                 students = tool_res.get("students", [])
                 total_cnt = tool_res.get("total_inactive_count", len(students))
                 rows = "\n".join([f"| {i+1} | **{s['name']}** | `{s['reg_no']}` | {s['department']} ({s['year_level']}) |" for i, s in enumerate(students[:10])])

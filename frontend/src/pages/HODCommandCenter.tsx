@@ -96,7 +96,7 @@ const StudentDetailDrawer: React.FC<{
  {student.name}
  </h3>
  <p className="text-xs text-slate-700 dark:text-slate-400 font-medium">
- {student.department_code} • {student.year_level} Year
+ {student.department_code} / {student.year_level} Year
  </p>
  </div>
  <button onClick={onClose} className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800 transition">
@@ -372,8 +372,7 @@ const StaffAllocationModal: React.FC<{
  </div>
  </div>
  <span className="px-3.5 py-1.5 rounded-full bg-amber-500/15 text-amber-900 dark:text-amber-300 border border-amber-500/30 font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-2xs">
- <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
- {unassignedStudents.length} Pending
+  {unassignedStudents.length} Pending
  </span>
  </div>
 
@@ -1753,93 +1752,141 @@ export const HODCommandCenter: React.FC = () => {
 
 
 
- {/* 1. HEADER */}
- <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 md:p-9 shadow-xl border border-brand-500/30">
- <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6">
- <div className="space-y-2 sm:space-y-3">
- <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10.5px] sm:text-xs font-black">
- <span className="uppercase tracking-wide">
- {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase())
- ? 'EXECUTIVE LEADERSHIP DECK • ALL DEPARTMENTS'
- : user?.role?.toLowerCase() === 'hod'
- ? `LEADERSHIP DECK • ${departments[0]?.name || 'Loading...'}`
- : ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())
- ? 'FACULTY PORTAL'
- : 'NANDHA INTELLIGENCE COMMAND'}
- </span>
- </div>
- <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white uppercase max-w-xl leading-tight">
- {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase()) ? (
- <>
- CAMPUS EXECUTIVE <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">LEADERSHIP DECK</span>
- </>
- ) : ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? (
- <>
- MY FACULTY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">ACTION CENTER</span>
- </>
- ) : user?.role?.toLowerCase() === 'hod' ? (
- <>
- DEPARTMENT <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">LEADERSHIP DECK</span>
- </>
- ) : (
- <>
- INSTITUTIONAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">ANALYTICS DASHBOARD</span>
- </>
- )}
- </h1>
- <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-normal leading-relaxed pt-0.5">
- {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase())
- ? 'Campus-wide departmental oversight: Inspect any department HOD process, staff mentoring allocations, student progress, and real-time operational health.'
- : user?.role?.toLowerCase() === 'hod'
- ? 'Department-scoped performance analytics, student cohort tracking, and faculty oversight for your HOD scope.'
- : ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())
- ? 'Track your assigned student cohort progress, submit mentoring actions, and manage student interventions.'
- : 'Real-time institutional performance analytics, automated student mentoring, and forensic integrity tracking.'}
- </p>
- </div>
+  {/* 1. HEADER - SLEEK MODERN MOBILE & DESKTOP HERO */}
+  <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white p-3.5 sm:p-7 md:p-8 shadow-xl border border-brand-500/30 backdrop-blur-md">
+    <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
+      
+      {/* Title & Metadata */}
+      <div className="space-y-1.5 sm:space-y-2.5 min-w-0">
+        {/* Mobile Top Row: Pill Badge + Quick Refresh */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black">
+            <span className="uppercase tracking-wide truncate max-w-[220px] xs:max-w-none">
+              {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase())
+                ? 'EXECUTIVE LEADERSHIP DECK | ALL DEPARTMENTS'
+                : user?.role?.toLowerCase() === 'hod'
+                ? `LEADERSHIP DECK | ${departments[0]?.name || 'Loading...'}`
+                : ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())
+                ? 'FACULTY PORTAL'
+                : 'NANDHA INTELLIGENCE COMMAND'}
+            </span>
+          </div>
 
- <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto sm:justify-end pt-2 sm:pt-0">
- {/* Quick Faculty Matrix Button */}
- <button
- onClick={() => {
-   document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
- }}
- className="inline-flex min-w-0 items-center justify-center gap-2 h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-200 sm:text-indigo-300 border border-indigo-700/50 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
- title="Jump to Faculty Mentors Performance & Progress Matrix"
- >
- <Users size={15} className="shrink-0 text-indigo-400" />
- <span className="truncate">Faculty Matrix</span>
- </button>
+          {/* Quick Refresh Icon on Mobile */}
+          <button
+            onClick={() => { setRefreshing(true); clearApiCache(); loadScopedData(false, true); loadStudents(); }}
+            className="sm:hidden inline-flex items-center justify-center w-8 h-8 rounded-xl bg-white/10 hover:bg-white/15 active:scale-90 text-slate-200 border border-white/10 transition-all shadow-xs cursor-pointer"
+            title="Refresh live data"
+            aria-label="Refresh live data"
+          >
+            <RotateCcw size={13} className={refreshing ? 'animate-spin' : ''} />
+          </button>
+        </div>
 
- {/* HOD Staff Allocation Manager Button */}
- <button
- onClick={() => setShowStaffAllocationModal(true)}
- className="inline-flex min-w-0 items-center justify-center gap-2 h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-purple-900/40 hover:bg-purple-900/60 text-purple-200 sm:text-purple-300 border border-purple-700/50 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
- >
- <Users size={15} className="shrink-0 text-purple-400" />
- <span className="truncate">Staff Allocation</span>
- </button>
+        <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white uppercase max-w-xl leading-snug">
+          {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase()) ? (
+            <>
+              CAMPUS EXECUTIVE <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">LEADERSHIP DECK</span>
+            </>
+          ) : ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? (
+            <>
+              MY FACULTY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">ACTION CENTER</span>
+            </>
+          ) : user?.role?.toLowerCase() === 'hod' ? (
+            <>
+              DEPARTMENT <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">LEADERSHIP DECK</span>
+            </>
+          ) : (
+            <>
+              INSTITUTIONAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">ANALYTICS DASHBOARD</span>
+            </>
+          )}
+        </h1>
 
- {/* Dedicated Report Hub Button */}
- <button
- onClick={() => setShowReportHubModal(true)}
- className="inline-flex min-w-0 items-center justify-center gap-2 h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-emerald-900/40 hover:bg-emerald-900/60 text-emerald-200 sm:text-emerald-300 border border-emerald-700/50 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
- >
- <FileSpreadsheet size={15} className="shrink-0 text-emerald-400" />
- <span className="truncate">Reports</span>
- </button>
+        <p className="hidden sm:block text-xs sm:text-sm text-slate-300 max-w-2xl font-normal leading-relaxed pt-0.5">
+          {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase())
+            ? 'Campus-wide departmental oversight: Inspect any department HOD process, staff mentoring allocations, student progress, and real-time operational health.'
+            : user?.role?.toLowerCase() === 'hod'
+            ? 'Department-scoped performance analytics, student cohort tracking, and faculty oversight for your HOD scope.'
+            : ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())
+            ? 'Track your assigned student cohort progress, submit mentoring actions, and manage student interventions.'
+            : 'Real-time institutional performance analytics, automated student mentoring, and forensic integrity tracking.'}
+        </p>
+      </div>
 
- {/* Refresh Button */}
- <button
- onClick={() => { setRefreshing(true); clearApiCache(); loadScopedData(false, true); loadStudents(); }}
- className="inline-flex min-w-0 items-center justify-center gap-2 h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-slate-800/80 hover:bg-slate-700/90 text-slate-200 sm:text-slate-300 border border-slate-700/60 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
- >
- <RotateCcw size={15} className={`shrink-0 ${refreshing ? 'animate-spin' : ''}`} />
- <span>Refresh</span>
- </button>
- </div>
- </div>
- </div>
+      {/* MOBILE ACTION PILLS (Native App Horizontal Dock) */}
+      <div className="flex sm:hidden items-center gap-2 overflow-x-auto no-scrollbar w-full pt-0.5 pb-0.5 -mx-0.5 px-0.5">
+        <button
+          onClick={() => {
+            document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="inline-flex shrink-0 items-center gap-1.5 h-8 px-3 rounded-full bg-indigo-500/20 active:bg-indigo-500/40 text-indigo-200 border border-indigo-400/30 text-xs font-bold transition-all active:scale-95 touch-manipulation shadow-xs cursor-pointer"
+        >
+          <Users size={12} className="shrink-0 text-indigo-300" />
+          <span className="whitespace-nowrap">Faculty Matrix</span>
+        </button>
+
+        <button
+          onClick={() => setShowStaffAllocationModal(true)}
+          className="inline-flex shrink-0 items-center gap-1.5 h-8 px-3 rounded-full bg-purple-500/20 active:bg-purple-500/40 text-purple-200 border border-purple-400/30 text-xs font-bold transition-all active:scale-95 touch-manipulation shadow-xs cursor-pointer"
+        >
+          <Users size={12} className="shrink-0 text-purple-300" />
+          <span className="whitespace-nowrap">Staff Allocation</span>
+        </button>
+
+        <button
+          onClick={() => setShowReportHubModal(true)}
+          className="inline-flex shrink-0 items-center gap-1.5 h-8 px-3 rounded-full bg-emerald-500/20 active:bg-emerald-500/40 text-emerald-200 border border-emerald-400/30 text-xs font-bold transition-all active:scale-95 touch-manipulation shadow-xs cursor-pointer"
+        >
+          <FileSpreadsheet size={12} className="shrink-0 text-emerald-300" />
+          <span className="whitespace-nowrap">Reports</span>
+        </button>
+      </div>
+
+      {/* DESKTOP ACTION BUTTONS (sm and up) */}
+      <div className="hidden sm:flex sm:flex-wrap sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto sm:justify-end pt-2 sm:pt-0">
+        {/* Quick Faculty Matrix Button */}
+        <button
+          onClick={() => {
+            document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="inline-flex min-w-0 items-center justify-center gap-2 h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-200 sm:text-indigo-300 border border-indigo-700/50 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
+          title="Jump to Faculty Mentors Performance & Progress Matrix"
+        >
+          <Users size={15} className="shrink-0 text-indigo-400" />
+          <span className="truncate">Faculty Matrix</span>
+        </button>
+
+        {/* HOD Staff Allocation Manager Button */}
+        <button
+          onClick={() => setShowStaffAllocationModal(true)}
+          className="inline-flex min-w-0 items-center justify-center gap-2 h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-purple-900/40 hover:bg-purple-900/60 text-purple-200 sm:text-purple-300 border border-purple-700/50 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
+        >
+          <Users size={15} className="shrink-0 text-purple-400" />
+          <span className="truncate">Staff Allocation</span>
+        </button>
+
+        {/* Dedicated Report Hub Button */}
+        <button
+          onClick={() => setShowReportHubModal(true)}
+          className="inline-flex min-w-0 items-center justify-center gap-2 h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-emerald-900/40 hover:bg-emerald-900/60 text-emerald-200 sm:text-emerald-300 border border-emerald-700/50 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
+        >
+          <FileSpreadsheet size={15} className="shrink-0 text-emerald-400" />
+          <span className="truncate">Reports</span>
+        </button>
+
+        {/* Refresh Button */}
+        <button
+          onClick={() => { setRefreshing(true); clearApiCache(); loadScopedData(false, true); loadStudents(); }}
+          className="inline-flex min-w-0 items-center justify-center gap-2 h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-slate-800/80 hover:bg-slate-700/90 text-slate-200 sm:text-slate-300 border border-slate-700/60 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
+        >
+          <RotateCcw size={15} className={`shrink-0 ${refreshing ? 'animate-spin' : ''}`} />
+          <span>Refresh</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
 
   {/* 2. EXECUTIVE MULTI-SCOPE FILTER BAR */}
   {(() => {
@@ -1874,7 +1921,7 @@ export const HODCommandCenter: React.FC = () => {
               </span>
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 font-bold truncate max-w-[160px] sm:max-w-none">
-                  {scopeDeptCode} • {scopeStaffName}
+                  {scopeDeptCode} / {scopeStaffName}
                 </span>
                 {activeFilterCount > 0 && (
                   <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full bg-brand-500/15 text-brand-500 dark:text-brand-400 border border-brand-400/30">
@@ -1920,8 +1967,104 @@ export const HODCommandCenter: React.FC = () => {
 
         {/* Collapsible Filter Body */}
         {isFilterOpen && (
-          <div className="p-3.5 sm:p-4 pt-2 border-t border-slate-100 dark:border-navy-900 bg-slate-50/50 dark:bg-navy-900/30 space-y-3 animate-in fade-in duration-200">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-3.5">
+          <div className="p-2.5 sm:p-4 pt-2 border-t border-slate-100 dark:border-navy-900 bg-slate-50/50 dark:bg-navy-900/30 space-y-2.5 animate-in fade-in duration-200">
+            {/* MOBILE NATIVE HORIZONTAL FILTER CHIPS (< sm: Airbnb / Swiggy / GitHub Mobile Style) */}
+            <div className="block sm:hidden">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-0.5 touch-pan-x">
+                {/* 1. Department Scope Chip */}
+                <div className="shrink-0">
+                  <GlobalFilter
+                    compact={true}
+                    value={selectedDept}
+                    onChange={val => {
+                      setSelectedDept(val);
+                      setSelectedStaff('ALL');
+                    }}
+                    dropdownWidth="w-[calc(100vw-24px)]"
+                    searchPlaceholder="Search department..."
+                    options={deptOptions}
+                    icon={<Building2 className="w-3.5 h-3.5 text-brand-500" />}
+                    className={selectedDept !== defaultDeptValue && selectedDept !== 'ALL' ? 'ring-2 ring-brand-500 border-brand-500' : ''}
+                  />
+                </div>
+
+                {/* 2. Staff Mentor Chip */}
+                <div className="shrink-0">
+                  <GlobalFilter
+                    compact={true}
+                    value={selectedStaff}
+                    onChange={val => setSelectedStaff(val)}
+                    dropdownWidth="w-[calc(100vw-24px)]"
+                    searchPlaceholder="Search staff mentor..."
+                    options={staffOptions}
+                    icon={<User className="w-3.5 h-3.5 text-indigo-500" />}
+                    className={selectedStaff !== 'ALL' ? 'ring-2 ring-indigo-500 border-indigo-500' : ''}
+                  />
+                </div>
+
+                {/* 3. Cohort Year Chip */}
+                <div className="shrink-0">
+                  <GlobalFilter
+                    compact={true}
+                    value={selectedYear}
+                    onChange={val => setSelectedYear(val)}
+                    dropdownWidth="w-[calc(100vw-24px)]"
+                    options={yearOptions}
+                    icon={<Calendar className="w-3.5 h-3.5 text-amber-500" />}
+                    className={selectedYear !== 'ALL' ? 'ring-2 ring-amber-500 border-amber-500' : ''}
+                  />
+                </div>
+
+                {/* 4. Section Chip */}
+                <div className="shrink-0">
+                  <GlobalFilter
+                    compact={true}
+                    value={selectedSection}
+                    onChange={val => setSelectedSection(val)}
+                    dropdownWidth="w-[calc(100vw-24px)]"
+                    options={sectionOptions}
+                    icon={<Layers className="w-3.5 h-3.5 text-purple-500" />}
+                    className={selectedSection !== 'ALL' ? 'ring-2 ring-purple-500 border-purple-500' : ''}
+                  />
+                </div>
+
+                {/* 5. Solver Status Chip */}
+                <div className="shrink-0">
+                  <GlobalFilter
+                    compact={true}
+                    value={selectedStatus}
+                    onChange={val => setSelectedStatus(val)}
+                    dropdownWidth="w-[calc(100vw-24px)]"
+                    options={statusOptions}
+                    icon={<Activity className="w-3.5 h-3.5 text-emerald-500" />}
+                    className={selectedStatus !== 'ALL' ? 'ring-2 ring-emerald-500 border-emerald-500' : ''}
+                  />
+                </div>
+
+                {/* Mobile Reset Chip */}
+                {activeFilterCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedDept(defaultDeptValue);
+                      setSelectedStaff('ALL');
+                      setSelectedYear('ALL');
+                      setSelectedSection('ALL');
+                      setSelectedStatus('ALL');
+                      setAllocationFilter('ALL');
+                      setStaffWorkloadFilter('ALL');
+                    }}
+                    className="shrink-0 h-9 px-3 rounded-xl border border-rose-300 dark:border-rose-800/80 bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 text-xs font-black flex items-center gap-1.5 active:scale-95 transition-transform cursor-pointer shadow-2xs"
+                  >
+                    <RotateCcw size={12} className="text-rose-500 shrink-0" />
+                    <span>Reset</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* DESKTOP / TABLET GRID (>= sm) */}
+            <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-3.5">
               {/* 1. Department Scope */}
               <div className="space-y-1.5 min-w-0">
                 <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate">
@@ -1997,27 +2140,6 @@ export const HODCommandCenter: React.FC = () => {
                 />
               </div>
             </div>
-
-            {/* Mobile Reset Action */}
-            <div className="flex justify-end pt-1 lg:hidden">
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedDept('ALL');
-                  setSelectedStaff('ALL');
-                  setSelectedYear('ALL');
-                  setSelectedSection('ALL');
-                  setSelectedStatus('ALL');
-                  setAllocationFilter('ALL');
-                  setStaffWorkloadFilter('ALL');
-                }}
-                disabled={activeFilterCount === 0}
-                className="h-9 px-3 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-black transition-all cursor-pointer shadow-xs active:scale-95"
-              >
-                <RotateCcw size={12} className="text-rose-500 shrink-0" />
-                <span>Reset All Filters</span>
-              </button>
-            </div>
           </div>
         )}
       </div>
@@ -2033,13 +2155,13 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  <div className="min-w-0">
  <div className="font-display text-sm font-bold text-slate-900 dark:text-white truncate">
- Your Student Cohort ({scopeStaffName} • {scopeDeptCode})
+ Your Student Cohort ({scopeStaffName} / {scopeDeptCode})
  </div>
  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-mono mt-0.5">
  <span className="text-emerald-600 font-bold">{activeInScope} Active</span>
- <span className="text-slate-300 dark:text-slate-600">•</span>
+ <span className="text-slate-300 dark:text-slate-600">/</span>
  <span className="text-rose-600 font-bold">{inactiveInScope} Inactive</span>
- <span className="text-slate-300 dark:text-slate-600">•</span>
+ <span className="text-slate-300 dark:text-slate-600">/</span>
  <span className="text-brand-600 font-bold">{improvingInScope} Improving</span>
  </div>
  </div>
@@ -2049,10 +2171,7 @@ export const HODCommandCenter: React.FC = () => {
  <div className="flex items-center justify-between sm:justify-end gap-2 border-t sm:border-0 border-slate-100 dark:border-navy-900 pt-2 sm:pt-0 shrink-0">
  {/* High-Contrast Live Telemetry Pill */}
  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg sm:rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/90 dark:border-white/10 text-[10px] sm:text-xs font-mono shadow-2xs">
- <span className="relative flex h-1.5 w-1.5">
- <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
- <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
- </span>
+            <Clock size={11} className="text-emerald-500 shrink-0" />
  <span className="text-slate-500 dark:text-slate-400 font-semibold hidden xs:inline">Last Sync:</span>
  <span className="font-black text-slate-900 dark:text-white tracking-wide">{lastLiveTimestamp}</span>
  </div>
@@ -2726,7 +2845,7 @@ export const HODCommandCenter: React.FC = () => {
  </td>
  <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white">
  <div>{s.name}</div>
- <div className="text-xs text-slate-600 dark:text-slate-400 font-mono font-normal">{s.reg_no}{cleanYear ? ` • ${cleanYear}` : ''}</div>
+ <div className="text-xs text-slate-600 dark:text-slate-400 font-mono font-normal">{s.reg_no}{cleanYear ? ` / ${cleanYear}` : ''}</div>
  </td>
  <td className="py-3 px-3 font-mono font-bold text-brand-600 dark:text-brand-400">
  @{s.leetcode_username || 'unlinked'}
@@ -3012,8 +3131,7 @@ export const HODCommandCenter: React.FC = () => {
  <td className="py-3 px-3 text-right">
  <div className="text-sm font-extrabold text-slate-900 dark:text-white font-mono">{d.student_count}</div>
  <div className="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-end gap-1 mt-0.5">
- <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
- <span>{d.active_count} active</span>
+  <span>{d.active_count} active</span>
  </div>
  </td>
  <td className="py-3 px-3 text-right">
@@ -3132,7 +3250,7 @@ export const HODCommandCenter: React.FC = () => {
              )}
            </div>
            <div className="text-xs text-slate-600 dark:text-slate-400 font-sans">
-             Active: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{y.active_count || 0}</strong> • Inactive: <strong className="text-rose-600 dark:text-rose-400 font-bold">{y.inactive_count || 0}</strong>
+             Active: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{y.active_count || 0}</strong> / Inactive: <strong className="text-rose-600 dark:text-rose-400 font-bold">{y.inactive_count || 0}</strong>
            </div>
          </div>
          <div className="text-right shrink-0">

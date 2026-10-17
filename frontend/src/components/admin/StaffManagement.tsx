@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { Search, UserPlus, Edit2, Shield, Ban, CheckCircle, RefreshCcw, UserX, AlertCircle, ArrowRight, Building2, GraduationCap, Award, Key, Mail, User, Calendar, Check, X, Trash2, Phone, Briefcase, Activity, ShieldAlert, FileText, Database, Lock, KeyRound, Loader2, Eye, Users } from 'lucide-react';
+import { Search, UserPlus, Edit2, Shield, Ban, CheckCircle, RefreshCcw, UserX, AlertCircle, ArrowRight, Building2, GraduationCap, Award, Key, Mail, User, Calendar, Check, X, Trash2, Phone, Briefcase, Activity, ShieldAlert, FileText, Database, Lock, KeyRound, Loader2, Eye, Users, ChevronRight } from 'lucide-react';
 import api from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
@@ -567,17 +567,17 @@ export const StaffManagement: React.FC = () => {
                       <div
                         key={staff.id}
                         onClick={() => setViewingStaff(staff)}
-                        className="group relative rounded-2xl p-3.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 shadow-xs hover:shadow-md transition-all active:scale-[0.99] cursor-pointer space-y-2.5 overflow-hidden"
+                        className="group relative rounded-2xl p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 shadow-sm hover:shadow-md transition-all active:scale-[0.99] cursor-pointer space-y-3 overflow-hidden"
                       >
                         {/* Subtle Top Status Accent Line */}
-                        <div className={`absolute top-0 left-0 right-0 h-0.5 ${
+                        <div className={`absolute top-0 left-0 right-0 h-1 ${
                           staff.is_active
                             ? 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500'
                             : 'bg-rose-500'
                         }`} />
 
                         {/* 1. Header: Avatar + Name & Role + Active Status */}
-                        <div className="flex items-start justify-between gap-2.5 min-w-0">
+                        <div className="flex items-start justify-between gap-3 min-w-0">
                           <div className="flex items-center gap-3 min-w-0 flex-1">
                             {/* Avatar with Status Pip */}
                             <div
@@ -598,15 +598,15 @@ export const StaffManagement: React.FC = () => {
                                 <img
                                   src={staff.profile_photo}
                                   alt={staff.full_name || staff.username}
-                                  className="w-10 h-10 rounded-xl object-cover border border-indigo-500/30 shadow-xs bg-white dark:bg-slate-950"
+                                  className="w-11 h-11 rounded-2xl object-cover border-2 border-indigo-500/30 shadow-xs bg-white dark:bg-slate-950"
                                 />
                               ) : (
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-xs flex items-center justify-center shadow-xs uppercase tracking-wider border border-white/20">
+                                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-sm flex items-center justify-center shadow-xs uppercase tracking-wider border border-white/20">
                                   {initials}
                                 </div>
                               )}
-                              <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-slate-900 ${
-                                staff.is_active ? 'bg-emerald-500' : 'bg-rose-500'
+                              <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${
+                                staff.is_active ? 'bg-emerald-500 ring-2 ring-emerald-500/20' : 'bg-rose-500'
                               }`} />
                             </div>
 
@@ -614,18 +614,21 @@ export const StaffManagement: React.FC = () => {
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <h4
-                                  className="font-black text-sm text-slate-900 dark:text-white leading-tight truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"
+                                  className="font-bold text-sm text-slate-900 dark:text-white leading-tight truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"
                                   title={staff.full_name || staff.username}
                                 >
                                   {staff.full_name || staff.username}
                                 </h4>
                                 {isRoot && (
-                                  <span className="px-1.5 py-0.2 rounded text-[8.5px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0">
+                                  <span className="px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0">
                                     ROOT
                                   </span>
                                 )}
+                              </div>
+
+                              <div className="flex items-center gap-2 mt-1">
                                 <span
-                                  className={`px-1.5 py-0.2 rounded-md text-[9.5px] font-bold inline-block truncate ${
+                                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold inline-block truncate ${
                                     roleName === 'Faculty'
                                       ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
                                       : roleName === 'HOD'
@@ -638,27 +641,18 @@ export const StaffManagement: React.FC = () => {
                                   {roleName}
                                 </span>
                               </div>
-
-                              {/* Email Address */}
-                              <div
-                                className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate"
-                                title={emailStr}
-                              >
-                                <Mail className="w-3 h-3 text-indigo-500 shrink-0" />
-                                <span className="truncate">{emailStr}</span>
-                              </div>
                             </div>
                           </div>
 
                           {/* Compact Status Badge */}
-                          <div className="shrink-0">
+                          <div className="shrink-0 pt-0.5">
                             {staff.is_active ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 Active
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                                 Suspended
                               </span>
@@ -666,51 +660,85 @@ export const StaffManagement: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* 2. Compact Metadata Chips & Actions Row */}
-                        <div className="flex items-center justify-between gap-2 pt-0.5 flex-wrap">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            {/* Department */}
-                            <span
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-navy-800 text-indigo-700 dark:text-indigo-300 border border-slate-200/70 dark:border-navy-700"
-                              title={`Department: ${deptName}`}
-                            >
-                              <Building2 className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
-                              <span className="truncate max-w-[120px]">{deptName}</span>
-                            </span>
+                        {/* Email Address Bar */}
+                        <div
+                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-600 dark:text-slate-300 font-mono border border-slate-100 dark:border-slate-800"
+                          title={emailStr}
+                        >
+                          <Mail className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                          <span className="truncate">{emailStr}</span>
+                        </div>
 
-                            {/* Institutional ID */}
-                            <span
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-slate-100/80 dark:bg-navy-800/80 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700/60"
-                              title={`Institutional ID: ${instId}`}
-                            >
-                              <KeyRound className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                              <span>{instId}</span>
+                        {/* 2. Clean Dedicated Metadata Chips Grid */}
+                        <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+                          {/* Department */}
+                          <div
+                            className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-center min-w-0"
+                            title={`Department: ${deptName}`}
+                          >
+                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                              <Building2 className="w-2.5 h-2.5 text-indigo-500 shrink-0" /> Dept
                             </span>
-
-                            {/* Assigned Mentees */}
-                            <span
-                              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200/70 dark:border-indigo-800/60"
-                              title={`Assigned Mentees: ${menteeCount}`}
-                            >
-                              <Users className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
-                              <span>{menteeCount} {menteeCount === 1 ? 'Mentee' : 'Mentees'}</span>
+                            <span className="text-[11px] font-black text-slate-700 dark:text-slate-200 truncate w-full uppercase">
+                              {deptName}
                             </span>
                           </div>
 
-                          {/* Compact Thumb-Friendly Actions */}
-                          <div className="flex items-center gap-1 ml-auto" onClick={(e) => e.stopPropagation()}>
+                          {/* Institutional ID */}
+                          <div
+                            className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-center min-w-0"
+                            title={`Institutional ID: ${instId}`}
+                          >
+                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                              <KeyRound className="w-2.5 h-2.5 text-slate-400 shrink-0" /> Staff ID
+                            </span>
+                            <span className="text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200 truncate w-full">
+                              {instId}
+                            </span>
+                          </div>
+
+                          {/* Assigned Mentees */}
+                          <div
+                            className="flex flex-col items-center justify-center p-2 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100/80 dark:border-indigo-900/40 text-center min-w-0"
+                            title={`Assigned Mentees: ${menteeCount}`}
+                          >
+                            <span className="text-[9px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                              <Users className="w-2.5 h-2.5 text-indigo-500 shrink-0" /> Mentees
+                            </span>
+                            <span className="text-[11px] font-black text-indigo-700 dark:text-indigo-300">
+                              {menteeCount} {menteeCount === 1 ? 'Mentee' : 'Mentees'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 3. Dedicated Touch-Friendly Action Bar */}
+                        <div
+                          className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setViewingStaff(staff)}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors py-1 px-1 -ml-1 rounded-lg"
+                          >
+                            <span>Profile Details</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Quick Action Button Group */}
+                          <div className="flex items-center gap-1.5">
                             <button
                               type="button"
                               onClick={() => setViewingStaff(staff)}
-                              className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer border border-slate-200/60 dark:border-navy-700"
-                              title="View Staff Profile and Mentees"
+                              className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all active:scale-95 flex items-center justify-center border border-slate-200/60 dark:border-slate-700"
+                              title="View Staff Profile"
                             >
                               <Eye className="w-3.5 h-3.5" />
                             </button>
                             <button
                               type="button"
                               onClick={() => handleOpenEditModal(staff)}
-                              className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 transition-all active:scale-95 cursor-pointer border border-indigo-200/60 dark:border-indigo-800/60"
+                              className="w-8 h-8 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 transition-all active:scale-95 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-800/60"
                               title="Edit Staff Account"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -718,10 +746,10 @@ export const StaffManagement: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => handleToggleStatus(staff.id, staff.is_active)}
-                              className={`p-1.5 rounded-lg transition-all active:scale-95 cursor-pointer border ${
+                              className={`w-8 h-8 rounded-xl transition-all active:scale-95 flex items-center justify-center border ${
                                 staff.is_active
-                                  ? 'bg-slate-100 hover:bg-amber-100 dark:bg-navy-800 text-slate-600 hover:text-amber-600 border-slate-200/60 dark:border-navy-700'
-                                  : 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 border-emerald-200/60 dark:border-emerald-800/60'
+                                  ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/60'
+                                  : 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/60'
                               }`}
                               title={staff.is_active ? 'Suspend Account' : 'Activate Account'}
                             >
@@ -730,7 +758,7 @@ export const StaffManagement: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => setDeletingStaff(staff)}
-                              className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 border border-rose-200/60 dark:border-rose-800/60 transition-all active:scale-95 cursor-pointer"
+                              className="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60 transition-all active:scale-95 flex items-center justify-center"
                               title="Delete Staff Account"
                             >
                               <Trash2 className="w-3.5 h-3.5" />

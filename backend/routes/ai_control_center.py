@@ -84,10 +84,17 @@ def get_ai_control_telemetry(
     Returns real-time database health, audit issue counts, and sync timestamps for AI Control Center.
     """
     from backend.models import Student, LeetCodeProfileStats
-    total_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
-    verified_students = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.sync_status.in_(["success", "verified"])).count()
-    pending_students = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.sync_status.in_(["pending", "pending_username"])).count()
-    failed_students = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.sync_status.in_(["failed", "error", "invalid_username"])).count()
+    active_filter = (Student.is_active == True) | (Student.is_active.is_(None))
+    total_students = db.query(Student).filter(active_filter).count()
+    verified_students = db.query(LeetCodeProfileStats).join(Student, LeetCodeProfileStats.student_id == Student.id).filter(
+        active_filter,
+        LeetCodeProfileStats.sync_status.in_(["success", "verified"])
+    ).count()
+    failed_students = db.query(LeetCodeProfileStats).join(Student, LeetCodeProfileStats.student_id == Student.id).filter(
+        active_filter,
+        LeetCodeProfileStats.sync_status.in_(["failed", "error", "invalid_username"])
+    ).count()
+    pending_students = max(0, total_students - verified_students - failed_students)
 
     last_sync = db.query(LeetCodeProfileStats.last_verified_at).order_by(LeetCodeProfileStats.last_verified_at.desc()).first()
     last_str = last_sync[0].strftime("%d %b %Y, %I:%M %p IST") if (last_sync and last_sync[0]) else "19 Aug 2026, 09:27 AM IST"

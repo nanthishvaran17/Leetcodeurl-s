@@ -694,9 +694,8 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
           {/* Top Row: Pill Badge + Role / Status Tag */}
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black uppercase tracking-wider max-w-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse shrink-0" />
               <span className="truncate">
-                {isAdmin ? 'System Control Center • NEC' : 'Account Management'}
+                {isAdmin ? 'System Control Center | NEC' : 'Account Management'}
               </span>
             </div>
 
@@ -705,7 +704,6 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                 className="h-6 sm:h-7 px-2.5 sm:px-3 rounded-full font-bold text-[10px] sm:text-xs border inline-flex items-center space-x-1.5 whitespace-nowrap leading-none"
                 style={{ background: 'rgba(16,185,129,0.15)', borderColor: 'rgba(16,185,129,0.3)', color: '#34d399' }}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                 <span>{currentUser?.role ? currentUser.role.toUpperCase() : 'ACTIVE'}</span>
               </span>
             </div>

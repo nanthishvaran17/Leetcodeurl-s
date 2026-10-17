@@ -486,7 +486,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     n !== null && n !== undefined && !isNaN(n) ? n.toLocaleString() : fallback;
 
   return (
-    <div className="space-y-5 sm:space-y-6 pt-0 pb-24 md:pb-8 animate-page-enter w-full">
+    <div className="space-y-5 sm:space-y-6 pt-0 pb-32 sm:pb-28 md:pb-8 animate-page-enter w-full">
       
       {/* 1. INSTITUTIONAL PERFORMANCE OVERVIEW */}
       <div className="stagger-1 relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900/95 to-indigo-950/90 text-white p-4 sm:p-7 lg:p-8 shadow-2xl border border-slate-700/80 dark:border-brand-500/30">
@@ -534,68 +534,80 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 </button>
               </div>
             )}
-            <div className="grid w-full grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 items-center">
+            <div className="grid w-full grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 items-center">
+              {/* Primary CTA: Fetch Live Data */}
               <button
                 onClick={handleStartSync}
                 disabled={isSyncing}
-                className="relative min-w-0 w-full overflow-hidden min-h-[46px] px-3 sm:px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black text-xs shadow-lg shadow-indigo-600/25 border border-indigo-400/40 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 touch-manipulation active:scale-95 group"
+                className="relative min-w-0 w-full overflow-hidden min-h-[42px] sm:min-h-[46px] px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black text-[11px] sm:text-xs shadow-[0_4px_20px_rgba(79,70,229,0.35)] hover:shadow-[0_6px_26px_rgba(79,70,229,0.5)] border border-indigo-300/40 hover:border-white/50 flex items-center justify-center space-x-1.5 sm:space-x-2 transition-all cursor-pointer disabled:opacity-50 touch-manipulation active:scale-95 group"
                 aria-label="Fetch live LeetCode statistics"
                 title="Synchronize live profile statistics for all students"
               >
-                <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${isSyncing ? 'animate-spin text-white' : 'text-white group-hover:rotate-180 transition-transform duration-300'}`} />
+                <div className="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                  <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-white' : 'text-white group-hover:rotate-180 transition-transform duration-500'}`} />
+                </div>
                 <span className="truncate tracking-wide font-black">{isSyncing ? 'Syncing...' : 'Fetch Live Data'}</span>
               </button>
 
+              {/* Secondary CTA 1: Import Roster */}
               <button
                 onClick={onOpenImport}
-                className="relative min-w-0 w-full overflow-hidden min-h-[46px] px-3 sm:px-4 py-2.5 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-white font-black text-xs shadow-md border border-slate-600/80 flex items-center justify-center space-x-2 transition-all cursor-pointer touch-manipulation active:scale-95 group"
+                className="relative min-w-0 w-full overflow-hidden min-h-[42px] sm:min-h-[46px] px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/[0.16] backdrop-blur-md text-white font-black text-[11px] sm:text-xs shadow-sm hover:shadow-[0_4px_16px_rgba(56,189,248,0.25)] border border-white/20 hover:border-sky-400/50 flex items-center justify-center space-x-1.5 sm:space-x-2 transition-all cursor-pointer touch-manipulation active:scale-95 group"
                 aria-label="Import student roster from Excel"
                 title="Upload Excel roster (.xlsx) to parse, validate, and update student profiles"
               >
-                <Plus className="w-3.5 h-3.5 text-brand-400 group-hover:scale-125 group-hover:rotate-90 transition-transform duration-200 shrink-0" />
+                <div className="w-5 h-5 rounded-lg bg-sky-500/20 border border-sky-400/30 flex items-center justify-center shrink-0 group-hover:bg-sky-500/30 transition-colors">
+                  <Plus className="w-3.5 h-3.5 text-sky-300 group-hover:scale-125 group-hover:rotate-90 transition-transform duration-200" />
+                </div>
                 <span className="truncate tracking-wide font-black">Import Roster</span>
               </button>
 
+              {/* Secondary CTA 2: Export Excel */}
               <button
                 onClick={handleExportExcel}
                 disabled={isExportingExcel}
-                className="relative min-w-0 w-full overflow-hidden min-h-[46px] px-3 sm:px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-600/20 border border-emerald-400/40 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-70 touch-manipulation active:scale-95 group"
+                className="relative min-w-0 w-full overflow-hidden min-h-[42px] sm:min-h-[46px] px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/[0.16] backdrop-blur-md text-white font-black text-[11px] sm:text-xs shadow-sm hover:shadow-[0_4px_16px_rgba(52,211,153,0.25)] border border-white/20 hover:border-emerald-400/50 flex items-center justify-center space-x-1.5 sm:space-x-2 transition-all cursor-pointer disabled:opacity-70 touch-manipulation active:scale-95 group"
                 aria-label="Export raw student roster to Excel"
                 title="Export current active student roster & raw LeetCode statistics to Excel workbook (.xlsx)"
               >
                 {isExportingExcel ? (
                   <>
-                    <RefreshCw className="w-4 h-4 text-white animate-spin shrink-0" />
+                    <RefreshCw className="w-3.5 h-3.5 text-emerald-400 animate-spin shrink-0" />
                     <span className="truncate tracking-wide font-black text-white">Exporting...</span>
                   </>
                 ) : (
                   <>
-                    <FileSpreadsheet className="w-4 h-4 text-white group-hover:scale-110 transition-transform duration-150 shrink-0" />
+                    <div className="w-5 h-5 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0 group-hover:bg-emerald-500/30 transition-colors">
+                      <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform duration-150" />
+                    </div>
                     <span className="truncate tracking-wide font-black text-white">Export Excel</span>
-                    <span className="px-1.5 py-0.5 rounded-md bg-white/20 text-[9px] font-mono text-white border border-white/30 font-black uppercase tracking-wider hidden sm:inline-block">
+                    <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-[9px] font-mono text-emerald-300 border border-emerald-400/30 font-black uppercase tracking-wider hidden sm:inline-block">
                       XLSX
                     </span>
                   </>
                 )}
               </button>
 
+              {/* Secondary CTA 3: Weekly Report */}
               <button
                 onClick={handleGenerateReport}
                 disabled={generatingReport}
-                className="relative min-w-0 w-full overflow-hidden min-h-[46px] px-3 sm:px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-white font-black text-xs shadow-lg shadow-amber-500/20 border border-amber-300/40 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-70 touch-manipulation active:scale-95 group"
+                className="relative min-w-0 w-full overflow-hidden min-h-[42px] sm:min-h-[46px] px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/[0.16] backdrop-blur-md text-white font-black text-[11px] sm:text-xs shadow-sm hover:shadow-[0_4px_16px_rgba(251,191,36,0.25)] border border-white/20 hover:border-amber-400/50 flex items-center justify-center space-x-1.5 sm:space-x-2 transition-all cursor-pointer disabled:opacity-70 touch-manipulation active:scale-95 group"
                 aria-label="Generate official weekly institutional report"
                 title="Instant download of pre-generated weekly performance tracker & PDF summary"
               >
                 {generatingReport ? (
                   <>
-                    <RefreshCw className="w-4 h-4 text-white animate-spin shrink-0" />
+                    <RefreshCw className="w-3.5 h-3.5 text-amber-400 animate-spin shrink-0" />
                     <span className="truncate tracking-wide font-black text-white">Rendering...</span>
                   </>
                 ) : (
                   <>
-                    <FileText className="w-4 h-4 text-white group-hover:scale-110 transition-transform duration-150 shrink-0" />
+                    <div className="w-5 h-5 rounded-lg bg-amber-500/20 border border-amber-400/30 flex items-center justify-center shrink-0 group-hover:bg-amber-500/30 transition-colors">
+                      <FileText className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform duration-150" />
+                    </div>
                     <span className="truncate tracking-wide font-black text-white">Weekly Report</span>
-                    <span className="px-1.5 py-0.5 rounded-md bg-white/20 text-[9px] font-mono text-white border border-white/30 font-black uppercase tracking-wider hidden sm:inline-block">
+                    <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 text-[9px] font-mono text-amber-300 border border-amber-400/30 font-black uppercase tracking-wider hidden sm:inline-block">
                       PDF
                     </span>
                   </>
@@ -606,60 +618,64 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </div>
 
-      {/* 2. EXECUTIVE BENTO KPI METRICS — 2026 Luxury Glassmorphic Architecture */}
-      <div className="stagger-2 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* 2. EXECUTIVE BENTO KPI METRICS — Modern Responsive Architecture */}
+      <div className="stagger-2 grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {/* Metric 1: Total Enrolled */}
-        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white/80 dark:bg-[#0c1424]/90 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-lg shadow-slate-200/50 dark:shadow-none hover:border-brand-500/50 dark:hover:border-brand-500/40 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-brand-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-brand-500/20 transition-all duration-300" />
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-brand-500/15 to-indigo-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 flex items-center justify-center shadow-sm">
-              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3 sm:p-5 bg-white/95 dark:bg-[#0c1424]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-xs sm:shadow-lg hover:border-brand-500/50 dark:hover:border-brand-500/40 transition-all duration-300 flex flex-col justify-between">
+          <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-bl from-brand-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-brand-500/20 transition-all duration-300" />
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-brand-500/15 to-indigo-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 flex items-center justify-center shadow-2xs">
+              <Users className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-300 border border-brand-200/60 dark:border-brand-500/20">
-              Institutional
+            <span className="px-1.5 py-0.5 sm:px-2 rounded-md sm:rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-300 border border-brand-200/60 dark:border-brand-500/20 shrink-0">
+              <span className="sm:hidden">Roster</span>
+              <span className="hidden sm:inline">Institutional</span>
             </span>
           </div>
-          <div className="space-y-1">
-            <div className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <div className="space-y-0.5 sm:space-y-1">
+            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
               Enrolled Roster
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl sm:text-3xl font-display font-black text-slate-900 dark:text-white tracking-tight">
+            <div className="flex items-baseline gap-1.5 sm:gap-2">
+              <span className="text-xl sm:text-3xl font-display font-black text-slate-900 dark:text-white tracking-tight">
                 {fmtCount(canonicalTotal ?? totalStudents)}
               </span>
-              <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">Students</span>
+              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500">Students</span>
             </div>
             <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 pt-0.5 truncate">
-              {departments.length > 0 ? `${departments.length} Departments Covered` : 'Verified Roster Identity'}
+              {departments.length > 0 ? `${departments.length} Depts Covered` : 'Verified Roster Identity'}
             </p>
           </div>
         </div>
 
         {/* Metric 2: Active Profiles */}
-        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white/80 dark:bg-[#0c1424]/90 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-lg shadow-slate-200/50 dark:shadow-none hover:border-emerald-500/50 dark:hover:border-emerald-500/40 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-emerald-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-emerald-500/20 transition-all duration-300" />
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shadow-sm">
-              <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3 sm:p-5 bg-white/95 dark:bg-[#0c1424]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-xs sm:shadow-lg hover:border-emerald-500/50 dark:hover:border-emerald-500/40 transition-all duration-300 flex flex-col justify-between">
+          <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-bl from-emerald-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-emerald-500/20 transition-all duration-300" />
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shadow-2xs">
+              <ShieldCheck className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
             </div>
-            <div className="flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20">
+            <div className="flex items-center px-1.5 py-0.5 sm:px-2 rounded-md sm:rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20 shrink-0">
               <span>Live Sync</span>
             </div>
           </div>
-          <div className="space-y-1">
-            <div className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <div className="space-y-0.5 sm:space-y-1">
+            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
               Active Profiles
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl sm:text-3xl font-display font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+            <div className="flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
+              <span className="text-xl sm:text-3xl font-display font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
                 {fmtCount(activeStudents)}
               </span>
-              <span className="text-[11px] font-black font-mono text-emerald-500 dark:text-emerald-400">
-                {totalStudents > 0 ? `${Math.round((activeStudents / totalStudents) * 1000) / 10}%` : ''}
-              </span>
+              {totalStudents > 0 && (
+                <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-[9px] sm:text-[11px] font-black font-mono text-emerald-600 dark:text-emerald-400">
+                  {`${Math.round((activeStudents / totalStudents) * 1000) / 10}%`}
+                </span>
+              )}
             </div>
             <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 pt-0.5 truncate">
-              Synchronized LeetCode Handles
+              <span className="sm:hidden">Active Profiles</span>
+              <span className="hidden sm:inline">Synchronized LeetCode Handles</span>
             </p>
           </div>
         </div>
@@ -667,88 +683,92 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         {/* Metric 3: Post-9:30 Solvers */}
         <div 
           onClick={() => onNavigateTab('weekly-contest')}
-          className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white/80 dark:bg-[#0c1424]/90 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-lg shadow-slate-200/50 dark:shadow-none hover:border-amber-500/50 dark:hover:border-amber-500/40 transition-all duration-300 cursor-pointer active:scale-[0.99]"
+          className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3 sm:p-5 bg-white/95 dark:bg-[#0c1424]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-xs sm:shadow-lg hover:border-amber-500/50 dark:hover:border-amber-500/40 transition-all duration-300 cursor-pointer active:scale-[0.98] flex flex-col justify-between"
         >
-          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-amber-500/20 transition-all duration-300" />
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shadow-sm">
-              <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-amber-500/20 transition-all duration-300" />
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shadow-2xs">
+              <Clock className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-500/20">
-              Verified Solves
+            <span className="px-1.5 py-0.5 sm:px-2 rounded-md sm:rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-500/20 shrink-0">
+              <span className="sm:hidden">Verified</span>
+              <span className="hidden sm:inline">Verified Solves</span>
             </span>
           </div>
-          <div className="space-y-1">
-            <div className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <div className="space-y-0.5 sm:space-y-1">
+            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
               Post-9:30 Solvers
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl sm:text-3xl font-display font-black text-amber-600 dark:text-amber-400 tracking-tight">
+            <div className="flex items-baseline gap-1.5 sm:gap-2">
+              <span className="text-xl sm:text-3xl font-display font-black text-amber-600 dark:text-amber-400 tracking-tight">
                 {fmtCount(actualContestSolvers)}
               </span>
-              <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">Sunday</span>
+              <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-[9px] sm:text-[11px] font-bold text-amber-700 dark:text-amber-300">Sunday</span>
             </div>
             <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 pt-0.5 truncate">
-              Timestamp Authenticated • View Solvers →
+              <span className="sm:hidden text-amber-600 dark:text-amber-400 font-bold">View Solvers →</span>
+              <span className="hidden sm:inline">Timestamp Authenticated • View Solvers →</span>
             </p>
           </div>
         </div>
 
         {/* Metric 4: Contest Rate */}
-        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white/80 dark:bg-[#0c1424]/90 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-lg shadow-slate-200/50 dark:shadow-none hover:border-indigo-500/50 dark:hover:border-indigo-500/40 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-indigo-500/20 transition-all duration-300" />
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-indigo-500/15 to-purple-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shadow-sm">
-              <Award className="w-4 h-4 sm:w-5 sm:h-5" />
+        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3 sm:p-5 bg-white/95 dark:bg-[#0c1424]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-xs sm:shadow-lg hover:border-indigo-500/50 dark:hover:border-indigo-500/40 transition-all duration-300 flex flex-col justify-between">
+          <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-indigo-500/20 transition-all duration-300" />
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-indigo-500/15 to-purple-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shadow-2xs">
+              <Award className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-500/20">
-              Contest Pace
+            <span className="px-1.5 py-0.5 sm:px-2 rounded-md sm:rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-500/20 shrink-0">
+              <span className="sm:hidden">Contest</span>
+              <span className="hidden sm:inline">Contest Pace</span>
             </span>
           </div>
-          <div className="space-y-1">
-            <div className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <div className="space-y-0.5 sm:space-y-1">
+            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
               Contest Rate
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl sm:text-3xl font-display font-black text-indigo-600 dark:text-indigo-300 tracking-tight">
+            <div className="flex items-baseline gap-1.5 sm:gap-2">
+              <span className="text-xl sm:text-3xl font-display font-black text-indigo-600 dark:text-indigo-300 tracking-tight">
                 {contestParticipationRate}%
               </span>
-              <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">Cohort</span>
+              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500">Cohort</span>
             </div>
             <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 pt-0.5 truncate">
-              Weekly Contest Engagement Index
+              <span className="sm:hidden">Engagement Rate</span>
+              <span className="hidden sm:inline">Weekly Contest Engagement Index</span>
             </p>
           </div>
         </div>
       </div>
 
       {/* REAL-TIME GROWTH & DELTA ENGINE */}
-      <div className="stagger-4 relative overflow-hidden rounded-xl bg-white dark:bg-navy-950 p-5 sm:p-8 shadow-sm border border-slate-200 dark:border-navy-700 mt-6">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
-          <div className="space-y-2 sm:space-y-3 min-w-0 flex-1">
-            <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-black tracking-wider uppercase">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-              <span>
+      <div className="stagger-4 relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-navy-950 p-4 sm:p-7 md:p-8 shadow-sm border border-slate-200/90 dark:border-navy-700 mt-4 sm:mt-6">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
+          <div className="space-y-1.5 sm:space-y-2.5 min-w-0 flex-1">
+            <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] sm:text-[11px] font-black tracking-wider uppercase">
+              <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-500 shrink-0" />
+              <span className="truncate">
                 {summary?.scope?.total_students != null
                   ? `${summary.scope.total_students.toLocaleString()} Students • ${summary.scope.total_departments ?? '—'} Departments`
                   : 'Analytics Engine'}
               </span>
             </div>
 
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-display font-extrabold tracking-tight text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
+            <h2 className="text-base sm:text-2xl lg:text-3xl font-display font-extrabold tracking-tight text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
               <span>REAL-TIME GROWTH &amp; DELTA ENGINE</span>
-              <span className="px-2 py-0.5 rounded-md text-[10px] bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 font-bold uppercase tracking-widest border border-brand-200 dark:border-brand-800/50">LIVE</span>
+              <span className="px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 font-bold uppercase tracking-widest border border-brand-200 dark:border-brand-800/50">LIVE</span>
             </h2>
 
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-              <strong className="text-slate-700 dark:text-slate-300">Growth Intelligence &amp; Time Machine</strong> — Track student problem-solving deltas, biggest improvers leaderboard, difficulty velocity, and granular historical stat snapshots across custom timeframe windows.
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed line-clamp-2 sm:line-clamp-none">
+              <strong className="text-slate-700 dark:text-slate-300">Growth Intelligence &amp; Time Machine</strong> — Track student problem-solving deltas, biggest improvers leaderboard, difficulty velocity, and granular historical stat snapshots.
             </p>
           </div>
 
-          <div className="shrink-0 sm:self-center">
+          <div className="shrink-0 pt-1 sm:pt-0 sm:self-center w-full sm:w-auto">
             <button
               onClick={() => onNavigateTab('growth')}
-              className="min-h-[44px] w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-brand-600/20 flex items-center justify-center space-x-2 transition-all cursor-pointer transform hover:scale-[1.02]"
+              className="min-h-[40px] sm:min-h-[44px] w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-brand-600/20 flex items-center justify-center space-x-2 transition-all cursor-pointer active:scale-95 touch-manipulation"
             >
               <Activity className="w-4 h-4 shrink-0" />
               <span>Launch Growth Engine</span>

@@ -792,8 +792,8 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
 
             roster_table_data.append([
                 Paragraph(str(idx), td_style),
-                Paragraph(reg_no, td_style),
-                Paragraph(s.get("name") or "", td_left),
+                Paragraph(str(reg_no).strip().upper(), td_style),
+                Paragraph(str(s.get("name") or s.get("student_name") or "").strip().upper(), td_left),
                 Paragraph(d_code, td_style),
                 Paragraph(y_val, td_style),
                 Paragraph(f"<font color='#059669'>{q1}</font>", td_bold),

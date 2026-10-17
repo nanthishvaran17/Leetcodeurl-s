@@ -111,6 +111,48 @@ def unregister_device_token_endpoint(
     return NotificationService.unregister_device_token(db, user_id=user_id, device_token=req.device_token)
 
 
+@router.post("/test-push")
+def send_test_push_endpoint(
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Sends a real instant test push notification to verify the user's active mobile device connection."""
+    user_id = get_primary_user_id(current_user)
+    variants = list(get_user_id_variants(current_user))
+    
+    # Check registered devices
+    from backend.models import FCMDevice
+    devices = db.query(FCMDevice).filter(
+        FCMDevice.user_id.in_(variants),
+        FCMDevice.is_active == True
+    ).all()
+    
+    if not devices:
+        return {
+            "success": False,
+            "message": "No active mobile device registered for this user.",
+            "instructions": "Open the web app on your phone browser (Chrome/Safari) and click 'Allow Notifications' when prompted."
+        }
+        
+    result = NotificationService.emit_event(
+        event_type="URGENT_ANNOUNCEMENT",
+        title="Push Notification Verified",
+        body="Your device is 100% connected to receive real-time admin messages and student allocations.",
+        actor_user_id=user_id,
+        recipient_scope="INDIVIDUAL",
+        recipient_target=user_id,
+        route="/dashboard",
+        priority="critical"
+    )
+    
+    return {
+        "success": True,
+        "message": f"Test push sent successfully to {len(devices)} active device(s).",
+        "devices": [{"id": d.id, "platform": d.platform, "device_model": d.device_model} for d in devices],
+        "result": result
+    }
+
+
 def get_user_id_variants(current_user: Any) -> set:
     user_id_variants = set()
     primary_id = get_primary_user_id(current_user)

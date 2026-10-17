@@ -80,6 +80,28 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   const { notify } = useToastNotification();
   const seenNotificationIdsRef = React.useRef(new Set<string>());
 
+  // Live OS / Mobile App Icon Badge & Dynamic Tab Title (like WhatsApp, Twitter, Instagram)
+  useEffect(() => {
+    // 1. Mobile Home Screen App Icon Badge (PWA & Android)
+    if (typeof navigator !== 'undefined' && 'setAppBadge' in navigator) {
+      if (unreadCount > 0) {
+        (navigator as any).setAppBadge(unreadCount).catch(() => {});
+      } else {
+        (navigator as any).clearAppBadge().catch(() => {});
+      }
+    }
+
+    // 2. Dynamic Browser Tab Title with Live Unread Counter
+    if (typeof document !== 'undefined') {
+      const baseTitle = 'NEC LeetCode Tracker';
+      if (unreadCount > 0) {
+        document.title = `(${unreadCount}) ${baseTitle}`;
+      } else {
+        document.title = baseTitle;
+      }
+    }
+  }, [unreadCount]);
+
   // Request browser desktop notification permission on explicit user action
   const requestNotificationPermission = useCallback(async () => {
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {

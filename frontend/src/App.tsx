@@ -18,8 +18,10 @@ import { useScrollLock, forceUnlockScroll } from './hooks/useScrollLock';
 import { StudentProfileSkeleton } from './components/StudentProfileSkeleton';
 import { StudentShareCardModal } from './components/StudentShareCardModal';
 import { MobileFilterDrawer } from './components/MobileFilterDrawer';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { BackToTopButton } from './components/BackToTopButton';
 import { isAdminOtpVerified } from './utils/adminOtpAuth';
+import { PullToRefresh } from './components/PullToRefresh';
 
 const LandingPage = safeLazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
 import { LoginPage } from './pages/LoginPage';
@@ -408,6 +410,11 @@ export const App: React.FC = () => {
       };
       window.addEventListener('open_mobile_filter_drawer', handleOpenFilterDrawer);
 
+      const handleOpenCommandPalette = () => {
+        setShowCommandPalette(true);
+      };
+      window.addEventListener('open_command_palette', handleOpenCommandPalette);
+
       window.addEventListener('open_share_card', handleOpenShareModal);
 
       return () => {
@@ -415,6 +422,7 @@ export const App: React.FC = () => {
         window.removeEventListener('open_ai_widget', handleOpenAi);
         window.removeEventListener('open_ai_assistant', handleOpenAiAssistant);
         window.removeEventListener('open_mobile_filter_drawer', handleOpenFilterDrawer);
+        window.removeEventListener('open_command_palette', handleOpenCommandPalette);
         window.removeEventListener('open_share_card', handleOpenShareModal);
       };
     }, [handleOpenShareModal]);
@@ -1023,7 +1031,7 @@ export const App: React.FC = () => {
       <div className={`flex-1 min-h-0 w-full mx-auto relative flex flex-col ${
         activeTab === 'messages'
           ? 'pt-0 pb-0 px-0 max-w-full overflow-hidden h-full'
-          : 'pt-3.5 sm:pt-4 pb-24 md:pb-6 px-2.5 sm:px-4 max-w-full'
+          : 'pt-3.5 sm:pt-4 pb-20 sm:pb-6 px-2.5 sm:px-4 max-w-full'
       }`}>
         
         {/* Slide-out Sidebar Drawer */}
@@ -1039,12 +1047,13 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* Main Content View Container with Fast CSS Transition */}
-        <main
-          id="main-content"
-          key={activeTab}
-          className={`min-w-0 w-full animate-fade-in ${activeTab === 'messages' ? 'flex-1 min-h-0 h-full flex flex-col overflow-hidden' : ''}`}
-        >
+        {/* Main Content View Container with Native Mobile Pull-to-Refresh */}
+        <PullToRefresh onRefresh={fetchSummary}>
+          <main
+            id="main-content"
+            key={activeTab}
+            className={`min-w-0 w-full animate-fade-in ${activeTab === 'messages' ? 'flex-1 min-h-0 h-full flex flex-col overflow-hidden' : ''}`}
+          >
 
             <ErrorBoundary>
               <Suspense fallback={<PageSkeleton />}>
@@ -1194,6 +1203,7 @@ export const App: React.FC = () => {
             </Suspense>
           </ErrorBoundary>
         </main>
+      </PullToRefresh>
 
       </div>
 
@@ -1373,6 +1383,21 @@ export const App: React.FC = () => {
 
       {/* Modern Floating Back to Top Button (hidden on messages tab to prevent overlapping chat composer) */}
       {activeTab !== 'messages' && <BackToTopButton />}
+
+      {/* Sleek Floating Island Mobile Bottom Navigation */}
+      {isAuthenticated && activeTab !== 'messages' && (
+        <MobileBottomNav
+          activeTab={activeTab}
+          setActiveTab={handleTabChange}
+          onOpenShareCard={() => setShowShareModal(true)}
+          onOpenAiWidget={() => {
+            setShowAiWidget(true);
+            window.dispatchEvent(new CustomEvent('force_open_ai_widget'));
+          }}
+          isAuthenticated={isAuthenticated}
+          userRole={(user as any)?.role || ''}
+        />
+      )}
 
     </div>
   );

@@ -495,8 +495,8 @@ def _build_canonical_contest_dataset_internal(
 
     for idx, student in enumerate(all_master_students, start=1):
         s_id = student.id
-        reg_no = student.reg_no
-        name = student.name
+        reg_no = (student.reg_no or "").strip().upper()
+        name = (student.name or "").strip().upper()
         p_res = public_res_map.get(s_id)
         v_res = virtual_res_map.get(s_id)
 

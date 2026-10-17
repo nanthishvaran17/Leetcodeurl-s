@@ -1577,9 +1577,9 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
         logger.info(f"[ADMIN_LOGOUT] User {user.username} ({user.email}) logged out successfully.")
         from backend.services.audit_service import log_admin_action
         
-        metadata = {"session_id": session_id} if session_id else {}
+        metadata: dict[str, Any] = {"session_id": str(session_id)} if session_id else {}
         if session_duration:
-            metadata["session_duration"] = session_duration
+            metadata["session_duration"] = str(session_duration)
             
         event_id = f"evt_logout_{session_id}" if session_id else None
         
@@ -2252,7 +2252,7 @@ def admin_login_init(login_data: UserLogin, request: Request, response: Response
     if user.role.lower() not in valid_roles:
         raise HTTPException(status_code=403, detail="Unauthorized access. Admins only.")
 
-    target_email = user.email or get_authoritative_admin_email()
+    target_email = str(user.email or get_authoritative_admin_email())
     from backend.services.otp_service import create_otp_transaction
     
     # Store in persistent database EmailOTPRecord to enable distributed multi-worker verification
@@ -2302,7 +2302,7 @@ def admin_verify_otp(data: AdminVerifyOTPRequest, request: Request, response: Re
         raise HTTPException(status_code=400, detail="Invalid credentials.")
 
     # 2. Verify OTP (Database persistent record first, fallback to memory cache)
-    target_email = user.email or get_authoritative_admin_email()
+    target_email = str(user.email or get_authoritative_admin_email())
     from backend.services.otp_service import verify_otp_transaction
     
     otp_valid, otp_msg, _ = verify_otp_transaction(db, target_email, data.otp.strip())
@@ -2762,9 +2762,9 @@ async def enroll_face(request: Request, db: Session = Depends(get_db)):
         "anchors": anchors if (isinstance(anchors, list) and len(anchors) > 0) else [descriptor]
     }
 
-    current_user.face_descriptor = json.dumps(stored_payload)
-    current_user.face_id_enabled = True
-    current_user.face_enrolled_at = datetime.datetime.now(datetime.timezone.utc)
+    setattr(current_user, "face_descriptor", json.dumps(stored_payload))
+    setattr(current_user, "face_id_enabled", True)
+    setattr(current_user, "face_enrolled_at", datetime.datetime.now(datetime.timezone.utc))
     db.commit()
 
     logger.info(f"[FACE_ID] Face enrolled successfully for user {current_user.username} (ID: {current_user.id})")
@@ -2781,9 +2781,9 @@ def remove_face(request: Request, db: Session = Depends(get_db)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
 
-    current_user.face_id_enabled = False
-    current_user.face_descriptor = None
-    current_user.face_enrolled_at = None
+    setattr(current_user, "face_id_enabled", False)
+    setattr(current_user, "face_descriptor", None)
+    setattr(current_user, "face_enrolled_at", None)
     db.commit()
 
     logger.info(f"[FACE_ID] Face ID deactivated for user {current_user.username}")
@@ -2806,7 +2806,7 @@ async def test_face_verify(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid descriptor.")
 
     try:
-        stored = json.loads(current_user.face_descriptor)
+        stored = json.loads(str(current_user.face_descriptor))
         similarity = _calculate_vector_similarity(descriptor, stored)
         # Match threshold 0.58 with multi-zone feature extraction ensures high true-positive accuracy
         is_match = similarity >= 0.58
@@ -2845,7 +2845,7 @@ async def login_with_face(request: Request, response: Response, db: Session = De
             return JSONResponse(status_code=400, content={"success": False, "message": "Face ID is not activated for this user ID. Please use password or activate Face ID in Profile Settings."})
 
         try:
-            stored = json.loads(target_user.face_descriptor)
+            stored = json.loads(str(target_user.face_descriptor))
             score = _calculate_vector_similarity(descriptor, stored)
             if score >= match_threshold:
                 best_user = target_user
@@ -2860,7 +2860,7 @@ async def login_with_face(request: Request, response: Response, db: Session = De
             if not cand.face_descriptor:
                 continue
             try:
-                stored = json.loads(cand.face_descriptor)
+                stored = json.loads(str(cand.face_descriptor))
                 score = _calculate_vector_similarity(descriptor, stored)
                 if score > best_score:
                     best_score = score

@@ -1,4 +1,3 @@
-import { SwipeHandle } from './SwipeHandle';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Edit3, X, CheckCircle, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Mail, Calendar, Plus, Trash2 } from 'lucide-react';
@@ -626,9 +625,6 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         className="w-full h-full sm:h-auto max-h-[100dvh] sm:max-h-[88vh] max-w-xl my-auto bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden mobile-responsive-modal animate-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Mobile Drag Indicator */}
-        <SwipeHandle onClose={onClose} className="py-2" pillClassName="bg-slate-300 dark:bg-slate-700 hover:bg-slate-400" />
-
         {/* Fixed Header */}
         <div className="px-4 py-3.5 sm:px-6 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0 z-20 shadow-md safe-area-pt">
           <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">

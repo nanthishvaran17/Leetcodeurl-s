@@ -2,7 +2,7 @@ import { SwipeHandle } from '../components/SwipeHandle';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { createPortal } from 'react-dom';
-import { ShieldAlert, Clock, Search, Filter, RefreshCw, CheckCircle2, AlertTriangle, UserCheck, X, Eye, Laptop, Terminal, User, Activity, Globe, Settings, Mail, FileText, LogIn, LogOut, Navigation, Printer, Download } from 'lucide-react';
+import { ShieldAlert, Clock, Search, Filter, RefreshCw, CheckCircle2, AlertTriangle, UserCheck, X, Eye, Laptop, Terminal, User, Activity, Globe, Settings, Mail, FileText, LogIn, LogOut, Navigation, Download, SlidersHorizontal, ListFilter } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
@@ -84,6 +84,7 @@ export const AuditLogPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [limitFilter, setLimitFilter] = useState<string>('10');
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
 
   const { user } = useAuth();
@@ -345,6 +346,14 @@ export const AuditLogPage: React.FC = () => {
     { value: 'WARNING', label: 'WARNING', badge: 'WARN', badgeColor: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-700' },
   ], []);
 
+  const limitOptions: DropdownOption[] = useMemo(() => [
+    { value: '5', label: 'Top 5 Logs', badge: '5', badgeColor: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700' },
+    { value: '10', label: 'Top 10 Logs', badge: '10', badgeColor: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700' },
+    { value: '25', label: 'Top 25 Logs', badge: '25', badgeColor: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700' },
+    { value: '50', label: 'Top 50 Logs', badge: '50', badgeColor: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700' },
+    { value: '100', label: 'Top 100 Logs', badge: '100', badgeColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700' },
+  ], []);
+
   useEffect(() => {
     const controller = new AbortController();
     const timer = setTimeout(() => {
@@ -355,12 +364,13 @@ export const AuditLogPage: React.FC = () => {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [searchTerm, roleFilter, statusFilter]);
+  }, [searchTerm, roleFilter, statusFilter, limitFilter]);
 
   const fetchLogs = async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      let url = '/admin/audit-logs?limit=50';
+      const lim = parseInt(limitFilter, 10) || 10;
+      let url = `/admin/audit-logs?limit=${lim}`;
       if (roleFilter !== 'ALL') url += `&role=${encodeURIComponent(roleFilter)}`;
       if (statusFilter !== 'ALL') url += `&status=${encodeURIComponent(statusFilter)}`;
       if (searchTerm.trim()) url += `&search=${encodeURIComponent(searchTerm.trim())}`;
@@ -402,38 +412,60 @@ export const AuditLogPage: React.FC = () => {
   return (
     <div className="space-y-6 pt-0 pb-16 animate-slideUp">
       
-      {/* HEADER */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-5 sm:p-6 md:p-8 shadow-2xl border border-indigo-500/20">
-        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+      {/* HEADER - SLEEK MODERN MOBILE & DESKTOP HERO */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-3.5 sm:p-6 md:p-8 shadow-2xl border border-indigo-500/20">
+        <div className="absolute inset-0 rounded-2xl sm:rounded-3xl overflow-hidden pointer-events-none">
           <div className="absolute top-0 right-0 -mt-16 -mr-16 w-96 h-96 bg-indigo-500/8 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-72 h-72 bg-brand-500/6 rounded-full blur-3xl"></div>
         </div>
-        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl min-w-0">
-            <div className="inline-flex max-w-full items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-400/25 text-indigo-300 text-[10px] sm:text-xs font-black">
-              <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-              <span className="truncate">ADMIN IDENTITY & AUDIT TRAIL</span>
+        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-3 sm:gap-6">
+          <div className="space-y-1.5 sm:space-y-2.5 max-w-2xl min-w-0">
+            {/* Mobile Top Row: Pill Badge + Quick Refresh */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="inline-flex max-w-full items-center space-x-1.5 sm:space-x-2 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-indigo-500/15 border border-indigo-400/25 text-indigo-300 text-[10px] sm:text-xs font-black">
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="truncate">ADMIN IDENTITY & AUDIT TRAIL</span>
+              </div>
+
+              {/* Quick Refresh Icon on Mobile */}
+              <button
+                onClick={() => fetchLogs()}
+                disabled={loading}
+                className="sm:hidden inline-flex items-center justify-center w-8 h-8 rounded-xl bg-white/10 hover:bg-white/15 active:scale-90 text-slate-200 border border-white/10 transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                title="Refresh logs"
+                aria-label="Refresh logs"
+              >
+                <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+              </button>
             </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white leading-tight break-words">
+
+            <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-snug break-words">
               Admin Identity & <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-sky-300 to-violet-400">Audit Log</span>
             </h1>
-            <p className="text-xs md:text-sm text-slate-300 font-semibold leading-relaxed">
+            <p className="hidden sm:block text-xs md:text-sm text-slate-300 font-semibold leading-relaxed">
               Real-time database audit log recording administrator identity, logins, page visits, report generation, email dispatches & setting modifications. Click any log entry to inspect full event telemetry.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2.5 w-full xl:w-auto shrink-0 self-start xl:self-center">
-            <button
-              onClick={handlePrintAuditLogReport}
-              className="inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-2 sm:px-5 py-2.5 h-11 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-2xl text-[11px] sm:text-xs font-black transition-all cursor-pointer backdrop-blur-md border border-white/15 shadow-sm whitespace-nowrap touch-manipulation"
-              title="Print Audit Log Report"
-            >
-              <Printer className="w-4 h-4 text-amber-300" />
-              <span>Print Report</span>
-            </button>
+
+          {/* MOBILE ACTION PILL */}
+          <div className="flex sm:hidden items-center gap-2 pt-0.5">
             <button
               onClick={handleExportAuditLogsExcel}
               disabled={exportingExcel}
-              className="inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-2 sm:px-5 py-2.5 h-11 bg-emerald-600/80 hover:bg-emerald-500 active:scale-95 disabled:opacity-60 text-white rounded-2xl text-[11px] sm:text-xs font-black shadow-lg shadow-emerald-600/20 transition-all cursor-pointer border border-emerald-400/30 whitespace-nowrap touch-manipulation"
+              className="inline-flex shrink-0 items-center gap-1.5 h-8 px-3 rounded-full bg-emerald-500/20 active:bg-emerald-500/40 text-emerald-200 border border-emerald-400/30 text-xs font-bold transition-all active:scale-95 touch-manipulation shadow-xs cursor-pointer disabled:opacity-60"
+              title="Export formatted Excel report"
+            >
+              <Download size={12} className={`shrink-0 text-emerald-300 ${exportingExcel ? 'animate-spin' : ''}`} />
+              <span>{exportingExcel ? 'Exporting...' : 'Excel Report'}</span>
+            </button>
+          </div>
+
+          {/* DESKTOP ACTION BUTTONS (sm and up) */}
+          <div className="hidden sm:flex sm:items-center gap-2.5 w-full xl:w-auto shrink-0 self-start xl:self-center">
+            <button
+              onClick={handleExportAuditLogsExcel}
+              disabled={exportingExcel}
+              className="inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 h-10 bg-emerald-600/80 hover:bg-emerald-500 active:scale-95 disabled:opacity-60 text-white rounded-xl text-xs font-black shadow-lg shadow-emerald-600/20 transition-all cursor-pointer border border-emerald-400/30 whitespace-nowrap touch-manipulation"
               title="Export formatted Excel report with clean column widths"
             >
               <Download className={`w-4 h-4 text-emerald-200 ${exportingExcel ? 'animate-spin' : ''}`} />
@@ -442,7 +474,7 @@ export const AuditLogPage: React.FC = () => {
             <button
               onClick={() => fetchLogs()}
               disabled={loading}
-              className="col-span-2 inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-3 sm:px-5 py-2.5 h-11 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white rounded-2xl text-[11px] sm:text-xs font-black shadow-lg shadow-indigo-600/25 transition-all cursor-pointer active:scale-95 border border-indigo-400/30 whitespace-nowrap touch-manipulation"
+              className="inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 h-10 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white rounded-xl text-xs font-black shadow-lg shadow-indigo-600/25 transition-all cursor-pointer active:scale-95 border border-indigo-400/30 whitespace-nowrap touch-manipulation"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               <span>{loading ? 'Refreshing...' : 'Refresh Logs'}</span>
@@ -451,80 +483,128 @@ export const AuditLogPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Filter Controls */}
-      <div className="glass-card p-5 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3.5 shadow-sm bg-white dark:bg-navy-950">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-end">
-          {/* 1. Search Box (Left, Spans 6 Columns) */}
-          <div className="md:col-span-6 flex flex-col space-y-1.5 min-w-0 w-full">
-            <label htmlFor="audit-search-input" className="block text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider truncate h-4 leading-4 m-0 p-0">
-              Search Audit Trail
-            </label>
-            <div className="relative flex items-center w-full">
-              <input
-                id="audit-search-input"
-                type="text"
-                placeholder="Search by Audit ID, Admin Name, Email, Action..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    fetchLogs();
-                  }
-                }}
-                className="w-full h-11 min-h-[44px] bg-white dark:bg-slate-800/90 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs font-bold py-2 pl-10 pr-9 rounded-2xl border border-slate-300 dark:border-slate-700 shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-left transition-all"
-              />
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
-                <Search className="w-4 h-4 stroke-[2.5]" />
-              </div>
-              {searchTerm && (
-                <button
-                  type="button"
-                  onClick={() => setSearchTerm('')}
-                  className="absolute inset-y-0 right-0 z-10 flex items-center px-3 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
-                  title="Clear search"
-                >
-                  <X className="w-4 h-4 stroke-[2.5]" />
-                </button>
-              )}
+      {/* Filter Controls — Modern Mobile & Desktop Interface */}
+      <div className="glass-card p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 space-y-3 shadow-xs bg-white/95 dark:bg-navy-950/95 backdrop-blur-md">
+        
+        {/* Top Filter Header: Title + Telemetry Count */}
+        <div className="flex items-center justify-between gap-2 pb-0.5">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shrink-0">
+              <SlidersHorizontal className="w-3.5 h-3.5" />
             </div>
+            <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white truncate">
+              Audit Filters &amp; Query
+            </span>
           </div>
 
-          {/* 2. Role & Status Filters: 2-Columns on mobile, 6 Columns on desktop */}
-          <div className="md:col-span-6 grid grid-cols-2 gap-3 min-w-0 w-full">
-            <div className="min-w-0 w-full">
-              <CustomDropdown
-                id="audit-role-filter"
-                label="Role Filter"
-                options={roleOptions}
-                value={roleFilter}
-                onChange={setRoleFilter}
-                icon={UserCheck}
-              />
-            </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700">
+              {logs.length} Loaded
+            </span>
+          </div>
+        </div>
 
-            <div className="min-w-0 w-full">
-              <CustomDropdown
-                id="audit-status-filter"
-                label="Status Filter"
-                options={statusOptions}
-                value={statusFilter}
-                onChange={setStatusFilter}
-                icon={Filter}
-              />
-            </div>
+        {/* 1. Search Bar */}
+        <div className="relative flex items-center w-full">
+          <input
+            id="audit-search-input"
+            type="text"
+            placeholder="Search by Audit ID, Admin, Email, Action..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                fetchLogs();
+              }
+            }}
+            className="w-full h-10 sm:h-11 bg-slate-50/80 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs font-bold py-2 pl-9 pr-9 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-left transition-all"
+          />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-400 dark:text-slate-500">
+            <Search className="w-3.5 h-3.5 stroke-[2.5]" />
+          </div>
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm('')}
+              className="absolute inset-y-0 right-0 z-10 flex items-center px-3 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
+              title="Clear search"
+            >
+              <X className="w-3.5 h-3.5 stroke-[2.5]" />
+            </button>
+          )}
+        </div>
+
+        {/* 2. Quick Limit Pills Bar (Top 5, Top 10, Top 25, Top 50, Top 100) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-0.5 px-0.5">
+          <span className="text-[10px] font-extrabold uppercase text-slate-400 dark:text-slate-500 tracking-wider shrink-0 mr-0.5 flex items-center gap-1">
+            <ListFilter className="w-3 h-3 text-indigo-500" />
+            <span>Show:</span>
+          </span>
+          {(['5', '10', '25', '50', '100'] as const).map((cnt) => (
+            <button
+              key={cnt}
+              type="button"
+              onClick={() => setLimitFilter(cnt)}
+              className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-black transition-all shrink-0 cursor-pointer active:scale-95 ${
+                limitFilter === cnt
+                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-2xs'
+                  : 'bg-slate-100/80 hover:bg-slate-200/80 dark:bg-navy-900/90 dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700/80'
+              }`}
+            >
+              Top {cnt}
+            </button>
+          ))}
+        </div>
+
+        {/* 3. Dropdowns (Role, Status, Limit) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 w-full pt-0.5">
+          <div className="min-w-0 w-full">
+            <CustomDropdown
+              id="audit-role-filter"
+              label="Role Filter"
+              options={roleOptions}
+              value={roleFilter}
+              onChange={setRoleFilter}
+              icon={UserCheck}
+              compact={true}
+            />
+          </div>
+
+          <div className="min-w-0 w-full">
+            <CustomDropdown
+              id="audit-status-filter"
+              label="Status Filter"
+              options={statusOptions}
+              value={statusFilter}
+              onChange={setStatusFilter}
+              icon={Filter}
+              compact={true}
+            />
+          </div>
+
+          <div className="min-w-0 w-full col-span-2 sm:col-span-1">
+            <CustomDropdown
+              id="audit-limit-filter"
+              label="Max Entries"
+              options={limitOptions}
+              value={limitFilter}
+              onChange={setLimitFilter}
+              icon={ListFilter}
+              compact={true}
+            />
           </div>
         </div>
 
         {/* Filter Summary / Quick Reset bar when filters active */}
-        {(searchTerm || roleFilter !== 'ALL' || statusFilter !== 'ALL') && (
-          <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-xs flex-wrap gap-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+        {(searchTerm || roleFilter !== 'ALL' || statusFilter !== 'ALL' || limitFilter !== '10') && (
+          <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 dark:border-slate-800 text-xs flex-wrap gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                 Active filters:
               </span>
               {searchTerm && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[10px] font-black font-mono">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[10px] font-black font-mono">
                   "{searchTerm}"
                   <button type="button" onClick={() => setSearchTerm('')} className="hover:text-rose-500 cursor-pointer">
                     <X className="w-3 h-3" />
@@ -532,7 +612,7 @@ export const AuditLogPage: React.FC = () => {
                 </span>
               )}
               {roleFilter !== 'ALL' && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-[10px] font-black">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-[10px] font-black">
                   Role: {roleFilter}
                   <button type="button" onClick={() => setRoleFilter('ALL')} className="hover:text-rose-500 cursor-pointer">
                     <X className="w-3 h-3" />
@@ -540,9 +620,17 @@ export const AuditLogPage: React.FC = () => {
                 </span>
               )}
               {statusFilter !== 'ALL' && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-black">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-black">
                   Status: {statusFilter}
                   <button type="button" onClick={() => setStatusFilter('ALL')} className="hover:text-rose-500 cursor-pointer">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {limitFilter !== '10' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-[10px] font-black font-mono">
+                  Top: {limitFilter}
+                  <button type="button" onClick={() => setLimitFilter('10')} className="hover:text-rose-500 cursor-pointer">
                     <X className="w-3 h-3" />
                   </button>
                 </span>
@@ -554,6 +642,7 @@ export const AuditLogPage: React.FC = () => {
                 setSearchTerm('');
                 setRoleFilter('ALL');
                 setStatusFilter('ALL');
+                setLimitFilter('10');
               }}
               className="inline-flex items-center gap-1 text-[11px] font-extrabold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors cursor-pointer shrink-0"
             >

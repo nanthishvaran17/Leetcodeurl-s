@@ -564,6 +564,18 @@ def run_migrations():
                         ADD COLUMN IF NOT EXISTS superseded_by_id INTEGER;
                     """,
                     """
+                    ALTER TABLE student_stat_snapshots
+                        ADD COLUMN IF NOT EXISTS contest_global_ranking INTEGER,
+                        ADD COLUMN IF NOT EXISTS delta_total INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS delta_easy INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS delta_medium INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS delta_hard INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS delta_rating DOUBLE PRECISION DEFAULT 0.0,
+                        ADD COLUMN IF NOT EXISTS sync_run_id VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'sync',
+                        ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT TRUE;
+                    """,
+                    """
                     ALTER TABLE email_otp_records
                         ADD COLUMN IF NOT EXISTS delivery_status VARCHAR(50) DEFAULT 'PENDING',
                         ADD COLUMN IF NOT EXISTS provider_message_id VARCHAR(255);
@@ -640,7 +652,8 @@ def run_migrations():
                     "CREATE INDEX IF NOT EXISTS ix_faculty_student_assignments_faculty_id ON faculty_student_assignments (faculty_id);",
                     "CREATE INDEX IF NOT EXISTS ix_faculty_student_assignments_is_active ON faculty_student_assignments (is_active);",
                     "CREATE INDEX IF NOT EXISTS ix_admin_audit_logs_event_timestamp ON admin_audit_logs (event_timestamp);",
-                    "CREATE INDEX IF NOT EXISTS ix_admin_audit_logs_audit_id ON admin_audit_logs (audit_id);"
+                    "CREATE INDEX IF NOT EXISTS ix_admin_audit_logs_audit_id ON admin_audit_logs (audit_id);",
+                    "CREATE INDEX IF NOT EXISTS ix_student_stat_snapshots_student_captured ON student_stat_snapshots (student_id, captured_at);"
                 ]
                 for idx_stmt in idx_statements:
                     try:

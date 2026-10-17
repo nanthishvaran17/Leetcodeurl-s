@@ -48,8 +48,8 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
         for idx, r in enumerate(contest_rows, start=1):
             writer.writerow([
                 idx,
-                r.get("reg_no", ""),
-                r.get("name", ""),
+                str(r.get("reg_no", "")).strip().upper(),
+                str(r.get("name") or r.get("student_name") or "").strip().upper(),
                 r.get("dept", r.get("department", "")),
                 r.get("year", r.get("year_level", "")),
                 _fmt_acc(r.get("accommodation") or r.get("accomodation") or r.get("accommodation_type")),
@@ -78,8 +78,8 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
                 idx,
                 p.get("contest_name", ""),
                 p.get("date", ""),
-                p.get("reg_no", ""),
-                p.get("student_name", ""),
+                str(p.get("reg_no", "")).strip().upper(),
+                str(p.get("student_name") or p.get("name") or "").strip().upper(),
                 p.get("dept", ""),
                 p.get("year", ""),
                 p.get("problems_solved", 0),
@@ -96,8 +96,8 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
         for idx, s in enumerate(rows_to_export, start=1):
             writer.writerow([
                 idx,
-                s.get("reg_no", ""),
-                s.get("name", ""),
+                str(s.get("reg_no", "")).strip().upper(),
+                str(s.get("name") or s.get("student_name") or "").strip().upper(),
                 s.get("dept", s.get("department", "")),
                 s.get("year", s.get("year_level", "")),
                 _fmt_acc(s.get("accommodation") or s.get("accomodation") or s.get("accommodation_type")),

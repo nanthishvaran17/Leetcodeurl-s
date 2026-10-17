@@ -143,6 +143,14 @@ def run_db_migrations():
             ("leetcode_profile_stats", "contest_sync_status", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS contest_sync_status VARCHAR(50)"),
             ("leetcode_profile_stats", "contest_last_verified_at", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS contest_last_verified_at TIMESTAMP"),
             ("student_stat_snapshots", "contest_global_ranking", "ALTER TABLE student_stat_snapshots ADD COLUMN IF NOT EXISTS contest_global_ranking INTEGER"),
+            ("student_stat_snapshots", "delta_total", "ALTER TABLE student_stat_snapshots ADD COLUMN IF NOT EXISTS delta_total INTEGER DEFAULT 0"),
+            ("student_stat_snapshots", "delta_easy", "ALTER TABLE student_stat_snapshots ADD COLUMN IF NOT EXISTS delta_easy INTEGER DEFAULT 0"),
+            ("student_stat_snapshots", "delta_medium", "ALTER TABLE student_stat_snapshots ADD COLUMN IF NOT EXISTS delta_medium INTEGER DEFAULT 0"),
+            ("student_stat_snapshots", "delta_hard", "ALTER TABLE student_stat_snapshots ADD COLUMN IF NOT EXISTS delta_hard INTEGER DEFAULT 0"),
+            ("student_stat_snapshots", "delta_rating", "ALTER TABLE student_stat_snapshots ADD COLUMN IF NOT EXISTS delta_rating DOUBLE PRECISION DEFAULT 0.0"),
+            ("student_stat_snapshots", "sync_run_id", "ALTER TABLE student_stat_snapshots ADD COLUMN IF NOT EXISTS sync_run_id VARCHAR(100)"),
+            ("student_stat_snapshots", "source", "ALTER TABLE student_stat_snapshots ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'sync'"),
+            ("student_stat_snapshots", "is_verified", "ALTER TABLE student_stat_snapshots ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT TRUE"),
             # weekly_public_results 
             ("weekly_public_results", "state", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS state VARCHAR(30) DEFAULT 'PENDING'"),
             ("weekly_public_results", "previous_state", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS previous_state VARCHAR(30)"),
@@ -378,6 +386,7 @@ def run_db_migrations():
             "CREATE INDEX IF NOT EXISTS ix_messages_unread_status ON messages (conversation_id, receiver_id, status)",
             "CREATE INDEX IF NOT EXISTS ix_messages_message_id ON messages (message_id)",
             "CREATE INDEX IF NOT EXISTS ix_conversations_conversation_id ON conversations (conversation_id)",
+            "CREATE INDEX IF NOT EXISTS ix_student_stat_snapshots_student_captured ON student_stat_snapshots (student_id, captured_at)",
         ]
         for idx_sql in perf_indexes:
             try:
@@ -612,6 +621,33 @@ def run_db_migrations():
             print("[DB Migration] Added missing columns to scheduled_job_executions table in SQLite.")
         except Exception as _job_col_err:
             print(f"[DB Migration] scheduled_job_executions column migration note: {_job_col_err}")
+
+        # Ensure student_stat_snapshots table has all columns in SQLite
+        try:
+            cursor.execute("PRAGMA table_info(student_stat_snapshots)")
+            snap_cols = {info[1] for info in cursor.fetchall()}
+            if snap_cols:
+                snap_migrations = [
+                    ("contest_global_ranking", "ALTER TABLE student_stat_snapshots ADD COLUMN contest_global_ranking INTEGER"),
+                    ("delta_total", "ALTER TABLE student_stat_snapshots ADD COLUMN delta_total INTEGER DEFAULT 0"),
+                    ("delta_easy", "ALTER TABLE student_stat_snapshots ADD COLUMN delta_easy INTEGER DEFAULT 0"),
+                    ("delta_medium", "ALTER TABLE student_stat_snapshots ADD COLUMN delta_medium INTEGER DEFAULT 0"),
+                    ("delta_hard", "ALTER TABLE student_stat_snapshots ADD COLUMN delta_hard INTEGER DEFAULT 0"),
+                    ("delta_rating", "ALTER TABLE student_stat_snapshots ADD COLUMN delta_rating REAL DEFAULT 0.0"),
+                    ("sync_run_id", "ALTER TABLE student_stat_snapshots ADD COLUMN sync_run_id VARCHAR(100)"),
+                    ("source", "ALTER TABLE student_stat_snapshots ADD COLUMN source VARCHAR(50) DEFAULT 'sync'"),
+                    ("is_verified", "ALTER TABLE student_stat_snapshots ADD COLUMN is_verified BOOLEAN DEFAULT 1"),
+                ]
+                for scname, scsql in snap_migrations:
+                    if scname not in snap_cols:
+                        try:
+                            cursor.execute(scsql)
+                            conn.commit()
+                            print(f"[DB Migration] Added column {scname} to student_stat_snapshots in SQLite.")
+                        except Exception as e:
+                            pass
+        except Exception as _snap_err:
+            pass
 
         columns_to_add = [
             ("recent_contest_name",  "VARCHAR(150)"),

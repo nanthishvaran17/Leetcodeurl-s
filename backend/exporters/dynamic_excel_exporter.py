@@ -857,6 +857,11 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                             val = dt_ist.strftime("%d %b %Y, %I:%M %p IST")
                 except Exception:
                     pass
+
+            if title_lower in ("student name", "name", "full name", "student") and isinstance(val, str):
+                val = val.strip().upper()
+            elif title_lower in ("register no", "reg no", "reg_no") and isinstance(val, str):
+                val = val.strip().upper()
                 
             cell = ws.cell(row=r_idx, column=col_idx, value=val)
             cell.font = FONT_BODY
@@ -1371,8 +1376,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             r_idx = hdr_top_start + idx
             vals = [
                 idx,
-                str(s_row.get("reg_no") or s_row.get("register_no") or "—"),
-                str(s_row.get("name") or s_row.get("student_name") or "—"),
+                str(s_row.get("reg_no") or s_row.get("register_no") or "—").strip().upper(),
+                str(s_row.get("name") or s_row.get("student_name") or "—").strip().upper(),
                 str(s_row.get("dept") or s_row.get("department") or dept),
                 int(s_row.get("solved") or s_row.get("total_solved") or 0)
             ]
@@ -1448,8 +1453,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                         
                     vals = [
                         idx,
-                        str(s_row.get("reg_no") or s_row.get("register_no") or "—"),
-                        str(s_row.get("name") or s_row.get("student_name") or "—"),
+                        str(s_row.get("reg_no") or s_row.get("register_no") or "—").strip().upper(),
+                        str(s_row.get("name") or s_row.get("student_name") or "—").strip().upper(),
                         str(s_row.get("dept") or s_row.get("department") or dept),
                         int(s_row.get("solved") or s_row.get("total_solved") or 0),
                         co_val_display

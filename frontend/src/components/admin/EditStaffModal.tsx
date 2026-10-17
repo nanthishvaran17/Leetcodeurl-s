@@ -499,20 +499,20 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
 
   return (
     <GlobalModalBackdrop isOpen={true} onClose={handleAttemptClose} className="flex items-end sm:items-center justify-center p-0 sm:p-6 bg-navy-950/75 backdrop-blur-md overflow-hidden z-[999]">
-      <div className="bg-white dark:bg-navy-950 rounded-t-[2.25rem] sm:rounded-[2.2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[92dvh] sm:h-[92vh] sm:max-h-[880px] overflow-hidden border-t sm:border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
+      <div className="bg-white dark:bg-navy-950 rounded-t-[2rem] sm:rounded-[2.2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[94dvh] sm:h-[92vh] sm:max-h-[880px] overflow-hidden border-t sm:border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
         
-        {/* MOBILE DRAG PULL HANDLE */}
-        <div className="sm:hidden pt-2.5 pb-1 flex justify-center bg-slate-900 cursor-pointer" onClick={handleAttemptClose}>
-          <div className="w-12 h-1.5 rounded-full bg-slate-600/70 hover:bg-slate-500 transition-colors" />
+        {/* MOBILE SEAMLESS DRAG PULL HANDLE */}
+        <div className="sm:hidden pt-2.5 pb-1.5 flex justify-center bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 cursor-pointer" onClick={handleAttemptClose}>
+          <div className="w-11 h-1.5 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
         </div>
 
         {/* RICH HEADER BANNER */}
-        <div className="px-4 sm:px-8 py-3.5 sm:py-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border-b border-indigo-500/30 flex items-center justify-between shrink-0 z-20 gap-3 shadow-md relative overflow-hidden">
+        <div className="px-3.5 sm:px-8 py-3 sm:py-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border-b border-indigo-500/30 flex items-center justify-between shrink-0 z-20 gap-2.5 shadow-md relative overflow-hidden">
           {/* Ambient Lighting Glow Effects */}
           <div className="absolute -top-12 -left-12 w-48 h-48 bg-brand-500/15 rounded-full blur-2xl pointer-events-none" />
           <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-indigo-500/15 rounded-full blur-2xl pointer-events-none" />
 
-          <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1 relative z-10">
+          <div className="flex items-center space-x-2.5 sm:space-x-4 min-w-0 flex-1 relative z-10">
             {/* Edit Icon Badge */}
             <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-brand-500 via-indigo-600 to-indigo-700 text-white flex items-center justify-center shadow-lg shadow-brand-500/25 border border-brand-400/40 shrink-0">
               <Edit3 className="w-4.5 h-4.5 sm:w-6 sm:h-6" />
@@ -520,16 +520,16 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
 
             <div className="min-w-0 flex-1 space-y-0.5">
               {/* Title & Badges Row */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-base sm:text-2xl font-black text-white tracking-tight truncate">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2.5">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                  <h2 className="text-sm sm:text-2xl font-black text-white tracking-tight truncate">
                     Edit Staff Member
                   </h2>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 font-mono font-black text-[9px] sm:text-xs backdrop-blur-md">
-                    <ShieldCheck className="w-3 h-3 text-indigo-400" />
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 font-mono font-bold text-[9px] sm:text-xs backdrop-blur-md">
+                    <ShieldCheck className="w-2.5 h-2.5 text-indigo-400" />
                     {staff.institutional_id || `NEC-STAFF-${String(staff.id).padStart(3, '0')}`}
                   </span>
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[9px] sm:text-xs font-black backdrop-blur-md ${
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-[9px] sm:text-xs font-bold backdrop-blur-md ${
                     isActive 
                       ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40' 
                       : 'bg-rose-500/20 text-rose-300 border-rose-400/40'
@@ -546,9 +546,9 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 relative z-10">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 relative z-10">
             {isDirty && (
-              <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-amber-500/20 text-amber-300 text-[10px] sm:text-xs font-black border border-amber-400/30 animate-pulse">
+              <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-amber-500/20 text-amber-300 text-[9.5px] sm:text-xs font-black border border-amber-400/30 animate-pulse">
                 <AlertCircle className="w-3 h-3 text-amber-400" />
                 <span className="hidden sm:inline">Unsaved Changes</span>
                 <span className="sm:hidden">Unsaved</span>
@@ -565,28 +565,30 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
           </div>
         </div>
 
-        {/* MOBILE CATEGORY TABS (QUICK JUMP TABS ON PHONE) */}
-        <div className="sm:hidden flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100/90 dark:bg-navy-900/90 border-b border-slate-200 dark:border-navy-800 overflow-x-auto no-scrollbar shrink-0 shadow-2xs">
-          {[
-            { id: 'all', label: 'All' },
-            { id: 'identity', label: 'Identity' },
-            { id: 'scope', label: 'Role & Scope' },
-            { id: 'access', label: 'Permissions' },
-            { id: 'security', label: 'Security' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setMobileTab(tab.id as any)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all cursor-pointer shrink-0 ${
-                mobileTab === tab.id
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 hover:bg-slate-50'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* MOBILE SEGMENTED TABS (CLEAN APP PILL SWITCHER) */}
+        <div className="sm:hidden px-3 py-2 bg-slate-100/95 dark:bg-navy-900/95 border-b border-slate-200/80 dark:border-navy-800 shrink-0">
+          <div className="flex items-center gap-1 p-1 bg-white/90 dark:bg-navy-950/90 rounded-xl border border-slate-200/70 dark:border-navy-800 shadow-2xs overflow-x-auto no-scrollbar">
+            {[
+              { id: 'all', label: 'All' },
+              { id: 'identity', label: 'Identity' },
+              { id: 'scope', label: 'Role & Scope' },
+              { id: 'access', label: 'Permissions' },
+              { id: 'security', label: 'Security' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setMobileTab(tab.id as any)}
+                className={`flex-1 min-w-[68px] py-1.5 px-2 rounded-lg text-[11px] font-bold whitespace-nowrap text-center transition-all cursor-pointer ${
+                  mobileTab === tab.id
+                    ? 'bg-brand-600 text-white shadow-xs font-black'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* ERROR NOTIFICATION BANNER */}
@@ -605,19 +607,19 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
           <form id="edit-staff-form" onSubmit={handleSave} className="space-y-4 sm:space-y-6">
             
             {/* MOBILE COMPACT PROFILE SUMMARY CHIP */}
-            <div className="sm:hidden flex items-center gap-3 p-3 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-xs mb-1">
-              <div className="w-10 h-10 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/20 font-black text-xs">
+            <div className="sm:hidden flex items-center gap-2.5 p-2.5 bg-white dark:bg-navy-900 rounded-xl border border-slate-200/80 dark:border-navy-800 shadow-2xs mb-2">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 font-black text-xs shadow-xs">
                 {(formData.full_name || staff.username || 'S').slice(0, 2).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-xs font-black text-slate-900 dark:text-white truncate">
                   {formData.full_name || staff.username}
                 </div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">
                   {formData.email}
                 </div>
               </div>
-              <span className="shrink-0 text-[10px] font-black uppercase px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+              <span className="shrink-0 text-[9.5px] font-black uppercase px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80">
                 {formData.role}
               </span>
             </div>
@@ -663,10 +665,10 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
               </div>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6 lg:gap-8">
               
               {/* LEFT COLUMN: IDENTITY & PROFESSIONAL DETAILS */}
-              <div className="lg:col-span-6 space-y-8">
+              <div className="lg:col-span-6 space-y-3 sm:space-y-6 lg:space-y-8">
                 
                 {/* 01 IDENTITY */}
                 <section className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5 ${mobileTab !== 'all' && mobileTab !== 'identity' ? 'hidden sm:block' : ''}`}>
@@ -807,7 +809,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                 </section>
 
                 {/* 02 PROFESSIONAL DETAILS */}
-                <section className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5 ${mobileTab !== 'all' && mobileTab !== 'identity' ? 'hidden sm:block' : ''}`}>
+                <section className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5 ${mobileTab !== 'all' && mobileTab !== 'identity' && mobileTab !== 'scope' ? 'hidden sm:block' : ''}`}>
                   <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800 pb-2.5 sm:pb-3">
                     <span className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-indigo-500 text-white font-black text-xs shadow-sm shadow-indigo-500/30">02</span>
                     <h3 className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -898,7 +900,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
               </div>
 
               {/* RIGHT COLUMN: DEPARTMENT, SCOPE, PERMISSIONS, STATUS & SECURITY */}
-              <div className="lg:col-span-6 space-y-8">
+              <div className="lg:col-span-6 space-y-3 sm:space-y-6 lg:space-y-8">
                 
                 {/* 03 DEPARTMENT & ACADEMIC SCOPE */}
                 <section className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5 ${mobileTab !== 'all' && mobileTab !== 'scope' ? 'hidden sm:block' : ''}`}>
@@ -914,8 +916,9 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                     <div className="space-y-1.5 relative z-[104]">
                       <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Department *</label>
                       {isGlobalRole ? (
-                        <div className="w-full h-11 px-4 flex items-center rounded-2xl border border-dashed border-brand-400 dark:border-brand-500/40 bg-brand-50/50 dark:bg-brand-500/5 text-xs font-black text-brand-950 dark:text-brand-200">
-                          All Departments (Global Scope)
+                        <div className="w-full h-11 px-3.5 flex items-center gap-2 rounded-xl border border-indigo-200/80 dark:border-indigo-800/60 bg-indigo-50/70 dark:bg-indigo-950/40 text-xs font-bold text-indigo-900 dark:text-indigo-200 shadow-2xs">
+                          <Building2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                          <span>All Departments (Global Scope)</span>
                         </div>
                       ) : ['Department HOD', 'Placement Coordinator'].includes(formData.role) ? (
                         <div className="relative" ref={hodDeptRef}>
@@ -999,8 +1002,9 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                     <div className="space-y-1.5 relative z-[103]">
                       <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Academic Year / Cohort</label>
                       {isGlobalRole ? (
-                        <div className="w-full h-11 px-4 flex items-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-navy-800/40 text-xs font-black text-slate-800 dark:text-slate-200">
-                          All Years (Global Access)
+                        <div className="w-full h-11 px-3.5 flex items-center gap-2 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-100/80 dark:bg-navy-900/60 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-2xs">
+                          <GraduationCap className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                          <span>All Years (Global Access)</span>
                         </div>
                       ) : (
                         <CustomDropdown
@@ -1322,7 +1326,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         </div>
 
         {/* STICKY FOOTER ACTIONS */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-50/95 dark:bg-navy-950/95 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between gap-3 shrink-0 z-20 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+        <div className="px-3.5 sm:px-6 py-2.5 sm:py-3.5 bg-slate-50/98 dark:bg-navy-950/98 backdrop-blur-md border-t border-slate-200 dark:border-navy-800 flex items-center justify-between gap-2.5 shrink-0 z-20 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
           <div className="hidden sm:flex items-center gap-2">
             {isDirty ? (
               <span className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
@@ -1333,12 +1337,12 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
             )}
           </div>
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
             <button
               type="button"
               onClick={handleAttemptClose}
               disabled={isSubmitting}
-              className="flex-1 sm:flex-none px-4 py-3 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-black text-slate-700 dark:text-slate-200 bg-slate-200/80 dark:bg-navy-850 hover:bg-slate-300 dark:hover:bg-navy-800 transition-all cursor-pointer min-h-[44px] flex items-center justify-center active:scale-95"
+              className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-black text-slate-700 dark:text-slate-200 bg-slate-200/80 dark:bg-navy-850 hover:bg-slate-300 dark:hover:bg-navy-800 transition-all cursor-pointer min-h-[42px] flex items-center justify-center active:scale-95"
             >
               Cancel
             </button>
@@ -1346,16 +1350,16 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
               form="edit-staff-form"
               type="submit"
               disabled={isSubmitting || !isDirty}
-              className="flex-[2] sm:flex-none px-5 sm:px-7 py-3 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 cursor-pointer min-h-[44px] active:scale-95"
+              className="flex-[2] sm:flex-none px-5 sm:px-7 py-2.5 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer min-h-[42px] active:scale-95"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   <span>Saving...</span>
                 </>
               ) : (
                 <>
-                  <Check className="w-4 h-4" />
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
                   <span>Save Changes</span>
                 </>
               )}

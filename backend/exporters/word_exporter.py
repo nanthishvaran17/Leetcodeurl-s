@@ -187,8 +187,8 @@ def export_word_from_dataset(dataset: dict) -> bytes:
 
             r_vals = [
                 str(idx),
-                r.get("reg_no", ""),
-                r.get("name", ""),
+                str(r.get("reg_no") or "").strip().upper(),
+                str(r.get("name") or r.get("student_name") or "").strip().upper(),
                 r.get("dept", ""),
                 str(r.get("year", "")),
                 status_str,
@@ -286,8 +286,8 @@ def export_word_from_dataset(dataset: dict) -> bytes:
             row_cells = table_top.rows[idx].cells
             row_vals = [
                 f"#{idx}",
-                s.get("reg_no", ""),
-                s.get("name", ""),
+                str(s.get("reg_no") or "").strip().upper(),
+                str(s.get("name") or s.get("student_name") or "").strip().upper(),
                 s.get("dept", ""),
                 s.get("year", ""),
                 str(s.get("easy", 0)),
@@ -349,8 +349,8 @@ def export_word_from_dataset(dataset: dict) -> bytes:
             row_cells = table_all.rows[idx].cells
             row_vals = [
                 str(idx),
-                s.get("reg_no", ""),
-                s.get("name", ""),
+                str(s.get("reg_no") or "").strip().upper(),
+                str(s.get("name") or s.get("student_name") or "").strip().upper(),
                 s.get("dept", ""),
                 s.get("year", ""),
                 str(s.get("total_solved") if s.get("total_solved") is not None else "—"),
@@ -407,8 +407,8 @@ def export_word_from_dataset(dataset: dict) -> bytes:
                 str(idx),
                 p_item.get("contest_name", ""),
                 p_item.get("date", ""),
-                p_item.get("reg_no", ""),
-                p_item.get("student_name", ""),
+                str(p_item.get("reg_no") or "").strip().upper(),
+                str(p_item.get("student_name") or p_item.get("name") or "").strip().upper(),
                 p_item.get("dept", ""),
                 f"{p_item.get('problems_solved', 0)} / {p_item.get('total_problems', 4)}",
                 str(p_item.get("rank", "-"))

@@ -79,16 +79,22 @@ class ProactiveIntelService:
                 (Student.is_active == True) | (Student.is_active.is_(None))
             ).scalar() or 0
 
-            verified = db.query(func.count(LeetCodeProfileStats.id)).filter(
+            verified = db.query(func.count(LeetCodeProfileStats.id)).join(
+                Student, LeetCodeProfileStats.student_id == Student.id
+            ).filter(
+                (Student.is_active == True) | (Student.is_active.is_(None)),
                 LeetCodeProfileStats.sync_status.in_(["success", "verified"])
             ).scalar() or 0
 
-            failed = db.query(func.count(LeetCodeProfileStats.id)).filter(
+            failed = db.query(func.count(LeetCodeProfileStats.id)).join(
+                Student, LeetCodeProfileStats.student_id == Student.id
+            ).filter(
+                (Student.is_active == True) | (Student.is_active.is_(None)),
                 LeetCodeProfileStats.sync_status.in_(["failed", "error", "invalid_username"])
             ).scalar() or 0
 
-            pending = total - verified - failed
-            pct = round(verified / total * 100) if total else 0
+            pending = max(0, total - verified - failed)
+            pct = min(100, round(verified / total * 100)) if total else 0
 
             card_type = "SUCCESS" if pct >= 90 else ("WARNING" if pct >= 70 else "ALERT")
             cards.append({
@@ -145,7 +151,7 @@ class ProactiveIntelService:
                 cards.append({
                     "type": "SUCCESS",
                     "icon": "trophy",
-                    "title": " Top Performer",
+                    "title": "Top Performer",
                     "body": f"{top.name} ({dept}) leads with {top.stats.total_solved} problems solved.",
                     "cta_label": "View full leaderboard",
                     "cta_query": "Who are the top 10 college solvers overall?",
@@ -157,7 +163,10 @@ class ProactiveIntelService:
 
         # Card 4: Low solver alert 
         try:
-            zero_solvers = db.query(func.count(LeetCodeProfileStats.id)).filter(
+            zero_solvers = db.query(func.count(LeetCodeProfileStats.id)).join(
+                Student, LeetCodeProfileStats.student_id == Student.id
+            ).filter(
+                (Student.is_active == True) | (Student.is_active.is_(None)),
                 LeetCodeProfileStats.total_solved == 0
             ).scalar() or 0
 

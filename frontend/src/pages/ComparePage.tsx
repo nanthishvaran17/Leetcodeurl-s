@@ -44,9 +44,11 @@ export const ComparePage: React.FC = () => {
 
   // Mobile Viewport Detector
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [mobileStudentTab, setMobileStudentTab] = useState<'MATRIX' | 'FIGHTER_A' | 'FIGHTER_B'>('MATRIX');
+  const [mobileGroupTab, setMobileGroupTab] = useState<'MATRIX' | 'GROUP_A' | 'GROUP_B'>('MATRIX');
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -751,8 +753,300 @@ export const ComparePage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Cards Comparison Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 lg:gap-6 items-center relative">
+              {/* Mobile View: High-Contrast Head-to-Head Combat Matrix (< lg) */}
+              <div className="block lg:hidden space-y-4">
+                {/* Compact Matchup Bar */}
+                <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-white/10 shadow-md space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    {/* Student A Mini Pill */}
+                    <div className={`flex items-center gap-2 min-w-0 flex-1 p-2 rounded-xl transition-all ${
+                      battleResult?.winner === 'A' 
+                        ? 'bg-amber-500/10 border border-amber-500/30' 
+                        : 'bg-slate-50 dark:bg-navy-900 border border-slate-200/60 dark:border-white/5'
+                    }`}>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs text-white shrink-0 shadow-xs ${
+                        battleResult?.winner === 'A' ? 'bg-gradient-to-tr from-amber-500 to-orange-500' : 'bg-brand-600'
+                      }`}>
+                        {studentA.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-extrabold text-xs text-slate-900 dark:text-white truncate">{studentA.name}</p>
+                        <span className="text-[10px] text-slate-400 font-mono block truncate">#{studentA.college_rank || '—'} · {studentA.department?.code}</span>
+                      </div>
+                    </div>
+
+                    {/* VS Emblem */}
+                    <div className="shrink-0 w-7 h-7 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center text-amber-400 font-black text-[11px] italic shadow-sm">
+                      VS
+                    </div>
+
+                    {/* Student B Mini Pill */}
+                    <div className={`flex items-center gap-2 min-w-0 flex-1 p-2 rounded-xl transition-all ${
+                      battleResult?.winner === 'B' 
+                        ? 'bg-amber-500/10 border border-amber-500/30' 
+                        : 'bg-slate-50 dark:bg-navy-900 border border-slate-200/60 dark:border-white/5'
+                    }`}>
+                      <div className="min-w-0 flex-1 text-right">
+                        <p className="font-extrabold text-xs text-slate-900 dark:text-white truncate">{studentB.name}</p>
+                        <span className="text-[10px] text-slate-400 font-mono block truncate">#{studentB.college_rank || '—'} · {studentB.department?.code}</span>
+                      </div>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs text-white shrink-0 shadow-xs ${
+                        battleResult?.winner === 'B' ? 'bg-gradient-to-tr from-amber-500 to-orange-500' : 'bg-indigo-600'
+                      }`}>
+                        {studentB.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Segmented View Switcher */}
+                  <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-100 dark:border-white/5">
+                    <button
+                      type="button"
+                      onClick={() => setMobileStudentTab('MATRIX')}
+                      className={`py-1.5 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
+                        mobileStudentTab === 'MATRIX'
+                          ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      Side-by-Side
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileStudentTab('FIGHTER_A')}
+                      className={`py-1.5 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer truncate ${
+                        mobileStudentTab === 'FIGHTER_A'
+                          ? 'bg-brand-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {studentA.name.split(' ')[0]} Card
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileStudentTab('FIGHTER_B')}
+                      className={`py-1.5 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer truncate ${
+                        mobileStudentTab === 'FIGHTER_B'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {studentB.name.split(' ')[0]} Card
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mobile Tab 1: High-Density Side-by-Side Comparison Matrix */}
+                {mobileStudentTab === 'MATRIX' && (
+                  <div className="p-4 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-white/10 shadow-lg space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-white/5 text-[10px] uppercase font-black tracking-wider text-slate-400">
+                      <span className="text-brand-600 dark:text-brand-400 truncate max-w-[40%] font-bold">{studentA.name.split(' ')[0]}</span>
+                      <span>METRIC BREAKDOWN</span>
+                      <span className="text-indigo-600 dark:text-indigo-400 truncate max-w-[40%] text-right font-bold">{studentB.name.split(' ')[0]}</span>
+                    </div>
+
+                    {/* Metric 1: Total Solved */}
+                    <div className="p-2.5 rounded-2xl bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/60 dark:border-white/5 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className={`font-mono font-black text-sm ${(studentA.stats?.total_solved || 0) >= (studentB.stats?.total_solved || 0) ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'}`}>
+                          {studentA.stats?.total_solved || 0}
+                        </span>
+                        <span className="text-[10px] font-extrabold uppercase text-slate-500">Total Solved</span>
+                        <span className={`font-mono font-black text-sm ${(studentB.stats?.total_solved || 0) >= (studentA.stats?.total_solved || 0) ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'}`}>
+                          {studentB.stats?.total_solved || 0}
+                        </span>
+                      </div>
+                      <div className="flex h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800">
+                        <div style={{ width: `${((studentA.stats?.total_solved || 0) / Math.max((studentA.stats?.total_solved || 0) + (studentB.stats?.total_solved || 0), 1)) * 100}%` }} className="bg-brand-500" />
+                        <div style={{ width: `${((studentB.stats?.total_solved || 0) / Math.max((studentA.stats?.total_solved || 0) + (studentB.stats?.total_solved || 0), 1)) * 100}%` }} className="bg-indigo-500" />
+                      </div>
+                    </div>
+
+                    {/* Metric 2: Contest Rating */}
+                    <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/60 dark:border-white/5 text-xs font-bold">
+                      <span className="text-brand-600 dark:text-brand-400 font-mono font-black">
+                        {studentA.stats?.contest_rating && Math.round(studentA.stats.contest_rating) !== 1500 ? Math.round(studentA.stats.contest_rating) : '—'}
+                      </span>
+                      <span className="text-[10px] uppercase font-bold text-slate-400">Contest Rating</span>
+                      <span className="text-indigo-600 dark:text-indigo-400 font-mono font-black">
+                        {studentB.stats?.contest_rating && Math.round(studentB.stats.contest_rating) !== 1500 ? Math.round(studentB.stats.contest_rating) : '—'}
+                      </span>
+                    </div>
+
+                    {/* Metric 3: Easy / Medium / Hard Breakdown */}
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                      {/* Easy */}
+                      <div className="p-2 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-500/20">
+                        <p className="text-[9px] uppercase font-bold text-emerald-600 dark:text-emerald-400">Easy</p>
+                        <div className="flex items-center justify-between font-mono font-black text-xs mt-0.5">
+                          <span className="text-brand-600 dark:text-brand-400">{studentA.stats?.easy_solved || 0}</span>
+                          <span className="text-slate-300 dark:text-slate-600 text-[10px]">vs</span>
+                          <span className="text-indigo-600 dark:text-indigo-400">{studentB.stats?.easy_solved || 0}</span>
+                        </div>
+                      </div>
+
+                      {/* Medium */}
+                      <div className="p-2 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-500/20">
+                        <p className="text-[9px] uppercase font-bold text-amber-600 dark:text-amber-400">Medium</p>
+                        <div className="flex items-center justify-between font-mono font-black text-xs mt-0.5">
+                          <span className="text-brand-600 dark:text-brand-400">{studentA.stats?.medium_solved || 0}</span>
+                          <span className="text-slate-300 dark:text-slate-600 text-[10px]">vs</span>
+                          <span className="text-indigo-600 dark:text-indigo-400">{studentB.stats?.medium_solved || 0}</span>
+                        </div>
+                      </div>
+
+                      {/* Hard */}
+                      <div className="p-2 rounded-xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-500/20">
+                        <p className="text-[9px] uppercase font-bold text-rose-600 dark:text-rose-400">Hard</p>
+                        <div className="flex items-center justify-between font-mono font-black text-xs mt-0.5">
+                          <span className="text-brand-600 dark:text-brand-400">{studentA.stats?.hard_solved || 0}</span>
+                          <span className="text-slate-300 dark:text-slate-600 text-[10px]">vs</span>
+                          <span className="text-indigo-600 dark:text-indigo-400">{studentB.stats?.hard_solved || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Metric 4: College Rank */}
+                    <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/60 dark:border-white/5 text-xs font-bold">
+                      <span className="px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-300 font-mono font-black text-[11px]">
+                        #{studentA.college_rank || '—'}
+                      </span>
+                      <span className="text-[10px] uppercase font-bold text-slate-400">College Rank</span>
+                      <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-mono font-black text-[11px]">
+                        #{studentB.college_rank || '—'}
+                      </span>
+                    </div>
+
+                    {/* Metric 5: Weekly Solved Progress */}
+                    <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/60 dark:border-white/5 text-xs font-bold">
+                      <span className="text-purple-600 dark:text-purple-400 font-mono font-black">
+                        +{studentA.weekly_progress || 0}
+                      </span>
+                      <span className="text-[10px] uppercase font-bold text-slate-400">Weekly Progress</span>
+                      <span className="text-purple-600 dark:text-purple-400 font-mono font-black">
+                        +{studentB.weekly_progress || 0}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Mobile Tab 2: Fighter A Card */}
+                {mobileStudentTab === 'FIGHTER_A' && (
+                  <div className={`relative z-10 p-1 rounded-3xl transition-all duration-300 ${
+                    battleResult?.winner === 'A'
+                      ? 'bg-gradient-to-b from-amber-400 via-amber-600 to-amber-900 shadow-lg'
+                      : 'bg-gradient-to-b from-brand-500/40 via-indigo-500/40 to-slate-800'
+                  }`}>
+                    <div className="bg-white dark:bg-[#0f111a] rounded-[22px] p-5 flex flex-col space-y-6">
+                      <div className="flex items-center justify-between">
+                        <span className={`px-3 py-1 rounded-full text-xs font-black shadow-sm ${battleResult?.winner === 'A' ? 'bg-amber-500 text-white' : 'bg-brand-600 text-white'}`}>
+                          Rank #{studentA.college_rank || '—'}
+                        </span>
+                        <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-mono font-bold text-xs border border-slate-200 dark:border-white/10">
+                          {studentA.department?.code} • {studentA.year_level} Year
+                        </span>
+                      </div>
+
+                      <div className="text-center space-y-3">
+                        <div className={`w-20 h-20 mx-auto rounded-full text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 ${battleResult?.winner === 'A' ? 'bg-gradient-to-tr from-amber-500 to-orange-500 border-amber-300' : 'bg-gradient-to-tr from-brand-600 to-indigo-600 border-white/20'}`}>
+                          {studentA.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </div>
+                        <div>
+                          <h3 className="font-black text-lg text-slate-900 dark:text-white truncate max-w-[260px] mx-auto">
+                            {studentA.name}
+                          </h3>
+                          <p className="text-xs text-brand-600 dark:text-brand-400 font-mono font-bold mt-0.5">
+                            {studentA.reg_no}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 text-center">
+                        <p className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider">Total Problems Solved</p>
+                        <h4 className="text-3xl font-black text-slate-900 dark:text-white mt-1">
+                          {studentA.stats?.total_solved || 0}
+                        </h4>
+                      </div>
+
+                      {/* Difficulty Stats Breakdown */}
+                      <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div className="p-2.5 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-2xs">
+                          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Easy</p>
+                          <p className="text-base font-black text-emerald-600 dark:text-emerald-400">{studentA.stats?.easy_solved || 0}</p>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-2xs">
+                          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Medium</p>
+                          <p className="text-base font-black text-amber-500">{studentA.stats?.medium_solved || 0}</p>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-2xs">
+                          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Hard</p>
+                          <p className="text-base font-black text-rose-500">{studentA.stats?.hard_solved || 0}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Mobile Tab 3: Fighter B Card */}
+                {mobileStudentTab === 'FIGHTER_B' && (
+                  <div className={`relative z-10 p-1 rounded-3xl transition-all duration-300 ${
+                    battleResult?.winner === 'B'
+                      ? 'bg-gradient-to-b from-amber-400 via-amber-600 to-amber-900 shadow-lg'
+                      : 'bg-gradient-to-b from-indigo-500/40 via-purple-500/40 to-slate-800'
+                  }`}>
+                    <div className="bg-white dark:bg-[#0f111a] rounded-[22px] p-5 flex flex-col space-y-6">
+                      <div className="flex items-center justify-between">
+                        <span className={`px-3 py-1 rounded-full text-xs font-black shadow-sm ${battleResult?.winner === 'B' ? 'bg-amber-500 text-white' : 'bg-indigo-600 text-white'}`}>
+                          Rank #{studentB.college_rank || '—'}
+                        </span>
+                        <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-mono font-bold text-xs border border-slate-200 dark:border-white/10">
+                          {studentB.department?.code} • {studentB.year_level} Year
+                        </span>
+                      </div>
+
+                      <div className="text-center space-y-3">
+                        <div className={`w-20 h-20 mx-auto rounded-full text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 ${battleResult?.winner === 'B' ? 'bg-gradient-to-tr from-amber-500 to-orange-500 border-amber-300' : 'bg-gradient-to-tr from-indigo-600 to-purple-600 border-white/20'}`}>
+                          {studentB.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </div>
+                        <div>
+                          <h3 className="font-black text-lg text-slate-900 dark:text-white truncate max-w-[260px] mx-auto">
+                            {studentB.name}
+                          </h3>
+                          <p className="text-xs text-indigo-600 dark:text-indigo-400 font-mono font-bold mt-0.5">
+                            {studentB.reg_no}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 text-center">
+                        <p className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider">Total Problems Solved</p>
+                        <h4 className="text-3xl font-black text-slate-900 dark:text-white mt-1">
+                          {studentB.stats?.total_solved || 0}
+                        </h4>
+                      </div>
+
+                      {/* Difficulty Stats Breakdown */}
+                      <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div className="p-2.5 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-2xs">
+                          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Easy</p>
+                          <p className="text-base font-black text-emerald-600 dark:text-emerald-400">{studentB.stats?.easy_solved || 0}</p>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-2xs">
+                          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Medium</p>
+                          <p className="text-base font-black text-amber-500">{studentB.stats?.medium_solved || 0}</p>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-white dark:bg-[#151822] border border-slate-200 dark:border-white/5 shadow-2xs">
+                          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Hard</p>
+                          <p className="text-base font-black text-rose-500">{studentB.stats?.hard_solved || 0}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop Cards Comparison Grid (Hidden on Mobile) */}
+              <div className="hidden lg:grid grid-cols-1 lg:grid-cols-7 gap-4 lg:gap-6 items-center relative">
                 
                 {/* Background ambient glow behind VS */}
                 <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-500/10 blur-[100px] rounded-full pointer-events-none z-0" />
@@ -1197,184 +1491,497 @@ export const ComparePage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Group Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                
-                {/* Group A Card */}
-                <div className={`glass-card p-6 rounded-3xl border-2 space-y-6 shadow-xl ${
-                  groupWinner?.winner === 'A' ? 'border-amber-400 shadow-amber-500/10' : 'border-brand-500/30'
-                }`}>
-                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-                    <div>
-                      <span className="px-3 py-1 rounded-full text-[10px] font-black bg-brand-500 text-white uppercase tracking-wider">
-                        GROUP A
-                      </span>
-                      <h3 className="text-lg font-black text-slate-900 dark:text-white mt-1">
-                        {groupAData.label}
-                      </h3>
-                    </div>
-                    <Building2 className="w-7 h-7 text-brand-500" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 text-center">
-                    <div className="p-4 rounded-2xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800">
-                      <p className="text-xs text-brand-600 dark:text-brand-400 font-bold">Total Students</p>
-                      <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{groupAData.total_students}</p>
+              {/* Mobile View: High-Contrast Group Matrix & Tabs (< md) */}
+              <div className="block md:hidden space-y-4">
+                {/* Compact Matchup Bar */}
+                <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-white/10 shadow-md space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    {/* Group A Mini Pill */}
+                    <div className={`flex items-center gap-2 min-w-0 flex-1 p-2 rounded-xl transition-all ${
+                      groupWinner?.winner === 'A' 
+                        ? 'bg-amber-500/10 border border-amber-500/30' 
+                        : 'bg-slate-50 dark:bg-navy-900 border border-slate-200/60 dark:border-white/5'
+                    }`}>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs text-white shrink-0 shadow-xs ${
+                        groupWinner?.winner === 'A' ? 'bg-gradient-to-tr from-amber-500 to-orange-500' : 'bg-brand-600'
+                      }`}>
+                        A
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-extrabold text-xs text-slate-900 dark:text-white truncate">{groupAData.label}</p>
+                        <span className="text-[10px] text-slate-400 font-mono block truncate">{groupAData.total_students} Students</span>
+                      </div>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">Avg Solved / Student</p>
-                      <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{groupAData.avg_solved}</p>
+                    {/* VS Emblem */}
+                    <div className="shrink-0 w-7 h-7 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center text-amber-400 font-black text-[11px] italic shadow-sm">
+                      VS
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
-                      <p className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">Active Participation</p>
-                      <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{groupAData.participation_rate}%</p>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
-                      <p className="text-xs text-amber-600 dark:text-amber-400 font-bold">Top Ranker</p>
-                      <p className="text-sm font-black text-amber-600 dark:text-amber-400 mt-1 truncate">{groupAData.top_student_name}</p>
-                    </div>
-                  </div>
-
-                  {/* Top 5 Performers in Group A */}
-                  <div className="space-y-3 pt-2">
-                    <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
-                      <Award className="w-4 h-4 text-brand-500" />
-                      <span>Top Performers in Group A</span>
-                    </h4>
-
-                    <div className="space-y-2">
-                      {groupAData.top_students.map((s, idx) => (
-                        <div key={s.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-navy-950 border text-xs font-bold">
-                          <div className="flex items-center space-x-3">
-                            <span className="w-6 h-6 rounded-full bg-brand-500/20 text-brand-600 dark:text-brand-400 font-black text-[10px] flex items-center justify-center">
-                              #{idx + 1}
-                            </span>
-                            <span className="text-slate-900 dark:text-white font-extrabold">{s.name}</span>
-                          </div>
-                          <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">
-                            {s.stats?.total_solved || 0} Solved
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Group B Card */}
-                <div className={`glass-card p-6 rounded-3xl border-2 space-y-6 shadow-xl ${
-                  groupWinner?.winner === 'B' ? 'border-amber-400 shadow-amber-500/10' : 'border-indigo-500/30'
-                }`}>
-                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-                    <div>
-                      <span className="px-3 py-1 rounded-full text-[10px] font-black bg-indigo-600 text-white uppercase tracking-wider">
-                        GROUP B
-                      </span>
-                      <h3 className="text-lg font-black text-slate-900 dark:text-white mt-1">
-                        {groupBData.label}
-                      </h3>
-                    </div>
-                    <Building2 className="w-7 h-7 text-indigo-500" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 text-center">
-                    <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
-                      <p className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">Total Students</p>
-                      <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{groupBData.total_students}</p>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">Avg Solved / Student</p>
-                      <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{groupBData.avg_solved}</p>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800">
-                      <p className="text-xs text-brand-600 dark:text-brand-400 font-bold">Active Participation</p>
-                      <p className="text-2xl font-black text-brand-600 dark:text-brand-400 mt-1">{groupBData.participation_rate}%</p>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
-                      <p className="text-xs text-amber-600 dark:text-amber-400 font-bold">Top Ranker</p>
-                      <p className="text-sm font-black text-amber-600 dark:text-amber-400 mt-1 truncate">{groupBData.top_student_name}</p>
+                    {/* Group B Mini Pill */}
+                    <div className={`flex items-center gap-2 min-w-0 flex-1 p-2 rounded-xl transition-all ${
+                      groupWinner?.winner === 'B' 
+                        ? 'bg-amber-500/10 border border-amber-500/30' 
+                        : 'bg-slate-50 dark:bg-navy-900 border border-slate-200/60 dark:border-white/5'
+                    }`}>
+                      <div className="min-w-0 flex-1 text-right">
+                        <p className="font-extrabold text-xs text-slate-900 dark:text-white truncate">{groupBData.label}</p>
+                        <span className="text-[10px] text-slate-400 font-mono block truncate">{groupBData.total_students} Students</span>
+                      </div>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs text-white shrink-0 shadow-xs ${
+                        groupWinner?.winner === 'B' ? 'bg-gradient-to-tr from-amber-500 to-orange-500' : 'bg-indigo-600'
+                      }`}>
+                        B
+                      </div>
                     </div>
                   </div>
 
-                  {/* Top 5 Performers in Group B */}
-                  <div className="space-y-3 pt-2">
-                    <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
-                      <Award className="w-4 h-4 text-indigo-500" />
-                      <span>Top Performers in Group B</span>
-                    </h4>
-
-                    <div className="space-y-2">
-                      {groupBData.top_students.map((s, idx) => (
-                        <div key={s.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-navy-950 border text-xs font-bold">
-                          <div className="flex items-center space-x-3">
-                            <span className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-black text-[10px] flex items-center justify-center">
-                              #{idx + 1}
-                            </span>
-                            <span className="text-slate-900 dark:text-white font-extrabold">{s.name}</span>
-                          </div>
-                          <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">
-                            {s.stats?.total_solved || 0} Solved
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                  {/* Segmented View Switcher */}
+                  <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-100 dark:border-white/5">
+                    <button
+                      type="button"
+                      onClick={() => setMobileGroupTab('MATRIX')}
+                      className={`py-1.5 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
+                        mobileGroupTab === 'MATRIX'
+                          ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      Side-by-Side
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileGroupTab('GROUP_A')}
+                      className={`py-1.5 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer truncate ${
+                        mobileGroupTab === 'GROUP_A'
+                          ? 'bg-brand-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {groupAData.label.length > 9 ? groupAData.label.slice(0, 8) + '…' : groupAData.label} Card
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileGroupTab('GROUP_B')}
+                      className={`py-1.5 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer truncate ${
+                        mobileGroupTab === 'GROUP_B'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {groupBData.label.length > 9 ? groupBData.label.slice(0, 8) + '…' : groupBData.label} Card
+                    </button>
                   </div>
                 </div>
 
+                {/* Mobile Tab 1: High-Density Side-by-Side Group Comparison Matrix */}
+                {mobileGroupTab === 'MATRIX' && (
+                  <div className="p-4 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-white/10 shadow-lg space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-white/5 text-[10px] uppercase font-black tracking-wider text-slate-400">
+                      <span className="text-brand-600 dark:text-brand-400 truncate max-w-[40%] font-bold">{groupAData.label}</span>
+                      <span>GROUP METRICS</span>
+                      <span className="text-indigo-600 dark:text-indigo-400 truncate max-w-[40%] text-right font-bold">{groupBData.label}</span>
+                    </div>
+
+                    {/* Metric 1: Avg Solved / Student */}
+                    <div className="p-2.5 rounded-2xl bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/60 dark:border-white/5 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className={`font-mono font-black text-sm ${groupAData.avg_solved >= groupBData.avg_solved ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'}`}>
+                          {groupAData.avg_solved} <span className="text-[10px] font-medium text-slate-400">/stud</span>
+                        </span>
+                        <span className="text-[10px] font-extrabold uppercase text-slate-500">Avg Solved</span>
+                        <span className={`font-mono font-black text-sm ${groupBData.avg_solved >= groupAData.avg_solved ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'}`}>
+                          {groupBData.avg_solved} <span className="text-[10px] font-medium text-slate-400">/stud</span>
+                        </span>
+                      </div>
+                      <div className="flex h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800">
+                        <div style={{ width: `${(groupAData.avg_solved / Math.max(groupAData.avg_solved + groupBData.avg_solved, 1)) * 100}%` }} className="bg-brand-500" />
+                        <div style={{ width: `${(groupBData.avg_solved / Math.max(groupAData.avg_solved + groupBData.avg_solved, 1)) * 100}%` }} className="bg-indigo-500" />
+                      </div>
+                    </div>
+
+                    {/* Metric 2: Active Participation Rate */}
+                    <div className="p-2.5 rounded-2xl bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/60 dark:border-white/5 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className={`font-mono font-black text-sm ${groupAData.participation_rate >= groupBData.participation_rate ? 'text-teal-600 dark:text-teal-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'}`}>
+                          {groupAData.participation_rate}%
+                        </span>
+                        <span className="text-[10px] font-extrabold uppercase text-slate-500">Participation</span>
+                        <span className={`font-mono font-black text-sm ${groupBData.participation_rate >= groupAData.participation_rate ? 'text-purple-600 dark:text-purple-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'}`}>
+                          {groupBData.participation_rate}%
+                        </span>
+                      </div>
+                      <div className="flex h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800">
+                        <div style={{ width: `${(groupAData.participation_rate / Math.max(groupAData.participation_rate + groupBData.participation_rate, 1)) * 100}%` }} className="bg-teal-500" />
+                        <div style={{ width: `${(groupBData.participation_rate / Math.max(groupAData.participation_rate + groupBData.participation_rate, 1)) * 100}%` }} className="bg-purple-500" />
+                      </div>
+                    </div>
+
+                    {/* Metric 3: Total Students */}
+                    <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/60 dark:border-white/5 text-xs font-bold">
+                      <span className="px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-300 font-mono font-black text-[11px]">
+                        {groupAData.total_students}
+                      </span>
+                      <span className="text-[10px] uppercase font-bold text-slate-400">Total Students</span>
+                      <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-mono font-black text-[11px]">
+                        {groupBData.total_students}
+                      </span>
+                    </div>
+
+                    {/* Metric 4: Top Performer */}
+                    <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/60 dark:border-white/5 text-xs font-bold">
+                      <span className="text-amber-600 dark:text-amber-400 font-bold truncate max-w-[40%] text-left">
+                        {groupAData.top_student_name}
+                      </span>
+                      <span className="text-[10px] uppercase font-bold text-slate-400">Top Ranker</span>
+                      <span className="text-amber-600 dark:text-amber-400 font-bold truncate max-w-[40%] text-right">
+                        {groupBData.top_student_name}
+                      </span>
+                    </div>
+
+                    {/* Metric 5: Top 3 Head-to-Head Leaders */}
+                    <div className="pt-2 border-t border-slate-100 dark:border-white/5 space-y-2">
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 text-center">Top 3 Head-to-Head Performers</p>
+                      {[0, 1, 2].map((i) => {
+                        const sA = groupAData.top_students[i];
+                        const sB = groupBData.top_students[i];
+                        if (!sA && !sB) return null;
+                        return (
+                          <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-navy-900/40 text-[11px]">
+                            <div className="flex items-center gap-1.5 truncate max-w-[45%]">
+                              <span className="w-4 h-4 rounded-full bg-brand-500/20 text-brand-600 dark:text-brand-400 font-black text-[9px] flex items-center justify-center shrink-0">
+                                #{i + 1}
+                              </span>
+                              <span className="font-extrabold text-slate-900 dark:text-white truncate">{sA ? sA.name : '—'}</span>
+                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-black shrink-0">({sA?.stats?.total_solved || 0})</span>
+                            </div>
+                            <span className="text-[9px] font-bold text-slate-300 dark:text-slate-600">vs</span>
+                            <div className="flex items-center gap-1.5 justify-end truncate max-w-[45%]">
+                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-black shrink-0">({sB?.stats?.total_solved || 0})</span>
+                              <span className="font-extrabold text-slate-900 dark:text-white truncate text-right">{sB ? sB.name : '—'}</span>
+                              <span className="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-black text-[9px] flex items-center justify-center shrink-0">
+                                #{i + 1}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Mobile Tab 2: Group A Card */}
+                {mobileGroupTab === 'GROUP_A' && (
+                  <div className={`glass-card p-5 rounded-3xl border-2 space-y-5 shadow-xl ${
+                    groupWinner?.winner === 'A' ? 'border-amber-400 shadow-amber-500/10' : 'border-brand-500/30'
+                  }`}>
+                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                      <div>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-brand-500 text-white uppercase tracking-wider">
+                          GROUP A
+                        </span>
+                        <h3 className="text-base font-black text-slate-900 dark:text-white mt-1">
+                          {groupAData.label}
+                        </h3>
+                      </div>
+                      <Building2 className="w-6 h-6 text-brand-500" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5 text-center">
+                      <div className="p-3 rounded-2xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800">
+                        <p className="text-[10px] text-brand-600 dark:text-brand-400 font-bold uppercase">Total Students</p>
+                        <p className="text-xl font-black text-slate-900 dark:text-white mt-0.5">{groupAData.total_students}</p>
+                      </div>
+
+                      <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Avg Solved</p>
+                        <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">{groupAData.avg_solved}</p>
+                      </div>
+
+                      <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+                        <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase">Active Rate</p>
+                        <p className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5">{groupAData.participation_rate}%</p>
+                      </div>
+
+                      <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                        <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase">Top Ranker</p>
+                        <p className="text-xs font-black text-amber-600 dark:text-amber-400 mt-1 truncate">{groupAData.top_student_name}</p>
+                      </div>
+                    </div>
+
+                    {/* Top 5 Performers in Group A */}
+                    <div className="space-y-2.5 pt-1">
+                      <h4 className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
+                        <Award className="w-3.5 h-3.5 text-brand-500" />
+                        <span>Top Performers in Group A</span>
+                      </h4>
+
+                      <div className="space-y-1.5">
+                        {groupAData.top_students.map((s, idx) => (
+                          <div key={s.id} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200/60 dark:border-white/5 text-xs font-bold">
+                            <div className="flex items-center space-x-2.5 truncate">
+                              <span className="w-5 h-5 rounded-full bg-brand-500/20 text-brand-600 dark:text-brand-400 font-black text-[10px] flex items-center justify-center shrink-0">
+                                #{idx + 1}
+                              </span>
+                              <span className="text-slate-900 dark:text-white font-extrabold truncate">{s.name}</span>
+                            </div>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black shrink-0">
+                              {s.stats?.total_solved || 0} Solved
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Mobile Tab 3: Group B Card */}
+                {mobileGroupTab === 'GROUP_B' && (
+                  <div className={`glass-card p-5 rounded-3xl border-2 space-y-5 shadow-xl ${
+                    groupWinner?.winner === 'B' ? 'border-amber-400 shadow-amber-500/10' : 'border-indigo-500/30'
+                  }`}>
+                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                      <div>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-600 text-white uppercase tracking-wider">
+                          GROUP B
+                        </span>
+                        <h3 className="text-base font-black text-slate-900 dark:text-white mt-1">
+                          {groupBData.label}
+                        </h3>
+                      </div>
+                      <Building2 className="w-6 h-6 text-indigo-500" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5 text-center">
+                      <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+                        <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase">Total Students</p>
+                        <p className="text-xl font-black text-slate-900 dark:text-white mt-0.5">{groupBData.total_students}</p>
+                      </div>
+
+                      <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Avg Solved</p>
+                        <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">{groupBData.avg_solved}</p>
+                      </div>
+
+                      <div className="p-3 rounded-2xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800">
+                        <p className="text-[10px] text-brand-600 dark:text-brand-400 font-bold uppercase">Active Rate</p>
+                        <p className="text-xl font-black text-brand-600 dark:text-brand-400 mt-0.5">{groupBData.participation_rate}%</p>
+                      </div>
+
+                      <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                        <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase">Top Ranker</p>
+                        <p className="text-xs font-black text-amber-600 dark:text-amber-400 mt-1 truncate">{groupBData.top_student_name}</p>
+                      </div>
+                    </div>
+
+                    {/* Top 5 Performers in Group B */}
+                    <div className="space-y-2.5 pt-1">
+                      <h4 className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
+                        <Award className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>Top Performers in Group B</span>
+                      </h4>
+
+                      <div className="space-y-1.5">
+                        {groupBData.top_students.map((s, idx) => (
+                          <div key={s.id} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200/60 dark:border-white/5 text-xs font-bold">
+                            <div className="flex items-center space-x-2.5 truncate">
+                              <span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-black text-[10px] flex items-center justify-center shrink-0">
+                                #{idx + 1}
+                              </span>
+                              <span className="text-slate-900 dark:text-white font-extrabold truncate">{s.name}</span>
+                            </div>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black shrink-0">
+                              {s.stats?.total_solved || 0} Solved
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Side-by-Side Group Metric Bars */}
-              <div className="glass-card p-6 rounded-3xl border space-y-5 shadow-xl">
-                <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center space-x-2">
-                  <BarChart3 className="w-5 h-5 text-brand-500" />
-                  <span>Side-by-Side Group Metric Comparison Bars</span>
-                </h3>
-
-                <div className="space-y-4 text-xs font-bold">
+              {/* Desktop Cards Comparison Grid & Bars (Hidden on Mobile) */}
+              <div className="hidden md:block space-y-8">
+                {/* Group Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   
-                  {/* Average Solved Bar */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-slate-600 dark:text-slate-300 truncate">
-                      <span className="truncate max-w-[45%] font-extrabold text-brand-600 dark:text-brand-400">{groupAData.label} ({groupAData.avg_solved} / student)</span>
-                      <span className="uppercase text-slate-400 font-extrabold">Avg Solved / Student</span>
-                      <span className="truncate max-w-[45%] text-right font-extrabold text-indigo-600 dark:text-indigo-400">{groupBData.label} ({groupBData.avg_solved} / student)</span>
+                  {/* Group A Card */}
+                  <div className={`glass-card p-6 rounded-3xl border-2 space-y-6 shadow-xl ${
+                    groupWinner?.winner === 'A' ? 'border-amber-400 shadow-amber-500/10' : 'border-brand-500/30'
+                  }`}>
+                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+                      <div>
+                        <span className="px-3 py-1 rounded-full text-[10px] font-black bg-brand-500 text-white uppercase tracking-wider">
+                          GROUP A
+                        </span>
+                        <h3 className="text-lg font-black text-slate-900 dark:text-white mt-1">
+                          {groupAData.label}
+                        </h3>
+                      </div>
+                      <Building2 className="w-7 h-7 text-brand-500" />
                     </div>
-                    <div className="flex h-3.5 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-inner">
-                      <div
-                        style={{ width: `${(groupAData.avg_solved / Math.max(groupAData.avg_solved + groupBData.avg_solved, 1)) * 100}%` }}
-                        className="bg-gradient-to-r from-brand-600 to-brand-400"
-                      ></div>
-                      <div
-                        style={{ width: `${(groupBData.avg_solved / Math.max(groupAData.avg_solved + groupBData.avg_solved, 1)) * 100}%` }}
-                        className="bg-gradient-to-r from-indigo-400 to-indigo-600"
-                      ></div>
+
+                    <div className="grid grid-cols-2 gap-3 text-center">
+                      <div className="p-4 rounded-2xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800">
+                        <p className="text-xs text-brand-600 dark:text-brand-400 font-bold">Total Students</p>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{groupAData.total_students}</p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">Avg Solved / Student</p>
+                        <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{groupAData.avg_solved}</p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+                        <p className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">Active Participation</p>
+                        <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{groupAData.participation_rate}%</p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                        <p className="text-xs text-amber-600 dark:text-amber-400 font-bold">Top Ranker</p>
+                        <p className="text-sm font-black text-amber-600 dark:text-amber-400 mt-1 truncate">{groupAData.top_student_name}</p>
+                      </div>
+                    </div>
+
+                    {/* Top 5 Performers in Group A */}
+                    <div className="space-y-3 pt-2">
+                      <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
+                        <Award className="w-4 h-4 text-brand-500" />
+                        <span>Top Performers in Group A</span>
+                      </h4>
+
+                      <div className="space-y-2">
+                        {groupAData.top_students.map((s, idx) => (
+                          <div key={s.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-navy-950 border text-xs font-bold">
+                            <div className="flex items-center space-x-3">
+                              <span className="w-6 h-6 rounded-full bg-brand-500/20 text-brand-600 dark:text-brand-400 font-black text-[10px] flex items-center justify-center">
+                                #{idx + 1}
+                              </span>
+                              <span className="text-slate-900 dark:text-white font-extrabold">{s.name}</span>
+                            </div>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">
+                              {s.stats?.total_solved || 0} Solved
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Participation Rate Bar */}
-                  <div className="space-y-1.5 pt-2">
-                    <div className="flex justify-between text-slate-600 dark:text-slate-300 truncate">
-                      <span className="truncate max-w-[45%] font-extrabold text-teal-600 dark:text-teal-400">{groupAData.label} ({groupAData.participation_rate}%)</span>
-                      <span className="uppercase text-indigo-500 font-extrabold">Active Participation Rate</span>
-                      <span className="truncate max-w-[45%] text-right font-extrabold text-purple-600 dark:text-purple-400">{groupBData.label} ({groupBData.participation_rate}%)</span>
+                  {/* Group B Card */}
+                  <div className={`glass-card p-6 rounded-3xl border-2 space-y-6 shadow-xl ${
+                    groupWinner?.winner === 'B' ? 'border-amber-400 shadow-amber-500/10' : 'border-indigo-500/30'
+                  }`}>
+                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+                      <div>
+                        <span className="px-3 py-1 rounded-full text-[10px] font-black bg-indigo-600 text-white uppercase tracking-wider">
+                          GROUP B
+                        </span>
+                        <h3 className="text-lg font-black text-slate-900 dark:text-white mt-1">
+                          {groupBData.label}
+                        </h3>
+                      </div>
+                      <Building2 className="w-7 h-7 text-indigo-500" />
                     </div>
-                    <div className="flex h-3.5 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-inner">
-                      <div
-                        style={{ width: `${(groupAData.participation_rate / Math.max(groupAData.participation_rate + groupBData.participation_rate, 1)) * 100}%` }}
-                        className="bg-gradient-to-r from-teal-600 to-teal-400"
-                      ></div>
-                      <div
-                        style={{ width: `${(groupBData.participation_rate / Math.max(groupAData.participation_rate + groupBData.participation_rate, 1)) * 100}%` }}
-                        className="bg-gradient-to-r from-purple-400 to-purple-600"
-                      ></div>
+
+                    <div className="grid grid-cols-2 gap-3 text-center">
+                      <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+                        <p className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">Total Students</p>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{groupBData.total_students}</p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">Avg Solved / Student</p>
+                        <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{groupBData.avg_solved}</p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800">
+                        <p className="text-xs text-brand-600 dark:text-brand-400 font-bold">Active Participation</p>
+                        <p className="text-2xl font-black text-brand-600 dark:text-brand-400 mt-1">{groupBData.participation_rate}%</p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                        <p className="text-xs text-amber-600 dark:text-amber-400 font-bold">Top Ranker</p>
+                        <p className="text-sm font-black text-amber-600 dark:text-amber-400 mt-1 truncate">{groupBData.top_student_name}</p>
+                      </div>
+                    </div>
+
+                    {/* Top 5 Performers in Group B */}
+                    <div className="space-y-3 pt-2">
+                      <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
+                        <Award className="w-4 h-4 text-indigo-500" />
+                        <span>Top Performers in Group B</span>
+                      </h4>
+
+                      <div className="space-y-2">
+                        {groupBData.top_students.map((s, idx) => (
+                          <div key={s.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-navy-950 border text-xs font-bold">
+                            <div className="flex items-center space-x-3">
+                              <span className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-black text-[10px] flex items-center justify-center">
+                                #{idx + 1}
+                              </span>
+                              <span className="text-slate-900 dark:text-white font-extrabold">{s.name}</span>
+                            </div>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">
+                              {s.stats?.total_solved || 0} Solved
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
+                </div>
+
+                {/* Side-by-Side Group Metric Bars */}
+                <div className="glass-card p-6 rounded-3xl border space-y-5 shadow-xl">
+                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center space-x-2">
+                    <BarChart3 className="w-5 h-5 text-brand-500" />
+                    <span>Side-by-Side Group Metric Comparison Bars</span>
+                  </h3>
+
+                  <div className="space-y-4 text-xs font-bold">
+                    
+                    {/* Average Solved Bar */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-slate-600 dark:text-slate-300 truncate">
+                        <span className="truncate max-w-[45%] font-extrabold text-brand-600 dark:text-brand-400">{groupAData.label} ({groupAData.avg_solved} / student)</span>
+                        <span className="uppercase text-slate-400 font-extrabold">Avg Solved / Student</span>
+                        <span className="truncate max-w-[45%] text-right font-extrabold text-indigo-600 dark:text-indigo-400">{groupBData.label} ({groupBData.avg_solved} / student)</span>
+                      </div>
+                      <div className="flex h-3.5 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-inner">
+                        <div
+                          style={{ width: `${(groupAData.avg_solved / Math.max(groupAData.avg_solved + groupBData.avg_solved, 1)) * 100}%` }}
+                          className="bg-gradient-to-r from-brand-600 to-brand-400"
+                        ></div>
+                        <div
+                          style={{ width: `${(groupBData.avg_solved / Math.max(groupAData.avg_solved + groupBData.avg_solved, 1)) * 100}%` }}
+                          className="bg-gradient-to-r from-indigo-400 to-indigo-600"
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Participation Rate Bar */}
+                    <div className="space-y-1.5 pt-2">
+                      <div className="flex justify-between text-slate-600 dark:text-slate-300 truncate">
+                        <span className="truncate max-w-[45%] font-extrabold text-teal-600 dark:text-teal-400">{groupAData.label} ({groupAData.participation_rate}%)</span>
+                        <span className="uppercase text-indigo-500 font-extrabold">Active Participation Rate</span>
+                        <span className="truncate max-w-[45%] text-right font-extrabold text-purple-600 dark:text-purple-400">{groupBData.label} ({groupBData.participation_rate}%)</span>
+                      </div>
+                      <div className="flex h-3.5 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-inner">
+                        <div
+                          style={{ width: `${(groupAData.participation_rate / Math.max(groupAData.participation_rate + groupBData.participation_rate, 1)) * 100}%` }}
+                          className="bg-gradient-to-r from-teal-600 to-teal-400"
+                        ></div>
+                        <div
+                          style={{ width: `${(groupBData.participation_rate / Math.max(groupAData.participation_rate + groupBData.participation_rate, 1)) * 100}%` }}
+                          className="bg-gradient-to-r from-purple-400 to-purple-600"
+                        ></div>
+                      </div>
+                    </div>
+
+                  </div>
                 </div>
               </div>
 

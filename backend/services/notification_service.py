@@ -195,6 +195,13 @@ class NotificationService:
                         User.role.ilike("%hod%"),
                         User.role.ilike("%admin%")
                     ))
+                elif target_role.upper() in ("HOD", "HEAD_OF_DEPARTMENT", "DEPT_HEAD"):
+                    query = query.filter(or_(
+                        User.role.ilike("%hod%"),
+                        User.role.ilike("%head%"),
+                        User.role.ilike("%admin%"),
+                        User.role.ilike("%principal%")
+                    ))
                 else:
                     query = query.filter(User.role.ilike(f"%{target_role}%"))
             for u in query.all():
@@ -282,6 +289,9 @@ class NotificationService:
         """
         db = SessionLocal()
         try:
+            from backend.services.email_service import strip_all_emojis
+            title = strip_all_emojis(title)
+            body = strip_all_emojis(body)
             logger.info(f"[NOTIF-DEBUG] EVENT_CREATED type={event_type} scope={recipient_scope} target={recipient_target} actor={actor_user_id}")
 
             # 1. Idempotency Check (Duplicate Prevention)
@@ -492,9 +502,13 @@ class NotificationService:
                     
                     lookup_val = em or uid
                     if lookup_val:
-                        u_match = db.query(User).filter(
-                            or_(User.email.ilike(str(lookup_val)), User.username == str(lookup_val))
-                        ).first()
+                        clean_val = str(lookup_val).strip()
+                        u_filters = [User.email.ilike(clean_val), User.username == clean_val]
+                        if clean_val.isdigit():
+                            u_filters.append(User.id == int(clean_val))
+                        elif clean_val.upper().startswith("STAFF_") and clean_val[6:].isdigit():
+                            u_filters.append(User.id == int(clean_val[6:]))
+                        u_match = db.query(User).filter(or_(*u_filters)).first()
                         if u_match:
                             if u_match.email:
                                 target_uids.add(str(u_match.email).lower())
@@ -503,9 +517,13 @@ class NotificationService:
                                 target_uids.add(str(u_match.username))
                             target_uids.add(str(u_match.id))
                             target_uids.add(f"STAFF_{u_match.id}")
-                        s_match = db.query(Student).filter(
-                            or_(Student.email.ilike(str(lookup_val)), Student.reg_no == str(lookup_val))
-                        ).first()
+
+                        s_filters = [Student.email.ilike(clean_val), Student.reg_no == clean_val]
+                        if hasattr(Student, "username"):
+                            s_filters.append(Student.username == clean_val)
+                        if clean_val.isdigit():
+                            s_filters.append(Student.id == int(clean_val))
+                        s_match = db.query(Student).filter(or_(*s_filters)).first()
                         if s_match:
                             if s_match.email:
                                 target_uids.add(str(s_match.email).lower())
@@ -623,19 +641,46 @@ class NotificationService:
                     logger.info(f"[NOTIF_ENGINE] Deactivated {len(stale_tokens)} stale FCM tokens.")
 
 
-            # 4. Email Dispatch Bypassed — App Notifications Only (FCM Push & WebSocket)
-            send_email_notification = False
-            if send_email_notification:
+            # 4. Formal Institutional Email Dispatch (Emoji-free & Professional)
+            should_send_email = send_email_notification or (eff_priority in ("high", "critical") and event_type not in ("ASSIGNMENT_CREATED", "ASSIGNMENT_DELETED"))
+            if should_send_email:
                 try:
-                    from backend.services.email_service import dispatch_notification_email
-                    email_targets = list(set([r["email"] for r in recipients if r["email"] and "@" in r["email"]]))
+                    from backend.services.email_service import send_email
+                    from backend.services.email_templates import generate_professional_template
+                    email_targets = list(set([r["email"] for r in recipients if r.get("email") and "@" in str(r["email"])]))
                     for e_mail in email_targets:
                         try:
-                            dispatch_notification_email(
-                                to_email=e_mail,
-                                subject=title,
-                                message_body=body,
-                                action_route=route
+                            r_name = next((r.get("name") for r in recipients if r.get("email") == e_mail), "Faculty / Staff")
+                            cleaned_body = str(body).strip()
+                            if cleaned_body.startswith("Dear "):
+                                greeting_line = ""
+                            else:
+                                greeting_line = f'<p style="margin-top:0; font-weight:600; color:#0f172a;">Dear {r_name},</p>'
+
+                            email_content = f"""
+                            {greeting_line}
+                            <p style="font-size:14px; line-height:1.6; color:#334155;">{cleaned_body}</p>
+                            <div style="margin-top:20px; padding:12px; background-color:#f8fafc; border-left:4px solid #0284c7; border-radius:4px;">
+                                <p style="margin:0; color:#64748b; font-size:12px; line-height:1.4;">
+                                    <strong>Official Institutional Notice:</strong> Nandha Engineering College LeetCode Tracker system. Please check your faculty dashboard for real-time updates.
+                                </p>
+                            </div>
+                            """
+                            action_btn = None
+                            if eff_route:
+                                full_url = f"https://leetcodeurl-s-ipfr.onrender.com{eff_route}" if not eff_route.startswith("http") else eff_route
+                                action_btn = f'<a href="{full_url}" class="btn" target="_blank" style="display:inline-block; background-color:#2563eb; color:#ffffff !important; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold;">View in System</a>'
+                            
+                            html_email = generate_professional_template(
+                                title=f"Nandha Engineering College: {title}",
+                                content=email_content,
+                                action_button=action_btn
+                            )
+                            send_email(
+                                recipient=e_mail,
+                                subject=f"Nandha Engineering College: {title}",
+                                html_body=html_email,
+                                text_body=body
                             )
                         except Exception as e_err:
                             logger.warning(f"[NOTIF_ENGINE] Email notice to {e_mail}: {e_err}")

@@ -481,15 +481,17 @@ class MessagingService:
             getattr(current_user, "name", None) or 
             getattr(current_user, "username", None) or 
             getattr(current_user, "email", None) or 
-            "Admin" if (getattr(current_user, "role", "") or "").lower() in ("admin", "super admin") else "User"
+            ("Admin" if (getattr(current_user, "role", "") or "").lower() in ("admin", "super admin") else "User")
         )
+        receiver_info = MessagingService._get_user_display(db, receiver_id)
+        receiver_display_name = receiver_info.get("name") or "Staff"
         msg_preview = content[:80] + ("..." if len(content) > 80 else "")
         idempotency_event_id = f"MSG_{msg.message_id}_{receiver_id}"
 
         NotificationService.emit_event(
             event_type="DIRECT_MESSAGE",
-            title=f"New message from {sender_name}",
-            body=msg_preview,
+            title=f"Message from {sender_name}",
+            body=f"Dear {receiver_display_name}, you received a new message from {sender_name}: \"{msg_preview}\"",
             actor_user_id=sender_id,
             recipient_scope="INDIVIDUAL",
             recipient_target=receiver_id,
@@ -500,7 +502,8 @@ class MessagingService:
                 "conversation_id": conv.conversation_id,
                 "message_id": msg.message_id,
                 "sender_id": sender_id,
-                "sender_name": sender_name
+                "sender_name": sender_name,
+                "receiver_name": receiver_display_name
             },
             send_email_notification=False
         )

@@ -4486,7 +4486,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                 {/* FRONT SIDE CARD COMPONENT */}
                 {(idCardSide === 'front' || idCardSide === 'both') && (
-                  <div className={`w-full max-w-sm sm:max-w-md rounded-3xl bg-gradient-to-br ${currentCardTheme.bg} p-5 sm:p-6 text-white shadow-2xl border-2 ${currentCardTheme.border} relative overflow-hidden space-y-4 sm:space-y-5 animate-fade-in`}>
+                  <div className={`w-full max-w-[340px] sm:max-w-md rounded-3xl bg-gradient-to-br ${currentCardTheme.bg} p-4 sm:p-6 text-white shadow-2xl border-2 ${currentCardTheme.border} relative overflow-hidden space-y-3.5 sm:space-y-5 animate-fade-in`}>
 
                     {/* Holographic Watermark Glow */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
@@ -4554,34 +4554,38 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     </div>
 
                     {/* Profile Photo & Primary Information */}
-                    <div className="flex items-center gap-4 relative z-10">
-                      <div className="w-22 h-26 sm:w-24 sm:h-28 rounded-2xl overflow-hidden border-2 border-amber-400/90 shadow-xl bg-slate-950 shrink-0 flex items-center justify-center relative">
+                    <div className="flex items-center gap-3.5 sm:gap-4 relative z-10">
+                      <div className="w-24 h-28 sm:w-28 sm:h-32 min-w-[96px] max-w-[96px] min-h-[112px] max-h-[112px] sm:min-w-[112px] sm:max-w-[112px] sm:min-h-[128px] sm:max-h-[128px] rounded-2xl overflow-hidden border-2 border-amber-400/90 shadow-xl bg-slate-950 shrink-0 flex items-center justify-center relative">
                         {profilePhoto ? (
-                          <img src={profilePhoto} alt="ID Photo" className="w-full h-full object-cover" />
+                          <img
+                            src={profilePhoto}
+                            alt="ID Photo"
+                            className="w-full h-full max-w-full max-h-full object-cover object-top block pointer-events-none select-none"
+                          />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-3xl flex items-center justify-center">
                             {(fullName || user?.username || 'N').charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <div className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-xs py-0.5 text-center text-[8px] font-black uppercase text-amber-300 tracking-wider">
+                        <div className="absolute bottom-0 inset-x-0 bg-black/70 backdrop-blur-xs py-0.5 text-center text-[8px] font-black uppercase text-amber-300 tracking-wider z-10">
                           Verified
                         </div>
                       </div>
 
-                      <div className="space-y-1 min-w-0 flex-1">
-                        <h3 className="text-base sm:text-lg font-black text-white truncate tracking-tight">
+                      <div className="space-y-1 min-w-0 flex-1 overflow-hidden">
+                        <h3 className="text-sm sm:text-lg font-black text-white truncate tracking-tight" title={fullName || user?.username || 'Nanthishvaran S'}>
                           {fullName || user?.username || 'Nanthishvaran S'}
                         </h3>
-                        <p className="text-xs font-extrabold text-amber-300 truncate">
+                        <p className="text-xs font-extrabold text-amber-300 truncate" title={designation || (rawRole.includes('admin') ? 'Administrator' : 'Faculty Member')}>
                           {designation || (rawRole.includes('admin') ? 'Administrator' : 'Faculty Member')}
                         </p>
                         <div className="pt-1 flex flex-col gap-1">
                           <div className="inline-flex items-center gap-1.5">
-                            <span className="px-2 py-0.5 rounded font-mono text-[11px] font-black bg-white/20 text-white border border-white/25">
+                            <span className="px-2 py-0.5 rounded font-mono text-[10.5px] sm:text-[11px] font-black bg-white/20 text-white border border-white/25 truncate">
                               {institutionalId}
                             </span>
                           </div>
-                          <span className="text-[10px] font-bold text-sky-200 truncate">
+                          <span className="text-[9.5px] sm:text-[10px] font-bold text-sky-200 truncate" title={departmentName && departmentName !== 'INSTITUTIONAL' ? departmentName : 'Computer Science & Engineering'}>
                             {departmentName && departmentName !== 'INSTITUTIONAL' ? departmentName : 'Computer Science & Engineering'}
                           </span>
                         </div>
@@ -4659,7 +4663,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                 {/* BACK SIDE CARD COMPONENT */}
                 {(idCardSide === 'back' || idCardSide === 'both') && (
-                  <div className={`w-full max-w-sm sm:max-w-md rounded-3xl bg-gradient-to-br ${currentCardTheme.bg} p-5 sm:p-6 text-white shadow-2xl border-2 ${currentCardTheme.border} relative overflow-hidden space-y-4 animate-fade-in`}>
+                  <div className={`w-full max-w-[340px] sm:max-w-md rounded-3xl bg-gradient-to-br ${currentCardTheme.bg} p-4 sm:p-6 text-white shadow-2xl border-2 ${currentCardTheme.border} relative overflow-hidden space-y-3.5 sm:space-y-4 animate-fade-in`}>
 
                     {/* Holographic Watermark glow */}
                     <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />

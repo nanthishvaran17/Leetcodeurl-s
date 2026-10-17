@@ -19,11 +19,7 @@ import { deriveYearLevelFromRegNo } from '../utils/filterUtils';
 
 const formatStudentName = (name: string) => {
   if (!name) return "—";
-  return name.split(' ').map(word => {
-    return word.split('.').map(part => 
-      part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
-    ).join('.');
-  }).join(' ');
+  return name.trim().toUpperCase();
 };
 
 const getContestDifficultyBreakdown = (s: any, forceCurrentContestOnly: boolean = false) => {

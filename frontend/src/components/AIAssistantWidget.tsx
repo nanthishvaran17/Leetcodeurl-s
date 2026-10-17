@@ -34,7 +34,9 @@ import {
   ChevronDown,
   ShieldCheck,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Plus,
+  Sparkles
 } from 'lucide-react';
 import api from '../services/api';
 import { getApiUrl } from '../config/apiConfig';
@@ -119,14 +121,14 @@ const RichMessageText: React.FC<{ text: string; isUser?: boolean }> = ({ text, i
 
   const blocks = cleaned.split(/\n\n+/);
 
-  const renderInline = (line: string, key: number) => {
-    const parts = line.split(/(\*\*[^*]+\*\*|__[^_]+__)/g);
+  const renderFormattedText = (textChunk: string, key: number) => {
+    const parts = textChunk.split(/(\*\*[^*]+\*\*|__[^_]+__)/g);
     return (
       <React.Fragment key={key}>
         {parts.map((part, i) => {
           if (/^\*\*[^*]+\*\*$/.test(part) || /^__[^_]+__$/.test(part)) {
             const inner = part.replace(/^\*\*|^\s*__/, '').replace(/\*\*$|__$/, '');
-            return <strong key={i} className="font-semibold text-slate-900 dark:text-white">{inner}</strong>;
+            return <strong key={i} className="font-bold text-slate-900 dark:text-white">{inner}</strong>;
           }
           const codeParts = part.split(/(`[^`]+`)/g);
           return (
@@ -134,7 +136,7 @@ const RichMessageText: React.FC<{ text: string; isUser?: boolean }> = ({ text, i
               {codeParts.map((cp, ci) => {
                 if (/^`[^`]+`$/.test(cp)) {
                   return (
-                    <code key={ci} className="px-1 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-[10.5px] font-mono text-brand-700 dark:text-brand-300">
+                    <code key={ci} className="px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-navy-800 text-[11px] font-mono font-bold text-brand-700 dark:text-brand-300">
                       {cp.slice(1, -1)}
                     </code>
                   );
@@ -148,6 +150,42 @@ const RichMessageText: React.FC<{ text: string; isUser?: boolean }> = ({ text, i
     );
   };
 
+  const renderInline = (line: string, key: number) => {
+    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    if (linkRegex.test(line)) {
+      const segments: React.ReactNode[] = [];
+      let lastIndex = 0;
+      let match;
+      linkRegex.lastIndex = 0;
+      while ((match = linkRegex.exec(line)) !== null) {
+        if (match.index > lastIndex) {
+          segments.push(renderFormattedText(line.slice(lastIndex, match.index), segments.length));
+        }
+        const linkText = match[1];
+        const linkUrl = match[2];
+        segments.push(
+          <a
+            key={segments.length}
+            href={linkUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1 my-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-bold text-[11px] transition-all no-underline shadow-xs cursor-pointer active:scale-95"
+          >
+            <FileText className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+            <span>{linkText}</span>
+            <ChevronRight className="w-3 h-3 text-emerald-400 shrink-0" />
+          </a>
+        );
+        lastIndex = match.index + match[0].length;
+      }
+      if (lastIndex < line.length) {
+        segments.push(renderFormattedText(line.slice(lastIndex), segments.length));
+      }
+      return <React.Fragment key={key}>{segments}</React.Fragment>;
+    }
+    return renderFormattedText(line, key);
+  };
+
   const renderedBlocks = blocks.map((block, bIdx) => {
     const trimmed = block.trim();
     if (!trimmed) return null;
@@ -155,7 +193,7 @@ const RichMessageText: React.FC<{ text: string; isUser?: boolean }> = ({ text, i
     if (trimmed.startsWith('```')) {
       const codeContent = trimmed.replace(/^```[\w]*\n?/, '').replace(/```$/, '').trim();
       return (
-        <div key={bIdx} className="my-2 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+        <div key={bIdx} className="my-2 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-xs">
           <div className="px-3 py-1.5 bg-slate-100 dark:bg-navy-800 border-b border-slate-200 dark:border-slate-700 flex items-center gap-1.5">
             <Code2 className="w-3 h-3 text-slate-400" />
             <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">Code</span>
@@ -167,13 +205,69 @@ const RichMessageText: React.FC<{ text: string; isUser?: boolean }> = ({ text, i
       );
     }
 
+    // Heading format
+    if (/^#{1,4}\s+/.test(trimmed)) {
+      const headingText = trimmed.replace(/^#{1,4}\s+/, '');
+      return (
+        <div key={bIdx} className="pt-2 pb-1 border-b border-slate-200/70 dark:border-navy-800">
+          <h4 className="text-[12.5px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span className="w-1.5 h-3.5 rounded-full bg-gradient-to-b from-brand-500 to-indigo-600 shrink-0" />
+            <span>{renderInline(headingText, 0)}</span>
+          </h4>
+        </div>
+      );
+    }
+
     const lines = trimmed.split('\n');
+
+    // Markdown Table Detection
+    const isTable = lines.length >= 2 && lines.filter(l => l.trim()).every(l => l.trim().startsWith('|') && l.trim().endsWith('|'));
+    if (isTable) {
+      const nonSeparatorLines = lines.filter(l => l.trim() && !/^[|\s-:]+$/.test(l.trim()));
+      const headerLine = nonSeparatorLines[0];
+      const dataLines = nonSeparatorLines.slice(1);
+      const parseCells = (l: string) => l.split('|').slice(1, -1).map(c => c.trim());
+      const headers = headerLine ? parseCells(headerLine) : [];
+
+      return (
+        <div key={bIdx} className="my-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700 overflow-hidden shadow-xs bg-white dark:bg-navy-950">
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full text-left text-[11px] border-collapse min-w-[340px]">
+              <thead>
+                <tr className="bg-slate-100/90 dark:bg-navy-800/90 text-slate-700 dark:text-slate-200 border-b border-slate-200/90 dark:border-navy-700">
+                  {headers.map((h, hi) => (
+                    <th key={hi} className="px-3 py-2 font-bold whitespace-nowrap text-[10.5px]">
+                      {renderInline(h, hi)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-navy-800/60 font-medium">
+                {dataLines.map((row, ri) => {
+                  const cells = parseCells(row);
+                  return (
+                    <tr key={ri} className="odd:bg-white dark:odd:bg-navy-950 even:bg-slate-50/70 dark:even:bg-navy-900/30 hover:bg-brand-50/40 dark:hover:bg-brand-950/30 transition-colors">
+                      {cells.map((c, ci) => (
+                        <td key={ci} className="px-3 py-1.5 text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                          {renderInline(c, ci)}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
     const isBulletList = lines.length > 1 && lines.every(l => /^[-\u2022*]\s+/.test(l.trim()) || l.trim() === '');
     const isNumberedList = lines.length > 1 && lines.every(l => /^\d+[.)]\s+/.test(l.trim()) || l.trim() === '');
 
     if (isBulletList) {
       return (
-        <ul key={bIdx} className="space-y-1 my-1 pl-0">
+        <ul key={bIdx} className="space-y-1.5 my-1.5 pl-0">
           {lines.filter(l => l.trim()).map((l, li) => (
             <li key={li} className="flex items-start gap-2 text-[12px] leading-relaxed text-slate-700 dark:text-slate-200">
               <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-400 shrink-0" />
@@ -186,7 +280,7 @@ const RichMessageText: React.FC<{ text: string; isUser?: boolean }> = ({ text, i
 
     if (isNumberedList) {
       return (
-        <ol key={bIdx} className="space-y-1 my-1 pl-0">
+        <ol key={bIdx} className="space-y-1.5 my-1.5 pl-0">
           {lines.filter(l => l.trim()).map((l, li) => {
             const match = l.match(/^(\d+)[.)]\s+(.*)/);
             const num = match ? match[1] : String(li + 1);
@@ -406,6 +500,7 @@ export const AIAssistantWidget: React.FC<AIAssistantWidgetProps> = ({
   const [briefCards, setBriefCards] = useState<BriefCard[]>([]);
   const [briefLoading, setBriefLoading] = useState(false);
   const [briefDismissed, setBriefDismissed] = useState(false);
+  const [briefExpanded, setBriefExpanded] = useState(false);
 
   const makeWelcomeMsg = (): ChatMessage => {
     return {
@@ -508,7 +603,8 @@ export const AIAssistantWidget: React.FC<AIAssistantWidgetProps> = ({
     }
   }, []);
 
-  useEffect(() => { fetchChatHistory(); }, []);
+  // Start fresh by default; user can click New Chat anytime to reset
+  // useEffect(() => { fetchChatHistory(); }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -811,13 +907,18 @@ export const AIAssistantWidget: React.FC<AIAssistantWidgetProps> = ({
     }
   };
 
-  const handleClearChat = async () => {
+  const handleNewChat = async () => {
     try { await api.post('/ai/clear-history').catch(() => null); } catch (_err) { }
+    conversationIdRef.current = `conv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     setMessages([{ ...makeWelcomeMsg(), id: `welcome_${Date.now()}`, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+    setBriefExpanded(false);
+    setInput('');
   };
 
+  const handleClearChat = handleNewChat;
+
   return (
-    <div className="ai-floating-widget fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] right-4 sm:right-6 z-[90000] font-sans pointer-events-auto">
+    <div className="ai-floating-widget fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] right-2 sm:right-6 left-2 sm:left-auto z-[90000] font-sans pointer-events-auto">
 
       {/* Chat Window */}
       <AnimatePresence>
@@ -829,43 +930,49 @@ export const AIAssistantWidget: React.FC<AIAssistantWidgetProps> = ({
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             role="dialog" aria-label="NEC AI Assistant"
             className={`ai-assistant-dialog bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-navy-800 shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 transition-all duration-300 ${isExpanded
-                ? 'w-[840px] max-w-[calc(100vw-1.5rem)] h-[800px] max-h-[calc(100dvh-3.5rem)]'
-                : 'w-[min(430px,calc(100vw-1rem))] h-[min(590px,calc(100dvh-5.5rem))]'
+                ? 'w-full sm:w-[840px] max-w-[calc(100vw-1rem)] h-[calc(100dvh-6rem)] sm:h-[800px] max-h-[calc(100dvh-3.5rem)]'
+                : 'w-full sm:w-[440px] h-[calc(100dvh-6.25rem)] sm:h-[620px] max-h-[640px]'
               }`}
           >
 
             {/* HEADER */}
-            <div className="px-4 py-3 bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 text-white flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-8 h-8 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shrink-0 shadow-inner">
+            <div className="px-3.5 py-2.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 text-white flex items-center justify-between shrink-0 shadow-sm">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0 shadow-inner">
                   <Bot className="w-4 h-4 text-amber-300" />
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-sm tracking-wide truncate leading-tight">NEC AI Copilot</h3>
-                    <span className="px-1.5 py-px rounded text-[9px] font-black bg-emerald-400 text-emerald-950 uppercase tracking-widest shrink-0">LIVE</span>
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="font-extrabold text-[13px] tracking-tight truncate leading-tight">NEC AI Copilot</h3>
+                    <span className="px-1.5 py-0.2 rounded-full text-[8.5px] font-black bg-emerald-400 text-emerald-950 uppercase tracking-widest shrink-0">PRO</span>
                   </div>
-                  <p className="text-[11px] text-white/70 font-medium truncate leading-tight">
+                  <p className="text-[10px] text-white/80 font-medium truncate leading-tight">
                     Institutional Intelligence & Operations
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleNewChat}
+                  aria-label="New chat session"
+                  className="px-2.5 py-1 rounded-xl bg-white/20 hover:bg-white/30 active:scale-95 text-white font-bold text-[10.5px] flex items-center gap-1 transition-all shadow-xs cursor-pointer border border-white/20"
+                  title="Start fresh conversation"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>New Chat</span>
+                </button>
                 <button type="button" onClick={() => setShowLaunchers(!showLaunchers)} aria-label="Toggle quick tools"
-                  className={`p-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${showLaunchers ? 'bg-white text-indigo-700 shadow-sm' : 'bg-white/15 hover:bg-white/25 text-white'}`}>
+                  className={`p-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${showLaunchers ? 'bg-white text-indigo-700 shadow-sm' : 'bg-white/15 hover:bg-white/25 text-white'}`} title="Tools & Launchers">
                   <Sliders className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline text-[10px]">Tools</span>
                 </button>
-                <button type="button" onClick={handleClearChat} aria-label="Clear chat"
-                  className="p-1.5 rounded-lg bg-white/15 hover:bg-rose-400/80 text-white transition-all cursor-pointer" title="Clear Chat">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
                 <button type="button" onClick={() => setIsExpanded(!isExpanded)} aria-label={isExpanded ? 'Collapse' : 'Expand'}
-                  className="hidden sm:flex p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer">
+                  className="hidden sm:flex p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer" title={isExpanded ? 'Collapse' : 'Full-screen mode'}>
                   {isExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
                 </button>
                 <button type="button" onClick={handleCloseWidget} aria-label="Close assistant"
-                  className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer">
+                  className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer" title="Close">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -891,42 +998,6 @@ export const AIAssistantWidget: React.FC<AIAssistantWidgetProps> = ({
               </div>
             )}
 
-            {/* TELEMETRY STRIP */}
-            <div className="px-4 py-1.5 bg-slate-900 dark:bg-[#070d1a] text-white border-b border-slate-800 flex items-center justify-between shrink-0 overflow-x-auto no-scrollbar">
-              <div className="flex items-center gap-3 text-[10px] font-mono text-slate-400 whitespace-nowrap">
-                <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  SQLITE WAL
-                </span>
-                <span className="text-slate-700">·</span>
-                <span>Total: <b className="text-white">{telemetry?.total_students ?? 302}</b></span>
-                <span className="text-slate-700">·</span>
-                <span>Verified: <b className="text-emerald-400">{telemetry?.verified_students ?? 237}</b></span>
-                <span className="text-slate-700">·</span>
-                <span>Pending: <b className="text-amber-400">{telemetry?.pending_students ?? 21}</b></span>
-              </div>
-              <button type="button" onClick={fetchTelemetry} aria-label="Refresh telemetry"
-                className="text-slate-500 hover:text-white cursor-pointer ml-2 transition-colors shrink-0">
-                <RefreshCw className={`w-3 h-3 ${loadingTelemetry ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
-
-            {/* MODE TOGGLE */}
-            <div className="px-3 py-2 bg-slate-50 dark:bg-navy-900/60 border-b border-slate-200 dark:border-navy-800 flex items-center gap-1.5 shrink-0">
-              {([
-                { id: 'operations', label: 'Operations', Icon: Cpu },
-                { id: 'institutional', label: 'Intelligence', Icon: Database },
-              ] as const).map(({ id, label, Icon }) => (
-                <button key={id} type="button" onClick={() => setActiveMode(id)}
-                  className={`flex-1 py-1.5 px-2.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${activeMode === id
-                      ? 'bg-white dark:bg-navy-950 text-brand-600 dark:text-brand-400 shadow-sm border border-slate-200 dark:border-navy-700'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                    }`}>
-                  <Icon className="w-3 h-3" />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </div>
 
             {/* LAUNCHERS PANEL */}
             {showLaunchers ? (
@@ -978,135 +1049,86 @@ export const AIAssistantWidget: React.FC<AIAssistantWidgetProps> = ({
             ) : (
               /* MESSAGES AREA */
               <>
-                {/* PROACTIVE INTEL FEED */}
-                {!briefDismissed && (briefLoading || briefCards.length > 0) && (
-                  <div className="px-3 pt-2.5 pb-1 bg-slate-50 dark:bg-navy-900/70 border-b border-slate-200 dark:border-navy-800 shrink-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1.5">
-                        <Activity className="w-3 h-3 text-brand-500" />
-                        <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
-                          Your Intelligence Brief
-                        </span>
-                        {briefLoading && <Loader2 className="w-2.5 h-2.5 text-brand-400 animate-spin" />}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setBriefDismissed(true)}
-                        aria-label="Dismiss brief"
-                        className="p-0.5 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                      {briefCards.map((card, idx) => {
-                        const borderColor =
-                          card.type === 'SUCCESS' ? 'border-l-emerald-400'
-                            : card.type === 'ALERT' ? 'border-l-rose-500'
-                              : card.type === 'WARNING' ? 'border-l-amber-400'
-                                : 'border-l-brand-400';
-                        const bgColor =
-                          card.type === 'SUCCESS' ? 'bg-emerald-50 dark:bg-emerald-950/20'
-                            : card.type === 'ALERT' ? 'bg-rose-50 dark:bg-rose-950/20'
-                              : card.type === 'WARNING' ? 'bg-amber-50 dark:bg-amber-950/20'
-                                : 'bg-white dark:bg-navy-900';
-                        const metricColor =
-                          card.type === 'SUCCESS' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
-                            : card.type === 'ALERT' ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300'
-                              : card.type === 'WARNING' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
-                                : 'bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300';
-                        const IconComp =
-                          card.icon === 'trophy' ? Trophy
-                            : card.icon === 'users' ? Users
-                              : card.icon === 'shield' ? ShieldCheck
-                                : card.icon === 'activity' ? Activity
-                                  : card.icon === 'zap' ? Activity
-                                    : AlertTriangle;
-                        const iconColor =
-                          card.type === 'SUCCESS' ? 'text-emerald-500'
-                            : card.type === 'ALERT' ? 'text-rose-500'
-                              : card.type === 'WARNING' ? 'text-amber-500'
-                                : 'text-brand-500';
-                        return (
-                          <motion.div
-                            key={idx}
-                            initial={{ opacity: 0, y: 6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.22, delay: idx * 0.07, ease: 'easeOut' }}
-                            className={`shrink-0 w-[196px] rounded-xl border-l-[3px] border border-slate-200 dark:border-navy-700 p-2.5 flex flex-col gap-1.5 shadow-sm ${borderColor} ${bgColor}`}
-                          >
-                            <div className="flex items-start justify-between gap-1">
-                              <div className="flex items-center gap-1.5">
-                                <IconComp className={`w-3 h-3 shrink-0 ${iconColor}`} />
-                                <span className="text-[10.5px] font-bold text-slate-800 dark:text-white leading-tight line-clamp-1">
-                                  {card.title}
-                                </span>
-                              </div>
-                              {card.metric && (
-                                <span className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${metricColor}`}>
-                                  {card.metric}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-[10px] leading-relaxed text-slate-600 dark:text-slate-400 line-clamp-2">
-                              {card.body}
-                            </p>
-                            <div className="flex items-center justify-between mt-auto pt-0.5">
-                              {card.trend && (
-                                <span className="flex items-center gap-0.5">
-                                  {card.trend === 'UP' && <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />}
-                                  {card.trend === 'DOWN' && <TrendingDown className="w-2.5 h-2.5 text-rose-500" />}
-                                </span>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setBriefDismissed(true);
-                                  handleSend(card.cta_query);
-                                }}
-                                className="ml-auto text-[9.5px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer flex items-center gap-0.5 transition-colors"
-                              >
-                                {card.cta_label} <ChevronRight className="w-2.5 h-2.5" />
-                              </button>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
                 <div
                   ref={messagesContainerRef}
                   onScroll={handleScroll}
                   className="flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-white dark:bg-navy-950"
                 >
                   {isEmptyConversation ? (
-                    <div className="h-full flex flex-col">
-                      <div className="px-4 pt-4 pb-2">
-                        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-2.5">
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                            <Bot className="w-3 h-3 text-white" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[10px] font-bold text-brand-600 dark:text-brand-400">NEC AI COPILOT</span>
-                              <span className="text-[9px] font-mono text-slate-400">{messages[0].timestamp}</span>
-                            </div>
-                            <div className="px-3.5 py-3 rounded-2xl rounded-tl-sm bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-sm">
-                              <RichMessageText text={messages[0].text} />
-                            </div>
-                          </div>
-                        </motion.div>
-                      </div>
-                      <div className="flex-1">
-                        <EmptyStateSuggestions onSend={(q) => handleSend(q)} mode={activeMode} activeContext={activeContext} />
-                      </div>
+                    <div className="h-full flex flex-col items-center justify-center px-4 py-8 text-center my-auto">
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.25 }}
+                        className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-brand-500/20 text-white mb-3"
+                      >
+                        <Sparkles className="w-6 h-6 text-amber-300" />
+                      </motion.div>
+                      <motion.h3
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 }}
+                        className="font-extrabold text-[16px] text-slate-800 dark:text-white tracking-tight"
+                      >
+                        NEC AI Copilot
+                      </motion.h3>
+                      <motion.p
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-[12px] text-slate-500 dark:text-slate-400 max-w-[320px] text-center mt-1 leading-relaxed"
+                      >
+                        Institutional Intelligence Assistant. Ask any question or select a starter below to generate verified reports.
+                      </motion.p>
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="grid grid-cols-2 gap-2.5 w-full max-w-[360px] mt-6"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleSend("Who are the top 10 college solvers overall?")}
+                          className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900 hover:bg-brand-50/60 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700 hover:border-brand-300 dark:hover:border-brand-700 transition-all text-left flex flex-col group cursor-pointer shadow-xs active:scale-98"
+                        >
+                          <Trophy className="w-4 h-4 text-amber-500 mb-1.5 group-hover:scale-110 transition-transform" />
+                          <span className="text-[11.5px] font-bold text-slate-800 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400">Top 10 Solvers</span>
+                          <span className="text-[10px] text-slate-400">College leaderboard</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSend("Find low solvers with less than 1 problem solved")}
+                          className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900 hover:bg-rose-50/60 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700 hover:border-rose-300 dark:hover:border-rose-700 transition-all text-left flex flex-col group cursor-pointer shadow-xs active:scale-98"
+                        >
+                          <AlertTriangle className="w-4 h-4 text-rose-500 mb-1.5 group-hover:scale-110 transition-transform" />
+                          <span className="text-[11.5px] font-bold text-slate-800 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400">Zero Solvers</span>
+                          <span className="text-[10px] text-slate-400">21 students alert</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSend("mail panu low solvers-ukku")}
+                          className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900 hover:bg-purple-50/60 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700 hover:border-purple-300 dark:hover:border-purple-700 transition-all text-left flex flex-col group cursor-pointer shadow-xs active:scale-98"
+                        >
+                          <Mail className="w-4 h-4 text-purple-500 mb-1.5 group-hover:scale-110 transition-transform" />
+                          <span className="text-[11.5px] font-bold text-slate-800 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400">Warning Email</span>
+                          <span className="text-[10px] text-slate-400">Draft warning notice</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSend("Check the entire database for bugs, duplicate usernames, and unverified profiles")}
+                          className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900 hover:bg-emerald-50/60 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all text-left flex flex-col group cursor-pointer shadow-xs active:scale-98"
+                        >
+                          <Activity className="w-4 h-4 text-emerald-500 mb-1.5 group-hover:scale-110 transition-transform" />
+                          <span className="text-[11.5px] font-bold text-slate-800 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400">Database Audit</span>
+                          <span className="text-[10px] text-slate-400">563 active records</span>
+                        </button>
+                      </motion.div>
                     </div>
                   ) : (
                     <div className="p-4 space-y-4">
                       <AnimatePresence initial={false}>
-                        {messages.map((msg) => (
+                        {messages.filter(m => !m.id.startsWith('welcome_')).map((msg) => (
                           <motion.div key={msg.id}
                             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.18, ease: 'easeOut' }}
@@ -1299,18 +1321,6 @@ export const AIAssistantWidget: React.FC<AIAssistantWidgetProps> = ({
               </>
             )}
 
-            {/* QUICK ACTION CHIPS */}
-            {!showLaunchers && (
-              <div className="px-3 py-2 bg-slate-50 dark:bg-navy-900/80 border-t border-slate-200 dark:border-navy-800 flex gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-                {quickActionsOps.map((action, idx) => (
-                  <button key={idx} type="button" onClick={() => handleSend(action.query)}
-                    className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-[10.5px] font-medium text-slate-600 dark:text-slate-300 hover:border-brand-400 dark:hover:border-brand-600 hover:text-brand-600 dark:hover:text-brand-300 whitespace-nowrap cursor-pointer transition-all shadow-sm shrink-0">
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
             {/* INPUT AREA / COMPOSER */}
             <div className="px-3 py-2 bg-white dark:bg-navy-950 border-t border-slate-200 dark:border-navy-800 shrink-0 space-y-1">
               <div className={`flex items-end gap-2 px-3 py-1.5 rounded-xl border transition-all duration-150 bg-slate-50 dark:bg-navy-900 ${loading
@@ -1347,6 +1357,11 @@ export const AIAssistantWidget: React.FC<AIAssistantWidgetProps> = ({
                       : 'bg-gradient-to-br from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-sm cursor-pointer active:scale-95'
                     }`}
                 >
+                  {loading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-400" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5" />
+                  )}
                 </button>
               </div>
             </div>

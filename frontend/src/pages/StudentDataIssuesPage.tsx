@@ -929,62 +929,76 @@ export const StudentDataIssuesPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950 via-slate-900 to-navy-950 text-white border border-indigo-500/40 shadow-xl flex items-center justify-between flex-wrap gap-4 text-xs font-bold"
+          className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-indigo-950 via-slate-900 to-navy-950 text-white border border-indigo-500/40 shadow-xl space-y-2.5 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-4 text-xs font-bold"
         >
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/25 border border-indigo-400/40 text-indigo-200 font-mono font-black text-sm whitespace-nowrap shadow-inner shrink-0">
-              <span className="flex items-center justify-center min-w-[20px] h-5 px-1 rounded-md bg-indigo-500 text-white text-xs font-black">
-                {selectedStudentIds.length}
+          {/* Header row: Selection count & mobile Deselect button */}
+          <div className="flex items-center justify-between sm:justify-start gap-2.5 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-500/25 border border-indigo-400/40 text-indigo-200 font-mono font-black text-xs whitespace-nowrap shadow-inner shrink-0">
+                <span className="flex items-center justify-center min-w-[18px] h-4.5 px-1 rounded-md bg-indigo-500 text-white text-[11px] font-black">
+                  {selectedStudentIds.length}
+                </span>
+                <span>Selected</span>
+              </div>
+              <span className="text-slate-300 font-medium text-[11px] truncate hidden sm:inline">
+                {bulkProgress || "Choose an administrative bulk action for selected students:"}
               </span>
-              <span>Selected</span>
             </div>
-            <span className="text-slate-200 font-medium truncate">
-              {bulkProgress || "Choose an administrative bulk action for selected students:"}
-            </span>
+
+            {/* Mobile Deselect Button */}
+            <button
+              onClick={() => setSelectedStudentIds([])}
+              className="sm:hidden px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-slate-300 hover:text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95"
+            >
+              <X className="w-3 h-3" />
+              <span>Deselect</span>
+            </button>
           </div>
 
-          <div className="flex items-center space-x-2 flex-wrap gap-y-2">
+          {/* Action buttons: Symmetrical 2x2 grid on mobile, flex row on desktop */}
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:space-x-2">
             <button
               onClick={handleDownloadExcel}
               disabled={isExporting}
-              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow cursor-pointer transition-all flex items-center space-x-1.5"
+              className="w-full sm:w-auto px-3 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] sm:text-xs font-bold shadow cursor-pointer transition-all flex items-center justify-center space-x-1.5 active:scale-95"
               title="Download Excel report containing only selected students"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export Selected Excel ({selectedStudentIds.length})</span>
+              <Download className="w-3.5 h-3.5 shrink-0" />
+              <span>Excel ({selectedStudentIds.length})</span>
             </button>
 
             <button
               onClick={handleDownloadCsv}
               disabled={isExporting}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow cursor-pointer transition-all flex items-center space-x-1.5"
+              className="w-full sm:w-auto px-3 py-1.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[11px] sm:text-xs font-bold shadow cursor-pointer transition-all flex items-center justify-center space-x-1.5 active:scale-95"
               title="Download CSV report containing only selected students"
             >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Export Selected CSV ({selectedStudentIds.length})</span>
+              <FileText className="w-3.5 h-3.5 shrink-0" />
+              <span>CSV ({selectedStudentIds.length})</span>
             </button>
 
             <button
               onClick={handleBulkVerifySelected}
               disabled={isBulking}
-              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow cursor-pointer transition-all flex items-center space-x-1.5"
+              className="w-full sm:w-auto px-3 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[11px] sm:text-xs font-bold shadow cursor-pointer transition-all flex items-center justify-center space-x-1.5 active:scale-95"
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Verify Selected URLs</span>
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+              <span>Verify URLs</span>
             </button>
 
             <button
               onClick={handleBulkSyncSelected}
               disabled={isBulking}
-              className="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow cursor-pointer transition-all flex items-center space-x-1.5"
+              className="w-full sm:w-auto px-3 py-1.5 sm:py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-[11px] sm:text-xs font-bold shadow cursor-pointer transition-all flex items-center justify-center space-x-1.5 active:scale-95"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Retry Sync Selected</span>
+              <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+              <span>Retry Sync</span>
             </button>
 
+            {/* Desktop Deselect All */}
             <button
               onClick={() => setSelectedStudentIds([])}
-              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl cursor-pointer"
+              className="hidden sm:inline-flex px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl cursor-pointer"
             >
               Deselect All
             </button>
@@ -993,53 +1007,53 @@ export const StudentDataIssuesPage: React.FC = () => {
       )}
 
       {/* 6. STUDENT ISSUE TABLE (ENTERPRISE GRADE) */}
-      <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 shadow-sm overflow-hidden space-y-0">
+      <div className="rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 shadow-sm overflow-hidden space-y-0">
         
         {/* Table Header & Download Controls */}
-        <div className="px-6 py-4 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center space-x-3">
-            <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2 min-w-0">
+        <div className="px-3.5 py-3 sm:px-6 sm:py-4 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-2.5 sm:gap-4">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <span className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5 sm:space-x-2 min-w-0">
               <span className="w-2 h-2 shrink-0 rounded-full bg-amber-500 animate-pulse"></span>
               <span className="break-words whitespace-normal text-left min-w-0">Matched Students Requiring Attention ({students.length})</span>
             </span>
           </div>
 
-          <div className="flex items-center space-x-2 flex-wrap gap-y-2">
+          <div className="flex items-center space-x-1.5 sm:space-x-2 flex-wrap gap-y-1.5">
             <button
               onClick={handleDownloadExcel}
               disabled={isExporting || students.length === 0}
-              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center space-x-1.5"
+              className="px-2.5 sm:px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center space-x-1 sm:space-x-1.5"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <FileSpreadsheet className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               <span>Export Excel</span>
             </button>
 
             <button
               onClick={handleDownloadCsv}
               disabled={isExporting || students.length === 0}
-              className="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5"
+              className="px-2.5 sm:px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center space-x-1 sm:space-x-1.5"
             >
-              <FileText className="w-3.5 h-3.5 text-slate-500" />
+              <FileText className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500" />
               <span>Export CSV</span>
             </button>
           </div>
         </div>
 
         {/* Mobile Cards View (block md:hidden) */}
-        <div className="block md:hidden p-4 sm:p-5 space-y-5 sm:space-y-6">
+        <div className="block md:hidden p-2.5 sm:p-4 space-y-3">
           {loading ? (
-            <div className="p-10 text-center text-xs text-slate-500 font-bold space-y-2">
-              <RefreshCw className="w-6 h-6 animate-spin text-amber-500 mx-auto" />
-              <p>Analyzing and classifying student data issues...</p>
+            <div className="p-8 text-center text-xs text-slate-500 font-bold space-y-2">
+              <RefreshCw className="w-5 h-5 animate-spin text-amber-500 mx-auto" />
+              <p>Analyzing student records...</p>
             </div>
           ) : students.length === 0 ? (
-            <div className="p-10 text-center text-xs text-slate-500 font-medium space-y-2">
-              <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
+            <div className="p-8 text-center text-xs text-slate-500 font-medium space-y-2">
+              <CheckCircle2 className="w-7 h-7 text-emerald-500 mx-auto" />
               <p className="text-sm font-bold text-slate-900 dark:text-white">No issues found.</p>
               <p>All records within this selection meet verification standards.</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-3.5 sm:gap-4.5">
+            <div className="flex flex-col gap-2.5">
               {paginatedStudents.map((student) => {
                 const isSelected = selectedStudentIds.includes(student.id);
                 const isVerifyingThis = verifyingRowId === student.id;
@@ -1050,60 +1064,55 @@ export const StudentDataIssuesPage: React.FC = () => {
                 return (
                   <div
                     key={student.id}
-                    className={`relative overflow-hidden rounded-3xl border transition-all duration-300 p-4 sm:p-5 space-y-3 shadow-lg ${
+                    className={`relative overflow-hidden rounded-2xl border transition-all duration-200 p-3 sm:p-3.5 space-y-2.5 shadow-sm ${
                       isSelected
-                        ? 'bg-gradient-to-br from-indigo-500/10 via-brand-500/5 to-transparent border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/25 shadow-brand-500/10'
+                        ? 'bg-gradient-to-br from-indigo-500/10 via-brand-500/5 to-transparent border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/25'
                         : isCritical
-                        ? 'bg-white/80 dark:bg-slate-900/75 border-rose-200/80 dark:border-rose-500/20 shadow-slate-200/40 dark:shadow-black/40'
+                        ? 'bg-white dark:bg-slate-900/90 border-rose-200/80 dark:border-rose-500/25'
                         : isWarning
-                        ? 'bg-white/80 dark:bg-slate-900/75 border-amber-200/80 dark:border-amber-500/20 shadow-slate-200/40 dark:shadow-black/40'
-                        : 'bg-white/80 dark:bg-slate-900/75 border-slate-200/80 dark:border-white/10 shadow-slate-200/40 dark:shadow-black/40'
-                    } backdrop-blur-xl group`}
+                        ? 'bg-white dark:bg-slate-900/90 border-amber-200/80 dark:border-amber-500/25'
+                        : 'bg-white dark:bg-slate-900/90 border-slate-200/80 dark:border-white/10'
+                    }`}
                   >
-                    {/* Ambient Glow */}
-                    <div className={`absolute -top-12 -right-12 w-36 h-36 rounded-full blur-3xl pointer-events-none ${
-                      isCritical ? 'bg-rose-500/10' : isWarning ? 'bg-amber-500/10' : 'bg-emerald-500/10'
-                    }`} />
-
-                    {/* Header Row: Checkbox, Avatar, Name & Reg, Severity Badge */}
-                    <div className="relative z-10 flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                    {/* Header Row: Checkbox, Avatar, Student Name & Reg No, Severity Badge */}
+                    <div className="flex items-start justify-between gap-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleToggleSelectRow(student.id)}
-                          className="rounded-md border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer w-4 h-4 shrink-0 transition-all"
+                          className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer w-4 h-4 shrink-0 transition-all"
                         />
 
-                        {/* Initial Avatar Badge */}
-                        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center font-display font-black text-xs sm:text-sm text-white shrink-0 shadow-md ${
+                        {/* Initial Avatar */}
+                        <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-display font-black text-xs text-white shrink-0 shadow-xs ${
                           isCritical
-                            ? 'bg-gradient-to-br from-rose-500 to-red-600 shadow-rose-500/25'
+                            ? 'bg-gradient-to-br from-rose-500 to-red-600'
                             : isWarning
-                            ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/25'
-                            : 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/25'
+                            ? 'bg-gradient-to-br from-amber-500 to-orange-600'
+                            : 'bg-gradient-to-br from-emerald-500 to-teal-600'
                         }`}>
                           {(student.name || 'S').charAt(0).toUpperCase()}
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-display font-black text-slate-900 dark:text-white text-sm sm:text-base tracking-tight truncate leading-tight">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-display font-bold text-slate-900 dark:text-white text-xs sm:text-sm tracking-tight truncate leading-tight">
                               {student.name}
                             </h4>
-                            <span className="font-mono font-bold text-brand-600 dark:text-brand-300 bg-brand-500/10 dark:bg-brand-500/15 px-2 py-0.5 rounded-lg border border-brand-500/25 text-[10px] shrink-0">
+                            <span className="font-mono font-bold text-brand-600 dark:text-brand-300 bg-brand-500/10 dark:bg-brand-500/15 px-1.5 py-0.5 rounded text-[10px] shrink-0 border border-brand-500/20">
                               {student.reg_no}
                             </span>
                           </div>
-                          <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-bold mt-0.5">
+                          <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                             {student.department_short} • {student.year_level}
                           </div>
                         </div>
                       </div>
 
-                      {/* Severity Badge */}
+                      {/* Severity / Status Badge */}
                       <span
-                        className={`px-2.5 py-1 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider shrink-0 flex items-center gap-1.5 border shadow-xs ${
+                        className={`px-2 py-0.5 rounded-lg text-[9px] font-mono font-black uppercase tracking-wider shrink-0 flex items-center gap-1 border shadow-xs ${
                           isCritical
                             ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-400/30'
                             : isWarning
@@ -1120,23 +1129,23 @@ export const StudentDataIssuesPage: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* Handle & URL Status Strip */}
-                    <div className="relative z-10 px-3 py-2 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/5 flex items-center justify-between gap-2 text-xs font-mono">
+                    {/* Metadata Strip: Handle, URL Status & Sync Time */}
+                    <div className="px-2.5 py-1.5 rounded-xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/70 dark:border-white/5 flex items-center justify-between gap-2 text-[11px] font-mono">
                       <div className="min-w-0 truncate flex items-center gap-1.5">
-                        <span className="text-slate-400 text-[11px] font-bold">Handle:</span>
+                        <span className="text-slate-400 text-[10px] font-bold">Handle:</span>
                         {student.username ? (
-                          <span className="font-black text-sky-600 dark:text-sky-400 truncate bg-sky-500/10 dark:bg-sky-500/15 px-2 py-0.5 rounded-lg border border-sky-400/30">
+                          <span className="font-bold text-sky-600 dark:text-sky-400 truncate bg-sky-500/10 dark:bg-sky-500/15 px-1.5 py-0.5 rounded border border-sky-400/25">
                             @{student.username}
                           </span>
                         ) : (
-                          <span className="text-rose-500 italic font-bold text-[11px]">No username configured</span>
+                          <span className="text-rose-500 italic font-bold text-[10px]">No username</span>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {student.leetcode_url ? (
                           <span
-                            className={`px-2.5 py-1 rounded-xl text-[10px] font-mono font-black uppercase tracking-wider flex items-center gap-1 border ${
+                            className={`px-1.5 py-0.5 rounded-md text-[9px] font-mono font-black uppercase tracking-wider flex items-center gap-1 border ${
                               student.url_status === 'VERIFIED'
                                 ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-400/30'
                                 : student.url_status === 'INVALID'
@@ -1144,55 +1153,58 @@ export const StudentDataIssuesPage: React.FC = () => {
                                 : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-400/30'
                             }`}
                           >
-                            <ShieldCheck className="w-3 h-3" />
+                            <ShieldCheck className="w-2.5 h-2.5" />
                             {student.url_status === 'VERIFIED'
-                              ? 'VERIFIED URL'
+                              ? 'VERIFIED'
                               : student.url_status === 'INVALID'
-                              ? 'INVALID URL'
-                              : 'NEEDS CHECK'}
+                              ? 'INVALID'
+                              : 'CHECK'}
                           </span>
                         ) : (
-                          <span className="text-[10px] font-mono text-slate-400">— No URL —</span>
+                          <span className="text-[9px] font-mono text-slate-400">— No URL —</span>
+                        )}
+
+                        {student.last_sync && (
+                          <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 hidden sm:inline-block">
+                            Sync: {student.last_sync}
+                          </span>
                         )}
                       </div>
                     </div>
 
                     {/* Problem Description & Action Details */}
-                    <div className="relative z-10 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/5 space-y-2">
-                      <p className="text-slate-900 dark:text-white font-black text-xs leading-snug">
+                    <div className="px-2.5 py-2 rounded-xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 space-y-1">
+                      <p className="text-slate-800 dark:text-slate-200 font-semibold text-[11px] leading-tight">
                         {student.error_description}
                       </p>
                       
-                      <div className="flex items-center justify-between gap-2 flex-wrap text-xs pt-1.5 border-t border-slate-200/60 dark:border-white/5">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 font-mono font-black text-[9px] uppercase tracking-wider border border-amber-400/30 shrink-0 flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3 text-amber-500" />
+                      <div className="flex items-center justify-between gap-2 flex-wrap text-[10px] pt-0.5">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300 font-mono font-black text-[9px] uppercase tracking-wider border border-amber-400/25 shrink-0 flex items-center gap-0.5">
+                            <AlertCircle className="w-2.5 h-2.5 text-amber-500" />
                             ACTION
                           </span>
-                          <span className="font-bold text-slate-700 dark:text-slate-300 truncate">
+                          <span className="font-medium text-slate-600 dark:text-slate-300 truncate">
                             {student.recommended_action}
                           </span>
                         </div>
 
                         {student.last_sync && (
-                          <div className="text-[10px] font-mono flex items-center gap-1.5 shrink-0">
-                            <span className="text-slate-400">Sync:</span>
-                            <span className="text-slate-600 dark:text-slate-300 font-bold bg-white dark:bg-white/5 px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-white/10">
-                              {student.last_sync}
-                            </span>
-                          </div>
+                          <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 sm:hidden">
+                            Sync: {student.last_sync}
+                          </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Action Buttons Row — 2026 Sleek Action Bar */}
-                    <div className="relative z-10 flex items-center justify-end gap-2 pt-2 border-t border-slate-200/60 dark:border-white/5 flex-wrap">
+                    {/* Action Buttons Row — Sleek & Compact */}
+                    <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-slate-200/60 dark:border-white/5 flex-wrap">
                       {student.leetcode_url && (
                         <a
                           href={student.leetcode_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-3 py-2 min-h-[38px] rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-400/30 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95 touch-manipulation"
+                          className="px-2.5 py-1 min-h-[30px] rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-400/30 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 touch-manipulation"
                           title="Open profile"
                         >
                           <ExternalLink className="w-3 h-3 shrink-0" />
@@ -1203,7 +1215,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                       {student.leetcode_url && (
                         <button
                           onClick={() => handleCopyUrl(student)}
-                          className="px-3 py-2 min-h-[38px] rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95 touch-manipulation"
+                          className="px-2.5 py-1 min-h-[30px] rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 touch-manipulation"
                           title="Copy URL"
                         >
                           {copiedId === student.id ? (
@@ -1224,7 +1236,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                         <button
                           onClick={() => handleVerifySingleUrl(student)}
                           disabled={isVerifyingThis}
-                          className="px-3 py-2 min-h-[38px] rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95 disabled:opacity-50 touch-manipulation"
+                          className="px-2.5 py-1 min-h-[30px] rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 disabled:opacity-50 touch-manipulation"
                         >
                           <ShieldCheck className={`w-3 h-3 shrink-0 ${isVerifyingThis ? 'animate-spin' : ''}`} />
                           <span>Verify</span>
@@ -1233,7 +1245,7 @@ export const StudentDataIssuesPage: React.FC = () => {
 
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOpenRepairModal(student); }}
-                        className="px-3 py-2 min-h-[38px] rounded-xl bg-gradient-to-r from-amber-500/15 to-orange-500/15 hover:from-amber-500/25 hover:to-orange-500/25 text-amber-800 dark:text-amber-300 border border-amber-400/35 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95 touch-manipulation"
+                        className="px-2.5 py-1 min-h-[30px] rounded-lg bg-gradient-to-r from-amber-500/15 to-orange-500/15 hover:from-amber-500/25 hover:to-orange-500/25 text-amber-800 dark:text-amber-300 border border-amber-400/35 text-[11px] font-black flex items-center justify-center gap-1 cursor-pointer shadow-xs transition-all active:scale-95 touch-manipulation"
                       >
                         <Edit3 className="w-3 h-3 shrink-0" />
                         <span>Repair</span>
@@ -1241,7 +1253,7 @@ export const StudentDataIssuesPage: React.FC = () => {
 
                       <button
                         onClick={() => handleRetrySyncSingle(student)}
-                        className="px-3 py-2 min-h-[38px] rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-400/30 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95 touch-manipulation"
+                        className="px-2.5 py-1 min-h-[30px] rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-400/30 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 touch-manipulation"
                       >
                         <RefreshCw className="w-3 h-3 shrink-0" />
                         <span>Retry</span>

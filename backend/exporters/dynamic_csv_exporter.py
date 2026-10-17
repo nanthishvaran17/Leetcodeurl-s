@@ -25,7 +25,10 @@ def export_dynamic_csv(dataset: dict) -> bytes:
         row_vals = []
         for h in headers:
             val = r.get(h)
-            row_vals.append(str(val) if val is not None else "")
+            if h.lower() in ("name", "student_name", "student", "reg_no", "register_no", "reg no") and val is not None:
+                row_vals.append(str(val).strip().upper())
+            else:
+                row_vals.append(str(val) if val is not None else "")
         writer.writerow(row_vals)
 
     return output.getvalue().encode('utf-8-sig')

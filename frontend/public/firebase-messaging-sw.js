@@ -32,6 +32,10 @@ messaging.onBackgroundMessage((payload) => {
     vibrate: [200, 100, 200, 100, 200], // Phone vibration pattern (like WhatsApp/SMS)
     requireInteraction: true,           // Keeps notification visible on lock screen/desktop
     silent: false,                      // Ensures audio chime & vibration trigger
+    actions: [
+      { action: 'open', title: '👉 Open Details' },
+      { action: 'dismiss', title: 'Dismiss' }
+    ],
     data: {
       url: payload.data?.action_route || payload.data?.actionRoute || payload.fcmOptions?.link || '/',
     },
@@ -39,12 +43,19 @@ messaging.onBackgroundMessage((payload) => {
     renotify: true,
   };
 
+  if ('setAppBadge' in self.navigator) {
+    self.navigator.setAppBadge().catch(() => {});
+  }
+
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Handle notification click (Deep linking)
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
+  if (event.action === 'dismiss') {
+    return;
+  }
   const notificationData = event.notification.data || {};
 
   // Handle downloaded report notification click

@@ -171,8 +171,8 @@ def normalize_row_data(r: dict) -> dict:
     trend = str(r.get("trend") or "STABLE").upper().strip()
 
     return {
-        "reg_no": str(r.get("reg_no") or r.get("register_no") or ""),
-        "name": str(r.get("name") or r.get("student_name") or ""),
+        "reg_no": str(r.get("reg_no") or r.get("register_no") or "").strip().upper(),
+        "name": str(r.get("name") or r.get("student_name") or "").strip().upper(),
         "dept": dept,
         "year": year,
         "batch": str(r.get("batch") or "2024–2028"),
@@ -805,8 +805,8 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
 
         vals = [
             s.get("s_no") or idx,
-            str(s.get("reg_no") or s.get("register_no") or ""),
-            str(s.get("name") or s.get("student_name") or ""),
+            str(s.get("reg_no") or s.get("register_no") or "").strip().upper(),
+            str(s.get("name") or s.get("student_name") or "").strip().upper(),
             str(s.get("dept") or s.get("department") or ""),
             str(s.get("year") or s.get("academic_year") or ""),
             s.get("easy") if s.get("easy") is not None else "—",

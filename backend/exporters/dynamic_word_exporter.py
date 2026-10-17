@@ -87,8 +87,8 @@ def export_dynamic_word(dataset: dict) -> bytes:
         for idx, r in enumerate(rows, 1):
             row_cells = table.add_row().cells
             sno_val = str(r.get("s_no") or idx)
-            reg_val = str(r.get("reg_no") or "")
-            name_val = str(r.get("name") or "")
+            reg_val = str(r.get("reg_no") or "").strip().upper()
+            name_val = str(r.get("name") or r.get("student_name") or "").strip().upper()
             dept_val = str(r.get("dept") or "")
             yr_val = str(r.get("year") or "")
 
@@ -166,6 +166,10 @@ def export_dynamic_word(dataset: dict) -> bytes:
                             val = "H"
                         else:
                             val = str(raw_val) if raw_val is not None else ""
+                    elif h.lower() in ("name", "student_name", "student"):
+                        val = str(raw_val).strip().upper() if raw_val else ""
+                    elif h.lower() in ("reg_no", "register_no", "reg no"):
+                        val = str(raw_val).strip().upper() if raw_val else ""
                     else:
                         val = str(raw_val) if raw_val is not None else ""
                     row_cells[c_idx].text = val

@@ -255,7 +255,8 @@ def generate_single_sheet_contest_excel(
         target_group["q4"] += q4
         target_group["total_solved"] += solved_count
         
-        student_name = str(s.get("name") or s.get("student_name") or "").strip()
+        student_name = str(s.get("name") or s.get("student_name") or "").strip().upper()
+        reg_no = str(s.get("reg_no") or s.get("register_no") or "").strip().upper()
         
         vals = [
             s_idx,

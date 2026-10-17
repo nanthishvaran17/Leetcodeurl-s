@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, AlertOctagon, Bell, Palette, Check, RefreshCw } from 'lucide-react';
+import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, AlertOctagon, Bell, Palette, Check, RefreshCw, Search } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -129,8 +129,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-2 sm:gap-3 lg:gap-3.5 flex-shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-3 lg:gap-3.5 flex-shrink-0">
               
+              {/* Quick Search Button (Mobile & Desktop) */}
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('open_command_palette'))}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100/90 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-200/80 dark:hover:bg-white/10 border border-slate-200/70 dark:border-white/10 transition-all cursor-pointer min-h-[38px] active:scale-95 touch-manipulation shadow-2xs select-none"
+                title="Search Students & Commands (Ctrl+K)"
+                aria-label="Quick Search"
+              >
+                <Search className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200">Search</span>
+                <kbd className="hidden md:inline-flex items-center px-1.5 py-0.2 bg-white dark:bg-navy-900 border border-slate-200 dark:border-white/10 rounded text-[9px] font-mono text-slate-400 ml-0.5">
+                  ⌘K
+                </kbd>
+              </button>
+
               {/* Sync Status Button */}
               <button
                 type="button"

@@ -140,10 +140,10 @@ export const PrivacyPolicyPage: React.FC = () => {
           <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-navy-950 text-white border-2 border-emerald-500/50 space-y-2.5 shadow-xl">
             <div className="flex items-center gap-2.5 text-emerald-400 font-black text-sm sm:text-base">
               <ShieldAlert className="w-5 h-5" />
-              <span>Zero Password & Zero Synthetic Data Guarantee</span>
+              <span>Zero Password & Authentic Roster Guarantee</span>
             </div>
             <p className="text-xs sm:text-sm font-medium text-slate-200 leading-relaxed">
-              We never store your LeetCode password or Google password. Authentication is strictly managed via secure OAuth tokens. Production databases adhere strictly to a <strong className="text-amber-300 font-bold">Zero Mock Data Policy</strong>, guaranteeing 100% data authenticity across all student rosters.
+              We never store your LeetCode password or Google password. Authentication is strictly managed via secure OAuth tokens. Production databases adhere strictly to an <strong className="text-amber-300 font-bold">Authentic Roster Policy</strong>, guaranteeing 100% verified data authenticity across all student records.
             </p>
           </div>
         </div>
@@ -375,7 +375,7 @@ export const PrivacyPolicyPage: React.FC = () => {
               <ShieldAlert className="w-8 h-8 text-brand-400 mb-4" />
               <h4 className="text-white font-black text-lg mb-2">Zero-Trust Framework</h4>
               <p className="text-slate-400 text-sm font-medium leading-relaxed">
-                Platform telemetry is protected by Neon PostgreSQL encrypted at rest. We never store passwords or sync mock data.
+                Platform telemetry is protected by Neon PostgreSQL encrypted at rest. We never store passwords or synthetic student records.
               </p>
             </div>
           </motion.div>

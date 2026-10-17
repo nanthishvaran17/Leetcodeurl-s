@@ -236,7 +236,7 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
       </td>
       <td className="px-3 py-3 text-center text-xs font-mono font-semibold text-slate-500 dark:text-slate-400">{actualIdx + 1}</td>
       <td className="px-3 py-3 font-semibold font-mono text-xs text-slate-800 dark:text-slate-200 tracking-tight whitespace-nowrap">{r.reg_no}</td>
-      <td className="px-3 py-3 font-bold text-slate-900 dark:text-white text-xs whitespace-nowrap max-w-[200px] truncate" title={r.name}>{r.name}</td>
+      <td className="px-3 py-3 font-bold text-slate-900 dark:text-white text-xs whitespace-nowrap max-w-[200px] truncate uppercase" title={r.name}>{(r.name || '').toUpperCase()}</td>
       <td className="px-3 py-3 text-center">
         <span className="px-2 py-0.5 rounded text-[10px] font-mono font-extrabold uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
           {r.dept}
@@ -404,8 +404,8 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
       {/* Middle Row: Student Name + Dept & Year Badges */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex flex-col min-w-0 flex-1">
-          <span className="font-black text-sm text-slate-900 dark:text-white truncate">
-            {r.name}
+          <span className="font-black text-sm text-slate-900 dark:text-white truncate uppercase">
+            {(r.name || '').toUpperCase()}
           </span>
           {r.username && (
             <span className="text-[11px] font-mono font-semibold text-brand-600 dark:text-brand-400 truncate">
@@ -4830,7 +4830,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                           <tr key={actualIdx} className="hover:bg-brand-50/40 dark:hover:bg-navy-800/40 transition-colors">
                             <td className="px-3 py-1.5 text-center text-slate-400 font-mono text-[11px]">{actualIdx + 1}</td>
                             <td className="px-3 py-1.5 font-bold font-mono text-slate-900 dark:text-white text-[11px]">{r.reg_no}</td>
-                            <td className="px-3 py-1.5 font-semibold text-slate-800 dark:text-slate-200">{r.name}</td>
+                            <td className="px-3 py-1.5 font-semibold text-slate-800 dark:text-slate-200 uppercase">{(r.name || '').toUpperCase()}</td>
                             <td className="px-3 py-1.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{r.dept}</td>
                             <td className="px-3 py-1.5 text-center text-slate-600 dark:text-slate-400 font-bold">{r.year}</td>
                             <td className="px-3 py-1.5 text-center">

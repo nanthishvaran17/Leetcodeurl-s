@@ -177,8 +177,8 @@ def normalize_student_record(s_dict: Dict[str, Any]) -> Dict[str, Any]:
         global_rank_val = None
 
     return {
-        "reg_no": str(s_dict.get("reg_no") or s_dict.get("register_no") or "—"),
-        "name": str(s_dict.get("name") or s_dict.get("student_name") or "—"),
+        "reg_no": str(s_dict.get("reg_no") or s_dict.get("register_no") or "—").strip().upper(),
+        "name": str(s_dict.get("name") or s_dict.get("student_name") or "—").strip().upper(),
         "dept": str(s_dict.get("dept") or s_dict.get("department") or "CSE").upper(),
         "year": str(s_dict.get("year") or s_dict.get("year_level") or "III").upper(),
         "username": str(s_dict.get("username") or s_dict.get("leetcode_username") or "—"),

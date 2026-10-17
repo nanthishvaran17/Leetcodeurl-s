@@ -333,7 +333,7 @@ export const TermsOfServicePage: React.FC = () => {
               <ShieldAlert className="w-8 h-8 text-brand-400 mb-4" />
               <h4 className="text-white font-black text-lg mb-2">Zero-Trust Framework</h4>
               <p className="text-slate-400 text-sm font-medium leading-relaxed">
-                Platform telemetry is protected by Neon PostgreSQL encrypted at rest. We never store passwords or sync mock data.
+                Platform telemetry is protected by Neon PostgreSQL encrypted at rest. We never store passwords or synthetic user data.
               </p>
             </div>
           </motion.div>
