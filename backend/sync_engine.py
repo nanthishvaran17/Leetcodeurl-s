@@ -160,60 +160,63 @@ def capture_student_snapshot(student: Student, db: Session, run_id: Optional[str
         return None
 
     try:
-        prev = db.query(StudentStatSnapshot).filter(
-            StudentStatSnapshot.student_id == student.id
-        ).order_by(StudentStatSnapshot.captured_at.desc()).first()
+        with db.begin_nested():
+            prev = db.query(StudentStatSnapshot).filter(
+                StudentStatSnapshot.student_id == student.id
+            ).order_by(StudentStatSnapshot.captured_at.desc()).first()
 
-        cur_tot = int(cast(Any, student.stats).total_solved or 0)
-        cur_ez  = int(cast(Any, student.stats).easy_solved or 0)
-        cur_med = int(cast(Any, student.stats).medium_solved or 0)
-        cur_hd  = int(cast(Any, student.stats).hard_solved or 0)
-        raw_cur_rat = cast(Any, student.stats).contest_rating
-        cur_rat = float(raw_cur_rat) if raw_cur_rat is not None else None
+            cur_tot = int(cast(Any, student.stats).total_solved or 0)
+            cur_ez  = int(cast(Any, student.stats).easy_solved or 0)
+            cur_med = int(cast(Any, student.stats).medium_solved or 0)
+            cur_hd  = int(cast(Any, student.stats).hard_solved or 0)
+            raw_cur_rat = cast(Any, student.stats).contest_rating
+            cur_rat = float(raw_cur_rat) if raw_cur_rat is not None else None
 
-        if prev:
-            prev_tot = int(cast(Any, prev).total_solved or 0)
-            prev_ez  = int(cast(Any, prev).easy_solved or 0)
-            prev_med = int(cast(Any, prev).medium_solved or 0)
-            prev_hd  = int(cast(Any, prev).hard_solved or 0)
-            raw_prev_rat = cast(Any, prev).contest_rating
-            prev_rat = float(raw_prev_rat) if raw_prev_rat is not None else None
+            if prev:
+                prev_tot = int(cast(Any, prev).total_solved or 0)
+                prev_ez  = int(cast(Any, prev).easy_solved or 0)
+                prev_med = int(cast(Any, prev).medium_solved or 0)
+                prev_hd  = int(cast(Any, prev).hard_solved or 0)
+                raw_prev_rat = cast(Any, prev).contest_rating
+                prev_rat = float(raw_prev_rat) if raw_prev_rat is not None else None
 
-            delta_total  = max(0, cur_tot - prev_tot)
-            delta_easy   = max(0, cur_ez - prev_ez)
-            delta_medium = max(0, cur_med - prev_med)
-            delta_hard   = max(0, cur_hd - prev_hd)
-            if cur_rat is not None and prev_rat is not None:
-                delta_rating = round(cur_rat - prev_rat, 1)
+                delta_total  = max(0, cur_tot - prev_tot)
+                delta_easy   = max(0, cur_ez - prev_ez)
+                delta_medium = max(0, cur_med - prev_med)
+                delta_hard   = max(0, cur_hd - prev_hd)
+                if cur_rat is not None and prev_rat is not None:
+                    delta_rating = round(cur_rat - prev_rat, 1)
+                else:
+                    delta_rating = 0.0
             else:
+                delta_total = 0
+                delta_easy = 0
+                delta_medium = 0
+                delta_hard = 0
                 delta_rating = 0.0
-        else:
-            delta_total = 0
-            delta_easy = 0
-            delta_medium = 0
-            delta_hard = 0
-            delta_rating = 0.0
 
-        snapshot = StudentStatSnapshot(
-            student_id=int(cast(Any, student).id),
-            total_solved=cast(Any, student.stats).total_solved,
-            easy_solved=cast(Any, student.stats).easy_solved,
-            medium_solved=cast(Any, student.stats).medium_solved,
-            hard_solved=cast(Any, student.stats).hard_solved,
-            contest_rating=cur_rat,
-            global_rank=getattr(student.stats, "contest_global_ranking", None),
-            contest_global_ranking=getattr(student.stats, "contest_global_ranking", None),
-            delta_total=delta_total,
-            delta_easy=delta_easy,
-            delta_medium=delta_medium,
-            delta_hard=delta_hard,
-            delta_rating=delta_rating,
-            captured_at=datetime.datetime.now(datetime.timezone.utc),
-            sync_run_id=run_id,
-            source="sync",
-            is_verified=True
-        )
-        db.add(snapshot)
+            snapshot = StudentStatSnapshot(
+                student_id=int(cast(Any, student).id),
+                total_solved=cast(Any, student.stats).total_solved,
+                easy_solved=cast(Any, student.stats).easy_solved,
+                medium_solved=cast(Any, student.stats).medium_solved,
+                hard_solved=cast(Any, student.stats).hard_solved,
+                contest_rating=cur_rat,
+                global_rank=getattr(student.stats, "contest_global_ranking", None),
+                contest_global_ranking=getattr(student.stats, "contest_global_ranking", None),
+                delta_total=delta_total,
+                delta_easy=delta_easy,
+                delta_medium=delta_medium,
+                delta_hard=delta_hard,
+                delta_rating=delta_rating,
+                captured_at=datetime.datetime.now(datetime.timezone.utc),
+                sync_run_id=run_id,
+                source="sync",
+                is_verified=True
+            )
+            db.add(snapshot)
+            db.flush()
+
         if commit:
             db.commit()
             db.refresh(snapshot)
@@ -834,10 +837,17 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 15, per
                             else:
                                 log_msg = f"[ERROR] Permanently Failed - {st.username or st.reg_no} after {max_retries} attempts ({err_detail})"
                                 logger.error(log_msg)
-                                w_db.commit() # Commit the failed status
+                                try:
+                                    w_db.commit() # Commit the failed status
+                                except Exception:
+                                    w_db.rollback()
                                 sync_tracker.record_completed(False, log_msg, is_mismatch=is_mismatch)
 
                     except Exception as ex:
+                        try:
+                            w_db.rollback()
+                        except Exception:
+                            pass
                         if attempt < max_retries:
                             delay = base_delay * (2 ** (attempt - 1))
                             logger.error(f"[ERROR] Worker error for student {student_id}: {ex}. Retrying in {delay}s...")
