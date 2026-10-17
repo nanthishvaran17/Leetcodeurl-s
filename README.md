@@ -1,65 +1,65 @@
 <div align="center">
 
+<img src="docs/assets/nec_25_years_logo.png" alt="Nandha Engineering College 25 Years" width="180" style="margin-bottom: 12px;" />
+
 # 🟢 NANDHA LEETCODE INTELLIGENCE
+### Autonomous Institutional Contest Intelligence • Forensic Verification • Career Acceleration Platform
 
-### Institutional Contest Intelligence • Verification • Analytics • Recognition
+**Nandha Engineering College (Autonomous), Erode, Tamil Nadu, India**
+*Accredited by NAAC with 'A+' Grade • Approved by AICTE • Autonomous Institution Affiliated to Anna University*
 
-**Nandha Engineering College, Erode**
-
-<p>
-  <img alt="Platform" src="https://img.shields.io/badge/Platform-Institutional%20Intelligence-00A86B?style=for-the-badge&logo=leetcode&logoColor=white">
-  <img alt="Scale" src="https://img.shields.io/badge/Scale-1500%2B%20Students-111827?style=for-the-badge">
-  <img alt="Architecture" src="https://img.shields.io/badge/Architecture-Production%20Grade-2563EB?style=for-the-badge">
-  <img alt="Verification" src="https://img.shields.io/badge/Data-Evidence%20First-7C3AED?style=for-the-badge">
+<p align="center">
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Scale" src="https://img.shields.io/badge/Scale-1%2C500%2B%20Students-059669?style=for-the-badge&logo=googleclassroom&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Architecture" src="https://img.shields.io/badge/Stack-FastAPI%20%7C%20React%2018%20%7C%20PostgreSQL-2563EB?style=for-the-badge&logo=react&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Autopilot" src="https://img.shields.io/badge/Autopilot-Sunday%20Contest%20Engine-7C3AED?style=for-the-badge&logo=temporal&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Evidence" src="https://img.shields.io/badge/Data-Evidence--First%20Forensics-DC2626?style=for-the-badge&logo=shield&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Mobile" src="https://img.shields.io/badge/PWA%20%26%20Android-Native%20APK%20Ready-F59E0B?style=for-the-badge&logo=android&logoColor=white"></a>
 </p>
 
-<p>
-  <img alt="License" src="https://img.shields.io/badge/License-Institutional%20Use-black?style=flat-square">
-  <img alt="Status" src="https://img.shields.io/badge/Status-Active%20Development-brightgreen?style=flat-square">
-  <img alt="Made with" src="https://img.shields.io/badge/Made%20with-Python%20%7C%20React%20%7C%20PostgreSQL-informational?style=flat-square">
+<p align="center">
+  <img alt="License" src="https://img.shields.io/badge/License-Institutional%20Enterprise-black?style=flat-square">
+  <img alt="Status" src="https://img.shields.io/badge/Release-v2.9.3%20Production-success?style=flat-square">
+  <img alt="Status" src="https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.14-blue?style=flat-square&logo=python">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.2%2B-blue?style=flat-square&logo=typescript">
+  <img alt="Accreditation" src="https://img.shields.io/badge/Accreditation-NBA%20%26%20NAAC%20Ready-teal?style=flat-square">
 </p>
 
-### *Track every contest. Verify every record. Understand student performance.*
+### *Track every contest. Forensically verify every record. Empower 1,500+ student careers.*
 
 </div>
 
 ---
 
-##  Table of Contents
+## 📑 Table of Contents
 
 <table>
 <tr>
 <td valign="top" width="33%">
 
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [Platform Scope](#-platform-scope)
-- [System Architecture](#-system-architecture)
-- [Core Processing Pipeline](#-core-processing-pipeline)
-- [Contest Discovery Engine](#-contest-discovery-engine)
-- [Student Synchronization](#-student-synchronization)
+- [🌟 Executive Overview](#-executive-overview)
+- [📸 Live Production Showcase](#-live-production-showcase)
+- [⚡ Autonomous Sunday Contest Engine](#-autonomous-sunday-contest-engine)
+- [🔬 Level 4 Forensic Verification](#-level-4-forensic-verification)
+- [🏛️ HOD Command Center & Governance](#️-hod-command-center--governance)
 
 </td>
 <td valign="top" width="33%">
 
-- [Participation Verification](#-participation-verification)
-- [Reconciliation Engine](#-reconciliation-engine)
-- [Evidence-First Data Model](#-evidence-first-data-model)
-- [Performance Intelligence](#-performance-intelligence)
-- [Institutional Analytics](#-institutional-analytics)
-- [Emerald Vault](#-emerald-vault)
-- [Digital Performance Pass](#-digital-performance-pass)
+- [🎯 360° Radar & Student Analytics](#-360-radar--student-analytics)
+- [⚔️ Head-to-Head Compare Arena](#️-head-to-head-compare-arena)
+- [💼 HR Placement Intelligence Finder](#-hr-placement-intelligence-finder)
+- [💎 Emerald Vault & Smart ID Pass](#-emerald-vault--smart-id-pass)
+- [🎓 NAAC & NBA Accreditation Studio](#-naac--nba-accreditation-studio)
 
 </td>
 <td valign="top" width="33%">
 
-- [Weekly Contest Lifecycle](#-weekly-contest-lifecycle)
-- [Reporting](#-reporting)
-- [Security & Access Control](#-security--access-control)
-- [Technology Stack](#-technology-stack)
-- [Engineering Principles](#-engineering-principles)
-- [Production Readiness](#-production-readiness)
-- [Future Scope](#-future-scope)
+- [📊 Automated Reporting & Brevo Email](#-automated-reporting--brevo-email)
+- [🏗️ System Architecture](#️-system-architecture)
+- [🛡️ Evidence-First Integrity Model](#️-evidence-first-integrity-model)
+- [💻 Technology Stack](#-technology-stack)
+- [🚀 Quick Start & Deployment Guide](#-quick-start--deployment-guide)
+- [👥 Institutional Leadership](#-institutional-leadership)
 
 </td>
 </tr>
@@ -67,609 +67,372 @@
 
 ---
 
-##  Overview
+## 🌟 Executive Overview
 
-**Nandha LeetCode Intelligence** is an institutional performance platform that transforms raw LeetCode contest activity into structured, verifiable, and actionable academic intelligence.
+**Nandha LeetCode Intelligence** is a mission-critical, enterprise-grade academic analytics and contest forensics platform engineered exclusively for **Nandha Engineering College**. It transforms chaotic, unverified competitive-programming activity from LeetCode into structured, tamper-proof, and actionable institutional intelligence.
 
-It unifies contest tracking, data synchronization, participation verification, performance analytics, reporting, and achievement recognition into a single coherent workflow — built for the scale and rigor an institution actually needs.
+Traditional tracking scripts rely on brittle web-scraping that fails during high concurrency, falsely treats temporary API timeouts as non-participation, and cannot distinguish live contest solves from post-contest virtual submissions. 
 
-Most tracking tools stop at one question. This platform goes much further:
-
-```text
-Who participated?
-        ↓
-Can the participation be verified?
-        ↓
-What was the performance?
-        ↓
-How is the student progressing?
-        ↓
-What patterns exist?
-        ↓
-What insights matter institutionally?
-        ↓
-What should be reported?
-        ↓
-Who should be recognized?
-```
-
-### The Core Transformation
+**Nandha LeetCode Intelligence solves this with an authoritative, evidence-first engineering paradigm:**
 
 ```text
-Raw Activity → Verified Data → Performance Intelligence
-     → Institutional Analytics → Actionable Reporting → Recognition
+LeetCode Raw Signals
+        ↓
+Controlled Dynamic Concurrency Pipeline (1,500+ Students)
+        ↓
+Level 4 Forensic Timing & Solve Verification (Q1 / Q2 / Q3 / Q4)
+        ↓
+Canonical Persistence with Database Snapshot Immutability Triggers
+        ↓
+Multi-Dimensional Analytics: Spider Skill Competencies & Trajectory Growth
+        ↓
+Executive Governance: HOD Matrix, Faculty Intervention Queue, Placement Intelligence
+        ↓
+Automated Multi-Channel Dispatch: WhatsApp Cloud API, Brevo Mailer, Smart TV Kiosk, PVC Smart IDs
 ```
 
-> **In short:** contest noise in, institutional intelligence out.
+### 🏛️ Institutional Scale at a Glance
+
+| Metric | Verified Production Value | Description |
+|---|---|---|
+| **Tracked Student Body** | **1,500+ Active Students** | Real-time tracking across 8 engineering departments & 4 year tiers |
+| **Weekly Contests Tracked** | **52+ Annual Contests** | Complete historical weekly and biweekly contest timeline |
+| **Sunday Autopilot Concurrency** | **4-Phase Autonomous Pipeline** | Zero human intervention needed from 08:00 AM IST to report generation |
+| **Verification Depth** | **Level 4A / 4B / 4C Forensics** | Timestamp audit against LeetCode contest cutoff to block virtual falsification |
+| **Institutional Exporters** | **Excel, PDF, Email & WhatsApp** | Boardroom-ready automated weekly packages with embedded crests |
+| **Accreditation Readiness** | **NBA Criteria 2 & 5 / NAAC** | Quantitative metrics formatted directly for national accreditation audits |
 
 ---
 
-##  Key Features
+## 📸 Live Production Showcase
 
-| Feature | Description |
-|---|---|
-|  **Contest Intelligence** | Discover, track, and process recurring contest activity automatically |
-|  **Student Synchronization** | Process large student datasets through controlled, reliable synchronization |
-|  **Participation Verification** | Validate participation using available evidence, not assumption |
-| ️ **Data Reconciliation** | Resolve inconsistencies between collected and authoritative records |
-|  **Performance Intelligence** | Analyze rank, rating, score, solved problems, and progress over time |
-| ️ **Institutional Analytics** | Aggregate individual performance into institution-level insight |
-|  **Emerald Vault** | Recognize verified student achievements with structured categories |
-|  **Digital Performance Pass** | A structured, verifiable digital record of student performance |
-|  **Automated Reporting** | Generate institutional reports directly from processed results |
-| ️ **Workflow Automation** | Reduce repetitive operational and administrative work |
-|  **Role-Based Access** | Enforce access according to institutional scope and hierarchy |
-|  **Real-Time Updates** | Synchronized dashboard updates wherever real-time infra is implemented |
+<div align="center">
+
+### 1. 🖥️ Executive Analytics Command Center
+*Real-time student leaderboard, multi-metric KPI tracking, live sync progress engine, and podium recognition.*
+
+<img src="docs/assets/screenshots/snap_01_dashboard.png" alt="Executive Analytics Dashboard" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 24px;" />
 
 ---
 
-##  Platform Scope
+### 2. 🔬 360° Spider Competency & Student Forensic Profile
+*Multi-axis Data Structures & Algorithms (DSA) competency radar, contest rating progression curves, and submission heatmaps.*
 
-Built from the ground up for institutional-scale requirements.
-
-<table>
-<tr><td>
-
--  **1,500+ students** actively tracked
--  Multiple academic groups
--  Multiple academic years
-- ️ Weekly contest activity
-- ️ Historical performance information
-
-</td><td>
-
--  Verified performance records
--  Institutional-level analytics
--  Institutional reporting
--  Achievement recognition
--  Evidence-first data integrity
-
-</td></tr>
-</table>
-
-> The scale and figures documented above reflect the currently verified platform state.
+<img src="docs/assets/screenshots/snap_02_radar_profile.png" alt="360 Student Forensic Profile" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 24px;" />
 
 ---
 
-## ️ System Architecture
+### 3. ⚔️ Real-Time Head-to-Head Compare Arena
+*Direct peer-to-peer benchmarking across LeetCode ratings, global ranks, solved tiers (Easy/Medium/Hard), and topic proficiencies.*
 
-The platform follows a layered architecture connecting external contest activity to institutional intelligence.
+<img src="docs/assets/screenshots/snap_03_compare_arena.png" alt="Compare Arena" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 24px;" />
+
+---
+
+### 4. 💼 Campus Placement & HR Candidate Intelligence Finder
+*Dedicated recruiter studio to filter high-performing candidates by specific rating thresholds, streak records, and problem mastery.*
+
+<img src="docs/assets/screenshots/snap_04_hr_candidate_finder.png" alt="HR Candidate Intelligence Finder" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 24px;" />
+
+---
+
+### 5. ⚡ Sunday Live Contest AI Command Center & Control Matrix
+*Autonomous live contest tracker, multi-department solve telemetry, real-time question breakdown, and authentic solver verification.*
+
+<img src="docs/assets/screenshots/snap_05_ai_control_matrix.png" alt="Sunday Contest AI Control Matrix" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 24px;" />
+
+---
+
+### 6. 📺 Fullscreen Campus Kiosk & Hall of Fame Mode
+*Optimized for 4K Smart TVs in department foyers, college reception, and placement auditoriums with automatic live cycling.*
+
+<img src="docs/assets/screenshots/snap_06_campus_kiosk.png" alt="Fullscreen Campus Kiosk Mode" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 24px;" />
+
+</div>
+
+---
+
+## ⚡ Autonomous Sunday Contest Engine
+
+Every Sunday from **08:00 AM IST to 12:00 PM IST**, the platform shifts into full autopilot mode via GitHub Actions and local multi-worker daemons:
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        SUNDAY CONTEST AUTOPILOT PIPELINE                               │
+├─────────────────────┬────────────────────┬─────────────────────┬───────────────────────┤
+│ PHASE 1: DISCOVERY  │ PHASE 2: LIVE SYNC │ PHASE 3: FORENSICS  │ PHASE 4: DISPATCH     │
+│ 08:00 AM IST        │ 08:00 - 09:30 AM   │ 09:30 - 10:15 AM    │ 10:30 AM IST          │
+├─────────────────────┼────────────────────┼─────────────────────┼───────────────────────┤
+│ • Auto-detects URL  │ • Streaming polls  │ • Timestamp audit   │ • Generates Excel/PDF │
+│ • Identifies Q1-Q4  │   1,500+ profiles  │ • Separates virtual │ • Brevo Mailer to HODs│
+│ • Initializes locked│ • High-resilience  │   from live solves  │ • WhatsApp alerts to  │
+│   snapshot session  │   retry pool       │ • Level 4 audit log │   students & parents  │
+└─────────────────────┴────────────────────┴─────────────────────┴───────────────────────┘
+```
+
+* **Friday Official Resync Engine (05:00 AM IST):** LeetCode officially publishes final rating updates and global ranks on Friday mornings. The platform executes an automated resync pipeline that validates dispute reconciliations without mutating finalized historical snapshot records.
+
+---
+
+## 🔬 Level 4 Forensic Verification
+
+In institutional competitive programming, data accuracy is paramount. A common failure in simple scrapers is crediting students who solved contest problems *after* the contest ended (Virtual Contests / Practice mode).
+
+**The Forensic Verification Rulebook:**
+1. **Contest Cutoff Window Validation:** Every submission's Unix timestamp must fall between `ContestStart` and `ContestEnd` (08:00:00 to 09:30:00 IST).
+2. **Authoritative Hash Immutability:** Once a weekly snapshot is signed and sealed, SQL database triggers (`trg_prevent_snapshot_mutation`) strictly reject direct in-place mutation. Revisions must use `snapshot_supersedes()`.
+3. **Evidence-First Classification:**
+   * `AUTHENTIC_SOLVER`: Solved within the strict contest window with verifiable submission ID.
+   * `POST_CONTEST_PRACTICE`: Solved after contest window; credited to general practice, excluded from contest rating.
+   * `NOT_ATTENDED`: Verified absence; distinct from network timeouts or API failure.
+
+---
+
+## 🏛️ HOD Command Center & Governance
+
+The platform provides dedicated, isolated administrative tools tailored for academic department heads:
+
+* **Departmental Isolation:** Clean boundary isolation for Computer Science (CSE), Information Technology (IT), Electronics & Communication (ECE), Electrical & Electronics (EEE), Artificial Intelligence & Data Science (AI&DS), and Computer Science & Business Systems (CSBS).
+* **Workload Optimization Matrix:** Eliminates the classic "30-mentee bottleneck" by dynamically distributing students among faculty mentors with automated performance tracking.
+* **Faculty Action Queue:** Automated flagging for students showing sudden contest drops, inactive streaks, or rating plateaus, with action logs for compliance and internal audits.
+
+---
+
+## 💎 Emerald Vault & Smart ID Pass
+
+The **Emerald Vault** is a high-visibility student recognition portal that celebrates verifiable programming milestones:
+
+* **Official 25-Year Celebration PVC Smart ID Card:** Generates high-density student coding passes featuring:
+  * Embedded high-contrast college seal & 25-Year Celebration insignia
+  * Dynamic student LeetCode global rank & contest rating tier
+  * Cryptographic QR Code that links directly to `/verify/:id` for public validation by interviewers and employers
+* **Hall of Fame Tiers:**
+  * 🥇 *Contest Champion* (Rating 1800+ / Knight & Guardian level)
+  * 🥈 *Century Club* (100+ Contests Attended)
+  * 🥉 *Streak Master* (Continuous 12+ Weeks Live Participation)
+  * ⚡ *DSA Specialist* (Hard Problem Solve Specialist)
+
+---
+
+## 🎓 NAAC & NBA Accreditation Studio
+
+Higher education regulatory bodies (NBA Criteria 2 & 5, NAAC, NIRF) require verifiable quantitative evidence of student programming skills, technical competitions, and continuous evaluation:
+
+* **One-Click Audit Dossier:** Generates comprehensive PDF/Excel dossiers detailing student participation rates, batch-wise performance trends, and institutional contest rankings.
+* **Continuous Internal Evaluation (CIE) Data:** Directly exports LeetCode contest rankings as verifiable laboratory and continuous assessment marks.
+* **Tamper-Evident Records:** Cryptographic verification IDs allow external peer-reviewers and audit teams to verify authenticity instantly on-campus.
+
+---
+
+## 📊 Automated Reporting & Brevo Email
+
+Reporting is a fully automated, hands-free core workflow:
+
+* **Multi-Tab Executive Excel Workbooks:** Built with custom OpenPyXL generators containing:
+  * Master college summary with embedded official emblems
+  * Department-by-department score breakdown
+  * Faculty mentor distribution reports
+  * Question-wise (Q1-Q4) solver matrices with conditional styling
+* **Official Executive PDF Reports:** Generated using ReportLab with exact institutional typography, watermark seals, and statistical summaries.
+* **Brevo API Automated Dispatch:** Delivers Sunday reports directly to Principal and HOD inboxes with idempotent delivery logs and retry backoff.
+* **Meta WhatsApp Cloud API:** Sends personalized performance and rank updates to students upon contest finalization.
+
+---
+
+## 🏗️ System Architecture
 
 ```mermaid
 flowchart TB
+    subgraph External ["External Data Sources"]
+        LC["LeetCode Public GraphQL / REST API"]
+    end
 
-    A["LeetCode"] --> B["Contest Discovery"]
-    B --> C["Application API"]
-    C --> D["Data Processing"]
-    D --> E[("PostgreSQL")]
+    subgraph Ingestion ["Ingestion & Synchronization"]
+        DYN["Dynamic Concurrency Engine"]
+        RATE["Rate-Limiting & Proxy Pool"]
+        DYN --> RATE
+        RATE --> LC
+    end
 
-    C --> F["Contest Intelligence"]
-    C --> G["Verification"]
-    C --> H["Analytics"]
+    subgraph Verification ["Forensic Verification Layer"]
+        TIME["Cutoff Timestamp Audit"]
+        CLASS["Solver Classifier (Level 4 Forensics)"]
+        TIME --> CLASS
+    end
 
-    F --> G
-    G --> H
+    subgraph Core ["Core Persistence & Database"]
+        DB[("PostgreSQL / SQLite Storage")]
+        TRIG["Immutability DB Triggers"]
+        AUDIT["Immutable Audit Trails"]
+        DB --- TRIG
+        DB --- AUDIT
+    end
 
-    H --> I["Executive Dashboard"]
-    H --> J["Institutional Reports"]
-    H --> K["Emerald Vault"]
-    H --> L["Digital Performance Pass"]
+    subgraph Services ["Application & Business Logic"]
+        API["FastAPI High-Performance Engine"]
+        WS["Real-Time WebSocket Hub"]
+        SCHED["APScheduler Background Daemons"]
+    end
+
+    subgraph Presentation ["Multi-Channel Delivery"]
+        WEB["React 18 / Tailwind PWA Dashboard"]
+        KIOSK["4K Smart TV Campus Kiosk Mode"]
+        APK["Capacitor 7 Native Android App"]
+        EXCEL["Executive Multi-Tab Excel Generator"]
+        PDF["ReportLab Cryptographic PDF Engine"]
+        BREVO["Brevo Email Dispatch Service"]
+        WA["Meta WhatsApp Cloud API Agent"]
+    end
+
+    LC --> Ingestion
+    Ingestion --> Verification
+    Verification --> Core
+    Core --> Services
+    Services --> Presentation
 ```
-
-### Architectural Layers
-
-```text
-External Contest Platform → Contest Discovery → Application API
-   → Data Processing → Persistence → Verification
-   → Performance Intelligence → Institutional Analytics
-   → Reporting & Recognition
-```
-
-> The architecture always reflects the components present in the current implementation — no aspirational diagrams.
 
 ---
 
-## ️ Core Processing Pipeline
+## 🛡️ Evidence-First Integrity Model
+
+### The Golden Rule of Institutional Data: *Never Guess Missing Data*
+
+In enterprise academic systems, an erroneous mark can damage a student's career. External platform outages, private profiles, and network glitches are explicitly recognized and isolated:
 
 ```text
-Student Activity → Data Collection → Validation → Normalization
-   → Persistence → Verification → Performance Intelligence
-   → Institutional Analytics → Reporting → Recognition
+┌─────────────────────────┬────────────────────────────────────────────────────────┐
+│ PLATFORM STATE          │ SEMANTIC INTERPRETATION                                │
+├─────────────────────────┼────────────────────────────────────────────────────────┤
+│ UNKNOWN                 │ ≠ 0 (Never assume 0 without confirmed proof)           │
+│ PRIVATE PROFILE         │ ≠ 0 (Flagged for student profile privacy unblock)     │
+│ FETCH FAILED            │ ≠ ABSENT (Network failure isolated, queued for retry)  │
+│ UNAVAILABLE             │ ≠ NOT ATTENDED (Pending authoritative Sunday snapshot) │
+└─────────────────────────┴────────────────────────────────────────────────────────┘
 ```
-
-This design cleanly separates **external data collection** from **downstream analytics and institutional decision support**, keeping each stage independently testable and auditable.
 
 ---
 
-##  Contest Discovery Engine
-
-The Contest Discovery Engine identifies relevant contest information using available contest metadata and scheduling logic.
-
-```text
-Contest Metadata → Schedule Evaluation → Contest Identification → Contest Lifecycle
-```
-
-**Purpose**
-- Identify relevant contests automatically
-- Reduce manual contest configuration
-- Establish a consistent contest-processing workflow
-- Provide contest context for every downstream stage
-
----
-
-##  Student Synchronization
-
-Large student datasets are processed through **controlled synchronization**, not uncontrolled concurrent requests.
-
-```text
-1,500+ Students → Controlled Batching → Data Fetch
-   → Validation → Normalization → Persistence → Verification
-```
-
-**Synchronization Objectives**
-- Controlled request volume
-- Better resource utilization
-- Failure isolation
-- Database consistency
-- Operational reliability
-- Large-scale data processing without degradation
-
-> The goal is **reliable institutional synchronization** — not maximum raw concurrency.
-
----
-
-##  Participation Verification
-
-Participation is never inferred solely from the presence or absence of an external record. The verification pipeline evaluates available evidence alongside contest context.
-
-```text
-Activity Evidence → Contest Context → Timing Validation
-   → Participation Classification → Verification State
-```
-
-This distinguishes **confirmed participation** from information that simply **cannot currently be verified** — a critical distinction for institutional integrity.
-
----
-
-## ️ Reconciliation Engine
-
-The Reconciliation Engine maintains consistency between collected information and available authoritative contest records.
-
-```text
-Collected Records + Available Official Records
-   → Reconciliation → Conflict Detection
-   → Validated Result → Canonical Record
-```
-
-**Purpose**
-- Detect conflicting information
-- Validate collected records
-- Maintain a canonical, authoritative dataset
-- Improve consistency for analytics
-- Support reliable, defensible reporting
-
----
-
-##  Evidence-First Data Model
-
-### Evidence Over Assumptions
-
-> **Golden Rule: Never guess missing data.**
-
-External data may be unavailable, private, delayed, incomplete, temporarily inaccessible, or fail during retrieval — and the platform accounts for every one of those states.
-
-```text
-VERIFIED
-VERIFIED WITH LIMITATION
-PENDING VERIFICATION
-DATA CONFLICT
-NOT VERIFIABLE
-FETCH FAILED
-```
-
-### Critical Semantics
-
-```text
-UNKNOWN       ≠ 0
-PRIVATE       ≠ 0
-FETCH FAILED  ≠ ABSENT
-UNAVAILABLE   ≠ NOT ATTENDED
-```
-
-This prevents unavailable information from being silently and incorrectly converted into a false negative result.
-
----
-
-##  Performance Intelligence
-
-Contest activity is converted into structured, comparable performance signals:
-
-```text
-Rank · Rating · Score · Solved Problems · Progress · Contest Streak · Skill Signals
-```
-
-These signals power:
-- Individual performance analysis
-- Contest progression tracking
-- Historical trend analysis
-- Improvement tracking
-- Skill development analysis
-- Achievement recognition
-
----
-
-## ️ Institutional Analytics
-
-The analytics layer transforms student-level data into institution-level insight.
-
-```text
-Student Records → Performance Metrics → Aggregated Insights
-   → Institutional Intelligence → Decision Support
-```
-
-**Analytical Areas**
-- Performance trends
-- Contest performance
-- Skill intelligence
-- Academic-group analysis
-- Contest streak analysis
-- Weekly progress
-- Historical performance
-
----
-
-##  Emerald Vault
-
-### Verified Achievement Recognition
-
-The **Emerald Vault** is a dedicated recognition layer for verified student achievements.
+## 💻 Technology Stack
 
 <table>
 <tr>
-<td align="center"><br><b>100 Club</b></td>
-<td align="center"><br><b>Streak Master</b></td>
-<td align="center"><br><b>Contest Champion</b></td>
+<th width="33%">Frontend & Client</th>
+<th width="33%">Backend & Core</th>
+<th width="33%">Data & Infrastructure</th>
 </tr>
 <tr>
-<td align="center"><br><b>Fast Solver</b></td>
-<td align="center"><br><b>DSA Specialist</b></td>
-<td align="center"><br><b>Weekly Improver</b></td>
+<td valign="top">
+
+* **Core:** React 18, TypeScript 5.2+
+* **Build:** Vite 5 (Ultra-fast HMR)
+* **Styling:** Tailwind CSS, Custom Design System
+* **State Management:** TanStack React Query v5
+* **Data Visualization:** Recharts, Lucide Icons
+* **Mobile / PWA:** Vite PWA Plugin, Workbox
+* **Native Android:** Capacitor 7 Native Android Wrapper
+* **UI Interactions:** Native Bottom Sheet Drawers, Pull-To-Refresh, Skeleton Grids
+
+</td>
+<td valign="top">
+
+* **Framework:** Python 3.10+ / FastAPI
+* **Server:** Uvicorn ASGI with Multi-Worker Pool
+* **ORM:** SQLAlchemy 2.0 with Thread Pool Isolation
+* **Scheduler:** APScheduler (Background automation)
+* **Real-Time:** WebSockets with Connection Heartbeats
+* **Email:** Brevo HTTP REST API (Transaction service)
+* **Messaging:** Meta WhatsApp Cloud API Agent
+* **Exporters:** OpenPyXL (Excel), ReportLab (PDF)
+
+</td>
+<td valign="top">
+
+* **Primary Database:** PostgreSQL 16
+* **Local Fallback:** SQLite with WAL Mode (Write-Ahead Logging) & 60s Busy Timeout
+* **Containerization:** Docker Multi-Stage Build, Docker Compose
+* **Web Server:** Nginx Reverse Proxy (SSL, WebSocket Upgrades)
+* **CI / CD:** GitHub Actions (Sunday Autopilot, Tests, Lint, Android Build)
+* **Process Manager:** Systemd Linux Service / NSSM Windows Daemon
+
+</td>
 </tr>
 </table>
 
-Recognition is grounded in available performance **evidence**, never unsupported manual claims.
-
 ---
 
-##  Digital Performance Pass
+## 🚀 Quick Start & Deployment Guide
 
-### A Verifiable Digital Performance Representation
+### 1. Prerequisites
+* Python 3.10 or higher
+* Node.js 18.x or higher & npm
+* Git
 
-```text
-┌────────────────────────────────────┐
-│       DIGITAL PERFORMANCE PASS      │
-├────────────────────────────────────┤
-│ Student                             │
-│ Register Number                     │
-│ Department                          │
-│ Batch                               │
-│ LeetCode Profile                    │
-│ Achievements                        │
-│ QR Verification                     │
-│ Verification ID                     │
-└────────────────────────────────────┘
+### 2. Clone the Repository
+```bash
+git clone https://github.com/nanthishvaran17/Leetcodeurl-s.git
+cd Leetcodeurl-s
 ```
 
-Where implemented, verification identifiers provide a structured mechanism for validating the associated performance record.
+### 3. Backend Setup
+```bash
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate      # On Windows
+source venv/bin/activate    # On Linux/macOS
 
-> Digital credential functionality is only claimed where the corresponding implementation actually exists.
+# Install dependencies
+pip install -r requirements.txt
 
----
-
-##  Weekly Contest Lifecycle
-
-```text
-DISCOVER → SCHEDULE → LIVE → SNAPSHOT → VERIFY → ANALYZE → REPORT → RECOGNIZE
+# Start FastAPI Backend Server
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-| Stage | Purpose |
-|---|---|
-| **Discover** | Identify the relevant contest |
-| **Schedule** | Determine contest timing and lifecycle |
-| **Live** | Track contest activity |
-| **Snapshot** | Capture available contest information |
-| **Verify** | Validate participation and records |
-| **Analyze** | Generate performance intelligence |
-| **Report** | Produce institutional results |
-| **Recognize** | Identify eligible achievements |
+### 4. Frontend Setup
+```bash
+cd frontend
 
----
+# Install Node modules
+npm install
 
-##  Institutional Automation
-
-```text
-Pre-Flight → Contest Discovery → Live Processing → Data Validation
-   → Finalization → Reconciliation → Analytics
-   → Report Generation → Recognition
+# Run frontend in development mode
+npm run dev
 ```
-
-**Automation Goals**
-
-| Goal | Meaning |
-|---|---|
-| **Repeatable** | The same operational workflow executes consistently every time |
-| **Consistent** | Processing follows defined stages and validation rules |
-| **Auditable** | Data moves through clearly identifiable processing stages |
-| **Efficient** | Automation removes repetitive institutional overhead |
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-##  Reporting
+### 5. Production Startup Scripts
 
-```text
-Contest Completion → Verification → Analysis → Result Processing
-   → Excel → PDF → Distribution
-```
+For one-click production launches, pre-configured scripts are located in the [scripts/](scripts/) directory:
 
-Reporting is a **core institutional workflow**, not an afterthought bolted on manually.
-
----
-
-##  Security & Access Control
-
-```text
-ADMIN → Institution Scope
-  → HOD → Department Scope
-    → STAFF / MENTOR → Assigned Scope
-```
-
-**Security Controls** *(where implemented)*
-- Authentication
-- Role-Based Authorization
-- Scope-Based Access
-- Input Validation
-- Environment Secrets
-- Database Security
-- Row-Level Security
-
-> **Security Principle:** Frontend visibility is not security. Authorization must be enforced at the service and data-access layers.
+* **FastAPI Backend (4 Workers):** Run `scripts/run_backend_prod.bat`
+* **React Production Build:** Run `scripts/run_frontend_prod.bat`
+* **Full Production Daemon:** Run `scripts/start_production.bat`
+* **Sunday Autopilot Runner:** Run `python scripts/sunday_automation_complete.py`
 
 ---
 
-## ️ Technology Stack
+## 👥 Institutional Leadership
 
-<table>
-<tr><td valign="top">
+<div align="center">
 
-**Frontend**
+**Nandha Engineering College (Autonomous)**
+*Established in 2001 • Celebrating 25 Years of Educational Excellence*
+Erode - Perundurai Main Road, Vaikkaalmedu, Erode, Tamil Nadu 638052
 
-| Tech | Role |
-|---|---|
-| React | User interface |
-| TypeScript | Type-safe development |
-| Vite | Build tooling |
-| Tailwind CSS | UI styling |
-| TanStack Query | Server-state management |
-| Recharts | Data visualization |
+**Platform Architecture & Lead Engineering:**
+**Nanthish S** ([@nanthishvaran17](https://github.com/nanthishvaran17))
+*Department of Computer Science and Engineering*
 
-</td><td valign="top">
-
-**Backend**
-
-| Tech | Role |
-|---|---|
-| Python | Backend development |
-| FastAPI | API framework |
-| Uvicorn | ASGI application server |
-
-**Database**
-
-| Tech | Role |
-|---|---|
-| PostgreSQL | Persistent application data |
-| Supabase | Verified production deployment |
-
-</td><td valign="top">
-
-**Real-Time**
-
-```text
-WebSocket
-```
-
-**Reporting**
-
-```text
-Excel
-PDF
-Email
-```
-
-</td></tr>
-</table>
-
-> The stack listed always reflects the currently deployed implementation.
-
----
-
-##  Data Integrity
-
-```text
-AVAILABLE → VALIDATE → NORMALIZE → STORE → VERIFY → ANALYZE → REPORT
-```
-
-**Fundamental Rule**
-
-```text
-No Evidence  ≠  Negative Evidence
-```
-
-The system preserves uncertainty rather than silently converting missing information into a false negative.
-
----
-
-##  Engineering Principles
-
-| # | Principle | Description |
-|---|---|---|
-| 1 | **Evidence First** | Never convert uncertainty into false certainty |
-| 2 | **Single Source of Truth** | Maintain authoritative, normalized application records |
-| 3 | **Controlled Synchronization** | Process external data through predictable, bounded workflows |
-| 4 | **Separation of Concerns** | Keep ingestion, verification, persistence, analytics, reporting, and presentation logically separate |
-| 5 | **Idempotent Processing** | Repeated operations avoid unnecessary duplication or corruption |
-| 6 | **Failure Awareness** | External systems can fail — failure must never silently become absence |
-| 7 | **Security by Design** | Authorization belongs at the service and data layers |
-| 8 | **Institutional Reliability** | Recurring operations execute consistently and transparently |
-
----
-
-##  Scalability & Reliability
-
-```text
-PostgreSQL Indexing · Pagination · Batch Processing · Connection Pooling
-Background Processing · Efficient Data Fetching · API Optimization
-Caching · Real-Time Updates
-```
-
-**Engineering Objective**
-
-The goal is not to maximize raw request concurrency — it's to deliver:
-
-```text
-Controlled Processing + Data Integrity + Failure Isolation
-   + Reliable Synchronization + Operational Consistency
-```
-
-> Capabilities are documented according to the actual implementation and deployment configuration — never aspirationally.
-
----
-
-## ️ Product Screenshots
-
-> Use only authentic screenshots from the deployed platform. **No fabricated or AI-generated product images.**
-
-| Section | Status |
-|---|---|
-| Executive Dashboard | _Add production dashboard screenshot_ |
-| Contest Intelligence | _Add production contest-management screenshot_ |
-| Student Performance | _Add production student-performance screenshot_ |
-| Emerald Vault | _Add production achievement screenshot_ |
-| Institutional Reporting | _Add production reporting screenshot_ |
-
----
-
-##  Current Platform Scope
-
-| Area | Current Representation |
-|---|---|
-| Student Scale | **1,500+** |
-| Contest Intelligence | **Weekly** |
-| Verification | **Evidence-Based** |
-| Analytics | **Institutional** |
-| Reporting | **Automated Workflow** |
-| Recognition | **Achievement-Based** |
-
-This documentation intentionally avoids unsupported claims regarding uptime percentage, API request volume, response-time guarantees, accuracy percentages, database size, or infrastructure capacity — keeping it aligned strictly with **verifiable** platform information.
-
----
-
-##  Engineering Quality
-
-```text
-Automated Testing · Production Validation · Database Integrity
-API Reliability · Authentication · Responsive UI · Performance Monitoring
-```
-
-Only capabilities verified in the current implementation are represented as active production features.
-
----
-
-##  Production Readiness
-
-```text
-Application Delivery → Backend Processing → Persistent Data
-   → Access Control → Data Synchronization
-   → Analytics → Reporting → Automation
-```
-
-Production-readiness claims are always backed by the actual deployed environment, implementation, and validation results.
-
----
-
-##  Future Scope
-
-Planned exploration areas — clearly separated from currently implemented features:
-
-- Expanded institutional analytics
-- Additional performance indicators
-- Advanced historical trend analysis
-- Extended digital credential capabilities
-- Improved reporting workflows
-- Additional automation
-- Further scalability improvements
-- Enhanced operational monitoring
-
----
-
-##  Project Principles
-
-```text
-TRACK → VERIFY → UNDERSTAND → ACT
-```
-
-| Principle | Meaning |
-|---|---|
-| **Track** | Collect and organize recurring contest activity |
-| **Verify** | Separate verified information from uncertain or unavailable data |
-| **Understand** | Convert performance records into meaningful intelligence |
-| **Act** | Use analytics, reporting, and recognition to support institutional decisions |
-
----
-
-##  Conclusion
-
-**Nandha LeetCode Intelligence** provides a unified approach to institutional competitive-programming performance management.
-
-```text
-Contest Activity → Data Collection → Verification
-   → Performance Intelligence → Institutional Analytics
-   → Reporting → Recognition
-```
-
-Its central engineering principle is **evidence-first processing**: unavailable, private, or failed external information is never incorrectly interpreted as zero participation or negative performance.
-
-By combining contest intelligence, controlled synchronization, verification, analytics, reporting, and achievement recognition, the platform provides a structured foundation for **continuous visibility into student competitive-programming performance**.
+</div>
 
 ---
 
 <div align="center">
 
-## 🟢 NANDHA LEETCODE INTELLIGENCE
+### 🟢 NANDHA LEETCODE INTELLIGENCE
+**1,500+ Students • 8 Departments • One Institutional Truth**
 
-**1,500+ Students • One Institutional Intelligence Platform**
-
-### Track • Verify • Understand • Analyze • Report • Recognize
-
-**Nandha Engineering College, Erode**
+*Crafted with precision for the students and faculty of Nandha Engineering College.*
 
 </div>
