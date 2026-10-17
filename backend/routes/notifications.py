@@ -371,7 +371,7 @@ def mark_notification_read_endpoint(
         title = target.title
         body = target.body
 
-        or_clauses = [NotificationRecord.notification_id == notification_id]
+        or_clauses: list[Any] = [NotificationRecord.notification_id == notification_id]
         if event_id:
             or_clauses.append(NotificationRecord.event_id == event_id)
         or_clauses.append(and_(NotificationRecord.title == title, NotificationRecord.body == body))
@@ -436,7 +436,7 @@ def mark_notification_unread_endpoint(
         title = target.title
         body = target.body
 
-        or_clauses = [NotificationRecord.notification_id == notification_id]
+        or_clauses: list[Any] = [NotificationRecord.notification_id == notification_id]
         if event_id:
             or_clauses.append(NotificationRecord.event_id == event_id)
         or_clauses.append(and_(NotificationRecord.title == title, NotificationRecord.body == body))
@@ -517,7 +517,7 @@ def delete_notification_endpoint(
         title = target.title
         body = target.body
 
-        or_clauses = [NotificationRecord.notification_id == notification_id]
+        or_clauses: list[Any] = [NotificationRecord.notification_id == notification_id]
         if event_id:
             or_clauses.append(NotificationRecord.event_id == event_id)
         or_clauses.append(and_(NotificationRecord.title == title, NotificationRecord.body == body))
@@ -564,7 +564,7 @@ def archive_notification_endpoint(
         title = target.title
         body = target.body
 
-        or_clauses = [NotificationRecord.notification_id == notification_id]
+        or_clauses: list[Any] = [NotificationRecord.notification_id == notification_id]
         if event_id:
             or_clauses.append(NotificationRecord.event_id == event_id)
         or_clauses.append(and_(NotificationRecord.title == title, NotificationRecord.body == body))

@@ -24,6 +24,8 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   const isPullingRef = useRef<boolean>(false);
   const reachedThresholdRef = useRef<boolean>(false);
 
+  const safetyTimeoutRef = useRef<any>(null);
+
   const triggerHaptic = (pattern: number | number[] = 10) => {
     if (typeof window !== 'undefined' && 'navigator' in window && navigator.vibrate) {
       try {
@@ -58,7 +60,9 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     // If horizontal scroll is dominant, cancel pull
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
       isPullingRef.current = false;
+      reachedThresholdRef.current = false;
       setPullDistance(0);
+      setIsThresholdReached(false);
       return;
     }
 
@@ -71,13 +75,15 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       if (damped >= PULL_THRESHOLD && !reachedThresholdRef.current) {
         reachedThresholdRef.current = true;
         setIsThresholdReached(true);
-        triggerHaptic(12);
+        triggerHaptic(14);
       } else if (damped < PULL_THRESHOLD && reachedThresholdRef.current) {
         reachedThresholdRef.current = false;
         setIsThresholdReached(false);
       }
     } else {
       setPullDistance(0);
+      reachedThresholdRef.current = false;
+      setIsThresholdReached(false);
     }
   }, [disabled, isRefreshing]);
 
@@ -85,10 +91,21 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     if (!isPullingRef.current || disabled || isRefreshing) return;
     isPullingRef.current = false;
 
-    if (reachedThresholdRef.current) {
+    const shouldRefresh = reachedThresholdRef.current;
+    reachedThresholdRef.current = false;
+
+    if (shouldRefresh) {
       setIsRefreshing(true);
       setPullDistance(52); // Keep indicator visibly parked during refresh
       triggerHaptic([15, 40, 15]);
+
+      // Safety timeout in case onRefresh hangs — automatically release after 8s
+      if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
+      safetyTimeoutRef.current = setTimeout(() => {
+        setIsRefreshing(false);
+        setIsThresholdReached(false);
+        setPullDistance(0);
+      }, 8000);
 
       try {
         // Dispatch global sync events
@@ -104,12 +121,13 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       } catch (err) {
         console.warn('Pull-to-refresh action warning:', err);
       } finally {
+        if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
         // Smoothly exit after slight pause
         setTimeout(() => {
           setIsRefreshing(false);
           setIsThresholdReached(false);
           setPullDistance(0);
-        }, 300);
+        }, 350);
       }
     } else {
       setPullDistance(0);
@@ -122,11 +140,23 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
     window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+
+    const handleBlur = () => {
+      isPullingRef.current = false;
+      reachedThresholdRef.current = false;
+      setIsThresholdReached(false);
+      setPullDistance(0);
+    };
+    window.addEventListener('blur', handleBlur);
 
     return () => {
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchEnd);
+      window.removeEventListener('blur', handleBlur);
+      if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
     };
   }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 

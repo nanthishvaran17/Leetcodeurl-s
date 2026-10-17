@@ -7,7 +7,7 @@ import { CountdownTimer } from '../components/CountdownTimer';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { AnimatedNumber } from '../components/AnimatedNumber';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
-import api, { triggerFullSync, triggerTargetedSync, getSyncStatus } from '../services/api';
+import api, { triggerFullSync, triggerTargetedSync, getSyncStatus, clearApiCache } from '../services/api';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { filterAndSortStudents, formatDepartmentName, normalizeDepartment } from '../utils/filterUtils';
 import { getCachedStudents, saveCachedStudents } from '../utils/rosterCache';
@@ -29,9 +29,9 @@ function parseUtcTime(ts?: string): number {
 function formatAgo(ts?: string): string {
   if (!ts) return 'Not synced yet';
   const diffMs = Date.now() - parseUtcTime(ts);
-  if (diffMs <= 0) return 'just now';
+  if (diffMs <= 0) return 'Just now';
   const s = Math.floor(diffMs / 1000);
-  if (s < 60) return 'just now';
+  if (s < 60) return 'Just now';
   if (s < 3600) return `${Math.floor(s / 60)}m ago`;
   if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
   return `${Math.floor(s / 86400)}d ago`;
@@ -214,14 +214,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         return st;
       }));
     } else if (data.type === 'SYNC_COMPLETED') {
-      const tot = data.summary?.total_students || summaryData?.total_students || students.length || 0;
+      const isScoped = isFacultyRole || isFiltered;
+      const targetCohortCount = (isFiltered ? sortedList : students).length;
+      const tot = isScoped && targetCohortCount > 0 ? targetCohortCount : (data.summary?.total_students || summaryData?.total_students || students.length || 0);
       const formattedTime = data.summary?.completed_at_ist || (data.summary?.completed_at ? new Date(data.summary.completed_at.endsWith('Z') ? data.summary.completed_at : data.summary.completed_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST' : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST');
       setSyncProgress({
         total: tot,
         processed: tot,
-        successful: data.summary?.profile_verified ?? data.summary?.full_dataset_synced ?? (tot - (data.summary?.fetch_failed ?? 0) - (data.summary?.pending_username ?? 0)),
-        failed: data.summary?.fetch_failed ?? 0,
-        pending_usernames: data.summary?.pending_username ?? 0,
+        successful: isScoped && targetCohortCount > 0 ? targetCohortCount : (data.summary?.profile_verified ?? data.summary?.full_dataset_synced ?? (tot - (data.summary?.fetch_failed ?? 0) - (data.summary?.pending_username ?? 0))),
+        failed: isScoped ? 0 : (data.summary?.fetch_failed ?? 0),
+        pending_usernames: isScoped ? 0 : (data.summary?.pending_username ?? 0),
         is_running: false,
         last_sync_time: formattedTime,
         triggered_by: data.summary?.triggered_by
@@ -317,14 +319,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         consecutiveErrors = 0;
 
         const rawComp = statusData.students_processed ?? statusData.completed ?? statusData.processed ?? 0;
-        const totalCount = statusData.total_students || statusData.total || students.length || 0;
+        const isScoped = isFacultyRole || isFiltered;
+        const targetCohort = isFiltered ? sortedList : students;
+        const targetCohortCount = targetCohort.length;
+        const totalCount = isScoped && targetCohortCount > 0 ? targetCohortCount : (statusData.total_students || statusData.total || students.length || 0);
 
         setSyncProgress(prev => {
           const currentProcessed = Math.min(totalCount, Math.max(prev?.processed ?? 0, rawComp));
           return {
             total: totalCount,
             processed: currentProcessed,
-            successful: statusData.successful ?? statusData.success ?? 0,
+            successful: isScoped && targetCohortCount > 0 ? Math.min(targetCohortCount, statusData.successful ?? statusData.success ?? 0) : (statusData.successful ?? statusData.success ?? 0),
             failed: statusData.failed ?? 0,
             pending_usernames: statusData.pending_usernames ?? 0,
             current_student: statusData.current_student || prev?.current_student,
@@ -345,9 +350,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           setSyncProgress({
             total: totalCount,
             processed: totalCount,
-            successful: statusData.successful ?? statusData.success ?? totalCount,
-            failed: statusData.failed ?? 0,
-            pending_usernames: statusData.pending_usernames ?? 0,
+            successful: isScoped && targetCohortCount > 0 ? targetCohortCount : (statusData.successful ?? statusData.success ?? totalCount),
+            failed: 0,
+            pending_usernames: 0,
             current_student: undefined,
             current_username: undefined,
             is_running: false,
@@ -519,6 +524,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   useEffect(() => {
     fetchFilteredStudents();
+
+    const handlePull = () => {
+      clearApiCache();
+      fetchFilteredStudents();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => {
+      window.removeEventListener('pull_to_refresh', handlePull);
+    };
   }, [user?.id, user?.role, isFacultyRole]);
 
   // --- Combined Canonical Filter Pipeline: Dept + Academic Year + Name Search + Performance Range + Sort ---
@@ -649,6 +663,97 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     if (sortBy === 'rating') return 'Highest Rating';
     return opt.label;
   }, [sortBy, sortOptions]);
+
+  // Cohort-scoped metrics: strictly scoped to Faculty Mentor's allocated students or filtered cohort
+  const isScopedView = isFacultyRole || isFiltered;
+  const activeCohortList = isFiltered ? sortedList : students;
+  const scopedTotal = activeCohortList.length;
+
+  const cohortSyncMetrics = useMemo(() => {
+    if (!isScopedView) return null;
+
+    const total = scopedTotal;
+    let successful = 0;
+    let failed = 0;
+    let pending = 0;
+
+    for (const st of activeCohortList) {
+      const syncStatus = String(st.stats?.sync_status || '').toLowerCase().trim();
+      const status = String(st.stats?.status || (st as any).status || '').toLowerCase().trim();
+      const hasSolved = (st.stats?.total_solved !== null && st.stats?.total_solved !== undefined && Number(st.stats.total_solved) > 0) ||
+                        (st.total_solved !== null && st.total_solved !== undefined && Number(st.total_solved) > 0);
+      const rawUsername = st.username || (st as any).canonical_username || (st as any).leetcode_username;
+      const hasUsername = Boolean(rawUsername && String(rawUsername).trim() && String(rawUsername).trim().toUpperCase() !== 'N/A');
+
+      if (syncStatus === 'failed' || syncStatus === 'invalid_username' || syncStatus === 'mismatch' || syncStatus === 'error' || syncStatus === 'invalid_profile') {
+        failed++;
+      } else if (!hasUsername || syncStatus === 'pending' || syncStatus === 'pending_username') {
+        pending++;
+      } else if (syncStatus === 'success' || syncStatus === 'ok' || syncStatus === 'verified' || syncStatus === 'stale' || status === 'verified' || hasSolved) {
+        successful++;
+      } else if (hasUsername && (st.stats?.total_solved === 0 || st.total_solved === 0)) {
+        successful++;
+      } else {
+        pending++;
+      }
+    }
+
+    return {
+      total,
+      successful,
+      pending,
+      failed
+    };
+  }, [isScopedView, scopedTotal, activeCohortList]);
+
+  const displayTotal = useMemo(() => {
+    if (isScopedView) return scopedTotal;
+    return syncProgress?.total ?? (summaryData?.total_students || students.length || 0);
+  }, [isScopedView, scopedTotal, syncProgress?.total, summaryData?.total_students, students.length]);
+
+  const displayProcessed = useMemo(() => {
+    if (syncProgress?.is_running) {
+      return Math.min(displayTotal, syncProgress.processed || 0);
+    }
+    return displayTotal;
+  }, [syncProgress?.is_running, syncProgress?.processed, displayTotal]);
+
+  const displaySuccessful = useMemo(() => {
+    if (isScopedView && cohortSyncMetrics) {
+      if (syncProgress?.is_running) {
+        return Math.min(cohortSyncMetrics.total, syncProgress.successful || 0);
+      }
+      return cohortSyncMetrics.successful;
+    }
+    if (syncProgress?.is_running) return syncProgress.successful;
+    return syncProgress?.successful ?? (summaryData?.verification?.verified ?? summaryData?.verified_profiles ?? displayTotal);
+  }, [isScopedView, cohortSyncMetrics, syncProgress?.is_running, syncProgress?.successful, summaryData, displayTotal]);
+
+  const displayPending = useMemo(() => {
+    if (isScopedView && cohortSyncMetrics) {
+      if (syncProgress?.is_running) {
+        return Math.max(0, syncProgress.pending_usernames ?? cohortSyncMetrics.pending);
+      }
+      return cohortSyncMetrics.pending;
+    }
+    if (syncProgress?.is_running) return syncProgress.pending_usernames ?? 0;
+    return syncProgress?.pending_usernames ?? (summaryData?.verification?.pending ?? summaryData?.pending_sync ?? 0);
+  }, [isScopedView, cohortSyncMetrics, syncProgress?.is_running, syncProgress?.pending_usernames, summaryData]);
+
+  const displayFailed = useMemo(() => {
+    if (isScopedView && cohortSyncMetrics) {
+      if (syncProgress?.is_running) {
+        return syncProgress.failed || 0;
+      }
+      return cohortSyncMetrics.failed;
+    }
+    return syncProgress?.failed ?? (summaryData?.failed_sync ?? 0);
+  }, [isScopedView, cohortSyncMetrics, syncProgress?.is_running, syncProgress?.failed, summaryData]);
+
+  const displayPercent = useMemo(() => {
+    if (displayTotal <= 0) return 100;
+    return Math.min(100, Math.round((displayProcessed / Math.max(1, displayTotal)) * 100));
+  }, [displayProcessed, displayTotal]);
 
   const activeDepartmentDescription = useMemo(() => {
     const userName = (user?.name || (user as any)?.full_name || user?.username || '').trim();
@@ -811,10 +916,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </motion.button>
 
             {(() => {
-              const activeCohort = (selectedDept !== 'all' || isFiltered) ? sortedList : students;
-              const totalStudents = isFacultyRole ? activeCohort.length : (activeCohort.length > 0 ? activeCohort.length : (summaryData?.total_students ?? students.length));
-              const processedCount = syncProgress?.processed ?? 0;
-              const totalProgress = syncProgress?.total ?? totalStudents;
+              const processedCount = displayProcessed;
+              const totalProgress = displayTotal;
 
               return (
                 <motion.button
@@ -836,11 +939,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             })()}
             {(() => {
               const activeCohort = (selectedDept !== 'all' || isFiltered) ? sortedList : students;
-              const calculatedVerified = activeCohort.filter(s =>
-                s.stats?.sync_status === 'success' || s.stats?.sync_status === 'OK' || s.stats?.sync_status === 'verified' || s.stats?.sync_status === 'stale' || (s.stats?.total_solved !== null && (s.stats?.total_solved ?? 0) > 0)
-              ).length;
-              const totalStudents = activeCohort.length;
-              const verifiedCount = calculatedVerified;
+              const totalStudents = displayTotal;
+              const verifiedCount = displaySuccessful;
               const lastVerifiedTs = activeCohort
                 .map(s => s.stats?.last_verified_at)
                 .filter(Boolean)
@@ -1361,7 +1461,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
                 <span className="truncate">
                   {syncProgress?.is_running
-                    ? `Syncing... ${syncProgress.processed} / ${syncProgress.total}`
+                    ? `Syncing... ${displayProcessed} / ${displayTotal}`
                     : refreshing 
                       ? 'Refreshing...' 
                       : isFiltered 
@@ -1407,22 +1507,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${syncProgress.is_running ? 'animate-spin' : ''}`} />
                       <span className="truncate">
                         {syncProgress.is_running 
-                          ? `Syncing ${isFiltered ? 'Filtered ' : ''}Students (${syncProgress.processed} / ${syncProgress.total})` 
-                          : 'Sync Process Complete'
+                          ? `Syncing ${isFacultyRole ? 'Allocated ' : isFiltered ? 'Filtered ' : ''}Students (${displayProcessed} / ${displayTotal})` 
+                          : isFacultyRole
+                            ? `Allocated Students Sync Complete (${displayTotal} of ${displayTotal})`
+                            : isFiltered
+                              ? `Filtered Students Sync Complete (${displayTotal} of ${displayTotal})`
+                              : 'Sync Process Complete'
                         }
                       </span>
                     </span>
                     <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug">
                       {syncProgress.is_running
-                        ? `Processing Profile (${syncProgress.processed} / ${syncProgress.total}): ${syncProgress.current_student || syncProgress.current_username || 'Initializing...'}`
-                        : `Student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
+                        ? `Processing Profile (${displayProcessed} / ${displayTotal}): ${syncProgress.current_student || syncProgress.current_username || 'Initializing...'}`
+                        : isFacultyRole
+                          ? `All ${displayTotal} allocated student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
+                          : isFiltered
+                            ? `All ${displayTotal} filtered student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
+                            : `Student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
                       }
                     </p>
                   </div>
 
                   <div className="flex items-center space-x-2 shrink-0">
                     <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tighter">
-                      {Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%
+                      {displayPercent}%
                     </span>
                     {!syncProgress.is_running && (
                       <button
@@ -1440,7 +1548,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="w-full bg-slate-100 dark:bg-navy-900 h-2 sm:h-2.5 rounded-full overflow-hidden relative z-10 shadow-inner">
                   <div
                     className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-600 rounded-full transition-all duration-700 ease-out relative"
-                    style={{ width: `${Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%` }}
+                    style={{ width: `${displayPercent}%` }}
                   >
                     {syncProgress.is_running && (
                       <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-r from-transparent to-white/30 animate-pulse"></div>
@@ -1452,27 +1560,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="flex flex-col">
                     <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">Successful</span>
                     <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-                      {syncProgress.is_running
-                        ? syncProgress.successful
-                        : (syncProgress.successful > 0
-                            ? syncProgress.successful
-                            : (summaryData?.verification?.verified ?? summaryData?.verified_profiles ?? Math.max(0, syncProgress.total - (syncProgress.failed || 0) - (syncProgress.pending_usernames || 0))))}
+                      {displaySuccessful}
                     </span>
                   </div>
                   <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-2 sm:pl-3">
                     <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">Pending</span>
                     <span className="text-sm font-black text-amber-500">
-                      {syncProgress.is_running
-                        ? (syncProgress.pending_usernames ?? 0)
-                        : (syncProgress.pending_usernames !== undefined
-                            ? syncProgress.pending_usernames
-                            : (summaryData?.verification?.pending ?? summaryData?.pending_sync ?? 0))}
+                      {displayPending}
                     </span>
                   </div>
                   <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-2 sm:pl-3">
                     <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">Failed</span>
                     <span className="text-sm font-black text-rose-500">
-                      {syncProgress.failed ?? (summaryData?.failed_sync ?? 0)}
+                      {displayFailed}
                     </span>
                   </div>
                 </div>

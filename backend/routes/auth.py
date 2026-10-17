@@ -1579,7 +1579,7 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
         
         metadata: dict[str, Any] = {"session_id": str(session_id)} if session_id else {}
         if session_duration:
-            metadata["session_duration"] = str(session_duration)
+            metadata["session_duration"] = session_duration
             
         event_id = f"evt_logout_{session_id}" if session_id else None
         
@@ -2252,7 +2252,7 @@ def admin_login_init(login_data: UserLogin, request: Request, response: Response
     if user.role.lower() not in valid_roles:
         raise HTTPException(status_code=403, detail="Unauthorized access. Admins only.")
 
-    target_email = str(user.email or get_authoritative_admin_email())
+    target_email = user.email or get_authoritative_admin_email()
     from backend.services.otp_service import create_otp_transaction
     
     # Store in persistent database EmailOTPRecord to enable distributed multi-worker verification
@@ -2302,7 +2302,7 @@ def admin_verify_otp(data: AdminVerifyOTPRequest, request: Request, response: Re
         raise HTTPException(status_code=400, detail="Invalid credentials.")
 
     # 2. Verify OTP (Database persistent record first, fallback to memory cache)
-    target_email = str(user.email or get_authoritative_admin_email())
+    target_email = user.email or get_authoritative_admin_email()
     from backend.services.otp_service import verify_otp_transaction
     
     otp_valid, otp_msg, _ = verify_otp_transaction(db, target_email, data.otp.strip())
@@ -2437,7 +2437,7 @@ def passkey_register_options(request: Request, db: Session = Depends(get_db)):
         )
     )
 
-    current_user.webauthn_challenge = bytes_to_base64url(options.challenge)
+    setattr(current_user, "webauthn_challenge", bytes_to_base64url(options.challenge))
     db.commit()
 
     options_dict = json.loads(options_to_json(options))
@@ -2491,9 +2491,9 @@ async def passkey_register_verify(request: Request, db: Session = Depends(get_db
 
         existing = db.query(UserPasskey).filter(UserPasskey.credential_id == cred_id_str).first()
         if existing:
-            existing.user_id = current_user.id
-            existing.public_key = pub_key_str
-            existing.sign_count = verification.sign_count
+            setattr(existing, "user_id", current_user.id)
+            setattr(existing, "public_key", pub_key_str)
+            setattr(existing, "sign_count", verification.sign_count)
         else:
             new_passkey = UserPasskey(
                 user_id=current_user.id,
@@ -2604,7 +2604,7 @@ def passkey_login_options(request: Request, body: dict = Body(default={}), db: S
 
     challenge_b64 = bytes_to_base64url(options.challenge)
     if user:
-        user.webauthn_challenge = challenge_b64
+        setattr(user, "webauthn_challenge", challenge_b64)
         db.commit()
 
     try:
@@ -2686,7 +2686,7 @@ async def passkey_login_verify(request: Request, response: Response, db: Session
             require_user_verification=False,
         )
 
-        passkey.sign_count = verification.new_sign_count
+        setattr(passkey, "sign_count", verification.new_sign_count)
         user.webauthn_challenge = None  # type: ignore
         db.commit()
 

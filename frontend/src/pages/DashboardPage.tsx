@@ -6,7 +6,7 @@ const PerformanceChart = React.lazy(() => import('../components/PerformanceChart
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { SyncHistoryModal } from '../components/SyncHistoryModal';
 import { FailedSyncModal } from '../components/FailedSyncModal';
-import api, { triggerSingleStudentSync } from '../services/api';
+import api, { triggerSingleStudentSync, clearApiCache } from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
@@ -45,6 +45,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const { data: systemHealth } = useSystemHealthQuery();
   const { data: syncStatus } = useSyncStatusQuery();
   const { data: students = [], isLoading: studentsLoading, isError: studentsError, refetch: refetchStudents } = useStudentsQuery();
+
+  useEffect(() => {
+    const handlePull = () => {
+      clearApiCache();
+      refreshAllData();
+      refetchStudents();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => {
+      window.removeEventListener('pull_to_refresh', handlePull);
+    };
+  }, [refreshAllData, refetchStudents]);
 
   const departments = useMemo(() => {
     let list: any[] = [];

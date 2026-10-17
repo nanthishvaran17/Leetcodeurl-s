@@ -6,7 +6,7 @@ import { LogOut, ChevronDown } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import type { StudentData } from './components/LeaderboardTable';
-import api, { logActivity } from './services/api';
+import api, { logActivity, clearApiCache } from './services/api';
 import { getCachedSummary, saveCachedSummary } from './utils/rosterCache';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useAuth } from './context/AuthContext';
@@ -651,6 +651,17 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleGlobalPullToRefresh = useCallback(async () => {
+    try {
+      clearApiCache();
+      await fetchSummary();
+      window.dispatchEvent(new CustomEvent('pull_to_refresh', { detail: { activeTab } }));
+      await new Promise(resolve => setTimeout(resolve, 800));
+    } catch (err) {
+      console.warn('Global pull-to-refresh error:', err);
+    }
+  }, [activeTab]);
+
   // Intelligent Background Route & Data Pre-fetching on Idle (authenticated users only)
   useEffect(() => {
     if (!user) return;
@@ -1048,7 +1059,7 @@ export const App: React.FC = () => {
         )}
 
         {/* Main Content View Container with Native Mobile Pull-to-Refresh */}
-        <PullToRefresh onRefresh={fetchSummary}>
+        <PullToRefresh onRefresh={handleGlobalPullToRefresh}>
           <main
             id="main-content"
             key={activeTab}

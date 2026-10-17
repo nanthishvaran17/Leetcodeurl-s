@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle, ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell, FileText, Clock, AlertCircle, ArrowRight, Download, ChevronDown, Check, Filter, Moon, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
@@ -190,7 +190,7 @@ export const StaffDashboardView: React.FC = () => {
         const totalChecked = res.data?.total_assigned || myStudents.length;
         const nowFormatted = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-        setLastSyncTime(nowFormatted);
+        setLastSyncTime(`Just now (${nowFormatted} IST)`);
         setSyncStatusMsg(`LIVE SYNC COMPLETED • ${totalChecked} Students Checked (${successCnt} Updated, ${unavailCnt} Unavailable, ${failedCnt} Failed)`);
         notify.success('Live Sync Complete', `Updated ${successCnt} profiles successfully.`);
         // Clear GET cache so fresh data loads immediately — not 60s stale data
@@ -205,6 +205,33 @@ export const StaffDashboardView: React.FC = () => {
       setLiveSyncing(false);
     }
   };
+
+  const handleLiveSyncRef = useRef(handleLiveSync);
+  handleLiveSyncRef.current = handleLiveSync;
+
+  const fetchMentoringDataRef = useRef(fetchMentoringData);
+  fetchMentoringDataRef.current = fetchMentoringData;
+
+  useEffect(() => {
+    const handlePull = async () => {
+      try {
+        clearApiCache();
+        if (fetchMentoringDataRef.current) {
+          await fetchMentoringDataRef.current(true);
+        }
+        if (handleLiveSyncRef.current) {
+          await handleLiveSyncRef.current();
+        }
+      } catch (err) {
+        console.warn('StaffDashboard pull-to-refresh listener error:', err);
+      }
+    };
+
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => {
+      window.removeEventListener('pull_to_refresh', handlePull);
+    };
+  }, []);
 
   // Strict helper predicates for classification to guarantee 100% exact match between KPI card counts and filtered list
   const isCompletedStudent = useCallback((s: any) => {
@@ -385,11 +412,10 @@ export const StaffDashboardView: React.FC = () => {
             <p className="text-sm md:text-base text-slate-300 font-normal pt-0.5">Faculty mentoring & student portfolio intelligence deck.</p>
             <div className="text-xs text-slate-400 flex flex-wrap items-center gap-2 pt-0.5">
               <span>Restricted Portfolio • Monitoring {totalAssignedCount === 0 ? '0' : totalAssignedCount} Assigned Students</span>
-              {lastSyncTime && (
-                <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                  Last Live Sync: {lastSyncTime} IST
-                </span>
-              )}
+              <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20 inline-flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Last Live Sync: {lastSyncTime || 'Just now'}</span>
+              </span>
             </div>
           </div>
 
@@ -1140,7 +1166,7 @@ export const StaffDashboardView: React.FC = () => {
               return (
                 <div
                   key={st.id}
-                  className="bg-white dark:bg-navy-900 rounded-2xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-700/80 shadow-md shadow-slate-200/50 dark:shadow-none space-y-3 transition-all hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-600/60 ring-1 ring-slate-100 dark:ring-navy-800/40"
+                  className="overflow-hidden bg-white dark:bg-navy-900 rounded-2xl p-3.5 sm:p-5 border border-slate-200/90 dark:border-navy-700/80 shadow-md shadow-slate-200/50 dark:shadow-none space-y-3 transition-all hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-600/60 ring-1 ring-slate-100 dark:ring-navy-800/40"
                 >
                   {/* Top Bar: Reg No, Dept/Year & Status Pills */}
                   <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-navy-800/80 pb-2.5">
@@ -1149,7 +1175,7 @@ export const StaffDashboardView: React.FC = () => {
                         {st.reg_no}
                       </span>
                       <span className="truncate text-[11px] font-black text-indigo-950 dark:text-indigo-100 bg-indigo-100/80 dark:bg-indigo-950/80 px-2 py-0.5 rounded-lg border border-indigo-300/80 dark:border-indigo-700/80">
-                        {st.department || 'CSE'} ({cleanYr || 'III'} Year)
+                        {st.department || 'CSE'} • {cleanYr || 'III'} Yr
                       </span>
                     </div>
 
@@ -1217,19 +1243,19 @@ export const StaffDashboardView: React.FC = () => {
                   </div>
 
                   {/* Quick Numbers & Inspect Button */}
-                  <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-slate-100 dark:border-navy-800">
-                    <div className="flex items-center gap-2.5 text-xs">
-                      <div className="bg-slate-50 dark:bg-navy-950 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-navy-800">
-                        <span className="text-[10px] text-slate-700 dark:text-slate-300 font-black uppercase block">Solved</span>
+                  <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 pt-2.5 border-t border-slate-100 dark:border-navy-800">
+                    <div className="grid grid-cols-3 gap-1.5 flex-1 min-w-0 text-xs">
+                      <div className="bg-slate-50 dark:bg-navy-950 px-2 py-1 rounded-xl border border-slate-200 dark:border-navy-800 text-center min-w-0">
+                        <span className="text-[9px] text-slate-500 dark:text-slate-400 font-black uppercase block truncate">Solved</span>
                         <span className="font-black text-slate-900 dark:text-white text-xs">{solved}</span>
                       </div>
-                      <div className="bg-slate-50 dark:bg-navy-950 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-navy-800">
-                        <span className="text-[10px] text-slate-700 dark:text-slate-300 font-black uppercase block">Rating</span>
-                        <span className="font-black text-amber-500 dark:text-amber-400 text-xs">{st.contest_rating && Number(st.contest_rating) > 0 && Math.round(st.contest_rating) !== 1500 ? Math.round(st.contest_rating) : 'N/A'}</span>
+                      <div className="bg-slate-50 dark:bg-navy-950 px-2 py-1 rounded-xl border border-slate-200 dark:border-navy-800 text-center min-w-0">
+                        <span className="text-[9px] text-slate-500 dark:text-slate-400 font-black uppercase block truncate">Rating</span>
+                        <span className="font-black text-amber-500 dark:text-amber-400 text-xs truncate block">{st.contest_rating && Number(st.contest_rating) > 0 && Math.round(st.contest_rating) !== 1500 ? Math.round(st.contest_rating) : 'N/A'}</span>
                       </div>
-                      <div className="bg-indigo-50 dark:bg-indigo-950/40 px-2.5 py-1 rounded-xl border border-indigo-200 dark:border-indigo-800/60 flex-1 min-w-[100px]">
-                        <span className="text-[10px] text-indigo-700 dark:text-indigo-300 font-black uppercase block whitespace-nowrap overflow-hidden text-ellipsis">Sun. Contest</span>
-                        <span className="font-black text-indigo-600 dark:text-indigo-400 text-xs">
+                      <div className="bg-indigo-50 dark:bg-indigo-950/40 px-2 py-1 rounded-xl border border-indigo-200 dark:border-indigo-800/60 text-center min-w-0">
+                        <span className="text-[9px] text-indigo-700 dark:text-indigo-300 font-black uppercase block truncate">Sun. Contest</span>
+                        <span className="font-black text-indigo-600 dark:text-indigo-400 text-xs truncate block">
                           {st.recent_contest_score ? st.recent_contest_score.split('/')[0].trim() : '-'}
                         </span>
                       </div>
@@ -1238,9 +1264,9 @@ export const StaffDashboardView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setSelectedStudent(st)}
-                      className="min-h-[40px] px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-white text-xs font-black inline-flex items-center space-x-1.5 transition-all shadow-md shadow-brand-500/20 cursor-pointer shrink-0 touch-manipulation"
+                      className="min-h-[38px] px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-white text-xs font-black inline-flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-brand-500/20 cursor-pointer shrink-0 touch-manipulation"
                     >
-                      <Eye className="w-4 h-4" />
+                      <Eye className="w-4 h-4 shrink-0" />
                       <span>Inspect</span>
                     </button>
                   </div>

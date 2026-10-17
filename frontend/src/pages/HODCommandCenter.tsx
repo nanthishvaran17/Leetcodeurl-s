@@ -1559,6 +1559,19 @@ export const HODCommandCenter: React.FC = () => {
  return () => unregisterCallback('hod_command_center');
  }, [registerCallback, unregisterCallback, loadScopedData, loadStudents]);
 
+ useEffect(() => {
+   const handlePull = () => {
+     setRefreshing(true);
+     clearApiCache();
+     loadScopedData(false, true);
+     loadStudents();
+   };
+   window.addEventListener('pull_to_refresh', handlePull);
+   return () => {
+     window.removeEventListener('pull_to_refresh', handlePull);
+   };
+ }, [loadScopedData, loadStudents]);
+
  const handleReassign = async (studentId: number, targetFacultyId: number) => {
  try {
  await assignStudentsBatch(targetFacultyId, [studentId]);
