@@ -19,7 +19,7 @@ interface LoginPageProps {
   onClose?: () => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
   const { user, isAuthenticated, authState, login, authError, clearAuthError } = useAuth();
 
   useEffect(() => {
@@ -27,6 +27,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       onSuccess();
     }
   }, [isAuthenticated, user, onSuccess]);
+
+  useEffect(() => {
+    if (!onClose) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const pageVariants: Variants = {
     initial: { opacity: 0, y: 8 },
@@ -549,6 +560,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
 
   return (
     <div className={`login-page-container ${isCapacitorNative() ? 'is-capacitor' : ''}`}>
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close login modal"
+          className="fixed top-4 right-4 z-[99999] p-2.5 rounded-full bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 shadow-xl backdrop-blur-md cursor-pointer transition-all active:scale-95 flex items-center justify-center"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      )}
       <img
         src="/nandha_aerial_bg_mobile.webp"
         alt="Nandha Campus Aerial View"

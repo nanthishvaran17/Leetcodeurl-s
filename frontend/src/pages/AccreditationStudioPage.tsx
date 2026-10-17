@@ -88,36 +88,57 @@ export const AccreditationStudioPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10 font-sans">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Top Back Navigation Strip */}
+        <div className="flex items-center justify-between pb-1">
+          <a
+            href="/"
+            className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors cursor-pointer group"
+          >
+            <span className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 group-hover:border-slate-700">&larr;</span>
+            <span>Return to Dashboard</span>
+          </a>
+        </div>
+
         {/* Header Banner */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold uppercase tracking-wider mb-2">
               <ShieldCheck className="w-4 h-4 text-emerald-400" /> INSTITUTIONAL AUDIT & CQI
             </div>
-            <h1 className="text-3xl font-black tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
               NAAC & NBA Accreditation Report Studio
             </h1>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-slate-400 text-xs sm:text-sm mt-1">
               Automated continuous quality improvement documentation for Criteria 2, Criteria 5 & NBA Mentoring audits
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               onClick={fetchMetrics}
-              className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-colors"
+              disabled={loading}
+              className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
               title="Refresh Audit Data"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </button>
 
             <button
+              onClick={() => handleDownload("PDF")}
+              disabled={Boolean(downloadingFormat)}
+              className="px-3.5 py-2.5 rounded-xl bg-indigo-600/80 hover:bg-indigo-500 text-white text-xs sm:text-sm font-bold shadow-lg shadow-indigo-600/20 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+            >
+              <FileText className="w-4 h-4" />
+              <span>{downloadingFormat === "PDF" ? "Exporting PDF..." : "Export PDF"}</span>
+            </button>
+
+            <button
               onClick={() => handleDownload("EXCEL")}
-              disabled={downloading}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-sm font-bold shadow-lg shadow-emerald-600/20 flex items-center gap-2 transition-all"
+              disabled={Boolean(downloadingFormat)}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-600/20 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
             >
               <Download className="w-4 h-4" />
-              {downloading ? "Exporting..." : "Download Official Audit XLSX"}
+              <span>{downloadingFormat === "EXCEL" ? "Exporting XLSX..." : "Download Audit XLSX"}</span>
             </button>
           </div>
         </div>

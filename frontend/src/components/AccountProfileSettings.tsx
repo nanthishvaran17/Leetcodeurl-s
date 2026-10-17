@@ -17,6 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { GlobalModalBackdrop } from './GlobalModalBackdrop';
 import { DynamicQRCode } from './DynamicQRCode';
+import { QRCodeCanvas } from 'qrcode.react';
 import Cropper from 'react-easy-crop';
 import 'react-easy-crop/react-easy-crop.css';
 import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser';
@@ -348,6 +349,7 @@ export const AccountProfileSettings: React.FC = () => {
   const { notify } = useNotification();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jsonImportInputRef = useRef<HTMLInputElement>(null);
+  const idCardQrCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Role-Aware Access Control: Only Faculty/Staff/Mentors have assigned mentees.
   // Administrators, Superadmins, Principals, Directors manage the institution and do not have personal mentees.
@@ -1466,6 +1468,24 @@ export const AccountProfileSettings: React.FC = () => {
     return `BEGIN:VCARD\r\nVERSION:3.0\r\nN:${fullName || 'Faculty Member'};;;;\r\nFN:${fullName || 'Faculty Member'}\r\nTITLE:${designation || 'Staff'}\r\nORG:Nandha Engineering College (Autonomous);${departmentName}\r\nTEL;TYPE=WORK,VOICE:${phoneNumber || '9042020879'}\r\nEMAIL;TYPE=WORK:${user?.email || 'nanthishvaran17@gmail.com'}\r\nNOTE:Institutional ID: ${institutionalId} | Status: VERIFIED ACTIVE | Auth: SHA256-${institutionalId.toLowerCase()}-verified\r\nURL:https://nandhaengg.org\r\nEND:VCARD`;
   }, [institutionalId, fullName, designation, departmentName, phoneNumber, user?.email]);
 
+  // Authoritative Institutional ID Verification URL for instant camera scan
+  const idVerificationUrl = useMemo(() => {
+    let origin = typeof window !== 'undefined' ? window.location.origin : 'https://leetcodeurl-s-roan.vercel.app';
+    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      origin = 'https://leetcodeurl-s-roan.vercel.app';
+    }
+    const params = new URLSearchParams({
+      type: 'id_card',
+      id: institutionalId,
+      name: fullName || user?.username || 'Staff Member',
+      role: rawRole.includes('admin') ? 'ADMINISTRATOR' : rawRole.includes('student') ? 'STUDENT' : 'FACULTY',
+      desig: designation || roleName || 'Faculty',
+      dept: departmentName && departmentName !== 'INSTITUTIONAL' ? departmentName : 'Computer Science & Engineering',
+      blood: bloodGroup || 'O+ (Positive)'
+    });
+    return `${origin}/verify/${encodeURIComponent(institutionalId)}?${params.toString()}`;
+  }, [institutionalId, fullName, user?.username, rawRole, designation, roleName, departmentName, bloodGroup]);
+
 
 
   // Export profile summary JSON
@@ -1899,14 +1919,18 @@ export const AccountProfileSettings: React.FC = () => {
       ctx.fillText(`HASH: SHA256-${institutionalId.toLowerCase()}-verified`, bx + 65, by + 750);
       ctx.fillText('ISSUED BY: Nandha Engineering College Autonomous Cell', bx + 65, by + 780);
 
-      drawRoundRect(bx + cw - 180, by + 700, 100, 100, 14);
+      drawRoundRect(bx + cw - 180, by + 695, 110, 110, 14);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
-      ctx.fillStyle = '#000000';
-      ctx.font = 'bold 11px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('VERIFIED', bx + cw - 130, by + 745);
-      ctx.fillText('SMART QR', bx + cw - 130, by + 765);
+      if (idCardQrCanvasRef.current) {
+        ctx.drawImage(idCardQrCanvasRef.current, bx + cw - 175, by + 700, 100, 100);
+      } else {
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('VERIFIED', bx + cw - 125, by + 745);
+        ctx.fillText('SMART QR', bx + cw - 125, by + 765);
+      }
 
       // Export to Blob
       canvas.toBlob(async (blob) => {
@@ -1978,6 +2002,7 @@ export const AccountProfileSettings: React.FC = () => {
     const effectiveDept = departmentName && departmentName !== 'INSTITUTIONAL' ? departmentName : 'Computer Science & Engineering';
     const effectiveRole = rawRole.includes('admin') ? 'ADMINISTRATOR' : rawRole.includes('student') ? 'STUDENT' : 'FACULTY';
     const origin = window.location.origin;
+    const qrDataUrl = idCardQrCanvasRef.current ? idCardQrCanvasRef.current.toDataURL('image/png') : '';
 
     const printHtml = `<!DOCTYPE html>
 <html>
@@ -2117,8 +2142,9 @@ export const AccountProfileSettings: React.FC = () => {
           <span style="font-size:8.5px;font-weight:900;color:#6ee7b7;display:block;">CRYPTOGRAPHIC SEAL</span>
           <span style="font-size:7.5px;font-family:monospace;color:#cbd5e1;">SHA256-${institutionalId.toLowerCase()}-verified</span>
         </div>
-        <div style="background:#fff;padding:6px 10px;border-radius:6px;color:#000;font-size:8.5px;font-weight:900;text-align:center;">
-          [ VERIFIED SMART QR ]
+        <div style="background:#ffffff;padding:4px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          ${qrDataUrl ? `<img src="${qrDataUrl}" style="width:68px;height:68px;display:block;border-radius:4px;" alt="Verified QR" />` : `<div style="width:68px;height:68px;background:#fff;color:#000;font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;text-align:center;">SCAN TO<br/>VERIFY</div>`}
+          <span style="font-size:6.5px;font-weight:900;color:#0f172a;margin-top:2px;letter-spacing:0.5px;">SCAN TO VERIFY</span>
         </div>
       </div>
     </div>
@@ -5142,11 +5168,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           SHA256-{institutionalId.toLowerCase()}-verified-2026
                         </p>
                         <p className="text-[9px] text-slate-300 font-bold">
-                          Scan to import official faculty vCard directly to phonebook
+                          Scan with any phone to view live status &amp; verified digital credentials
                         </p>
                       </div>
-                      <div className="shrink-0 bg-white p-1 rounded-xl shadow-md">
-                        <DynamicQRCode data={qrVerificationPayload} size={76} />
+                      <div className="shrink-0 bg-white p-1.5 rounded-xl shadow-md">
+                        <QRCodeCanvas value={idVerificationUrl} size={86} level="M" includeMargin={false} bgColor="#ffffff" fgColor="#0b1528" className="rounded-lg shadow-sm block" />
                       </div>
                     </div>
 
@@ -6207,11 +6233,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           SHA256-{institutionalId.toLowerCase()}-verified-2026
                         </p>
                         <p className="text-[8px] text-slate-400">
-                          Official faculty digital ID verification record
+                          Scan with any phone to view live status &amp; verified digital credentials
                         </p>
                       </div>
-                      <div className="shrink-0 bg-white p-1 rounded-xl shadow-md">
-                        <DynamicQRCode data={qrVerificationPayload} size={64} />
+                      <div className="shrink-0 bg-white p-1.5 rounded-xl shadow-md">
+                        <QRCodeCanvas value={idVerificationUrl} size={84} level="M" includeMargin={false} bgColor="#ffffff" fgColor="#0b1528" className="rounded-lg shadow-xs block" />
                       </div>
                     </div>
 
@@ -6271,6 +6297,19 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           );
         }}
       />
+
+      {/* Hidden QR Code Canvas for High-Resolution PVC Print & PNG Generation */}
+      <div style={{ position: 'fixed', left: '-9999px', top: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
+        <QRCodeCanvas
+          ref={idCardQrCanvasRef}
+          value={idVerificationUrl}
+          size={480}
+          level="M"
+          includeMargin={true}
+          bgColor="#ffffff"
+          fgColor="#0b1528"
+        />
+      </div>
 
     </div>
   );

@@ -1152,8 +1152,15 @@ export const StaffDashboardView: React.FC = () => {
               Loading your assigned students...
             </div>
           ) : sortedFilteredStudents.length === 0 ? (
-            <div className="p-8 text-center text-slate-400 italic">
-              No students found matching your filters.
+            <div className="p-8 text-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-navy-900/50 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-2">
+              <p className="font-extrabold text-sm text-slate-800 dark:text-slate-200">
+                {myStudents.length === 0 ? 'No Mentees Assigned Yet' : 'No students found matching your filters.'}
+              </p>
+              <p className="text-xs">
+                {myStudents.length === 0
+                  ? 'Your mentoring portfolio is currently empty. Ask your HOD to allocate students from the Command Center.'
+                  : 'Try changing your search term or filter selection.'}
+              </p>
             </div>
           ) : (
             sortedFilteredStudents.map((st: any) => {
@@ -1341,15 +1348,32 @@ export const StaffDashboardView: React.FC = () => {
               ) : sortedFilteredStudents.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="py-12 px-4 text-center">
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <div className="p-3 rounded-2xl bg-slate-100 dark:bg-navy-800 text-slate-400">
-                        <Search className="w-6 h-6 text-indigo-500" />
+                    <div className="flex flex-col items-center justify-center space-y-3 max-w-md mx-auto">
+                      <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-navy-800 text-slate-400">
+                        <Users className="w-7 h-7 text-indigo-500" />
                       </div>
-                      <h4 className="text-sm font-black text-slate-900 dark:text-white">No students found</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
-                        Try changing the selected student or search term.
+                      <h4 className="text-base font-black text-slate-900 dark:text-white">
+                        {myStudents.length === 0 ? 'No Mentees Assigned Yet' : 'No matching students found'}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        {myStudents.length === 0
+                          ? 'You currently do not have any students assigned to your mentoring portfolio. Contact your Department HOD or use the Command Center to allocate mentees.'
+                          : 'No students matched your active filter criteria. Try changing the selected student, filter category, or search term.'}
                       </p>
-                      {(selectedStudentFilter !== 'ALL' || search || filterStatus !== 'ALL') && (
+                      {myStudents.length === 0 && (user?.role?.toLowerCase().includes('hod') || user?.role?.toLowerCase().includes('admin')) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            window.location.hash = '#/hod-command-center';
+                            window.dispatchEvent(new CustomEvent('navigate_to_route', { detail: { route: 'hod-command-center' } }));
+                          }}
+                          className="mt-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-md shadow-brand-500/25 transition cursor-pointer flex items-center gap-2"
+                        >
+                          <ArrowRight className="w-4 h-4" />
+                          <span>Open HOD Leadership Deck & Allocate</span>
+                        </button>
+                      )}
+                      {myStudents.length > 0 && (selectedStudentFilter !== 'ALL' || search || filterStatus !== 'ALL') && (
                         <button
                           type="button"
                           onClick={() => {

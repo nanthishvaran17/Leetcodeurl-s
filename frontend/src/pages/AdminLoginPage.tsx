@@ -240,12 +240,21 @@ export const AdminLoginPage = () => {
                   setOtp('');
                   setSuccessMsg('');
                 }}
-                className="w-full text-slate-400 hover:text-white text-sm transition-colors py-2"
+                className="w-full text-slate-400 hover:text-white text-sm transition-colors py-2 cursor-pointer"
               >
                 Back to credentials
               </button>
             </form>
           )}
+
+          <div className="pt-4 text-center border-t border-slate-800 mt-4">
+            <a
+              href="/"
+              className="text-xs font-semibold text-slate-400 hover:text-white transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>&larr; Return to Dashboard</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>

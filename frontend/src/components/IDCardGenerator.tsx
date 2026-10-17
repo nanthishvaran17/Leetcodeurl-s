@@ -734,9 +734,10 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
   }, [studentName, regNo, deptName, yearLevel, totalSolved, collegeRank, streakCount, leetcodeUsername, contestRating, easySolved, mediumSolved, hardSolved, lastVerifiedAt, officialContests, virtualContests, verificationSource, credentialStatus, logoLoaded, secondaryLogoLoaded]);
 
   const credentialId = `NEC-PASS-2026-${regNo || '732225CC018'}`;
-  const verificationUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/verify/${encodeURIComponent(credentialId)}`
-    : `https://nandha-engineering-college.example/verify/${encodeURIComponent(credentialId)}`;
+  const resolvedOrigin = typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1')
+    ? window.location.origin
+    : 'https://leetcodeurl-s-roan.vercel.app';
+  const verificationUrl = `${resolvedOrigin}/verify/${encodeURIComponent(credentialId)}`;
   const [isGenerating, setIsGenerating] = useState(false);
   const [viewMode, setViewMode] = useState<'pass' | 'certificate'>('pass');
 
@@ -986,7 +987,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
           ref={qrCanvasRef}
           value={verificationUrl}
           size={400}
-          level="H"
+          level="M"
           includeMargin
           bgColor="#ffffff"
           fgColor="#0F172A"

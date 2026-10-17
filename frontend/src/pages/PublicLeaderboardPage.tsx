@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
-import { Globe, Shield, Users, TrendingUp, Search, Award, ChevronLeft, ChevronRight, BarChart3, Filter, ExternalLink, Calendar, Building2, LayoutList } from 'lucide-react';
+import { Globe, Shield, Users, TrendingUp, Search, Award, ChevronLeft, ChevronRight, BarChart3, Filter, ExternalLink, Calendar, Building2, LayoutList, RotateCcw } from 'lucide-react';
 import { GlobalFilter } from '../components/GlobalFilter';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { studentLiveStore, useStudentListIds } from '../stores/studentLiveStore';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
-import { sortStudents, normalizeAcademicYear, deriveYearLevelFromRegNo } from '../utils/filterUtils';
+import { sortStudents, normalizeAcademicYear, deriveYearLevelFromRegNo, matchesDepartment, matchesAcademicYear, matchesNameSearch } from '../utils/filterUtils';
 import { useFilters, useFilteredStudents } from '../context/FilterContext';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { useDepartments } from '../contexts/DepartmentContext';
@@ -55,26 +55,27 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
 
   const deferredSearchQuery = useDeferredValue(filters.searchQuery);
 
-  // Filter & Sort Logic
+  // Normalize current department filter:
+  // For the Public Leaderboard, 'MY_DEPARTMENTS', 'all', or 'ALL' means show all departments.
+  const effectiveDepartment = useMemo(() => {
+    if (!filters.department || filters.department === 'ALL' || filters.department === 'all' || filters.department === 'MY_DEPARTMENTS') {
+      return 'ALL';
+    }
+    return filters.department;
+  }, [filters.department]);
+
+  // Filter & Sort Logic using canonical matching predicates
   const filteredAndSorted = useMemo(() => {
     let result = [...globalStudents];
 
-    if (deferredSearchQuery) {
-      const q = deferredSearchQuery.toLowerCase();
-      result = result.filter((s: any) => {
-        if (s.name?.toLowerCase().includes(q)) return true;
-        if (s.reg_no?.toLowerCase().includes(q)) return true;
-        if (s.username?.toLowerCase().includes(q)) return true;
-        if (s.codeforces_username?.toLowerCase().includes(q)) return true;
-        return false;
-      });
+    if (deferredSearchQuery && deferredSearchQuery.trim()) {
+      result = result.filter((s: any) => matchesNameSearch(s, deferredSearchQuery));
     }
-    if (filters.department !== 'ALL') {
-      result = result.filter((s: any) => s.department?.code === filters.department);
+    if (effectiveDepartment !== 'ALL') {
+      result = result.filter((s: any) => matchesDepartment(s, effectiveDepartment));
     }
-    if (filters.academicYear !== 'ALL') {
-      const targetYearNorm = normalizeAcademicYear(filters.academicYear);
-      result = result.filter((s: any) => normalizeAcademicYear(s.year_level) === targetYearNorm);
+    if (filters.academicYear && filters.academicYear !== 'ALL' && filters.academicYear !== 'all') {
+      result = result.filter((s: any) => matchesAcademicYear(s, filters.academicYear));
     }
 
     if (sortBy === 'easy') result.sort((a, b) => (b.stats?.easy_solved || 0) - (a.stats?.easy_solved || 0));
@@ -83,7 +84,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
     // Default 'rank' uses global ranking / total solved which is already sorted from backend
 
     return result;
-  }, [globalStudents, deferredSearchQuery, filters.department, filters.academicYear, sortBy]);
+  }, [globalStudents, deferredSearchQuery, effectiveDepartment, filters.academicYear, sortBy]);
 
   const total = filteredAndSorted.length;
   const top3 = filteredAndSorted.slice(0, 3);
@@ -348,7 +349,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
 
             {/* Dept Filter */}
             <GlobalFilter
-              value={filters.department}
+              value={effectiveDepartment}
               onChange={val => filters.setDepartment(val)}
               icon={<Building2 className="w-5 h-5" />}
               dropdownWidth="w-72"
@@ -390,7 +391,21 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
         </div>
 
         <div className="flex items-center justify-between text-xs text-slate-400 font-bold">
-          <span>Showing {filtered.length} of {students.length} students</span>
+          <span>Showing {total} {total === 1 ? 'student' : 'students'} {total !== students.length ? `(filtered from ${students.length} total)` : ''}</span>
+          {(effectiveDepartment !== 'ALL' || (filters.academicYear && filters.academicYear !== 'ALL') || filters.searchQuery) && (
+            <button
+              type="button"
+              onClick={() => {
+                filters.setDepartment('ALL');
+                filters.setAcademicYear('ALL');
+                filters.setSearchQuery('');
+              }}
+              className="text-brand-500 hover:text-brand-600 dark:text-brand-400 text-xs font-bold hover:underline cursor-pointer flex items-center gap-1"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Filters</span>
+            </button>
+          )}
         </div>
       </div>
 
