@@ -10,7 +10,7 @@ import {
   AlertTriangle, Sliders, ShieldX, Copy, CheckCheck,
   RotateCw, RefreshCcw, Volume2, VolumeX, Sparkles, Search, UploadCloud,
   Fingerprint, MessageSquare, Compass, Cpu, Palette, ChevronRight, ChevronDown,
-  Trophy, BookmarkCheck, FileBadge, Users
+  Trophy, BookmarkCheck, FileBadge, Users, ArrowLeft
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -579,6 +579,27 @@ export const AccountProfileSettings: React.FC = () => {
   const [isRemovingFace, setIsRemovingFace] = useState<boolean>(false);
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState<boolean>(false);
   const [showClearNotesConfirm, setShowClearNotesConfirm] = useState<boolean>(false);
+  const [showIdCardModal, setShowIdCardModal] = useState<boolean>(false);
+  const [isSavingCard, setIsSavingCard] = useState<boolean>(false);
+  const [modalCardSide, setModalCardSide] = useState<'both' | 'front' | 'back'>('both');
+
+  // Capacitor Android Hardware Back Button listener for ID Card Modal
+  useEffect(() => {
+    if (!showIdCardModal) return;
+    let listenerHandle: any = null;
+    const setupBack = async () => {
+      try {
+        const { App: CapApp } = await import('@capacitor/app');
+        listenerHandle = await CapApp.addListener('backButton', () => {
+          setShowIdCardModal(false);
+        });
+      } catch {}
+    };
+    setupBack();
+    return () => {
+      if (listenerHandle?.remove) listenerHandle.remove();
+    };
+  }, [showIdCardModal]);
 
   const fetchFaceStatus = async () => {
     try {
@@ -1568,11 +1589,386 @@ export const AccountProfileSettings: React.FC = () => {
     notify.success('vCard Contact downloaded! Open with Phonebook/Contacts.', '', { category: 'ADMIN' });
   };
 
+  // High-Resolution 300 DPI Canvas ID Card Image Exporter (Native Mobile & Web)
+  const handleDownloadIdCardPng = async () => {
+    setIsSavingCard(true);
+    try {
+      const effectiveDob = dateOfBirth || '17/01/2004';
+      const effectiveBlood = bloodGroup || 'O+ (Positive)';
+      const effectiveCabin = officeLocation || 'Main Campus • Academic Block B-204';
+      const effectiveDept = departmentName && departmentName !== 'INSTITUTIONAL' ? departmentName : 'Computer Science & Engineering';
+      const effectiveRole = rawRole.includes('admin') ? 'ADMINISTRATOR' : rawRole.includes('student') ? 'STUDENT' : 'FACULTY';
+      const userName = fullName || user?.username || 'Institutional Member';
+      const userDesig = designation || roleName || 'Faculty / Staff';
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 1600;
+      canvas.height = 1100;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas 2D rendering is not available');
+
+      // 1. Overall Dark Background
+      const bgGrad = ctx.createLinearGradient(0, 0, 1600, 1100);
+      bgGrad.addColorStop(0, '#0a0f1d');
+      bgGrad.addColorStop(1, '#020617');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, 1600, 1100);
+
+      // Top Institutional Banner
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('NANDHA ENGINEERING COLLEGE (AUTONOMOUS)', 800, 58);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('Official Institutional Identity Card • High-Resolution CR80 PVC Print Ready', 800, 92);
+
+      const drawRoundRect = (x: number, y: number, w: number, h: number, r: number) => {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+      };
+
+      // ==========================================
+      // FRONT CARD (X: 120, Y: 125, W: 640, H: 910)
+      // ==========================================
+      const fx = 120, fy = 125, cw = 640, ch = 910;
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+      ctx.shadowBlur = 35;
+      ctx.shadowOffsetY = 16;
+      drawRoundRect(fx, fy, cw, ch, 32);
+      ctx.fillStyle = '#0f172a';
+      ctx.fill();
+      ctx.restore();
+
+      const fGrad = ctx.createLinearGradient(fx, fy, fx + cw, fy + ch);
+      fGrad.addColorStop(0, '#0f172a');
+      fGrad.addColorStop(0.5, '#1e1b4b');
+      fGrad.addColorStop(1, '#020617');
+      drawRoundRect(fx, fy, cw, ch, 32);
+      ctx.fillStyle = fGrad;
+      ctx.fill();
+
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = '#f59e0b';
+      ctx.stroke();
+
+      // Front Header Text
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'left';
+      ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('NANDHA ENGINEERING COLLEGE', fx + 40, fy + 65);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'bold 13.5px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('Autonomous • Anna University • NBA & NAAC A+', fx + 40, fy + 90);
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(fx + 40, fy + 110);
+      ctx.lineTo(fx + cw - 40, fy + 110);
+      ctx.stroke();
+
+      // EMV Gold Chip
+      const chipGrad = ctx.createLinearGradient(fx + 40, fy + 130, fx + 110, fy + 180);
+      chipGrad.addColorStop(0, '#fde68a');
+      chipGrad.addColorStop(0.5, '#f59e0b');
+      chipGrad.addColorStop(1, '#d97706');
+      drawRoundRect(fx + 40, fy + 130, 70, 50, 10);
+      ctx.fillStyle = chipGrad;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Role Pill
+      const rolePillX = fx + cw - 180;
+      drawRoundRect(rolePillX, fy + 135, 140, 36, 18);
+      ctx.fillStyle = effectiveRole === 'FACULTY' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(99, 102, 241, 0.25)';
+      ctx.fill();
+      ctx.strokeStyle = effectiveRole === 'FACULTY' ? '#10b981' : '#6366f1';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = effectiveRole === 'FACULTY' ? '#6ee7b7' : '#a5b4fc';
+      ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(effectiveRole, rolePillX + 70, fy + 159);
+
+      // Photo Box
+      drawRoundRect(fx + 40, fy + 210, 160, 180, 24);
+      ctx.fillStyle = '#090d16';
+      ctx.fill();
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 64px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(userName.charAt(0).toUpperCase(), fx + 120, fy + 325);
+
+      // User Information
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const displayUserName = userName.length > 22 ? userName.slice(0, 20) + '...' : userName;
+      ctx.fillText(displayUserName, fx + 225, fy + 250);
+
+      ctx.fillStyle = '#fde047';
+      ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(userDesig, fx + 225, fy + 285);
+
+      // Institutional ID Tag
+      drawRoundRect(fx + 225, fy + 305, 240, 36, 10);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 17px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(institutionalId, fx + 345, fy + 329);
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#93c5fd';
+      ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const displayDept = effectiveDept.length > 28 ? effectiveDept.slice(0, 26) + '...' : effectiveDept;
+      ctx.fillText(displayDept, fx + 225, fy + 365);
+
+      // Specs Grid
+      drawRoundRect(fx + 40, fy + 420, cw - 80, 175, 20);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('DOB (VERIFIED)', fx + 65, fy + 455);
+      ctx.fillText('BLOOD GROUP', fx + 340, fy + 455);
+      ctx.fillText('MOBILE / CONTACT', fx + 65, fy + 535);
+      ctx.fillText('CABIN / ROOM', fx + 340, fy + 535);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(effectiveDob, fx + 65, fy + 482);
+
+      ctx.fillStyle = '#fca5a5';
+      ctx.fillText(effectiveBlood, fx + 340, fy + 482);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(phoneNumber || '+91 90420 20879', fx + 65, fy + 562);
+      ctx.fillText(effectiveCabin.length > 20 ? effectiveCabin.slice(0, 18) + '...' : effectiveCabin, fx + 340, fy + 562);
+
+      // Barcode
+      const bcY = fy + 625;
+      const bcXStart = fx + 60;
+      const bcW = cw - 120;
+      ctx.fillStyle = '#ffffff';
+      for (let bx = bcXStart; bx < bcXStart + bcW; bx += 7) {
+        const lineW = (bx % 3 === 0) ? 3 : (bx % 2 === 0 ? 2 : 1);
+        ctx.fillRect(bx, bcY, lineW, 46);
+      }
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'bold 15px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`*${institutionalId}*`, fx + cw / 2, bcY + 68);
+
+      // Signatures & Validity
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('Valid: Academic Session 2025–26', fx + 40, fy + 770);
+      ctx.fillStyle = '#fde047';
+      ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('25th Year (Silver Jubilee)', fx + 40, fy + 792);
+
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#fde047';
+      ctx.font = 'italic bold 26px "Brush Script MT", cursive, sans-serif';
+      ctx.fillText('Dr. U. S. Ragupathy', fx + cw - 40, fy + 770);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('Dr. U. S. Ragupathy, M.E., Ph.D.', fx + cw - 40, fy + 795);
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('Principal • Authorized Signatory', fx + cw - 40, fy + 815);
+
+      // ==========================================
+      // BACK CARD (X: 840, Y: 125, W: 640, H: 910)
+      // ==========================================
+      const bx = 840, by = 125;
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+      ctx.shadowBlur = 35;
+      ctx.shadowOffsetY = 16;
+      drawRoundRect(bx, by, cw, ch, 32);
+      ctx.fillStyle = '#090d16';
+      ctx.fill();
+      ctx.restore();
+
+      const bGrad = ctx.createLinearGradient(bx, by, bx + cw, by + ch);
+      bGrad.addColorStop(0, '#090d16');
+      bGrad.addColorStop(0.5, '#131b2e');
+      bGrad.addColorStop(1, '#030712');
+      drawRoundRect(bx, by, cw, ch, 32);
+      ctx.fillStyle = bGrad;
+      ctx.fill();
+
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = '#6366f1';
+      ctx.stroke();
+
+      // Magnetic Stripe
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(bx, by + 40, cw, 60);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bx, by + 40, cw, 60);
+
+      // Address & Affiliation
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('NANDHA ENGINEERING COLLEGE (AUTONOMOUS)', bx + cw / 2, by + 145);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai', bx + cw / 2, by + 175);
+      ctx.fillText('Erode - Perundurai Main Road, Vaikkaalmedu, Erode - 638 052, Tamil Nadu', bx + cw / 2, by + 200);
+      ctx.fillText('Phone: 04294 - 225585 | Email: info@nandhaengg.org | www.nandhaengg.org', bx + cw / 2, by + 225);
+
+      // Emergency Box
+      drawRoundRect(bx + 40, by + 260, cw - 80, 120, 18);
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.12)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#fca5a5';
+      ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('EMERGENCY & MEDICAL RECORD', bx + 65, by + 295);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(`Person: ${emergencyContactName || 'Department HOD / College Emergency Desk'}`, bx + 65, by + 325);
+      ctx.fillText(`Phone: ${emergencyContactPhone || phoneNumber || '+91 04294 225585'} | Blood: ${effectiveBlood}`, bx + 65, by + 355);
+
+      // Institutional Instructions
+      ctx.fillStyle = '#fde047';
+      ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('INSTITUTIONAL INSTRUCTIONS:', bx + 40, by + 430);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('• This card is institutional property and strictly non-transferable.', bx + 45, by + 465);
+      ctx.fillText('• 25 Years of Institutional Excellence (1999 - 2025).', bx + 45, by + 495);
+      ctx.fillText('• Loss must be reported immediately to College Office / IT Admin.', bx + 45, by + 525);
+      ctx.fillText('• If found, kindly deposit at Campus Security Gate or Principal\'s Office.', bx + 45, by + 555);
+
+      // Cryptographic Seal & Verification
+      drawRoundRect(bx + 40, by + 680, cw - 80, 140, 20);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#6ee7b7';
+      ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('CRYPTOGRAPHIC SEAL & DIGITAL AUDIT TRAIL', bx + 65, by + 720);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '13px monospace';
+      ctx.fillText(`HASH: SHA256-${institutionalId.toLowerCase()}-verified`, bx + 65, by + 750);
+      ctx.fillText('ISSUED BY: Nandha Engineering College Autonomous Cell', bx + 65, by + 780);
+
+      drawRoundRect(bx + cw - 180, by + 700, 100, 100, 14);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 11px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('VERIFIED', bx + cw - 130, by + 745);
+      ctx.fillText('SMART QR', bx + cw - 130, by + 765);
+
+      // Export to Blob
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          throw new Error('Canvas toBlob conversion failed');
+        }
+        const filename = `Nandha_PVC_ID_Card_${institutionalId}.png`;
+        await downloadManager.downloadBlob(blob, filename, 'image/png');
+        notify.success(
+          'ID Card Saved to Device!',
+          `Saved as ${filename} in your Downloads folder. Ready for PVC plastic card printing.`,
+          { category: 'ADMIN' }
+        );
+      }, 'image/png');
+    } catch (err: any) {
+      console.error('ID Card image generation failed:', err);
+      notify.error('Save Failed', err?.message || 'Could not save ID Card image.', { category: 'ADMIN' });
+    } finally {
+      setIsSavingCard(false);
+    }
+  };
+
+  // Share ID Card details or image
+  const handleShareIdCard = async () => {
+    try {
+      const title = `Nandha Engineering College PVC ID Badge - ${fullName || user?.username}`;
+      const text = `Institutional ID: ${institutionalId} | Role: ${rawRole} | Nandha Engineering College (Autonomous)`;
+      if (Capacitor.isNativePlatform()) {
+        const { Share } = await import('@capacitor/share');
+        await Share.share({
+          title,
+          text,
+          dialogTitle: 'Share ID Card'
+        });
+      } else if (navigator.share) {
+        await navigator.share({
+          title,
+          text,
+          url: window.location.href
+        });
+      } else {
+        await navigator.clipboard.writeText(`${title}\n${text}`);
+        notify.success('ID Card details copied to clipboard!', '', { category: 'ADMIN' });
+      }
+    } catch (err) {
+      console.warn('Share cancelled or not supported:', err);
+    }
+  };
+
   // Dedicated High-Resolution PVC ID Card Print Dispatcher
   const handlePrintIdCard = () => {
+    // If on native mobile APK, ALWAYS open the responsive in-app ID Card Modal so the app is never destroyed
+    if (isNativeMobile || Capacitor.isNativePlatform()) {
+      setShowIdCardModal(true);
+      return;
+    }
+
+    // On desktop, open print popup with sticky back & download navigation
     const printWindow = window.open('', '_blank', 'width=1000,height=800');
     if (!printWindow) {
-      notify.error('Please allow popups to print ID card', '', { category: 'ADMIN' });
+      // Fallback to modal if popup is blocked
+      setShowIdCardModal(true);
       return;
     }
 
@@ -1595,7 +1991,8 @@ export const AccountProfileSettings: React.FC = () => {
     .header-banner { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
     .header-banner h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: 0.5px; color: #1e1b4b; }
     .header-banner p { margin: 4px 0 0; font-size: 11px; font-weight: 700; color: #64748b; }
-    .print-toolbar { text-align: center; margin-bottom: 24px; }
+    .print-toolbar { text-align: center; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; gap: 12px; position: sticky; top: 12px; z-index: 999; }
+    .btn-back { background: #334155; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
     .btn-print { background: #4f46e5; color: white; border: none; padding: 12px 28px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
     .cards-container { display: flex; gap: 36px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
     .pvc-frame { width: 340px; height: 520px; border-radius: 20px; position: relative; overflow: hidden; color: white; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); display: flex; flex-direction: column; justify-content: space-between; page-break-inside: avoid; border: 2px solid #f59e0b; background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 55%, #020617 100%); }
@@ -1635,6 +2032,7 @@ export const AccountProfileSettings: React.FC = () => {
 </head>
 <body>
   <div class="print-toolbar">
+    <button class="btn-back" onclick="if(window.history.length > 1){window.history.back()}else{window.close()}">← Back to Profile</button>
     <button class="btn-print" onclick="window.print()">Print High-Resolution PVC ID Card</button>
   </div>
   <div class="header-banner">
@@ -2100,7 +2498,7 @@ export const AccountProfileSettings: React.FC = () => {
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm1-4h.01M12 12h.01" /></svg>
         Print / Save as PDF
       </button>
-      <button id="btnCloseReport" type="button" class="btn-close" onclick="window.close()">&#10005; Close</button>
+      <button id="btnCloseReport" type="button" class="btn-close" onclick="if(window.history.length > 1){window.history.back()}else{window.close()}">&#10005; Back / Close</button>
     </div>
   </div>
 
@@ -2240,6 +2638,14 @@ export const AccountProfileSettings: React.FC = () => {
   </script>
 </body>
 </html>`;
+
+    // On mobile APK, download report directly to avoid overwriting the WebView
+    if (isNativeMobile || Capacitor.isNativePlatform()) {
+      const blob = new Blob([reportHtml], { type: 'text/html' });
+      downloadManager.downloadBlob(blob, `NEC_Security_Audit_Report_${institutionalId}.html`, 'text/html');
+      notify.success('Security Report Saved', 'Report downloaded to your device Downloads folder.', { category: 'ADMIN' });
+      return;
+    }
 
     const printWin = window.open('', '_blank', 'width=1140,height=880,scrollbars=yes,resizable=yes');
     if (printWin) {
@@ -4458,6 +4864,17 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                 <button
                   type="button"
+                  disabled={isSavingCard}
+                  onClick={handleDownloadIdCardPng}
+                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
+                  title="Save high-resolution PVC ID badge directly to phone Downloads"
+                >
+                  {isSavingCard ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                  <span>Save ID Card</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={handleExportVCard}
                   className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
                   title="Download vCard file for mobile phonebook"
@@ -4470,10 +4887,10 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   type="button"
                   onClick={handlePrintIdCard}
                   className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
-                  title="Print high-resolution PVC ID badge"
+                  title="Preview, print, or save high-resolution PVC ID badge"
                 >
                   <Printer className="w-3.5 h-3.5" />
-                  <span>Print ID</span>
+                  <span>Preview &amp; Print</span>
                 </button>
               </div>
             </div>
@@ -5494,6 +5911,345 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Clear Notes</span>
               </button>
+            </div>
+          </div>
+        </GlobalModalBackdrop>
+      )}
+
+      {/* ========================================================================= */}
+      {/* HIGH-RESOLUTION IN-APP PVC ID BADGE MODAL (Mobile APK & Web Responsive) */}
+      {/* ========================================================================= */}
+      {showIdCardModal && (
+        <GlobalModalBackdrop
+          isOpen={showIdCardModal}
+          onClose={() => setShowIdCardModal(false)}
+          className="flex items-center justify-center p-2 sm:p-4 z-[9999]"
+        >
+          <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-slate-900 border-2 border-amber-500/50 rounded-3xl shadow-2xl text-white overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Sticky Header with Back Button */}
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 bg-slate-950/80 border-b border-white/10 backdrop-blur-md shrink-0 gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => setShowIdCardModal(false)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs inline-flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 border border-white/15"
+                  title="Back to Settings"
+                >
+                  <ArrowLeft className="w-4 h-4 text-amber-400" />
+                  <span className="hidden xs:inline">Back</span>
+                </button>
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-sm font-black text-white truncate flex items-center gap-1.5">
+                    <span>Institutional PVC ID Badge</span>
+                    <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      Silver Jubilee
+                    </span>
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-mono truncate">
+                    {institutionalId} • Nandha Engineering College
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons in Header */}
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <button
+                  type="button"
+                  disabled={isSavingCard}
+                  onClick={handleDownloadIdCardPng}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
+                  title="Save high-resolution PNG to phone Downloads"
+                >
+                  {isSavingCard ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                  <span className="hidden sm:inline">Save Image</span>
+                  <span className="sm:hidden">Save</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleShareIdCard}
+                  className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
+                  title="Share ID Card details"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Share</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isNativeMobile || Capacitor.isNativePlatform()) {
+                      handleDownloadIdCardPng();
+                    } else {
+                      window.print();
+                    }
+                  }}
+                  className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5 active:scale-95 border border-white/10"
+                  title="Print PVC Card"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Print</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowIdCardModal(false)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Close modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Segmented View Switcher */}
+            <div className="flex items-center justify-between px-4 sm:px-6 py-2 bg-slate-950/40 border-b border-white/10 shrink-0">
+              <span className="text-[11px] font-bold text-slate-400">Card View:</span>
+              <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setModalCardSide('both')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    modalCardSide === 'both' ? 'bg-amber-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Both Sides
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalCardSide('front')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    modalCardSide === 'front' ? 'bg-amber-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Front
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalCardSide('back')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    modalCardSide === 'back' ? 'bg-amber-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body: Scrollable ID Card Cards */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+              <div className={`flex flex-col ${modalCardSide === 'both' ? 'lg:flex-row' : ''} gap-6 justify-center items-center`}>
+
+                {/* FRONT SIDE */}
+                {(modalCardSide === 'front' || modalCardSide === 'both') && (
+                  <div className="w-full max-w-[340px] rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 p-5 text-white shadow-2xl border-2 border-amber-500 relative overflow-hidden space-y-4">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-white/20 pb-3 relative z-10 gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <img
+                          src="/nandha_emblem.png"
+                          alt="NEC"
+                          className="w-10 h-10 object-contain shrink-0"
+                          onError={(e: any) => { e.target.style.display = 'none'; }}
+                        />
+                        <div className="min-w-0">
+                          <h4 className="text-[12px] font-black uppercase tracking-wider text-white truncate">
+                            NANDHA ENGINEERING COLLEGE
+                          </h4>
+                          <p className="text-[9px] text-amber-200/90 font-bold truncate">
+                            (Autonomous) • Anna University, Chennai
+                          </p>
+                          <p className="text-[8px] text-slate-300 font-semibold truncate">
+                            NBA &amp; NAAC A+ Grade Accredited
+                          </p>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 shrink-0">
+                        {rawRole.includes('admin') ? 'ADMIN' : rawRole.includes('student') ? 'STUDENT' : 'FACULTY'}
+                      </span>
+                    </div>
+
+                    {/* Chip & Contactless */}
+                    <div className="flex items-center justify-between relative z-10 pt-0.5">
+                      <div className="w-9 h-7 rounded bg-gradient-to-br from-amber-300 via-amber-400 to-yellow-500 border border-amber-200/70 p-1 relative overflow-hidden shadow-sm">
+                        <div className="w-full h-px bg-amber-700/40 my-1" />
+                        <div className="w-full h-px bg-amber-700/40" />
+                      </div>
+                      <span className="text-[10px] font-mono text-amber-300 bg-white/10 px-2 py-0.5 rounded-full">
+                        RFID • NFC
+                      </span>
+                    </div>
+
+                    {/* Profile Row */}
+                    <div className="flex items-center gap-3 relative z-10">
+                      <div className="w-20 h-22 rounded-2xl border-2 border-amber-400/80 bg-black overflow-hidden flex items-center justify-center shrink-0 shadow-lg">
+                        {profilePhoto ? (
+                          <img src={profilePhoto} alt="Photo" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-3xl font-black text-white">{(fullName || user?.username || 'U').charAt(0).toUpperCase()}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <h3 className="text-sm font-black text-white truncate">
+                          {fullName || user?.username}
+                        </h3>
+                        <p className="text-xs font-bold text-amber-300 truncate">
+                          {designation || roleName}
+                        </p>
+                        <span className="inline-block px-2 py-0.5 rounded font-mono text-[10px] font-black bg-white/20 text-white border border-white/25 truncate">
+                          {institutionalId}
+                        </span>
+                        <p className="text-[9px] font-bold text-sky-200 truncate">
+                          {departmentName && departmentName !== 'INSTITUTIONAL' ? departmentName : 'Computer Science & Engineering'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Specs Grid */}
+                    <div className="grid grid-cols-2 gap-2 text-xs font-bold bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/15 relative z-10">
+                      <div>
+                        <span className="text-[8px] uppercase font-black text-slate-300 block">DOB (Verified)</span>
+                        <span className="font-mono text-white text-[11px]">{dateOfBirth || '17/01/2004'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[8px] uppercase font-black text-slate-300 block">Blood Group</span>
+                        <span className="text-rose-300 font-black text-[11px]">{bloodGroup || 'O+ (Positive)'}</span>
+                      </div>
+                      <div className="col-span-2 pt-1 border-t border-white/10 flex items-center justify-between">
+                        <div className="min-w-0 flex-1 pr-2">
+                          <span className="text-[8px] uppercase font-black text-slate-300 block">Office / Cabin</span>
+                          <span className="text-white text-[11px] truncate block">{officeLocation || 'Main Campus • Block B-204'}</span>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-[8px] uppercase font-black text-slate-300 block">Mobile</span>
+                          <span className="font-mono text-amber-300 text-[11px]">{phoneNumber || '+91 90420 20879'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Barcode */}
+                    <div className="pt-1 text-center relative z-10">
+                      <div className="h-5 w-full rounded bg-white/90 p-0.5 flex items-center justify-center">
+                        <div
+                          className="w-full h-3.5"
+                          style={{
+                            background: 'repeating-linear-gradient(to right, #000, #000 2px, transparent 2px, transparent 4px, #000 4px, #000 7px, transparent 7px, transparent 9px)'
+                          }}
+                        />
+                      </div>
+                      <div className="font-mono text-[8.5px] font-black tracking-widest text-slate-300 mt-1">
+                        *{institutionalId}*
+                      </div>
+                    </div>
+
+                    {/* Signature */}
+                    <div className="pt-2 border-t border-white/15 flex items-end justify-between text-[10px] relative z-10">
+                      <div>
+                        <span className="text-[8px] uppercase block text-slate-400">Valid Session 2025–26</span>
+                        <span className="text-[8px] font-black text-amber-300 block">25th Silver Jubilee</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-serif italic font-black text-amber-300 text-xs">
+                          Dr. U. S. Ragupathy
+                        </div>
+                        <span className="text-[8px] uppercase block text-slate-200 font-extrabold">Principal • Authorized Signatory</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* BACK SIDE */}
+                {(modalCardSide === 'back' || modalCardSide === 'both') && (
+                  <div className="w-full max-w-[340px] rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-5 text-white shadow-2xl border-2 border-indigo-500 relative overflow-hidden space-y-3.5">
+                    {/* Magnetic Stripe */}
+                    <div className="-mx-5 -mt-5 h-8 bg-black border-b border-white/20 flex items-center justify-center">
+                      <span className="text-[8px] font-mono tracking-widest text-slate-500 uppercase">
+                        HI-CO MAGNETIC SECURITY STRIPE • 25TH YEAR
+                      </span>
+                    </div>
+
+                    {/* Address */}
+                    <div className="text-center space-y-0.5 border-b border-white/15 pb-2.5">
+                      <h5 className="text-[11px] font-black uppercase tracking-wide text-white">
+                        NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
+                      </h5>
+                      <p className="text-[8.5px] text-slate-300 font-medium">
+                        Approved by AICTE • Affiliated to Anna University, Chennai
+                      </p>
+                      <p className="text-[8px] text-slate-400">
+                        Erode - Perundurai Road, Vaikkaalmedu, Erode - 638 052, Tamil Nadu
+                      </p>
+                      <p className="text-[8px] text-amber-300 font-mono">
+                        Phone: 04294-225585 • Email: info@nandhaengg.org
+                      </p>
+                    </div>
+
+                    {/* Emergency Box */}
+                    <div className="bg-rose-950/40 border border-rose-500/40 rounded-xl p-2.5 text-[9.5px] space-y-0.5">
+                      <span className="text-[8.5px] font-black text-rose-300 uppercase tracking-wider block">
+                        Emergency &amp; Medical Record
+                      </span>
+                      <p className="text-slate-200">
+                        <strong className="text-white">Contact:</strong> {emergencyContactName || 'Department HOD / Security Desk'}
+                      </p>
+                      <p className="text-slate-200">
+                        <strong className="text-white">Phone:</strong> {emergencyContactPhone || phoneNumber || '+91 04294 225585'}
+                      </p>
+                    </div>
+
+                    {/* QR Code and Cryptographic Seal */}
+                    <div className="flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-2xl p-2.5">
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <span className="text-[8px] font-black uppercase text-emerald-400 block tracking-wider">
+                          Cryptographic Seal
+                        </span>
+                        <p className="font-mono text-[8px] text-slate-200 break-all leading-tight">
+                          SHA256-{institutionalId.toLowerCase()}-verified-2026
+                        </p>
+                        <p className="text-[8px] text-slate-400">
+                          Official faculty digital ID verification record
+                        </p>
+                      </div>
+                      <div className="shrink-0 bg-white p-1 rounded-xl shadow-md">
+                        <DynamicQRCode data={qrVerificationPayload} size={64} />
+                      </div>
+                    </div>
+
+                    {/* Instructions */}
+                    <div className="pt-1 text-[7.5px] text-slate-400 space-y-0.5 border-t border-white/15">
+                      <p className="font-bold text-slate-300">• Property of Nandha Engineering College (Autonomous).</p>
+                      <p>• If found, return to Campus Security Gate or Principal's Office (04294-225585).</p>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </div>
+
+            {/* Modal Bottom Action Strip */}
+            <div className="px-4 sm:px-6 py-3 bg-slate-950 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+              <span className="text-[11px] font-medium text-slate-400 text-center sm:text-left">
+                PVC Standard: 300 DPI high-resolution format compliant with CR80 identity card printers.
+              </span>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={handleExportVCard}
+                  className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black transition-all shadow-xs cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-95"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>Save vCard</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={isSavingCard}
+                  onClick={handleDownloadIdCardPng}
+                  className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-all shadow-md shadow-emerald-600/30 cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
+                >
+                  {isSavingCard ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                  <span>Save High-Res Image (PNG)</span>
+                </button>
+              </div>
             </div>
           </div>
         </GlobalModalBackdrop>

@@ -8,6 +8,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { GlobalFilter } from './GlobalFilter';
+import { downloadManager } from '../services/download/downloadManager';
 
 const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
 const ALLOWED_EXTS = ['.pdf', '.jpg', '.jpeg', '.png'];
@@ -320,8 +321,16 @@ export const StaffVerificationSection: React.FC = () => {
     }
   };
 
-  const openDocument = (verificationId: number) => {
-    window.open(`/api/staff-verification/${verificationId}/document`, '_blank');
+  const openDocument = async (verificationId: number) => {
+    try {
+      await downloadManager.download({
+        endpoint: `/staff-verification/${verificationId}/document`,
+        filename: `Staff_Verification_Document_${verificationId}.pdf`,
+      });
+    } catch (err: any) {
+      console.error('Failed to download staff verification document:', err);
+      notify.error('Download Failed', err?.message || 'Could not retrieve staff verification document.');
+    }
   };
 
   if (loadingState) {

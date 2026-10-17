@@ -1139,11 +1139,6 @@ export const HRCandidateFinderPage: React.FC = () => {
 
   // Single Candidate Executive PDF Report Export
   const exportCandidateReportPDF = (c: Candidate, intel: any) => {
-    const win = window.open("", "_blank");
-    if (!win) {
-      alert("Please allow popups to export the candidate PDF report.");
-      return;
-    }
 
     const perfScore = intel?.performance?.score ?? intel?.performance_score ?? c.performance_score ?? 85;
     const interviewScore = intel?.performance?.interview_readiness ?? intel?.interview_readiness ?? c.interview_readiness ?? 80;
@@ -1297,12 +1292,32 @@ export const HRCandidateFinderPage: React.FC = () => {
             position: relative;
             box-sizing: border-box;
           }
+          .top-bar-nav {
+            position: sticky;
+            top: 0;
+            background: #0f172a;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            z-index: 9999;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            color: white;
+          }
           @media print {
+            .top-bar-nav { display: none !important; }
             body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
           }
         </style>
       </head>
       <body>
+        <div class="top-bar-nav">
+          <button onclick="if(window.history.length>1){window.history.back()}else{window.close()}" style="background:#334155;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-weight:bold;cursor:pointer;">← Back to App</button>
+          <span style="font-weight:800;font-size:12px;">Candidate Executive Report • ${c.name}</span>
+          <button onclick="window.print()" style="background:#4f46e5;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-weight:bold;cursor:pointer;">Print / Save as PDF</button>
+        </div>
         <div class="page-border">
         <div class="header">
           <div class="badge-ready">${readiness}</div>
@@ -1461,6 +1476,11 @@ export const HRCandidateFinderPage: React.FC = () => {
       </html>
     `;
 
+    const win = window.open("", "_blank");
+    if (!win) {
+      triggerDownload(new Blob([html], { type: 'text/html' }), `Candidate_Report_${c.name.replace(/\s+/g, "_")}.html`);
+      return;
+    }
     win.document.open();
     win.document.write(html);
     win.document.close();

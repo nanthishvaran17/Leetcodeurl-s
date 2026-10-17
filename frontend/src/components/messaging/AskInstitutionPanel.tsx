@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../../services/api';
+import { downloadManager } from '../../services/download/downloadManager';
 import { CheckCircle2, ShieldAlert, ArrowRight, RefreshCw, Send, AlertTriangle, Bot, User, ArrowLeft, History, Plus, Trash2, X, Maximize2, Minimize2, MoreVertical, Share2, Archive, MessageSquare, Check, Copy, ChevronDown } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -845,8 +846,12 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
                                             reportParams.set(key, String(value));
                                           }
                                         });
-                                        const downloadUrl = `${api.defaults.baseURL || '/api'}/reports/export-pdf?${reportParams.toString()}`;
-                                        window.open(downloadUrl, '_blank');
+                                        downloadManager.download({
+                                          endpoint: '/reports/export-pdf',
+                                          filename: `Institution_Report_${Date.now()}.pdf`,
+                                          params: act.params || {},
+                                          mimeType: 'application/pdf',
+                                        });
                                       } else {
                                         onActionTrigger && onActionTrigger(act);
                                       }

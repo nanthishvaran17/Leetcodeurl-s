@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { getApiUrl } from '../config/apiConfig';
+import { downloadManager } from '../services/download/downloadManager';
 
 // --- Interfaces ---
 
@@ -1285,7 +1286,18 @@ export const AIAssistantWidget: React.FC<AIAssistantWidgetProps> = ({
                                     </div>
                                     <button
                                       type="button"
-                                      onClick={() => window.open(msg.downloadUrl || '/api/reports/export/summary-pdf', '_blank')}
+                                      onClick={async () => {
+                                        try {
+                                          const endpoint = msg.downloadUrl || '/reports/export/summary-pdf';
+                                          await downloadManager.download({
+                                            endpoint,
+                                            filename: 'NEC_Institutional_Summary_Report.pdf',
+                                            mimeType: 'application/pdf',
+                                          });
+                                        } catch (e) {
+                                          console.error('Failed to download report PDF:', e);
+                                        }
+                                      }}
                                       className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-sm transition-all cursor-pointer"
                                     >
                                       Download PDF
