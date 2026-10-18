@@ -6,14 +6,248 @@ from typing import Dict, Any, List
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
+import re
+import httpx
 from backend.models import (
     Student, Department, StudentStatSnapshot, StudentContestSnapshot,
     ContestParticipation, ReportCache, WeeklyStudentProgress, LeetCodeProfileStats,
-    LeetCodeLanguageStats, LeetCodeTopicStats, LeetCodeProblemStats
+    LeetCodeLanguageStats, LeetCodeTopicStats, LeetCodeProblemStats,
+    WeeklySession, WeeklyPublicResult, WeeklyVirtualResult
 )
 
 # Global Semaphore to prevent OOM on Render. Allows max 2 concurrent report generation jobs.
 REPORT_GENERATION_SEMAPHORE = threading.Semaphore(2)
+
+def _fetch_and_bridge_contest_history(db: Session, student: Student, contest_rating: float) -> List[Dict[str, Any]]:
+    """
+    Automated Contest Intelligence Pipeline for Student Reports.
+    1. On-demand sync from official LeetCode GraphQL userContestRankingHistory.
+    2. Sync recent/active weekly contest session (e.g. today's Weekly Contest 524, 525...).
+    3. Bridges ContestParticipation + WeeklyPublicResult + WeeklyVirtualResult.
+    4. Seamlessly chains rating_before and rating_after.
+    5. Excludes future contest dates (> today).
+    6. Returns chronologically sorted list (newest first) with no missing contests.
+    """
+    # 1. On-demand LeetCode GraphQL sync
+    if student.username:
+        try:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                "Content-Type": "application/json",
+                "Referer": "https://leetcode.com"
+            }
+            q = """query u($username: String!) {
+              userContestRankingHistory(username: $username) {
+                attended
+                problemsSolved
+                totalProblems
+                finishTimeInSeconds
+                rating
+                ranking
+                contest { title startTime }
+              }
+            }"""
+            with httpx.Client(timeout=4.0) as client:
+                resp = client.post(
+                    "https://leetcode.com/graphql",
+                    json={"query": q, "variables": {"username": student.username.strip()}},
+                    headers=headers
+                )
+                if resp.status_code == 200:
+                    hist = resp.json().get("data", {}).get("userContestRankingHistory") or []
+                    has_changes = False
+                    latest_attended = None
+                    for h in hist:
+                        if not h.get("attended"):
+                            continue
+                        latest_attended = h
+                        c_title = (h.get("contest") or {}).get("title") or ""
+                        if not c_title:
+                            continue
+                        start_ts = (h.get("contest") or {}).get("startTime")
+                        c_date = datetime.datetime.fromtimestamp(start_ts, datetime.timezone.utc).strftime("%Y-%m-%d") if start_ts else datetime.date.today().strftime("%Y-%m-%d")
+                        
+                        existing = db.query(ContestParticipation).filter(
+                            ContestParticipation.student_id == student.id,
+                            ContestParticipation.contest_name == c_title
+                        ).first()
+                        if not existing:
+                            existing = ContestParticipation(
+                                student_id=student.id,
+                                contest_name=c_title,
+                                participation_type="OFFICIAL"
+                            )
+                            db.add(existing)
+                            has_changes = True
+                        if existing.contest_date != c_date or existing.problems_solved != (h.get("problemsSolved") or 0):
+                            existing.contest_date = c_date
+                            existing.problems_solved = h.get("problemsSolved") or 0
+                            existing.total_problems = h.get("totalProblems") or 4
+                            existing.contest_rank = h.get("ranking")
+                            existing.contest_rating_after = h.get("rating")
+                            has_changes = True
+                    
+                    if latest_attended and student.stats:
+                        latest_r = latest_attended.get("rating")
+                        latest_rk = latest_attended.get("ranking")
+                        if latest_r and (student.stats.contest_rating is None or latest_r > student.stats.contest_rating):
+                            student.stats.contest_rating = latest_r
+                            has_changes = True
+                        if latest_rk and (student.stats.contest_global_ranking is None or latest_rk != student.stats.contest_global_ranking):
+                            student.stats.contest_global_ranking = latest_rk
+                            has_changes = True
+                            
+                    if has_changes:
+                        db.commit()
+        except Exception:
+            pass
+
+    # 2. Check latest weekly session and sync if pending
+    try:
+        from backend.services.auto_contest_sync_service import sync_student_contest_sync
+        latest_session = db.query(WeeklySession).filter(
+            WeeklySession.contest_id.ilike("%weekly-contest%")
+        ).order_by(WeeklySession.id.desc()).first()
+        if latest_session:
+            wpr = db.query(WeeklyPublicResult).filter(
+                WeeklyPublicResult.session_id == latest_session.id,
+                WeeklyPublicResult.student_id == student.id
+            ).first()
+            if not wpr or wpr.participation_status == "PENDING":
+                sync_student_contest_sync(student, db, latest_session.id)
+    except Exception:
+        pass
+
+    # 3. Query all ContestParticipation records
+    raw_participations = db.query(ContestParticipation).filter(
+        ContestParticipation.student_id == student.id
+    ).order_by(ContestParticipation.contest_date.asc(), ContestParticipation.id.asc()).all()
+
+    today_str = datetime.date.today().strftime("%Y-%m-%d")
+    contest_dict: Dict[str, Dict[str, Any]] = {}
+
+    for cp in raw_participations:
+        c_name = cp.contest_name or "Weekly Contest"
+        key = c_name.strip().lower()
+        c_date = str(cp.contest_date) if cp.contest_date else today_str
+        if c_date > today_str:
+            continue
+        contest_dict[key] = {
+            "contest_name": c_name,
+            "contest_date": c_date,
+            "rank": cp.contest_rank if cp.contest_rank else "N/A",
+            "solved": cp.problems_solved if cp.problems_solved is not None else 0,
+            "score": f"{cp.problems_solved or 0} / {cp.total_problems or 4}",
+            "rating_before": round(cp.contest_rating_before, 1) if cp.contest_rating_before else None,
+            "rating_after": round(cp.contest_rating_after, 1) if cp.contest_rating_after else None,
+            "participation_type": cp.participation_type or "OFFICIAL"
+        }
+
+    # 4. Bridge WeeklyPublicResults
+    pub_results = db.query(WeeklyPublicResult, WeeklySession).join(
+        WeeklySession, WeeklyPublicResult.session_id == WeeklySession.id
+    ).filter(
+        WeeklyPublicResult.student_id == student.id,
+        (WeeklyPublicResult.participation_status.in_(["PUBLIC_ATTENDED", "ATTENDED"])) | (WeeklyPublicResult.total_contest_solved > 0)
+    ).all()
+
+    for pr, ws in pub_results:
+        w_name = ws.contest_name or f"Weekly Contest {ws.session_number}"
+        key = w_name.strip().lower()
+        d_str = ws.session_date or ""
+        parsed_date = today_str
+        if "." in d_str:
+            parts = d_str.split(".")
+            if len(parts) == 3:
+                parsed_date = f"{parts[2]}-{parts[1]}-{parts[0]}"
+        elif "-" in d_str:
+            parsed_date = d_str
+
+        if parsed_date > today_str:
+            continue
+
+        if key not in contest_dict:
+            contest_dict[key] = {
+                "contest_name": w_name,
+                "contest_date": parsed_date,
+                "rank": f"#{pr.contest_rank:,}" if (pr.contest_rank and pr.contest_rank > 0) else "Official Attended",
+                "solved": pr.total_contest_solved or 0,
+                "score": f"{pr.total_contest_solved or 0} / 4",
+                "rating_before": None,
+                "rating_after": round(pr.contest_rating, 1) if pr.contest_rating else None,
+                "participation_type": "OFFICIAL"
+            }
+
+    # 5. Bridge WeeklyVirtualResults
+    virt_results = db.query(WeeklyVirtualResult, WeeklySession).join(
+        WeeklySession, WeeklyVirtualResult.session_id == WeeklySession.id
+    ).filter(
+        WeeklyVirtualResult.student_id == student.id,
+        (WeeklyVirtualResult.participation_status.in_(["VIRTUAL_ATTENDED", "VIRTUAL_ATTENDED_VERIFIED"])) | (WeeklyVirtualResult.total_contest_solved > 0)
+    ).all()
+
+    for vr, ws in virt_results:
+        w_name = ws.contest_name or f"Weekly Contest {ws.session_number}"
+        key = w_name.strip().lower()
+        d_str = ws.session_date or ""
+        parsed_date = today_str
+        if "." in d_str:
+            parts = d_str.split(".")
+            if len(parts) == 3:
+                parsed_date = f"{parts[2]}-{parts[1]}-{parts[0]}"
+        elif "-" in d_str:
+            parsed_date = d_str
+
+        if parsed_date > today_str:
+            continue
+
+        if key not in contest_dict:
+            contest_dict[key] = {
+                "contest_name": w_name,
+                "contest_date": parsed_date,
+                "rank": f"#{vr.contest_rank:,}" if (vr.contest_rank and vr.contest_rank > 0) else "Virtual Attended",
+                "solved": vr.total_contest_solved or 0,
+                "score": f"{vr.total_contest_solved or 0} / 4",
+                "rating_before": None,
+                "rating_after": round(vr.contest_rating, 1) if vr.contest_rating else None,
+                "participation_type": "VIRTUAL"
+            }
+
+    # 6. Sort and Chain
+    def _sort_key(item):
+        d = item.get("contest_date") or "1970-01-01"
+        match = re.search(r"(\d+)", item.get("contest_name") or "")
+        c_num = int(match.group(1)) if match else 0
+        return (d, c_num)
+
+    all_sorted = sorted(contest_dict.values(), key=_sort_key)
+
+    prev_rating_after = None
+    chrono_history = []
+    for item in all_sorted:
+        r_after = item.get("rating_after")
+        r_before = item.get("rating_before")
+        if (r_before is None or r_before == 0) and prev_rating_after is not None:
+            r_before = prev_rating_after
+
+        if r_after is None and prev_rating_after is not None:
+            r_after = prev_rating_after
+
+        chrono_history.append({
+            "contest_name": item["contest_name"],
+            "contest_date": item["contest_date"],
+            "rank": item["rank"],
+            "solved": item["solved"],
+            "score": item["score"],
+            "rating_before": f"{r_before:,.1f}" if (r_before is not None and r_before > 0) else "—",
+            "rating_after": f"{r_after:,.1f}" if (r_after is not None and r_after > 0) else "—",
+            "participation_type": item["participation_type"]
+        })
+
+        if r_after is not None and r_after > 0:
+            prev_rating_after = r_after
+
+    return list(reversed(chrono_history))
 
 def generate_student_report(
     db: Session,
@@ -138,43 +372,8 @@ def generate_student_report(
         active_days = (rt_stats.active_days if rt_stats and rt_stats.active_days 
                        else max(10, min(180, total_solved // 15)))
         
-        # Fetch Contest Participations ordered chronologically to compute rating_before chain
-        raw_participations = db.query(ContestParticipation).filter(
-            ContestParticipation.student_id == student_id
-        ).order_by(ContestParticipation.contest_date.asc(), ContestParticipation.id.asc()).all()
-
-        if not raw_participations:
-            raw_participations = db.query(ContestParticipation).filter(
-                ContestParticipation.student_id == student_id
-            ).order_by(ContestParticipation.id.asc()).all()
-
-        chrono_history = []
-        prev_rating_after = None
-
-        for cp in raw_participations:
-            r_after = round(cp.contest_rating_after, 1) if cp.contest_rating_after else None  # type: ignore
-            r_before = round(cp.contest_rating_before, 1) if cp.contest_rating_before else None  # type: ignore
-
-            # Fallback rating_before to previous contest's rating_after
-            if (r_before is None or r_before == 0) and prev_rating_after is not None:
-                r_before = prev_rating_after
-
-            chrono_history.append({
-                "contest_name": cp.contest_name or "Weekly Contest",
-                "contest_date": cp.contest_date or datetime.date.today().strftime("%Y-%m-%d"),
-                "rank": cp.contest_rank if cp.contest_rank else "N/A",
-                "solved": cp.problems_solved if cp.problems_solved is not None else 0,
-                "score": f"{cp.problems_solved or 0} / {cp.total_problems or 4}",
-                "rating_before": f"{r_before:,.1f}" if (r_before is not None and r_before > 0) else "—",
-                "rating_after": f"{r_after:,.1f}" if (r_after is not None and r_after > 0) else "—",
-                "participation_type": cp.participation_type or "OFFICIAL"
-            })
-
-            if r_after is not None and r_after > 0:
-                prev_rating_after = r_after
-
-        # For report display, newest contests come first
-        contest_history = list(reversed(chrono_history))
+        # Fetch Contest Participations with automated LeetCode GraphQL sync & weekly session bridge
+        contest_history = _fetch_and_bridge_contest_history(db, student, contest_rating)
 
         # Only add derived contest if valid contest_stats actually exists with non-zero solves
         if not contest_history and (contest_stats and contest_stats.contest_name and contest_stats.questions_solved > 0):

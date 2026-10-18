@@ -22,8 +22,9 @@ import { startSafeHeartbeat } from './services/heartbeat'
 // Safe Cold-Start Mitigation & Health Heartbeat
 // Deferred: run after first render to avoid competing with FCP/LCP resources
 if (typeof window !== 'undefined') {
-  if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(() => startSafeHeartbeat(), { timeout: 3000 });
+  const win = window as any;
+  if (win && typeof win['requestIdleCallback'] === 'function') {
+    win['requestIdleCallback'](() => startSafeHeartbeat(), { timeout: 3000 });
   } else {
     setTimeout(startSafeHeartbeat, 600);
   }

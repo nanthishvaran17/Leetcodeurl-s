@@ -25,6 +25,7 @@ import { PullToRefresh } from './components/PullToRefresh';
 
 const LandingPage = safeLazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
 import { LoginPage } from './pages/LoginPage';
+import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
 const AdminLoginPage = safeLazy(() => import('./pages/AdminLoginPage').then(m => ({ default: m.AdminLoginPage })));
 const CommandPalette = safeLazy(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
 const KeyboardShortcutsModal = safeLazy(() => import('./components/KeyboardShortcutsModal').then(m => ({ default: m.KeyboardShortcutsModal })));
@@ -53,7 +54,7 @@ function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ d
   );
 }
 
-export const preloadStudentProfilePage = () => {
+const preloadStudentProfilePage = () => {
   import('./pages/StudentProfilePage');
 };
 
@@ -78,7 +79,6 @@ const StaffDashboardView = safeLazy(() => import('./pages/StaffDashboardView').t
 const GrowthIntelligencePage = safeLazy(() => import('./pages/GrowthIntelligencePage').then(m => ({ default: m.GrowthIntelligencePage })));
 const MessagesPage = safeLazy(() => import('./pages/MessagesPage').then(m => ({ default: m.MessagesPage })));
 const SystemHealthPage = safeLazy(() => import('./pages/SystemHealthPage').then(m => ({ default: m.SystemHealthPage })));
-const CertificateVerificationPage = safeLazy(() => import('./pages/CertificateVerificationPage').then(m => ({ default: m.CertificateVerificationPage })));
 const AIControlCenterPage = safeLazy(() => import('./pages/AIControlCenterPage').then(m => ({ default: m.AIControlCenterPage })));
 const HODCommandCenter = safeLazy(() => import('./pages/HODCommandCenter').then(m => ({ default: m.HODCommandCenter })));
 const FacultyActionCenter = safeLazy(() => import('./pages/FacultyActionCenter').then(m => ({ default: m.FacultyActionCenter })));
