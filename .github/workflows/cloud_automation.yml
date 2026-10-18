@@ -39,25 +39,40 @@ jobs:
       - name: Wait for Backend Warm-up
         run: |
           echo "Warming up backend before triggering Sunday automation..."
-          for i in 1 2 3; do
+          WARM=0
+          for i in 1 2 3 4 5 6 7 8; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "${{ secrets.BACKEND_URL }}/health" || echo "000")
+            if [ "$STATUS" != "200" ]; then
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "${{ secrets.BACKEND_URL }}/api/health" || echo "000")
+            fi
             echo "Attempt $i: status $STATUS"
             if [ "$STATUS" = "200" ]; then
-              echo "Backend warm and ready."
+              echo "✅ Backend warm and ready."
+              WARM=1
               break
             fi
-            sleep 15
+            sleep 12
           done
+          if [ "$WARM" -eq 0 ]; then
+            echo "⚠️ Backend still warming up (status $STATUS), attempting dispatch with retries..."
+          fi
 
       - name: Trigger Sunday Session Pipeline
         run: |
           echo "Triggering Sunday automation pipeline..."
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 30 \
-            -X POST "${{ secrets.BACKEND_URL }}/api/cron/sunday-session" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            -H "Content-Type: application/json")
-          echo "Response status: $RESPONSE"
+          RESPONSE="000"
+          for i in 1 2 3 4; do
+            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+              --max-time 60 \
+              -X POST "${{ secrets.BACKEND_URL }}/api/cron/sunday-session" \
+              -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+              -H "Content-Type: application/json" || echo "000")
+            echo "Attempt $i response status: $RESPONSE"
+            if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "202" ] || [ "$RESPONSE" = "409" ]; then
+              break
+            fi
+            sleep 15
+          done
           if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "202" ]; then
             echo "✅ Sunday automation triggered successfully!"
           elif [ "$RESPONSE" = "409" ]; then

@@ -652,6 +652,7 @@ export const ChatWindow: React.FC<Props> = ({
               isMe = msg.senderId === currentUserId;
             }
 
+            const canEditOrDeleteEveryone = (isMe || msg.senderId === currentUserId || !isFromOther) && !msg.isDeletedEveryone;
             const isMenuOpen = activeMenuMessageId === msg.messageId;
             const prevMsg = idx > 0 ? messages[idx - 1] : null;
             let prevIsMe = false;
@@ -711,6 +712,11 @@ export const ChatWindow: React.FC<Props> = ({
                 >
                   {/* Message Bubble Container */}
                   <div
+                    onClick={(e) => {
+                      const target = e.target as HTMLElement;
+                      if (target.closest('a') || target.closest('video') || target.closest('audio') || target.closest('button')) return;
+                      setActiveMenuMessageId(isMenuOpen ? null : msg.messageId);
+                    }}
                     onContextMenu={(e) => {
                       e.preventDefault();
                       setActiveMenuMessageId(isMenuOpen ? null : msg.messageId);
@@ -718,7 +724,7 @@ export const ChatWindow: React.FC<Props> = ({
                     onTouchStart={() => {
                       touchTimerRef.current = setTimeout(() => {
                         setActiveMenuMessageId(msg.messageId);
-                      }, 500);
+                      }, 400);
                     }}
                     onTouchEnd={() => {
                       if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
@@ -727,7 +733,7 @@ export const ChatWindow: React.FC<Props> = ({
                       if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
                     }}
                     className={clsx(
-                      "px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-[1.2rem] text-[14px] sm:text-[14.5px] break-words relative shadow-xs leading-relaxed",
+                      "px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-[1.2rem] text-[14px] sm:text-[14.5px] break-words relative shadow-xs leading-relaxed cursor-pointer select-text",
                       isMe
                         ? (activeWallpaper.bubbleMeClass || "bg-brand-600 text-white") + " rounded-br-xs"
                         : (activeWallpaper.bubbleOtherClass || "bg-white dark:bg-[#151b23] text-slate-900 dark:text-slate-100 border border-slate-200/80 dark:border-slate-800") + " rounded-bl-xs"
@@ -737,7 +743,10 @@ export const ChatWindow: React.FC<Props> = ({
                     {/* Quoted Parent Reply Box */}
                     {msg.replyToMessage && (
                       <div
-                        onClick={() => scrollToMessageId(msg.replyToMessage!.messageId)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          scrollToMessageId(msg.replyToMessage!.messageId);
+                        }}
                         className={clsx(
                           "mb-2 p-2 rounded-lg text-xs border-l-4 cursor-pointer transition-opacity hover:opacity-90 flex items-start gap-2",
                           isMe
@@ -782,42 +791,43 @@ export const ChatWindow: React.FC<Props> = ({
                       </div>
                     )}
 
-                    {/* Message Body Content */}
-                    {msg.isDeletedEveryone ? (
-                      <div className="italic opacity-70 text-xs flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                        <Trash2 className="w-3.5 h-3.5 opacity-70 shrink-0" />
-                        <span>This message was deleted</span>
-                      </div>
-                    ) : (
-                      <div className="leading-relaxed">
-                        {msg.content}
-                      </div>
-                    )}
-
-                    {/* Action Trigger Chevron / Dots */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveMenuMessageId(isMenuOpen ? null : msg.messageId);
-                      }}
-                      className={clsx(
-                        "absolute top-2 p-1 rounded-md cursor-pointer transition-all z-10",
-                        isMe
-                          ? "right-full mr-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-white/90 dark:bg-navy-900/90 shadow-xs"
-                          : "left-full ml-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-white/90 dark:bg-navy-900/90 shadow-xs",
-                        "opacity-75 sm:opacity-0 sm:group-hover:opacity-100"
+                    {/* Message Body Content + Inline Options Chevron */}
+                    <div className="flex items-start justify-between gap-2">
+                      {msg.isDeletedEveryone ? (
+                        <div className="italic opacity-70 text-xs flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                          <Trash2 className="w-3.5 h-3.5 opacity-70 shrink-0" />
+                          <span>This message was deleted</span>
+                        </div>
+                      ) : (
+                        <div className="leading-relaxed flex-1">
+                          {msg.content}
+                        </div>
                       )}
-                      title="Message options (Edit, Delete, Reply)"
-                    >
-                      <MoreVertical className="w-3.5 h-3.5" />
-                    </button>
+
+                      {/* Dropdown Chevron directly inside the bubble */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMenuMessageId(isMenuOpen ? null : msg.messageId);
+                        }}
+                        className={clsx(
+                          "p-0.5 rounded-full cursor-pointer transition-all shrink-0 ml-1 mt-0.5",
+                          isMe
+                            ? "text-white/70 hover:text-white hover:bg-black/20"
+                            : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700/60"
+                        )}
+                        title="Options (Edit, Delete, Reply)"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Transparent Backdrop to close on click outside */}
                   {isMenuOpen && (
                     <div 
-                      className="fixed inset-0 z-20" 
+                      className="fixed inset-0 z-30" 
                       onClick={(e) => {
                         e.stopPropagation();
                         setActiveMenuMessageId(null);
@@ -830,7 +840,7 @@ export const ChatWindow: React.FC<Props> = ({
                     <div 
                       onClick={(e) => e.stopPropagation()}
                       className={clsx(
-                        "absolute top-8 z-30 w-52 bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-100",
+                        "absolute top-8 z-40 w-56 bg-white dark:bg-[#151D2A] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-2 space-y-1 animate-in fade-in zoom-in-95 duration-100",
                         isMe ? "right-0" : "left-0"
                       )}
                     >
@@ -868,7 +878,7 @@ export const ChatWindow: React.FC<Props> = ({
                       </button>
 
                       {/* Edit (For my messages) */}
-                      {isMe && !msg.isDeletedEveryone && (
+                      {canEditOrDeleteEveryone && (
                         <button
                           type="button"
                           onClick={() => {
@@ -931,7 +941,7 @@ export const ChatWindow: React.FC<Props> = ({
                       </button>
 
                       {/* Delete for everyone */}
-                      {isMe && !msg.isDeletedEveryone && (
+                      {canEditOrDeleteEveryone && (
                         <button
                           type="button"
                           onClick={() => {
@@ -993,6 +1003,19 @@ export const ChatWindow: React.FC<Props> = ({
                         )}
                       </span>
                     )}
+
+                    {/* Quick Options Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveMenuMessageId(isMenuOpen ? null : msg.messageId);
+                      }}
+                      className="p-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-md transition-colors cursor-pointer ml-0.5"
+                      title="Message Options (Edit, Delete, Reply)"
+                    >
+                      <MoreVertical className="w-3 h-3" />
+                    </button>
                   </div>
                 </div>
               </React.Fragment>
