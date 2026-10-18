@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import million from 'million/compiler'
 import path from 'path'
+import fs from 'fs'
 
+const rootDir = fs.realpathSync?.native ? fs.realpathSync.native(__dirname) : __dirname
 
 export default defineConfig({
   plugins: [
@@ -10,9 +11,9 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      'react': path.resolve(__dirname, './node_modules/react'),
-      'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
+      '@': path.resolve(rootDir, './src'),
+      'react': path.resolve(rootDir, './node_modules/react'),
+      'react-dom': path.resolve(rootDir, './node_modules/react-dom'),
     },
     dedupe: ['react', 'react-dom'],
   },
