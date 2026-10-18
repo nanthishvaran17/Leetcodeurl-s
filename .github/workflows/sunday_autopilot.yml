@@ -66,5 +66,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Execute Sunday Automation Runner
+        env:
+          AUTOPILOT_PHASE: ${{ github.event.inputs.phase || 'all' }}
         run: |
-          python scripts/sunday_automation_complete.py
+          python -m backend.sunday_runner --phase "${{ github.event.inputs.phase || 'all' }}"

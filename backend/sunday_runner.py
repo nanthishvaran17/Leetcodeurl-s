@@ -67,6 +67,56 @@ def execute_full_sunday_pipeline() -> Dict[str, Any]:
     finally:
         db.close()
 
+def execute_phase(phase: str = "all") -> Dict[str, Any]:
+    """
+    Executes a specific phase or the full Sunday Autopilot pipeline.
+    Supported phases:
+      - 'all'
+      - 'preflight_0755'
+      - 'baseline_0800'
+      - 'finalization_0930'
+      - 'reports_0935'
+      - 'virtual_sync_2200'
+    """
+    phase_key = (phase or "all").strip().lower()
+    if phase_key == "all":
+        return execute_full_sunday_pipeline()
+
+    logger.info(f"[SUNDAY_RUNNER] Initiating targeted phase execution: '{phase_key}'...")
+    db = SessionLocal()
+    try:
+        if phase_key in ("preflight_0755", "preflight", "phase_1"):
+            res = sunday_autopilot.phase_1_preflight_0755(db)
+            return {"success": True, "phase": phase_key, "result": res}
+        elif phase_key in ("baseline_0800", "baseline", "phase_2"):
+            res = asyncio.run(sunday_autopilot.phase_2_baseline_0800(db=db)) if asyncio.iscoroutinefunction(sunday_autopilot.phase_2_baseline_0800) else sunday_autopilot.phase_2_baseline_0800(db=db)
+            return {"success": True, "phase": phase_key, "result": res}
+        elif phase_key in ("finalization_0930", "finalization", "phase_4"):
+            res = asyncio.run(sunday_autopilot.phase_4_finalization_0930(db=db)) if asyncio.iscoroutinefunction(sunday_autopilot.phase_4_finalization_0930) else sunday_autopilot.phase_4_finalization_0930(db=db)
+            return {"success": True, "phase": phase_key, "result": res}
+        elif phase_key in ("reports_0935", "reports", "phase_5"):
+            res = sunday_autopilot.phase_5_report_generation_0935(db)
+            return {"success": True, "phase": phase_key, "result": res}
+        elif phase_key in ("virtual_sync_2200", "virtual_sync", "phase_7"):
+            res = sunday_autopilot.phase_7_virtual_sync_2200(db)
+            return {"success": True, "phase": phase_key, "result": res}
+        else:
+            logger.warning(f"[SUNDAY_RUNNER] Unrecognized phase '{phase_key}', falling back to full pipeline.")
+            return execute_full_sunday_pipeline()
+    except Exception as exc:
+        logger.error(f"[SUNDAY_RUNNER] Error executing phase '{phase_key}': {exc}", exc_info=True)
+        return {"success": False, "phase": phase_key, "error": str(exc)}
+    finally:
+        db.close()
+
 if __name__ == "__main__":
-    res = execute_full_sunday_pipeline()
+    import argparse
+    parser = argparse.ArgumentParser(description="Sunday Autopilot Pipeline Execution Runner")
+    parser.add_argument("--phase", default=os.getenv("AUTOPILOT_PHASE", "all"), help="Phase to execute (all, preflight_0755, baseline_0800, finalization_0930, reports_0935, virtual_sync_2200)")
+    args = parser.parse_args()
+    
+    print(f"🚀 Sunday Autopilot Runner starting with phase: {args.phase}")
+    res = execute_phase(args.phase)
     print("Execution result:", res)
+    if not res.get("success", False):
+        sys.exit(1)
