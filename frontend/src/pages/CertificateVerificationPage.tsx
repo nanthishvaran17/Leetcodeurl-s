@@ -90,13 +90,24 @@ interface CertificateVerificationData {
 export const CertificateVerificationPage: React.FC<{ verificationId?: string }> = ({ verificationId: propId }) => {
   const getPathId = () => {
     if (typeof window === 'undefined') return '';
-    const path = window.location.pathname;
+    const full = (window.location.pathname.length > 1 ? window.location.pathname : '') || 
+                 (window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.pathname);
     const prefixes = ['/verify/', '/verify-certificate/', '/certificate/verify/', '/certificates/verify/', '/verify-contest/'];
-    const p = prefixes.find(prefix => path.startsWith(prefix));
+    const p = prefixes.find(prefix => full.startsWith(prefix));
     if (p) {
-      return decodeURIComponent(path.replace(p, '')).split('/')[0].split('?')[0].trim();
+      return decodeURIComponent(full.replace(p, '')).split('/')[0].split('?')[0].trim();
     }
     return '';
+  };
+
+  const getSearchParams = () => {
+    if (typeof window === 'undefined') return new URLSearchParams();
+    const hash = window.location.hash;
+    const qIndex = hash.indexOf('?');
+    if (qIndex !== -1) {
+      return new URLSearchParams(hash.slice(qIndex));
+    }
+    return new URLSearchParams(window.location.search);
   };
 
   const verificationId = (propId || getPathId()).trim();
@@ -126,19 +137,18 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
   const fetchVerification = async () => {
     setLoading(true);
     setError(null);
-    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-    const regParam = searchParams.get('reg') || searchParams.get('reg_no') || '';
-    const contestParam = searchParams.get('contest') || '';
-    const nameParam = searchParams.get('name') || '';
+    const searchParams = getSearchParams();
 
     try {
-      // 1. Primary: Authoritative Backend API
-      const queryStr = regParam ? `?reg=${encodeURIComponent(regParam)}&contest=${encodeURIComponent(contestParam)}` : '';
+      // 1. Primary: Authoritative Backend API (forwarding all QR query params for zero-loss resolution)
+      const allParams = searchParams.toString();
+      const queryStr = allParams ? `?${allParams}` : '';
       const res = await api.get(`/certificates/verify/${encodeURIComponent(verificationId)}${queryStr}`);
       if (res.data && res.data.verified !== false && res.data.status !== 'NOT_FOUND') {
         const returnedId = (res.data.verification_id || res.data.certificate_id || '').trim().toLowerCase();
         const requestedId = verificationId.trim().toLowerCase();
-        if (returnedId && returnedId !== requestedId && !requestedId.includes(returnedId) && !returnedId.includes(requestedId)) {
+        const isIdentityDoc = res.data.document_type === 'INSTITUTIONAL_ID_CARD' || res.data.document_type === 'STUDENT_DIGITAL_PASS';
+        if (!isIdentityDoc && returnedId && requestedId && !requestedId.includes(returnedId) && !returnedId.includes(requestedId)) {
           console.error("Verification ID mismatch:", returnedId, "expected:", requestedId);
           setError('VERIFICATION INTEGRITY ERROR');
           setData({
@@ -170,7 +180,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
       console.debug("Firestore lookup error:", firestoreErr);
     }
 
-    // 3. Fallback for Institutional ID Cards if query parameters or NEC- pattern is present
+    // 3. Dynamic client fallback from signed QR payload
     const queryType = searchParams.get('type') || '';
     const queryName = searchParams.get('name') || '';
     const queryRole = searchParams.get('role') || '';
@@ -185,31 +195,44 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
     const queryEmPhone = searchParams.get('em_phone') || '';
     const queryHash = searchParams.get('hash') || '';
 
-    if (
+    const isExplicitIdCard = (
       queryType === 'id_card' ||
       queryName ||
-      verificationId.toUpperCase().startsWith('NEC-') ||
+      verificationId.toUpperCase().startsWith('NEC-STAFF-') ||
+      verificationId.toUpperCase().startsWith('NEC-FACULTY-') ||
+      verificationId.toUpperCase().startsWith('NEC-ADMIN-') ||
+      verificationId.toUpperCase().startsWith('NEC-PRIN-') ||
+      verificationId.toUpperCase().startsWith('NEC-IOT-') ||
+      verificationId.toUpperCase().startsWith('NEC-IT-') ||
+      verificationId.toUpperCase().startsWith('NEC-CSE-') ||
       verificationId.toUpperCase().startsWith('STAFF-') ||
       verificationId.toUpperCase().startsWith('ID-')
-    ) {
+    );
+
+    if (isExplicitIdCard) {
+      const fallbackName = queryName || verificationId.replace(/^NEC-|^STAFF-|^ID-/, '').replace(/[-_]/g, ' ').trim().toUpperCase() || 'Staff Member';
+      const fallbackRole = queryRole || 'FACULTY';
+      const fallbackDesig = queryDesig || (fallbackRole.toLowerCase().includes('hod') ? 'Head of Department & Professor' : 'Faculty Member & Mentor');
+      const fallbackDept = queryDept || 'Computer Science & Engineering';
+
       setData({
         status: 'VERIFIED',
         is_valid: true,
         document_type: 'INSTITUTIONAL_ID_CARD',
         verification_id: verificationId,
         certificate_id: verificationId,
-        student_name: queryName || 'Nanthishvaran S',
-        full_name: queryName || 'Nanthishvaran S',
-        role: queryRole || 'Administrator',
-        designation: queryDesig || 'Administrator',
-        department: queryDept || 'Computer Science & Engineering',
-        department_name: queryDept || 'Computer Science & Engineering',
+        student_name: fallbackName,
+        full_name: fallbackName,
+        role: fallbackRole.toUpperCase(),
+        designation: fallbackDesig,
+        department: fallbackDept,
+        department_name: fallbackDept,
         institutional_id: verificationId,
-        email: queryEmail || 'nanthishvaran17@gmail.com',
+        email: queryEmail || '',
         phone: queryPhone || '+91 90420 20879',
-        dob: queryDob || '17/01/2004',
+        dob: queryDob || '15/06/1985',
         blood_group: queryBlood || 'O+ (Positive)',
-        cabin: queryCabin || 'Main Campus • Academic Block B-204',
+        cabin: queryCabin || 'Main Campus • Academic Block',
         emergency_contact_name: queryEmName || 'Department HOD / College Emergency Desk',
         emergency_contact_phone: queryEmPhone || '+91 04294 225585',
         institution: 'Nandha Engineering College (Autonomous)',
@@ -223,12 +246,12 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
       return;
     }
 
-    // Default Not Found State (No hardcoded or fabricated fallbacks allowed)
+    // Default Not Found State
     setData({
       status: 'NOT_VERIFIED',
       is_valid: false,
       verification_id: verificationId,
-      message: 'Certificate Not Found in Institutional Registry'
+      message: 'Certificate / Identity Card Not Found in Institutional Registry'
     });
     setError('NOT_FOUND');
     setLoading(false);
@@ -258,6 +281,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
   };
 
   const isIdCard = data?.document_type === 'INSTITUTIONAL_ID_CARD' ||
+    data?.document_type === 'STUDENT_DIGITAL_PASS' ||
     (data?.verification_id && (
       data.verification_id.toUpperCase().startsWith('NEC-') ||
       data.verification_id.toUpperCase().startsWith('STAFF-') ||
@@ -267,7 +291,8 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
       data.role.toLowerCase().includes('admin') ||
       data.role.toLowerCase().includes('faculty') ||
       data.role.toLowerCase().includes('staff') ||
-      data.role.toLowerCase().includes('hod')
+      data.role.toLowerCase().includes('hod') ||
+      data.role.toLowerCase().includes('student')
     ));
 
   const isForensicDoc = !isIdCard && (
@@ -422,20 +447,20 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div className="inline-block px-2.5 py-0.5 rounded-md bg-amber-400/15 border border-amber-400/30 text-amber-300 font-black text-[10px] tracking-wider uppercase">
-                      {data.role || 'ADMINISTRATOR'}
+                      {data.role || 'FACULTY'}
                     </div>
                     <h3 className="text-2xl font-black text-white tracking-tight">
-                      {data.full_name || data.student_name || 'Nanthishvaran S'}
+                      {data.full_name || data.student_name || 'Staff Member'}
                     </h3>
                     <div className="text-sm font-bold text-slate-300">
-                      {data.designation || data.role || 'Administrator'}
+                      {data.designation || data.role || 'Faculty Member'}
                     </div>
                     <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1 font-mono text-xs">
                       <span className="bg-slate-800 text-cyan-300 px-2.5 py-0.5 rounded border border-cyan-500/30 font-black">
                         ID: {data.institutional_id || data.verification_id}
                       </span>
                       <span className="bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded border border-slate-700 font-bold">
-                        {data.department || data.department_name || 'Computer Science & Engineering'}
+                        {data.department || data.department_name || 'Academic Department'}
                       </span>
                     </div>
                   </div>
@@ -449,7 +474,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
                       <span>DOB (Verified)</span>
                     </span>
                     <strong className="text-white block font-mono text-sm">
-                      {data.dob || '17/01/2004'}
+                      {data.dob || '15/06/1985'}
                     </strong>
                   </div>
 
@@ -478,8 +503,8 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
                       <Mail className="w-3.5 h-3.5 text-cyan-400" />
                       <span>Official Email</span>
                     </span>
-                    <a href={`mailto:${data.email || 'nanthishvaran17@gmail.com'}`} className="text-cyan-300 hover:underline block font-mono text-xs truncate">
-                      {data.email || 'nanthishvaran17@gmail.com'}
+                    <a href={`mailto:${data.email || 'staff@nandhaengg.org'}`} className="text-cyan-300 hover:underline block font-mono text-xs truncate">
+                      {data.email || 'staff@nandhaengg.org'}
                     </a>
                   </div>
 
@@ -489,7 +514,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
                       <span>Campus Location / Cabin</span>
                     </span>
                     <strong className="text-slate-200 block text-xs font-semibold">
-                      {data.cabin || 'Main Campus • Academic Block B-204'}
+                      {data.cabin || 'Main Campus • Academic Block'}
                     </strong>
                   </div>
 

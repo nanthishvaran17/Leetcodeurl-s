@@ -39,9 +39,11 @@ jobs:
           python -c "
           from backend.migrate_db import run_db_migrations
           from backend.database import run_migrations
+          from backend.scripts.fix_all_pg_sequences import fix_all_sequences
           run_db_migrations()
           run_migrations()
-          print('✅ Database migrations successfully applied.')
+          fix_all_sequences()
+          print('✅ Database migrations and sequences successfully applied.')
           "
 
       - name: Execute Sync Worker

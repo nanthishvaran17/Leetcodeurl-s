@@ -141,8 +141,28 @@ const PageSkeleton = () => (
 );
 
 export const App: React.FC = () => {
-  // Direct Public Route Interceptors
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  // Direct Public Route Interceptors with reactive routing state
+  const [navLocation, setNavLocation] = useState(() => ({
+    pathname: typeof window !== 'undefined' ? window.location.pathname : '',
+    hash: typeof window !== 'undefined' ? window.location.hash : ''
+  }));
+
+  useEffect(() => {
+    const onLocationChange = () => {
+      setNavLocation({
+        pathname: window.location.pathname,
+        hash: window.location.hash
+      });
+    };
+    window.addEventListener('popstate', onLocationChange);
+    window.addEventListener('hashchange', onLocationChange);
+    return () => {
+      window.removeEventListener('popstate', onLocationChange);
+      window.removeEventListener('hashchange', onLocationChange);
+    };
+  }, []);
+
+  const pathname = navLocation.pathname;
   if (pathname === '/admin' || pathname === '/admin/') {
     return (
       <Suspense fallback={<PageSkeleton />}>
@@ -195,9 +215,17 @@ export const App: React.FC = () => {
   }
 
   const verifyPrefixes = ['/verify/', '/verify-certificate/', '/certificate/verify/', '/certificates/verify/', '/verify-contest/'];
-  const matchedPrefix = verifyPrefixes.find(p => pathname.startsWith(p));
+  const hashPath = navLocation.hash.startsWith('#/') ? navLocation.hash.slice(1) : '';
+  const effectivePath = pathname.length > 1 ? pathname : hashPath;
+  const matchedPrefix = verifyPrefixes.find(p => effectivePath.startsWith(p));
   if (matchedPrefix) {
-    const rawCode = pathname.replace(matchedPrefix, '');
+    // If loaded on Firebase Hosting (where there is no live Python backend or SQLite DB), redirect to authoritative production host
+    if (typeof window !== 'undefined' && window.location.hostname.includes('web.app')) {
+      const search = window.location.search || '';
+      window.location.replace(`http://13.53.231.6${effectivePath}${search}`);
+      return null;
+    }
+    const rawCode = effectivePath.replace(matchedPrefix, '');
     const certId = decodeURIComponent(rawCode).split('/')[0].split('?')[0].trim();
     return (
       <Suspense fallback={<PageSkeleton />}>

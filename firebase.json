@@ -1,0 +1,42 @@
+{
+  "hosting": {
+    "site": "leetcode-student-data",
+    "public": "frontend/dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "**/*.apk",
+      "**/*.exe"
+    ],
+    "redirects": [
+      {
+        "source": "/verify/:id*",
+        "destination": "http://13.53.231.6/verify/:id*",
+        "type": 302
+      },
+      {
+        "source": "/certificates/verify/:id*",
+        "destination": "http://13.53.231.6/verify/:id*",
+        "type": 302
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000, immutable"
+          }
+        ]
+      }
+    ]
+  }
+}

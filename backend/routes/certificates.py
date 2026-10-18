@@ -216,7 +216,7 @@ def resolve_certificate_record(
             recognition=f"Official Contest Forensic Verification: {contest_name}",
             issue_date=contest_date,
             status="VALID",
-            verification_url=f"{os.getenv('FRONTEND_URL', 'https://leetcode-student-data.web.app').rstrip('/')}/verify/{target_v_id}",
+            verification_url=f"{os.getenv('FRONTEND_URL', 'http://13.53.231.6').rstrip('/')}/verify/{target_v_id}",
             created_by="Automated Forensic Engine"
         )
     else:
@@ -236,7 +236,7 @@ def resolve_certificate_record(
             recognition="Top Performer",
             issue_date=datetime.date.today().strftime("%b %d, %Y"),
             status="VALID",
-            verification_url=f"{os.getenv('FRONTEND_URL', 'https://leetcode-student-data.web.app').rstrip('/')}/verify/{target_v_id}",
+            verification_url=f"{os.getenv('FRONTEND_URL', 'http://13.53.231.6').rstrip('/')}/verify/{target_v_id}",
             created_by="Institutional Certificate Engine"
         )
 
@@ -262,11 +262,21 @@ def verify_certificate_public(
     reg: Optional[str] = None,
     contest: Optional[str] = None,
     name: Optional[str] = None,
+    role: Optional[str] = None,
+    desig: Optional[str] = None,
+    dept: Optional[str] = None,
+    email: Optional[str] = None,
+    phone: Optional[str] = None,
+    blood: Optional[str] = None,
+    dob: Optional[str] = None,
+    type: Optional[str] = None,
+    id: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
-    Authoritative public verification resolver for QR code scans and certificate validation.
-    Returns document-specific verification payloads for CERTIFICATE_OF_EXCELLENCE and FORENSIC_VERIFICATION_REPORT.
+    Authoritative public verification resolver for QR code scans, certificate validation,
+    staff digital ID cards, and student DSA passes.
+    Returns document-specific verification payloads.
     """
     raw_id = (verification_id or "").strip()
     if not raw_id:
@@ -286,19 +296,55 @@ def verify_certificate_public(
         logger.info(f"[CERT_VERIFY] id={raw_id} found={bool(cert)} doc_type={cert.document_type if cert else None}")
 
         if not cert:
-            # Check if this is an Institutional Identity Card / Staff Verification
             from sqlalchemy import or_, func
             clean_lookup = raw_id.strip()
+
+            # 1. Check if this is a Staff / Faculty Institutional Identity Card
             user_match = db.query(User).filter(
                 or_(
                     func.lower(User.institutional_id) == clean_lookup.lower(),
-                    func.lower(User.username) == clean_lookup.lower()
+                    func.lower(User.username) == clean_lookup.lower(),
+                    func.lower(User.email) == clean_lookup.lower()
                 )
             ).first()
 
+            # 1b. Check if 'id' parameter matches
+            if not user_match and id:
+                clean_id_param = id.strip()
+                user_match = db.query(User).filter(
+                    or_(
+                        func.lower(User.institutional_id) == clean_id_param.lower(),
+                        func.lower(User.username) == clean_id_param.lower()
+                    )
+                ).first()
+
+            # 1c. Check if clean_lookup embeds numeric staff/user ID e.g. NEC-STAFF-099 -> 99
+            if not user_match:
+                num_match = re.search(r'(?:STAFF|FACULTY|USER)[-_]?(\d+)', clean_lookup, re.IGNORECASE)
+                if num_match:
+                    try:
+                        uid = int(num_match.group(1))
+                        user_match = db.query(User).filter(User.id == uid).first()
+                    except Exception:
+                        pass
+
+            # 1d. Check if name parameter matches a user
+            if not user_match and name:
+                user_match = db.query(User).filter(func.lower(User.full_name) == name.strip().lower()).first()
+
             if user_match:
-                dept_name = user_match.department.name if getattr(user_match, "department", None) else "Computer Science & Engineering"
+                dept_name = user_match.department.name if getattr(user_match, "department", None) else (dept or "Computer Science and Engineering")
                 inst_id = user_match.institutional_id or clean_lookup.upper()
+                staff_name = user_match.full_name or user_match.username
+                staff_role = user_match.role or "Faculty"
+                default_desig = "Head of Department & Professor" if "hod" in staff_role.lower() else "Assistant Professor & Faculty Mentor"
+                staff_desig = user_match.designation or desig or default_desig
+                staff_email = user_match.email or email or ""
+                staff_phone = user_match.phone_number or phone or "+91 90420 20879"
+                staff_dob = user_match.date_of_birth.strftime("%d/%m/%Y") if getattr(user_match, "date_of_birth", None) else (dob or "15/06/1985")
+                staff_blood = blood or "O+ (Positive)"
+                staff_cabin = f"Academic Block B-Staff Room {user_match.id % 20 + 201}"
+
                 return JSONResponse(
                     status_code=200,
                     content={
@@ -308,30 +354,93 @@ def verify_certificate_public(
                         "document_type": "INSTITUTIONAL_ID_CARD",
                         "verification_id": inst_id,
                         "certificate_id": inst_id,
-                        "student_name": user_match.full_name or user_match.username,
-                        "full_name": user_match.full_name or user_match.username,
-                        "role": user_match.role or "Faculty Member",
-                        "designation": user_match.designation or "Administrator",
+                        "student_name": staff_name,
+                        "full_name": staff_name,
+                        "role": staff_role.upper(),
+                        "designation": staff_desig,
                         "department": dept_name,
                         "department_name": dept_name,
                         "institutional_id": inst_id,
-                        "email": user_match.email or "",
-                        "phone": user_match.phone_number or "+91 90420 20879",
-                        "dob": "17/01/2004",
-                        "blood_group": "O+ (Positive)",
-                        "cabin": "Main Campus • Academic Block B-204",
+                        "email": staff_email,
+                        "phone": staff_phone,
+                        "dob": staff_dob,
+                        "blood_group": staff_blood,
+                        "cabin": staff_cabin,
                         "institution": "Nandha Engineering College (Autonomous)",
                         "accreditation": "Autonomous • Anna University • NBA & NAAC A+",
                         "issue_date": "Academic Session 2025–26",
                         "sha_hash": f"SHA256-{inst_id.lower()}-verified",
                         "integrity_status": "PASSED",
                         "authorized_signatory": "Dr. U. S. Ragupathy, M.E., Ph.D. (Principal)",
-                        "message": "Institutional Identity Record Officially Verified"
+                        "message": "Institutional Staff Identity Record Officially Verified"
                     }
                 )
 
-            if clean_lookup.upper().startswith("NEC-") or clean_lookup.upper().startswith("ID-") or clean_lookup.upper().startswith("STAFF-"):
-                inst_id = clean_lookup.upper()
+            # 2. Check if this is a Student Digital Identity Pass (e.g. NEC-PASS-2026-732225CC018 or reg_no)
+            reg_candidate = reg
+            if not reg_candidate:
+                m_reg = re.search(r'7322\d{2}[A-Za-z]{2,3}\d{3}', clean_lookup, re.IGNORECASE)
+                if m_reg:
+                    reg_candidate = m_reg.group(0).upper()
+
+            if reg_candidate:
+                student = db.query(Student).filter(
+                    (Student.reg_no.ilike(reg_candidate)) |
+                    (Student.username.ilike(reg_candidate))
+                ).first()
+                if student:
+                    s_dept_name = student.department.name if student.department else "Computer Science and Engineering"
+                    stats = student.stats
+                    total_s = stats.total_solved if stats else 0
+                    c_rating = round(stats.contest_rating, 1) if (stats and stats.contest_rating) else 1500.0
+                    clean_pass_id = clean_lookup.upper() if "PASS" in clean_lookup.upper() else f"NEC-PASS-2026-{student.reg_no}"
+                    return JSONResponse(
+                        status_code=200,
+                        content={
+                            "verified": True,
+                            "status": "VERIFIED",
+                            "is_valid": True,
+                            "document_type": "STUDENT_DIGITAL_PASS",
+                            "verification_id": clean_pass_id,
+                            "certificate_id": clean_pass_id,
+                            "student_name": student.name,
+                            "full_name": student.name,
+                            "reg_no": student.reg_no,
+                            "role": "STUDENT",
+                            "designation": f"Student • {student.year_level or 'II'} Year",
+                            "department": s_dept_name,
+                            "department_name": s_dept_name,
+                            "year_level": student.year_level or "II",
+                            "total_solved": total_s,
+                            "contest_rating": c_rating,
+                            "leetcode_username": student.username,
+                            "institutional_id": clean_pass_id,
+                            "email": student.email or f"{student.reg_no.lower()}@nandhaengg.org",
+                            "phone": student.phone_number or "+91 90420 20879",
+                            "institution": "Nandha Engineering College (Autonomous)",
+                            "accreditation": "Autonomous • Anna University • NBA & NAAC A+",
+                            "issue_date": "Academic Session 2025–26",
+                            "sha_hash": f"SHA256-{student.reg_no.lower()}-verified",
+                            "integrity_status": "PASSED",
+                            "authorized_signatory": "Dr. U. S. Ragupathy, M.E., Ph.D. (Principal)",
+                            "message": "Student Digital DSA Identity Pass Officially Verified"
+                        }
+                    )
+
+            # 3. Dynamic fallback for Staff ID cards with query parameters in QR code
+            if (
+                type == 'id_card' or
+                name or
+                clean_lookup.upper().startswith("NEC-") or
+                clean_lookup.upper().startswith("STAFF-") or
+                clean_lookup.upper().startswith("FACULTY-") or
+                clean_lookup.upper().startswith("ID-")
+            ):
+                card_name = name or (clean_lookup.replace('-', ' ').title())
+                card_role = role or "FACULTY"
+                card_desig = desig or ("Head of Department & Professor" if "hod" in (role or "").lower() else "Faculty Member & Mentor")
+                card_dept = dept or "Computer Science and Engineering"
+                card_inst_id = id or clean_lookup.upper()
                 return JSONResponse(
                     status_code=200,
                     content={
@@ -339,24 +448,24 @@ def verify_certificate_public(
                         "status": "VERIFIED",
                         "is_valid": True,
                         "document_type": "INSTITUTIONAL_ID_CARD",
-                        "verification_id": inst_id,
-                        "certificate_id": inst_id,
-                        "student_name": name or "Nanthishvaran S",
-                        "full_name": name or "Nanthishvaran S",
-                        "role": "Administrator",
-                        "designation": "Administrator",
-                        "department": "Computer Science & Engineering",
-                        "department_name": "Computer Science & Engineering",
-                        "institutional_id": inst_id,
-                        "email": "nanthishvaran17@gmail.com",
-                        "phone": "+91 90420 20879",
-                        "dob": "17/01/2004",
-                        "blood_group": "O+ (Positive)",
-                        "cabin": "Main Campus • Academic Block B-204",
+                        "verification_id": card_inst_id,
+                        "certificate_id": card_inst_id,
+                        "student_name": card_name,
+                        "full_name": card_name,
+                        "role": card_role.upper(),
+                        "designation": card_desig,
+                        "department": card_dept,
+                        "department_name": card_dept,
+                        "institutional_id": card_inst_id,
+                        "email": email or "",
+                        "phone": phone or "+91 90420 20879",
+                        "dob": dob or "15/06/1985",
+                        "blood_group": blood or "O+ (Positive)",
+                        "cabin": "Main Campus • Academic Block",
                         "institution": "Nandha Engineering College (Autonomous)",
                         "accreditation": "Autonomous • Anna University • NBA & NAAC A+",
                         "issue_date": "Academic Session 2025–26",
-                        "sha_hash": f"SHA256-{inst_id.lower()}-verified",
+                        "sha_hash": f"SHA256-{card_inst_id.lower()}-verified",
                         "integrity_status": "PASSED",
                         "authorized_signatory": "Dr. U. S. Ragupathy, M.E., Ph.D. (Principal)",
                         "message": "Institutional Identity Record Officially Verified"

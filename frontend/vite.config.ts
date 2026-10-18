@@ -16,6 +16,10 @@ export default defineConfig({
   server: {
     host: true,
     port: 3000,
+    fs: {
+      strict: false,
+      allow: ['..', 'F:/', 'E:/']
+    },
     headers: {
       'Permissions-Policy': 'publickey-credentials-create=*, publickey-credentials-get=*'
     },

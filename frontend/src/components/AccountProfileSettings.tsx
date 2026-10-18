@@ -1481,10 +1481,13 @@ export const AccountProfileSettings: React.FC = () => {
       role: rawRole.includes('admin') ? 'ADMINISTRATOR' : rawRole.includes('student') ? 'STUDENT' : 'FACULTY',
       desig: designation || roleName || 'Faculty',
       dept: departmentName && departmentName !== 'INSTITUTIONAL' ? departmentName : 'Computer Science & Engineering',
+      email: user?.email || '',
+      phone: phoneNumber || (user as any)?.phone_number || '',
+      dob: dateOfBirth || '',
       blood: bloodGroup || 'O+ (Positive)'
     });
     return `${origin}/verify/${encodeURIComponent(institutionalId)}?${params.toString()}`;
-  }, [institutionalId, fullName, user?.username, rawRole, designation, roleName, departmentName, bloodGroup]);
+  }, [institutionalId, fullName, user?.username, user?.email, (user as any)?.phone_number, phoneNumber, dateOfBirth, rawRole, designation, roleName, departmentName, bloodGroup]);
 
 
 

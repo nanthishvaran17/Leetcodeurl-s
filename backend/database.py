@@ -189,7 +189,7 @@ if "postgresql" in db_url or "postgres" in db_url:
             "interfaceerror"
         ))
 
-        if is_conn_error or isinstance(sa_exc, (_SAOperationalError, _SADBAPIError)):
+        if is_conn_error or isinstance(sa_exc, _SAOperationalError) or getattr(exception_context, 'is_disconnect', False):
             from backend.logger import logger as _logger
             conn = exception_context.connection
             exception_context.is_disconnect = True
@@ -1574,6 +1574,75 @@ def run_migrations():
                 print("[DB Migration] PostgreSQL / Supabase performance indexes ensured.")
         except Exception as _pge:
             print(f"[DB Migration] PostgreSQL index note: {_pge}")
+
+        # Ensure all PostgreSQL auto-increment sequences are aligned with MAX(id)
+        if "postgresql" in db_url or "postgres" in db_url:
+            try:
+                with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as pg_conn:
+                    try:
+                        pg_conn.execute(sqlalchemy.text("""
+                            DO $$
+                            DECLARE
+                                rec RECORD;
+                                max_id BIGINT;
+                                seq_name TEXT;
+                            BEGIN
+                                FOR rec IN 
+                                    SELECT 
+                                        tc.table_name, 
+                                        kcu.column_name
+                                    FROM information_schema.table_constraints tc
+                                    JOIN information_schema.key_column_usage kcu 
+                                        ON tc.constraint_name = kcu.constraint_name
+                                        AND tc.table_schema = kcu.table_schema
+                                    WHERE tc.constraint_type = 'PRIMARY KEY'
+                                      AND tc.table_schema = 'public'
+                                LOOP
+                                    BEGIN
+                                        seq_name := pg_get_serial_sequence(quote_ident(rec.table_name), rec.column_name);
+                                        IF seq_name IS NOT NULL THEN
+                                            EXECUTE format('SELECT COALESCE(MAX(%I), 0) FROM %I', rec.column_name, rec.table_name) INTO max_id;
+                                            IF max_id > 0 THEN
+                                                EXECUTE format('SELECT setval(%L, %s, true)', seq_name, max_id);
+                                            ELSE
+                                                EXECUTE format('SELECT setval(%L, 1, false)', seq_name);
+                                            END IF;
+                                        END IF;
+                                    EXCEPTION WHEN OTHERS THEN
+                                        NULL;
+                                    END;
+                                END LOOP;
+                            END $$;
+                        """))
+                    except Exception:
+                        pass
+
+                    explicit_seq_tables = [
+                        "departments", "students", "users", "weekly_sessions", "student_contest_participations",
+                        "lc_topic_stats", "lc_language_stats", "student_stat_snapshots", "student_badges",
+                        "weekly_public_results", "weekly_virtual_results", "weekly_student_progress",
+                        "official_weekly_snapshots", "scheduled_job_executions", "faculty_action_audit_logs",
+                        "faculty_student_assignments", "public_contest_sync_audits", "email_otp_records",
+                        "email_dispatch_logs", "verification_notifications", "weekly_verification_records",
+                        "weekly_report_audits", "conversations", "messages", "sync_jobs", "sync_job_items",
+                        "staff_alerts", "staff_follow_ups", "student_weekly_targets", "report_cache",
+                        "certificate_records", "admin_sessions", "lc_activity", "lc_submissions",
+                        "lc_contest_rating_history", "lc_problem_stats", "leetcode_profile_stats"
+                    ]
+                    for seq_t in explicit_seq_tables:
+                        try:
+                            pg_conn.execute(sqlalchemy.text(f"""
+                                SELECT setval(
+                                    pg_get_serial_sequence('"{seq_t}"', 'id'),
+                                    GREATEST(COALESCE((SELECT MAX(id) FROM "{seq_t}"), 1), 1),
+                                    COALESCE((SELECT MAX(id) FROM "{seq_t}"), 0) > 0
+                                );
+                            """))
+                        except Exception:
+                            pass
+                print("[DB Migration] PostgreSQL primary key sequences verified & synchronized.")
+            except Exception as _seq_err:
+                print(f"[DB Migration] Sequence sync note: {_seq_err}")
 
 # Migrations are deferred to FastAPI lifespan in main.py to prevent blocking port binding.
 if __name__ == "__main__":

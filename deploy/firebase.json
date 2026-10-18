@@ -5,7 +5,21 @@
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "**/*.apk",
+      "**/*.exe"
+    ],
+    "redirects": [
+      {
+        "source": "/verify/:id*",
+        "destination": "http://13.53.231.6/verify/:id*",
+        "type": 302
+      },
+      {
+        "source": "/certificates/verify/:id*",
+        "destination": "http://13.53.231.6/verify/:id*",
+        "type": 302
+      }
     ],
     "rewrites": [
       {

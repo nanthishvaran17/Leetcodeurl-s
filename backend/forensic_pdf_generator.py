@@ -396,7 +396,7 @@ def generate_forensic_audit_pdf(
 
     # 7. Institutional Signatures & QR Code
     qr = qrcode.QRCode(box_size=2, border=1)
-    frontend_url = os.getenv("FRONTEND_URL", "https://leetcode-student-data.web.app").rstrip("/")
+    frontend_url = os.getenv("FRONTEND_URL", "http://13.53.231.6").rstrip("/")
     qr.add_data(f"{frontend_url}/verify/{trace_id}")
     qr.make(fit=True)
     qr_img = qr.make_image(fill_color="#0F172A", back_color="white")
