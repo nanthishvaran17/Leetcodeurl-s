@@ -110,13 +110,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <div className="flex flex-col justify-center min-w-0">
                   <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                    <span className="font-extrabold text-[12px] xs:text-[13.5px] leading-tight sm:text-[15.5px] sm:leading-tight tracking-tight text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors whitespace-nowrap truncate font-display flex items-center gap-1.5">
+                    <span className="font-extrabold text-[12px] xs:text-[13.5px] leading-tight sm:text-[15.5px] sm:leading-tight tracking-tight text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors whitespace-nowrap truncate font-display">
                       NANDHA INTELLIGENCE
-                      <span className="inline-block sm:hidden w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" title="AI System Active"></span>
-                    </span>
-                    <span className="hidden lg:inline-flex items-center gap-1.5 px-2 py-0.5 text-[9px] font-mono font-bold tracking-wider rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shadow-[0_0_10px_rgba(16,185,129,0.15)] flex-shrink-0">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      AI CORE ACTIVE
                     </span>
                     {(freshness?.total_students || menteesCount !== null) ? (
                       <span className="hidden sm:inline-flex px-2 py-0.5 text-[9px] font-bold rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/25 whitespace-nowrap flex-shrink-0 items-center tracking-wide shadow-xs">
