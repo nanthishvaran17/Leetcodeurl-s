@@ -120,6 +120,16 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     }
   };
 
+  // Pull-to-refresh listener: refresh global query data and re-render department students
+  useEffect(() => {
+    const handlePull = () => {
+      refreshAllData(true);
+      refetch();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, [refreshAllData, refetch]);
+
   const handleResetFilters = () => {
     setSelectedDept(defaultDeptId);
     setYearLevel('all');

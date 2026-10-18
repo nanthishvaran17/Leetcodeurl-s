@@ -210,6 +210,15 @@ export const GrowthIntelligencePage: React.FC = () => {
     return () => clearInterval(interval);
   }, [period, deptFilter, yearFilter]);
 
+  // Pull-to-refresh listener: reload growth metrics
+  useEffect(() => {
+    const handlePull = () => {
+      fetchGrowthData(false);
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, [period, deptFilter, yearFilter]);
+
   useEffect(() => {
     api.get('/growth/options')
       .then((response) => {

@@ -1049,6 +1049,13 @@ export const FacultyActionCenter: React.FC = () => {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // Pull-to-refresh listener: reload actions list and real-time KPIs
+  useEffect(() => {
+    const handlePull = () => { loadData(); };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, [loadData]);
+
   const applyKPIFilter = (key: string, type: 'priority' | 'status' | 'overdue' | 'escalated') => {
     const next = kpiFilter === key ? '' : key;
     setKpiFilter(next);

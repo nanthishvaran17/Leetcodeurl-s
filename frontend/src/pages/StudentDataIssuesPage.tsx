@@ -281,6 +281,16 @@ export const StudentDataIssuesPage: React.FC = () => {
     notify.success('Ledger Refreshed', 'Real-time student data issues updated.', { category: 'DATA ISSUES' });
   };
 
+  // Pull-to-refresh listener: reload summary metrics and student issues list
+  useEffect(() => {
+    const handlePull = () => {
+      fetchSummaryData();
+      fetchStudentsData();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, [selectedDept, selectedYear, selectedIssue, searchQuery]);
+
   // Copy canonical URL to clipboard
   const handleCopyUrl = (student: StudentIssue) => {
     if (!student.leetcode_url) return;

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { GlobalFilter } from '../components/GlobalFilter';
 import api from '../services/api';
+import { clearAllStudentCaches } from '../utils/rosterCache';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
@@ -242,6 +243,18 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   useEffect(() => {
     setServerPage(1);
   }, [filters.department, filters.academicYear, filters.searchQuery]);
+
+  // Pull-to-refresh listener: clear caches, invalidate React Query and refetch student roster
+  useEffect(() => {
+    const handlePull = () => {
+      clearAllStudentCaches();
+      queryClient.invalidateQueries({ queryKey: ['students-master'] });
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      refetchStudents();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, [queryClient, refetchStudents]);
 
 
   const { departments: ctxDepts = [] } = useDepartments();

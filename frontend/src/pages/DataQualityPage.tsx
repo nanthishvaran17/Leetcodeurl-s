@@ -97,6 +97,15 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
     fetchQualityData(false);
   }, [selectedDept, selectedYear]);
 
+  // Pull-to-refresh listener: re-run quality audit
+  useEffect(() => {
+    const handlePull = () => {
+      fetchQualityData(true);
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, [selectedDept, selectedYear]);
+
   const fetchQualityData = async (force: boolean = false) => {
     if (force) {
       setRefreshing(true);

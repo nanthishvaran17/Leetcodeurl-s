@@ -7,6 +7,10 @@ import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import type { StudentData } from './components/LeaderboardTable';
 import api, { logActivity, clearApiCache } from './services/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { clearAllStudentCaches } from './utils/rosterCache';
+import { clearContestCache } from './services/contestCache';
+import { useGlobalData } from './context/GlobalDataContext';
 import { getCachedSummary, saveCachedSummary } from './utils/rosterCache';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useAuth } from './context/AuthContext';
@@ -307,6 +311,8 @@ export const App: React.FC = () => {
       window.removeEventListener('touchstart', onUserInteract);
     };
   }, []);
+  const queryClient = useQueryClient();
+  const { refreshAllData } = useGlobalData();
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== 'undefined') {
       if (sessionStorage.getItem('admin_login_portal') === 'true' || localStorage.getItem('admin_login_portal') === 'true' || window.location.hash.includes('dev-studio')) {
@@ -681,14 +687,29 @@ export const App: React.FC = () => {
 
   const handleGlobalPullToRefresh = useCallback(async () => {
     try {
+      // 1. Purge all in-memory, session, and local storage caches
       clearApiCache();
-      await fetchSummary();
+      clearAllStudentCaches();
+      clearContestCache();
+
+      // 2. Fetch fresh global summary and trigger TanStack query refetches across all active views
+      await Promise.allSettled([
+        fetchSummary(),
+        refreshAllData ? refreshAllData(true) : Promise.resolve(),
+        queryClient.invalidateQueries(),
+        queryClient.refetchQueries({ type: 'active' }),
+      ]);
+
+      // 3. Dispatch targeted sync events to every active sub-page
       window.dispatchEvent(new CustomEvent('pull_to_refresh', { detail: { activeTab } }));
-      await new Promise(resolve => setTimeout(resolve, 800));
+      window.dispatchEvent(new CustomEvent('refresh_dashboard_summary'));
+      window.dispatchEvent(new CustomEvent('reload_active_tab_data', { detail: { activeTab } }));
+
+      await new Promise(resolve => setTimeout(resolve, 500));
     } catch (err) {
       console.warn('Global pull-to-refresh error:', err);
     }
-  }, [activeTab]);
+  }, [activeTab, fetchSummary, refreshAllData, queryClient]);
 
   // Intelligent Background Route & Data Pre-fetching on Idle (authenticated users only)
   useEffect(() => {

@@ -25,7 +25,8 @@ import {
   setCachedContestData, 
   fetchWithCacheDedupe, 
   prefetchContest, 
-  logContestTelemetry 
+  logContestTelemetry,
+  clearContestCache
 } from '../services/contestCache';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 
@@ -995,6 +996,19 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, debouncedSearchTerm, currentPage, pageSize]);
+
+  // Pull-to-refresh listener: clear contest caches and refetch live session telemetry & student matrix
+  useEffect(() => {
+    const handlePull = () => {
+      clearContestCache();
+      fetchInitialContestData();
+      if (selectedSessionId) {
+        fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, false);
+      }
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, [selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter]);
 
   // Auto-switch tab to live matrix view when contest is LIVE
   const isSessionLiveNow = currentSession?.status === 'LIVE';
