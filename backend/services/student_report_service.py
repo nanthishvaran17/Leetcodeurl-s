@@ -118,20 +118,43 @@ def _fetch_and_bridge_contest_history(db: Session, student: Student, contest_rat
     except Exception:
         pass
 
-    # 3. Query all ContestParticipation records
+    today_str = datetime.date.today().strftime("%Y-%m-%d")
+
+    def _get_exact_contest_date(c_name: str, given_date: Any = None) -> str:
+        m = re.search(r"weekly\s*contest\s*(\d+)", (c_name or "").lower())
+        if m:
+            c_num = int(m.group(1))
+            # Weekly Contest 524 anchor: 2026-10-18
+            ref_date = datetime.date(2026, 10, 18)
+            calc_date = ref_date + datetime.timedelta(weeks=(c_num - 524))
+            return calc_date.strftime("%Y-%m-%d")
+        if given_date and str(given_date).strip() not in ("", "—", "None"):
+            d_str = str(given_date).strip()
+            if "." in d_str:
+                parts = d_str.split(".")
+                if len(parts) == 3:
+                    return f"{parts[2]}-{parts[1]}-{parts[0]}"
+            return d_str
+        return today_str
+
+    # 3. Query all ContestParticipation records (authoritative LeetCode GraphQL records)
     raw_participations = db.query(ContestParticipation).filter(
         ContestParticipation.student_id == student.id
-    ).order_by(ContestParticipation.contest_date.asc(), ContestParticipation.id.asc()).all()
+    ).all()
 
-    today_str = datetime.date.today().strftime("%Y-%m-%d")
     contest_dict: Dict[str, Dict[str, Any]] = {}
+    max_official_c_num = 0
 
     for cp in raw_participations:
         c_name = cp.contest_name or "Weekly Contest"
         key = c_name.strip().lower()
-        c_date = str(cp.contest_date) if cp.contest_date else today_str
+        c_date = _get_exact_contest_date(c_name, str(cp.contest_date) if cp.contest_date else None)
         if c_date > today_str:
             continue
+        m = re.search(r"weekly\s*contest\s*(\d+)", (c_name or "").lower())
+        c_num = int(m.group(1)) if m else 0
+        if c_num > max_official_c_num:
+            max_official_c_num = c_num
         contest_dict[key] = {
             "contest_name": c_name,
             "contest_date": c_date,
@@ -143,33 +166,30 @@ def _fetch_and_bridge_contest_history(db: Session, student: Student, contest_rat
             "participation_type": cp.participation_type or "OFFICIAL"
         }
 
-    # 4. Bridge WeeklyPublicResults
+    # 4. Bridge WeeklyPublicResults ONLY for current/latest week (>= max_official_c_num) with actual solves
     pub_results = db.query(WeeklyPublicResult, WeeklySession).join(
         WeeklySession, WeeklyPublicResult.session_id == WeeklySession.id
     ).filter(
         WeeklyPublicResult.student_id == student.id,
-        (WeeklyPublicResult.participation_status.in_(["PUBLIC_ATTENDED", "ATTENDED"])) | (WeeklyPublicResult.total_contest_solved > 0)
+        WeeklyPublicResult.total_contest_solved > 0
     ).all()
 
     for pr, ws in pub_results:
         w_name = ws.contest_name or f"Weekly Contest {ws.session_number}"
-        key = w_name.strip().lower()
-        d_str = ws.session_date or ""
-        parsed_date = today_str
-        if "." in d_str:
-            parts = d_str.split(".")
-            if len(parts) == 3:
-                parsed_date = f"{parts[2]}-{parts[1]}-{parts[0]}"
-        elif "-" in d_str:
-            parsed_date = d_str
+        m = re.search(r"weekly\s*contest\s*(\d+)", (w_name or "").lower())
+        c_num = int(m.group(1)) if m else 0
+        if c_num < max_official_c_num:
+            continue
 
-        if parsed_date > today_str:
+        key = w_name.strip().lower()
+        c_date = _get_exact_contest_date(w_name, ws.session_date)
+        if c_date > today_str:
             continue
 
         if key not in contest_dict:
             contest_dict[key] = {
                 "contest_name": w_name,
-                "contest_date": parsed_date,
+                "contest_date": c_date,
                 "rank": f"#{pr.contest_rank:,}" if (pr.contest_rank and pr.contest_rank > 0) else "Official Attended",
                 "solved": pr.total_contest_solved or 0,
                 "score": f"{pr.total_contest_solved or 0} / 4",
@@ -178,33 +198,30 @@ def _fetch_and_bridge_contest_history(db: Session, student: Student, contest_rat
                 "participation_type": "OFFICIAL"
             }
 
-    # 5. Bridge WeeklyVirtualResults
+    # 5. Bridge WeeklyVirtualResults ONLY for current/latest week with actual solves
     virt_results = db.query(WeeklyVirtualResult, WeeklySession).join(
         WeeklySession, WeeklyVirtualResult.session_id == WeeklySession.id
     ).filter(
         WeeklyVirtualResult.student_id == student.id,
-        (WeeklyVirtualResult.participation_status.in_(["VIRTUAL_ATTENDED", "VIRTUAL_ATTENDED_VERIFIED"])) | (WeeklyVirtualResult.total_contest_solved > 0)
+        WeeklyVirtualResult.total_contest_solved > 0
     ).all()
 
     for vr, ws in virt_results:
         w_name = ws.contest_name or f"Weekly Contest {ws.session_number}"
-        key = w_name.strip().lower()
-        d_str = ws.session_date or ""
-        parsed_date = today_str
-        if "." in d_str:
-            parts = d_str.split(".")
-            if len(parts) == 3:
-                parsed_date = f"{parts[2]}-{parts[1]}-{parts[0]}"
-        elif "-" in d_str:
-            parsed_date = d_str
+        m = re.search(r"weekly\s*contest\s*(\d+)", (w_name or "").lower())
+        c_num = int(m.group(1)) if m else 0
+        if c_num < max_official_c_num:
+            continue
 
-        if parsed_date > today_str:
+        key = w_name.strip().lower()
+        c_date = _get_exact_contest_date(w_name, ws.session_date)
+        if c_date > today_str:
             continue
 
         if key not in contest_dict:
             contest_dict[key] = {
                 "contest_name": w_name,
-                "contest_date": parsed_date,
+                "contest_date": c_date,
                 "rank": f"#{vr.contest_rank:,}" if (vr.contest_rank and vr.contest_rank > 0) else "Virtual Attended",
                 "solved": vr.total_contest_solved or 0,
                 "score": f"{vr.total_contest_solved or 0} / 4",
@@ -213,12 +230,11 @@ def _fetch_and_bridge_contest_history(db: Session, student: Student, contest_rat
                 "participation_type": "VIRTUAL"
             }
 
-    # 6. Sort and Chain
+    # 6. Sort STRICTLY by Contest Number (oldest to newest) to chain ratings chronologically
     def _sort_key(item):
-        d = item.get("contest_date") or "1970-01-01"
-        match = re.search(r"(\d+)", item.get("contest_name") or "")
-        c_num = int(match.group(1)) if match else 0
-        return (d, c_num)
+        m = re.search(r"weekly\s*contest\s*(\d+)", (item.get("contest_name") or "").lower())
+        c_num = int(m.group(1)) if m else 0
+        return (c_num, item.get("contest_date") or "")
 
     all_sorted = sorted(contest_dict.values(), key=_sort_key)
 
