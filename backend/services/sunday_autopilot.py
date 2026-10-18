@@ -977,6 +977,24 @@ class UniversalWeeklyContestAutopilot:
     def _resolve_target_session(self, db: Session, session_id: Optional[int] = None) -> Optional[WeeklySession]:
         if session_id:
             return db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+        now_ist = get_current_ist_datetime()
+        today_dates = [now_ist.strftime('%d.%m.%Y'), now_ist.strftime('%Y-%m-%d'), now_ist.strftime('%d-%m-%Y')]
+
+        # 1. Strictly match today\'s date first
+        sess = db.query(WeeklySession).filter(WeeklySession.session_date.in_(today_dates)).first()
+        if sess:
+            return sess
+
+        # 2. Match active LIVE contest
+        sess = db.query(WeeklySession).filter(WeeklySession.status == 'LIVE').order_by(WeeklySession.id.desc()).first()
+        if sess:
+            return sess
+
+        # 3. Match SCHEDULED contest
+        sess = db.query(WeeklySession).filter(WeeklySession.status == 'SCHEDULED').order_by(WeeklySession.id.desc()).first()
+        if sess:
+            return sess
+
         return db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
 
     async def resume_or_recover_on_startup(self, db: Optional[Session] = None):
