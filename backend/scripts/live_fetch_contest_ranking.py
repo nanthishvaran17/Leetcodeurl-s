@@ -355,6 +355,19 @@ def live_run(contest_slug: Optional[str] = None, session_id: Optional[int] = Non
                 (WeeklySession.contest_id.ilike(f"%{c_num}%"))
             ).first()
         
+        if not contest_slug:
+            from datetime import datetime
+            now_dt = datetime.now()
+            today_formats = [now_dt.strftime("%d.%m.%Y"), now_dt.strftime("%Y-%m-%d"), now_dt.strftime("%d-%m-%Y")]
+            ws = db.query(WeeklySession).filter(WeeklySession.session_date.in_(today_formats)).first()
+            if not ws:
+                ws = db.query(WeeklySession).filter(WeeklySession.status == "LIVE").order_by(WeeklySession.id.desc()).first()
+            if ws:
+                c_name = str(getattr(ws, "contest_name", "") or getattr(ws, "contest_id", ""))
+                m = re.search(r'\d+', c_name)
+                c_num = m.group(0) if m else "523"
+                contest_slug = f"weekly-contest-{c_num}"
+
         # If still not found, pick the latest active WeeklySession
         if not ws:
             ws = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
