@@ -18,7 +18,7 @@
 
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/License-Institutional%20Enterprise-black?style=flat-square">
-  <img alt="Status" src="https://img.shields.io/badge/Release-v2.9.6%20Production-success?style=flat-square">
+  <img alt="Status" src="https://img.shields.io/badge/Release-v2.9.7%20Production-success?style=flat-square">
   <img alt="Status" src="https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.14-blue?style=flat-square&logo=python">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.2%2B-blue?style=flat-square&logo=typescript">
   <img alt="Accreditation" src="https://img.shields.io/badge/Accreditation-NBA%20%26%20NAAC%20Ready-teal?style=flat-square">
