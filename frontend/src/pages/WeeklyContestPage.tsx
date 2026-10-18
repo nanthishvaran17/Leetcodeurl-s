@@ -122,13 +122,15 @@ const LiveCountdownClock = memo(({ endSec, label, className }: { endSec: number;
 
 // Isolated Next-Update Ticker (ticks down without page re-render) 
 const NextUpdateTicker = memo(({ initialSec }: { initialSec: number }) => {
-  const [sec, setSec] = useState(initialSec);
-  useEffect(() => { setSec(initialSec); }, [initialSec]);
+  const [sec, setSec] = useState(initialSec > 0 ? initialSec : 120);
+  useEffect(() => { setSec(initialSec > 0 ? initialSec : 120); }, [initialSec]);
   useEffect(() => {
-    const t = setInterval(() => setSec(s => (s <= 1 ? 20 : s - 1)), 1000);
+    const t = setInterval(() => setSec(s => (s <= 1 ? 120 : s - 1)), 1000);
     return () => clearInterval(t);
   }, []);
-  return <span>{sec}s</span>;
+  const mins = Math.floor(sec / 60);
+  const remSec = sec % 60;
+  return <span>{mins > 0 ? `${mins}m ${String(remSec).padStart(2, '0')}s` : `${sec}s`}</span>;
 });
 
 // Isolated Countdown Segments (Days/Hours/Mins/Secs before contest starts) 
@@ -729,7 +731,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       // Poll telemetry every 20s when LIVE or during Sunday window for TV responsiveness
       interval = setInterval(() => {
         if (isMounted) pollTelemetry();
-      }, isSessionLive ? 20000 : 60000);
+      }, 120000);
     }
 
     return () => {
@@ -751,7 +753,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       if (!isMounted || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) return;
       // Silent refresh — keep existing rows, just update values
       fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, true);
-    }, isSessionLive ? 25000 : 60000); // Every 25s during LIVE / Sunday contest window for instant TV updates
+    }, 120000); // Every 25s during LIVE / Sunday contest window for instant TV updates
 
     return () => {
       isMounted = false;

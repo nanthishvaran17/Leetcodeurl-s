@@ -735,7 +735,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       if (document.visibilityState === 'visible') {
         fetchPreviousWeekData(false, true);
       }
-    }, 8000);
+    }, 120000);
 
     return () => clearInterval(interval);
   }, [sessionId]);

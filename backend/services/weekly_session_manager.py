@@ -1614,7 +1614,7 @@ class SundayLiveContestEngine:
         self.is_paused: bool = False
         self.worker_state: str = "IDLE"  # IDLE, RUNNING, PAUSED, FINALIZING, FINALIZED
         self.last_sync_dt: Optional[datetime.datetime] = None
-        self.next_poll_interval_sec: int = 20
+        self.next_poll_interval_sec: int = 120
         self.processed_count: int = 0
         self.successful_count: int = 0
         self.failed_count: int = 0
