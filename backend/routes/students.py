@@ -367,6 +367,7 @@ async def get_students(
 
     cache_key = f"students_list:{user_id}:{role_clean}:{dept_id}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}:{paginated}"
     def _execute_query(db):
+        import re
         query = db.query(Student).outerjoin(Student.stats).options(
             joinedload(Student.department),
             joinedload(Student.section),
@@ -401,10 +402,12 @@ async def get_students(
 
         if search:
             s_exact = search.strip()
-            s_prefix = f"{s_exact}%"
+            s_clean = re.sub(r'[^a-zA-Z0-9]', '', s_exact)
             s_any = f"%{s_exact}%"
+            s_clean_any = f"%{s_clean}%" if s_clean else s_any
             query = query.filter(
-                (Student.reg_no.ilike(s_prefix)) |
+                (Student.reg_no.ilike(s_any)) |
+                (Student.reg_no.ilike(s_clean_any)) |
                 (Student.name.ilike(s_any)) |
                 (Student.username.ilike(s_any))
             )

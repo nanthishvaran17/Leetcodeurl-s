@@ -1,3 +1,4 @@
+import re
 import datetime
 import io
 from backend.time_utils import now_ist
@@ -208,6 +209,7 @@ def get_data_issues_summary(
     students = query.all()
 
     classified = [classify_student_issue(s) for s in students]
+    all_classified = list(classified)
 
     counts = {
         "total_students": len(classified),
@@ -312,6 +314,7 @@ def get_data_issues_students(
     students = query.all()
 
     classified = [classify_student_issue(s) for s in students]
+    all_classified = list(classified)
 
     # 0. Filter by explicit student_ids if provided
     if student_ids and student_ids.strip():
@@ -351,17 +354,45 @@ def get_data_issues_students(
         else:
             classified = [c for c in classified if c["issue_category"] == i_upper]
 
-    # 4. Search Filter
+    # 4. Search Filter (Partial register number, normalized alphanumeric & smart fallback)
     if search and search.strip():
         q = search.strip().lower()
-        classified = [
-            c for c in classified
-            if q in c["name"].lower() or
-               q in c["reg_no"].lower() or
-               (c["username"] and q in c["username"].lower()) or
-               q in c["issue_label"].lower() or
-               q in c["error_description"].lower()
-        ]
+        q_clean = re.sub(r'[^a-z0-9]', '', q)
+
+        def _matches(c: dict) -> bool:
+            # Substring match on name
+            if q in c["name"].lower():
+                return True
+            # Substring match on reg_no
+            if q in c["reg_no"].lower():
+                return True
+            # Substring match on username
+            if c["username"] and q in c["username"].lower():
+                return True
+            # Substring match on issue label or description
+            if q in c["issue_label"].lower() or q in c["error_description"].lower():
+                return True
+            # Alphanumeric normalized matching (e.g. 24cc031 -> 732224CC031, cc031 -> 732224CC031)
+            if q_clean:
+                reg_clean = re.sub(r'[^a-z0-9]', '', c["reg_no"].lower())
+                reg_short = reg_clean.replace("7322", "")
+                if q_clean in reg_clean or q_clean in reg_short:
+                    return True
+                if c["username"]:
+                    u_clean = re.sub(r'[^a-z0-9]', '', c["username"].lower())
+                    if q_clean in u_clean:
+                        return True
+            return False
+
+        # First filter within the scoped list
+        matches = [c for c in classified if _matches(c)]
+        
+        # If no match in the filtered subset and query is a specific search (>=3 chars),
+        # fallback to all_classified so user can see this student even if category/dept filter hid them!
+        if not matches and (len(q_clean) >= 3 or len(q) >= 3):
+            matches = [c for c in all_classified if _matches(c)]
+            
+        classified = matches
 
     return {
         "total_matched": len(classified),
